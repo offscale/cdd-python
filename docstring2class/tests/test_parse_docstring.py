@@ -1,6 +1,10 @@
+from ast import parse
 from unittest import TestCase, main as unittest_main
 
+from meta.asttools import cmp_ast
+
 from docstring2class.info import parse_docstring
+from docstring2class.tests.mocks import cls, ast_def, docstring0
 
 
 class TestParseDocstring(TestCase):
@@ -64,6 +68,33 @@ class TestParseDocstring(TestCase):
                               'returns': '',
                               'short_description': 'Load the data for your ML pipeline. Will be fed into '
                                                    '`train`.'}
+                             )
+
+    def test_equality(self) -> None:
+        self.assertTrue(cmp_ast(parse(cls, mode='exec'), ast_def),
+                        'class parsed as AST doesn\'t match constructed AST')
+        self.assertDictEqual(parse_docstring(docstring0),
+                             {'long_description': '',
+                              'params': [{'doc': 'name of dataset',
+                                          'name': 'dataset_name',
+                                          'typ': 'str'},
+                                         {'doc': 'directory to look for models in. Default is '
+                                                 '~/tensorflow_datasets.',
+                                          'name': 'tfds_dir',
+                                          'typ': 'None or str'},
+                                         {'doc': 'backend engine, e.g., `np` or `tf`',
+                                          'name': 'K',
+                                          'typ': 'None or np or tf or Any'},
+                                         {'doc': 'Convert to numpy ndarrays',
+                                          'name': 'as_numpy',
+                                          'typ': 'bool'},
+                                         {'doc': 'pass this as arguments to data_loader function',
+                                          'name': 'data_loader_kwargs',
+                                          'typ': '**data_loader_kwargs'}],
+                              'returns': '',
+                              'short_description': 'Acquire from the official tensorflow_datasets model '
+                                                   'zoo, or the ophthalmology focussed ml-prepare '
+                                                   'library'}
                              )
 
     def test_badly_formatted(self) -> None:
