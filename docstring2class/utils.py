@@ -24,7 +24,7 @@ def param2ast(param):
                          simple=1,
                          target=Name(ctx=Store(),
                                      id=param['name']),
-                         value=Constant(kind=param['typ'],
+                         value=Constant(kind=None,
                                         value=simple_types[param['typ']]))
     elif param['typ'] == 'dict':
         return AnnAssign(annotation=Name(ctx=Load(),

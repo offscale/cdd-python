@@ -8,7 +8,7 @@ from os import path
 import yaml
 
 __author__ = 'Samuel Marks'
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 
 def get_logger(name=None):
@@ -19,3 +19,4 @@ def get_logger(name=None):
 
 
 root_logger = get_logger()
+logging.getLogger('blib2to3').setLevel(logging.WARNING)

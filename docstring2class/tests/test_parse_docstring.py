@@ -51,12 +51,14 @@ class TestParseDocstring(TestCase):
                                          {'doc': 'backend engine, e.g., `np` or `tf`',
                                           'name': 'K',
                                           'typ': 'Optional[Union[np, tf, Any]]'}],
-                              'returns': '',
+                              'returns': {'name': 'Dataset splits (by default, your train and test)',
+                                          'typ': 'Tuple[np.ndarray, np.ndarray]'},
                               'short_description': 'Load the data for your ML pipeline. Will be fed into '
                                                    '`train`.'}
                              )
 
     def test_equality(self) -> None:
+        print_ast(parse(cls, mode='exec'))
         self.assertTrue(cmp_ast(parse(cls, mode='exec'), ast_def),
                         'class parsed as AST doesn\'t match constructed AST')
         self.assertDictEqual(parse_docstring(docstring0),
@@ -77,7 +79,9 @@ class TestParseDocstring(TestCase):
                                          {'doc': 'pass this as arguments to data_loader function',
                                           'name': 'data_loader_kwargs',
                                           'typ': '**data_loader_kwargs'}],
-                              'returns': '',
+                              'returns': {'name': 'Train and tests dataset splits',
+                                          'typ': 'Union[Tuple[tf.data.Dataset, tf.data.Dataset], '
+                                                 'Tuple[np.ndarray, np.ndarray]]'},
                               'short_description': 'Acquire from the official tensorflow_datasets model '
                                                    'zoo, or the ophthalmology focussed ml-prepare '
                                                    'library'}
