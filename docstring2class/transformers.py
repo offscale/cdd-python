@@ -1,6 +1,9 @@
-from ast import parse
+from ast import parse, ClassDef, Name, Load, Constant, Expr, Module
 
-from meta.asttools import python_source
+import typed_astunparse
+
+from docstring2class.info import parse_docstring
+from docstring2class.utils import tab, param2ast
 
 
 def ast2file(ast, filename, mode='a'):
@@ -8,7 +11,7 @@ def ast2file(ast, filename, mode='a'):
     Convert AST to a file
 
     :param ast: Constructed object of the `ast` class, usually an `ast.Module`
-    :type ast: ```ast.Module```
+    :type ast: ```Union[ast.Module, ast.ClassDef]```
 
     :param filename: emit to this file
     :type filename: ```str```
@@ -19,21 +22,47 @@ def ast2file(ast, filename, mode='a'):
     :return: None
     :rtype: ```NoneType```
     """
+    if isinstance(ast, ClassDef):
+        ast = Module(body=[ast], type_ignores=[])
     with open(filename, mode) as f:
-        python_source(ast, file=f)
+        f.write(typed_astunparse.unparse(ast))
 
 
-def docstring2ast(docstring):
+def docstring2ast(docstring, class_name='TargetClass', class_bases=('object',)):
     """
     Converts a docstring to an AST
 
     :param docstring: docstring portion
     :type docstring: ```str```
 
+    :param class_name: name of class
+    :type class_name: ```str```
+
+    :param class_bases: bases of class (the generated class will inherit these)
+    :type class_bases: ```Tuple[str]```
+
     :return: Class AST of the docstring
     :rtype: ```ast.ClassDef```
     """
-    raise NotImplementedError()
+    parsed = parse_docstring(docstring)
+    return ClassDef(bases=[Name(ctx=Load(),
+                                id=base_class)
+                           for base_class in class_bases],
+                    body=[
+                             Expr(value=Constant(kind=None,
+                                                 value='\n    {description}\n\n{cvars}'.format(
+                                                     description=parsed['long_description'] or parsed[
+                                                         'short_description'],
+                                                     cvars='\n'.join(
+                                                         '{tab}:cvar {param[name]}: {param[doc]}'.format(tab=tab,
+                                                                                                         param=param)
+                                                         for param in parsed['params'])
+                                                 )))
+                         ] + list(map(param2ast, parsed['params'])),
+                    decorator_list=[],
+                    keywords=[],
+                    name=class_name
+                    )
 
 
 def ast2docstring(ast):
@@ -41,7 +70,7 @@ def ast2docstring(ast):
     Converts a docstring to an AST
 
     :param ast: Class AST or Module AST
-    :type ast: ```ast.Module or ast.ClassDef```
+    :type ast: ```Union[ast.Module, ast.ClassDef]```
 
     :return: docstring
     :rtype: ```str```
@@ -67,7 +96,7 @@ def class2ast(class_string, filename='<unknown>', mode='exec',
     :type type_comments: ```bool```
 
     :param feature_version: `feature_version` for `ast.parse`, defaults to None
-    :type feature_version: ```None or Tuple[int, int]```
+    :type feature_version: ```Optional[Tuple[int, int]]```
 
     :return: Class AST
     :rtype: ```ast.ClassDef```
