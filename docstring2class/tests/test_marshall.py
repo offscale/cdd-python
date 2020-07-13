@@ -9,8 +9,8 @@ from docstring2class.transformers import docstring2ast, ast2file
 class TestParseDocstring(TestCase):
     def test_docstring2ast(self):
         gen_ast = docstring2ast(docstring0)
-        ast2file(gen_ast, 'delme.py')
-        self.assertTrue(cmp_ast(gen_ast, ast_def), 'Generated AST doesn\'t match reference AST')
+        ast2file(gen_ast, 'delme.py', skip_black=False)
+        self.assertTrue(cmp_ast(gen_ast, ast_def.body[0]), 'Generated AST doesn\'t match reference AST')
 
     # def test_class2docstring(self) -> None: self.assertFalse(True)
 

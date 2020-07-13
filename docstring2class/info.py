@@ -21,8 +21,8 @@
 import re
 import sys
 
-PARAM_OR_RETURNS_REGEX = re.compile(":(?:param|returns)")
-RETURNS_REGEX = re.compile(":returns: (?P<doc>.*)", re.S)
+PARAM_OR_RETURNS_REGEX = re.compile(":(?:param|returns?)")
+RETURNS_REGEX = re.compile(":returns?: (?P<doc>.*)", re.S)
 PARAM_REGEX = re.compile(r":param (?P<name>[\*\w]+): (?P<doc>.*?)"
                          r"(?:(?=:param)|(?=:return)|(?=:raises)|\Z)", re.S)
 
@@ -54,15 +54,15 @@ def trim(docstring):
     # Current code/unittests expects a line return at
     # end of multiline docstrings
     # workaround expected behavior from unittests
-    if "\n" in docstring:
+    if '\n' in docstring:
         trimmed.append("")
 
     # Return a single string:
-    return "\n".join(trimmed)
+    return '\n'.join(trimmed)
 
 
 def reindent(string):
-    return "\n".join(line.strip() for line in string.strip().split("\n"))
+    return '\n'.join(line.strip() for line in string.strip().split('\n'))
 
 
 def doc_to_type_doc(name, doc):
@@ -88,10 +88,10 @@ def parse_docstring(docstring):
 
     :returns: a dictionary of form
               {
-                  "short_description": ...,
-                  "long_description": ...,
-                  "params": [{"name": ..., "doc": ...}, ...],
-                  "returns": ...
+                  'short_description': ...,
+                  'long_description': ...,
+                  'params': [{'name': ..., 'doc': ..., 'typ': ...}, ...],
+                  "returns': {'name': ..., 'typ': ...}
               }
     """
 
@@ -99,9 +99,9 @@ def parse_docstring(docstring):
     params = []
 
     if docstring:
-        docstring = trim(docstring.lstrip("\n"))
+        docstring = trim(docstring.lstrip('\n'))
 
-        lines = docstring.split("\n", 1)
+        lines = docstring.split('\n', 1)
         short_description = lines[0]
 
         if len(lines) > 1:
@@ -123,13 +123,25 @@ def parse_docstring(docstring):
 
                 match = RETURNS_REGEX.search(params_returns_desc)
                 if match:
-                    returns = reindent(match.group("doc"))
+                    returns = reindent(match.group('doc'))
+                if returns:
+                    r_dict = {'name': ''}
+                    for idx, char in enumerate(returns):
+                        if char == ':':
+                            r_dict['typ'] = returns[idx + len(':rtype:'):].strip()
+                            if r_dict['typ'].startswith('```') and r_dict['typ'].endswith('```'):
+                                r_dict['typ'] = r_dict['typ'][3:-3]
+                            break
+                        else:
+                            r_dict['name'] += char
+                    r_dict['name'] = r_dict['name'].rstrip()
+                    returns = r_dict
 
     return {
-        "short_description": short_description,
-        "long_description": long_description,
-        "params": params,
-        "returns": returns
+        'short_description': short_description,
+        'long_description': long_description,
+        'params': params,
+        'returns': returns
     }
 
 
@@ -149,12 +161,12 @@ class InfoMixin(object):
         doc = parse_docstring(cls._get_doc())
 
         return {
-            "name": cls.get_name(),
-            "platform": cls.get_platform(),
-            "module": cls.__module__,
-            "title": doc["short_description"],
-            "description": doc["long_description"],
-            "parameters": doc["params"],
-            "schema": getattr(cls, "CONFIG_SCHEMA", None),
-            "returns": doc["returns"]
+            'name': cls.get_name(),
+            'platform': cls.get_platform(),
+            'module': cls.__module__,
+            'title': doc['short_description'],
+            'description': doc['long_description'],
+            'parameters': doc['params'],
+            'schema': getattr(cls, 'CONFIG_SCHEMA', None),
+            'returns': doc['returns']
         }

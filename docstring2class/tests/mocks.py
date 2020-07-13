@@ -42,119 +42,125 @@ class TargetClass(object):
     :cvar K: backend engine, e.g., `np` or `tf`
     :cvar as_numpy: Convert to numpy ndarrays
     :cvar data_loader_kwargs: pass this as arguments to data_loader function
-    :cvar return_type: Train and tests dataset splits
-    """
+    :cvar return_type: Train and tests dataset splits"""
 
-    dataset_name: Optional[str] = None
+    dataset_name: str = ''
     tfds_dir: Optional[str] = None
-    K: Optional[str]
+    K: Optional[Union[np, tf, Any]] = None
     as_numpy: bool = True
     data_loader_kwargs: dict = {}
-    return_type: Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]
+    return_type: Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]] = None
 '''
 
 # Generated from `print_ast(parse(cls, mode='exec'))`
 ast_def = Module(body=[
-    ClassDef(bases=[Name(ctx=Load(),
-                         id='object')],
-             body=[
-                 Expr(value=Constant(kind=None,
-                                     value='\n    Acquire from the official tensorflow_datasets model zoo, or the'
-                                           ' ophthalmology focussed ml-prepare library\n\n'
-                                           '    :cvar dataset_name: name of dataset\n'
-                                           '    :cvar tfds_dir: directory to look for models in. '
-                                           'Default is ~/tensorflow_datasets.\n'
-                                           '    :cvar K: backend engine, e.g., `np` or `tf`\n'
-                                           '    :cvar as_numpy: Convert to numpy ndarrays\n'
-                                           '    :cvar data_loader_kwargs: pass this as arguments to '
-                                           'data_loader function\n'
-                                           '    :cvar return_type: Train and tests dataset splits\n    ')),
-                 AnnAssign(annotation=Subscript(ctx=Load(),
-                                                slice=Index(value=Name(ctx=Load(),
-                                                                       id='str')),
-                                                value=Name(ctx=Load(),
-                                                           id='Optional')),
-                           simple=1,
-                           target=Name(ctx=Store(),
-                                       id='dataset_name'),
-                           value=Constant(kind=None,
-                                          value=None)),
-                 AnnAssign(annotation=Subscript(ctx=Load(),
-                                                slice=Index(value=Name(ctx=Load(),
-                                                                       id='str')),
-                                                value=Name(ctx=Load(),
-                                                           id='Optional')),
-                           simple=1,
-                           target=Name(ctx=Store(),
-                                       id='tfds_dir'),
-                           value=Constant(kind=None,
-                                          value=None)),
-                 AnnAssign(annotation=Subscript(ctx=Load(),
-                                                slice=Index(value=Name(ctx=Load(),
-                                                                       id='str')),
-                                                value=Name(ctx=Load(),
-                                                           id='Optional')),
-                           simple=1,
-                           target=Name(ctx=Store(),
-                                       id='K'),
-                           value=None),
-                 AnnAssign(annotation=Name(ctx=Load(),
-                                           id='bool'),
-                           simple=1,
-                           target=Name(ctx=Store(),
-                                       id='as_numpy'),
-                           value=Constant(kind=None,
-                                          value=True)),
-                 AnnAssign(annotation=Name(ctx=Load(),
-                                           id='dict'),
-                           simple=1,
-                           target=Name(ctx=Store(),
-                                       id='data_loader_kwargs'),
-                           value=Dict(keys=[],
-                                      values=[])),
-                 AnnAssign(
-                     annotation=Subscript(
-                         ctx=Load(),
-                         slice=Index(value=Tuple(
-                             ctx=Load(),
-                             elts=[
-                                 Subscript(ctx=Load(),
-                                           slice=Index(value=Tuple(ctx=Load(),
-                                                                   elts=[Attribute(attr='Dataset',
-                                                                                   ctx=Load(),
-                                                                                   value=Attribute(attr='data',
+    ClassDef(
+        bases=[
+            Name(ctx=Load(),
+                 id='object')
+        ],
+        body=[
+            Expr(value=Constant(kind=None,
+                                value='\n    Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library\n\n    :cvar dataset_name: name of dataset\n    :cvar tfds_dir: directory to look for models in. Default is ~/tensorflow_datasets.\n    :cvar K: backend engine, e.g., `np` or `tf`\n    :cvar as_numpy: Convert to numpy ndarrays\n    :cvar data_loader_kwargs: pass this as arguments to data_loader function\n    :cvar return_type: Train and tests dataset splits')),
+            AnnAssign(annotation=Name(ctx=Load(),
+                                      id='str'),
+                      simple=1,
+                      target=Name(ctx=Store(),
+                                  id='dataset_name'),
+                      value=Constant(kind=None,
+                                     value='')),
+            AnnAssign(annotation=Subscript(ctx=Load(),
+                                           slice=Index(value=Name(ctx=Load(),
+                                                                  id='str')),
+                                           value=Name(ctx=Load(),
+                                                      id='Optional')),
+                      simple=1,
+                      target=Name(ctx=Store(),
+                                  id='tfds_dir'),
+                      value=Constant(kind=None,
+                                     value=None)),
+            AnnAssign(annotation=Subscript(ctx=Load(),
+                                           slice=Index(value=Subscript(ctx=Load(),
+                                                                       slice=Index(value=Tuple(ctx=Load(),
+                                                                                               elts=[Name(ctx=Load(),
+                                                                                                          id='np'),
+                                                                                                     Name(ctx=Load(),
+                                                                                                          id='tf'),
+                                                                                                     Name(ctx=Load(),
+                                                                                                          id='Any')])),
+                                                                       value=Name(ctx=Load(),
+                                                                                  id='Union'))),
+                                           value=Name(ctx=Load(),
+                                                      id='Optional')),
+                      simple=1,
+                      target=Name(ctx=Store(),
+                                  id='K'),
+                      value=Constant(kind=None,
+                                     value=None)),
+            AnnAssign(annotation=Name(ctx=Load(),
+                                      id='bool'),
+                      simple=1,
+                      target=Name(ctx=Store(),
+                                  id='as_numpy'),
+                      value=Constant(kind=None,
+                                     value=True)),
+            AnnAssign(annotation=Name(ctx=Load(),
+                                      id='dict'),
+                      simple=1,
+                      target=Name(ctx=Store(),
+                                  id='data_loader_kwargs'),
+                      value=Dict(keys=[],
+                                 values=[])),
+            AnnAssign(
+                annotation=Subscript(ctx=Load(),
+                                     slice=Index(
+                                         value=Tuple(
+                                             ctx=Load(),
+                                             elts=[
+                                                 Subscript(ctx=Load(),
+                                                           slice=Index(value=Tuple(ctx=Load(),
+                                                                                   elts=[Attribute(attr='Dataset',
+                                                                                                   ctx=Load(),
+                                                                                                   value=Attribute(
+                                                                                                       attr='data',
+                                                                                                       ctx=Load(),
+                                                                                                       value=Name(
+                                                                                                           ctx=Load(),
+                                                                                                           id='tf'))),
+                                                                                         Attribute(attr='Dataset',
+                                                                                                   ctx=Load(),
+                                                                                                   value=Attribute(
+                                                                                                       attr='data',
+                                                                                                       ctx=Load(),
+                                                                                                       value=Name(
+                                                                                                           ctx=Load(),
+                                                                                                           id='tf')))]
+                                                                                   )),
+                                                           value=Name(ctx=Load(),
+                                                                      id='Tuple')),
+                                                 Subscript(ctx=Load(),
+                                                           slice=Index(value=Tuple(ctx=Load(),
+                                                                                   elts=[Attribute(attr='ndarray',
                                                                                                    ctx=Load(),
                                                                                                    value=Name(
                                                                                                        ctx=Load(),
-                                                                                                       id='tf'))),
-                                                                         Attribute(attr='Dataset',
-                                                                                   ctx=Load(),
-                                                                                   value=Attribute(attr='data',
+                                                                                                       id='np')),
+                                                                                         Attribute(attr='ndarray',
                                                                                                    ctx=Load(),
                                                                                                    value=Name(
                                                                                                        ctx=Load(),
-                                                                                                       id='tf')))])),
-                                           value=Name(ctx=Load(),
-                                                      id='Tuple')),
-                                 Subscript(ctx=Load(),
-                                           slice=Index(value=Tuple(ctx=Load(),
-                                                                   elts=[Attribute(attr='ndarray',
-                                                                                   ctx=Load(),
-                                                                                   value=Name(ctx=Load(),
-                                                                                              id='np')),
-                                                                         Attribute(attr='ndarray',
-                                                                                   ctx=Load(),
-                                                                                   value=Name(ctx=Load(),
-                                                                                              id='np'))])),
-                                           value=Name(ctx=Load(),
-                                                      id='Tuple'))])),
-                         value=Name(ctx=Load(),
-                                    id='Union')),
-                     simple=1,
-                     target=Name(ctx=Store(),
-                                 id='return_type'),
-                     value=None)],
-             decorator_list=[],
-             keywords=[],
-             name='TargetClass')
-], type_ignores=[])
+                                                                                                       id='np'))])),
+                                                           value=Name(ctx=Load(),
+                                                                      id='Tuple'))])),
+                                     value=Name(ctx=Load(),
+                                                id='Union')),
+                simple=1,
+                target=Name(ctx=Store(),
+                            id='return_type'),
+                value=Constant(kind=None,
+                               value=None))],
+        decorator_list=[],
+        keywords=[],
+        name='TargetClass')],
+    type_ignores=[]
+)
