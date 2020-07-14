@@ -4,7 +4,7 @@ from astor import to_source
 from black import format_str, FileMode
 
 from docstring2class.info import parse_docstring
-from docstring2class.utils import param2ast, pp, tab
+from docstring2class.utils import param2ast, tab
 
 
 def ast2file(ast, filename, mode='a', skip_black=False):
@@ -88,7 +88,7 @@ def docstring2ast(docstring, class_name='TargetClass', class_bases=('object',)):
 
 def ast2docstring(ast):
     """
-    Converts a docstring to an AST
+    Converts an AST to a docstring
 
     :param ast: Class AST or Module AST
     :type ast: ```Union[ast.Module, ast.ClassDef]```
@@ -96,6 +96,8 @@ def ast2docstring(ast):
     :return: docstring
     :rtype: ```str```
     """
+    if not isinstance(ast, ClassDef):
+        raise NotImplementedError(type(ast).__name__)
     raise NotImplementedError()
 
 

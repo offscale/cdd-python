@@ -1,4 +1,4 @@
-from ast import AnnAssign, Load, Index, Subscript, Constant, Name, Store, Dict
+from ast import AnnAssign, Load, Constant, Name, Store, Dict, parse
 from pprint import PrettyPrinter
 
 pp = PrettyPrinter(indent=4).pprint
@@ -43,22 +43,7 @@ def param2ast(param):
                          value=Dict(keys=[],
                                     values=[]))
     else:
-        # assume `Tuple`, `Union`, `Optional`, or something along those lines
-        wrapping = ''
-        typ_len = len(param['typ'])
-        for i in range(typ_len):
-            char = param['typ'][i]
-            if char == '[':
-                param['typ'] = param['typ'][i + 1:-1]
-                break
-            else:
-                wrapping += char
-
-        return AnnAssign(annotation=Subscript(ctx=Load(),
-                                              slice=Index(value=Name(ctx=Load(),
-                                                                     id=param['typ'])),
-                                              value=Name(ctx=Load(),
-                                                         id=wrapping)),
+        return AnnAssign(annotation=parse(param['typ']).body[0].value,
                          simple=1,
                          target=Name(ctx=Store(),
                                      id=param['name']),

@@ -1,3 +1,5 @@
 meta
 astor
 black
+static_typing
+pyyaml
