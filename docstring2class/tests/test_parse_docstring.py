@@ -58,7 +58,7 @@ class TestParseDocstring(TestCase):
                              )
 
     def test_equality(self) -> None:
-        print_ast(parse(cls, mode='exec'))
+        # print_ast(parse(cls, mode='exec'))
         self.assertTrue(cmp_ast(parse(cls, mode='exec'), ast_def),
                         'class parsed as AST doesn\'t match constructed AST')
         self.assertDictEqual(parse_docstring(docstring0),
