@@ -1,7 +1,7 @@
 from ast import parse
 from unittest import TestCase, main as unittest_main
 
-from meta.asttools import cmp_ast, print_ast
+from meta.asttools import cmp_ast
 
 from docstring2class.info import parse_docstring
 from docstring2class.tests.mocks import cls, ast_def, docstring0

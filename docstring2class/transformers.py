@@ -4,7 +4,7 @@ from astor import to_source
 from black import format_str, FileMode
 
 from docstring2class.info import parse_docstring
-from docstring2class.utils import param2ast, tab
+from docstring2class.utils import param2ast, tab, ast2docstring_structure
 
 
 def ast2file(ast, filename, mode='a', skip_black=False):
@@ -96,9 +96,18 @@ def ast2docstring(ast):
     :return: docstring
     :rtype: ```str```
     """
-    if not isinstance(ast, ClassDef):
-        raise NotImplementedError(type(ast).__name__)
-    raise NotImplementedError()
+    docstring_struct = ast2docstring_structure(ast)
+    return '''\n{description}\n\n{params}\n{returns}\n'''.format(
+        description=docstring_struct['long_description'] or docstring_struct['short_description'],
+        params='\n'.join(':param {param[name]}: {param[doc]}\n'
+                         ':type {param[name]}: ```{typ}```\n'.format(param=param,
+                                                                     typ=('**{name}'.format(name=param['name'])
+                                                                          if 'kwargs' in param['name']
+                                                                          else param['typ']))
+                         for param in docstring_struct['params']),
+        returns=':return: {param[doc]}\n'
+                ':rtype: ```{param[typ]}```'.format(param=docstring_struct['returns'])
+    )
 
 
 def class2ast(class_string, filename='<unknown>', mode='exec',
