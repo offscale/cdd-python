@@ -1,9 +1,11 @@
 from _ast import Module, ClassDef
-from ast import AnnAssign, Load, Constant, Name, Store, Dict, parse
-from collections import OrderedDict
+from ast import AnnAssign, Load, Constant, Name, Store, Dict, parse, Expr, Call, keyword, Attribute, Tuple, Subscript, \
+    Index
+from collections import OrderedDict, namedtuple
 from pprint import PrettyPrinter
 
 from astor import to_source
+from meta.asttools import print_ast
 
 pp = PrettyPrinter(indent=4).pprint
 
@@ -121,4 +123,104 @@ def ast2docstring_structure(ast):
     return docstring_struct
 
 
-__all__ = ['param2ast', 'pp', 'tab', 'to_class_def', 'ast2docstring_structure']
+def param2argparse_param(param):
+    """
+    Converts a param to an Expr `argparse.add_argument` call
+
+    :param param: Param dict
+    :type param: ```dict```
+
+    :return: argparse.add_argument
+    :rtype: ```Expr```
+    """
+    choices, required = None, False
+    if param['typ'] in simple_types:
+        typ = param['typ']
+    else:
+        parsed_type = parse(param['typ']).body[0]
+        # print("print_ast(parse(param['typ']))")
+        # print_ast(parsed_type)
+        # print("</print_ast>")
+
+        # print('parsed_type.value.slice.value:', parsed_type.value.slice.value, ';')
+        # print_ast(parsed_type.value.slice.value)
+
+        Param = namedtuple('Param', ('required', 'typ', 'choices'))
+
+        def handle_name(node):
+            assert isinstance(node, Name), 'Expected `Name` got `{}`'.format(type(node).__name__)
+            if node.id == 'dict':
+                _typ = 'loads'
+            else:
+                _typ = node.id
+
+            return Param(
+                required=False,
+                typ=_typ,
+                choices=None
+            )
+
+        def handle_subscript(node):
+            assert isinstance(node, Subscript), 'Expected `Subscript` got `{}`'.format(type(node).__name__)
+            _choices = None
+            _typ = 'str'
+            if isinstance(node.slice, Index):
+                if isinstance(node.slice.value, Subscript):
+                    if isinstance(node.slice.value.value, Name):
+                        if node.slice.value.value.id == 'Literal':
+                            if isinstance(node.slice, Index):
+                                if isinstance(node.slice.value, Subscript):
+                                    if isinstance(node.slice.value.slice.value, Tuple):
+                                        _choices = tuple(node.id
+                                                         for node in node.slice.value.slice.value.elts
+                                                         if isinstance(node, Name))
+                                        _typ = 'str'  # Convert later?
+
+            return Param(
+                required=node.value.id == 'Optional',
+                typ=_typ,
+                choices=_choices
+            )
+
+        if isinstance(parsed_type.value, Name):
+            required, typ, choices = handle_name(parsed_type.value)
+        elif isinstance(parsed_type.value.slice.value, Name):
+            required, typ, choices = handle_name(parsed_type.value.value)
+            required = parsed_type.value.value.id != 'Optional'  # TODO: Check for `None` in a `Union`
+            typ = parsed_type.value.slice.value.id
+            # if parsed_type.value.slice.value.id in simple_types:
+            #    typ = parsed_type.value.slice.value.id
+            # else:
+            #    typ = None
+        elif isinstance(parsed_type.value, Subscript):
+            required, typ, choices = handle_subscript(parsed_type.value)
+        else:
+            raise NotImplementedError(type(parsed_type.value).__name__)
+    return Expr(
+        value=Call(args=[Constant(kind=None,
+                                  value='--{param[name]}'.format(param=param))],
+                   func=Attribute(attr='add_argument',
+                                  ctx=Load(),
+                                  value=Name(ctx=Load(),
+                                             id='argument_parser')),
+                   keywords=list(filter(None, (
+                       keyword(arg='type',
+                               value=Name(ctx=Load(),
+                                          id=typ)),
+                       choices if choices is None
+                       else keyword(arg='choices',
+                                    value=Tuple(ctx=Load(),
+                                                elts=[Constant(kind=None,
+                                                               value=choice)
+                                                      for choice in choices])),
+                       keyword(arg='help',
+                               value=Constant(kind=None,
+                                              value=param['doc'])),
+                       keyword(arg='required',
+                               value=Constant(kind=None,
+                                              value=True)) if required else None
+                   ))))
+    )
+
+
+__all__ = ['param2ast', 'pp', 'tab', 'to_class_def', 'ast2docstring_structure', 'param2argparse_param']

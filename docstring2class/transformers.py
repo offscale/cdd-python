@@ -1,10 +1,11 @@
-from ast import parse, ClassDef, Name, Load, Constant, Expr, Module
+from ast import parse, ClassDef, Name, Load, Constant, Expr, Module, FunctionDef, arguments, arg, Assign, Attribute, \
+    Store, Tuple, Subscript, Return
 
 from astor import to_source
 from black import format_str, FileMode
 
 from docstring2class.info import parse_docstring
-from docstring2class.utils import param2ast, tab, ast2docstring_structure
+from docstring2class.utils import param2ast, tab, ast2docstring_structure, pp, param2argparse_param
 
 
 def ast2file(ast, filename, mode='a', skip_black=False):
@@ -148,3 +149,51 @@ def class2docstring(class_string):
     :rtype: ```str```
     """
     return ast2docstring(class2ast(class_string))
+
+
+def ast2argparse(ast, function_name='set_cli_args'):
+    docstring_struct = ast2docstring_structure(ast)
+    pp(docstring_struct)
+    return FunctionDef(args=arguments(args=[arg(annotation=None,
+                                                arg='argument_parser',
+                                                type_comment=None)],
+                                      defaults=[],
+                                      kw_defaults=[],
+                                      kwarg=None,
+                                      kwonlyargs=[],
+                                      posonlyargs=[],
+                                      vararg=None),
+                       body=[
+                                Expr(value=Constant(kind=None,
+                                                    value='\n    Set CLI arguments\n\n    '
+                                                          ':param argument_parser: argument parser\n    '
+                                                          ':type argument_parser: ```ArgumentParser```\n\n    '
+                                                          ':return: argument parser and return type\n    '
+                                                          ':rtype: ```Tuple[ArgumentParser,'
+                                                          ' {return_type}]```\n    '.format(
+                                                        return_type=docstring_struct['returns']['typ']))),
+                                Assign(targets=[Attribute(attr='description',
+                                                          ctx=Store(),
+                                                          value=Name(ctx=Load(),
+                                                                     id='argument_parser'))],
+                                       type_comment=None,
+                                       value=Constant(
+                                           kind=None,
+                                           value=docstring_struct['long_description'] or docstring_struct[
+                                               'short_description']))
+                            ] + list(map(param2argparse_param, docstring_struct['params'])) + [
+                                Return(
+                                    value=Tuple(
+                                        ctx=Load(),
+                                        elts=[
+                                            Name(ctx=Load(),
+                                                 id='argument_parser'),
+                                            Subscript(
+                                                ctx=Load(),
+                                                slice=parse(docstring_struct['returns']['typ']),
+                                                value=Name(ctx=Load(),
+                                                           id='Union'))]))],
+                       decorator_list=[],
+                       name=function_name,
+                       returns=None,
+                       type_comment=None)

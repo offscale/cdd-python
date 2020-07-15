@@ -1,7 +1,7 @@
 from ast import parse
 from unittest import TestCase, main as unittest_main
 
-from meta.asttools import cmp_ast
+from meta.asttools import cmp_ast, print_ast
 
 from docstring2class.info import parse_docstring
 from docstring2class.tests.mocks import cls, ast_def, docstring0
@@ -22,7 +22,7 @@ class TestParseDocstring(TestCase):
                  ":param output_type: outgoing data_type, defaults to no conversion\n" \
                  ":type output_type: ```str```\n\n" \
                  ":param K: backend engine, e.g., `np` or `tf`\n" \
-                 ":type K: ```Optional[Union[np, tf, Any]]```\n\n" \
+                 ":type K: ```Optional[Literal[np, tf]]```\n\n" \
                  ":return: Dataset splits (by default, your train and test)\n" \
                  ":rtype: ```Tuple[np.ndarray, np.ndarray]```\n"
 
@@ -50,7 +50,7 @@ class TestParseDocstring(TestCase):
                                           'typ': 'str'},
                                          {'doc': 'backend engine, e.g., `np` or `tf`',
                                           'name': 'K',
-                                          'typ': 'Optional[Union[np, tf, Any]]'}],
+                                          'typ': 'Optional[Literal[np, tf]]'}],
                               'returns': {'name': 'Dataset splits (by default, your train and test)',
                                           'typ': 'Tuple[np.ndarray, np.ndarray]'},
                               'short_description': 'Load the data for your ML pipeline. Will be fed into '
@@ -72,7 +72,7 @@ class TestParseDocstring(TestCase):
                                           'typ': 'Optional[str]'},
                                          {'doc': 'backend engine, e.g., `np` or `tf`',
                                           'name': 'K',
-                                          'typ': 'Optional[Union[np, tf, Any]]'},
+                                          'typ': 'Optional[Literal[np, tf]]'},
                                          {'doc': 'Convert to numpy ndarrays',
                                           'name': 'as_numpy',
                                           'typ': 'bool'},
