@@ -3,8 +3,8 @@ from unittest import TestCase, main as unittest_main
 
 from meta.asttools import cmp_ast, str_ast
 
-from docstring2class.tests.mocks import docstring0, ast_def, set_cli_func_ast
-from docstring2class.transformers import docstring2ast, ast2docstring, ast2argparse, ast2file
+from doctrans.tests.mocks import docstring0, ast_def, set_cli_func_ast
+from doctrans.transformers import docstring2ast, ast2docstring, ast2argparse, ast2file
 
 
 class TestParseDocstring(TestCase):

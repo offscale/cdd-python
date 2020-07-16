@@ -15,7 +15,7 @@ else:
     from itertools import imap, ifilter
 
 if __name__ == '__main__':
-    package_name = 'docstring2class'
+    package_name = 'doctrans'
 
     with open(path.join(package_name, '__init__.py')) as f:
         __author__, __version__ = imap(
