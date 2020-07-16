@@ -4,8 +4,8 @@ from ast import parse, ClassDef, Name, Load, Constant, Expr, Module, FunctionDef
 from astor import to_source
 from black import format_str, FileMode
 
-from docstring2class.info import parse_docstring
-from docstring2class.utils import param2ast, tab, ast2docstring_structure, pp, param2argparse_param
+from doctrans.info import parse_docstring
+from doctrans.utils import param2ast, tab, ast2docstring_structure, pp, param2argparse_param
 
 
 def ast2file(ast, filename, mode='a', skip_black=False):

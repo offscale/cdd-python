@@ -9,8 +9,8 @@ from ml_params import __version__
 
 def _build_parser():
     parser = ArgumentParser(
-        prog='python -m docstring2class',
-        description='Docstring to class'
+        prog='python -m doctrans',
+        description='Translate between docstrings, classes, and argparse'
     )
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
 
