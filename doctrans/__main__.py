@@ -2,9 +2,8 @@
 
 from argparse import ArgumentParser
 from os import path
-from sys import stdout
 
-from ml_params import __version__
+from doctrans import __version__
 
 
 def _build_parser():
@@ -14,16 +13,33 @@ def _build_parser():
     )
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
 
-    parser.add_argument('--input', required=True,
-                        help='Input file to extract docstrings from')
-    parser.add_argument('--output', default=stdout,
-                        help='Output file to send classes to')
+    parser.add_argument('--config', help='File where config `class` is declared.')
+    parser.add_argument('--config-name', help='Name of `class`', default='Config')
+
+    parser.add_argument('--function', help='File where function is `def`ined.')
+    parser.add_argument('--function-name', help='Name of Function. If method, use C++ syntax, '
+                                                'i.e., ClassName::method_name',
+                        default='train')
+
+    parser.add_argument('--argparse-function', help='File where argparse function is `def`ined.')
+    parser.add_argument('--argparse-function-name', help='Name of argparse function.',
+                        default='set_cli_args')
+
+    parser.add_argument('--truth', help='Single source of truth. Others will be generated from this.',
+                        choices=('argparse_function', 'config', 'function'), required=True)
+
     return parser
 
 
 if __name__ == '__main__':
     _parser = _build_parser()
     args = _parser.parse_args()
+    args.argparse_function = args.argparse_function or args.config
+    args.config = args.config or args.argparse_function
+    args.function = args.function or args.config
+    args.argparse_function = args.argparse_function or args.config
 
-    if not path.isfile(args.input):
-        _parser.error('--input must be specify an existent file. Got: {!r}'.format(args.input))
+    if args.argparse_function is None:
+        _parser.error('One or more of `--argparse-function`, `--config`, and `--function` must be specified.')
+    elif not path.isfile(args.truth):
+        _parser.error('--truth must be choose an existent file. Got: {!r}'.format(getattr(args, args.truth)))
