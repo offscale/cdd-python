@@ -1,14 +1,13 @@
 from ast import parse
 from unittest import TestCase, main as unittest_main
 
-from meta.asttools import cmp_ast, print_ast
+from meta.asttools import cmp_ast
 
 from doctrans.info import parse_docstring
-from doctrans.tests.mocks import cls, ast_def, docstring0
+from doctrans.tests.mocks import class_str, class_ast, docstring_str
 
 
 class TestParseDocstring(TestCase):
-    maxDiff = 1651
     docstring0 = "\nLoad the data for your ML pipeline. Will be fed into `train`.\n\n" \
                  ":param dataset_name: name of dataset\n" \
                  ":type dataset_name: ```str```\n\n" \
@@ -58,10 +57,9 @@ class TestParseDocstring(TestCase):
                              )
 
     def test_equality(self) -> None:
-        # print_ast(parse(cls, mode='exec'))
-        self.assertTrue(cmp_ast(parse(cls, mode='exec'), ast_def),
+        self.assertTrue(cmp_ast(parse(class_str, mode='exec').body[0], class_ast),
                         'class parsed as AST doesn\'t match constructed AST')
-        self.assertDictEqual(parse_docstring(docstring0),
+        self.assertDictEqual(parse_docstring(docstring_str),
                              {'long_description': '',
                               'params': [{'doc': 'name of dataset',
                                           'name': 'dataset_name',

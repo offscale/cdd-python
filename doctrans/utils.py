@@ -5,10 +5,8 @@ from collections import OrderedDict, namedtuple
 from pprint import PrettyPrinter
 
 from astor import to_source
-from meta.asttools import print_ast
 
 pp = PrettyPrinter(indent=4).pprint
-KeyError
 tab = ' ' * 4
 
 simple_types = {'int': 0, float: .0, 'str': '', 'bool': True}
