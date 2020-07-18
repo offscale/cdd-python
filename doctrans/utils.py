@@ -1,7 +1,8 @@
-from _ast import Module, ClassDef
+from _ast import Module, ClassDef, Assign, Return
 from ast import AnnAssign, Load, Constant, Name, Store, Dict, parse, Expr, Call, keyword, Attribute, Tuple, Subscript, \
     Index
 from collections import OrderedDict, namedtuple
+from itertools import takewhile
 from pprint import PrettyPrinter
 
 from astor import to_source
@@ -22,6 +23,7 @@ def param2ast(param):
     :return: ast node (AnnAssign)
     :rtype: ```AnnAssign```
     """
+    # print('param', param, ';')
     if param['typ'] in simple_types:
         return AnnAssign(annotation=Name(ctx=Load(),
                                          id=param['typ']),
@@ -79,7 +81,7 @@ def to_class_def(ast):
         raise NotImplementedError(type(ast).__name__)
 
 
-def ast2docstring_structure(ast):
+def class_ast2docstring_structure(ast):
     """
     Converts an AST to a docstring structure
 
@@ -221,4 +223,64 @@ def param2argparse_param(param):
     )
 
 
-__all__ = ['param2ast', 'pp', 'tab', 'to_class_def', 'ast2docstring_structure', 'param2argparse_param']
+def argparse_ast2docstring_structure(ast):
+    """
+    Converts an AST to a docstring structure
+
+    :param ast: AST of argparse function
+    :type ast: ```FunctionDef``
+
+    :return: docstring structure
+    :rtype: ```dict```
+    """
+    docstring_struct = {'params': []}
+    for e in ast.body:
+        if isinstance(e, Expr):
+            if isinstance(e.value, Constant):
+                if e.value.kind is not None:
+                    raise NotImplementedError('kind')
+                docstring_struct['short_description'] = '\n'.join(
+                    takewhile(lambda l: not l.lstrip().startswith(':param'),
+                              e.value.value.split('\n'))).strip()
+            elif (isinstance(e.value, Call) and len(e.value.args) == 1 and
+                  isinstance(e.value.args[0], Constant) and
+                  e.value.args[0].kind is None):
+                docstring_struct['params'].append({
+                    'name': e.value.args[0].value[len('--'):],
+                    'doc': next(keyword.value.value
+                                for keyword in e.value.keywords
+                                if keyword.arg == 'help'
+                                ),
+                    'typ':
+                        next(('Literal[{}]'.format(', '.join('"{}"'.format(elt.value)
+                                                             for elt in keyword.value.elts))
+                              for keyword in e.value.keywords
+                              if keyword.arg == 'choices'
+                              ), next(('dict' if keyword.value.id == 'loads' else keyword.value.id
+                                       for keyword in e.value.keywords
+                                       if keyword.arg == 'type'
+                                       ), 'str'))
+                })
+        elif isinstance(e, Assign):
+            if all((len(e.targets) == 1,
+                    isinstance(e.targets[0], Attribute),
+                    e.targets[0].attr == 'description',
+                    isinstance(e.targets[0].value, Name),
+                    e.targets[0].value.id == 'argument_parser',
+                    isinstance(e.value, Constant))):
+                docstring_struct['long_description'] = e.value.value
+        elif isinstance(e, Return) and isinstance(e.value, Tuple) and isinstance(e.value.elts[1], Subscript):
+            docstring_struct['returns'] = {
+                'name': 'return_type',
+                'doc': next(line.partition(',')[2].lstrip()
+                            for line in ast.body[0].value.value.split('\n')
+                            if line.lstrip().startswith(':return')
+                            ),
+                'typ': to_source(e.value.elts[1]).replace('\n', '')
+            }
+
+    return docstring_struct
+
+
+__all__ = ['param2ast', 'pp', 'tab', 'to_class_def', 'param2argparse_param',
+           'class_ast2docstring_structure', 'argparse_ast2docstring_structure']
