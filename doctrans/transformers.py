@@ -1,5 +1,5 @@
 from ast import parse, ClassDef, Name, Load, Constant, Expr, Module, FunctionDef, arguments, arg, Assign, Attribute, \
-    Store, Tuple, Subscript, Return
+    Store, Tuple, Return, Index, Subscript
 
 from astor import to_source
 from black import format_str, FileMode
@@ -170,10 +170,10 @@ def ast2argparse(ast, function_name='set_cli_args'):
                                                     value='\n    Set CLI arguments\n\n    '
                                                           ':param argument_parser: argument parser\n    '
                                                           ':type argument_parser: ```ArgumentParser```\n\n    '
-                                                          ':return: argument parser and return type\n    '
+                                                          ':return: argument_parser, {returns[doc]}\n    '
                                                           ':rtype: ```Tuple[ArgumentParser,'
-                                                          ' {return_type}]```\n    '.format(
-                                                        return_type=docstring_struct['returns']['typ']))),
+                                                          ' {returns[typ]}]```\n    '.format(
+                                                        returns=docstring_struct['returns']))),
                                 Assign(targets=[Attribute(attr='description',
                                                           ctx=Store(),
                                                           value=Name(ctx=Load(),
@@ -190,11 +190,8 @@ def ast2argparse(ast, function_name='set_cli_args'):
                                         elts=[
                                             Name(ctx=Load(),
                                                  id='argument_parser'),
-                                            Subscript(
-                                                ctx=Load(),
-                                                slice=parse(docstring_struct['returns']['typ']),
-                                                value=Name(ctx=Load(),
-                                                           id='Union'))]))],
+                                            parse(docstring_struct['returns']['typ']).body[0].value
+                                        ]))],
                        decorator_list=[],
                        name=function_name,
                        returns=None,
