@@ -172,7 +172,7 @@ def set_cli_args(argument_parser):
     :param argument_parser: argument parser
     :type argument_parser: ```ArgumentParser```
 
-    :return: argument parser and return type
+    :return: argument_parser, Train and tests dataset splits
     :rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]]```
     """
 
@@ -208,7 +208,7 @@ argparse_func_ast = FunctionDef(
                             value='\n    Set CLI arguments\n\n    '
                                   ':param argument_parser: argument parser\n    '
                                   ':type argument_parser: ```ArgumentParser```\n\n    '
-                                  ':return: argument parser and return type\n    '
+                                  ':return: argument_parser, Train and tests dataset splits\n    '
                                   ':rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset],'
                                   ' Tuple[np.ndarray, np.ndarray]]]```\n    ')),
         Assign(targets=[Attribute(attr='description',

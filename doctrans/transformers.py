@@ -5,7 +5,8 @@ from astor import to_source
 from black import format_str, FileMode
 
 from doctrans.info import parse_docstring
-from doctrans.utils import param2ast, tab, ast2docstring_structure, pp, param2argparse_param
+from doctrans.utils import param2ast, tab, class_ast2docstring_structure, param2argparse_param, pp, \
+    argparse_ast2docstring_structure
 
 
 def ast2file(ast, filename, mode='a', skip_black=False):
@@ -46,7 +47,7 @@ def docstring2ast(docstring, class_name='TargetClass', class_bases=('object',)):
     Converts a docstring to an AST
 
     :param docstring: docstring portion
-    :type docstring: ```str```
+    :type docstring: ```Union[str, Dict]```
 
     :param class_name: name of class
     :type class_name: ```str```
@@ -57,12 +58,14 @@ def docstring2ast(docstring, class_name='TargetClass', class_bases=('object',)):
     :return: Class AST of the docstring
     :rtype: ```ast.ClassDef```
     """
-    parsed = parse_docstring(docstring)
+    parsed = docstring if isinstance(docstring, dict) else parse_docstring(docstring)
 
     returns = 'returns' in parsed and 'name' in parsed['returns']
     if returns:
-        parsed['returns']['doc'] = parsed['returns']['name']
+        parsed['returns']['doc'] = parsed['returns'].get('doc', parsed['returns']['name'])
         parsed['returns']['name'] = 'return_type'
+
+    pp(parsed)
 
     return ClassDef(bases=[Name(ctx=Load(),
                                 id=base_class)
@@ -97,7 +100,7 @@ def ast2docstring(ast):
     :return: docstring
     :rtype: ```str```
     """
-    docstring_struct = ast2docstring_structure(ast)
+    docstring_struct = class_ast2docstring_structure(ast)
     return '''\n{description}\n\n{params}\n{returns}\n'''.format(
         description=docstring_struct['long_description'] or docstring_struct['short_description'],
         params='\n'.join(':param {param[name]}: {param[doc]}\n'
@@ -152,8 +155,7 @@ def class2docstring(class_string):
 
 
 def ast2argparse(ast, function_name='set_cli_args'):
-    docstring_struct = ast2docstring_structure(ast)
-    pp(docstring_struct)
+    docstring_struct = class_ast2docstring_structure(ast)
     return FunctionDef(args=arguments(args=[arg(annotation=None,
                                                 arg='argument_parser',
                                                 type_comment=None)],
@@ -197,3 +199,22 @@ def ast2argparse(ast, function_name='set_cli_args'):
                        name=function_name,
                        returns=None,
                        type_comment=None)
+
+
+def argparse2class(ast, class_name='TargetClass'):
+    """
+    Converts an argparse function to a class
+
+    :param ast: AST of argparse function
+    :type ast: ```FunctionDef```
+
+    :param class_name: class name
+    :type class_name: ```str```
+
+    :return: docstring
+    :rtype: ```str```
+    """
+    assert isinstance(ast, FunctionDef), 'Expected `FunctionDef` got: `{}`'.format(type(ast).__name__)
+    docstring_struct = argparse_ast2docstring_structure(ast)
+
+    return docstring2ast(docstring_struct)
