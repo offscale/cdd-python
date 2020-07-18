@@ -1,11 +1,11 @@
+import os
 from sys import version
 from unittest import TestCase, main as unittest_main
-from os import path
 
 from meta.asttools import cmp_ast, str_ast
 
 from doctrans.tests.mocks import docstring_str, class_ast, argparse_func_ast
-from doctrans.transformers import docstring2ast, ast2docstring, ast2argparse, ast2file, argparse2class
+from doctrans.transformers import docstring2ast, ast2docstring, ast2argparse, argparse2class, ast2file
 
 
 class TestParseDocstring(TestCase):
@@ -24,11 +24,12 @@ class TestParseDocstring(TestCase):
 
     def test_ast2argparse(self) -> None:
         gen_ast = ast2argparse(class_ast)
+        ast2file(gen_ast, os.path.join(os.path.dirname(__file__), 'delme.py'), skip_black=False)
         self.run_ast_test(gen_ast, gold=argparse_func_ast)
 
     def test_argparse2class(self) -> None:
         gen_ast = argparse2class(argparse_func_ast)
-        ast2file(gen_ast, path.join(path.dirname(__file__), 'delme.py'), skip_black=False)
+        # ast2file(gen_ast, path.join(path.dirname(__file__), 'delme.py'), skip_black=False)
         self.run_ast_test(gen_ast, gold=class_ast)
 
 

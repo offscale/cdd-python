@@ -245,6 +245,11 @@ def argparse_ast2docstring_structure(ast):
             elif (isinstance(e.value, Call) and len(e.value.args) == 1 and
                   isinstance(e.value.args[0], Constant) and
                   e.value.args[0].kind is None):
+                required = next(
+                    (keyword.value
+                     for keyword in e.value.keywords
+                     if keyword.arg == 'required'), Constant(value=False)
+                ).value
                 docstring_struct['params'].append({
                     'name': e.value.args[0].value[len('--'):],
                     'doc': next(keyword.value.value
@@ -252,7 +257,8 @@ def argparse_ast2docstring_structure(ast):
                                 if keyword.arg == 'help'
                                 ),
                     'typ':
-                        next(('Literal[{}]'.format(', '.join('"{}"'.format(elt.value)
+                        (lambda typ: 'Optional[{typ}]'.format(typ=typ) if required else typ)(
+                        typ=next(('Literal[{}]'.format(', '.join('"{}"'.format(elt.value)
                                                              for elt in keyword.value.elts))
                               for keyword in e.value.keywords
                               if keyword.arg == 'choices'
@@ -260,6 +266,7 @@ def argparse_ast2docstring_structure(ast):
                                        for keyword in e.value.keywords
                                        if keyword.arg == 'type'
                                        ), 'str'))
+                    )
                 })
         elif isinstance(e, Assign):
             if all((len(e.targets) == 1,
