@@ -2,15 +2,18 @@ from _ast import Module, ClassDef, Assign, Return
 from ast import AnnAssign, Load, Constant, Name, Store, Dict, parse, Expr, Call, keyword, Attribute, Tuple, Subscript, \
     Index
 from collections import OrderedDict, namedtuple
-from itertools import takewhile
 from pprint import PrettyPrinter
+from typing import Any
 
 from astor import to_source
+from meta.asttools import print_ast
+
+from doctrans.info import parse_docstring
 
 pp = PrettyPrinter(indent=4).pprint
 tab = ' ' * 4
 
-simple_types = {'int': 0, float: .0, 'str': '', 'bool': True}
+simple_types = {'int': 0, float: .0, 'str': '', 'bool': False}
 
 
 def param2ast(param):
@@ -23,7 +26,6 @@ def param2ast(param):
     :return: ast node (AnnAssign)
     :rtype: ```AnnAssign```
     """
-    # print('param', param, ';')
     if param['typ'] in simple_types:
         return AnnAssign(annotation=Name(ctx=Load(),
                                          id=param['typ']),
@@ -31,30 +33,22 @@ def param2ast(param):
                          target=Name(ctx=Store(),
                                      id=param['name']),
                          value=Constant(kind=None,
-                                        value=simple_types[param['typ']]))
-    elif param['typ'] == 'dict':
-        return AnnAssign(annotation=Name(ctx=Load(),
-                                         id=param['typ']),
-                         simple=1,
-                         target=Name(ctx=Store(),
-                                     id=param['name']),
-                         value=Dict(keys=[],
-                                    values=[]))
-    elif param['typ'].startswith('*'):
+                                        value=param.get('default', simple_types[param['typ']])))
+    elif param['typ'] == 'dict' or param['typ'].startswith('*'):
         return AnnAssign(annotation=Name(ctx=Load(),
                                          id='dict'),
                          simple=1,
                          target=Name(ctx=Store(),
                                      id=param['name']),
                          value=Dict(keys=[],
-                                    values=[]))
+                                    values=param.get('default', [])))
     else:
         return AnnAssign(annotation=parse(param['typ']).body[0].value,
                          simple=1,
                          target=Name(ctx=Store(),
                                      id=param['name']),
                          value=Constant(kind=None,
-                                        value=None))
+                                        value=param.get('default')))
 
 
 def to_class_def(ast):
@@ -68,7 +62,9 @@ def to_class_def(ast):
     :rtype: ```ast.ClassDef```
     """
     if isinstance(ast, Module):
-        classes = tuple(e for e in ast.body if isinstance(e, ClassDef))
+        classes = tuple(e
+                        for e in ast.body
+                        if isinstance(e, ClassDef))
         if len(classes) > 1:  # We can filter by name I guess? - Or convert every one?
             raise NotImplementedError()
         elif len(classes) > 0:
@@ -105,7 +101,10 @@ def class_ast2docstring_structure(ast):
             name, _, doc = line.rpartition(':')
             name = name.replace(':param ', '')
             key = 'returns' if name == 'return_type' else 'params'
-            docstring_struct[key][name] = {'doc': doc.lstrip(), 'typ': None}
+            docstring_struct[key][name] = {
+                'doc': doc.lstrip(),
+                'typ': None
+            }
         elif docstring_struct[key]:
             docstring_struct[key][name]['doc'] += line
         else:
@@ -233,41 +232,71 @@ def argparse_ast2docstring_structure(ast):
     :return: docstring structure
     :rtype: ```dict```
     """
-    docstring_struct = {'params': []}
+    docstring_struct = {'params': [], 'long_description': '', 'short_description': ''}
     for e in ast.body:
         if isinstance(e, Expr):
             if isinstance(e.value, Constant):
                 if e.value.kind is not None:
                     raise NotImplementedError('kind')
-                docstring_struct['short_description'] = '\n'.join(
-                    takewhile(lambda l: not l.lstrip().startswith(':param'),
-                              e.value.value.split('\n'))).strip()
+                docstring_struct['short_description'] = ''
+                # '\n'.join(
+                #    takewhile(lambda l: not l.lstrip().startswith(':param'),
+                #              e.value.value.split('\n'))).strip()
             elif (isinstance(e.value, Call) and len(e.value.args) == 1 and
                   isinstance(e.value.args[0], Constant) and
                   e.value.args[0].kind is None):
                 required = next(
-                    (keyword.value
+                    (keyword
                      for keyword in e.value.keywords
                      if keyword.arg == 'required'), Constant(value=False)
                 ).value
+
+                def handle_value(value):
+                    if isinstance(value, Attribute):
+                        return Any
+                    elif isinstance(value, Name):
+                        return 'dict' if value.id == 'loads' else value.id
+                    raise NotImplementedError(type(value).__name__)
+
+                typ = next((
+                    handle_value(keyword.value)
+                    for keyword in e.value.keywords
+                    if keyword.arg == 'type'
+                ), 'str')
+                name = e.value.args[0].value[len('--'):]
+                default = None
+                if name.endswith('kwargs'):
+                    default = {}
+                    required = True
+                elif default is None and typ in simple_types:
+                    if required:
+                        default = simple_types[typ]
+                    elif typ == 'bool':
+                        default = simple_types[typ]
+                        # required = True
+                        # print(e.value.args[0].value,
+                        #       '\t\trequired: {!r}'
+                        #       '\t\ttyp: {!r}'
+                        #       '\t\tdefault: {!r}'.format(required, typ, default))
                 docstring_struct['params'].append({
-                    'name': e.value.args[0].value[len('--'):],
-                    'doc': next(keyword.value.value
-                                for keyword in e.value.keywords
-                                if keyword.arg == 'help'
-                                ),
-                    'typ':
-                        (lambda typ: 'Optional[{typ}]'.format(typ=typ) if required else typ)(
-                        typ=next(('Literal[{}]'.format(', '.join('"{}"'.format(elt.value)
-                                                             for elt in keyword.value.elts))
-                              for keyword in e.value.keywords
-                              if keyword.arg == 'choices'
-                              ), next(('dict' if keyword.value.id == 'loads' else keyword.value.id
-                                       for keyword in e.value.keywords
-                                       if keyword.arg == 'type'
-                                       ), 'str'))
-                    )
+                    'name': name,
+                    'doc': next(
+                        key_word.value.value
+                        for key_word in e.value.keywords
+                        if key_word.arg == 'help'
+                    ),
+                    'typ': (lambda typ: typ if required else 'Optional[{typ}]'.format(typ=typ))(
+                        typ=next(
+                            ('Literal[{}]'.format(', '.join(elt.value if typ == Any else '"{}"'.format(elt.value)
+                                                            for elt in keyword.value.elts))
+                             for keyword in e.value.keywords
+                             if keyword.arg == 'choices'
+                             ), typ
+                        )
+                    ),
+                    'default': default
                 })
+            print_ast(e)
         elif isinstance(e, Assign):
             if all((len(e.targets) == 1,
                     isinstance(e.targets[0], Attribute),
@@ -275,7 +304,7 @@ def argparse_ast2docstring_structure(ast):
                     isinstance(e.targets[0].value, Name),
                     e.targets[0].value.id == 'argument_parser',
                     isinstance(e.value, Constant))):
-                docstring_struct['long_description'] = e.value.value
+                docstring_struct['short_description'] = e.value.value
         elif isinstance(e, Return) and isinstance(e.value, Tuple) and isinstance(e.value.elts[1], Subscript):
             docstring_struct['returns'] = {
                 'name': 'return_type',
@@ -285,9 +314,28 @@ def argparse_ast2docstring_structure(ast):
                             ),
                 'typ': to_source(e.value.elts[1]).replace('\n', '')
             }
-
+    pp(docstring_struct)
     return docstring_struct
 
 
+def docstring2docstring_structure(docstring):
+    """
+    Converts a docstring to an AST
+
+    :param docstring: docstring portion
+    :type docstring: ```Union[str, Dict]```
+
+    :return: Class AST of the docstring
+    :rtype: ```Tuple[dict, bool]```
+    """
+    parsed = docstring if isinstance(docstring, dict) else parse_docstring(docstring)
+    returns = 'returns' in parsed and 'name' in parsed['returns']
+    if returns:
+        parsed['returns']['doc'] = parsed['returns'].get('doc', parsed['returns']['name'])
+        parsed['returns']['name'] = 'return_type'
+    return parsed, returns
+
+
 __all__ = ['param2ast', 'pp', 'tab', 'to_class_def', 'param2argparse_param',
-           'class_ast2docstring_structure', 'argparse_ast2docstring_structure']
+           'class_ast2docstring_structure', 'argparse_ast2docstring_structure',
+           'docstring2docstring_structure']

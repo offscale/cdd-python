@@ -1,12 +1,11 @@
 from ast import parse, ClassDef, Name, Load, Constant, Expr, Module, FunctionDef, arguments, arg, Assign, Attribute, \
-    Store, Tuple, Return, Index, Subscript
+    Store, Tuple, Return
 
 from astor import to_source
 from black import format_str, FileMode
 
-from doctrans.info import parse_docstring
-from doctrans.utils import param2ast, tab, class_ast2docstring_structure, param2argparse_param, pp, \
-    argparse_ast2docstring_structure
+from doctrans.utils import param2ast, tab, class_ast2docstring_structure, param2argparse_param, \
+    argparse_ast2docstring_structure, docstring2docstring_structure
 
 
 def ast2file(ast, filename, mode='a', skip_black=False):
@@ -58,14 +57,7 @@ def docstring2ast(docstring, class_name='TargetClass', class_bases=('object',)):
     :return: Class AST of the docstring
     :rtype: ```ast.ClassDef```
     """
-    parsed = docstring if isinstance(docstring, dict) else parse_docstring(docstring)
-
-    returns = 'returns' in parsed and 'name' in parsed['returns']
-    if returns:
-        parsed['returns']['doc'] = parsed['returns'].get('doc', parsed['returns']['name'])
-        parsed['returns']['name'] = 'return_type'
-
-    pp(parsed)
+    parsed, returns = docstring2docstring_structure(docstring)
 
     return ClassDef(bases=[Name(ctx=Load(),
                                 id=base_class)
@@ -81,9 +73,7 @@ def docstring2ast(docstring, class_name='TargetClass', class_bases=('object',)):
                                      )
                                  )
                              ))
-                         ] + list(map(param2ast, parsed['params'])) + [
-                             param2ast(parsed['returns'])
-                         ] if parsed['returns'] else [],
+                         ] + list(map(param2ast, parsed['params'] + ([parsed['returns']] if parsed['returns'] else []))),
                     decorator_list=[],
                     keywords=[],
                     name=class_name
@@ -214,4 +204,4 @@ def argparse2class(ast, class_name='TargetClass'):
     assert isinstance(ast, FunctionDef), 'Expected `FunctionDef` got: `{}`'.format(type(ast).__name__)
     docstring_struct = argparse_ast2docstring_structure(ast)
 
-    return docstring2ast(docstring_struct)
+    return docstring2ast(docstring_struct, class_name=class_name)

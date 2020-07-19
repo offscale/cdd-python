@@ -4,7 +4,9 @@ from unittest import TestCase, main as unittest_main
 from meta.asttools import cmp_ast
 
 from doctrans.info import parse_docstring
-from doctrans.tests.mocks import class_str, class_ast, docstring_str
+from doctrans.tests.mocks.classes import class_str, class_ast
+from doctrans.tests.mocks.docstrings import docstring_str
+from doctrans.utils import pp
 
 
 class TestParseDocstring(TestCase):
@@ -21,7 +23,7 @@ class TestParseDocstring(TestCase):
                  ":param output_type: outgoing data_type, defaults to no conversion\n" \
                  ":type output_type: ```str```\n\n" \
                  ":param K: backend engine, e.g., `np` or `tf`\n" \
-                 ":type K: ```Optional[Literal[np, tf]]```\n\n" \
+                 ":type K: ```Union[np, tf]```\n\n" \
                  ":return: Dataset splits (by default, your train and test)\n" \
                  ":rtype: ```Tuple[np.ndarray, np.ndarray]```\n"
 
@@ -49,7 +51,7 @@ class TestParseDocstring(TestCase):
                                           'typ': 'str'},
                                          {'doc': 'backend engine, e.g., `np` or `tf`',
                                           'name': 'K',
-                                          'typ': 'Optional[Literal[np, tf]]'}],
+                                          'typ': 'Union[np, tf]'}],
                               'returns': {'name': 'Dataset splits (by default, your train and test)',
                                           'typ': 'Tuple[np.ndarray, np.ndarray]'},
                               'short_description': 'Load the data for your ML pipeline. Will be fed into '
@@ -70,10 +72,10 @@ class TestParseDocstring(TestCase):
                                           'typ': 'Optional[str]'},
                                          {'doc': 'backend engine, e.g., `np` or `tf`',
                                           'name': 'K',
-                                          'typ': 'Optional[Literal[np, tf]]'},
+                                          'typ': 'Union[np, tf]'},
                                          {'doc': 'Convert to numpy ndarrays',
                                           'name': 'as_numpy',
-                                          'typ': 'bool'},
+                                          'typ': 'Optional[bool]'},
                                          {'doc': 'pass this as arguments to data_loader function',
                                           'name': 'data_loader_kwargs',
                                           'typ': '**data_loader_kwargs'}],

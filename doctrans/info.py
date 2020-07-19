@@ -67,7 +67,7 @@ def reindent(string):
 
 def doc_to_type_doc(name, doc):
     doc = trim(doc).splitlines()
-    docs, typ = [], []
+    docs, typ, default = [], [], None
     for line in doc:
         if line.startswith(':type'):
             line = line[len(':type '):]
@@ -79,8 +79,11 @@ def doc_to_type_doc(name, doc):
         elif len(typ):
             typ.append(line)
         else:
-            docs.append(line)
-    return dict(doc='\n'.join(docs), **{'typ': '\n'.join(typ)} if len(typ) else {})
+            search_str = 'defaults to '
+            doc, _, default = (lambda parts: parts if parts[1] else line.partition(search_str.capitalize()))(line.partition(search_str))
+            docs.append(doc.rstrip())
+    return dict(doc='\n'.join(docs), **{'default': default} if default else {},
+                **{'typ': '\n'.join(typ)} if len(typ) else {})
 
 
 def parse_docstring(docstring):
