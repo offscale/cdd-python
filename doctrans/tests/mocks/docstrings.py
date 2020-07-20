@@ -1,23 +1,26 @@
 docstring_structure = {
-    'short_description': 'Acquire from the official tensorflow_datasets '
-                         'model zoo, or the ophthalmology focussed '
-                         'ml-prepare library',
+    'short_description': 'Acquire from the official tensorflow_datasets model '
+                         'zoo, or the ophthalmology focussed ml-prepare '
+                         'library',
     'long_description': '',
     'params': [
         {
             'default': 'mnist',
-            'doc': 'name of dataset.',
+            'doc': 'name of dataset. Defaults to mnist',
             'name': 'dataset_name',
             'typ': 'str'
         },
         {
             'default': '~/tensorflow_datasets',
-            'doc': 'directory to look for models in.',
+            'doc': 'directory to look for models in. Defaults to '
+                   '~/tensorflow_datasets',
             'name': 'tfds_dir',
             'typ': 'Optional[str]'
         },
         {
-            'doc': 'backend engine, e.g., `np` or `tf`',
+            'default': 'np',
+            'doc': 'backend engine, e.g., `np` or `tf`. Defaults to '
+                   'np',
             'name': 'K',
             'typ': 'Union[np, tf]'
         },
@@ -27,15 +30,13 @@ docstring_structure = {
             'typ': 'Optional[bool]'
         },
         {
-            'doc': 'pass this as arguments to data_loader '
-                   'function',
+            'doc': 'pass this as arguments to data_loader function',
             'name': 'data_loader_kwargs',
-            'typ': '**data_loader_kwargs'
+            'typ': 'dict'
         }
     ],
     'returns': {
         'doc': 'Train and tests dataset splits',
-        'name': 'return_type',
         'typ': 'Union[Tuple[tf.data.Dataset, tf.data.Dataset], '
                'Tuple[np.ndarray, np.ndarray]]'
     }

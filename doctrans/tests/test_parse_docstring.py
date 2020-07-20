@@ -6,7 +6,6 @@ from meta.asttools import cmp_ast
 from doctrans.info import parse_docstring
 from doctrans.tests.mocks.classes import class_str, class_ast
 from doctrans.tests.mocks.docstrings import docstring_str
-from doctrans.utils import pp
 
 
 class TestParseDocstring(TestCase):
@@ -22,7 +21,7 @@ class TestParseDocstring(TestCase):
                  ":type data_type: ```str```\n\n" \
                  ":param output_type: outgoing data_type, defaults to no conversion\n" \
                  ":type output_type: ```str```\n\n" \
-                 ":param K: backend engine, e.g., `np` or `tf`\n" \
+                 ":param K: backend engine, e.g., `np` or `tf`. Defaults to np\n" \
                  ":type K: ```Union[np, tf]```\n\n" \
                  ":return: Dataset splits (by default, your train and test)\n" \
                  ":rtype: ```Tuple[np.ndarray, np.ndarray]```\n"
@@ -50,6 +49,7 @@ class TestParseDocstring(TestCase):
                                           'name': 'output_type',
                                           'typ': 'str'},
                                          {'doc': 'backend engine, e.g., `np` or `tf`',
+                                          'default': 'np',
                                           'name': 'K',
                                           'typ': 'Union[np, tf]'}],
                               'returns': {'name': 'Dataset splits (by default, your train and test)',
@@ -66,12 +66,13 @@ class TestParseDocstring(TestCase):
                               'params': [{'doc': 'name of dataset',
                                           'name': 'dataset_name',
                                           'typ': 'str'},
-                                         {'doc': 'directory to look for models in. Default is '
+                                         {'doc': 'directory to look for models in. Defaults to '
                                                  '~/tensorflow_datasets.',
                                           'name': 'tfds_dir',
                                           'typ': 'Optional[str]'},
                                          {'doc': 'backend engine, e.g., `np` or `tf`',
                                           'name': 'K',
+                                          'default': 'np',
                                           'typ': 'Union[np, tf]'},
                                          {'doc': 'Convert to numpy ndarrays',
                                           'name': 'as_numpy',

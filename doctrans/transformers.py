@@ -4,8 +4,10 @@ from ast import parse, ClassDef, Name, Load, Constant, Expr, Module, FunctionDef
 from astor import to_source
 from black import format_str, FileMode
 
-from doctrans.utils import param2ast, tab, class_ast2docstring_structure, param2argparse_param, \
-    argparse_ast2docstring_structure, docstring2docstring_structure
+from doctrans.ast_utils import param2ast, param2argparse_param
+from doctrans.pure_utils import tab
+from doctrans.utils import class_ast2docstring_structure, argparse_ast2docstring_structure, \
+    docstring2docstring_structure
 
 
 def ast2file(ast, filename, mode='a', skip_black=False):
@@ -73,7 +75,8 @@ def docstring2ast(docstring, class_name='TargetClass', class_bases=('object',)):
                                      )
                                  )
                              ))
-                         ] + list(map(param2ast, parsed['params'] + ([parsed['returns']] if parsed['returns'] else []))),
+                         ] + list(
+                        map(param2ast, parsed['params'] + ([parsed['returns']] if parsed['returns'] else []))),
                     decorator_list=[],
                     keywords=[],
                     name=class_name

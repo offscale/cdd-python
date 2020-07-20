@@ -21,6 +21,8 @@
 import re
 import sys
 
+from doctrans.string_utils import extract_default
+
 PARAM_OR_RETURNS_REGEX = re.compile(":(?:param|returns?)")
 RETURNS_REGEX = re.compile(":returns?: (?P<doc>.*)", re.S)
 PARAM_REGEX = re.compile(r":param (?P<name>[\*\w]+): (?P<doc>.*?)"
@@ -79,11 +81,11 @@ def doc_to_type_doc(name, doc):
         elif len(typ):
             typ.append(line)
         else:
-            search_str = 'defaults to '
-            doc, _, default = (lambda parts: parts if parts[1] else line.partition(search_str.capitalize()))(line.partition(search_str))
-            docs.append(doc.rstrip())
+            doc, default = extract_default(line)
+            docs.append(doc)
     return dict(doc='\n'.join(docs), **{'default': default} if default else {},
-                **{'typ': '\n'.join(typ)} if len(typ) else {})
+                **{'typ': (lambda typ: 'dict' if typ.endswith('kwargs') else typ)('\n'.join(typ))}
+                if len(typ) else {})
 
 
 def parse_docstring(docstring):
@@ -137,7 +139,7 @@ def parse_docstring(docstring):
                             break
                         else:
                             r_dict['name'] += char
-                    r_dict['name'] = r_dict['name'].rstrip()
+                    r_dict['doc'] = r_dict.pop('name').rstrip()
                     returns = r_dict
 
     return {

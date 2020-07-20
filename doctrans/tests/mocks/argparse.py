@@ -18,10 +18,11 @@ def set_cli_args(argument_parser):
 
     argument_parser.add_argument('--dataset_name', type=str, help='name of dataset', required=True, default='mnist')
     argument_parser.add_argument('--tfds_dir', type=str,
-                                 help='directory to look for models in. Default is ~/tensorflow_datasets.')
+                                 help='directory to look for models in. Defaults to ~/tensorflow_datasets')
     argument_parser.add_argument('--K', type=globals().__getitem__,
                                  choices=('np', 'tf'),
-                                 help='backend engine, e.g., `np` or `tf`',
+                                 default='np',
+                                 help='backend engine, e.g., `np` or `tf`.',
                                  required=True)
     argument_parser.add_argument('--as_numpy', type=bool, help='Convert to numpy ndarrays')
     argument_parser.add_argument('--data_loader_kwargs', type=loads,
@@ -89,7 +90,7 @@ argparse_func_ast = FunctionDef(
                                   keyword(arg='help',
                                           value=Constant(kind=None,
                                                          value='directory to look for models in.'
-                                                               ' Default is ~/tensorflow_datasets.'))])),
+                                                               ' Defaults to ~/tensorflow_datasets'))])),
         Expr(value=Call(args=[Constant(kind=None,
                                        value='--K')],
                         func=Attribute(attr='add_argument',
@@ -112,6 +113,9 @@ argparse_func_ast = FunctionDef(
                                   keyword(arg='help',
                                           value=Constant(kind=None,
                                                          value='backend engine, e.g., `np` or `tf`')),
+                                  keyword(arg='default',
+                                          value=Constant(kind=None,
+                                                         value='np')),
                                   keyword(arg='required',
                                           value=Constant(kind=None,
                                                          value=True))])),
