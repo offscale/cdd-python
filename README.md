@@ -39,7 +39,7 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 :param dataset_name: name of dataset
 :type dataset_name: ```str```
 
-:param tfds_dir: directory to look for models in. Default is ~/tensorflow_datasets.
+:param tfds_dir: directory to look for models in. Defaults to ~/tensorflow_datasets
 :type tfds_dir: ```Optional[str]```
 
 :param K: backend engine, e.g., `np` or `tf`
@@ -62,7 +62,7 @@ class TargetClass(object):
     Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
 
     :cvar dataset_name: name of dataset
-    :cvar tfds_dir: directory to look for models in. Default is ~/tensorflow_datasets.
+    :cvar tfds_dir: directory to look for models in. Defaults to ~/tensorflow_datasets
     :cvar K: backend engine, e.g., `np` or `tf`
     :cvar as_numpy: Convert to numpy ndarrays
     :cvar data_loader_kwargs: pass this as arguments to data_loader function
