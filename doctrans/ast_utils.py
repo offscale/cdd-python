@@ -3,7 +3,9 @@ from _ast import AnnAssign, Name, Load, Store, Constant, Dict, Module, ClassDef,
 from ast import parse, Index
 from collections import namedtuple
 
-from doctrans.pure_utils import simple_types
+from meta.asttools import print_ast
+
+from doctrans.pure_utils import simple_types, pp
 
 
 def param2ast(param):
@@ -33,12 +35,48 @@ def param2ast(param):
                          value=Dict(keys=[],
                                     values=param.get('default', [])))
     else:
-        return AnnAssign(annotation=parse(param['typ']).body[0].value,
+        annotation = parse(param['typ']).body[0].value
+
+        def determine_quoting(node):
+            if isinstance(node, Subscript) and isinstance(node.value, Name):
+                if node.value.id == 'Optional':
+                    return determine_quoting(node.slice.value)
+                elif node.value.id == 'Union':
+                    if all(True
+                           for elt in node.slice.value.elts
+                           if isinstance(elt, Subscript)):
+                        return any(determine_quoting(elt)
+                                   for elt in node.slice.value.elts)
+                    return any(True
+                               for elt in node.slice.value.elts
+                               if elt.id == 'str')
+                elif node.value.id == 'Tuple':
+                    # print_ast(node)
+                    return any(determine_quoting(elt)
+                               for elt in node.slice.value.elts)
+                else:
+                    raise NotImplementedError(node.value.id)
+            elif isinstance(node, Name):
+                return node.id == 'str'
+            elif isinstance(node, Attribute):
+                return determine_quoting(node.value)
+            else:
+                raise NotImplementedError(type(node).__name__)
+
+        if param.get('default') and not determine_quoting(annotation):
+            print('quotes not needed for', param['name'])
+            value = Name(ctx=Load(),
+                     id=param.get('default'))
+        else:
+            print('quotes needed for', param['name'])
+            value = Constant(kind=None,
+                             value=param.get('default'))
+
+        return AnnAssign(annotation=annotation,
                          simple=1,
                          target=Name(ctx=Store(),
                                      id=param['name']),
-                         value=Constant(kind=None,
-                                        value=param.get('default')))
+                         value=value)
 
 
 def to_class_def(ast):

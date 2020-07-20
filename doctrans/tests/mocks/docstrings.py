@@ -12,15 +12,13 @@ docstring_structure = {
         },
         {
             'default': '~/tensorflow_datasets',
-            'doc': 'directory to look for models in. Defaults to '
-                   '~/tensorflow_datasets',
+            'doc': 'directory to look for models in. Defaults to ~/tensorflow_datasets',
             'name': 'tfds_dir',
             'typ': 'Optional[str]'
         },
         {
             'default': 'np',
-            'doc': 'backend engine, e.g., `np` or `tf`. Defaults to '
-                   'np',
+            'doc': 'backend engine, e.g., `np` or `tf`. Defaults to np',
             'name': 'K',
             'typ': 'Union[np, tf]'
         },
@@ -36,7 +34,8 @@ docstring_structure = {
         }
     ],
     'returns': {
-        'doc': 'Train and tests dataset splits',
+        'doc': 'Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))',
+        'default': '(np.empty(0), np.empty(0))',
         'typ': 'Union[Tuple[tf.data.Dataset, tf.data.Dataset], '
                'Tuple[np.ndarray, np.ndarray]]'
     }
@@ -60,6 +59,6 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 :param data_loader_kwargs: pass this as arguments to data_loader function
 :type data_loader_kwargs: ```**data_loader_kwargs```
 
-:return: Train and tests dataset splits
+:return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """

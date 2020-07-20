@@ -61,26 +61,27 @@ def docstring2ast(docstring, class_name='TargetClass', class_bases=('object',)):
     """
     parsed, returns = docstring2docstring_structure(docstring)
 
-    return ClassDef(bases=[Name(ctx=Load(),
-                                id=base_class)
-                           for base_class in class_bases],
-                    body=[
-                             Expr(value=Constant(
-                                 kind=None,
-                                 value='\n    {description}\n\n{cvars}'.format(
-                                     description=parsed['long_description'] or parsed['short_description'],
-                                     cvars='\n'.join(
-                                         '{tab}:cvar {param[name]}: {param[doc]}'.format(tab=tab, param=param)
-                                         for param in parsed['params'] + ([parsed['returns']] if returns else [])
-                                     )
-                                 )
-                             ))
-                         ] + list(
-                        map(param2ast, parsed['params'] + ([parsed['returns']] if parsed['returns'] else []))),
-                    decorator_list=[],
-                    keywords=[],
-                    name=class_name
-                    )
+    return ClassDef(
+        bases=[Name(ctx=Load(),
+                    id=base_class)
+               for base_class in class_bases],
+        body=[
+                 Expr(value=Constant(
+                     kind=None,
+                     value='\n    {description}\n\n{cvars}'.format(
+                         description=parsed['long_description'] or parsed['short_description'],
+                         cvars='\n'.join(
+                             '{tab}:cvar {param[name]}: {param[doc]}'.format(tab=tab, param=param)
+                             for param in parsed['params'] + ([parsed['returns']] if returns else [])
+                         )
+                     )
+                 ))
+             ] + list(
+            map(param2ast, parsed['params'] + ([parsed['returns']] if parsed['returns'] else []))),
+        decorator_list=[],
+        keywords=[],
+        name=class_name
+    )
 
 
 def ast2docstring(ast):
@@ -206,5 +207,6 @@ def argparse2class(ast, class_name='TargetClass'):
     """
     assert isinstance(ast, FunctionDef), 'Expected `FunctionDef` got: `{}`'.format(type(ast).__name__)
     docstring_struct = argparse_ast2docstring_structure(ast)
-
+    if 'returns' in docstring_struct:
+        docstring_struct['returns']['name'] = 'return_type'
     return docstring2ast(docstring_struct, class_name=class_name)
