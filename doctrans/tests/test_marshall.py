@@ -33,7 +33,7 @@ class TestParseDocstring(TestCase):
 
     def test_argparse2class(self) -> None:
         gen_ast = argparse2class(argparse_func_ast)
-        ast2file(gen_ast, os.path.join(os.path.dirname(__file__), 'delme.py'), skip_black=False)
+        ast2file(gen_ast, os.path.join(os.path.dirname(__file__), 'delme.py'), skip_black=True)
         self.run_ast_test(gen_ast, gold=class_ast)
 
 

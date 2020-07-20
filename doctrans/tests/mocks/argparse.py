@@ -1,5 +1,5 @@
 from ast import FunctionDef, arguments, arg, Expr, Constant, Assign, Store, \
-    Attribute, Name, Load, Call, keyword, Return, Tuple, Subscript, Index
+    Attribute, Name, Load, Call, keyword, Return, Tuple
 
 argparse_func_str = '''
 def set_cli_args(argument_parser):
@@ -28,7 +28,7 @@ def set_cli_args(argument_parser):
     argument_parser.add_argument('--data_loader_kwargs', type=loads,
                                  help='pass this as arguments to data_loader function')
 
-    return argument_parser, Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]
+    return argument_parser, (np.empty(0), np.empty(0))
 '''
 
 argparse_func_ast = FunctionDef(
@@ -46,19 +46,19 @@ argparse_func_ast = FunctionDef(
                             value='\n    Set CLI arguments\n\n    '
                                   ':param argument_parser: argument parser\n    '
                                   ':type argument_parser: ```ArgumentParser```\n\n    '
-                                  ':return: argument_parser, Train and tests dataset splits\n    '
+                                  ':return: argument_parser, Train and tests dataset splits\n'
+                                  '    '
                                   ':rtype: ```Tuple[ArgumentParser,'
-                                  ' Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]]```'
-                                  '\n    ')),
+                                  ' Union[Tuple[tf.data.Dataset, tf.data.Dataset],'
+                                  ' Tuple[np.ndarray, np.ndarray]]]```\n    ')),
         Assign(targets=[Attribute(attr='description',
                                   ctx=Store(),
                                   value=Name(ctx=Load(),
                                              id='argument_parser'))],
                type_comment=None,
-               value=Constant(
-                   kind=None,
-                   value='Acquire from the official tensorflow_datasets model zoo,'
-                         ' or the ophthalmology focussed ml-prepare library')),
+               value=Constant(kind=None,
+                              value='Acquire from the official tensorflow_datasets model zoo,'
+                                    ' or the ophthalmology focussed ml-prepare library')),
         Expr(value=Call(args=[Constant(kind=None,
                                        value='--dataset_name')],
                         func=Attribute(attr='add_argument',
@@ -76,8 +76,7 @@ argparse_func_ast = FunctionDef(
                                                          value=True)),
                                   keyword(arg='default',
                                           value=Constant(kind=None,
-                                                         value='mnist'))
-                                  ])),
+                                                         value='mnist'))])),
         Expr(value=Call(args=[Constant(kind=None,
                                        value='--tfds_dir')],
                         func=Attribute(attr='add_argument',
@@ -89,8 +88,9 @@ argparse_func_ast = FunctionDef(
                                                      id='str')),
                                   keyword(arg='help',
                                           value=Constant(kind=None,
-                                                         value='directory to look for models in.'
-                                                               ' Defaults to ~/tensorflow_datasets'))])),
+                                                         value='directory to look for'
+                                                               ' models in. Defaults'
+                                                               ' to ~/tensorflow_datasets'))])),
         Expr(value=Call(args=[Constant(kind=None,
                                        value='--K')],
                         func=Attribute(attr='add_argument',
@@ -110,12 +110,13 @@ argparse_func_ast = FunctionDef(
                                                                      value='np'),
                                                             Constant(kind=None,
                                                                      value='tf')])),
-                                  keyword(arg='help',
-                                          value=Constant(kind=None,
-                                                         value='backend engine, e.g., `np` or `tf`')),
                                   keyword(arg='default',
                                           value=Constant(kind=None,
                                                          value='np')),
+                                  keyword(arg='help',
+                                          value=Constant(kind=None,
+                                                         value='backend engine, '
+                                                               'e.g., `np` or `tf`.')),
                                   keyword(arg='required',
                                           value=Constant(kind=None,
                                                          value=True))])),
@@ -137,65 +138,32 @@ argparse_func_ast = FunctionDef(
                                        ctx=Load(),
                                        value=Name(ctx=Load(),
                                                   id='argument_parser')),
-                        keywords=[
-                            keyword(arg='type',
-                                    value=Name(ctx=Load(),
-                                               id='loads')),
-                            keyword(arg='help',
-                                    value=Constant(kind=None,
-                                                   value='pass this as arguments to data_loader function'))
-                        ])),
-        Return(
-            value=Tuple(
-                ctx=Load(),
-                elts=[
-                    Name(ctx=Load(),
-                         id='argument_parser'),
-                    Subscript(
-                        ctx=Load(),
-                        slice=Index(value=Tuple(ctx=Load(),
-                                                elts=[
-                                                    Subscript(ctx=Load(),
-                                                              slice=Index(value=Tuple(
-                                                                  ctx=Load(),
-                                                                  elts=[
-                                                                      Attribute(
-                                                                          attr='Dataset',
-                                                                          ctx=Load(),
-                                                                          value=Attribute(
-                                                                              attr='data',
-                                                                              ctx=Load(),
-                                                                              value=Name(ctx=Load(),
-                                                                                         id='tf'))),
-                                                                      Attribute(
-                                                                          attr='Dataset',
-                                                                          ctx=Load(),
-                                                                          value=Attribute(
-                                                                              attr='data',
-                                                                              ctx=Load(),
-                                                                              value=Name(ctx=Load(),
-                                                                                         id='tf')))])),
-                                                              value=Name(ctx=Load(),
-                                                                         id='Tuple')),
-                                                    Subscript(
-                                                        ctx=Load(),
-                                                        slice=Index(value=Tuple(
-                                                            ctx=Load(),
-                                                            elts=[
-                                                                Attribute(
-                                                                    attr='ndarray',
-                                                                    ctx=Load(),
-                                                                    value=Name(ctx=Load(),
-                                                                               id='np')),
-                                                                Attribute(
-                                                                    attr='ndarray',
-                                                                    ctx=Load(),
-                                                                    value=Name(ctx=Load(),
-                                                                               id='np'))])),
-                                                        value=Name(ctx=Load(),
-                                                                   id='Tuple'))])),
-                        value=Name(ctx=Load(),
-                                   id='Union'))]))],
+                        keywords=[keyword(arg='type',
+                                          value=Name(ctx=Load(),
+                                                     id='loads')),
+                                  keyword(arg='help',
+                                          value=Constant(kind=None,
+                                                         value='pass this as arguments'
+                                                               ' to data_loader function'))])),
+        Return(value=Tuple(ctx=Load(),
+                           elts=[Name(ctx=Load(),
+                                      id='argument_parser'),
+                                 Tuple(ctx=Load(),
+                                       elts=[Call(args=[Constant(kind=None,
+                                                                 value=0)],
+                                                  func=Attribute(attr='empty',
+                                                                 ctx=Load(),
+                                                                 value=Name(ctx=Load(),
+                                                                            id='np')),
+                                                  keywords=[]),
+                                             Call(args=[Constant(kind=None,
+                                                                 value=0)],
+                                                  func=Attribute(attr='empty',
+                                                                 ctx=Load(),
+                                                                 value=Name(ctx=Load(),
+                                                                            id='np')),
+                                                  keywords=[])])]))
+    ],
     decorator_list=[],
     name='set_cli_args',
     returns=None,

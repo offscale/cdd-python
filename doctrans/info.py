@@ -21,6 +21,7 @@
 import re
 import sys
 
+from doctrans.pure_utils import pp
 from doctrans.string_utils import extract_default
 
 PARAM_OR_RETURNS_REGEX = re.compile(":(?:param|returns?)")
@@ -140,6 +141,8 @@ def parse_docstring(docstring):
                         else:
                             r_dict['name'] += char
                     r_dict['doc'] = r_dict.pop('name').rstrip()
+                    doc, default = extract_default(r_dict['doc'])
+                    r_dict['default'] = default
                     returns = r_dict
 
     return {
