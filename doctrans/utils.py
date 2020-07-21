@@ -3,11 +3,10 @@ from collections import OrderedDict
 from typing import Any
 
 from astor import to_source
-from meta.asttools import print_ast
 
 from doctrans.ast_utils import to_class_def
 from doctrans.info import parse_docstring
-from doctrans.pure_utils import simple_types, pp
+from doctrans.pure_utils import simple_types
 from doctrans.string_utils import extract_default
 
 
