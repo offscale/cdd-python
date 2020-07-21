@@ -21,7 +21,6 @@
 import re
 import sys
 
-from doctrans.pure_utils import pp
 from doctrans.string_utils import extract_default
 
 PARAM_OR_RETURNS_REGEX = re.compile(":(?:param|returns?)")

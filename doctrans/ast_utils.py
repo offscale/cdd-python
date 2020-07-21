@@ -2,7 +2,7 @@ from _ast import AnnAssign, Name, Load, Store, Constant, Dict, Module, ClassDef,
     Attribute, keyword
 from ast import parse, walk
 
-from doctrans.pure_utils import simple_types, pp
+from doctrans.pure_utils import simple_types
 from doctrans.string_utils import extract_default
 
 
@@ -67,8 +67,6 @@ def param2ast(param):
             value = Constant(kind=None,
                              value=param.get('default'))
 
-        if 'name' not in param:
-            pp(param)
         return AnnAssign(
             annotation=annotation,
             simple=1,
