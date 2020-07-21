@@ -21,6 +21,7 @@
 import re
 import sys
 
+from doctrans.pure_utils import pp
 from doctrans.string_utils import extract_default
 
 PARAM_OR_RETURNS_REGEX = re.compile(":(?:param|returns?)")
@@ -67,7 +68,17 @@ def reindent(string):
     return '\n'.join(line.strip() for line in string.strip().split('\n'))
 
 
-def doc_to_type_doc(name, doc):
+def doc_to_type_doc(name, doc, with_default_doc=True):
+    """
+    :param name: name
+    :type name: ```str```
+
+    :param doc: doc
+    :type doc: ```str```
+
+    :param with_default_doc: Help/docstring should include 'With default' text
+    :type with_default_doc: ```bool``
+    """
     doc = trim(doc).splitlines()
     docs, typ, default = [], [], None
     for line in doc:
@@ -81,15 +92,21 @@ def doc_to_type_doc(name, doc):
         elif len(typ):
             typ.append(line)
         else:
-            doc, default = extract_default(line)
+            doc, default = extract_default(line, with_default_doc=with_default_doc)
             docs.append(doc)
     return dict(doc='\n'.join(docs), **{'default': default} if default else {},
                 **{'typ': (lambda typ: 'dict' if typ.endswith('kwargs') else typ)('\n'.join(typ))}
                 if len(typ) else {})
 
 
-def parse_docstring(docstring):
+def parse_docstring(docstring, with_default_doc=True):
     """Parse the docstring into its components.
+
+    :param docstring: the docstring
+    :type docstring: ```str```
+
+    :param with_default_doc: Help/docstring should include 'With default' text
+    :type with_default_doc: ```bool``
 
     :returns: a dictionary of form
               {
@@ -98,6 +115,7 @@ def parse_docstring(docstring):
                   'params': [{'name': ..., 'doc': ..., 'typ': ...}, ...],
                   "returns': {'name': ..., 'typ': ...}
               }
+    :rtype ```dict```
     """
 
     short_description = long_description = returns = ""
@@ -130,7 +148,7 @@ def parse_docstring(docstring):
                 if match:
                     returns = reindent(match.group('doc'))
                 if returns:
-                    r_dict = {'name': ''}
+                    r_dict = {'doc': ''}
                     for idx, char in enumerate(returns):
                         if char == ':':
                             r_dict['typ'] = returns[idx + len(':rtype:'):].strip()
@@ -138,10 +156,15 @@ def parse_docstring(docstring):
                                 r_dict['typ'] = r_dict['typ'][3:-3]
                             break
                         else:
-                            r_dict['name'] += char
-                    r_dict['doc'] = r_dict.pop('name').rstrip()
-                    doc, default = extract_default(r_dict['doc'])
-                    r_dict['default'] = default
+                            r_dict['doc'] += char
+                    r_dict['doc'] = r_dict['doc'].rstrip('\n').rstrip('.')
+                    doc, default = extract_default(r_dict['doc'], with_default_doc=with_default_doc)
+                    r_dict.update({
+                        'doc': doc,
+                        'default': default
+                    })
+                    if not r_dict.get('default', True):
+                        del r_dict['default']
                     returns = r_dict
 
     return {

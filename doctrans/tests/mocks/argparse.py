@@ -9,25 +9,33 @@ def set_cli_args(argument_parser):
     :param argument_parser: argument parser
     :type argument_parser: ```ArgumentParser```
 
-    :return: argument_parser, Train and tests dataset splits
+    :return: argument_parser, Train and tests dataset splits.
     :rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]]```
     """
-
-    argument_parser.description = 'Acquire from the official tensorflow_datasets model zoo, ' \
-                                  'or the ophthalmology focussed ml-prepare library'
-
-    argument_parser.add_argument('--dataset_name', type=str, help='name of dataset', required=True, default='mnist')
-    argument_parser.add_argument('--tfds_dir', type=str,
-                                 help='directory to look for models in. Defaults to ~/tensorflow_datasets')
-    argument_parser.add_argument('--K', type=globals().__getitem__,
-                                 choices=('np', 'tf'),
-                                 default='np',
-                                 help='backend engine, e.g., `np` or `tf`.',
-                                 required=True)
+    argument_parser.description = (
+        'Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library'
+    )
+    argument_parser.add_argument(
+        '--dataset_name', type=str, help='name of dataset.', required=True, default='mnist'
+    )
+    argument_parser.add_argument(
+        '--tfds_dir',
+        type=str,
+        help='directory to look for models in.',
+        default='~/tensorflow_datasets',
+    )
+    argument_parser.add_argument(
+        '--K',
+        type=globals().__getitem__,
+        choices=('np', 'tf'),
+        help='backend engine, e.g., `np` or `tf`.',
+        required=True,
+        default='np',
+    )
     argument_parser.add_argument('--as_numpy', type=bool, help='Convert to numpy ndarrays')
-    argument_parser.add_argument('--data_loader_kwargs', type=loads,
-                                 help='pass this as arguments to data_loader function')
-
+    argument_parser.add_argument(
+        '--data_loader_kwargs', type=loads, help='pass this as arguments to data_loader function'
+    )
     return argument_parser, (np.empty(0), np.empty(0))
 '''
 
@@ -46,8 +54,7 @@ argparse_func_ast = FunctionDef(
                             value='\n    Set CLI arguments\n\n    '
                                   ':param argument_parser: argument parser\n    '
                                   ':type argument_parser: ```ArgumentParser```\n\n    '
-                                  ':return: argument_parser, Train and tests dataset splits\n'
-                                  '    '
+                                  ':return: argument_parser, Train and tests dataset splits.\n    '
                                   ':rtype: ```Tuple[ArgumentParser,'
                                   ' Union[Tuple[tf.data.Dataset, tf.data.Dataset],'
                                   ' Tuple[np.ndarray, np.ndarray]]]```\n    ')),
@@ -70,7 +77,7 @@ argparse_func_ast = FunctionDef(
                                                      id='str')),
                                   keyword(arg='help',
                                           value=Constant(kind=None,
-                                                         value='name of dataset')),
+                                                         value='name of dataset.')),
                                   keyword(arg='required',
                                           value=Constant(kind=None,
                                                          value=True)),
@@ -88,9 +95,10 @@ argparse_func_ast = FunctionDef(
                                                      id='str')),
                                   keyword(arg='help',
                                           value=Constant(kind=None,
-                                                         value='directory to look for'
-                                                               ' models in. Defaults'
-                                                               ' to ~/tensorflow_datasets'))])),
+                                                         value='directory to look for models in.')),
+                                  keyword(arg='default',
+                                          value=Constant(kind=None,
+                                                         value='~/tensorflow_datasets'))])),
         Expr(value=Call(args=[Constant(kind=None,
                                        value='--K')],
                         func=Attribute(attr='add_argument',
@@ -110,16 +118,15 @@ argparse_func_ast = FunctionDef(
                                                                      value='np'),
                                                             Constant(kind=None,
                                                                      value='tf')])),
-                                  keyword(arg='default',
-                                          value=Constant(kind=None,
-                                                         value='np')),
                                   keyword(arg='help',
                                           value=Constant(kind=None,
-                                                         value='backend engine, '
-                                                               'e.g., `np` or `tf`.')),
+                                                         value='backend engine, e.g., `np` or `tf`.')),
                                   keyword(arg='required',
                                           value=Constant(kind=None,
-                                                         value=True))])),
+                                                         value=True)),
+                                  keyword(arg='default',
+                                          value=Constant(kind=None,
+                                                         value='np'))])),
         Expr(value=Call(args=[Constant(kind=None,
                                        value='--as_numpy')],
                         func=Attribute(attr='add_argument',
@@ -143,8 +150,7 @@ argparse_func_ast = FunctionDef(
                                                      id='loads')),
                                   keyword(arg='help',
                                           value=Constant(kind=None,
-                                                         value='pass this as arguments'
-                                                               ' to data_loader function'))])),
+                                                         value='pass this as arguments to data_loader function'))])),
         Return(value=Tuple(ctx=Load(),
                            elts=[Name(ctx=Load(),
                                       id='argument_parser'),
@@ -162,8 +168,7 @@ argparse_func_ast = FunctionDef(
                                                                  ctx=Load(),
                                                                  value=Name(ctx=Load(),
                                                                             id='np')),
-                                                  keywords=[])])]))
-    ],
+                                                  keywords=[])])]))],
     decorator_list=[],
     name='set_cli_args',
     returns=None,

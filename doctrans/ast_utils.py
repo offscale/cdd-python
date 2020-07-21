@@ -1,9 +1,9 @@
 from _ast import AnnAssign, Name, Load, Store, Constant, Dict, Module, ClassDef, Subscript, Tuple, Expr, Call, \
     Attribute, keyword
-from ast import parse, Index
-from collections import namedtuple
+from ast import parse, walk
 
-from doctrans.pure_utils import simple_types
+from doctrans.pure_utils import simple_types, pp
+from doctrans.string_utils import extract_default
 
 
 def param2ast(param):
@@ -49,7 +49,6 @@ def param2ast(param):
                                for elt in node.slice.value.elts
                                if elt.id == 'str')
                 elif node.value.id == 'Tuple':
-                    # print_ast(node)
                     return any(determine_quoting(elt)
                                for elt in node.slice.value.elts)
                 else:
@@ -68,6 +67,8 @@ def param2ast(param):
             value = Constant(kind=None,
                              value=param.get('default'))
 
+        if 'name' not in param:
+            pp(param)
         return AnnAssign(
             annotation=annotation,
             simple=1,
@@ -103,73 +104,48 @@ def to_class_def(ast):
         raise NotImplementedError(type(ast).__name__)
 
 
-def param2argparse_param(param):
+def param2argparse_param(param, with_default_doc=True):
     """
     Converts a param to an Expr `argparse.add_argument` call
 
     :param param: Param dict
     :type param: ```dict```
 
+    :param with_default_doc: Help/docstring should include 'With default' text
+    :type with_default_doc: ```bool``
+
     :return: argparse.add_argument
     :rtype: ```Expr```
     """
-    choices, required = None, False
+    typ, choices, required = 'str', None, True
     if param['typ'] in simple_types:
         typ = param['typ']
+    elif param['typ'] == 'dict':
+        typ = 'loads'
+        required = not param['name'].endswith('kwargs')
     else:
         parsed_type = parse(param['typ']).body[0]
 
-        Param = namedtuple('Param', ('required', 'typ', 'choices'))
+        for node in walk(parsed_type):
+            if isinstance(node, Tuple):
+                maybe_choices = tuple(elt.id
+                                      for elt in node.elts
+                                      if isinstance(elt, Name))
+                if len(maybe_choices) == len(node.elts):
+                    choices = maybe_choices
+            elif isinstance(node, Name):
+                if node.id == 'Optional':
+                    required = False
+                elif node.id in simple_types:
+                    typ = node.id
+                elif node.id in frozenset(('Union',)):
+                    pass
+                else:
+                    typ = 'globals().__getitem__'
 
-        def handle_name(node):
-            assert isinstance(node, Name), 'Expected `Name` got `{}`'.format(type(node).__name__)
-            if node.id == 'dict':
-                _typ = 'loads'
-            else:
-                _typ = node.id
+    doc, _default = extract_default(param['doc'], with_default_doc=with_default_doc)
+    default = param.get('default', _default)
 
-            return Param(
-                required=False,
-                typ=_typ,
-                choices=None
-            )
-
-        def handle_subscript(node):
-            assert isinstance(node, Subscript), 'Expected `Subscript` got `{}`'.format(type(node).__name__)
-            _choices = None
-            _typ = 'str'
-            if isinstance(node.slice, Index):
-                if isinstance(node.slice.value, Subscript):
-                    if isinstance(node.slice.value.value, Name):
-                        if node.slice.value.value.id in frozenset(('Literal', 'Union')):
-                            if isinstance(node.slice, Index):
-                                if isinstance(node.slice.value, Subscript):
-                                    if isinstance(node.slice.value.slice.value, Tuple):
-                                        _choices = tuple(node.id
-                                                         for node in node.slice.value.slice.value.elts
-                                                         if isinstance(node, Name))
-                                        _typ = 'str'  # Convert later?
-
-            return Param(
-                required=node.value.id == 'Optional',
-                typ=_typ,
-                choices=_choices
-            )
-
-        if isinstance(parsed_type.value, Name):
-            required, typ, choices = handle_name(parsed_type.value)
-        elif isinstance(parsed_type.value.slice.value, Name):
-            required, typ, choices = handle_name(parsed_type.value.value)
-            required = parsed_type.value.value.id != 'Optional'  # TODO: Check for `None` in a `Union`
-            typ = parsed_type.value.slice.value.id
-            # if parsed_type.value.slice.value.id in simple_types:
-            #    typ = parsed_type.value.slice.value.id
-            # else:
-            #    typ = None
-        elif isinstance(parsed_type.value, Subscript):
-            required, typ, choices = handle_subscript(parsed_type.value)
-        else:
-            raise NotImplementedError(type(parsed_type.value).__name__)
     return Expr(
         value=Call(args=[Constant(kind=None,
                                   value='--{param[name]}'.format(param=param))],
@@ -178,9 +154,18 @@ def param2argparse_param(param):
                                   value=Name(ctx=Load(),
                                              id='argument_parser')),
                    keywords=list(filter(None, (
-                       keyword(arg='type',
-                               value=Name(ctx=Load(),
-                                          id=typ)),
+                       keyword(
+                           arg='type',
+                           value=Attribute(
+                               attr='__getitem__',
+                               ctx=Load(),
+                               value=Call(args=[],
+                                          func=Name(ctx=Load(),
+                                                    id='globals'),
+                                          keywords=[])
+                           ) if typ == 'globals().__getitem__'
+                           else Name(ctx=Load(), id=typ)
+                       ),
                        choices if choices is None
                        else keyword(arg='choices',
                                     value=Tuple(ctx=Load(),
@@ -189,9 +174,13 @@ def param2argparse_param(param):
                                                       for choice in choices])),
                        keyword(arg='help',
                                value=Constant(kind=None,
-                                              value=param['doc'])),
+                                              value=doc)),
                        keyword(arg='required',
                                value=Constant(kind=None,
-                                              value=True)) if required else None
+                                              value=True)) if required else None,
+                       default if default is None
+                       else keyword(arg='default',
+                                    value=Constant(kind=None,
+                                                   value=default))
                    ))))
     )

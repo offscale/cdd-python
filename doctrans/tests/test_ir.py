@@ -1,9 +1,8 @@
 from unittest import TestCase, main as unittest_main
 
-from doctrans.pure_utils import pp
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import class_ast
-from doctrans.tests.mocks.docstrings import docstring_structure, docstring_str
+from doctrans.tests.mocks.docstrings import docstring_structure, docstring_str, docstring_structure_no_default_doc
 from doctrans.utils import class_ast2docstring_structure, argparse_ast2docstring_structure, \
     docstring2docstring_structure
 
@@ -13,10 +12,9 @@ class TestIntermediateRepresentation(TestCase):
 
     def test_argparse_ast2docstring_structure(self):
         self.assertDictEqual(argparse_ast2docstring_structure(argparse_func_ast),
-                             docstring_structure)
+                             docstring_structure_no_default_doc)
 
     def test_class_ast2docstring_structure(self):
-        pp(class_ast2docstring_structure(class_ast))
         self.assertDictEqual(class_ast2docstring_structure(class_ast),
                              docstring_structure)
 

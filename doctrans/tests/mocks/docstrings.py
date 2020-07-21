@@ -1,3 +1,7 @@
+from copy import deepcopy
+
+from doctrans.string_utils import remove_defaults_from_docstring_structure
+
 docstring_structure = {
     'short_description': 'Acquire from the official tensorflow_datasets model '
                          'zoo, or the ophthalmology focussed ml-prepare '
@@ -40,6 +44,10 @@ docstring_structure = {
                'Tuple[np.ndarray, np.ndarray]]'
     }
 }
+
+docstring_structure_no_default_doc = remove_defaults_from_docstring_structure(
+    deepcopy(docstring_structure)
+)
 
 docstring_str = """
 Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
