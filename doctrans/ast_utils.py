@@ -3,9 +3,7 @@ from _ast import AnnAssign, Name, Load, Store, Constant, Dict, Module, ClassDef,
 from ast import parse, Index
 from collections import namedtuple
 
-from meta.asttools import print_ast
-
-from doctrans.pure_utils import simple_types, pp
+from doctrans.pure_utils import simple_types
 
 
 def param2ast(param):
@@ -64,19 +62,19 @@ def param2ast(param):
                 raise NotImplementedError(type(node).__name__)
 
         if param.get('default') and not determine_quoting(annotation):
-            print('quotes not needed for', param['name'])
-            value = Name(ctx=Load(),
-                     id=param.get('default'))
+            value = parse(param['default']).body[0].value if 'default' in param \
+                else Name(ctx=Load(), id=None)
         else:
-            print('quotes needed for', param['name'])
             value = Constant(kind=None,
                              value=param.get('default'))
 
-        return AnnAssign(annotation=annotation,
-                         simple=1,
-                         target=Name(ctx=Store(),
-                                     id=param['name']),
-                         value=value)
+        return AnnAssign(
+            annotation=annotation,
+            simple=1,
+            target=Name(ctx=Store(),
+                        id=param['name']),
+            value=value
+        )
 
 
 def to_class_def(ast):

@@ -18,8 +18,10 @@ class TargetClass(object):
     K: Union[np, tf] = np
     as_numpy: Optional[bool] = None
     data_loader_kwargs: dict = {}
-    return_type: Union[Tuple[tf.data.Dataset, tf.data.Dataset],
-                       Tuple[np.ndarray, np.ndarray]] = np.empty(0), np.empty(0)
+    return_type: Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]] = (
+        np.empty(0),
+        np.empty(0),
+    )
 '''
 
 class_ast = ClassDef(
