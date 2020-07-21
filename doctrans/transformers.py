@@ -8,7 +8,7 @@ from black import format_str, FileMode
 from doctrans.ast_utils import param2ast, param2argparse_param
 from doctrans.pure_utils import tab
 from doctrans.string_utils import extract_default
-from doctrans.utils import class_ast2docstring_structure, argparse_ast2docstring_structure, \
+from doctrans.common import class_def2docstring_structure, argparse_ast2docstring_structure, \
     docstring2docstring_structure
 
 
@@ -16,7 +16,7 @@ def ast2file(ast, filename, mode='a', skip_black=False):
     """
     Convert AST to a file
 
-    :param ast: Constructed object of the `ast` class, usually an `ast.Module`
+    :param ast: Constructed object of the `class_def` class, usually an `ast.Module`
     :type ast: ```Union[Module, ClassDef, FunctionDef]```
 
     :param filename: emit to this file
@@ -45,8 +45,8 @@ def ast2file(ast, filename, mode='a', skip_black=False):
         f.write(src)
 
 
-def docstring2ast(docstring, class_name='TargetClass',
-                  class_bases=('object',), with_default_doc=True):
+def docstring2class_def(docstring, class_name='TargetClass',
+                        class_bases=('object',), with_default_doc=True):
     """
     Converts a docstring to an AST
 
@@ -93,12 +93,12 @@ def docstring2ast(docstring, class_name='TargetClass',
     )
 
 
-def ast2docstring(ast, with_default_doc=True):
+def class_def2docstring(class_def, with_default_doc=True):
     """
     Converts an AST to a docstring
 
-    :param ast: Class AST or Module AST
-    :type ast: ```Union[ast.Module, ast.ClassDef]```
+    :param class_def: Class AST or Module AST with a ClassDef inside
+    :type class_def: ```Union[ast.Module, ast.ClassDef]```
 
     :param with_default_doc: Help/docstring should include 'With default' text
     :type with_default_doc: ```bool``
@@ -106,7 +106,7 @@ def ast2docstring(ast, with_default_doc=True):
     :return: docstring
     :rtype: ```str```
     """
-    docstring_struct = class_ast2docstring_structure(ast, with_default_doc=with_default_doc)
+    docstring_struct = class_def2docstring_structure(class_def, with_default_doc=with_default_doc)
     return '''\n{description}\n\n{params}\n{returns}\n'''.format(
         description=docstring_struct['long_description'] or docstring_struct['short_description'],
         params='\n'.join(':param {param[name]}: {param[doc]}\n'
@@ -128,16 +128,16 @@ def str2ast(python_source_str, filename='<unknown>', mode='exec',
     :param python_source_str: class definition as a str
     :type python_source_str: ```str```
 
-    :param filename: filename for ast.parse
+    :param filename: filename for class_def.parse
     :type filename: ```str```
 
-    :param mode: `mode` for `ast.parse`, defaults to 'exec'
+    :param mode: `mode` for `class_def.parse`, defaults to 'exec'
     :type mode: ```str```
 
-    :param type_comments: `type_comments` for `ast.parse`, defaults to False
+    :param type_comments: `type_comments` for `class_def.parse`, defaults to False
     :type type_comments: ```bool```
 
-    :param feature_version: `feature_version` for `ast.parse`, defaults to None
+    :param feature_version: `feature_version` for `class_def.parse`, defaults to None
     :type feature_version: ```Optional[Tuple[int, int]]```
 
     :return: Class AST
@@ -160,7 +160,7 @@ def class2docstring(class_string, with_default_doc=True):
     :return: docstring
     :rtype: ```str```
     """
-    return ast2docstring(str2ast(class_string, with_default_doc=with_default_doc), with_default_doc=with_default_doc)
+    return class_def2docstring(str2ast(class_string, with_default_doc=with_default_doc), with_default_doc=with_default_doc)
 
 
 def ast2argparse(ast, function_name='set_cli_args', with_default_doc=False):
@@ -175,7 +175,7 @@ def ast2argparse(ast, function_name='set_cli_args', with_default_doc=False):
     :param with_default_doc: Help/docstring should include 'With default' text
     :type with_default_doc: ```bool``
     """
-    docstring_struct = class_ast2docstring_structure(ast, with_default_doc=with_default_doc)
+    docstring_struct = class_def2docstring_structure(ast, with_default_doc=with_default_doc)
     doc, _default = extract_default(docstring_struct['returns']['doc'],
                                     with_default_doc=with_default_doc)
     docstring_struct['returns']['doc'] = doc
@@ -242,4 +242,4 @@ def argparse2class(ast, class_name='TargetClass', with_default_doc=True):
     docstring_struct = argparse_ast2docstring_structure(ast, with_default_doc=with_default_doc)
     if 'returns' in docstring_struct:
         docstring_struct['returns']['name'] = 'return_type'
-    return docstring2ast(docstring_struct, class_name=class_name, with_default_doc=with_default_doc)
+    return docstring2class_def(docstring_struct, class_name=class_name, with_default_doc=with_default_doc)

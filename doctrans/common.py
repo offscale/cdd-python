@@ -6,17 +6,17 @@ from typing import Any
 from astor import to_source
 
 from doctrans.ast_utils import to_class_def
-from doctrans.info import parse_docstring
+from doctrans.rest_docstring_parser import parse_docstring
 from doctrans.pure_utils import simple_types
 from doctrans.string_utils import extract_default
 
 
-def class_ast2docstring_structure(ast, with_default_doc=True):
+def class_def2docstring_structure(class_def, with_default_doc=True):
     """
     Converts an AST to a docstring structure
 
-    :param ast: Class AST or Module AST
-    :type ast: ```Union[ast.Module, ast.ClassDef]```
+    :param class_def: Class AST or Module AST with a ClassDef inside
+    :type class_def: ```Union[Module, ClassDef]```
 
     :param with_default_doc: Help/docstring should include 'With default' text
     :type with_default_doc: ```bool``
@@ -24,7 +24,7 @@ def class_ast2docstring_structure(ast, with_default_doc=True):
     :return: docstring structure
     :rtype: ```dict```
     """
-    ast = to_class_def(ast)
+    class_def = to_class_def(class_def)
     docstring_struct = {
         'short_description': '',
         'long_description': '',
@@ -33,7 +33,7 @@ def class_ast2docstring_structure(ast, with_default_doc=True):
     }
     name, key = None, 'params'
     for line in filter(None, map(lambda l: l.lstrip(),
-                                 ast.body[0].value.value.replace(':cvar', ':param').split('\n'))):
+                                 class_def.body[0].value.value.replace(':cvar', ':param').split('\n'))):
         if line.startswith(':param'):
             name, _, doc = line.rpartition(':')
             name = name.replace(':param ', '')
@@ -47,18 +47,27 @@ def class_ast2docstring_structure(ast, with_default_doc=True):
         else:
             docstring_struct['short_description'] += line
 
-    for e in filter(lambda _e: isinstance(_e, AnnAssign), ast.body[1:]):
+    for e in filter(lambda _e: isinstance(_e, AnnAssign), class_def.body[1:]):
         name = e.target.id
         docstring_struct['returns' if name == 'return_type' else 'params'][name]['typ'] = \
             e.annotation.id if isinstance(e.annotation, Name) else to_source(e.annotation).rstrip()
 
-    def interpolate_defaults(d):
-        if 'doc' in d:
-            doc, default = extract_default(d['doc'], with_default_doc=with_default_doc)
-            d['doc'] = doc
+    def interpolate_defaults(param):
+        """
+        Correctly set the 'default' and 'doc' parameters
+
+        :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'required': ... }
+        :type param: ```dict```
+
+        :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+        :rtype: ```dict```
+        """
+        if 'doc' in param:
+            doc, default = extract_default(param['doc'], with_default_doc=with_default_doc)
+            param['doc'] = doc
             if default:
-                d['default'] = default
-        return d
+                param['default'] = default
+        return param
 
     docstring_struct['params'] = [
         dict(name=k, **interpolate_defaults(v))
@@ -71,12 +80,12 @@ def class_ast2docstring_structure(ast, with_default_doc=True):
     return docstring_struct
 
 
-def argparse_ast2docstring_structure(ast, with_default_doc=False):
+def argparse_ast2docstring_structure(function_def, with_default_doc=False):
     """
     Converts an AST to a docstring structure
 
-    :param ast: AST of argparse function
-    :type ast: ```FunctionDef``
+    :param function_def: AST of argparse function
+    :type function_def: ```FunctionDef``
 
     :param with_default_doc: Help/docstring should include 'With default' text
     :type with_default_doc: ```bool``
@@ -85,15 +94,15 @@ def argparse_ast2docstring_structure(ast, with_default_doc=False):
     :rtype: ```dict```
     """
     docstring_struct = {'short_description': '', 'long_description': '', 'params': []}
-    _docstring_struct = parse_docstring(get_docstring(ast), with_default_doc=with_default_doc)
-    for e in ast.body:
+    _docstring_struct = parse_docstring(get_docstring(function_def), with_default_doc=with_default_doc)
+    for e in function_def.body:
         if isinstance(e, Expr):
             if isinstance(e.value, Constant):
                 if e.value.kind is not None:
                     raise NotImplementedError('kind')
                 # docstring_struct['short_description'] = '\n'.join(
                 #     takewhile(lambda l: not l.lstrip().startswith(':param'),
-                #               e.value.value.split('\n'))).strip()
+                #               expr.value.value.split('\n'))).strip()
             elif (isinstance(e.value, Call) and len(e.value.args) == 1 and
                   isinstance(e.value.args[0], Constant) and
                   e.value.args[0].kind is None):
@@ -112,7 +121,7 @@ def argparse_ast2docstring_structure(ast, with_default_doc=False):
                     # 'name': 'return_type',
                     'doc': next(
                         line.partition(',')[2].lstrip()
-                        for line in ast.body[0].value.value.split('\n')
+                        for line in function_def.body[0].value.value.split('\n')
                         if line.lstrip().startswith(':return')
                     ),
                     'typ': to_source(e.value.elts[1]).replace('\n', '')
@@ -121,7 +130,7 @@ def argparse_ast2docstring_structure(ast, with_default_doc=False):
                 default = to_source(e.value.elts[1]).replace('\n', '')
                 doc = next(
                     line.partition(',')[2].lstrip()
-                    for line in ast.body[0].value.value.split('\n')
+                    for line in function_def.body[0].value.value.split('\n')
                     if line.lstrip().startswith(':return')
                 )
                 if not with_default_doc:
@@ -147,15 +156,15 @@ def argparse_ast2docstring_structure(ast, with_default_doc=False):
     return docstring_struct
 
 
-def parse_out_param(e, with_default_doc=True):
+def parse_out_param(expr, with_default_doc=True):
     """
-    Turns the ast repr of '--dataset_name', type=str, help='name of dataset.', required=True, default='mnist'
+    Turns the class_def repr of '--dataset_name', type=str, help='name of dataset.', required=True, default='mnist'
       into
           {'name': 'dataset_name', 'typ': 'str', doc='name of dataset.',
            'required': True, 'default': 'mnist'}
 
-    :param e: Expr
-    :type e: ```Expr```
+    :param expr: Expr
+    :type expr: ```Expr```
 
     :param with_default_doc: Help/docstring should include 'With default' text
     :type with_default_doc: ```bool``
@@ -164,27 +173,36 @@ def parse_out_param(e, with_default_doc=True):
     """
     required = next(
         (keyword
-         for keyword in e.value.keywords
+         for keyword in expr.value.keywords
          if keyword.arg == 'required'),
         Constant(value=False)
     ).value
 
-    def handle_value(value):
-        if isinstance(value, Attribute):
+    def handle_value(node):
+        """
+        Handle keyword.value types, returning the correct one as a `str` or `Any`
+
+        :param node: AST node from keyword.value
+        :type node: ```Union[Attribute, Name]```
+
+        :returns: `str` or `Any`, representing the type for argparse
+        :rtype: ```Union[str, Any]```
+        """
+        if isinstance(node, Attribute):
             return Any
-        elif isinstance(value, Name):
-            return 'dict' if value.id == 'loads' else value.id
-        raise NotImplementedError(type(value).__name__)
+        elif isinstance(node, Name):
+            return 'dict' if node.id == 'loads' else node.id
+        raise NotImplementedError(type(node).__name__)
 
     typ = next((
         handle_value(keyword.value)
-        for keyword in e.value.keywords
+        for keyword in expr.value.keywords
         if keyword.arg == 'type'
     ), 'str')
-    name = e.value.args[0].value[len('--'):]
+    name = expr.value.args[0].value[len('--'):]
     default = next(
         (key_word.value.value
-         for key_word in e.value.keywords
+         for key_word in expr.value.keywords
          if key_word.arg == 'default'),
         None
     )
@@ -199,7 +217,7 @@ def parse_out_param(e, with_default_doc=True):
         )
     )(next(
         key_word.value.value
-        for key_word in e.value.keywords
+        for key_word in expr.value.keywords
         if key_word.arg == 'help'
     ))
     if default is None:
@@ -221,7 +239,7 @@ def parse_out_param(e, with_default_doc=True):
                 ('Union[{}]'.format(', '.join(elt.value if typ == Any
                                               else '"{}"'.format(elt.value)
                                               for elt in keyword.value.elts))
-                 for keyword in e.value.keywords
+                 for keyword in expr.value.keywords
                  if keyword.arg == 'choices'
                  ), typ
             )
@@ -240,7 +258,7 @@ def docstring2docstring_structure(docstring, with_default_doc=True):
     :param with_default_doc: Help/docstring should include 'With default' text
     :type with_default_doc: ```bool``
 
-    :return: Class AST of the docstring
+    :return: docstring_structure, whether it returns or not
     :rtype: ```Tuple[dict, bool]```
     """
     parsed = docstring if isinstance(docstring, dict) \
@@ -252,6 +270,6 @@ def docstring2docstring_structure(docstring, with_default_doc=True):
     return parsed, returns
 
 
-__all__ = ['class_ast2docstring_structure',
+__all__ = ['class_def2docstring_structure',
            'argparse_ast2docstring_structure',
            'docstring2docstring_structure']

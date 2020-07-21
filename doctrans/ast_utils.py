@@ -10,10 +10,10 @@ def param2ast(param):
     """
     Converts a param to an AnnAssign
 
-    :param param: dictionary of shape {'typ': str, 'name': str, 'doc': str}
+    :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :type param: ```dict```
 
-    :return: ast node (AnnAssign)
+    :return: AST node (AnnAssign)
     :rtype: ```AnnAssign```
     """
     if param['typ'] in simple_types:
@@ -36,6 +36,15 @@ def param2ast(param):
         annotation = parse(param['typ']).body[0].value
 
         def determine_quoting(node):
+            """
+            Determine whether the input needs to be quoted
+
+            :param node: AST node
+            :type node: ```Union[Subscript, Tuple, Name, Attribute]```
+
+            :returns: True if input needs quoting
+            :rtype: ```bool```
+            """
             if isinstance(node, Subscript) and isinstance(node.value, Name):
                 if node.value.id == 'Optional':
                     return determine_quoting(node.slice.value)
@@ -95,7 +104,7 @@ def to_class_def(ast):
         elif len(classes) > 0:
             return classes[0]
         else:
-            raise TypeError('No ClassDef in ast')
+            raise TypeError('No ClassDef in AST')
     elif isinstance(ast, ClassDef):
         return ast
     else:
@@ -106,13 +115,13 @@ def param2argparse_param(param, with_default_doc=True):
     """
     Converts a param to an Expr `argparse.add_argument` call
 
-    :param param: Param dict
+    :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :type param: ```dict```
 
     :param with_default_doc: Help/docstring should include 'With default' text
     :type with_default_doc: ```bool``
 
-    :return: argparse.add_argument
+    :return: `argparse.add_argument` call—with arguments—as an AST node
     :rtype: ```Expr```
     """
     typ, choices, required = 'str', None, True
