@@ -41,7 +41,11 @@ jobs:
                     git config --global user.name "$author"
                     git config --global user.email "$email"
                     if git diff --name-only --diff-filter='M' | grep -qF '.github/doccoverage.svg'; then
-                        git add .github/doccoverage.svg;
+                        echo 'surprise fail'
+                        git status
+                        git diff --name-only
+                    else
+                        git add .github/doccoverage.svg
                         git commit -m '[.github/doccoverage.svg] Updated documentation coverage'
                         git push origin master
                     fi
