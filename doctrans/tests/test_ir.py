@@ -8,8 +8,6 @@ from doctrans.utils import class_ast2docstring_structure, argparse_ast2docstring
 
 
 class TestIntermediateRepresentation(TestCase):
-    maxDiff = 2500
-
     def test_argparse_ast2docstring_structure(self):
         self.assertDictEqual(argparse_ast2docstring_structure(argparse_func_ast),
                              docstring_structure_no_default_doc)
