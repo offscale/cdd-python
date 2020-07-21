@@ -1,7 +1,7 @@
 doctrans
 ========
 ![Python version range](https://img.shields.io/badge/python-3.8-blue.svg)
-[![Linting & testing](https://github.com/SamuelMarks/doctrans/workflows/Linting%20&%20testing/badge.svg)](https://github.com/SamuelMarks/doctrans/actions)
+[![Linting, testing, and coverage](https://github.com/SamuelMarks/doctrans/workflows/Linting%2C+testing%2C+and+coverage/badge.svg)](https://github.com/SamuelMarks/doctrans/actions)
 ![Documentation coverage](.github/doccoverage.svg)
 
 Translate between docstrings, classes, and argparse.
