@@ -1,3 +1,6 @@
+"""
+Tests for docstring parsing
+"""
 from unittest import TestCase, main as unittest_main
 
 from doctrans.rest_docstring_parser import parse_docstring

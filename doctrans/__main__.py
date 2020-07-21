@@ -1,5 +1,9 @@
 # !/usr/bin/env python
 
+"""
+`__main__` implementation, can be run directly or with `python -m doctrans`
+"""
+
 from argparse import ArgumentParser
 from os import path
 
@@ -7,6 +11,12 @@ from doctrans import __version__
 
 
 def _build_parser():
+    """
+    Parser builder
+
+    :returns: instanceof ArgumentParser
+    :rtype: ```ArgumentParser```
+    """
     parser = ArgumentParser(
         prog='python -m doctrans',
         description='Translate between docstrings, classes, and argparse'

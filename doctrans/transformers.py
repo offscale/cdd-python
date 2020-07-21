@@ -1,3 +1,7 @@
+"""
+Transform from string or AST representations of input, to AST, file, or str output.
+"""
+
 from ast import parse, ClassDef, Name, Load, Constant, Expr, Module, FunctionDef, arguments, arg, Assign, Attribute, \
     Store, Tuple, Return
 from functools import partial
@@ -7,8 +11,8 @@ from black import format_str, FileMode
 
 from doctrans.ast_utils import param2ast, param2argparse_param
 from doctrans.pure_utils import tab
-from doctrans.string_utils import extract_default
-from doctrans.common import class_def2docstring_structure, argparse_ast2docstring_structure, \
+from doctrans.defaults_utils import extract_default
+from doctrans.docstring_structure_utils import class_def2docstring_structure, argparse_ast2docstring_structure, \
     docstring2docstring_structure
 
 

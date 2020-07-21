@@ -1,3 +1,9 @@
+"""
+ReST docstring parser.
+Translates from the [ReST docstring format (Sphinx)](
+  https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html#the-sphinx-docstring-format)
+"""
+
 # Stolen from https://raw.githubusercontent.com/openstack/rally/ab365e9/rally/common/plugin/info.py
 #
 # New things:
@@ -23,7 +29,7 @@
 import re
 import sys
 
-from doctrans.string_utils import extract_default
+from doctrans.defaults_utils import extract_default
 
 PARAM_OR_RETURNS_REGEX = re.compile(":(?:param|returns?)")
 RETURNS_REGEX = re.compile(":returns?: (?P<doc>.*)", re.S)

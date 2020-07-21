@@ -1,6 +1,10 @@
+"""
+Tests for the Intermediate Representation
+"""
+
 from unittest import TestCase, main as unittest_main
 
-from doctrans.common import class_def2docstring_structure, argparse_ast2docstring_structure, \
+from doctrans.docstring_structure_utils import class_def2docstring_structure, argparse_ast2docstring_structure, \
     docstring2docstring_structure
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import class_ast

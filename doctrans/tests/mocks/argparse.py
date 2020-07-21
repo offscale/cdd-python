@@ -1,3 +1,7 @@
+"""
+Mocks for the argparse function
+"""
+
 from ast import FunctionDef, arguments, arg, Expr, Constant, Assign, Store, \
     Attribute, Name, Load, Call, keyword, Return, Tuple
 

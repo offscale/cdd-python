@@ -1,3 +1,7 @@
+"""
+Mocks for the `class`
+"""
+
 from ast import ClassDef, Name, Load, Expr, Constant, AnnAssign, \
     Store, Subscript, Tuple, Dict, Attribute, Index, Call
 

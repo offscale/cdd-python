@@ -1,3 +1,7 @@
+"""
+Tests for AST equality
+"""
+
 from unittest import TestCase, main as unittest_main
 
 from doctrans.tests.mocks.argparse import argparse_func_str, argparse_func_ast

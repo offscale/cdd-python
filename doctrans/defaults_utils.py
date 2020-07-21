@@ -1,3 +1,8 @@
+"""
+Functions to handle default parameterisation
+"""
+
+
 def extract_default(line, with_default_doc=True):
     """
     Extract the a tuple of (doc, default) from a doc line
