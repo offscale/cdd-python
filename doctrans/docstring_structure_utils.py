@@ -1,3 +1,7 @@
+"""
+Functions which produce docstring_structure from various different inputs
+"""
+
 from ast import Assign, Return, AnnAssign, Constant, Name, Expr, Call, Attribute, Tuple, Subscript, parse, \
     get_docstring
 from collections import OrderedDict
@@ -8,7 +12,7 @@ from astor import to_source
 from doctrans.ast_utils import to_class_def
 from doctrans.rest_docstring_parser import parse_docstring
 from doctrans.pure_utils import simple_types
-from doctrans.string_utils import extract_default
+from doctrans.defaults_utils import extract_default
 
 
 def class_def2docstring_structure(class_def, with_default_doc=True):
@@ -169,6 +173,7 @@ def parse_out_param(expr, with_default_doc=True):
     :param with_default_doc: Help/docstring should include 'With default' text
     :type with_default_doc: ```bool``
 
+    :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :rtype ```dict```
     """
     required = next(

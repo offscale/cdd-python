@@ -1,6 +1,10 @@
+"""
+Mocks for docstrings
+"""
+
 from copy import deepcopy
 
-from doctrans.string_utils import remove_defaults_from_docstring_structure
+from doctrans.defaults_utils import remove_defaults_from_docstring_structure
 
 docstring_structure = {
     'short_description': 'Acquire from the official tensorflow_datasets model '

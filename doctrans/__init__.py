@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Root __init__
+"""
 
 import logging
 from logging.config import dictConfig as _dictConfig

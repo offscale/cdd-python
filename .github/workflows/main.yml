@@ -30,3 +30,17 @@ jobs:
             -   name: Test with unittest
                 run: |
                     python setup.py test
+            -   name: Doc coverage
+                run: |
+                    pip install interrogate
+                    interrogate --generate-badge '.github/doccoverage.svg'
+                    sed -i 's/interrogate/doc coverage/g' .github/doccoverage.svg
+                    email_author="$(git log -1 --pretty=format:'%an <%ce>')"
+                    author="${email_author% *}"
+                    email="${email_author#*<}"; email="${email::-1}"
+                    git config --global user.name "$author"
+                    git config --global user.email "$email"
+                    if git diff --name-only --diff-filter='M' | grep -qF '.github/doccoverage.svg'; then
+                        git add .github/doccoverage.svg;
+                        git commit -am '[.github/doccoverage.svg] Updated documentation coverage'
+                    fi

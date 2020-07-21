@@ -1,9 +1,11 @@
-from _ast import AnnAssign, Name, Load, Store, Constant, Dict, Module, ClassDef, Subscript, Tuple, Expr, Call, \
-    Attribute, keyword
-from ast import parse, walk
+"""
+ast_utils, bunch of helpers for converting input into ast.* output
+"""
+from ast import AnnAssign, Name, Load, Store, Constant, Dict, Module, ClassDef, Subscript, Tuple, Expr, Call, \
+    Attribute, keyword, parse, walk
 
 from doctrans.pure_utils import simple_types
-from doctrans.string_utils import extract_default
+from doctrans.defaults_utils import extract_default
 
 
 def param2ast(param):
