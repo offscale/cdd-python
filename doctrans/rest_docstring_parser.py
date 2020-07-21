@@ -2,6 +2,8 @@
 #
 # New things:
 # - `doc_to_type_doc` function definition and call
+# - Added docstrings
+# - Handled default parameters
 #
 # Copyright 2015: Mirantis Inc.
 # All Rights Reserved.
@@ -30,7 +32,15 @@ PARAM_REGEX = re.compile(r":param (?P<name>[\*\w]+): (?P<doc>.*?)"
 
 
 def trim(docstring):
-    """trim function from PEP-257"""
+    """
+    trim function from PEP-257
+
+    :param docstring: the docstring
+    :type docstring: ```str```
+
+    :return: Trimmed input
+    :rtype ```str```
+    """
     if not docstring:
         return ""
     # Convert tabs to spaces (following the normal Python rules)
@@ -63,12 +73,23 @@ def trim(docstring):
     return '\n'.join(trimmed)
 
 
-def reindent(string):
-    return '\n'.join(line.strip() for line in string.strip().split('\n'))
+def reindent(s):
+    """
+    Reindent the input string
+
+    :param s: input string
+    :type s: ```str```
+
+    :return: reindented—and stripped—string
+    :rtype: ```str```
+    """
+    return '\n'.join(line.strip() for line in s.strip().split('\n'))
 
 
 def doc_to_type_doc(name, doc, with_default_doc=True):
     """
+    Convert input string to default and type (if those are present)
+
     :param name: name
     :type name: ```str```
 
@@ -77,6 +98,9 @@ def doc_to_type_doc(name, doc, with_default_doc=True):
 
     :param with_default_doc: Help/docstring should include 'With default' text
     :type with_default_doc: ```bool``
+
+    :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    :rtype: ```dict```
     """
     doc = trim(doc).splitlines()
     docs, typ, default = [], [], None
@@ -111,8 +135,8 @@ def parse_docstring(docstring, with_default_doc=True):
               {
                   'short_description': ...,
                   'long_description': ...,
-                  'params': [{'name': ..., 'doc': ..., 'typ': ...}, ...],
-                  "returns': {'name': ..., 'typ': ...}
+                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+                  "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
               }
     :rtype ```dict```
     """
@@ -175,18 +199,34 @@ def parse_docstring(docstring, with_default_doc=True):
 
 
 class InfoMixin(object):
+    """ InfoMixin. Attach to your `class`. """
 
     @classmethod
     def _get_doc(cls):
         """Return documentary of class
 
-        By default it returns docstring of class, but it can be overridden
+        :param cls: this class
+        :type cls: ```InfoMixin```
+
+        :returns: By default it returns docstring of class, but it can be overridden
         for example for cases like merging own docstring with parent
+        :rtype: ```dict```
         """
         return cls.__doc__
 
     @classmethod
     def get_info(cls):
+        """
+        Provide docstring info
+
+        :param cls: this class
+        :type cls: ```InfoMixin```
+
+        :returns: dict of shape {'name': ..., 'platform': ...,
+            'module': ..., 'title': ..., 'description': ...,
+            'parameters': ..., 'schema': ...,'returns': ...}
+        :rtype: ```dict```
+        """
         doc = parse_docstring(cls._get_doc())
 
         return {
