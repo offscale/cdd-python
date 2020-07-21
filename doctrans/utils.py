@@ -1,4 +1,5 @@
-from ast import Assign, Return, AnnAssign, Constant, Name, Expr, Call, Attribute, Tuple, Subscript, parse
+from ast import Assign, Return, AnnAssign, Constant, Name, Expr, Call, Attribute, Tuple, Subscript, parse, \
+    get_docstring
 from collections import OrderedDict
 from typing import Any
 
@@ -10,12 +11,15 @@ from doctrans.pure_utils import simple_types
 from doctrans.string_utils import extract_default
 
 
-def class_ast2docstring_structure(ast):
+def class_ast2docstring_structure(ast, with_default_doc=True):
     """
     Converts an AST to a docstring structure
 
     :param ast: Class AST or Module AST
     :type ast: ```Union[ast.Module, ast.ClassDef]```
+
+    :param with_default_doc: Help/docstring should include 'With default' text
+    :type with_default_doc: ```bool``
 
     :return: docstring structure
     :rtype: ```dict```
@@ -50,50 +54,50 @@ def class_ast2docstring_structure(ast):
 
     def interpolate_defaults(d):
         if 'doc' in d:
-            doc, default = extract_default(d['doc'])
+            doc, default = extract_default(d['doc'], with_default_doc=with_default_doc)
+            d['doc'] = doc
             if default:
-                d.update({
-                    'doc': doc,
-                    'default': default
-                })
+                d['default'] = default
         return d
 
     docstring_struct['params'] = [
         dict(name=k, **interpolate_defaults(v))
         for k, v in docstring_struct['params'].items()
     ]
-    docstring_struct['returns'] = interpolate_defaults(docstring_struct['returns']['return_type'])
+    docstring_struct['returns'] = interpolate_defaults(
+        docstring_struct['returns']['return_type']
+    )
 
     return docstring_struct
 
 
-def argparse_ast2docstring_structure(ast):
+def argparse_ast2docstring_structure(ast, with_default_doc=False):
     """
     Converts an AST to a docstring structure
 
     :param ast: AST of argparse function
     :type ast: ```FunctionDef``
 
+    :param with_default_doc: Help/docstring should include 'With default' text
+    :type with_default_doc: ```bool``
+
     :return: docstring structure
     :rtype: ```dict```
     """
     docstring_struct = {'short_description': '', 'long_description': '', 'params': []}
-    # print_ast(ast)
-    _docstring_struct = None
+    _docstring_struct = parse_docstring(get_docstring(ast), with_default_doc=with_default_doc)
     for e in ast.body:
         if isinstance(e, Expr):
-            if _docstring_struct is None and isinstance(e.value, Constant):
+            if isinstance(e.value, Constant):
                 if e.value.kind is not None:
                     raise NotImplementedError('kind')
                 # docstring_struct['short_description'] = '\n'.join(
                 #     takewhile(lambda l: not l.lstrip().startswith(':param'),
                 #               e.value.value.split('\n'))).strip()
-                elif isinstance(e.value, Constant):
-                    _docstring_struct = parse_docstring(e.value.value)
             elif (isinstance(e.value, Call) and len(e.value.args) == 1 and
                   isinstance(e.value.args[0], Constant) and
                   e.value.args[0].kind is None):
-                docstring_struct['params'].append(parse_out_param(e))
+                docstring_struct['params'].append(parse_out_param(e, with_default_doc=with_default_doc))
         elif isinstance(e, Assign):
             if all((len(e.targets) == 1,
                     isinstance(e.targets[0], Attribute),
@@ -115,18 +119,25 @@ def argparse_ast2docstring_structure(ast):
                 }
             else:
                 default = to_source(e.value.elts[1]).replace('\n', '')
-                # print_ast(e)
-                # print('default: {!r};'.format(default))
+                doc = next(
+                    line.partition(',')[2].lstrip()
+                    for line in ast.body[0].value.value.split('\n')
+                    if line.lstrip().startswith(':return')
+                )
+                if not with_default_doc:
+                    doc, _ = extract_default(doc, with_default_doc=with_default_doc)
+
                 docstring_struct['returns'] = {
                     # 'name': 'return_type',
-                    'doc': '{doc}. Defaults to {default}'.format(
-                        doc=next(
-                            line.partition(',')[2].lstrip()
-                            for line in ast.body[0].value.value.split('\n')
-                            if line.lstrip().startswith(':return')
-                        ),
+                    'doc': '{doc}{maybe_dot} Defaults to {default}'.format(
+                        maybe_dot='' if doc.endswith('.') else '.',
+                        doc=doc,
                         default=default
-                    ),
+                    ) if all((default is not None,
+                              with_default_doc,
+                              'Defaults to' not in doc,
+                              'defaults to' not in doc))
+                    else doc,
                     'default': default,
                     'typ': to_source(
                         parse(_docstring_struct['returns']['typ']).body[0].value.slice.value.elts[1]
@@ -136,7 +147,21 @@ def argparse_ast2docstring_structure(ast):
     return docstring_struct
 
 
-def parse_out_param(e):
+def parse_out_param(e, with_default_doc=True):
+    """
+    Turns the ast repr of '--dataset_name', type=str, help='name of dataset.', required=True, default='mnist'
+      into
+          {'name': 'dataset_name', 'typ': 'str', doc='name of dataset.',
+           'required': True, 'default': 'mnist'}
+
+    :param e: Expr
+    :type e: ```Expr```
+
+    :param with_default_doc: Help/docstring should include 'With default' text
+    :type with_default_doc: ```bool``
+
+    :rtype ```dict```
+    """
     required = next(
         (keyword
          for keyword in e.value.keywords
@@ -165,7 +190,7 @@ def parse_out_param(e):
     )
     doc = (
         lambda help: (
-            help if default is None or (hasattr(default, '__len__') and len(
+            help if default is None or with_default_doc is False or (hasattr(default, '__len__') and len(
                 default) == 0) or 'defaults to' in help or 'Defaults to' in help
             else '{help} Defaults to {default}'.format(
                 help=help if help.endswith('.') else '{}.'.format(help),
@@ -178,7 +203,7 @@ def parse_out_param(e):
         if key_word.arg == 'help'
     ))
     if default is None:
-        _, default = extract_default(doc)
+        doc, default = extract_default(doc, with_default_doc=with_default_doc)
     if default is None:
         # if name.endswith('kwargs'):
         #    default = {}
@@ -205,17 +230,21 @@ def parse_out_param(e):
     )
 
 
-def docstring2docstring_structure(docstring):
+def docstring2docstring_structure(docstring, with_default_doc=True):
     """
     Converts a docstring to an AST
 
     :param docstring: docstring portion
     :type docstring: ```Union[str, Dict]```
 
+    :param with_default_doc: Help/docstring should include 'With default' text
+    :type with_default_doc: ```bool``
+
     :return: Class AST of the docstring
     :rtype: ```Tuple[dict, bool]```
     """
-    parsed = docstring if isinstance(docstring, dict) else parse_docstring(docstring)
+    parsed = docstring if isinstance(docstring, dict) \
+        else parse_docstring(docstring, with_default_doc=with_default_doc)
     returns = 'returns' in parsed and 'name' in parsed['returns']
     if returns:
         parsed['returns']['doc'] = parsed['returns'].get('doc', parsed['returns']['name'])
