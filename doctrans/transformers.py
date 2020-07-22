@@ -10,10 +10,10 @@ from astor import to_source
 from black import format_str, FileMode
 
 from doctrans.ast_utils import param2ast, param2argparse_param
-from doctrans.pure_utils import tab
 from doctrans.defaults_utils import extract_default
 from doctrans.docstring_structure_utils import class_def2docstring_structure, argparse_ast2docstring_structure, \
     docstring2docstring_structure
+from doctrans.pure_utils import tab
 
 
 def ast2file(ast, filename, mode='a', skip_black=False):
@@ -110,7 +110,7 @@ def class_def2docstring(class_def, with_default_doc=True):
     :return: docstring
     :rtype: ```str```
     """
-    docstring_struct = class_def2docstring_structure(class_def, with_default_doc=with_default_doc)
+    docstring_struct = class_def2docstring_structure(class_def)
     return '''\n{description}\n\n{params}\n{returns}\n'''.format(
         description=docstring_struct['long_description'] or docstring_struct['short_description'],
         params='\n'.join(':param {param[name]}: {param[doc]}\n'
@@ -164,7 +164,8 @@ def class2docstring(class_string, with_default_doc=True):
     :return: docstring
     :rtype: ```str```
     """
-    return class_def2docstring(str2ast(class_string, with_default_doc=with_default_doc), with_default_doc=with_default_doc)
+    return class_def2docstring(str2ast(class_string, with_default_doc=with_default_doc),
+                               with_default_doc=with_default_doc)
 
 
 def ast2argparse(ast, function_name='set_cli_args', with_default_doc=False):
@@ -179,7 +180,7 @@ def ast2argparse(ast, function_name='set_cli_args', with_default_doc=False):
     :param with_default_doc: Help/docstring should include 'With default' text
     :type with_default_doc: ```bool``
     """
-    docstring_struct = class_def2docstring_structure(ast, with_default_doc=with_default_doc)
+    docstring_struct = class_def2docstring_structure(ast)
     doc, _default = extract_default(docstring_struct['returns']['doc'],
                                     with_default_doc=with_default_doc)
     docstring_struct['returns']['doc'] = doc

@@ -28,7 +28,7 @@ docstring_structure = {
             'default': 'np',
             'doc': 'backend engine, e.g., `np` or `tf`. Defaults to np',
             'name': 'K',
-            'typ': 'Union[np, tf]'
+            'typ': 'Literal[\'np\', \'tf\']'
         },
         {
             'doc': 'Convert to numpy ndarrays',
@@ -63,7 +63,7 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 :type tfds_dir: ```Optional[str]```
 
 :param K: backend engine, e.g., `np` or `tf`. Defaults to np
-:type K: ```Union[np, tf]```
+:type K: ```Literal['np', 'tf']```
 
 :param as_numpy: Convert to numpy ndarrays
 :type as_numpy: ```Optional[bool]```
