@@ -4,8 +4,8 @@ ast_utils, bunch of helpers for converting input into ast.* output
 from ast import AnnAssign, Name, Load, Store, Constant, Dict, Module, ClassDef, Subscript, Tuple, Expr, Call, \
     Attribute, keyword, parse, walk
 
-from doctrans.pure_utils import simple_types
 from doctrans.defaults_utils import extract_default
+from doctrans.pure_utils import simple_types
 
 
 def param2ast(param):
@@ -36,40 +36,6 @@ def param2ast(param):
                                     values=param.get('default', [])))
     else:
         annotation = parse(param['typ']).body[0].value
-
-        def determine_quoting(node):
-            """
-            Determine whether the input needs to be quoted
-
-            :param node: AST node
-            :type node: ```Union[Subscript, Tuple, Name, Attribute]```
-
-            :returns: True if input needs quoting
-            :rtype: ```bool```
-            """
-            if isinstance(node, Subscript) and isinstance(node.value, Name):
-                if node.value.id == 'Optional':
-                    return determine_quoting(node.slice.value)
-                elif node.value.id == 'Union':
-                    if all(True
-                           for elt in node.slice.value.elts
-                           if isinstance(elt, Subscript)):
-                        return any(determine_quoting(elt)
-                                   for elt in node.slice.value.elts)
-                    return any(True
-                               for elt in node.slice.value.elts
-                               if elt.id == 'str')
-                elif node.value.id == 'Tuple':
-                    return any(determine_quoting(elt)
-                               for elt in node.slice.value.elts)
-                else:
-                    raise NotImplementedError(node.value.id)
-            elif isinstance(node, Name):
-                return node.id == 'str'
-            elif isinstance(node, Attribute):
-                return determine_quoting(node.value)
-            else:
-                raise NotImplementedError(type(node).__name__)
 
         if param.get('default') and not determine_quoting(annotation):
             value = parse(param['default']).body[0].value if 'default' in param \
@@ -142,6 +108,11 @@ def param2argparse_param(param, with_default_doc=True):
                                       if isinstance(elt, Name))
                 if len(maybe_choices) == len(node.elts):
                     choices = maybe_choices
+                maybe_choices = tuple(elt.value
+                                      for elt in node.elts
+                                      if isinstance(elt, Constant))
+                if len(maybe_choices) == len(node.elts):
+                    choices = maybe_choices
             elif isinstance(node, Name):
                 if node.id == 'Optional':
                     required = False
@@ -193,3 +164,37 @@ def param2argparse_param(param, with_default_doc=True):
                                                    value=default))
                    ))))
     )
+
+
+def determine_quoting(node):
+    """
+    Determine whether the input needs to be quoted
+
+    :param node: AST node
+    :type node: ```Union[Subscript, Tuple, Name, Attribute]```
+
+    :returns: True if input needs quoting
+    :rtype: ```bool```
+    """
+    if isinstance(node, Subscript) and isinstance(node.value, Name):
+        if node.value.id == 'Optional':
+            return determine_quoting(node.slice.value)
+        elif node.value.id in frozenset(('Union', 'Literal')):
+            if all(isinstance(elt, Subscript)
+                   for elt in node.slice.value.elts):
+                return any(determine_quoting(elt)
+                           for elt in node.slice.value.elts)
+            return any(isinstance(elt, Constant) and elt.kind is None and isinstance(elt.value, str)
+                       or elt.id == 'str'
+                       for elt in node.slice.value.elts)
+        elif node.value.id == 'Tuple':
+            return any(determine_quoting(elt)
+                       for elt in node.slice.value.elts)
+        else:
+            raise NotImplementedError(node.value.id)
+    elif isinstance(node, Name):
+        return node.id == 'str'
+    elif isinstance(node, Attribute):
+        return determine_quoting(node.value)
+    else:
+        raise NotImplementedError(type(node).__name__)

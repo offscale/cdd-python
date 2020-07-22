@@ -1,18 +1,19 @@
 """
 Functions which produce docstring_structure from various different inputs
 """
-
+import ast
 from ast import Assign, Return, AnnAssign, Constant, Name, Expr, Call, Attribute, Tuple, Subscript, parse, \
-    get_docstring
+    get_docstring, FunctionDef
 from collections import OrderedDict
 from typing import Any
 
 from astor import to_source
+from meta.asttools import print_ast
 
 from doctrans.ast_utils import to_class_def
-from doctrans.rest_docstring_parser import parse_docstring
-from doctrans.pure_utils import simple_types
 from doctrans.defaults_utils import extract_default
+from doctrans.pure_utils import simple_types, pp
+from doctrans.rest_docstring_parser import parse_docstring
 
 
 def class_def2docstring_structure(class_def, with_default_doc=True):
@@ -56,30 +57,99 @@ def class_def2docstring_structure(class_def, with_default_doc=True):
         docstring_struct['returns' if name == 'return_type' else 'params'][name]['typ'] = \
             e.annotation.id if isinstance(e.annotation, Name) else to_source(e.annotation).rstrip()
 
-    def interpolate_defaults(param):
-        """
-        Correctly set the 'default' and 'doc' parameters
-
-        :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'required': ... }
-        :type param: ```dict```
-
-        :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-        :rtype: ```dict```
-        """
-        if 'doc' in param:
-            doc, default = extract_default(param['doc'], with_default_doc=with_default_doc)
-            param['doc'] = doc
-            if default:
-                param['default'] = default
-        return param
-
     docstring_struct['params'] = [
-        dict(name=k, **interpolate_defaults(v))
+        dict(name=k, **interpolate_defaults(v, with_default_doc=with_default_doc))
         for k, v in docstring_struct['params'].items()
     ]
     docstring_struct['returns'] = interpolate_defaults(
-        docstring_struct['returns']['return_type']
+        docstring_struct['returns']['return_type'],
+        with_default_doc=with_default_doc
     )
+
+    return docstring_struct
+
+
+def class_with_method2docstring_structure(class_def, method_name, with_default_doc=True):
+    """
+    Converts an AST of a class with a method to a docstring structure
+
+    :param class_def: Class AST or Module AST with a ClassDef inside
+    :type class_def: ```Union[Module, ClassDef]```
+
+    :param method_name: Method name
+    :type method_name: ```str```
+
+    :param with_default_doc: Help/docstring should include 'With default' text
+    :type with_default_doc: ```bool``
+
+    :return: docstring structure
+    :rtype: ```dict```
+    """
+    class_def = to_class_def(class_def)
+    docstring_struct = {
+        'short_description': '',
+        'long_description': '',
+        'params': OrderedDict(),
+        'returns': {}
+    }
+    function_def = next(
+        node
+        for node in class_def.body
+        if isinstance(node, FunctionDef) and node.name == method_name
+    )
+    del class_def
+
+    # print_ast(function_def)
+
+    def arguments2params(arguments):
+        """
+        :param arguments: Function arguments
+        :type arguments: ```ast.arguments```
+
+        :returns: dict of shape {'name': ..., 'typ': ... }
+        :rtype: ```dict```
+        """
+        assert isinstance(arguments, ast.arguments)
+        args = arguments.args[1:] if arguments.args[0].arg in frozenset(('self', 'cls')) \
+            else arguments.args
+        return OrderedDict(
+            (arg.arg, {} if arg.annotation is None else {'typ': to_source(arg.annotation).rstrip()})
+            for arg in args
+        )
+
+    docstring_struct['params'] = arguments2params(function_def.args)
+
+    name, key = None, 'params'
+    for line in filter(None, map(lambda l: l.lstrip(),
+                                 get_docstring(function_def).replace(':cvar', ':param').split('\n'))):
+        if line.startswith(':param'):
+            name, _, doc = line.rpartition(':')
+            name = name.replace(':param ', '')
+            key = 'returns' if name == 'return_type' else 'params'
+            docstring_struct[key][name]['doc'] = doc.lstrip()
+
+        elif name is not None and docstring_struct[key]:
+            docstring_struct[key][name]['doc'] += line
+        else:
+            docstring_struct['short_description'] += line
+
+    print_ast(function_def)
+
+    for e in filter(lambda _e: isinstance(_e, AnnAssign), function_def.body[1:]):
+        name = e.target.id
+        docstring_struct['returns' if name == 'return_type' else 'params'][name]['typ'] = \
+            e.annotation.id if isinstance(e.annotation, Name) else to_source(e.annotation).rstrip()
+
+    docstring_struct['params'] = [
+        dict(name=k, **interpolate_defaults(v, with_default_doc=with_default_doc))
+        for k, v in docstring_struct['params'].items()
+    ]
+    pp(docstring_struct)
+    if 'return_type' in docstring_struct['returns']:
+        docstring_struct['returns'] = interpolate_defaults(
+            docstring_struct['returns']['return_type'],
+            with_default_doc=with_default_doc
+        )
 
     return docstring_struct
 
@@ -235,15 +305,29 @@ def parse_out_param(expr, with_default_doc=True):
         if typ in simple_types:
             if required:
                 default = simple_types[typ]
+
+    def handle_keyword(keyword):
+        quote_f = lambda s: s
+        type_ = 'Union'
+        if typ == Any or typ == 'str':
+            quote_f = lambda s: '\'{}\''.format(s)
+            type_ = 'Literal'
+        elif typ in simple_types:
+            type_ = 'Literal'
+
+        return '{type}[{typs}]'.format(
+            type=type_,
+            typs=', '.join(quote_f(elt.value)
+                           for elt in keyword.value.elts)
+        )
+
     return dict(
         name=name,
         doc=doc,
         typ=(lambda typ: (typ if required or name.endswith('kwargs')
                           else 'Optional[{typ}]'.format(typ=typ)))(
             typ=next(
-                ('Union[{}]'.format(', '.join(elt.value if typ == Any
-                                              else '"{}"'.format(elt.value)
-                                              for elt in keyword.value.elts))
+                (handle_keyword(keyword)
                  for keyword in expr.value.keywords
                  if keyword.arg == 'choices'
                  ), typ
@@ -273,6 +357,27 @@ def docstring2docstring_structure(docstring, with_default_doc=True):
         parsed['returns']['doc'] = parsed['returns'].get('doc', parsed['returns']['name'])
         # parsed['returns']['name'] = 'return_type'
     return parsed, returns
+
+
+def interpolate_defaults(param, with_default_doc=True):
+    """
+    Correctly set the 'default' and 'doc' parameters
+
+    :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'required': ... }
+    :type param: ```dict```
+
+    :param with_default_doc: Help/docstring should include 'With default' text
+    :type with_default_doc: ```bool``
+
+    :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    :rtype: ```dict```
+    """
+    if 'doc' in param:
+        doc, default = extract_default(param['doc'], with_default_doc=with_default_doc)
+        param['doc'] = doc
+        if default:
+            param['default'] = default
+    return param
 
 
 __all__ = ['class_def2docstring_structure',
