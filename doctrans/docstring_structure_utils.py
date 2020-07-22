@@ -1,8 +1,8 @@
 """
 Functions which produce docstring_structure from various different inputs
 """
-from ast import Assign, Return, AnnAssign, Constant, Name, Expr, Call, Attribute, Tuple, Subscript, parse, \
-    get_docstring, FunctionDef
+from ast import Assign, Return, AnnAssign, Constant, Name, Expr, Call, \
+    Attribute, Tuple, Subscript, parse, get_docstring, FunctionDef, keyword
 from collections import OrderedDict
 from typing import Any
 
@@ -97,9 +97,25 @@ def class_with_method2docstring_structure(class_def, method_name, with_default_d
     )
     del class_def
 
-    # print_ast(function_def)
-
     def append_line(d, key, name, prop, line):
+        """
+        Append line to a dict
+
+        :param d: dictionary
+        :type d: ```dict```
+
+        :param key: first property
+        :type key: ```str```
+
+        :param name: second property
+        :type name: ```str```
+
+        :param prop: final property
+        :type prop: ```str```
+
+        :param line: value
+        :type line: ```str```
+        """
         if name in d[key]:
             if prop in d[key][name]:
                 d[key][name][prop] += line
@@ -133,6 +149,15 @@ def class_with_method2docstring_structure(class_def, method_name, with_default_d
             docstring_struct['short_description'] += line
 
     def interpolate_doc_and_default(idx_name_d):
+        """
+        Extract doc, default
+
+        :param idx_name_d: tuple from enumerated OrderedDict.items
+        :type idx_name_d: ```Tuple[int, Tuple[str, dict]]```
+
+        :returns: dict of shape {"doc": ..., "default": ...}
+        :rtype: ```dict```
+        """
         idx, (name_, d) = idx_name_d
         trailing_dot = '.:type' in d['doc']
         doc_typ_d = doc_to_type_doc(name_, d['doc'].replace(
@@ -148,7 +173,6 @@ def class_with_method2docstring_structure(class_def, method_name, with_default_d
 
     docstring_struct['params'] = OrderedDict(map(interpolate_doc_and_default,
                                                  enumerate(docstring_struct['params'].items())))
-    # print_ast(function_def)
 
     for e in filter(lambda _e: isinstance(_e, AnnAssign), function_def.body[1:]):
         name = e.target.id
@@ -336,6 +360,15 @@ def parse_out_param(expr, with_default_doc=True):
                 default = simple_types[typ]
 
     def handle_keyword(keyword):
+        """
+        Decide which type to wrap the keyword tuples in
+
+        :param keyword: AST keyword
+        :type keyword: ```keyword```
+
+        :returns: string representation of type
+        :rtype: ```str``
+        """
         quote_f = lambda s: s
         type_ = 'Union'
         if typ == Any or typ == 'str':

@@ -33,7 +33,7 @@ from doctrans.defaults_utils import extract_default
 
 PARAM_OR_RETURNS_REGEX = re.compile(":(?:param|returns?)")
 RETURNS_REGEX = re.compile(":returns?: (?P<doc>.*)", re.S)
-PARAM_REGEX = re.compile(r":param (?P<name>[\*\w]+): (?P<doc>.*?)"
+PARAM_REGEX = re.compile(r":param (?P<name>[\w]+): (?P<doc>.*?)"
                          r"(?:(?=:param)|(?=:return)|(?=:raises)|\Z)", re.S)
 
 
@@ -132,7 +132,7 @@ def parse_docstring(docstring, with_default_doc=True):
     """Parse the docstring into its components.
 
     :param docstring: the docstring
-    :type docstring: ```str```
+    :type docstring: ```Union[str, dict]```
 
     :param with_default_doc: Help/docstring should include 'With default' text
     :type with_default_doc: ```bool``
@@ -184,6 +184,18 @@ def parse_docstring(docstring, with_default_doc=True):
 
 
 def extract_return_params(params_returns_desc, with_default_doc):
+    """
+    Parse out the doc, type, and defaults from the ReST doctype
+
+    :param params_returns_desc: return text from docstring
+    :type params_returns_desc: ```str```
+
+    :param with_default_doc: Help/docstring should include 'With default' text
+    :type with_default_doc: ```bool``
+
+    :return: dict of shape {'typ': ..., 'doc': ..., 'default': ...}
+    :rdict: ```dict```
+    """
     match = RETURNS_REGEX.search(params_returns_desc)
     returns = None
     if match:
