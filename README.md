@@ -31,7 +31,7 @@ With current tooling there is no way to know:
 Some of these problems can be solved dynamically, however in doing so one loses developer-tool insights. There is no code-completion, and likely the CLI parser won't provide you with the enumeration of possibilities.
 
 ### Example
-All 3 of these can convert to each other.
+All 4 of these can convert to each other.
 
 #### Docstring
 ```reStructuredText
@@ -78,6 +78,37 @@ class TargetClass(object):
         np.empty(0),
         np.empty(0),
     )
+```
+
+##### `class` method
+```python
+class C(object):
+    """ C class (mocked!) """
+
+    def method_name(self, dataset_name='mnist', tfds_dir='~/tensorflow_datasets',
+                    K='np', as_numpy=None, **data_loader_kwargs):
+        """
+        Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
+
+        :param dataset_name: name of dataset.
+        :type dataset_name: ```str```
+
+        :param tfds_dir: directory to look for models in.
+        :type tfds_dir: ```Optional[str]```
+
+        :param K: backend engine, e.g., `np` or `tf`.
+        :type K: ```Literal['np', 'tf']```
+
+        :param as_numpy: Convert to numpy ndarrays
+        :type as_numpy: ```Optional[bool]```
+
+        :param data_loader_kwargs: pass this as arguments to data_loader function
+        :type data_loader_kwargs: ```**data_loader_kwargs```
+
+        :return: Train and tests dataset splits.
+        :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
+        """
+        return np.empty(0), np.empty(0)
 ```
 
 ##### Argparse augmenting function
@@ -133,8 +164,13 @@ def set_cli_args(argument_parser):
   - You have to run a tool to synchronise your: docstring(s), config `class`(es), and argparse augmenting function.
   - Duplication (but the tool handles this)
 
+## Alternatives
+
+  - Dynamic code generation, e.g., with a singular interface for everything; so everything is in one place without duplication
+
 ## Future work
 
+  - Finish implementing '`class` method'
   - More docstring support ([docstring-parser](https://github.com/rr-/docstring_parser) doesn't support this [sphinx ReST format with types](https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists))
   - Proper CLI to manage what function, class, and argparse is generated, and from which source-of-truth
   - Choosing between having the types in the docstring and having the types inline ([PEP484](https://python.org/dev/peps/pep-0484)–style)
