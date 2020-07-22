@@ -173,28 +173,7 @@ def parse_docstring(docstring, with_default_doc=True):
                     for name, doc in PARAM_REGEX.findall(params_returns_desc)
                 ]
 
-                match = RETURNS_REGEX.search(params_returns_desc)
-                if match:
-                    returns = reindent(match.group('doc'))
-                if returns:
-                    r_dict = {'doc': ''}
-                    for idx, char in enumerate(returns):
-                        if char == ':':
-                            r_dict['typ'] = returns[idx + len(':rtype:'):].strip()
-                            if r_dict['typ'].startswith('```') and r_dict['typ'].endswith('```'):
-                                r_dict['typ'] = r_dict['typ'][3:-3]
-                            break
-                        else:
-                            r_dict['doc'] += char
-                    r_dict['doc'] = r_dict['doc'].rstrip('\n').rstrip('.')
-                    doc, default = extract_default(r_dict['doc'], with_default_doc=with_default_doc)
-                    r_dict.update({
-                        'doc': doc,
-                        'default': default
-                    })
-                    if not r_dict.get('default', True):
-                        del r_dict['default']
-                    returns = r_dict
+                returns = extract_return_params(params_returns_desc, with_default_doc)
 
     return {
         'short_description': short_description,
@@ -202,6 +181,33 @@ def parse_docstring(docstring, with_default_doc=True):
         'params': params,
         'returns': returns
     }
+
+
+def extract_return_params(params_returns_desc, with_default_doc):
+    match = RETURNS_REGEX.search(params_returns_desc)
+    returns = None
+    if match:
+        returns = reindent(match.group('doc'))
+    if returns:
+        r_dict = {'doc': ''}
+        for idx, char in enumerate(returns):
+            if char == ':':
+                r_dict['typ'] = returns[idx + len(':rtype:'):].strip()
+                if r_dict['typ'].startswith('```') and r_dict['typ'].endswith('```'):
+                    r_dict['typ'] = r_dict['typ'][3:-3]
+                break
+            else:
+                r_dict['doc'] += char
+        r_dict['doc'] = r_dict['doc'].rstrip('\n').rstrip('.')
+        doc, default = extract_default(r_dict['doc'], with_default_doc=with_default_doc)
+        r_dict.update({
+            'doc': doc,
+            'default': default
+        })
+        if not r_dict.get('default', True):
+            del r_dict['default']
+        returns = r_dict
+    return returns
 
 
 class InfoMixin(object):
