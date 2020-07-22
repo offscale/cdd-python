@@ -1,19 +1,17 @@
 """
 Functions which produce docstring_structure from various different inputs
 """
-import ast
 from ast import Assign, Return, AnnAssign, Constant, Name, Expr, Call, Attribute, Tuple, Subscript, parse, \
     get_docstring, FunctionDef
 from collections import OrderedDict
 from typing import Any
 
 from astor import to_source
-from meta.asttools import print_ast
 
 from doctrans.ast_utils import to_class_def
 from doctrans.defaults_utils import extract_default
-from doctrans.pure_utils import simple_types, pp
-from doctrans.rest_docstring_parser import parse_docstring
+from doctrans.pure_utils import simple_types
+from doctrans.rest_docstring_parser import parse_docstring, doc_to_type_doc, extract_return_params
 
 
 def class_def2docstring_structure(class_def, with_default_doc=True):
@@ -101,23 +99,14 @@ def class_with_method2docstring_structure(class_def, method_name, with_default_d
 
     # print_ast(function_def)
 
-    def arguments2params(arguments):
-        """
-        :param arguments: Function arguments
-        :type arguments: ```ast.arguments```
-
-        :returns: dict of shape {'name': ..., 'typ': ... }
-        :rtype: ```dict```
-        """
-        assert isinstance(arguments, ast.arguments)
-        args = arguments.args[1:] if arguments.args[0].arg in frozenset(('self', 'cls')) \
-            else arguments.args
-        return OrderedDict(
-            (arg.arg, {} if arg.annotation is None else {'typ': to_source(arg.annotation).rstrip()})
-            for arg in args
-        )
-
-    docstring_struct['params'] = arguments2params(function_def.args)
+    def append_line(d, key, name, prop, line):
+        if name in d[key]:
+            if prop in d[key][name]:
+                d[key][name][prop] += line
+            else:
+                d[key][name][prop] = line
+        else:
+            d[key][name] = {prop: line}
 
     name, key = None, 'params'
     for line in filter(None, map(lambda l: l.lstrip(),
@@ -126,14 +115,40 @@ def class_with_method2docstring_structure(class_def, method_name, with_default_d
             name, _, doc = line.rpartition(':')
             name = name.replace(':param ', '')
             key = 'returns' if name == 'return_type' else 'params'
-            docstring_struct[key][name]['doc'] = doc.lstrip()
-
-        elif name is not None and docstring_struct[key]:
+            if name in docstring_struct[key]:
+                docstring_struct[key][name]['doc'] = doc.lstrip()
+            else:
+                docstring_struct[key][name] = {'doc': doc.lstrip()}
+        elif name is None:
+            docstring_struct['short_description'] = line
+        elif line.lstrip().startswith(':return'):
+            key, name = 'returns', 'return_type'
+            append_line(docstring_struct, key, name, 'doc', line)
+        elif line.lstrip().startswith(':rtype'):
+            key, name = 'returns', 'return_type'
+            append_line(docstring_struct, key, name, 'typ', line)
+        elif docstring_struct[key]:
             docstring_struct[key][name]['doc'] += line
         else:
             docstring_struct['short_description'] += line
 
-    print_ast(function_def)
+    def interpolate_doc_and_default(idx_name_d):
+        idx, (name_, d) = idx_name_d
+        trailing_dot = '.:type' in d['doc']
+        doc_typ_d = doc_to_type_doc(name_, d['doc'].replace(
+            ':type', '\n:type'
+        ), with_default_doc=with_default_doc)
+
+        if len(function_def.args.defaults) > idx and function_def.args.defaults[idx].value is not None:
+            doc_typ_d['default'] = function_def.args.defaults[idx].value
+        if trailing_dot and not doc_typ_d['doc'].endswith('.'):
+            doc_typ_d['doc'] = '{doc}.'.format(doc=doc_typ_d['doc'])
+
+        return name_, doc_typ_d
+
+    docstring_struct['params'] = OrderedDict(map(interpolate_doc_and_default,
+                                                 enumerate(docstring_struct['params'].items())))
+    # print_ast(function_def)
 
     for e in filter(lambda _e: isinstance(_e, AnnAssign), function_def.body[1:]):
         name = e.target.id
@@ -144,12 +159,26 @@ def class_with_method2docstring_structure(class_def, method_name, with_default_d
         dict(name=k, **interpolate_defaults(v, with_default_doc=with_default_doc))
         for k, v in docstring_struct['params'].items()
     ]
-    pp(docstring_struct)
     if 'return_type' in docstring_struct['returns']:
+        trailing_dot = docstring_struct['returns']['return_type']['doc'].endswith('.')
+        docstring_struct['returns']['return_type'].update(extract_return_params(
+            docstring_struct['returns']['return_type']['doc'] + docstring_struct['returns']['return_type']['typ'],
+            with_default_doc=with_default_doc
+        ))
+        if trailing_dot and not docstring_struct['returns']['return_type']['doc'].endswith('.'):
+            docstring_struct['returns']['return_type']['doc'] = '{doc}.'.format(
+                doc=docstring_struct['returns']['return_type']['doc']
+            )
+
         docstring_struct['returns'] = interpolate_defaults(
             docstring_struct['returns']['return_type'],
             with_default_doc=with_default_doc
         )
+        returns = next((node.value
+                        for node in function_def.body
+                        if isinstance(node, Return)), None)
+        if returns is not None:
+            docstring_struct['returns']['default'] = to_source(returns).rstrip()
 
     return docstring_struct
 
