@@ -4,6 +4,7 @@ Functions which produce docstring_structure from various different inputs
 from ast import Assign, Return, AnnAssign, Constant, Name, Expr, Call, \
     Attribute, Tuple, Subscript, parse, get_docstring, FunctionDef, keyword
 from collections import OrderedDict
+from functools import partial
 from typing import Any
 
 from astor import to_source
@@ -245,7 +246,7 @@ def argparse_ast2docstring_structure(function_def, with_default_doc=False):
         elif isinstance(e, Return) and isinstance(e.value, Tuple):
             if isinstance(e.value.elts[1], Subscript):
                 docstring_struct['returns'] = {
-                    # 'name': 'return_type',
+                    'name': 'return_type',
                     'doc': next(
                         line.partition(',')[2].lstrip()
                         for line in function_def.body[0].value.value.split('\n')
@@ -264,7 +265,7 @@ def argparse_ast2docstring_structure(function_def, with_default_doc=False):
                     doc, _ = extract_default(doc, with_default_doc=with_default_doc)
 
                 docstring_struct['returns'] = {
-                    # 'name': 'return_type',
+                    'name': 'return_type',
                     'doc': '{doc}{maybe_dot} Defaults to {default}'.format(
                         maybe_dot='' if doc.endswith('.') else '.',
                         doc=doc,
@@ -417,8 +418,78 @@ def docstring2docstring_structure(docstring, with_default_doc=True):
     returns = 'returns' in parsed and 'name' in parsed['returns']
     if returns:
         parsed['returns']['doc'] = parsed['returns'].get('doc', parsed['returns']['name'])
-        # parsed['returns']['name'] = 'return_type'
     return parsed, returns
+
+
+def docstring_structure2docstring(docstring_structure, with_default_doc=True,
+                                  docstring_format='rest'):
+    """
+    Converts a docstring to an AST
+
+    :param docstring_structure: docstring struct
+    :type docstring_structure: ```dict```
+
+    :param with_default_doc: Help/docstring should include 'With default' text
+    :type with_default_doc: ```bool``
+
+    :param docstring_format: Format of docstring
+    :type docstring_format: ```Literal['rest', 'numpy', 'google']```
+
+    :return: docstring
+    :rtype: ```str```
+    """
+    if docstring_format != 'rest':
+        raise NotImplementedError(docstring_format)
+
+    def param2docstring_param(param, docstring_format='rest', with_default_doc=True):
+        """
+        Converts param dict from docstring_struct to the right string representation
+
+        :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+        :type param: ```dict```
+
+        :param docstring_format: Format of docstring
+        :type docstring_format: ```Literal['rest', 'numpy', 'google']```
+
+        :param with_default_doc: Help/docstring should include 'With default' text
+        :type with_default_doc: ```bool``
+
+        """
+        if docstring_format != 'rest':
+            raise NotImplementedError(docstring_format)
+
+        doc, default = extract_default(param['doc'], with_default_doc=False)
+        if default is None:
+            default = param.get('default')
+
+        typ = '**{param[name]}'.format(param=param) \
+            if param.get('typ') == 'dict' and param['name'].endswith('kwargs') \
+            else param.get('typ')
+
+        return ''.join(filter(
+            None, (
+                '\n:param {param[name]}: {doc}'.format(param=param, doc=doc),
+                ' Defaults to {default}'.format(default=default) if with_default_doc and 'default' in param
+                else None,
+                '\n',
+                typ if typ is None else ':type {param[name]}: ```{typ}```'.format(param=param,
+                                                                                  typ=typ)
+            )
+        ))
+
+    return '\n{description}\n{params}\n{returns}\n'.format(
+        description=docstring_structure.get('long_description') or docstring_structure['short_description'],
+        params='\n'.join(map(partial(param2docstring_param,
+                                     with_default_doc=with_default_doc,
+                                     docstring_format=docstring_format),
+                             docstring_structure['params'])),
+        returns=param2docstring_param(
+            docstring_structure['returns'],
+            with_default_doc=with_default_doc,
+            docstring_format=docstring_format
+        ).replace(':param return_type:', ':return:').replace(':type return_type:', ':rtype:')
+        if docstring_structure.get('returns') else ''
+    )
 
 
 def interpolate_defaults(param, with_default_doc=True):

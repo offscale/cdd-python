@@ -2,8 +2,8 @@
 Transform from string or AST representations of input, to AST, file, or str output.
 """
 
-from ast import parse, ClassDef, Name, Load, Constant, Expr, Module, FunctionDef, arguments, arg, Assign, Attribute, \
-    Store, Tuple, Return
+from ast import parse, ClassDef, Name, Load, Constant, Expr, Module, FunctionDef, arguments, Assign, Attribute, \
+    Store, Tuple, Return, arg
 from functools import partial
 
 from astor import to_source
@@ -12,8 +12,9 @@ from black import format_str, FileMode
 from doctrans.ast_utils import param2ast, param2argparse_param
 from doctrans.defaults_utils import extract_default
 from doctrans.docstring_structure_utils import class_def2docstring_structure, argparse_ast2docstring_structure, \
-    docstring2docstring_structure
-from doctrans.pure_utils import tab
+    docstring2docstring_structure, docstring_structure2docstring
+from doctrans.pure_utils import tab, simple_types
+from doctrans.rest_docstring_parser import parse_docstring
 
 
 def ast2file(ast, filename, mode='a', skip_black=False):
@@ -72,7 +73,6 @@ def docstring2class_def(docstring, class_name='TargetClass',
     parsed, returns = docstring2docstring_structure(docstring, with_default_doc=with_default_doc)
     if parsed.get('returns'):
         returns = [parsed['returns']]
-        returns[0]['name'] = 'return_type'
     else:
         returns = []
     return ClassDef(
@@ -245,6 +245,82 @@ def argparse2class(ast, class_name='TargetClass', with_default_doc=True):
     """
     assert isinstance(ast, FunctionDef), 'Expected `FunctionDef` got: `{}`'.format(type(ast).__name__)
     docstring_struct = argparse_ast2docstring_structure(ast, with_default_doc=with_default_doc)
-    if 'returns' in docstring_struct:
-        docstring_struct['returns']['name'] = 'return_type'
     return docstring2class_def(docstring_struct, class_name=class_name, with_default_doc=with_default_doc)
+
+
+def docstring2function_def(docstring, method_name='method_name', first_arg='self', with_default_doc=True):
+    """
+    Converts a docstring to an AST
+
+    :param docstring: docstring portion
+    :type docstring: ```Union[str, Dict]```
+
+    :param method_name: Name of method to update docstring and function arguments of. Will create if nonexistent.
+    :type method_name: ```str```
+
+    :param first_arg: First argument. If `None` then it's a staticmethod or root function
+    :type first_arg: ```Optional[Literal['cls', 'self']]```
+
+    :param with_default_doc: Help/docstring should include 'With default' text
+    :type with_default_doc: ```bool``
+
+    :return: Class AST of the docstring
+    :rtype: ```Union[ast.Module, ast.ClassDef]```
+    """
+    assert isinstance(docstring, str), 'Expected `str` got: `{}`'.format(type(docstring).__name__)
+    docstring_struct = parse_docstring(docstring, with_default_doc=with_default_doc)
+
+    params_no_kwargs = tuple(filter(
+        lambda param: not param['name'].endswith('kwargs'),
+        docstring_struct['params']
+    ))
+
+    return FunctionDef(
+        args=arguments(args=list(filter(
+            None,
+            (first_arg if first_arg is None else arg(annotation=None,
+                                                     arg=first_arg,
+                                                     type_comment=None),
+             *map(lambda param: arg(
+                 annotation=Name(
+                     ctx=Load(),
+                     id=param['typ']
+                 ) if param['typ'] in simple_types else parse(param['typ']),
+                 arg=param['name'],
+                 type_comment=None
+             ),
+                  params_no_kwargs)))),
+            defaults=list(
+                map(lambda param: Constant(kind=None,
+                                           value=param['default']),
+                    filter(lambda param: 'default' in param,
+                           params_no_kwargs))
+            ) + [Constant(kind=None,
+                          value=None)],
+            kw_defaults=[],
+            kwarg=next(map(
+                lambda param: arg(annotation=None,
+                                  arg=param['name'],
+                                  type_comment=None),
+                filter(
+                    lambda param: param['name'].endswith('kwargs'),
+                    docstring_struct['params']
+                ))
+            ),
+            kwonlyargs=[],
+            posonlyargs=[],
+            vararg=None),
+        body=list(filter(
+            None,
+            (Expr(value=Constant(
+                kind=None,
+                value=docstring_structure2docstring(docstring_struct,
+                                                    with_default_doc=with_default_doc))),
+             Return(value=parse(docstring_struct['returns']['default']))
+             if 'returns' in docstring_struct and docstring_struct['returns'].get('default')
+             else None)
+        )),
+        decorator_list=[],
+        name=method_name,
+        returns=parse(docstring_struct['returns']['typ']) if 'returns' in docstring_struct else None,
+        type_comment=None)
