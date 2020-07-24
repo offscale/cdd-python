@@ -30,7 +30,7 @@ class TestMarshallDocstring(TestCase):
         Tests whether `parse_docstring` produces `docstring_str_no_default_doc`
               from `docstring_str_no_default_doc` """
         self.assertDictEqual(
-            parse_docstring(docstring_str_no_default_doc, with_default_doc=False),
+            parse_docstring(docstring_str_no_default_doc, emit_default_doc=False),
             docstring_structure_no_default_doc
         )
 
@@ -47,7 +47,9 @@ class TestMarshallDocstring(TestCase):
         Tests whether `docstring_structure2docstring` produces `docstring_str`
               from `docstring_structure` """
         self.assertEqual(
-            docstring_structure2docstring(deepcopy(docstring_structure)),
+            docstring_structure2docstring(deepcopy(docstring_structure), indent_level=0,
+                                          emit_types=True, emit_default_doc=True,
+                                          emit_separating_tab=False),
             docstring_str
         )
 

@@ -29,7 +29,7 @@ class TestIntermediateRepresentation(TestCase):
         """
         Tests whether `argparse_ast2docstring_structure` produces `docstring_structure_no_default_doc`
               from `argparse_func_ast` """
-        self.assertDictEqual(argparse_ast2docstring_structure(argparse_func_ast, with_default_doc=False),
+        self.assertDictEqual(argparse_ast2docstring_structure(argparse_func_ast, emit_default_doc=False),
                              docstring_structure_no_default_doc)
 
     def test_class_ast2docstring_structure(self) -> None:
@@ -45,7 +45,7 @@ class TestIntermediateRepresentation(TestCase):
               from `class_with_method_ast` """
         self.assertDictEqual(
             class_with_method2docstring_structure(class_with_method_ast, 'method_name',
-                                                  with_default_doc=False),
+                                                  emit_default_doc=False),
             docstring_structure_no_default_doc
         )
 
@@ -57,7 +57,7 @@ class TestIntermediateRepresentation(TestCase):
               from `class_with_method_types_ast` """
         self.assertDictEqual(
             class_with_method2docstring_structure(class_with_method_types_ast, 'method_name',
-                                                  with_default_doc=False),
+                                                  emit_default_doc=False),
             docstring_structure
         )
     '''

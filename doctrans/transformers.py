@@ -15,6 +15,7 @@ from doctrans.docstring_structure_utils import class_def2docstring_structure, ar
     docstring2docstring_structure, docstring_structure2docstring
 from doctrans.pure_utils import tab, simple_types
 from doctrans.rest_docstring_parser import parse_docstring
+from doctrans.tests.mocks.docstrings import docstring_structure
 
 
 def ast2file(ast, filename, mode='a', skip_black=False):
@@ -51,7 +52,7 @@ def ast2file(ast, filename, mode='a', skip_black=False):
 
 
 def docstring2class_def(docstring, class_name='TargetClass',
-                        class_bases=('object',), with_default_doc=True):
+                        class_bases=('object',), emit_default_doc=True):
     """
     Converts a docstring to an AST
 
@@ -64,13 +65,13 @@ def docstring2class_def(docstring, class_name='TargetClass',
     :param class_bases: bases of class (the generated class will inherit these)
     :type class_bases: ```Tuple[str]```
 
-    :param with_default_doc: Help/docstring should include 'With default' text
-    :type with_default_doc: ```bool``
+    :param emit_default_doc: Help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
     :return: Class AST of the docstring
     :rtype: ```ast.ClassDef```
     """
-    parsed, returns = docstring2docstring_structure(docstring, with_default_doc=with_default_doc)
+    parsed, returns = docstring2docstring_structure(docstring, emit_default_doc=emit_default_doc)
     if parsed.get('returns'):
         returns = [parsed['returns']]
     else:
@@ -97,15 +98,15 @@ def docstring2class_def(docstring, class_name='TargetClass',
     )
 
 
-def class_def2docstring(class_def, with_default_doc=True):
+def class_def2docstring(class_def, emit_default_doc=True):
     """
     Converts an AST to a docstring
 
     :param class_def: Class AST or Module AST with a ClassDef inside
     :type class_def: ```Union[ast.Module, ast.ClassDef]```
 
-    :param with_default_doc: Help/docstring should include 'With default' text
-    :type with_default_doc: ```bool``
+    :param emit_default_doc: Help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
     :return: docstring
     :rtype: ```str```
@@ -151,24 +152,24 @@ def str2ast(python_source_str, filename='<unknown>', mode='exec',
                  type_comments=type_comments, feature_version=feature_version)
 
 
-def class2docstring(class_string, with_default_doc=True):
+def class2docstring(class_string, emit_default_doc=True):
     """
     Converts a class to a docstring
 
     :param class_string: class definition as a str
     :type class_string: ```str```
 
-    :param with_default_doc: Help/docstring should include 'With default' text
-    :type with_default_doc: ```bool``
+    :param emit_default_doc: Help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
     :return: docstring
     :rtype: ```str```
     """
-    return class_def2docstring(str2ast(class_string, with_default_doc=with_default_doc),
-                               with_default_doc=with_default_doc)
+    return class_def2docstring(str2ast(class_string),
+                               emit_default_doc=emit_default_doc)
 
 
-def ast2argparse(ast, function_name='set_cli_args', with_default_doc=False):
+def ast2argparse(ast, function_name='set_cli_args', emit_default_doc=False):
     """
 
     :param ast: Class AST or Module AST
@@ -177,12 +178,12 @@ def ast2argparse(ast, function_name='set_cli_args', with_default_doc=False):
     :param function_name: name of function
     :type function_name: ```str```
 
-    :param with_default_doc: Help/docstring should include 'With default' text
-    :type with_default_doc: ```bool``
+    :param emit_default_doc: Help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
     """
     docstring_struct = class_def2docstring_structure(ast)
     doc, _default = extract_default(docstring_struct['returns']['doc'],
-                                    with_default_doc=with_default_doc)
+                                    emit_default_doc=emit_default_doc)
     docstring_struct['returns']['doc'] = doc
     return FunctionDef(args=arguments(args=[arg(annotation=None,
                                                 arg='argument_parser',
@@ -211,7 +212,7 @@ def ast2argparse(ast, function_name='set_cli_args', with_default_doc=False):
                                            kind=None,
                                            value=docstring_struct['long_description'] or docstring_struct[
                                                'short_description']))
-                            ] + list(map(partial(param2argparse_param, with_default_doc=with_default_doc),
+                            ] + list(map(partial(param2argparse_param, emit_default_doc=emit_default_doc),
                                          docstring_struct['params'])) + [
                                 Return(
                                     value=Tuple(
@@ -227,7 +228,7 @@ def ast2argparse(ast, function_name='set_cli_args', with_default_doc=False):
                        type_comment=None)
 
 
-def argparse2class(ast, class_name='TargetClass', with_default_doc=True):
+def argparse2class(ast, class_name='TargetClass', emit_default_doc=True):
     """
     Converts an argparse function to a class
 
@@ -237,18 +238,18 @@ def argparse2class(ast, class_name='TargetClass', with_default_doc=True):
     :param class_name: class name
     :type class_name: ```str```
 
-    :param with_default_doc: Help/docstring should include 'With default' text
-    :type with_default_doc: ```bool``
+    :param emit_default_doc: Help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
     :return: docstring
     :rtype: ```str```
     """
     assert isinstance(ast, FunctionDef), 'Expected `FunctionDef` got: `{}`'.format(type(ast).__name__)
-    docstring_struct = argparse_ast2docstring_structure(ast, with_default_doc=with_default_doc)
-    return docstring2class_def(docstring_struct, class_name=class_name, with_default_doc=with_default_doc)
+    docstring_struct = argparse_ast2docstring_structure(ast, emit_default_doc=emit_default_doc)
+    return docstring2class_def(docstring_struct, class_name=class_name, emit_default_doc=emit_default_doc)
 
 
-def docstring2function_def(docstring, method_name='method_name', first_arg='self', with_default_doc=True):
+def docstring2function_def(docstring, method_name='method_name', first_arg='self', emit_default_doc=False):
     """
     Converts a docstring to an AST
 
@@ -261,14 +262,14 @@ def docstring2function_def(docstring, method_name='method_name', first_arg='self
     :param first_arg: First argument. If `None` then it's a staticmethod or root function
     :type first_arg: ```Optional[Literal['cls', 'self']]```
 
-    :param with_default_doc: Help/docstring should include 'With default' text
-    :type with_default_doc: ```bool``
+    :param emit_default_doc: Help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
     :return: Class AST of the docstring
     :rtype: ```Union[ast.Module, ast.ClassDef]```
     """
     assert isinstance(docstring, str), 'Expected `str` got: `{}`'.format(type(docstring).__name__)
-    docstring_struct = parse_docstring(docstring, with_default_doc=with_default_doc)
+    docstring_struct = parse_docstring(docstring, emit_default_doc=emit_default_doc)
 
     params_no_kwargs = tuple(filter(
         lambda param: not param['name'].endswith('kwargs'),
@@ -276,20 +277,26 @@ def docstring2function_def(docstring, method_name='method_name', first_arg='self
     ))
 
     return FunctionDef(
-        args=arguments(args=list(filter(
-            None,
-            (first_arg if first_arg is None else arg(annotation=None,
-                                                     arg=first_arg,
-                                                     type_comment=None),
-             *map(lambda param: arg(
-                 annotation=Name(
-                     ctx=Load(),
-                     id=param['typ']
-                 ) if param['typ'] in simple_types else parse(param['typ']),
-                 arg=param['name'],
-                 type_comment=None
-             ),
-                  params_no_kwargs)))),
+        args=arguments(
+            args=list(filter(
+                None,
+                (first_arg if first_arg is None else arg(annotation=None,
+                                                         arg=first_arg,
+                                                         type_comment=None),
+                 *map(lambda param:
+                      arg(
+                          annotation=Name(
+                              ctx=Load(),
+                              id=param['typ']
+                          )
+                          if param['typ'] in simple_types
+                          else parse(param['typ']).body[0].value,
+                          arg=param['name'],
+                          type_comment=None
+                      ),
+                      params_no_kwargs)
+                 )
+            )),
             defaults=list(
                 map(lambda param: Constant(kind=None,
                                            value=param['default']),
@@ -309,18 +316,26 @@ def docstring2function_def(docstring, method_name='method_name', first_arg='self
             ),
             kwonlyargs=[],
             posonlyargs=[],
-            vararg=None),
+            vararg=None
+        ),
         body=list(filter(
             None,
-            (Expr(value=Constant(
-                kind=None,
-                value=docstring_structure2docstring(docstring_struct,
-                                                    with_default_doc=with_default_doc))),
-             Return(value=parse(docstring_struct['returns']['default']))
-             if 'returns' in docstring_struct and docstring_struct['returns'].get('default')
-             else None)
+            (
+                Expr(value=Constant(
+                    kind=None,
+                    value=docstring_structure2docstring(
+                        docstring_structure,
+                        emit_default_doc=emit_default_doc
+                    )
+                )),
+                Return(value=parse(docstring_struct['returns']['default']).body[0].value)
+                if 'returns' in docstring_struct and docstring_struct['returns'].get('default')
+                else None
+            )
         )),
         decorator_list=[],
         name=method_name,
-        returns=parse(docstring_struct['returns']['typ']) if 'returns' in docstring_struct else None,
-        type_comment=None)
+        returns=(parse(docstring_struct['returns']['typ']).body[0].value
+                 if 'returns' in docstring_struct else None),
+        type_comment=None
+    )

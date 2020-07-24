@@ -92,7 +92,7 @@ def reindent(s):
     return '\n'.join(line.strip() for line in s.strip().split('\n'))
 
 
-def doc_to_type_doc(name, doc, with_default_doc=True):
+def doc_to_type_doc(name, doc, emit_default_doc=True):
     """
     Convert input string to default and type (if those are present)
 
@@ -102,8 +102,8 @@ def doc_to_type_doc(name, doc, with_default_doc=True):
     :param doc: doc
     :type doc: ```str```
 
-    :param with_default_doc: Help/docstring should include 'With default' text
-    :type with_default_doc: ```bool``
+    :param emit_default_doc: Help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
     :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :rtype: ```dict```
@@ -121,21 +121,21 @@ def doc_to_type_doc(name, doc, with_default_doc=True):
         elif len(typ):
             typ.append(line)
         else:
-            doc, default = extract_default(line, with_default_doc=with_default_doc)
+            doc, default = extract_default(line, emit_default_doc=emit_default_doc)
             docs.append(doc)
     return dict(doc='\n'.join(docs), **{'default': default} if default else {},
                 **{'typ': (lambda typ: 'dict' if typ.endswith('kwargs') else typ)('\n'.join(typ))}
                 if len(typ) else {})
 
 
-def parse_docstring(docstring, with_default_doc=True):
+def parse_docstring(docstring, emit_default_doc=True):
     """Parse the docstring into its components.
 
     :param docstring: the docstring
     :type docstring: ```Union[str, dict]```
 
-    :param with_default_doc: Help/docstring should include 'With default' text
-    :type with_default_doc: ```bool``
+    :param emit_default_doc: Help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
     :returns: a dictionary of form
               {
@@ -169,11 +169,11 @@ def parse_docstring(docstring, with_default_doc=True):
 
             if params_returns_desc:
                 params = [
-                    dict(name=name, **doc_to_type_doc(name, doc, with_default_doc=with_default_doc))
+                    dict(name=name, **doc_to_type_doc(name, doc, emit_default_doc=emit_default_doc))
                     for name, doc in PARAM_REGEX.findall(params_returns_desc)
                 ]
 
-                returns = extract_return_params(params_returns_desc, with_default_doc=with_default_doc)
+                returns = extract_return_params(params_returns_desc, emit_default_doc=emit_default_doc)
 
     return {
         'short_description': short_description,
@@ -183,15 +183,15 @@ def parse_docstring(docstring, with_default_doc=True):
     }
 
 
-def extract_return_params(params_returns_desc, with_default_doc):
+def extract_return_params(params_returns_desc, emit_default_doc):
     """
     Parse out the doc, type, and defaults from the ReST doctype
 
     :param params_returns_desc: return text from docstring
     :type params_returns_desc: ```str```
 
-    :param with_default_doc: Help/docstring should include 'With default' text
-    :type with_default_doc: ```bool``
+    :param emit_default_doc: Help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
     :return: dict of shape {'typ': ..., 'doc': ..., 'default': ...}
     :rdict: ```dict```
@@ -210,7 +210,7 @@ def extract_return_params(params_returns_desc, with_default_doc):
                 break
             else:
                 r_dict['doc'] += char
-        doc, default = extract_default(r_dict['doc'].rstrip('\n'), with_default_doc=with_default_doc)
+        doc, default = extract_default(r_dict['doc'].rstrip('\n'), emit_default_doc=emit_default_doc)
         r_dict.update({
             'name': 'return_type',
             'doc': doc,

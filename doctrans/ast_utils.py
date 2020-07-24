@@ -79,15 +79,15 @@ def to_class_def(ast):
         raise NotImplementedError(type(ast).__name__)
 
 
-def param2argparse_param(param, with_default_doc=True):
+def param2argparse_param(param, emit_default_doc=True):
     """
     Converts a param to an Expr `argparse.add_argument` call
 
     :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :type param: ```dict```
 
-    :param with_default_doc: Help/docstring should include 'With default' text
-    :type with_default_doc: ```bool``
+    :param emit_default_doc: Help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
     :return: `argparse.add_argument` call—with arguments—as an AST node
     :rtype: ```Expr```
@@ -123,7 +123,7 @@ def param2argparse_param(param, with_default_doc=True):
                 else:
                     typ = 'globals().__getitem__'
 
-    doc, _default = extract_default(param['doc'], with_default_doc=with_default_doc)
+    doc, _default = extract_default(param['doc'], emit_default_doc=emit_default_doc)
     default = param.get('default', _default)
 
     return Expr(
