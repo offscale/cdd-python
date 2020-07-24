@@ -3,23 +3,23 @@ Functions to handle default parameterisation
 """
 
 
-def extract_default(line, with_default_doc=True):
+def extract_default(line, emit_default_doc=True):
     """
     Extract the a tuple of (doc, default) from a doc line
 
     :param line: Example - "dataset. Defaults to mnist"
     :type line: ```str``
 
-    :param with_default_doc: Help/docstring should include 'With default' text
-    :type with_default_doc: ```bool``
+    :param emit_default_doc: Help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
-    :returns: Example - ("dataset. Defaults to mnist", "mnist") if with_default_doc else ("dataset", "mnist")
+    :returns: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
     :rtype: Tuple[str, str]
     """
     search_str = 'defaults to '
     doc, _, default = (lambda parts: parts if parts[1] else line.partition(search_str.capitalize()))(
         line.partition(search_str))
-    return line if with_default_doc else doc.rstrip(), default if len(default) else None
+    return line if emit_default_doc else doc.rstrip(), default if len(default) else None
 
 
 def remove_defaults_from_docstring_structure(docstring_struct, remove_defaults=False):
@@ -56,7 +56,7 @@ def remove_defaults_from_docstring_structure(docstring_struct, remove_defaults=F
         :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
         :rtype: ```dict```
         """
-        doc, default = extract_default(param['doc'], with_default_doc=False)
+        doc, default = extract_default(param['doc'], emit_default_doc=False)
         param.update({
             'doc': doc,
             'default': default

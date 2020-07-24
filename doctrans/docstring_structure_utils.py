@@ -11,19 +11,19 @@ from astor import to_source
 
 from doctrans.ast_utils import to_class_def
 from doctrans.defaults_utils import extract_default
-from doctrans.pure_utils import simple_types
+from doctrans.pure_utils import simple_types, tab
 from doctrans.rest_docstring_parser import parse_docstring, doc_to_type_doc, extract_return_params
 
 
-def class_def2docstring_structure(class_def, with_default_doc=True):
+def class_def2docstring_structure(class_def, emit_default_doc=True):
     """
     Converts an AST to a docstring structure
 
     :param class_def: Class AST or Module AST with a ClassDef inside
     :type class_def: ```Union[Module, ClassDef]```
 
-    :param with_default_doc: Help/docstring should include 'With default' text
-    :type with_default_doc: ```bool``
+    :param emit_default_doc: Help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
     :return: docstring structure
     :rtype: ```dict```
@@ -57,18 +57,18 @@ def class_def2docstring_structure(class_def, with_default_doc=True):
             e.annotation.id if isinstance(e.annotation, Name) else to_source(e.annotation).rstrip()
 
     docstring_struct['params'] = [
-        dict(name=k, **interpolate_defaults(v, with_default_doc=with_default_doc))
+        dict(name=k, **interpolate_defaults(v, emit_default_doc=emit_default_doc))
         for k, v in docstring_struct['params'].items()
     ]
     docstring_struct['returns'] = interpolate_defaults(
         docstring_struct['returns']['return_type'],
-        with_default_doc=with_default_doc
+        emit_default_doc=emit_default_doc
     )
 
     return docstring_struct
 
 
-def class_with_method2docstring_structure(class_def, method_name, with_default_doc=True):
+def class_with_method2docstring_structure(class_def, method_name, emit_default_doc=True):
     """
     Converts an AST of a class with a method to a docstring structure
 
@@ -78,8 +78,8 @@ def class_with_method2docstring_structure(class_def, method_name, with_default_d
     :param method_name: Method name
     :type method_name: ```str```
 
-    :param with_default_doc: Help/docstring should include 'With default' text
-    :type with_default_doc: ```bool``
+    :param emit_default_doc: Help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
     :return: docstring structure
     :rtype: ```dict```
@@ -163,7 +163,7 @@ def class_with_method2docstring_structure(class_def, method_name, with_default_d
         trailing_dot = '.:type' in d['doc']
         doc_typ_d = doc_to_type_doc(name_, d['doc'].replace(
             ':type', '\n:type'
-        ), with_default_doc=with_default_doc)
+        ), emit_default_doc=emit_default_doc)
 
         if len(function_def.args.defaults) > idx and function_def.args.defaults[idx].value is not None:
             doc_typ_d['default'] = function_def.args.defaults[idx].value
@@ -181,14 +181,14 @@ def class_with_method2docstring_structure(class_def, method_name, with_default_d
             e.annotation.id if isinstance(e.annotation, Name) else to_source(e.annotation).rstrip()
 
     docstring_struct['params'] = [
-        dict(name=k, **interpolate_defaults(v, with_default_doc=with_default_doc))
+        dict(name=k, **interpolate_defaults(v, emit_default_doc=emit_default_doc))
         for k, v in docstring_struct['params'].items()
     ]
     if 'return_type' in docstring_struct['returns']:
         trailing_dot = docstring_struct['returns']['return_type']['doc'].endswith('.')
         docstring_struct['returns']['return_type'].update(extract_return_params(
             docstring_struct['returns']['return_type']['doc'] + docstring_struct['returns']['return_type']['typ'],
-            with_default_doc=with_default_doc
+            emit_default_doc=emit_default_doc
         ))
         if trailing_dot and not docstring_struct['returns']['return_type']['doc'].endswith('.'):
             docstring_struct['returns']['return_type']['doc'] = '{doc}.'.format(
@@ -197,7 +197,7 @@ def class_with_method2docstring_structure(class_def, method_name, with_default_d
 
         docstring_struct['returns'] = interpolate_defaults(
             docstring_struct['returns']['return_type'],
-            with_default_doc=with_default_doc
+            emit_default_doc=emit_default_doc
         )
         returns = next((node.value
                         for node in function_def.body
@@ -208,21 +208,21 @@ def class_with_method2docstring_structure(class_def, method_name, with_default_d
     return docstring_struct
 
 
-def argparse_ast2docstring_structure(function_def, with_default_doc=False):
+def argparse_ast2docstring_structure(function_def, emit_default_doc=False):
     """
     Converts an AST to a docstring structure
 
     :param function_def: AST of argparse function
     :type function_def: ```FunctionDef``
 
-    :param with_default_doc: Help/docstring should include 'With default' text
-    :type with_default_doc: ```bool``
+    :param emit_default_doc: Help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
     :return: docstring structure
     :rtype: ```dict```
     """
     docstring_struct = {'short_description': '', 'long_description': '', 'params': []}
-    _docstring_struct = parse_docstring(get_docstring(function_def), with_default_doc=with_default_doc)
+    _docstring_struct = parse_docstring(get_docstring(function_def), emit_default_doc=emit_default_doc)
     for e in function_def.body:
         if isinstance(e, Expr):
             if isinstance(e.value, Constant):
@@ -234,7 +234,7 @@ def argparse_ast2docstring_structure(function_def, with_default_doc=False):
             elif (isinstance(e.value, Call) and len(e.value.args) == 1 and
                   isinstance(e.value.args[0], Constant) and
                   e.value.args[0].kind is None):
-                docstring_struct['params'].append(parse_out_param(e, with_default_doc=with_default_doc))
+                docstring_struct['params'].append(parse_out_param(e, emit_default_doc=emit_default_doc))
         elif isinstance(e, Assign):
             if all((len(e.targets) == 1,
                     isinstance(e.targets[0], Attribute),
@@ -261,8 +261,8 @@ def argparse_ast2docstring_structure(function_def, with_default_doc=False):
                     for line in function_def.body[0].value.value.split('\n')
                     if line.lstrip().startswith(':return')
                 )
-                if not with_default_doc:
-                    doc, _ = extract_default(doc, with_default_doc=with_default_doc)
+                if not emit_default_doc:
+                    doc, _ = extract_default(doc, emit_default_doc=emit_default_doc)
 
                 docstring_struct['returns'] = {
                     'name': 'return_type',
@@ -271,7 +271,7 @@ def argparse_ast2docstring_structure(function_def, with_default_doc=False):
                         doc=doc,
                         default=default
                     ) if all((default is not None,
-                              with_default_doc,
+                              emit_default_doc,
                               'Defaults to' not in doc,
                               'defaults to' not in doc))
                     else doc,
@@ -284,7 +284,7 @@ def argparse_ast2docstring_structure(function_def, with_default_doc=False):
     return docstring_struct
 
 
-def parse_out_param(expr, with_default_doc=True):
+def parse_out_param(expr, emit_default_doc=True):
     """
     Turns the class_def repr of '--dataset_name', type=str, help='name of dataset.', required=True, default='mnist'
       into
@@ -294,8 +294,8 @@ def parse_out_param(expr, with_default_doc=True):
     :param expr: Expr
     :type expr: ```Expr```
 
-    :param with_default_doc: Help/docstring should include 'With default' text
-    :type with_default_doc: ```bool``
+    :param emit_default_doc: Help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
     :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :rtype ```dict```
@@ -337,7 +337,7 @@ def parse_out_param(expr, with_default_doc=True):
     )
     doc = (
         lambda help: (
-            help if default is None or with_default_doc is False or (hasattr(default, '__len__') and len(
+            help if default is None or emit_default_doc is False or (hasattr(default, '__len__') and len(
                 default) == 0) or 'defaults to' in help or 'Defaults to' in help
             else '{help} Defaults to {default}'.format(
                 help=help if help.endswith('.') else '{}.'.format(help),
@@ -350,7 +350,7 @@ def parse_out_param(expr, with_default_doc=True):
         if key_word.arg == 'help'
     ))
     if default is None:
-        doc, default = extract_default(doc, with_default_doc=with_default_doc)
+        doc, default = extract_default(doc, emit_default_doc=emit_default_doc)
     if default is None:
         # if name.endswith('kwargs'):
         #    default = {}
@@ -400,40 +400,50 @@ def parse_out_param(expr, with_default_doc=True):
     )
 
 
-def docstring2docstring_structure(docstring, with_default_doc=True):
+def docstring2docstring_structure(docstring, emit_default_doc=True):
     """
     Converts a docstring to an AST
 
     :param docstring: docstring portion
     :type docstring: ```Union[str, Dict]```
 
-    :param with_default_doc: Help/docstring should include 'With default' text
-    :type with_default_doc: ```bool``
+    :param emit_default_doc: Help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
     :return: docstring_structure, whether it returns or not
     :rtype: ```Tuple[dict, bool]```
     """
     parsed = docstring if isinstance(docstring, dict) \
-        else parse_docstring(docstring, with_default_doc=with_default_doc)
+        else parse_docstring(docstring, emit_default_doc=emit_default_doc)
     returns = 'returns' in parsed and 'name' in parsed['returns']
     if returns:
         parsed['returns']['doc'] = parsed['returns'].get('doc', parsed['returns']['name'])
     return parsed, returns
 
 
-def docstring_structure2docstring(docstring_structure, with_default_doc=True,
-                                  docstring_format='rest'):
+def docstring_structure2docstring(docstring_structure, emit_default_doc=True,
+                                  docstring_format='rest', indent_level=2,
+                                  emit_types=False, emit_separating_tab=True):
     """
     Converts a docstring to an AST
 
     :param docstring_structure: docstring struct
     :type docstring_structure: ```dict```
 
-    :param with_default_doc: Help/docstring should include 'With default' text
-    :type with_default_doc: ```bool``
+    :param emit_default_doc: Help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpy', 'google']```
+
+    :param indent_level: indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
+    :type indent_level: ```int```
+
+    :param emit_types: whether to show `:type` lines
+    :type emit_types: ```bool```
+
+    :param emit_separating_tab: whether to put a tab between :param and return and desc
+    :type emit_separating_tab: ```bool```
 
     :return: docstring
     :rtype: ```str```
@@ -441,7 +451,9 @@ def docstring_structure2docstring(docstring_structure, with_default_doc=True,
     if docstring_format != 'rest':
         raise NotImplementedError(docstring_format)
 
-    def param2docstring_param(param, docstring_format='rest', with_default_doc=True):
+    def param2docstring_param(param, docstring_format='rest',
+                              emit_default_doc=True, indent_level=1,
+                              emit_types=False):
         """
         Converts param dict from docstring_struct to the right string representation
 
@@ -451,14 +463,19 @@ def docstring_structure2docstring(docstring_structure, with_default_doc=True,
         :param docstring_format: Format of docstring
         :type docstring_format: ```Literal['rest', 'numpy', 'google']```
 
-        :param with_default_doc: Help/docstring should include 'With default' text
-        :type with_default_doc: ```bool``
+        :param emit_default_doc: Help/docstring should include 'With default' text
+        :type emit_default_doc: ```bool``
 
+        :param indent_level: indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
+        :type indent_level: ```int```
+
+        :param emit_types: whether to show `:type` lines
+        :type emit_types: ```bool```
         """
         if docstring_format != 'rest':
             raise NotImplementedError(docstring_format)
 
-        doc, default = extract_default(param['doc'], with_default_doc=False)
+        doc, default = extract_default(param['doc'], emit_default_doc=False)
         if default is None:
             default = param.get('default')
 
@@ -468,45 +485,53 @@ def docstring_structure2docstring(docstring_structure, with_default_doc=True,
 
         return ''.join(filter(
             None, (
-                '\n:param {param[name]}: {doc}'.format(param=param, doc=doc),
-                ' Defaults to {default}'.format(default=default) if with_default_doc and 'default' in param
+                '{tab}:param {param[name]}: {doc}'.format(tab=tab * indent_level, param=param, doc=doc),
+                ' Defaults to {default}'.format(default=default) if emit_default_doc and 'default' in param
                 else None,
-                '\n',
-                typ if typ is None else ':type {param[name]}: ```{typ}```'.format(param=param,
-                                                                                  typ=typ)
+                None if typ is None or not emit_types else '\n{tab}:type {param[name]}: ```{typ}```'.format(
+                    tab=tab * indent_level,
+                    param=param,
+                    typ=typ
+                )
             )
         ))
 
-    return '\n{description}\n{params}\n{returns}\n'.format(
+    param2docstring_param = partial(
+        param2docstring_param,
+        emit_default_doc=emit_default_doc,
+        docstring_format=docstring_format,
+        indent_level=indent_level,
+        emit_types=emit_types
+    )
+    sep = tab if emit_separating_tab else ''
+    return '\n{tab}{description}\n{sep}\n{params}\n{sep}\n{returns}\n{tab}'.format(
+        sep=sep,
+        tab=tab * indent_level,
         description=docstring_structure.get('long_description') or docstring_structure['short_description'],
-        params='\n'.join(map(partial(param2docstring_param,
-                                     with_default_doc=with_default_doc,
-                                     docstring_format=docstring_format),
-                             docstring_structure['params'])),
-        returns=param2docstring_param(
-            docstring_structure['returns'],
-            with_default_doc=with_default_doc,
-            docstring_format=docstring_format
-        ).replace(':param return_type:', ':return:').replace(':type return_type:', ':rtype:')
+        params='\n{sep}\n'.format(sep=sep).join(map(param2docstring_param,
+                                                    docstring_structure['params'])),
+        returns=(param2docstring_param(docstring_structure['returns'])
+                 .replace(':param return_type:', ':return:')
+                 .replace(':type return_type:', ':rtype:'))
         if docstring_structure.get('returns') else ''
     )
 
 
-def interpolate_defaults(param, with_default_doc=True):
+def interpolate_defaults(param, emit_default_doc=True):
     """
     Correctly set the 'default' and 'doc' parameters
 
     :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'required': ... }
     :type param: ```dict```
 
-    :param with_default_doc: Help/docstring should include 'With default' text
-    :type with_default_doc: ```bool``
+    :param emit_default_doc: Help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
     :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :rtype: ```dict```
     """
     if 'doc' in param:
-        doc, default = extract_default(param['doc'], with_default_doc=with_default_doc)
+        doc, default = extract_default(param['doc'], emit_default_doc=emit_default_doc)
         param['doc'] = doc
         if default:
             param['default'] = default
