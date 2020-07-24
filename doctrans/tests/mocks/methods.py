@@ -263,7 +263,8 @@ class_with_method_types_ast = ClassDef(
                                                            id='Tuple'))])),
                   value=Name(ctx=Load(),
                              id='Union')),
-              type_comment=None)],
+              type_comment=None)
+          ],
     decorator_list=[],
     keywords=[],
     name='C'

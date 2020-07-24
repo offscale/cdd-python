@@ -22,7 +22,7 @@ def extract_default(line, with_default_doc=True):
     return line if with_default_doc else doc.rstrip(), default if len(default) else None
 
 
-def remove_defaults_from_docstring_structure(docstring_struct):
+def remove_defaults_from_docstring_structure(docstring_struct, remove_defaults=False):
     """
     Remove "Default of" text from docstring structure
 
@@ -34,6 +34,9 @@ def remove_defaults_from_docstring_structure(docstring_struct):
                   "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
               }
     :type docstring_struct: ```dict```
+
+    :param remove_defaults: Whether to remove default property
+    :type remove_defaults: ```bool```
 
     :returns: a dictionary of form
               {
@@ -58,7 +61,7 @@ def remove_defaults_from_docstring_structure(docstring_struct):
             'doc': doc,
             'default': default
         })
-        if default is None:
+        if default is None or remove_defaults:
             del param['default']
         return param
 

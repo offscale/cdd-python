@@ -42,16 +42,13 @@ docstring_structure = {
         }
     ],
     'returns': {
+        'name': 'return_type',
         'doc': 'Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))',
         'default': '(np.empty(0), np.empty(0))',
         'typ': 'Union[Tuple[tf.data.Dataset, tf.data.Dataset], '
                'Tuple[np.ndarray, np.ndarray]]'
     }
 }
-
-docstring_structure_no_default_doc = remove_defaults_from_docstring_structure(
-    deepcopy(docstring_structure)
-)
 
 docstring_str = """
 Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
@@ -72,5 +69,31 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 :type data_loader_kwargs: ```**data_loader_kwargs```
 
 :return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
+:rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
+"""
+
+docstring_structure_no_default_doc = remove_defaults_from_docstring_structure(
+    deepcopy(docstring_structure), remove_defaults=True
+)
+
+docstring_str_no_default_doc = """
+Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
+
+:param dataset_name: name of dataset.
+:type dataset_name: ```str```
+
+:param tfds_dir: directory to look for models in.
+:type tfds_dir: ```Optional[str]```
+
+:param K: backend engine, e.g., `np` or `tf`.
+:type K: ```Literal['np', 'tf']```
+
+:param as_numpy: Convert to numpy ndarrays
+:type as_numpy: ```Optional[bool]```
+
+:param data_loader_kwargs: pass this as arguments to data_loader function
+:type data_loader_kwargs: ```**data_loader_kwargs```
+
+:return: Train and tests dataset splits.
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """

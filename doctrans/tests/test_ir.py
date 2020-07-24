@@ -25,21 +25,21 @@ class TestIntermediateRepresentation(TestCase):
               }
     """
 
-    def test_argparse_ast2docstring_structure(self):
+    def test_argparse_ast2docstring_structure(self) -> None:
         """
         Tests whether `argparse_ast2docstring_structure` produces `docstring_structure_no_default_doc`
               from `argparse_func_ast` """
-        self.assertDictEqual(argparse_ast2docstring_structure(argparse_func_ast),
+        self.assertDictEqual(argparse_ast2docstring_structure(argparse_func_ast, with_default_doc=False),
                              docstring_structure_no_default_doc)
 
-    def test_class_ast2docstring_structure(self):
+    def test_class_ast2docstring_structure(self) -> None:
         """
         Tests whether `class_def2docstring_structure` produces `docstring_structure`
               from `class_ast` """
         self.assertDictEqual(class_def2docstring_structure(class_ast),
                              docstring_structure)
 
-    def test_class_with_method2docstring_structure(self):
+    def test_class_with_method2docstring_structure(self) -> None:
         """
         Tests whether `class_with_method2docstring_structure` produces `docstring_structure`
               from `class_with_method_ast` """
@@ -51,7 +51,7 @@ class TestIntermediateRepresentation(TestCase):
 
     # Commented out as `ast.parse` isn't extracting the return type in the `def f() -> bool` form.
     '''
-    def test_class_with_method2docstring_structure_inline_types(self):
+    def test_class_with_method2docstring_structure_inline_types(self) -> None:
         """
         Tests whether `class_with_method2docstring_structure` produces `docstring_structure`
               from `class_with_method_types_ast` """
@@ -62,7 +62,7 @@ class TestIntermediateRepresentation(TestCase):
         )
     '''
 
-    def test_docstring2docstring_structure(self):
+    def test_docstring2docstring_structure(self) -> None:
         """
         Tests whether `docstring2docstring_structure` produces `docstring_structure`
               from `docstring_str` """

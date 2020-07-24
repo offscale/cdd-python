@@ -169,11 +169,11 @@ def parse_docstring(docstring, with_default_doc=True):
 
             if params_returns_desc:
                 params = [
-                    dict(name=name, **doc_to_type_doc(name, doc))
+                    dict(name=name, **doc_to_type_doc(name, doc, with_default_doc=with_default_doc))
                     for name, doc in PARAM_REGEX.findall(params_returns_desc)
                 ]
 
-                returns = extract_return_params(params_returns_desc, with_default_doc)
+                returns = extract_return_params(params_returns_desc, with_default_doc=with_default_doc)
 
     return {
         'short_description': short_description,
@@ -210,9 +210,9 @@ def extract_return_params(params_returns_desc, with_default_doc):
                 break
             else:
                 r_dict['doc'] += char
-        r_dict['doc'] = r_dict['doc'].rstrip('\n').rstrip('.')
-        doc, default = extract_default(r_dict['doc'], with_default_doc=with_default_doc)
+        doc, default = extract_default(r_dict['doc'].rstrip('\n'), with_default_doc=with_default_doc)
         r_dict.update({
+            'name': 'return_type',
             'doc': doc,
             'default': default
         })
