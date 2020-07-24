@@ -10,7 +10,7 @@ from typing import Any
 from astor import to_source
 
 from doctrans.ast_utils import to_class_def
-from doctrans.defaults_utils import extract_default
+from doctrans.defaults_utils import extract_default, remove_defaults_from_docstring_structure
 from doctrans.pure_utils import simple_types, tab
 from doctrans.rest_docstring_parser import parse_docstring, doc_to_type_doc, extract_return_params
 
@@ -60,10 +60,11 @@ def class_def2docstring_structure(class_def, emit_default_doc=True):
         dict(name=k, **interpolate_defaults(v, emit_default_doc=emit_default_doc))
         for k, v in docstring_struct['params'].items()
     ]
-    docstring_struct['returns'] = interpolate_defaults(
-        docstring_struct['returns']['return_type'],
-        emit_default_doc=emit_default_doc
-    )
+    docstring_struct['returns'] = (lambda k: dict(
+        name=k,
+        **interpolate_defaults(docstring_struct['returns'][k],
+                               emit_default_doc=emit_default_doc)
+    ))('return_type')
 
     return docstring_struct
 
@@ -205,6 +206,8 @@ def class_with_method2docstring_structure(class_def, method_name, emit_default_d
         if returns is not None:
             docstring_struct['returns']['default'] = to_source(returns).rstrip()
 
+    if not emit_default_doc:
+        docstring_struct = remove_defaults_from_docstring_structure(docstring_struct, remove_defaults=True)
     return docstring_struct
 
 
@@ -281,6 +284,8 @@ def argparse_ast2docstring_structure(function_def, emit_default_doc=False):
                     ).rstrip()
                     # 'Tuple[ArgumentParser, {typ}]'.format(typ=_docstring_struct['returns']['typ'])
                 }
+    if not emit_default_doc:
+        remove_defaults_from_docstring_structure(docstring_struct, remove_defaults=True)
     return docstring_struct
 
 
