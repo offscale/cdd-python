@@ -85,28 +85,28 @@ class TargetClass(object):
 class C(object):
     """ C class (mocked!) """
 
-    def method_name(self, dataset_name='mnist', tfds_dir='~/tensorflow_datasets',
-                    K='np', as_numpy=None, **data_loader_kwargs):
+    def method_name(
+        self,
+        dataset_name: str = 'mnist',
+        tfds_dir: Optional[str] = '~/tensorflow_datasets',
+        K: Literal['np', 'tf'] = 'np',
+        as_numpy: Optional[bool] = None,
+        **data_loader_kwargs
+    ) -> Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
         """
         Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
-
+    
         :param dataset_name: name of dataset.
-        :type dataset_name: ```str```
-
+    
         :param tfds_dir: directory to look for models in.
-        :type tfds_dir: ```Optional[str]```
-
+    
         :param K: backend engine, e.g., `np` or `tf`.
-        :type K: ```Literal['np', 'tf']```
-
+    
         :param as_numpy: Convert to numpy ndarrays
-        :type as_numpy: ```Optional[bool]```
-
+    
         :param data_loader_kwargs: pass this as arguments to data_loader function
-        :type data_loader_kwargs: ```**data_loader_kwargs```
-
+    
         :return: Train and tests dataset splits.
-        :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
         """
         return np.empty(0), np.empty(0)
 ```
