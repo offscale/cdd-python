@@ -15,6 +15,13 @@ jobs:
                 uses: actions/setup-python@v2
                 with:
                     python-version: ${{ matrix.python-version }}
+            -   name: Configure git
+                run: |
+                    email_author="$(git log -1 --pretty=format:'%an <%ce>')"
+                    author="${email_author% *}"
+                    email="${email_author#*<}"; email="${email::-1}"
+                    git config --global user.name "$author"
+                    git config --global user.email "$email"
             -   name: Install dependencies
                 run: |
                     python -m pip install --upgrade pip
@@ -35,13 +42,19 @@ jobs:
                     pip install interrogate
                     interrogate --generate-badge '.github/doccoverage.svg'
                     sed -i 's/interrogate/doc coverage/g' .github/doccoverage.svg
-                    email_author="$(git log -1 --pretty=format:'%an <%ce>')"
-                    author="${email_author% *}"
-                    email="${email_author#*<}"; email="${email::-1}"
-                    git config --global user.name "$author"
-                    git config --global user.email "$email"
                     if git diff --name-only --diff-filter='M' | grep -qF '.github/doccoverage.svg'; then
                         git add .github/doccoverage.svg
-                        git commit -m '[.github/doccoverage.svg] Updated documentation coverage'
-                        git push origin master
+                        git commit -m '[.github/doccoverage.svg] Updated coverage'
                     fi
+            - name: Test coverage
+              run: |
+                  pip install coverage coverage-badge
+                  coverage run -m unittest discover
+                  coverage-badge -o .github/testcoverage.svg
+                  if git diff --name-only --diff-filter='M' | grep -qF '.github/doccoverage.svg'; then
+                      git add .github/testcoverage.svg
+                      git commit -m '[.github/testcoverage.svg] Updated coverage'
+                  fi
+            - name: Push changes
+              run: |
+                  if [ ! -z "$(git cherry -v origin/master)" ]; then git push origin master; fi

@@ -3,8 +3,9 @@ doctrans
 ![Python version range](https://img.shields.io/badge/python-3.8-blue.svg)
 [![Linting, testing, and coverage](https://github.com/SamuelMarks/doctrans/workflows/Linting,%20testing,%20and%20coverage/badge.svg)](https://github.com/SamuelMarks/doctrans/actions)
 ![Documentation coverage](.github/doccoverage.svg)
+![Test coverage](.github/testcoverage.svg)
 
-Translate between docstrings, classes, and argparse.
+Translate between docstrings, classes, methods, and argparse.
 
 ## Install dependencies
 
