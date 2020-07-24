@@ -71,11 +71,8 @@ def docstring2class_def(docstring, class_name='TargetClass',
     :return: Class AST of the docstring
     :rtype: ```ast.ClassDef```
     """
-    parsed, returns = docstring2docstring_structure(docstring, emit_default_doc=emit_default_doc)
-    if parsed.get('returns'):
-        returns = [parsed['returns']]
-    else:
-        returns = []
+    parsed, _ = docstring2docstring_structure(docstring, emit_default_doc=emit_default_doc)
+    returns = [parsed['returns']] if parsed.get('returns') else []
     return ClassDef(
         bases=[Name(ctx=Load(),
                     id=base_class)
