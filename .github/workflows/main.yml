@@ -50,7 +50,7 @@ jobs:
               run: |
                   pip install coverage coverage-badge
                   coverage run -m unittest discover
-                  coverage-badge -o .github/testcoverage.svg
+                  coverage-badge -fo .github/testcoverage.svg
                   if git diff --name-only --diff-filter='M' | grep -qF '.github/doccoverage.svg'; then
                       git add .github/testcoverage.svg
                       git commit -m '[.github/testcoverage.svg] Updated coverage'
