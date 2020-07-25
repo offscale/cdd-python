@@ -1,18 +1,17 @@
 """
 Transform from string or AST representations of input, to AST, file, or str output.
 """
-from ast import parse, ClassDef, Name, Load, Constant, Expr, Module, FunctionDef, arguments, Assign, Attribute, \
-    Store, Tuple, Return, arg
+from ast import parse, ClassDef, Name, Load, Constant, Expr, Module, \
+    FunctionDef, arguments, Assign, Attribute, Store, Tuple, Return, arg
 from functools import partial
 
 from astor import to_source
 from black import format_str, FileMode
 
+from doctrans import docstring_struct
 from doctrans.ast_utils import param2argparse_param, param2ast
 from doctrans.defaults_utils import extract_default
-from doctrans.docstring_structure_utils import class_def2docstring_structure, argparse_ast2docstring_structure, \
-    docstring_structure2docstring
-from doctrans.pure_utils import tab, simple_types
+from doctrans.pure_utils import tab, simple_types, pp
 from doctrans.rest_docstring_parser import parse_docstring
 
 
@@ -262,7 +261,7 @@ class BaseTransform(object):
                 (
                     Expr(value=Constant(
                         kind=None,
-                        value=docstring_structure2docstring(
+                        value=docstring_struct.to_docstring(
                             self.docstring_struct,
                             emit_default_doc=self.emit_default_doc
                         )
@@ -301,7 +300,7 @@ class ArgparseTransform(BaseTransform):
         """
         super(ArgparseTransform, self).__init__(inline_types=inline_types,
                                                 emit_default_doc=emit_default_doc)
-        self.docstring_struct = argparse_ast2docstring_structure(ast, emit_default_doc=emit_default_doc)
+        self.docstring_struct = docstring_struct.from_argparse_ast(ast, emit_default_doc=emit_default_doc)
 
 
 class ClassTransform(BaseTransform):
@@ -324,7 +323,7 @@ class ClassTransform(BaseTransform):
         """
         super(ClassTransform, self).__init__(inline_types=inline_types,
                                              emit_default_doc=emit_default_doc)
-        self.docstring_struct = class_def2docstring_structure(ast)
+        self.docstring_struct = docstring_struct.from_class(ast)
 
 
 class DocstringTransform(BaseTransform):
@@ -350,7 +349,10 @@ class DocstringTransform(BaseTransform):
         """
         super(DocstringTransform, self).__init__(inline_types=inline_types,
                                                  emit_default_doc=emit_default_doc)
-        self.docstring_struct = parse_docstring(docstring, emit_default_doc=emit_default_doc)
+        if docstring_format != 'rest':
+            raise NotImplementedError(docstring_format)
+        self.docstring_struct = docstring_struct.from_docstring(docstring, emit_default_doc=emit_default_doc)
+        pp(parse_docstring(docstring))
 
 
 class MethodTransform(BaseTransform):
@@ -373,4 +375,4 @@ class MethodTransform(BaseTransform):
         """
         super(MethodTransform, self).__init__(inline_types=inline_types,
                                               emit_default_doc=emit_default_doc)
-        self.docstring_struct = class_def2docstring_structure(ast)
+        self.docstring_struct = docstring_struct.from_class(ast)
