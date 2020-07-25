@@ -47,14 +47,9 @@ jobs:
                         git commit -m '[.github/doccoverage.svg] Updated coverage'
                     fi
             - name: Test coverage
-              run: |
-                  pip install coverage coverage-badge
-                  coverage run -m unittest discover
-                  coverage-badge -fo .github/testcoverage.svg
-                  if git diff --name-only --diff-filter='M' | grep -qF '.github/doccoverage.svg'; then
-                      git add .github/testcoverage.svg
-                      git commit -m '[.github/testcoverage.svg] Updated coverage'
-                  fi
+              uses: codecov/codecov-action@v1
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
             - name: Push changes
               run: |
                   if [ ! -z "$(git cherry -v origin/master)" ]; then git push origin master; fi

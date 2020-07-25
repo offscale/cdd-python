@@ -4,7 +4,7 @@ doctrans
 [![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Linting, testing, and coverage](https://github.com/SamuelMarks/doctrans/workflows/Linting,%20testing,%20and%20coverage/badge.svg)](https://github.com/SamuelMarks/doctrans/actions)
 ![Documentation coverage](.github/doccoverage.svg)
-![Test coverage](.github/testcoverage.svg)
+[![codecov](https://codecov.io/gh/SamuelMarks/doctrans/branch/master/graph/badge.svg)](https://codecov.io/gh/SamuelMarks/doctrans)
 
 Translate between docstrings, classes, methods, and argparse.
 
