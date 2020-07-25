@@ -351,8 +351,8 @@ class DocstringTransform(BaseTransform):
                                                  emit_default_doc=emit_default_doc)
         if docstring_format != 'rest':
             raise NotImplementedError(docstring_format)
-        self.docstring_struct = docstring_struct.from_docstring(docstring, emit_default_doc=emit_default_doc)
-        pp(parse_docstring(docstring))
+        self.docstring_struct = docstring_struct.from_docstring(docstring,
+                                                                emit_default_doc=emit_default_doc)
 
 
 class MethodTransform(BaseTransform):

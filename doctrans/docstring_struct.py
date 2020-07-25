@@ -15,7 +15,7 @@ from astor import to_source
 from doctrans.ast_utils import to_class_def
 from doctrans.defaults_utils import remove_defaults_from_docstring_structure, extract_default
 from doctrans.docstring_structure_utils import interpolate_defaults, parse_out_param
-from doctrans.pure_utils import tab
+from doctrans.pure_utils import tab, rpartial
 from doctrans.rest_docstring_parser import doc_to_type_doc, extract_return_params, parse_docstring
 
 
@@ -40,8 +40,7 @@ def from_class(class_def, emit_default_doc=True):
         'returns': {}
     }
     name, key = None, 'params'
-    for line in filter(None, map(lambda l: l.lstrip(),
-                                 class_def.body[0].value.value.replace(':cvar', ':param').split('\n'))):
+    for line in get_docstring(class_def).replace(':cvar', ':param').split('\n'):
         if line.startswith(':param'):
             name, _, doc = line.rpartition(':')
             name = name.replace(':param ', '')
@@ -55,7 +54,7 @@ def from_class(class_def, emit_default_doc=True):
         else:
             docstring_struct['short_description'] += line
 
-    for e in filter(lambda _e: isinstance(_e, AnnAssign), class_def.body[1:]):
+    for e in filter(rpartial(isinstance, AnnAssign), class_def.body[1:]):
         name = e.target.id
         docstring_struct['returns' if name == 'return_type' else 'params'][name]['typ'] = \
             e.annotation.id if isinstance(e.annotation, Name) else to_source(e.annotation).rstrip()
@@ -211,7 +210,8 @@ def from_class_with_method(class_def, method_name, emit_default_doc=True):
             docstring_struct['returns']['default'] = to_source(returns).rstrip()
 
     if not emit_default_doc:
-        docstring_struct = remove_defaults_from_docstring_structure(docstring_struct, remove_defaults=True)
+        docstring_struct = remove_defaults_from_docstring_structure(docstring_struct,
+                                                                    remove_defaults=True)
     return docstring_struct
 
 
