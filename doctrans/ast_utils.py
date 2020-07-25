@@ -5,7 +5,7 @@ from ast import AnnAssign, Name, Load, Store, Constant, Dict, Module, ClassDef, 
     Attribute, keyword, parse, walk
 
 from doctrans.defaults_utils import extract_default
-from doctrans.pure_utils import simple_types
+from doctrans.pure_utils import simple_types, rpartial
 
 
 def param2ast(param):
@@ -64,9 +64,8 @@ def to_class_def(ast):
     :rtype: ```ast.ClassDef```
     """
     if isinstance(ast, Module):
-        classes = tuple(e
-                        for e in ast.body
-                        if isinstance(e, ClassDef))
+        classes = tuple(next(filter(rpartial(isinstance, ClassDef),
+                                    ast.body)))
         if len(classes) > 1:  # We can filter by name I guess? - Or convert every one?
             raise NotImplementedError()
         elif len(classes) > 0:
