@@ -4,6 +4,8 @@ Tests for the Intermediate Representation
 from ast import FunctionDef, Expr, Constant
 from unittest import TestCase, main as unittest_main
 
+from docstring_parser.rest import parse
+
 from doctrans import docstring_struct
 from doctrans.docstring_struct import to_docstring
 from doctrans.tests.mocks.argparse import argparse_func_ast
@@ -87,6 +89,28 @@ class TestIntermediateRepresentation(TestCase):
         self.assertRaises(NotImplementedError,
                           lambda: to_docstring(docstring_str,
                                                docstring_format='numpy'))
+
+    def test_from_docstring_parser(self) -> None:
+        """
+        Tests if it can convert from the 3rd-party libraries format to this one
+        """
+        self.assertDictEqual(docstring_struct.from_docstring_parser(
+            parse('[Summary]\n\n'
+                  ':param [ParamName]: [ParamDescription], defaults to [DefaultParamVal]\n'
+                  ':type [ParamName]: [ParamType](, optional)\n\n'
+                  ':raises [ErrorType]: [ErrorDescription]\n\n'
+                  ':return: [ReturnDescription]\n'
+                  ':rtype: [ReturnType]\n')
+        ),
+            {'params': [{'default': '[DefaultParamVal]',
+                         'doc': '[ParamDescription], ',
+                         'name': '[ParamName]'}],
+             'raises': [{'doc': '[ErrorDescription]',
+                         'name': 'raises',
+                         'typ': '[ErrorType]'}],
+             'returns': {'doc': '[ReturnDescription]', 'name': 'return_type'},
+             'short_description': '[Summary]'}
+        )
 
 
 if __name__ == '__main__':

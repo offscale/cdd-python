@@ -9,8 +9,10 @@ from ast import AnnAssign, Name, FunctionDef, Return, Expr, Constant, Call, \
     Assign, Attribute, Tuple, get_docstring, parse
 from collections import OrderedDict
 from functools import partial
+from operator import itemgetter
 
 from astor import to_source
+from docstring_parser import DocstringParam, DocstringMeta
 
 from doctrans.ast_utils import to_class_def
 from doctrans.defaults_utils import remove_defaults_from_docstring_structure, extract_default
@@ -396,3 +398,91 @@ def to_docstring(docstring_structure, emit_default_doc=True,
                  .replace(':type return_type:', ':rtype:'))
         if docstring_structure.get('returns') else ''
     )
+
+
+def from_docstring_parser(docstring):
+    """
+    Converts Docstring from the docstring_parser library to our internal representation / docstring structure
+
+    :param docstring: Docstring from the docstring_parser library
+    :type docstring: ```docstring_parser.common.Docstring```
+
+    :return: docstring structure
+    :rtype: ```dict```
+    """
+
+    def parse_dict(d):
+        """
+        Restructure dictionary to match expectations
+
+        :param d: input dictionary
+        :type d: ```dict```
+
+        :returns: restructured dict
+        :rtype: ```dict```
+        """
+        if 'args' in d and len(d['args']) in frozenset((1, 2)):
+            d['name'] = d.pop('args')[0]
+        if 'type_name' in d:
+            d['typ'] = d.pop('type_name')
+        if 'description' in d:
+            d['doc'] = d.pop('description')
+
+        return {k: v for k, v in d.items() if v is not None}
+
+    def evaluate_to_docstring_value(name_value):
+        """
+        Turn the second element of the tuple into the final representation (e.g., a bool, str, int)
+
+        :param name_value: name value tuple
+        :type name_value: ```Tuple[str, Any]```
+
+        :return: Same shape as input
+        :rtype: ```Tuple[str, Tuple[Union[str, int, bool, float]]]```
+        """
+        name, value = name_value
+        if isinstance(value, (list, tuple)):
+            value = list(map(itemgetter(1),
+                             map(lambda v: evaluate_to_docstring_value((name, v)),
+                                 value)))
+        elif isinstance(value, DocstringParam):
+            assert len(value.args) == 2 and value.args[1] == value.arg_name
+            value = {attr: getattr(value, attr)
+                     for attr in ('type_name', 'arg_name', 'is_optional',
+                                  'default', 'description')
+                     if getattr(value, attr) is not None}
+            if 'arg_name' in value:
+                value['name'] = value.pop('arg_name')
+            if 'description' in value:
+                value['doc'] = extract_default(value.pop('description'), emit_default_doc=False)[0]
+        elif isinstance(value, DocstringMeta):
+            value = parse_dict({
+                attr: getattr(value, attr)
+                for attr in dir(value)
+                if not attr.startswith('_') and getattr(value, attr)
+            })
+        elif isinstance(value, dict):
+            value = parse_dict(value)
+        elif not isinstance(value, (str, int, float, bool, type(None))):
+            raise NotImplementedError(type(value).__name__)
+        return name, value
+
+    docstring_structure = dict(map(evaluate_to_docstring_value,
+                                   filter(lambda k_v: not isinstance(k_v[1], (type(None), bool)),
+                                          map(lambda attr: (attr, getattr(docstring, attr)),
+                                              filter(lambda attr: not attr.startswith('_'),
+                                                     dir(docstring))))))
+    if 'meta' in docstring_structure and 'params' in docstring_structure:
+        meta = {e['name']: e
+                for e in docstring_structure.pop('meta')}
+        docstring_structure['params'] = [
+            dict(**param, **{k: v
+                             for k, v in meta[param['name']].items()
+                             if k not in param})
+            for param in docstring_structure['params']
+        ]
+
+    if 'returns' in docstring_structure:
+        docstring_structure['returns']['name'] = 'return_type'
+
+    return docstring_structure

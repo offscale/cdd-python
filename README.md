@@ -32,8 +32,8 @@ With current tooling there is no way to know:
 
 Some of these problems can be solved dynamically, however in doing so one loses developer-tool insights. There is no code-completion, and likely the CLI parser won't provide you with the enumeration of possibilities.
 
-### Example
-All 4 of these can convert to each other.
+### Approach
+Traverse the AST, and emit the modifications, such that each of these 4 can convert to each other.
 
 #### Docstring
 ```reStructuredText
@@ -60,20 +60,26 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 
 ##### `class`
 ```python
+from typing import Optional, Union, Tuple, Literal
+
+import numpy as np
+import tensorflow as tf
+
+
 class TargetClass(object):
     """
     Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
 
     :cvar dataset_name: name of dataset. Defaults to mnist
     :cvar tfds_dir: directory to look for models in. Defaults to ~/tensorflow_datasets
-    :cvar K: backend engine, expr.g., `np` or `tf`. Defaults to np
+    :cvar K: backend engine, e.g., `np` or `tf`. Defaults to np
     :cvar as_numpy: Convert to numpy ndarrays
     :cvar data_loader_kwargs: pass this as arguments to data_loader function
     :cvar return_type: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))"""
 
     dataset_name: str = 'mnist'
     tfds_dir: Optional[str] = '~/tensorflow_datasets'
-    K: Union[np, tf] = np
+    K: Literal['np', 'tf'] = 'np'
     as_numpy: Optional[bool] = None
     data_loader_kwargs: dict = {}
     return_type: Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]] = (
@@ -84,6 +90,11 @@ class TargetClass(object):
 
 ##### `class` method
 ```python
+from typing import Optional, Union, Tuple, Literal
+
+import numpy as np
+import tensorflow as tf
+
 class C(object):
     """ C class (mocked!) """
 
@@ -115,6 +126,13 @@ class C(object):
 
 ##### Argparse augmenting function
 ```python
+from typing import Union, Tuple
+from json import loads
+
+import numpy as np
+import tensorflow as tf
+
+
 def set_cli_args(argument_parser):
     """
     Set CLI arguments
@@ -172,12 +190,13 @@ def set_cli_args(argument_parser):
 
 ## Future work
 
-  - Finish implementing '`class` method'
-  - More docstring support ([docstring-parser](https://github.com/rr-/docstring_parser) doesn't support this [sphinx ReST format with types](https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#info-field-lists))
   - Proper CLI to manage what function, class, and argparse is generated, and from which source-of-truth
   - Choosing between having the types in the docstring and having the types inline ([PEP484](https://python.org/dev/peps/pep-0484)–style)
   - Generating JSON-schema from `class` so it becomes useful in JSON-RPC, REST-API, and GUI environments
-  - Backporting below Python 3.8
+  - Add 5th 'type' of SQLalchemy model
+  - Add 6th type of routing layer
+  - Add 7th type of Open API (at this point, rename to `cdd-python`)
+  - Backporting below Python 3.8 (argparse might stop this… the only other thing I use is `Literal`; but this has been [backported](https://pypi.org/project/typing-extensions))
   - Move to https://github.com/offscale then upload to PyPi
 
 ---
