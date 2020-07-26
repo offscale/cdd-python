@@ -2,3 +2,4 @@ meta
 astor
 black
 pyyaml
+docstring_parser

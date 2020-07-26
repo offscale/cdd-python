@@ -19,7 +19,7 @@ def extract_default(line, emit_default_doc=True):
     search_str = 'defaults to '
     doc, _, default = (lambda parts: parts if parts[1] else line.partition(search_str.capitalize()))(
         line.partition(search_str))
-    return line if emit_default_doc else doc.rstrip(), default if len(default) else None
+    return line if emit_default_doc else doc.rstrip('.,;\n'), default if len(default) else None
 
 
 def remove_defaults_from_docstring_structure(docstring_structure, emit_defaults=True):
