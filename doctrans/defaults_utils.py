@@ -14,12 +14,13 @@ def extract_default(line, emit_default_doc=True):
     :type emit_default_doc: ```bool``
 
     :returns: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
-    :rtype: Tuple[str, str]
+    :rtype: Tuple[str, Optional[str]]
     """
     search_str = 'defaults to '
     doc, _, default = (lambda parts: parts if parts[1] else line.partition(search_str.capitalize()))(
-        line.partition(search_str))
-    return line if emit_default_doc else doc.rstrip('.,;\n'), default if len(default) else None
+        line.partition(search_str)
+    )
+    return line if emit_default_doc else doc.rstrip(';\n, '), default if len(default) else None
 
 
 def remove_defaults_from_docstring_structure(docstring_structure, emit_defaults=True):
