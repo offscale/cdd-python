@@ -7,10 +7,12 @@ Translates from the [ReST docstring format (Sphinx)](
 # Stolen from https://raw.githubusercontent.com/openstack/rally/ab365e9/rally/common/plugin/info.py
 #
 # New things:
-# - `doc_to_type_doc` function definition and call
-# - Added docstrings
+# - Added docstrings to all functions and the module itself
 # - Handled default parameters
+# - Handle type parameters
+# - Remove MixIn
 #
+# Copyright 2020: Copyright 2020 Samuel Marks (for Offscale.io)
 # Copyright 2015: Mirantis Inc.
 # All Rights Reserved.
 #
@@ -102,7 +104,7 @@ def doc_to_type_doc(name, doc, emit_default_doc=True):
     :param doc: doc
     :type doc: ```str```
 
-    :param emit_default_doc: Help/docstring should include 'With default' text
+    :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
 
     :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
@@ -134,7 +136,7 @@ def parse_docstring(docstring, emit_default_doc=True):
     :param docstring: the docstring
     :type docstring: ```Union[str, dict]```
 
-    :param emit_default_doc: Help/docstring should include 'With default' text
+    :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
 
     :returns: a dictionary of form
@@ -190,7 +192,7 @@ def extract_return_params(params_returns_desc, emit_default_doc):
     :param params_returns_desc: return text from docstring
     :type params_returns_desc: ```str```
 
-    :param emit_default_doc: Help/docstring should include 'With default' text
+    :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
 
     :return: dict of shape {'typ': ..., 'doc': ..., 'default': ...}
@@ -220,46 +222,3 @@ def extract_return_params(params_returns_desc, emit_default_doc):
             del r_dict['default']
         returns = r_dict
     return returns
-
-
-class InfoMixin(object):
-    """ InfoMixin. Attach to your `class`. """
-
-    @classmethod
-    def _get_doc(cls):
-        """Return documentary of class
-
-        :param cls: this class
-        :type cls: ```InfoMixin```
-
-        :returns: By default it returns docstring of class, but it can be overridden
-        for example for cases like merging own docstring with parent
-        :rtype: ```dict```
-        """
-        return cls.__doc__
-
-    @classmethod
-    def get_info(cls):
-        """
-        Provide docstring info
-
-        :param cls: this class
-        :type cls: ```InfoMixin```
-
-        :returns: dict of shape {'name': ..., 'platform': ...,
-            'module': ..., 'title': ..., 'description': ...,
-            'parameters': ..., 'schema': ...,'returns': ...}
-        :rtype: ```dict```
-        """
-        doc = parse_docstring(cls._get_doc())
-
-        return {
-            'name': cls.get_name(),
-            'platform': cls.get_platform(),
-            'module': cls.__module__,
-            'title': doc['short_description'],
-            'description': doc['long_description'],
-            'parameters': doc['params'],
-            'schema': getattr(cls, 'CONFIG_SCHEMA', None),
-            'returns': doc['returns']
-        }
