@@ -134,7 +134,7 @@ def to_class(docstring_structure, class_name='TargetClass', class_bases=('object
     )
 
 
-def to_docstring(docstring_structure):
+def to_docstring(docstring_structure, docstring_format='rest'):
     """
     Converts an AST to a docstring
 
@@ -147,9 +147,14 @@ def to_docstring(docstring_structure):
           }
     :type docstring_structure: ```dict```
 
+    :param docstring_format: Format of docstring
+    :type docstring_format: ```Literal['rest', 'numpy', 'google']```
+
     :returns: docstring
     :rtype: ```str``
     """
+    if docstring_format != 'rest':
+        raise NotImplementedError()
     return '''\n{description}\n\n{params}\n{returns}\n'''.format(
         description=docstring_structure['long_description'] or docstring_structure['short_description'],
         params='\n'.join(
@@ -198,7 +203,7 @@ def to_file(ast, filename, mode='a', skip_black=False):
         f.write(src)
 
 
-def to_function(docstring_structure, emit_default_doc, function_name, function_type):
+def to_function(docstring_structure, emit_default_doc, function_name, function_type, docstring_format='rest'):
     """
     Construct a function
 
@@ -219,6 +224,9 @@ def to_function(docstring_structure, emit_default_doc, function_name, function_t
 
     :param function_type: None is a loose function (def f()`), others self-explanatory
     :type function_type: ```Optional[Literal['self', 'cls']]```
+
+    :param docstring_format: Format of docstring
+    :type docstring_format: ```Literal['rest', 'numpy', 'google']```
 
     :returns: function (could be a method on a class)
     :rtype: ```FunctionDef``
@@ -277,7 +285,8 @@ def to_function(docstring_structure, emit_default_doc, function_name, function_t
                     kind=None,
                     value=docstring_struct.to_docstring(
                         docstring_structure,
-                        emit_default_doc=emit_default_doc
+                        emit_default_doc=emit_default_doc,
+                        docstring_format=docstring_format
                     )
                 )),
                 Return(value=parse(docstring_structure['returns']['default']).body[0].value)
