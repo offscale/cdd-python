@@ -38,11 +38,8 @@ class TestCli(TestCase):
         """
         argparse_mock = MagicMock()
         with patch('argparse.ArgumentParser._print_message', argparse_mock), patch('sys.argv', argv):
-            if exit_code == 0:
-                main(argv)
-            else:
-                with self.assertRaises(SystemExit) as e:
-                    main(cli_argv=argv)
+            with self.assertRaises(SystemExit) as e:
+                main(cli_argv=argv)
         self.assertEqual(e.exception.code, SystemExit(exit_code).code)
         self.assertEqual(output_checker(argparse_mock.call_args.args[0]),
                          output)
@@ -50,7 +47,7 @@ class TestCli(TestCase):
 
     def test_version(self) -> None:
         """ Tests CLI interface gives version """
-        self.run_cli_test(['__version__'], exit_code=0, output=__version__,
+        self.run_cli_test(['--version'], exit_code=0, output=__version__,
                           output_checker=lambda output: output.rpartition(' ')[2][:-1])
 
     def test_incorrect_arg_fails(self) -> None:
