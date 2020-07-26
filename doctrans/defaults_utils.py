@@ -10,7 +10,7 @@ def extract_default(line, emit_default_doc=True):
     :param line: Example - "dataset. Defaults to mnist"
     :type line: ```str``
 
-    :param emit_default_doc: Help/docstring should include 'With default' text
+    :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
 
     :returns: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
@@ -22,21 +22,21 @@ def extract_default(line, emit_default_doc=True):
     return line if emit_default_doc else doc.rstrip(), default if len(default) else None
 
 
-def remove_defaults_from_docstring_structure(docstring_struct, remove_defaults=False):
+def remove_defaults_from_docstring_structure(docstring_structure, emit_defaults=True):
     """
     Remove "Default of" text from docstring structure
 
-    :param docstring_struct: a dictionary of form
+    :param docstring_structure: a dictionary of form
               {
                   'short_description': ...,
                   'long_description': ...,
                   'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
                   "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
               }
-    :type docstring_struct: ```dict```
+    :type docstring_structure: ```dict```
 
-    :param remove_defaults: Whether to remove default property
-    :type remove_defaults: ```bool```
+    :param emit_defaults: Whether to emit default property
+    :type emit_defaults: ```bool```
 
     :returns: a dictionary of form
               {
@@ -61,10 +61,10 @@ def remove_defaults_from_docstring_structure(docstring_struct, remove_defaults=F
             'doc': doc,
             'default': default
         })
-        if default is None or remove_defaults:
+        if default is None or not emit_defaults:
             del param['default']
         return param
 
-    docstring_struct['params'] = list(map(handle_param, docstring_struct['params']))
-    docstring_struct['returns'] = handle_param(docstring_struct['returns'])
-    return docstring_struct
+    docstring_structure['params'] = list(map(handle_param, docstring_structure['params']))
+    docstring_structure['returns'] = handle_param(docstring_structure['returns'])
+    return docstring_structure

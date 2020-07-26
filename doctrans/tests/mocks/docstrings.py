@@ -73,7 +73,7 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 """
 
 docstring_structure_no_default_doc = remove_defaults_from_docstring_structure(
-    deepcopy(docstring_structure), remove_defaults=True
+    deepcopy(docstring_structure), emit_defaults=False
 )
 
 docstring_str_no_default_doc = """

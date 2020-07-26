@@ -18,7 +18,7 @@ def parse_out_param(expr, emit_default_doc=True):
     :param expr: Expr
     :type expr: ```Expr```
 
-    :param emit_default_doc: Help/docstring should include 'With default' text
+    :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
 
     :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
@@ -131,7 +131,7 @@ def interpolate_defaults(param, emit_default_doc=True):
     :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'required': ... }
     :type param: ```dict```
 
-    :param emit_default_doc: Help/docstring should include 'With default' text
+    :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
 
     :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }

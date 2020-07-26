@@ -85,7 +85,7 @@ def param2argparse_param(param, emit_default_doc=True):
     :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :type param: ```dict```
 
-    :param emit_default_doc: Help/docstring should include 'With default' text
+    :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
 
     :return: `argparse.add_argument` call—with arguments—as an AST node
