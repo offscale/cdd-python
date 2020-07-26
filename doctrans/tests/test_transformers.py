@@ -66,7 +66,7 @@ class TestTransformers(TestCase):
             docstring_str
         )
 
-    def test_to_numpy_docstring(self) -> None:
+    def test_to_numpy_docstring_fails(self) -> None:
         """
         Tests whether `to_docstring` fails when `docstring_format` is 'numpy'
         """
@@ -76,7 +76,7 @@ class TestTransformers(TestCase):
                                               docstring_format='numpy')
         )
 
-    def test_to_google_docstring(self) -> None:
+    def test_to_google_docstring_fails(self) -> None:
         """
         Tests whether `to_docstring` fails when `docstring_format` is 'google'
         """

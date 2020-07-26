@@ -103,7 +103,7 @@ class TestIntermediateRepresentation(TestCase):
                   ':rtype: [ReturnType]\n')
         ),
             {'params': [{'default': '[DefaultParamVal]',
-                         'doc': '[ParamDescription], ',
+                         'doc': '[ParamDescription]',
                          'name': '[ParamName]'}],
              'raises': [{'doc': '[ErrorDescription]',
                          'name': 'raises',
