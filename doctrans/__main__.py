@@ -41,15 +41,24 @@ def _build_parser():
     return parser
 
 
-if __name__ == '__main__':
+def main(cli_argv=None):
+    """
+    Run the CLI parser
+
+    :param cli_argv: CLI arguments. If None uses `sys.argv`.
+    :type cli_argv: ```Optional[List[str]]```
+    """
     _parser = _build_parser()
-    args = _parser.parse_args()
-    args.argparse_function = args.argparse_function or args.config
+    args = _parser.parse_args(args=cli_argv)
+    args.argparse_function = args.argparse_function or args.config or args.function
     args.config = args.config or args.argparse_function
     args.function = args.function or args.config
-    args.argparse_function = args.argparse_function or args.config
 
     if args.argparse_function is None:
         _parser.error('One or more of `--argparse-function`, `--config`, and `--function` must be specified.')
     elif not path.isfile(args.truth):
         _parser.error('--truth must be choose an existent file. Got: {!r}'.format(getattr(args, args.truth)))
+
+
+if __name__ == '__main__':
+    main()
