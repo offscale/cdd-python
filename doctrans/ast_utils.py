@@ -64,8 +64,8 @@ def to_class_def(ast):
     :rtype: ```ast.ClassDef```
     """
     if isinstance(ast, Module):
-        classes = tuple(next(filter(rpartial(isinstance, ClassDef),
-                                    ast.body)))
+        classes = tuple(filter(rpartial(isinstance, ClassDef),
+                               ast.body))
         if len(classes) > 1:  # We can filter by name I guess? - Or convert every one?
             raise NotImplementedError()
         elif len(classes) > 0:

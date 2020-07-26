@@ -24,21 +24,21 @@ class TestIntermediateRepresentation(TestCase):
               }
     """
 
-    def test_argparse_ast2docstring_structure(self) -> None:
+    def test_from_argparse_ast(self) -> None:
         """
         Tests whether `argparse_ast2docstring_structure` produces `docstring_structure_no_default_doc`
               from `argparse_func_ast` """
         self.assertDictEqual(docstring_struct.from_argparse_ast(argparse_func_ast, emit_default_doc=False),
                              docstring_structure_no_default_doc)
 
-    def test_class_ast2docstring_structure(self) -> None:
+    def test_from_class(self) -> None:
         """
         Tests whether `class_def2docstring_structure` produces `docstring_structure`
               from `class_ast` """
         self.assertDictEqual(docstring_struct.from_class(class_ast),
                              docstring_structure)
 
-    def test_class_with_method2docstring_structure(self) -> None:
+    def test_from_class_with_method(self) -> None:
         """
         Tests whether `class_with_method2docstring_structure` produces `docstring_structure`
               from `class_with_method_ast` """
@@ -61,11 +61,13 @@ class TestIntermediateRepresentation(TestCase):
         )
     '''
 
-    def test_docstring2docstring_structure(self) -> None:
+    def test_from_docstring(self) -> None:
         """
         Tests whether `docstring2docstring_structure` produces `docstring_structure`
               from `docstring_str` """
-        self.assertDictEqual(docstring_struct.from_docstring(docstring_str),
+        _docstring_structure, returns = docstring_struct.from_docstring(docstring_str, return_tuple=True)
+        self.assertTrue(returns)
+        self.assertDictEqual(_docstring_structure,
                              docstring_structure)
 
 
