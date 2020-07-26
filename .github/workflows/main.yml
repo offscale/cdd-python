@@ -47,10 +47,7 @@ jobs:
                         git commit -m '[.github/doccoverage.svg] Updated coverage'
                         git push origin master
                     fi
-            - name: Test coverage
-              uses: codecov/codecov-action@v1
-              with:
-                  token: ${{ secrets.CODECOV_TOKEN }}
-            - name: Push changes
-              run: |
-                  if [ ! -z "$(git cherry -v origin/master)" ]; then ; fi
+            -   name: Test coverage
+                run: bash <(curl -s https://codecov.io/bash)
+                env:
+                    token: ${{ secrets.CODECOV_TOKEN }}
