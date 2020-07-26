@@ -87,6 +87,10 @@ class TestTransformers(TestCase):
         )
 
     def test_to_file(self):
+        """
+        Tests whether `to_file` constructs a file, and fills it with the right content
+        """
+
         filename = os.path.join(os.path.dirname(__file__),
                                 'delete_me.py')
         try:

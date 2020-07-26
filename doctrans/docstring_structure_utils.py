@@ -96,10 +96,9 @@ def parse_out_param(expr, emit_default_doc=True):
         """
         quote_f = lambda s: s
         type_ = 'Union'
-        if typ == Any or typ == 'str':
-            quote_f = lambda s: '\'{}\''.format(s)
-            type_ = 'Literal'
-        elif typ in simple_types:
+        if typ == Any or typ in simple_types:
+            if typ == 'str' or typ == Any:
+                quote_f = lambda s: '\'{}\''.format(s)
             type_ = 'Literal'
 
         return '{type}[{typs}]'.format(
