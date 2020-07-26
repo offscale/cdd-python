@@ -6,7 +6,7 @@ Transform from string or AST representations of input, to docstring_structure di
 """
 
 from ast import AnnAssign, Name, FunctionDef, Return, Expr, Constant, Call, \
-    Assign, Attribute, Tuple, Subscript, get_docstring, parse
+    Assign, Attribute, Tuple, get_docstring, parse
 from collections import OrderedDict
 from functools import partial
 
@@ -164,15 +164,12 @@ def from_class_with_method(class_def, method_name, emit_default_doc=True):
         :rtype: ```dict```
         """
         idx, (name_, d) = idx_name_d
-        trailing_dot = '.:type' in d['doc']
         doc_typ_d = doc_to_type_doc(name_, d['doc'].replace(
             ':type', '\n:type'
         ), emit_default_doc=emit_default_doc)
 
         if len(function_def.args.defaults) > idx and function_def.args.defaults[idx].value is not None:
             doc_typ_d['default'] = function_def.args.defaults[idx].value
-        if trailing_dot and not doc_typ_d['doc'].endswith('.'):
-            doc_typ_d['doc'] = '{doc}.'.format(doc=doc_typ_d['doc'])
 
         return name_, doc_typ_d
 
@@ -189,17 +186,12 @@ def from_class_with_method(class_def, method_name, emit_default_doc=True):
         for k, v in docstring_structure['params'].items()
     ]
     if 'return_type' in docstring_structure['returns']:
-        trailing_dot = docstring_structure['returns']['return_type']['doc'].endswith('.')
         docstring_structure['returns']['return_type'].update(
             extract_return_params(
                 docstring_structure['returns']['return_type']['doc'] + docstring_structure['returns']['return_type'][
                     'typ'],
                 emit_default_doc=emit_default_doc
             ))
-        if trailing_dot and not docstring_structure['returns']['return_type']['doc'].endswith('.'):
-            docstring_structure['returns']['return_type']['doc'] = '{doc}.'.format(
-                doc=docstring_structure['returns']['return_type']['doc']
-            )
 
         docstring_structure['returns'] = interpolate_defaults(
             docstring_structure['returns']['return_type'],
@@ -253,43 +245,32 @@ def from_argparse_ast(function_def, emit_default_doc=False):
                     isinstance(e.value, Constant))):
                 docstring_structure['short_description'] = e.value.value
         elif isinstance(e, Return) and isinstance(e.value, Tuple):
-            if isinstance(e.value.elts[1], Subscript):
-                docstring_structure['returns'] = {
-                    'name': 'return_type',
-                    'doc': next(
-                        line.partition(',')[2].lstrip()
-                        for line in function_def.body[0].value.value.split('\n')
-                        if line.lstrip().startswith(':return')
-                    ),
-                    'typ': to_source(e.value.elts[1]).replace('\n', '')
-                }
-            else:
-                default = to_source(e.value.elts[1]).replace('\n', '')
-                doc = next(
-                    line.partition(',')[2].lstrip()
-                    for line in function_def.body[0].value.value.split('\n')
-                    if line.lstrip().startswith(':return')
-                )
-                if not emit_default_doc:
-                    doc, _ = extract_default(doc, emit_default_doc=emit_default_doc)
+            default = to_source(e.value.elts[1]).replace('\n', '')
+            doc = next(
+                line.partition(',')[2].lstrip()
+                for line in function_def.body[0].value.value.split('\n')
+                if line.lstrip().startswith(':return')
+            )
+            if not emit_default_doc:
+                doc, _ = extract_default(doc, emit_default_doc=emit_default_doc)
 
-                docstring_structure['returns'] = {
-                    'name': 'return_type',
-                    'doc': '{doc}{maybe_dot} Defaults to {default}'.format(
-                        maybe_dot='' if doc.endswith('.') else '.',
-                        doc=doc,
-                        default=default
-                    ) if all((default is not None,
-                              emit_default_doc,
-                              'Defaults to' not in doc,
-                              'defaults to' not in doc))
-                    else doc,
-                    'default': default,
-                    'typ': to_source(
-                        parse(_docstring_struct['returns']['typ']).body[0].value.slice.value.elts[1]
-                    ).rstrip()
-                    # 'Tuple[ArgumentParser, {typ}]'.format(typ=_docstring_structure['returns']['typ'])
-                }
+            docstring_structure['returns'] = {
+                'name': 'return_type',
+                'doc': '{doc}{maybe_dot} Defaults to {default}'.format(
+                    maybe_dot='' if doc.endswith('.') else '.',
+                    doc=doc,
+                    default=default
+                ) if all((default is not None,
+                          emit_default_doc,
+                          'Defaults to' not in doc,
+                          'defaults to' not in doc))
+                else doc,
+                'default': default,
+                'typ': to_source(
+                    parse(_docstring_struct['returns']['typ']).body[0].value.slice.value.elts[1]
+                ).rstrip()
+                # 'Tuple[ArgumentParser, {typ}]'.format(typ=_docstring_structure['returns']['typ'])
+            }
     if not emit_default_doc:
         remove_defaults_from_docstring_structure(docstring_structure, emit_defaults=False)
     return docstring_structure
