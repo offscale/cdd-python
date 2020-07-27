@@ -1,7 +1,7 @@
 """ Tests for pure utils """
 from unittest import TestCase
 
-from doctrans.pure_utils import rpartial, pp, tab, simple_types
+from doctrans.pure_utils import rpartial, pp, tab, simple_types, identity
 from doctrans.tests.utils_for_tests import unittest_main
 
 
@@ -24,6 +24,13 @@ class TestPureUtils(TestCase):
         """ Test that rpartial works as advertised """
         self.assertTrue(rpartial(isinstance, str)(''))
         self.assertFalse(rpartial(isinstance, str)(0))
+
+    def test_identity(self) -> None:
+        """ Tests that ident returns itself """
+        self.assertEqual(identity(''), '')
+        self.assertFalse(identity(False))
+        self.assertTrue(identity(True))
+        self.assertIsNone(identity(None))
 
 
 unittest_main()

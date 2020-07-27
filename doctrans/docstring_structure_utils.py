@@ -40,20 +40,7 @@ def _handle_keyword(keyword, typ):
     :returns: string representation of type
     :rtype: ```str``
     """
-
-    def identity(s):
-        """
-        Identity function
-
-        :param s: Any value
-        :type s: ```Any```
-
-        :returns: the input value
-        :rtype: ```Any```
-        """
-        return s
-
-    quote_f = identity
+    global quote_f
 
     type_ = 'Union'
     if typ == Any or typ in simple_types:
