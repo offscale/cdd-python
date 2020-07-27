@@ -51,6 +51,8 @@ class TestIntermediateRepresentation(TestCase):
         self.assertDictEqual(docstring_struct.from_class(class_ast),
                              docstring_structure)
 
+    maxDiff = 55555
+
     def test_from_class_with_method(self) -> None:
         """
         Tests whether `from_class_with_method` produces `docstring_structure`

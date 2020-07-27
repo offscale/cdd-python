@@ -1,8 +1,8 @@
 """ Tests for ast_utils """
-from ast import FunctionDef, Module, ClassDef, Subscript, Name
+from ast import FunctionDef, Module, ClassDef, Subscript, Name, arguments, arg
 from unittest import TestCase
 
-from doctrans.ast_utils import to_class_def, determine_quoting
+from doctrans.ast_utils import to_class_def, determine_quoting, get_function_type
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
 
 
@@ -35,6 +35,29 @@ class TestAstUtils(TestCase):
                           lambda: determine_quoting(ClassDef()))
         self.assertRaises(NotImplementedError,
                           lambda: determine_quoting(Module()))
+
+    def test_get_function_type(self) -> None:
+        """ Test get_function_type returns the right type """
+        self.assertIsNone(
+            get_function_type(FunctionDef(args=arguments(args=[arg(annotation=None,
+                                                                   arg='something else',
+                                                                   type_comment=None)]))))
+        self.assertIsNone(
+            get_function_type(FunctionDef(args=arguments(args=[]))))
+        self.assertEqual(
+            get_function_type(
+                FunctionDef(args=arguments(args=[arg(annotation=None,
+                                                     arg='self',
+                                                     type_comment=None)]))),
+            'self'
+        )
+        self.assertEqual(
+            get_function_type(
+                FunctionDef(args=arguments(args=[arg(annotation=None,
+                                                     arg='cls',
+                                                     type_comment=None)]))),
+            'cls'
+        )
 
 
 unittest_main()

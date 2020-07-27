@@ -6,7 +6,7 @@ Transform from string or AST representations of input, to docstring_structure di
 """
 
 from ast import AnnAssign, Name, FunctionDef, Return, Expr, Constant, Call, \
-    Assign, Attribute, Tuple, get_docstring, parse
+    Assign, Attribute, Tuple, get_docstring, parse, Subscript
 from collections import OrderedDict
 from functools import partial
 from operator import itemgetter
@@ -14,11 +14,11 @@ from operator import itemgetter
 from astor import to_source
 from docstring_parser import DocstringParam, DocstringMeta
 
-from doctrans.ast_utils import to_class_def
+from doctrans.ast_utils import to_class_def, get_function_type
 from doctrans.defaults_utils import remove_defaults_from_docstring_structure, extract_default
-from doctrans.docstring_structure_utils import interpolate_defaults, parse_out_param
+from doctrans.docstring_structure_utils import parse_out_param
 from doctrans.pure_utils import tab, rpartial
-from doctrans.rest_docstring_parser import doc_to_type_doc, extract_return_params, parse_docstring
+from doctrans.rest_docstring_parser import parse_docstring
 
 
 def from_class(class_def, emit_default_doc=True):
@@ -35,41 +35,22 @@ def from_class(class_def, emit_default_doc=True):
     :rtype: ```dict```
     """
     class_def = to_class_def(class_def)
-    docstring_structure = {
-        'short_description': '',
-        'long_description': '',
-        'params': OrderedDict(),
-        'returns': {}
-    }
-    name, key = None, 'params'
-    for line in get_docstring(class_def).replace(':cvar', ':param').split('\n'):
-        if line.startswith(':param'):
-            name, _, doc = line.rpartition(':')
-            name = name.replace(':param ', '')
-            key = 'returns' if name == 'return_type' else 'params'
-            docstring_structure[key][name] = {
-                'doc': doc.lstrip(),
-                'typ': None
-            }
-        elif docstring_structure[key]:
-            docstring_structure[key][name]['doc'] += line
-        else:
-            docstring_structure['short_description'] += line
+    docstring_structure = from_docstring(get_docstring(class_def).replace(':cvar', ':param'),
+                                         emit_default_doc=emit_default_doc)
+    docstring_structure['params'] = OrderedDict((param.pop('name'), param)
+                                                for param in docstring_structure['params'])
+    if 'return_type' in docstring_structure['params']:
+        docstring_structure['returns'] = {'return_type': docstring_structure['params'].pop('return_type')}
 
-    for e in filter(rpartial(isinstance, AnnAssign), class_def.body[1:]):
-        name = e.target.id
-        docstring_structure['returns' if name == 'return_type' else 'params'][name]['typ'] = \
-            e.annotation.id if isinstance(e.annotation, Name) else to_source(e.annotation).rstrip()
+    for e in filter(rpartial(isinstance, AnnAssign), class_def.body):
+        docstring_structure['returns' if e.target.id == 'return_type' else 'params'][e.target.id]['typ'] = \
+            to_source(e.annotation)[:-1]
 
     docstring_structure['params'] = [
-        dict(name=k, **interpolate_defaults(v, emit_default_doc=emit_default_doc))
+        dict(name=k, **v)
         for k, v in docstring_structure['params'].items()
     ]
-    docstring_structure['returns'] = (lambda k: dict(
-        name=k,
-        **interpolate_defaults(docstring_structure['returns'][k],
-                               emit_default_doc=emit_default_doc)
-    ))('return_type')
+    docstring_structure['returns'] = (lambda k: dict(name=k, **docstring_structure['returns'][k]))('return_type')
 
     return docstring_structure
 
@@ -90,124 +71,59 @@ def from_class_with_method(class_def, method_name, emit_default_doc=True):
     :return: docstring structure
     :rtype: ```dict```
     """
-    class_def = to_class_def(class_def)
-    docstring_structure = {
-        'short_description': '',
-        'long_description': '',
-        'params': OrderedDict(),
-        'returns': {}
-    }
-    function_def = next(
-        node
-        for node in class_def.body
-        if isinstance(node, FunctionDef) and node.name == method_name
+    return from_function(
+        function_def=next(
+            node
+            for node in to_class_def(class_def).body
+            if isinstance(node, FunctionDef) and node.name == method_name
+        ),
+        emit_default_doc=emit_default_doc
     )
-    del class_def
 
-    def append_line(d, key, name, prop, line):
-        """
-        Append line to a dict
 
-        :param d: dictionary
-        :type d: ```dict```
+def from_function(function_def, emit_default_doc=True):
+    """
+    Converts an AST of a class with a method to a docstring structure
 
-        :param key: first property
-        :type key: ```str```
+    :param function_def: FunctionDef
+    :type function_def: ```FunctionDef```
 
-        :param name: second property
-        :type name: ```str```
+    :param emit_default_doc: Whether help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
-        :param prop: final property
-        :type prop: ```str```
+    :return: docstring structure
+    :rtype: ```dict```
+    """
 
-        :param line: value
-        :type line: ```str```
-        """
-        if name in d[key]:
-            if prop in d[key][name]:
-                d[key][name][prop] += line
-            else:
-                d[key][name][prop] = line
-        else:
-            d[key][name] = {prop: line}
+    docstring_structure = from_docstring(get_docstring(function_def).replace(':cvar', ':param'),
+                                         emit_default_doc=emit_default_doc)
+    function_type = get_function_type(function_def)
+    offset = 0 if function_type is None else 1
 
-    name, key = None, 'params'
-    for line in filter(None, map(lambda l: l.lstrip(),
-                                 get_docstring(function_def).replace(':cvar', ':param').split('\n'))):
-        if line.startswith(':param'):
-            name, _, doc = line.rpartition(':')
-            name = name.replace(':param ', '')
-            key = 'returns' if name == 'return_type' else 'params'
-            if name in docstring_structure[key]:
-                docstring_structure[key][name]['doc'] = doc.lstrip()
-            else:
-                docstring_structure[key][name] = {'doc': doc.lstrip()}
-        elif name is None:
-            docstring_structure['short_description'] = line
-        elif line.lstrip().startswith(':return'):
-            key, name = 'returns', 'return_type'
-            append_line(docstring_structure, key, name, 'doc', line)
-        elif line.lstrip().startswith(':rtype'):
-            key, name = 'returns', 'return_type'
-            append_line(docstring_structure, key, name, 'typ', line)
-        elif docstring_structure[key]:
-            docstring_structure[key][name]['doc'] += line
-        else:
-            docstring_structure['short_description'] += line
+    for idx, arg in enumerate(function_def.args.args):
+        if arg.annotation is not None:
+            docstring_structure['params'][idx - offset]['typ'] = to_source(arg.annotation)[:-1]
 
-    def interpolate_doc_and_default(idx_name_d):
-        """
-        Extract doc, default
+    if emit_default_doc:
+        for idx, const in enumerate(function_def.args.defaults):
+            assert isinstance(const, Constant) and const.kind is None
+            if const.value is not None:
+                docstring_structure['params'][idx]['default'] = const.value
 
-        :param idx_name_d: tuple from enumerated OrderedDict.items
-        :type idx_name_d: ```Tuple[int, Tuple[str, dict]]```
+        # Convention - the final top-level `return` is the default
+        return_ast = next(filter(rpartial(isinstance, Return), function_def.body[::-1]), None)
+        if return_ast is not None and return_ast.value is not None:
+            docstring_structure['returns']['default'] = to_source(return_ast.value)[:-1]
 
-        :returns: dict of shape {"doc": ..., "default": ...}
-        :rtype: ```dict```
-        """
-        idx, (name_, d) = idx_name_d
-        doc_typ_d = doc_to_type_doc(name_, d['doc'].replace(
-            ':type', '\n:type'
-        ), emit_default_doc=emit_default_doc)
+    if isinstance(function_def.returns, Subscript):
+        docstring_structure['returns']['typ'] = to_source(function_def.returns)[:-1]
 
-        if len(function_def.args.defaults) > idx and function_def.args.defaults[idx].value is not None:
-            doc_typ_d['default'] = function_def.args.defaults[idx].value
-
-        return name_, doc_typ_d
-
-    docstring_structure['params'] = OrderedDict(map(interpolate_doc_and_default,
-                                                    enumerate(docstring_structure['params'].items())))
-
-    for e in filter(lambda _e: isinstance(_e, AnnAssign), function_def.body[1:]):
-        name = e.target.id
-        docstring_structure['returns' if name == 'return_type' else 'params'][name]['typ'] = \
+    for e in filter(lambda el: el.target.id not in frozenset(('self', 'cls')),
+                    filter(rpartial(isinstance, AnnAssign),
+                           function_def.body)):
+        docstring_structure['returns' if e.target.id == 'return_type' else 'params'][e.target.id]['typ'] = \
             e.annotation.id if isinstance(e.annotation, Name) else to_source(e.annotation).rstrip()
 
-    docstring_structure['params'] = [
-        dict(name=k, **interpolate_defaults(v, emit_default_doc=emit_default_doc))
-        for k, v in docstring_structure['params'].items()
-    ]
-    if 'return_type' in docstring_structure['returns']:
-        docstring_structure['returns']['return_type'].update(
-            extract_return_params(
-                docstring_structure['returns']['return_type']['doc'] + docstring_structure['returns']['return_type'][
-                    'typ'],
-                emit_default_doc=emit_default_doc
-            ))
-
-        docstring_structure['returns'] = interpolate_defaults(
-            docstring_structure['returns']['return_type'],
-            emit_default_doc=emit_default_doc
-        )
-        returns = next((node.value
-                        for node in function_def.body
-                        if isinstance(node, Return)), None)
-        if returns is not None:
-            docstring_structure['returns']['default'] = to_source(returns).rstrip()
-
-    if not emit_default_doc:
-        docstring_structure = remove_defaults_from_docstring_structure(docstring_structure,
-                                                                       emit_defaults=False)
     return docstring_structure
 
 
@@ -292,11 +208,11 @@ def from_docstring(docstring, emit_default_doc=True, return_tuple=False):
     :type return_tuple: ```bool```
 
     :return: docstring_structure, whether it returns or not
-    :rtype: ```Union[dict, Tuple[dict, bool]]```
+    :rtype: ```Optional[Union[dict, Tuple[dict, bool]]]```
     """
     parsed = docstring if isinstance(docstring, dict) \
         else parse_docstring(docstring, emit_default_doc=emit_default_doc)
-    returns = 'returns' in parsed and 'name' in parsed['returns']
+    returns = 'returns' in parsed and parsed['returns'] is not None and 'name' in parsed['returns']
     if returns:
         parsed['returns']['doc'] = parsed['returns'].get('doc', parsed['returns']['name'])
     if return_tuple:
@@ -420,12 +336,16 @@ def from_docstring_parser(docstring):
         """
         if 'args' in d and len(d['args']) in frozenset((1, 2)):
             d['name'] = d.pop('args')[0]
+            if d['name'] == 'return':
+                d['name'] = 'return_type'
         if 'type_name' in d:
             d['typ'] = d.pop('type_name')
         if 'description' in d:
             d['doc'] = d.pop('description')
 
-        return {k: v for k, v in d.items() if v is not None}
+        return {k: v
+                for k, v in d.items()
+                if v is not None}
 
     def evaluate_to_docstring_value(name_value):
         """
@@ -476,8 +396,5 @@ def from_docstring_parser(docstring):
                              if k not in param})
             for param in docstring_structure['params']
         ]
-
-    if 'returns' in docstring_structure:
-        docstring_structure['returns']['name'] = 'return_type'
 
     return docstring_structure

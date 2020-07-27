@@ -2,7 +2,7 @@
 ast_utils, bunch of helpers for converting input into ast.* output
 """
 from ast import AnnAssign, Name, Load, Store, Constant, Dict, Module, ClassDef, Subscript, Tuple, Expr, Call, \
-    Attribute, keyword, parse, walk
+    Attribute, keyword, parse, walk, FunctionDef
 
 from doctrans.defaults_utils import extract_default
 from doctrans.pure_utils import simple_types, rpartial
@@ -195,3 +195,21 @@ def determine_quoting(node):
         return determine_quoting(node.value)
     else:
         raise NotImplementedError(type(node).__name__)
+
+
+def get_function_type(function):
+    """
+    Get the type of the function
+
+    :param function: AST function node
+    :type function: ```FunctionDef```
+
+    :returns: None is a loose function (def f()`), others self-explanatory
+    :rtype: ```Optional[Literal['self', 'cls']]```
+    """
+    assert isinstance(function, FunctionDef)
+    if function.args is None or len(function.args.args) == 0:
+        return None
+    elif function.args.args[0].arg in frozenset(('self', 'cls')):
+        return function.args.args[0].arg
+    return None
