@@ -28,7 +28,7 @@ class TestUtilsForTests(TestCase):
             import doctrans.tests.utils_for_tests
             doctrans.tests.utils_for_tests.unittest_main()
 
-        self.assertFalse(e.exception.code)
+        self.assertIsInstance(e.exception.code, bool)
         self.assertIsNone(argparse_mock.call_args)
         self.assertIsNone(doctrans.tests.utils_for_tests.unittest_main())
 
