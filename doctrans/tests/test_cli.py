@@ -2,12 +2,15 @@
 import os
 from argparse import ArgumentParser
 from functools import partial
-from unittest import TestCase, main as unittest_main
+from importlib.machinery import SourceFileLoader
+from importlib.util import spec_from_loader, module_from_spec
+from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from doctrans import __version__
 from doctrans.__main__ import _build_parser, main
 from doctrans.tests.mocks.classes import class_str
+from doctrans.tests.utils_for_tests import unittest_main
 
 
 class TestCli(TestCase):
@@ -72,7 +75,7 @@ class TestCli(TestCase):
     def test_args(self) -> None:
         """ Tests CLI interface sets namespace correctly """
         filename = os.path.join(os.path.dirname(__file__),
-                                'delete_this_{}'.format(os.path.basename(__file__)))
+                                'delete_this_0{}'.format(os.path.basename(__file__)))
         with open(filename, 'wt') as f:
             f.write(class_str)
         try:
@@ -97,7 +100,7 @@ class TestCli(TestCase):
     def test_non_existent_file_fails(self) -> None:
         """ Tests nonexistent file throws the right error """
         filename = os.path.join(os.path.dirname(__file__),
-                                'delete_this_{}'.format(os.path.basename(__file__)))
+                                'delete_this_1{}'.format(os.path.basename(__file__)))
 
         self.run_cli_test(
             ['--config', filename, '--truth', 'config'],
@@ -121,6 +124,21 @@ class TestCli(TestCase):
             output='the following arguments are required: --truth\n'
         )
 
+    def test_name_main(self) -> None:
+        """
+        Test the `if __name__ == '__main___'` block
+        """
 
-if __name__ == '__main__':
-    unittest_main()
+        argparse_mock = MagicMock()
+
+        loader = SourceFileLoader('__main__',
+                                  os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                                               '__main__.py'))
+        with patch('argparse.ArgumentParser._print_message', argparse_mock), self.assertRaises(SystemExit) as e:
+            loader.exec_module(module_from_spec(spec_from_loader(loader.name, loader)))
+        self.assertEqual(e.exception.code, SystemExit(2).code)
+        self.assertEqual((lambda output: output[output.rfind(' ') + 1:][:-1])(argparse_mock.call_args.args[0]),
+                         '--truth')
+
+
+unittest_main()

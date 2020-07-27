@@ -1,7 +1,8 @@
 """ Tests for pure utils """
-from unittest import TestCase, main as unittest_main
+from unittest import TestCase
 
 from doctrans.pure_utils import rpartial, pp, tab, simple_types
+from doctrans.tests.utils_for_tests import unittest_main
 
 
 class TestPureUtils(TestCase):
@@ -25,5 +26,4 @@ class TestPureUtils(TestCase):
         self.assertFalse(rpartial(isinstance, str)(0))
 
 
-if __name__ == '__main__':
-    unittest_main()
+unittest_main()

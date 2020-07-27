@@ -1,9 +1,9 @@
 """ Tests for ast_utils """
 from ast import FunctionDef, Module, ClassDef, Subscript, Name
-from unittest import TestCase, main as unittest_main
+from unittest import TestCase
 
 from doctrans.ast_utils import to_class_def, determine_quoting
-from doctrans.tests.utils_for_tests import run_ast_test
+from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
 
 
 class TestAstUtils(TestCase):
@@ -37,5 +37,4 @@ class TestAstUtils(TestCase):
                           lambda: determine_quoting(Module()))
 
 
-if __name__ == '__main__':
-    unittest_main()
+unittest_main()

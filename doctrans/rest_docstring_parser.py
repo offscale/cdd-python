@@ -49,8 +49,6 @@ def trim(docstring):
     :return: Trimmed input
     :rtype ```str```
     """
-    if not docstring:
-        return ""
     # Convert tabs to spaces (following the normal Python rules)
     # and split into a list of lines:
     lines = docstring.expandtabs().splitlines()

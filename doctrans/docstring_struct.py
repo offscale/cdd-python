@@ -355,9 +355,6 @@ def to_docstring(docstring_structure, emit_default_doc=True,
         :param emit_types: whether to show `:type` lines
         :type emit_types: ```bool```
         """
-        if docstring_format != 'rest':
-            raise NotImplementedError(docstring_format)
-
         doc, default = extract_default(param['doc'], emit_default_doc=False)
         if default is None:
             default = param.get('default')
@@ -461,8 +458,6 @@ def from_docstring_parser(docstring):
                 for attr in dir(value)
                 if not attr.startswith('_') and getattr(value, attr)
             })
-        elif isinstance(value, dict):
-            value = parse_dict(value)
         elif not isinstance(value, (str, int, float, bool, type(None))):
             raise NotImplementedError(type(value).__name__)
         return name, value
