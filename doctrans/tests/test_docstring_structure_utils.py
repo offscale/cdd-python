@@ -1,5 +1,5 @@
 """ Tests for docstring_structure_utils """
-from ast import Expr
+from ast import Expr, Call, Constant, Attribute, Load, Name, keyword, Subscript
 from copy import deepcopy
 from unittest import TestCase
 
@@ -20,6 +20,46 @@ class TestDocstringStructureUtils(TestCase):
                                         argparse_func_ast.body[::-1]))),
             docstring_structure['params'][-1]
         )
+
+    def test_parse_out_param_default(self) -> None:
+        """ Test that parse_out_param sets default when required and unset """
+        self.assertDictEqual(
+            parse_out_param(
+                Expr(value=Call(args=[Constant(kind=None,
+                                               value='--num')],
+                                func=Attribute(attr='add_argument',
+                                               ctx=Load(),
+                                               value=Name(ctx=Load(),
+                                                          id='argument_parser')),
+                                keywords=[keyword(arg='type',
+                                                  value=Name(ctx=Load(),
+                                                             id='int')),
+                                          keyword(arg='required',
+                                                  value=Constant(kind=None,
+                                                                 value=True))]))
+            ),
+            {'default': 0,
+             'doc': None,
+             'name': 'num',
+             'typ': 'int'}
+        )
+
+    def test_parse_out_param_fails(self) -> None:
+        """ Test that parse_out_param throws NotImplementedError when unsupported type given """
+        self.assertRaises(NotImplementedError,
+                          lambda: parse_out_param(
+                              Expr(value=Call(args=[Constant(kind=None,
+                                                             value='--num')],
+                                              func=Attribute(attr='add_argument',
+                                                             ctx=Load(),
+                                                             value=Name(ctx=Load(),
+                                                                        id='argument_parser')),
+                                              keywords=[keyword(arg='type',
+                                                                value=Subscript()),
+                                                        keyword(arg='required',
+                                                                value=Constant(kind=None,
+                                                                               value=True))]))
+                          ))
 
     def test_interpolate_defaults(self) -> None:
         """ Test that interpolate_defaults corrects sets the default property """

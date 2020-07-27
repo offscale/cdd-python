@@ -102,11 +102,6 @@ def param2argparse_param(param, emit_default_doc=True):
 
         for node in walk(parsed_type):
             if isinstance(node, Tuple):
-                maybe_choices = tuple(elt.id
-                                      for elt in node.elts
-                                      if isinstance(elt, Name))
-                if len(maybe_choices) == len(node.elts):
-                    choices = maybe_choices
                 maybe_choices = tuple(elt.value
                                       for elt in node.elts
                                       if isinstance(elt, Constant))

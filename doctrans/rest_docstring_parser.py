@@ -66,8 +66,6 @@ def trim(docstring):
     # Strip off trailing and leading blank lines:
     while trimmed and not trimmed[-1]:
         trimmed.pop()
-    while trimmed and not trimmed[0]:
-        trimmed.pop(0)
 
     # Current code/unittests expects a line return at
     # end of multiline docstrings
@@ -92,6 +90,48 @@ def reindent(s):
     return '\n'.join(line.strip() for line in s.strip().split('\n'))
 
 
+def _parse_line(line, name, default, docs, typ, emit_default_doc):
+    """
+    Parse a single line from the docstring. Helper used by `doc_to_type_doc`.
+
+    :param line: Current line
+    :type line: ```str```
+
+    :param name: Name of current param
+    :type name: ```str```
+
+    :param default: Last default
+    :type default: ```Optional[str]```
+
+    :param docs: List of docs
+    :type docs: ```List[str]```
+
+    :param typ: List of types
+    :type typ: ```List[str]```
+
+    :param emit_default_doc: Whether help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
+
+    :returns: Default value
+    :rtype: ```Optional[str]```
+    """
+    if line.startswith(':type'):
+        line = line[len(':type '):]
+        colon_at = line.find(':')
+        found_name = line[:colon_at]
+        assert name == found_name, '{!r} != {!r}'.format(name, found_name)
+        line = line[colon_at + 2:]
+        typ.append(line[3:-3]
+                   if line.startswith('```') and line.endswith('```')
+                   else line)
+    elif len(typ):
+        typ.append(line)
+    else:
+        doc_, default = extract_default(line, emit_default_doc=emit_default_doc)
+        docs.append(doc_)
+    return default
+
+
 def doc_to_type_doc(name, doc, emit_default_doc=True):
     """
     Convert input string to default and type (if those are present)
@@ -108,21 +148,11 @@ def doc_to_type_doc(name, doc, emit_default_doc=True):
     :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :rtype: ```dict```
     """
+
     doc = trim(doc).splitlines()
     docs, typ, default = [], [], None
     for line in doc:
-        if line.startswith(':type'):
-            line = line[len(':type '):]
-            colon_at = line.find(':')
-            found_name = line[:colon_at]
-            assert name == found_name, '{!r} != {!r}'.format(name, found_name)
-            line = line[colon_at + 2:]
-            typ.append(line[3:-3] if line.startswith('```') and line.endswith('```') else line)
-        elif len(typ):
-            typ.append(line)
-        else:
-            doc, default = extract_default(line, emit_default_doc=emit_default_doc)
-            docs.append(doc)
+        default = _parse_line(line, name, default, docs, typ, emit_default_doc)
     return dict(doc='\n'.join(docs), **{'default': default} if default else {},
                 **{'typ': (lambda typ: 'dict' if typ.endswith('kwargs') else typ)('\n'.join(typ))}
                 if len(typ) else {})
