@@ -188,10 +188,14 @@ def set_cli_args(argument_parser):
 
   - Dynamic code generation, e.g., with a singular interface for everything; so everything is in one place without duplication
 
+## Minor other use-cases this facilitates
+
+  - Switch between having types in the docstring and having the types inline ([PEP484](https://python.org/dev/peps/pep-0484)–style)
+  - Switch between docstring formats (WiP, SDK can go from {numpy, ReST, google} to ReST; but to others)
+
 ## Future work
 
   - Proper CLI to manage what function, class, and argparse is generated, and from which source-of-truth
-  - Choosing between having the types in the docstring and having the types inline ([PEP484](https://python.org/dev/peps/pep-0484)–style)
   - Generating JSON-schema from `class` so it becomes useful in JSON-RPC, REST-API, and GUI environments
   - Add 5th 'type' of SQLalchemy model
   - Add 6th type of routing layer
