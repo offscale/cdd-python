@@ -117,9 +117,7 @@ def param2argparse_param(param, emit_default_doc=True):
                     required = False
                 elif node.id in simple_types:
                     typ = node.id
-                elif node.id in frozenset(('Union',)):
-                    pass
-                else:
+                elif node.id not in frozenset(('Union',)):
                     typ = 'globals().__getitem__'
 
     doc, _default = extract_default(param['doc'], emit_default_doc=emit_default_doc)

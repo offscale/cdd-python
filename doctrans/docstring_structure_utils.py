@@ -75,14 +75,8 @@ def parse_out_param(expr, emit_default_doc=True):
     ))
     if default is None:
         doc, default = extract_default(doc, emit_default_doc=emit_default_doc)
-    if default is None:
-        # if name.endswith('kwargs'):
-        #    default = {}
-        # required = True
-        # el
-        if typ in simple_types:
-            if required:
-                default = simple_types[typ]
+    if default is None and typ in simple_types and required:
+        default = simple_types[typ]
 
     def handle_keyword(keyword):
         """

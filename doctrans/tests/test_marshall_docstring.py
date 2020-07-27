@@ -2,12 +2,13 @@
 Tests for docstring parsing
 """
 from copy import deepcopy
-from unittest import TestCase, main as unittest_main
+from unittest import TestCase
 
 from doctrans import docstring_struct
 from doctrans.rest_docstring_parser import parse_docstring
 from doctrans.tests.mocks.docstrings import docstring_str, docstring_structure, docstring_str_no_default_doc, \
     docstring_structure_no_default_doc
+from doctrans.tests.utils_for_tests import unittest_main
 
 
 class TestMarshallDocstring(TestCase):
@@ -53,5 +54,4 @@ class TestMarshallDocstring(TestCase):
         )
 
 
-if __name__ == '__main__':
-    unittest_main()
+unittest_main()

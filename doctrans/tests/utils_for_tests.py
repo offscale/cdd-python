@@ -4,6 +4,7 @@ Shared utility function used by many tests
 
 from ast import parse
 from sys import version
+from unittest import main
 
 from meta.asttools import cmp_ast, str_ast
 
@@ -28,3 +29,9 @@ def run_ast_test(test_case_instance, gen_ast, gold):
                                                    (gen_ast, gold))))
     if version[:3] == '3.8':
         test_case_instance.assertTrue(cmp_ast(gen_ast, gold), 'Generated AST doesn\'t match reference AST')
+
+
+def unittest_main():
+    """ Runs unittest.main if __main__ """
+    if __name__ == '__main__':
+        main()

@@ -1,12 +1,13 @@
 """ Tests for docstring_structure_utils """
 from ast import Expr
 from copy import deepcopy
-from unittest import TestCase, main as unittest_main
+from unittest import TestCase
 
 from doctrans.docstring_structure_utils import parse_out_param, interpolate_defaults
 from doctrans.pure_utils import rpartial
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.docstrings import docstring_structure
+from doctrans.tests.utils_for_tests import unittest_main
 
 
 class TestDocstringStructureUtils(TestCase):
@@ -31,5 +32,4 @@ class TestDocstringStructureUtils(TestCase):
         )
 
 
-if __name__ == '__main__':
-    unittest_main()
+unittest_main()
