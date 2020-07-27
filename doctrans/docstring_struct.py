@@ -118,12 +118,6 @@ def from_function(function_def, emit_default_doc=True):
     if isinstance(function_def.returns, Subscript):
         docstring_structure['returns']['typ'] = to_source(function_def.returns)[:-1]
 
-    for e in filter(lambda el: el.target.id not in frozenset(('self', 'cls')),
-                    filter(rpartial(isinstance, AnnAssign),
-                           function_def.body)):
-        docstring_structure['returns' if e.target.id == 'return_type' else 'params'][e.target.id]['typ'] = \
-            e.annotation.id if isinstance(e.annotation, Name) else to_source(e.annotation).rstrip()
-
     return docstring_structure
 
 
@@ -378,8 +372,8 @@ def from_docstring_parser(docstring):
                 for attr in dir(value)
                 if not attr.startswith('_') and getattr(value, attr)
             })
-        elif not isinstance(value, (str, int, float, bool, type(None))):
-            raise NotImplementedError(type(value).__name__)
+        # elif not isinstance(value, (str, int, float, bool, type(None))):
+        #     raise NotImplementedError(type(value).__name__)
         return name, value
 
     docstring_structure = dict(map(evaluate_to_docstring_value,

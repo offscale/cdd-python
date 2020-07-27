@@ -17,6 +17,8 @@ def extract_default(line, emit_default_doc=True):
     :rtype: Tuple[str, Optional[str]]
     """
     search_str = 'defaults to '
+    if line is None:
+        return line, line
     doc, _, default = (lambda parts: parts if parts[1] else line.partition(search_str.capitalize()))(
         line.partition(search_str)
     )

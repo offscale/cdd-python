@@ -60,7 +60,7 @@ def parse_out_param(expr, emit_default_doc=True):
         None
     )
     doc = (
-        lambda help: (
+        lambda help: help if help is None else (
             help if default is None or emit_default_doc is False or (hasattr(default, '__len__') and len(
                 default) == 0) or 'defaults to' in help or 'Defaults to' in help
             else '{help} Defaults to {default}'.format(
@@ -69,9 +69,10 @@ def parse_out_param(expr, emit_default_doc=True):
             )
         )
     )(next(
-        key_word.value.value
-        for key_word in expr.value.keywords
-        if key_word.arg == 'help'
+        (key_word.value.value
+         for key_word in expr.value.keywords
+         if key_word.arg == 'help'),
+        None
     ))
     if default is None:
         doc, default = extract_default(doc, emit_default_doc=emit_default_doc)
