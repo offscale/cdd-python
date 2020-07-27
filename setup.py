@@ -12,17 +12,21 @@ from os import path, listdir
 
 from setuptools import setup, find_packages
 
-if __name__ == '__main__':
-    package_name = 'doctrans'
+package_name = 'doctrans'
 
+
+def to_funcs(*paths):
+    return (partial(path.join, path.dirname(__file__), package_name, *paths),
+            partial(path.join, get_python_lib(prefix=''), package_name, *paths))
+
+
+if __name__ == '__main__':
     with open(path.join(package_name, '__init__.py')) as f:
         __author__, __version__ = map(
             lambda buf: next(map(lambda e: e.value.s, parse(buf).body)),
             filter(lambda line: line.startswith('__version__') or line.startswith('__author__'), f)
         )
 
-    to_funcs = lambda *paths: (partial(path.join, path.dirname(__file__), package_name, *paths),
-                               partial(path.join, get_python_lib(prefix=''), package_name, *paths))
     _data_join, _data_install_dir = to_funcs('_data')
 
     setup(

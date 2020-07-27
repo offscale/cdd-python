@@ -49,17 +49,17 @@ class C(object):
     ) -> Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
         """
         Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
-    
+
         :param dataset_name: name of dataset.
-    
+
         :param tfds_dir: directory to look for models in.
-    
+
         :param K: backend engine, e.g., `np` or `tf`.
-    
+
         :param as_numpy: Convert to numpy ndarrays
-    
+
         :param data_loader_kwargs: pass this as arguments to data_loader function
-    
+
         :return: Train and tests dataset splits.
         """
         return np.empty(0), np.empty(0)

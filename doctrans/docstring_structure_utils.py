@@ -1,11 +1,82 @@
 """
 Functions which produce docstring_structure from various different inputs
 """
-from ast import Constant, Name, Expr, Attribute, keyword
+from ast import Constant, Name, Attribute, Return, parse
 from typing import Any
+
+from astor import to_source
 
 from doctrans.defaults_utils import extract_default
 from doctrans.pure_utils import simple_types
+
+
+def _handle_value(node):
+    """
+    Handle keyword.value types, returning the correct one as a `str` or `Any`
+
+    :param node: AST node from keyword.value
+    :type node: ```Union[Attribute, Name]```
+
+    :returns: `str` or `Any`, representing the type for argparse
+    :rtype: ```Union[str, Any]```
+    """
+    if isinstance(node, Attribute):
+        return Any
+    elif isinstance(node, Name):
+        return 'dict' if node.id == 'loads' else node.id
+    raise NotImplementedError(type(node).__name__)
+
+
+def _handle_keyword(keyword, typ):
+    """
+    Decide which type to wrap the keyword tuples in
+
+    :param keyword: AST keyword
+    :type keyword: ```keyword```
+
+    :param typ: string representation of type
+    :type typ: ```str```
+
+    :returns: string representation of type
+    :rtype: ```str``
+    """
+
+    def identity(s):
+        """
+        Identity function
+
+        :param s: Any value
+        :type s: ```Any```
+
+        :returns: the input value
+        :rtype: ```Any```
+        """
+        return s
+
+    quote_f = identity
+
+    type_ = 'Union'
+    if typ == Any or typ in simple_types:
+        if typ == 'str' or typ == Any:
+            def quote_f(s):
+                """
+                Wrap the input in quotes
+
+                :param s: Any value
+                :type s: ```Any```
+
+                :returns: the input value
+                :rtype: ```Any```
+                """
+                return '\'{}\''.format(s)
+
+        type_ = 'Literal'
+
+    return '{type}[{typs}]'.format(
+        type=type_,
+        typs=', '.join(quote_f(elt.value)
+                       for elt in keyword.value.elts)
+    )
 
 
 def parse_out_param(expr, emit_default_doc=True):
@@ -31,24 +102,8 @@ def parse_out_param(expr, emit_default_doc=True):
         Constant(value=False)
     ).value
 
-    def handle_value(node):
-        """
-        Handle keyword.value types, returning the correct one as a `str` or `Any`
-
-        :param node: AST node from keyword.value
-        :type node: ```Union[Attribute, Name]```
-
-        :returns: `str` or `Any`, representing the type for argparse
-        :rtype: ```Union[str, Any]```
-        """
-        if isinstance(node, Attribute):
-            return Any
-        elif isinstance(node, Name):
-            return 'dict' if node.id == 'loads' else node.id
-        raise NotImplementedError(type(node).__name__)
-
     typ = next((
-        handle_value(keyword.value)
+        _handle_value(keyword.value)
         for keyword in expr.value.keywords
         if keyword.arg == 'type'
     ), 'str')
@@ -79,36 +134,13 @@ def parse_out_param(expr, emit_default_doc=True):
     if default is None and typ in simple_types and required:
         default = simple_types[typ]
 
-    def handle_keyword(keyword):
-        """
-        Decide which type to wrap the keyword tuples in
-
-        :param keyword: AST keyword
-        :type keyword: ```keyword```
-
-        :returns: string representation of type
-        :rtype: ```str``
-        """
-        quote_f = lambda s: s
-        type_ = 'Union'
-        if typ == Any or typ in simple_types:
-            if typ == 'str' or typ == Any:
-                quote_f = lambda s: '\'{}\''.format(s)
-            type_ = 'Literal'
-
-        return '{type}[{typs}]'.format(
-            type=type_,
-            typs=', '.join(quote_f(elt.value)
-                           for elt in keyword.value.elts)
-        )
-
     return dict(
         name=name,
         doc=doc,
         typ=(lambda typ: (typ if required or name.endswith('kwargs')
                           else 'Optional[{typ}]'.format(typ=typ)))(
             typ=next(
-                (handle_keyword(keyword)
+                (_handle_keyword(keyword, typ)
                  for keyword in expr.value.keywords
                  if keyword.arg == 'choices'
                  ), typ
@@ -137,6 +169,60 @@ def interpolate_defaults(param, emit_default_doc=True):
         if default:
             param['default'] = default
     return param
+
+
+def _parse_return(e, docstring_structure, function_def, emit_default_doc):
+    """
+    Parse return into a param dict
+
+    :param e: Return AST node
+    :type e: Return
+
+    :param docstring_structure: a dictionary of form
+          {
+              'short_description': ...,
+              'long_description': ...,
+              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+          }
+    :type docstring_structure: ```dict```
+
+    :param function_def: FunctionDef
+    :type function_def: ```FunctionDef```
+
+    :param emit_default_doc: Whether help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
+
+    :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    :rtype: ```dict```
+    """
+    assert isinstance(e, Return)
+    default = to_source(e.value.elts[1]).replace('\n', '')
+    doc = next(
+        line.partition(',')[2].lstrip()
+        for line in function_def.body[0].value.value.split('\n')
+        if line.lstrip().startswith(':return')
+    )
+    if not emit_default_doc:
+        doc, _ = extract_default(doc, emit_default_doc=emit_default_doc)
+
+    return {
+        'name': 'return_type',
+        'doc': '{doc}{maybe_dot} Defaults to {default}'.format(
+            maybe_dot='' if doc.endswith('.') else '.',
+            doc=doc,
+            default=default
+        ) if all((default is not None,
+                  emit_default_doc,
+                  'Defaults to' not in doc,
+                  'defaults to' not in doc))
+        else doc,
+        'default': default,
+        'typ': to_source(
+            parse(docstring_structure['returns']['typ']).body[0].value.slice.value.elts[1]
+        ).rstrip()
+        # 'Tuple[ArgumentParser, {typ}]'.format(typ=_docstring_structure['returns']['typ'])
+    }
 
 
 __all__ = ['parse_out_param', 'interpolate_defaults']
