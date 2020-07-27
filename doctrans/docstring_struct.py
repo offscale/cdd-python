@@ -6,7 +6,7 @@ Transform from string or AST representations of input, to docstring_structure di
 """
 
 from ast import AnnAssign, Name, FunctionDef, Return, Expr, Constant, Call, \
-    Assign, Attribute, Tuple, get_docstring, parse, Subscript
+    Assign, Attribute, Tuple, get_docstring, Subscript
 from collections import OrderedDict
 from functools import partial
 from operator import itemgetter
@@ -16,7 +16,7 @@ from docstring_parser import DocstringParam, DocstringMeta
 
 from doctrans.ast_utils import to_class_def, get_function_type
 from doctrans.defaults_utils import remove_defaults_from_docstring_structure, extract_default
-from doctrans.docstring_structure_utils import parse_out_param
+from doctrans.docstring_structure_utils import parse_out_param, _parse_return
 from doctrans.pure_utils import tab, rpartial
 from doctrans.rest_docstring_parser import parse_docstring
 
@@ -157,32 +157,9 @@ def from_argparse_ast(function_def, emit_default_doc=False):
                     isinstance(e.value, Constant))):
                 docstring_structure['short_description'] = e.value.value
         elif isinstance(e, Return) and isinstance(e.value, Tuple):
-            default = to_source(e.value.elts[1]).replace('\n', '')
-            doc = next(
-                line.partition(',')[2].lstrip()
-                for line in function_def.body[0].value.value.split('\n')
-                if line.lstrip().startswith(':return')
-            )
-            if not emit_default_doc:
-                doc, _ = extract_default(doc, emit_default_doc=emit_default_doc)
-
-            docstring_structure['returns'] = {
-                'name': 'return_type',
-                'doc': '{doc}{maybe_dot} Defaults to {default}'.format(
-                    maybe_dot='' if doc.endswith('.') else '.',
-                    doc=doc,
-                    default=default
-                ) if all((default is not None,
-                          emit_default_doc,
-                          'Defaults to' not in doc,
-                          'defaults to' not in doc))
-                else doc,
-                'default': default,
-                'typ': to_source(
-                    parse(_docstring_struct['returns']['typ']).body[0].value.slice.value.elts[1]
-                ).rstrip()
-                # 'Tuple[ArgumentParser, {typ}]'.format(typ=_docstring_structure['returns']['typ'])
-            }
+            docstring_structure['returns'] = _parse_return(e, docstring_structure=_docstring_struct,
+                                                           function_def=function_def,
+                                                           emit_default_doc=emit_default_doc)
     if not emit_default_doc:
         remove_defaults_from_docstring_structure(docstring_structure, emit_defaults=False)
     return docstring_structure
@@ -307,6 +284,66 @@ def to_docstring(docstring_structure, emit_default_doc=True,
     )
 
 
+def _parse_dict(d):
+    """
+    Restructure dictionary to match expectations
+
+    :param d: input dictionary
+    :type d: ```dict```
+
+    :returns: restructured dict
+    :rtype: ```dict```
+    """
+    if 'args' in d and len(d['args']) in frozenset((1, 2)):
+        d['name'] = d.pop('args')[0]
+        if d['name'] == 'return':
+            d['name'] = 'return_type'
+    if 'type_name' in d:
+        d['typ'] = d.pop('type_name')
+    if 'description' in d:
+        d['doc'] = d.pop('description')
+
+    return {k: v
+            for k, v in d.items()
+            if v is not None}
+
+
+def _evaluate_to_docstring_value(name_value):
+    """
+    Turn the second element of the tuple into the final representation (e.g., a bool, str, int)
+
+    :param name_value: name value tuple
+    :type name_value: ```Tuple[str, Any]```
+
+    :return: Same shape as input
+    :rtype: ```Tuple[str, Tuple[Union[str, int, bool, float]]]```
+    """
+    name, value = name_value
+    if isinstance(value, (list, tuple)):
+        value = list(map(itemgetter(1),
+                         map(lambda v: _evaluate_to_docstring_value((name, v)),
+                             value)))
+    elif isinstance(value, DocstringParam):
+        assert len(value.args) == 2 and value.args[1] == value.arg_name
+        value = {attr: getattr(value, attr)
+                 for attr in ('type_name', 'arg_name', 'is_optional',
+                              'default', 'description')
+                 if getattr(value, attr) is not None}
+        if 'arg_name' in value:
+            value['name'] = value.pop('arg_name')
+        if 'description' in value:
+            value['doc'] = extract_default(value.pop('description'), emit_default_doc=False)[0]
+    elif isinstance(value, DocstringMeta):
+        value = _parse_dict({
+            attr: getattr(value, attr)
+            for attr in dir(value)
+            if not attr.startswith('_') and getattr(value, attr)
+        })
+    # elif not isinstance(value, (str, int, float, bool, type(None))):
+    #     raise NotImplementedError(type(value).__name__)
+    return name, value
+
+
 def from_docstring_parser(docstring):
     """
     Converts Docstring from the docstring_parser library to our internal representation / docstring structure
@@ -318,65 +355,7 @@ def from_docstring_parser(docstring):
     :rtype: ```dict```
     """
 
-    def parse_dict(d):
-        """
-        Restructure dictionary to match expectations
-
-        :param d: input dictionary
-        :type d: ```dict```
-
-        :returns: restructured dict
-        :rtype: ```dict```
-        """
-        if 'args' in d and len(d['args']) in frozenset((1, 2)):
-            d['name'] = d.pop('args')[0]
-            if d['name'] == 'return':
-                d['name'] = 'return_type'
-        if 'type_name' in d:
-            d['typ'] = d.pop('type_name')
-        if 'description' in d:
-            d['doc'] = d.pop('description')
-
-        return {k: v
-                for k, v in d.items()
-                if v is not None}
-
-    def evaluate_to_docstring_value(name_value):
-        """
-        Turn the second element of the tuple into the final representation (e.g., a bool, str, int)
-
-        :param name_value: name value tuple
-        :type name_value: ```Tuple[str, Any]```
-
-        :return: Same shape as input
-        :rtype: ```Tuple[str, Tuple[Union[str, int, bool, float]]]```
-        """
-        name, value = name_value
-        if isinstance(value, (list, tuple)):
-            value = list(map(itemgetter(1),
-                             map(lambda v: evaluate_to_docstring_value((name, v)),
-                                 value)))
-        elif isinstance(value, DocstringParam):
-            assert len(value.args) == 2 and value.args[1] == value.arg_name
-            value = {attr: getattr(value, attr)
-                     for attr in ('type_name', 'arg_name', 'is_optional',
-                                  'default', 'description')
-                     if getattr(value, attr) is not None}
-            if 'arg_name' in value:
-                value['name'] = value.pop('arg_name')
-            if 'description' in value:
-                value['doc'] = extract_default(value.pop('description'), emit_default_doc=False)[0]
-        elif isinstance(value, DocstringMeta):
-            value = parse_dict({
-                attr: getattr(value, attr)
-                for attr in dir(value)
-                if not attr.startswith('_') and getattr(value, attr)
-            })
-        # elif not isinstance(value, (str, int, float, bool, type(None))):
-        #     raise NotImplementedError(type(value).__name__)
-        return name, value
-
-    docstring_structure = dict(map(evaluate_to_docstring_value,
+    docstring_structure = dict(map(_evaluate_to_docstring_value,
                                    filter(lambda k_v: not isinstance(k_v[1], (type(None), bool)),
                                           map(lambda attr: (attr, getattr(docstring, attr)),
                                               filter(lambda attr: not attr.startswith('_'),

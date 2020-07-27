@@ -5,7 +5,6 @@ Transform from string or AST representations of input, to AST, file, or str outp
 from ast import parse, ClassDef, Name, Load, Constant, Expr, Module, \
     FunctionDef, arguments, Assign, Attribute, Store, Tuple, Return, arg
 from functools import partial
-from typing import Iterable
 
 from astor import to_source
 from black import format_str, FileMode
@@ -48,16 +47,15 @@ def to_argparse(docstring_structure, emit_default_doc, function_name='set_cli_ar
                        posonlyargs=[],
                        vararg=None),
         body=[
-                 Expr(value=Constant(kind=None,
-                                     value=
-                                     '\n    Set CLI arguments\n\n    '
-                                     ':param argument_parser: argument parser\n    '
-                                     ':type argument_parser: ```ArgumentParser```\n\n    '
-                                     ':return: argument_parser, {returns[doc]}\n    '
-                                     ':rtype: ```Tuple[ArgumentParser,'
-                                     ' {returns[typ]}]```\n    '.format(
-                                         returns=docstring_structure['returns']
-                                     ))),
+                 Expr(
+                     value=Constant(
+                         kind=None,
+                         value='\n    Set CLI arguments\n\n    '
+                               ':param argument_parser: argument parser\n    '
+                               ':type argument_parser: ```ArgumentParser```\n\n    '
+                               ':return: argument_parser, {returns[doc]}\n    '
+                               ':rtype: ```Tuple[ArgumentParser,'
+                               ' {returns[typ]}]```\n    '.format(returns=docstring_structure['returns']))),
                  Assign(targets=[Attribute(attr='description',
                                            ctx=Store(),
                                            value=Name(ctx=Load(),
@@ -65,8 +63,7 @@ def to_argparse(docstring_structure, emit_default_doc, function_name='set_cli_ar
                         type_comment=None,
                         value=Constant(
                             kind=None,
-                            value=docstring_structure['long_description'] or
-                                  docstring_structure['short_description']))
+                            value=docstring_structure['long_description'] or docstring_structure['short_description']))
              ] + list(map(partial(param2argparse_param, emit_default_doc=emit_default_doc),
                           docstring_structure['params'])) + [
                  Return(
@@ -112,17 +109,18 @@ def to_class(docstring_structure, class_name='TargetClass', class_bases=('object
                     id=base_class)
                for base_class in class_bases],
         body=[
-                 Expr(value=Constant(
-                     kind=None,
-                     value='\n    {description}\n\n{cvars}'.format(
-                         description=docstring_structure['long_description']
-                                     or docstring_structure['short_description'],
-                         cvars='\n'.join(
-                             '{tab}:cvar {param[name]}: {param[doc]}'.format(tab=tab, param=param)
-                             for param in docstring_structure['params'] + returns
+                 Expr(
+                     value=Constant(
+                         kind=None,
+                         value='\n    {description}\n\n{cvars}'.format(
+                             description=docstring_structure['long_description'] or docstring_structure[
+                                 'short_description'],
+                             cvars='\n'.join(
+                                 '{tab}:cvar {param[name]}: {param[doc]}'.format(tab=tab, param=param)
+                                 for param in docstring_structure['params'] + returns
+                             )
                          )
-                     )
-                 ))
+                     ))
              ] + list(map(param2ast, docstring_structure['params'] + returns)),
         decorator_list=[],
         keywords=[],
