@@ -16,6 +16,15 @@ package_name = 'doctrans'
 
 
 def to_funcs(*paths):
+    """
+    Produce function tuples that produce the local and install dir, respectively.
+
+    :param paths: one or more str, referring to relative folder names
+    :type paths: ```*paths```
+
+    :returns: 2 functions
+    :rtype: ```Tuple[Callable[Optional[List[str]], str], Callable[Optional[List[str]], str]]```
+    """
     return (partial(path.join, path.dirname(__file__), package_name, *paths),
             partial(path.join, get_python_lib(prefix=''), package_name, *paths))
 

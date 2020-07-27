@@ -13,3 +13,16 @@ simple_types = {'int': 0, float: .0, 'str': '', 'bool': False}
 def rpartial(func, *args):
     """Partially applies last arguments."""
     return lambda *a: func(*(a + args))
+
+
+def identity(s):
+    """
+    Identity function
+
+    :param s: Any value
+    :type s: ```Any```
+
+    :returns: the input value
+    :rtype: ```Any```
+    """
+    return s
