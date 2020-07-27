@@ -270,7 +270,8 @@ class_with_method_types_ast = ClassDef(
                                                         value=Name(ctx=Load(),
                                                                    id='np'))])),
                                 value=Name(ctx=Load(),
-                                           id='Tuple'))])),
+                                           id='Tuple'))
+                        ])),
                 value=Name(ctx=Load(),
                            id='Union')),
             type_comment=None)],

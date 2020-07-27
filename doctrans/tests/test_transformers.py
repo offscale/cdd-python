@@ -9,11 +9,12 @@ from unittest import TestCase
 from meta.asttools import cmp_ast
 
 from doctrans import transformers, docstring_struct
+from doctrans.ast_utils import get_function_type
 from doctrans.pure_utils import rpartial
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import class_ast
 from doctrans.tests.mocks.docstrings import docstring_str, docstring_structure
-from doctrans.tests.mocks.methods import class_with_method_types_ast
+from doctrans.tests.mocks.methods import class_with_method_types_ast, class_with_method_ast
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
 
 
@@ -86,7 +87,7 @@ class TestTransformers(TestCase):
                                               docstring_format='google')
         )
 
-    def test_to_file(self):
+    def test_to_file(self) -> None:
         """
         Tests whether `to_file` constructs a file, and fills it with the right content
         """
@@ -127,17 +128,55 @@ class TestTransformers(TestCase):
         """
         Tests whether `to_function` produces method from `class_with_method_types_ast` given `docstring_str`
         """
+        function_def = next(filter(rpartial(isinstance, FunctionDef),
+                                   class_with_method_types_ast.body))
         run_ast_test(
             self,
-            transformers.to_function(
-                docstring_struct.from_docstring(docstring_str,
-                                                emit_default_doc=False),
-                function_name='method_name',
-                function_type='self',
-                emit_default_doc=False
-            ),
-            gold=next(filter(rpartial(isinstance, FunctionDef),
-                             class_with_method_types_ast.body))
+            transformers.to_function(docstring_struct.from_docstring(docstring_str,
+                                                                     emit_default_doc=True),
+                                     function_name=function_def.name,
+                                     function_type=get_function_type(function_def),
+                                     emit_default_doc=False,
+                                     inline_types=True,
+                                     emit_separating_tab=True),
+            gold=function_def
+        )
+
+    def test_to_function_with_docstring_types(self) -> None:
+        """
+        Tests that `to_function` can generate a function with types in docstring
+        """
+        function_def = next(filter(rpartial(isinstance, FunctionDef),
+                                   class_with_method_ast.body))
+        run_ast_test(
+            self,
+            transformers.to_function(docstring_struct.from_function(function_def),
+                                     function_name=function_def.name,
+                                     function_type=get_function_type(function_def),
+                                     emit_default_doc=False,
+                                     inline_types=False,
+                                     indent_level=2,
+                                     emit_separating_tab=False),
+            gold=function_def
+        )
+
+    def test_to_function_with_inline_types(self) -> None:
+        """
+        Tests that `to_function` can generate a function with inline types
+        """
+        function_def = next(filter(rpartial(isinstance, FunctionDef),
+                                   class_with_method_types_ast.body))
+        # transformers.to_file(gen_ast, os.path.join(os.path.dirname(__file__), 'delme.py'))
+        run_ast_test(
+            self,
+            transformers.to_function(docstring_struct.from_function(function_def,
+                                                                    emit_default_doc=True),
+                                     function_name=function_def.name,
+                                     function_type=get_function_type(function_def),
+                                     emit_default_doc=False,
+                                     inline_types=True,
+                                     emit_separating_tab=True),
+            gold=function_def
         )
 
 

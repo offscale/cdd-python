@@ -12,7 +12,6 @@ from black import format_str, FileMode
 
 from doctrans import docstring_struct
 from doctrans.ast_utils import param2argparse_param, param2ast
-from doctrans.defaults_utils import extract_default
 from doctrans.pure_utils import tab, simple_types
 
 
@@ -38,9 +37,6 @@ def to_argparse(docstring_structure, emit_default_doc, function_name='set_cli_ar
     :returns: function which constructs argparse
     :rtype: ```FunctionDef``
     """
-    doc, _default = extract_default(docstring_structure['returns']['doc'],
-                                    emit_default_doc=emit_default_doc)
-    docstring_structure['returns']['doc'] = doc
     return FunctionDef(
         args=arguments(args=[arg(annotation=None,
                                  arg='argument_parser',
@@ -203,7 +199,9 @@ def to_file(ast, filename, mode='a', skip_black=False):
         f.write(src)
 
 
-def to_function(docstring_structure, emit_default_doc, function_name, function_type, docstring_format='rest'):
+def to_function(docstring_structure, emit_default_doc, function_name,
+                function_type, docstring_format='rest', indent_level=2,
+                emit_separating_tab=False, inline_types=True):
     """
     Construct a function
 
@@ -228,6 +226,15 @@ def to_function(docstring_structure, emit_default_doc, function_name, function_t
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpy', 'google']```
 
+    :param indent_level: docstring indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
+    :type indent_level: ```int```
+
+    :param emit_separating_tab: docstring decider for whether to put a tab between :param and return and desc
+    :type emit_separating_tab: ```bool```
+
+    :param inline_types: Whether the type should be inline or in docstring
+    :type inline_types: ```bool```
+
     :returns: function (could be a method on a class)
     :rtype: ```FunctionDef``
     """
@@ -245,12 +252,13 @@ def to_function(docstring_structure, emit_default_doc, function_name, function_t
                                                                  type_comment=None),
                  *map(lambda param:
                       arg(
-                          annotation=Name(
+                          annotation=(Name(
                               ctx=Load(),
                               id=param['typ']
                           )
-                          if param['typ'] in simple_types
-                          else parse(param['typ']).body[0].value,
+                                      if param['typ'] in simple_types
+                                      else parse(param['typ']).body[0].value)
+                          if inline_types and 'typ' in param else None,
                           arg=param['name'],
                           type_comment=None
                       ),
@@ -286,7 +294,10 @@ def to_function(docstring_structure, emit_default_doc, function_name, function_t
                     value=docstring_struct.to_docstring(
                         docstring_structure,
                         emit_default_doc=emit_default_doc,
-                        docstring_format=docstring_format
+                        docstring_format=docstring_format,
+                        emit_types=not inline_types,
+                        indent_level=indent_level,
+                        emit_separating_tab=emit_separating_tab
                     )
                 )),
                 Return(value=parse(docstring_structure['returns']['default']).body[0].value)
@@ -297,6 +308,7 @@ def to_function(docstring_structure, emit_default_doc, function_name, function_t
         decorator_list=[],
         name=function_name,
         returns=(parse(docstring_structure['returns']['typ']).body[0].value
-                 if 'returns' in docstring_structure else None),
+                 if 'returns' in docstring_structure
+                    and 'typ' in docstring_structure['returns'] else None) if inline_types else None,
         type_comment=None
     )
