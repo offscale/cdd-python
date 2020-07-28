@@ -3,7 +3,9 @@ Mocks for methods
 """
 
 from ast import Return, Tuple, Load, Call, Constant, Expr, Index, \
-    arguments, arg, FunctionDef, ClassDef, Attribute, Name, Subscript
+    arguments, arg, FunctionDef, ClassDef, Attribute, Name, Subscript, parse
+
+from doctrans.pure_utils import PY3_8
 
 class_with_method_str = '''
 class C(object):
@@ -141,7 +143,7 @@ class_with_method_ast = ClassDef(
     decorator_list=[],
     keywords=[],
     name='C'
-)
+) if PY3_8 else parse(class_with_method_str).body[0]
 
 class_with_method_types_ast = ClassDef(
     bases=[Name(ctx=Load(),
@@ -278,4 +280,4 @@ class_with_method_types_ast = ClassDef(
     decorator_list=[],
     keywords=[],
     name='C'
-)
+) if PY3_8 else parse(class_with_method_types_str).body[0]

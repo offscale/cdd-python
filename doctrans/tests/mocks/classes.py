@@ -3,7 +3,9 @@ Mocks for the `class`
 """
 
 from ast import ClassDef, Name, Load, Expr, Constant, AnnAssign, \
-    Store, Subscript, Tuple, Dict, Attribute, Index, Call
+    Store, Subscript, Tuple, Dict, Attribute, Index, Call, parse
+
+from doctrans.pure_utils import PY3_8
 
 class_str = '''
 class TargetClass(object):
@@ -164,4 +166,4 @@ class_ast = ClassDef(
     decorator_list=[],
     keywords=[],
     name='TargetClass'
-)
+) if PY3_8 else parse(class_str).body[0]

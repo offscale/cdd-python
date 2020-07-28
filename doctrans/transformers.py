@@ -2,7 +2,7 @@
 Transform from string or AST representations of input, to AST, file, or str output.
 """
 
-from ast import parse, ClassDef, Name, Load, Constant, Expr, Module, \
+from ast import parse, ClassDef, Name, Load, Expr, Module, \
     FunctionDef, arguments, Assign, Attribute, Store, Tuple, Return, arg
 from functools import partial
 
@@ -10,7 +10,7 @@ from astor import to_source
 from black import format_str, FileMode
 
 from doctrans import docstring_struct
-from doctrans.ast_utils import param2argparse_param, param2ast
+from doctrans.ast_utils import param2argparse_param, param2ast, set_value
 from doctrans.pure_utils import tab, simple_types
 
 
@@ -48,7 +48,7 @@ def to_argparse(docstring_structure, emit_default_doc, function_name='set_cli_ar
                        vararg=None),
         body=[
                  Expr(
-                     value=Constant(
+                     value=set_value(
                          kind=None,
                          value='\n    Set CLI arguments\n\n    '
                                ':param argument_parser: argument parser\n    '
@@ -61,7 +61,7 @@ def to_argparse(docstring_structure, emit_default_doc, function_name='set_cli_ar
                                            value=Name(ctx=Load(),
                                                       id='argument_parser'))],
                         type_comment=None,
-                        value=Constant(
+                        value=set_value(
                             kind=None,
                             value=docstring_structure['long_description'] or docstring_structure['short_description']))
              ] + list(map(partial(param2argparse_param, emit_default_doc=emit_default_doc),
@@ -110,7 +110,7 @@ def to_class(docstring_structure, class_name='TargetClass', class_bases=('object
                for base_class in class_bases],
         body=[
                  Expr(
-                     value=Constant(
+                     value=set_value(
                          kind=None,
                          value='\n    {description}\n\n{cvars}'.format(
                              description=docstring_structure['long_description'] or docstring_structure[
@@ -264,12 +264,12 @@ def to_function(docstring_structure, emit_default_doc, function_name,
                  )
             )),
             defaults=list(
-                map(lambda param: Constant(kind=None,
-                                           value=param['default']),
+                map(lambda param: set_value(kind=None,
+                                            value=param['default']),
                     filter(lambda param: 'default' in param,
                            params_no_kwargs))
-            ) + [Constant(kind=None,
-                          value=None)],
+            ) + [set_value(kind=None,
+                           value=None)],
             kw_defaults=[],
             kwarg=next(map(
                 lambda param: arg(annotation=None,
@@ -287,7 +287,7 @@ def to_function(docstring_structure, emit_default_doc, function_name,
         body=list(filter(
             None,
             (
-                Expr(value=Constant(
+                Expr(value=set_value(
                     kind=None,
                     value=docstring_struct.to_docstring(
                         docstring_structure,

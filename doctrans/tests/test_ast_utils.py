@@ -1,8 +1,9 @@
 """ Tests for ast_utils """
-from ast import FunctionDef, Module, ClassDef, Subscript, Name, arguments, arg
+from ast import FunctionDef, Module, ClassDef, Subscript, Name, arguments, arg, Constant, NameConstant, Str
 from unittest import TestCase
+from unittest.mock import patch
 
-from doctrans.ast_utils import to_class_def, determine_quoting, get_function_type
+from doctrans.ast_utils import to_class_def, determine_quoting, get_function_type, get_value
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
 
 
@@ -58,6 +59,32 @@ class TestAstUtils(TestCase):
                                                      type_comment=None)]))),
             'cls'
         )
+
+    def test_set_value(self):
+        """ Tests that `set_value` returns the right type for the right Python version """
+        with patch('doctrans.ast_utils.PY3_8', True):
+            import doctrans.ast_utils
+            self.assertIsInstance(doctrans.ast_utils.set_value(None, None), Constant)
+
+        with patch('doctrans.ast_utils.PY3_8', False):
+            import doctrans.ast_utils
+            self.assertIsInstance(doctrans.ast_utils.set_value(None, None), NameConstant)
+
+        with patch('doctrans.ast_utils.PY3_8', True):
+            import doctrans.ast_utils
+            self.assertIsInstance(doctrans.ast_utils.set_value('foo', None), Constant)
+
+        with patch('doctrans.ast_utils.PY3_8', False):
+            import doctrans.ast_utils
+            self.assertIsInstance(doctrans.ast_utils.set_value('foo', None), Str)
+
+    def test_get_value_fails(self):
+        """ Tests get_value fails properly """
+        self.assertRaises(NotImplementedError, lambda: get_value(None))
+        self.assertRaises(NotImplementedError, lambda: get_value(''))
+        self.assertRaises(NotImplementedError, lambda: get_value(0))
+        self.assertRaises(NotImplementedError, lambda: get_value(.0))
+        self.assertRaises(NotImplementedError, lambda: get_value([]))
 
 
 unittest_main()

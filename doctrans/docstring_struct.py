@@ -6,7 +6,7 @@ Transform from string or AST representations of input, to docstring_structure di
 """
 
 from ast import AnnAssign, Name, FunctionDef, Return, Expr, Constant, Call, \
-    Assign, Attribute, Tuple, get_docstring, Subscript
+    Assign, Attribute, Tuple, get_docstring, Subscript, Str, NameConstant
 from collections import OrderedDict
 from functools import partial
 from operator import itemgetter
@@ -14,7 +14,7 @@ from operator import itemgetter
 from astor import to_source
 from docstring_parser import DocstringParam, DocstringMeta
 
-from doctrans.ast_utils import to_class_def, get_function_type
+from doctrans.ast_utils import to_class_def, get_function_type, get_value
 from doctrans.defaults_utils import remove_defaults_from_docstring_structure, extract_default
 from doctrans.docstring_structure_utils import parse_out_param, _parse_return
 from doctrans.pure_utils import tab, rpartial
@@ -106,9 +106,11 @@ def from_function(function_def, emit_default_doc=True):
 
     if emit_default_doc:
         for idx, const in enumerate(function_def.args.defaults):
-            assert isinstance(const, Constant) and const.kind is None
-            if const.value is not None:
-                docstring_structure['params'][idx]['default'] = const.value
+            assert isinstance(const, Constant) and const.kind is None or isinstance(const, (Str, NameConstant)), type(
+                const).__name__
+            value = get_value(const)
+            if value is not None:
+                docstring_structure['params'][idx]['default'] = value
 
         # Convention - the final top-level `return` is the default
         return_ast = next(filter(rpartial(isinstance, Return), function_def.body[::-1]), None)
@@ -145,8 +147,7 @@ def from_argparse_ast(function_def, emit_default_doc=False):
                 #     takewhile(lambda l: not l.lstrip().startswith(':param'),
                 #               expr.value.value.split('\n'))).strip()
             elif (isinstance(e.value, Call) and len(e.value.args) == 1 and
-                  isinstance(e.value.args[0], Constant) and
-                  e.value.args[0].kind is None):
+                  isinstance(e.value.args[0], (Constant, Str))):
                 docstring_structure['params'].append(parse_out_param(e, emit_default_doc=emit_default_doc))
         elif isinstance(e, Assign):
             if all((len(e.targets) == 1,
@@ -154,8 +155,8 @@ def from_argparse_ast(function_def, emit_default_doc=False):
                     e.targets[0].attr == 'description',
                     isinstance(e.targets[0].value, Name),
                     e.targets[0].value.id == 'argument_parser',
-                    isinstance(e.value, Constant))):
-                docstring_structure['short_description'] = e.value.value
+                    isinstance(e.value, (Constant, Str)))):
+                docstring_structure['short_description'] = get_value(e.value)
         elif isinstance(e, Return) and isinstance(e.value, Tuple):
             docstring_structure['returns'] = _parse_return(e, docstring_structure=_docstring_struct,
                                                            function_def=function_def,

@@ -3,14 +3,13 @@ Tests for marshalling between formats
 """
 import os
 from ast import FunctionDef, parse
-from sys import version
 from unittest import TestCase
 
 from meta.asttools import cmp_ast
 
 from doctrans import transformers, docstring_struct
 from doctrans.ast_utils import get_function_type
-from doctrans.pure_utils import rpartial
+from doctrans.pure_utils import rpartial, PY3_8
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import class_ast
 from doctrans.tests.mocks.docstrings import docstring_str, docstring_structure
@@ -21,7 +20,7 @@ from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
 class TestTransformers(TestCase):
     """ Tests whether conversion between formats works """
 
-    def test_to_class(self) -> None:
+    def test_to_class_from_argparse_ast(self) -> None:
         """
         Tests whether `to_class` produces `class_ast` given `argparse_func_ast`
         """
@@ -34,7 +33,10 @@ class TestTransformers(TestCase):
             gold=class_ast
         )
 
-        # Tests whether `to_class` produces `class_ast` given `docstring_str`
+    def test_to_class_from_docstring_str(self) -> None:
+        """
+        Tests whether `to_class` produces `class_ast` given `docstring_str`
+        """
         run_ast_test(
             self,
             transformers.to_class(
@@ -116,9 +118,9 @@ class TestTransformers(TestCase):
                 blacked = f.read()
 
             self.assertNotEqual(ugly, blacked)
-            if version[:3] == '3.8':
-                self.assertTrue(cmp_ast(parse(ugly), parse(blacked)),
-                                'Ugly AST doesn\'t match blacked AST')
+            # if PY3_8:
+            self.assertTrue(cmp_ast(parse(ugly), parse(blacked)),
+                            'Ugly AST doesn\'t match blacked AST')
 
         finally:
             if os.path.isfile(filename):
@@ -138,7 +140,7 @@ class TestTransformers(TestCase):
                                      function_type=get_function_type(function_def),
                                      emit_default_doc=False,
                                      inline_types=True,
-                                     emit_separating_tab=True),
+                                     emit_separating_tab=PY3_8),
             gold=function_def
         )
 
@@ -175,7 +177,7 @@ class TestTransformers(TestCase):
                                      function_type=get_function_type(function_def),
                                      emit_default_doc=False,
                                      inline_types=True,
-                                     emit_separating_tab=True),
+                                     emit_separating_tab=PY3_8),
             gold=function_def
         )
 
