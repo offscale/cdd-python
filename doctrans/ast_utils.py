@@ -2,10 +2,10 @@
 ast_utils, bunch of helpers for converting input into ast.* output
 """
 from ast import AnnAssign, Name, Load, Store, Constant, Dict, Module, ClassDef, Subscript, Tuple, Expr, Call, \
-    Attribute, keyword, parse, walk, FunctionDef
+    Attribute, keyword, parse, walk, FunctionDef, Str, NameConstant
 
 from doctrans.defaults_utils import extract_default
-from doctrans.pure_utils import simple_types, rpartial
+from doctrans.pure_utils import simple_types, rpartial, PY3_8
 
 
 def param2ast(param):
@@ -24,8 +24,8 @@ def param2ast(param):
                          simple=1,
                          target=Name(ctx=Store(),
                                      id=param['name']),
-                         value=Constant(kind=None,
-                                        value=param.get('default', simple_types[param['typ']])))
+                         value=set_value(kind=None,
+                                         value=param.get('default', simple_types[param['typ']])))
     elif param['typ'] == 'dict' or param['typ'].startswith('*'):
         return AnnAssign(annotation=Name(ctx=Load(),
                                          id='dict'),
@@ -41,8 +41,8 @@ def param2ast(param):
             value = parse(param['default']).body[0].value if 'default' in param \
                 else Name(ctx=Load(), id=None)
         else:
-            value = Constant(kind=None,
-                             value=param.get('default'))
+            value = set_value(kind=None,
+                              value=param.get('default'))
 
         return AnnAssign(
             annotation=annotation,
@@ -102,9 +102,9 @@ def param2argparse_param(param, emit_default_doc=True):
 
         for node in walk(parsed_type):
             if isinstance(node, Tuple):
-                maybe_choices = tuple(elt.value
+                maybe_choices = tuple(get_value(elt)
                                       for elt in node.elts
-                                      if isinstance(elt, Constant))
+                                      if isinstance(elt, (Constant, Str)))
                 if len(maybe_choices) == len(node.elts):
                     choices = maybe_choices
             elif isinstance(node, Name):
@@ -119,8 +119,8 @@ def param2argparse_param(param, emit_default_doc=True):
     default = param.get('default', _default)
 
     return Expr(
-        value=Call(args=[Constant(kind=None,
-                                  value='--{param[name]}'.format(param=param))],
+        value=Call(args=[set_value(kind=None,
+                                   value='--{param[name]}'.format(param=param))],
                    func=Attribute(attr='add_argument',
                                   ctx=Load(),
                                   value=Name(ctx=Load(),
@@ -141,19 +141,19 @@ def param2argparse_param(param, emit_default_doc=True):
                        choices if choices is None
                        else keyword(arg='choices',
                                     value=Tuple(ctx=Load(),
-                                                elts=[Constant(kind=None,
-                                                               value=choice)
+                                                elts=[set_value(kind=None,
+                                                                value=choice)
                                                       for choice in choices])),
                        keyword(arg='help',
-                               value=Constant(kind=None,
-                                              value=doc)),
+                               value=set_value(kind=None,
+                                               value=doc)),
                        keyword(arg='required',
-                               value=Constant(kind=None,
-                                              value=True)) if required else None,
+                               value=(Constant(kind=None, value=True) if PY3_8
+                                      else NameConstant(value=True))) if required else None,
                        default if default is None
                        else keyword(arg='default',
-                                    value=Constant(kind=None,
-                                                   value=default))
+                                    value=set_value(kind=None,
+                                                    value=default))
                    ))))
     )
 
@@ -177,7 +177,7 @@ def determine_quoting(node):
                 return any(determine_quoting(elt)
                            for elt in node.slice.value.elts)
             return any(isinstance(elt, Constant) and elt.kind is None and isinstance(elt.value, str)
-                       or elt.id == 'str'
+                       or (isinstance(elt, Str) or elt.id == 'str')
                        for elt in node.slice.value.elts)
         elif node.value.id == 'Tuple':
             return any(determine_quoting(elt)
@@ -208,3 +208,42 @@ def get_function_type(function):
     elif function.args.args[0].arg in frozenset(('self', 'cls')):
         return function.args.args[0].arg
     return None
+
+
+def get_value(node):
+    """
+    Get the value from a Constant or a Str… or anything with a `.value`
+
+    :param node: AST node
+    :type node: ```Union[Constant, Str]```
+
+    :returns: Probably a string, but could be any constant value
+    :rtype: ```Optional[Union[str, int, float, bool]]```
+    """
+    if isinstance(node, Str):
+        return node.s
+    elif isinstance(node, Constant) or hasattr(node, 'value'):
+        return node.value
+    else:
+        raise NotImplementedError(type(node).__name__)
+
+
+def set_value(value, kind=None):
+    """
+    Creates a Constant or a Str depending on Python version in use
+
+    :param value: AST node
+    :type value: ```Any```
+
+    :param kind: AST node
+    :type kind: ```Optional[Any]```
+
+    :returns: Probably a string, but could be any constant value
+    :rtype: ```Union[Constant, Str, NameConstant]```
+    """
+    if not PY3_8:
+        if isinstance(value, str):
+            return Str(s=value)
+        elif value is None:
+            return NameConstant(value=value)
+    return Constant(kind=kind, value=value)

@@ -3,6 +3,7 @@ Pure utils for pure functions. For the same input will always produce the same o
 """
 
 from pprint import PrettyPrinter
+from sys import version
 
 pp = PrettyPrinter(indent=4).pprint
 tab = ' ' * 4
@@ -26,3 +27,6 @@ def identity(s):
     :rtype: ```Any```
     """
     return s
+
+
+PY3_8 = version.startswith('3.8')

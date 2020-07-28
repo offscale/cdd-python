@@ -3,7 +3,9 @@ Mocks for the argparse function
 """
 
 from ast import FunctionDef, arguments, arg, Expr, Constant, Assign, Store, \
-    Attribute, Name, Load, Call, keyword, Return, Tuple
+    Attribute, Name, Load, Call, keyword, Return, Tuple, parse
+
+from doctrans.pure_utils import PY3_8
 
 argparse_func_str = '''
 def set_cli_args(argument_parser):
@@ -180,4 +182,4 @@ argparse_func_ast = FunctionDef(
     name='set_cli_args',
     returns=None,
     type_comment=None
-)
+) if PY3_8 else parse(argparse_func_str).body[0]

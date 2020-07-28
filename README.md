@@ -1,6 +1,6 @@
 doctrans
 ========
-![Python version range](https://img.shields.io/badge/python-3.8-blue.svg)
+![Python version range](https://img.shields.io/badge/python-3.7%20|%203.8-blue.svg)
 [![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Linting, testing, and coverage](https://github.com/SamuelMarks/doctrans/workflows/Linting,%20testing,%20and%20coverage/badge.svg)](https://github.com/SamuelMarks/doctrans/actions)
 ![Documentation coverage](.github/doccoverage.svg)
@@ -191,7 +191,7 @@ def set_cli_args(argument_parser):
 ## Minor other use-cases this facilitates
 
   - Switch between having types in the docstring and having the types inline ([PEP484](https://python.org/dev/peps/pep-0484)–style)
-  - Switch between docstring formats (WiP, SDK can go from {numpy, ReST, google} to ReST; but to others)
+  - Switch between docstring formats (WiP, SDK can go from {numpy, ReST, google} to ReST; but not to others)
 
 ## Future work
 

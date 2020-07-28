@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, patch
 
 from doctrans import __version__
 from doctrans.__main__ import _build_parser, main
+from doctrans.pure_utils import PY3_8
 from doctrans.tests.mocks.classes import class_str
 from doctrans.tests.utils_for_tests import unittest_main
 
@@ -61,7 +62,8 @@ class TestCli(TestCase):
         if argparse_mock.call_args is None:
             self.assertIsNone(output)
         else:
-            self.assertEqual(output_checker(argparse_mock.call_args.args[0]),
+            self.assertEqual(output_checker((argparse_mock.call_args.args if PY3_8
+                                             else argparse_mock.call_args[0])[0]),
                              output)
         return output, args
 
@@ -137,7 +139,8 @@ class TestCli(TestCase):
         with patch('argparse.ArgumentParser._print_message', argparse_mock), self.assertRaises(SystemExit) as e:
             loader.exec_module(module_from_spec(spec_from_loader(loader.name, loader)))
         self.assertEqual(e.exception.code, SystemExit(2).code)
-        self.assertEqual((lambda output: output[output.rfind(' ') + 1:][:-1])(argparse_mock.call_args.args[0]),
+        self.assertEqual((lambda output: output[output.rfind(' ') + 1:][:-1])((argparse_mock.call_args.args if PY3_8
+                                                                               else argparse_mock.call_args[0])[0]),
                          '--truth')
 
 

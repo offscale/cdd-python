@@ -6,6 +6,7 @@ from typing import Any
 
 from astor import to_source
 
+from doctrans.ast_utils import get_value
 from doctrans.defaults_utils import extract_default
 from doctrans.pure_utils import simple_types
 
@@ -61,7 +62,7 @@ def _handle_keyword(keyword, typ):
 
     return '{type}[{typs}]'.format(
         type=type_,
-        typs=', '.join(quote_f(elt.value)
+        typs=', '.join(quote_f(get_value(elt))
                        for elt in keyword.value.elts)
     )
 
@@ -90,13 +91,13 @@ def parse_out_param(expr, emit_default_doc=True):
     ).value
 
     typ = next((
-        _handle_value(keyword.value)
+        _handle_value(get_value(keyword))
         for keyword in expr.value.keywords
         if keyword.arg == 'type'
     ), 'str')
-    name = expr.value.args[0].value[len('--'):]
+    name = get_value(expr.value.args[0])[len('--'):]
     default = next(
-        (key_word.value.value
+        (get_value(key_word.value)
          for key_word in expr.value.keywords
          if key_word.arg == 'default'),
         None
@@ -111,7 +112,7 @@ def parse_out_param(expr, emit_default_doc=True):
             )
         )
     )(next(
-        (key_word.value.value
+        (get_value(key_word.value)
          for key_word in expr.value.keywords
          if key_word.arg == 'help'),
         None
@@ -187,7 +188,7 @@ def _parse_return(e, docstring_structure, function_def, emit_default_doc):
     default = to_source(e.value.elts[1]).replace('\n', '')
     doc = next(
         line.partition(',')[2].lstrip()
-        for line in function_def.body[0].value.value.split('\n')
+        for line in get_value(function_def.body[0].value).split('\n')
         if line.lstrip().startswith(':return')
     )
     if not emit_default_doc:
