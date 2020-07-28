@@ -1,6 +1,6 @@
 doctrans
 ========
-![Python version range](https://img.shields.io/badge/python-3.7%20|%203.8-blue.svg)
+![Python version range](https://img.shields.io/badge/python-3.6%20|%203.7%20|%203.8-blue.svg)
 [![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Linting, testing, and coverage](https://github.com/SamuelMarks/doctrans/workflows/Linting,%20testing,%20and%20coverage/badge.svg)](https://github.com/SamuelMarks/doctrans/actions)
 ![Documentation coverage](.github/doccoverage.svg)
