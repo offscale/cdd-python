@@ -207,7 +207,7 @@ def _parse_return(e, docstring_structure, function_def, emit_default_doc):
         else doc,
         'default': default,
         'typ': to_source(
-            parse(docstring_structure['returns']['typ']).body[0].value.slice.value.elts[1]
+            get_value(parse(docstring_structure['returns']['typ']).body[0].value.slice).elts[1]
         ).rstrip()
         # 'Tuple[ArgumentParser, {typ}]'.format(typ=_docstring_structure['returns']['typ'])
     }
