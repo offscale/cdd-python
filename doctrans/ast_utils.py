@@ -170,18 +170,18 @@ def determine_quoting(node):
     """
     if isinstance(node, Subscript) and isinstance(node.value, Name):
         if node.value.id == 'Optional':
-            return determine_quoting(node.slice.value)
+            return determine_quoting(get_value(node.slice))
         elif node.value.id in frozenset(('Union', 'Literal')):
             if all(isinstance(elt, Subscript)
-                   for elt in node.slice.value.elts):
+                   for elt in get_value(node.slice).elts):
                 return any(determine_quoting(elt)
-                           for elt in node.slice.value.elts)
+                           for elt in get_value(node.slice).elts)
             return any(isinstance(elt, Constant) and elt.kind is None and isinstance(elt.value, str)
                        or (isinstance(elt, Str) or elt.id == 'str')
-                       for elt in node.slice.value.elts)
+                       for elt in get_value(node.slice).elts)
         elif node.value.id == 'Tuple':
             return any(determine_quoting(elt)
-                       for elt in node.slice.value.elts)
+                       for elt in get_value(node.slice).elts)
         else:
             raise NotImplementedError(node.value.id)
     elif isinstance(node, Name):
@@ -224,6 +224,8 @@ def get_value(node):
         return node.s
     elif isinstance(node, Constant) or hasattr(node, 'value'):
         return node.value
+    elif isinstance(node, (Tuple, Name)):  # It used to be Index in Python < 3.9
+        return node
     else:
         raise NotImplementedError(type(node).__name__)
 
