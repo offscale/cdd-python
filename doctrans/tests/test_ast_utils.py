@@ -1,5 +1,5 @@
 """ Tests for ast_utils """
-from ast import FunctionDef, Module, ClassDef, Subscript, Name, arguments, arg, Constant, NameConstant, Str
+from ast import FunctionDef, Module, ClassDef, Subscript, Name, arguments, arg, Constant, NameConstant, Str, Tuple
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -77,6 +77,15 @@ class TestAstUtils(TestCase):
         with patch('doctrans.ast_utils.PY3_8', False):
             import doctrans.ast_utils
             self.assertIsInstance(doctrans.ast_utils.set_value('foo', None), Str)
+
+    def test_get_value(self):
+        """ Tests get_value succeeds """
+        val = 'foo'
+        self.assertEqual(get_value(Str(s=val)), val)
+        self.assertEqual(get_value(Constant(value=val)), val)
+        self.assertIsInstance(get_value(Tuple()), Tuple)
+        self.assertIsInstance(get_value(Tuple()), Tuple)
+        self.assertIsInstance(get_value(Name()), Name)
 
     def test_get_value_fails(self):
         """ Tests get_value fails properly """
