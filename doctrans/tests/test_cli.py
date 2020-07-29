@@ -102,12 +102,12 @@ class TestCli(TestCase):
     def test_non_existent_file_fails(self) -> None:
         """ Tests nonexistent file throws the right error """
         filename = os.path.join(os.path.dirname(__file__),
-                                'delete_this_1{}'.format(os.path.basename(__file__))).replace('\\\\', '\\')
+                                'delete_this_1{}'.format(os.path.basename(__file__)))
 
         self.run_cli_test(
             ['--config', filename, '--truth', 'config'],
             exit_code=2,
-            output='--truth must be choose an existent file. Got: \'{}\'\n'.format(filename),
+            output='--truth must be choose an existent file. Got: \'{}\'\n'.format(filename.replace('\\', '\\\\')),
         )
 
     def test_missing_argument_fails(self) -> None:
