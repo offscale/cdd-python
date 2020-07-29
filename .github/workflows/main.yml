@@ -4,17 +4,29 @@ on: [push]
 
 jobs:
     build:
-        runs-on: ubuntu-latest
+        name: ${{ matrix.os.name }} ${{ matrix.python-version }}
+        runs-on: ${{ matrix.os.runs-on }}
         strategy:
             matrix:
                 python-version: [3.6, 3.7, 3.8, 3.9.0-beta.5]
 
+            os:
+                -   name: Linux
+                    runs-on: ubuntu-latest
+                    python_platform: linux
+                -   name: Windows
+                    runs-on: windows-latest
+                    python_platform: win32
+                -   name: macOS
+                    runs-on: macos-latest
+                    python_platform: darwin
         steps:
             -   uses: actions/checkout@v2
             -   name: Set up Python ${{ matrix.python-version }}
                 uses: actions/setup-python@v2
                 with:
                     python-version: ${{ matrix.python-version }}
+                    architecture: x64
             -   name: Configure git
                 run: |
                     email_author="$(git log -1 --pretty=format:'%an <%ce>')"
@@ -28,28 +40,41 @@ jobs:
                     python -m pip install --upgrade setuptools wheel
                     pip install flake8
                     pip install -r requirements.txt
-            -   name: Lint with flake8
-                run: |
-                    # stop the build if there are Python syntax errors or undefined names
-                    flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-                    # exit-zero treats all errors as warnings.
-                    flake8 . --count --exit-zero --max-complexity=10 --max-line-length=119 --statistics
             -   name: Test with unittest
                 run: |
                     python setup.py test
-            -   name: Doc coverage
-                run: |
-                    pip install interrogate codecov coverage
-                    interrogate --generate-badge '.github/doccoverage.svg'
-                    sed -i 's/interrogate/doc coverage/g' .github/doccoverage.svg
-                    if git diff --name-only --diff-filter='M' | grep -qF '.github/doccoverage.svg'; then
-                        git add .github/doccoverage.svg
-                        git commit -m '[.github/doccoverage.svg] Updated coverage'
-                        git push origin master
-                    fi
-            -   name: Test coverage
-                run: |
-                    coverage run -m unittest discover
-                    bash <(curl -s https://codecov.io/bash)
-                env:
-                    CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        lint_and_coverage:
+            name: Linting and coverage
+            runs-on: ubuntu-latest
+            strategy:
+                matrix:
+                    python-version: [3.8]
+            steps:
+                -   uses: actions/checkout@v2
+                -   name: Set up Python ${{ matrix.python-version }}
+                    uses: actions/setup-python@v2
+                    with:
+                        python-version: ${{ matrix.python-version }}
+                        architecture: x64
+                -   name: Lint with flake8
+                    run: |
+                        # stop the build if there are Python syntax errors or undefined names
+                        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+                        # exit-zero treats all errors as warnings.
+                        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=119 --statistics
+                -   name: Doc coverage
+                    run: |
+                        pip install interrogate codecov coverage
+                        interrogate --generate-badge '.github/doccoverage.svg'
+                        sed -i 's/interrogate/doc coverage/g' .github/doccoverage.svg
+                        if git diff --name-only --diff-filter='M' | grep -qF '.github/doccoverage.svg'; then
+                            git add .github/doccoverage.svg
+                            git commit -m '[.github/doccoverage.svg] Updated coverage'
+                            git push origin master
+                        fi
+                -   name: Test coverage
+                    run: |
+                        coverage run -m unittest discover
+                        bash <(curl -s https://codecov.io/bash)
+                    env:
+                        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
