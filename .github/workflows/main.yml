@@ -9,17 +9,16 @@ jobs:
         strategy:
             matrix:
                 python-version: [3.6, 3.7, 3.8, 3.9.0-beta.5]
-
-            os:
-                -   name: Linux
-                    runs-on: ubuntu-latest
-                    python_platform: linux
-                -   name: Windows
-                    runs-on: windows-latest
-                    python_platform: win32
-                -   name: macOS
-                    runs-on: macos-latest
-                    python_platform: darwin
+                os:
+                    -   name: Linux
+                        runs-on: ubuntu-latest
+                        python_platform: linux
+                    -   name: Windows
+                        runs-on: windows-latest
+                        python_platform: win32
+                    -   name: macOS
+                        runs-on: macos-latest
+                        python_platform: darwin
         steps:
             -   uses: actions/checkout@v2
             -   name: Set up Python ${{ matrix.python-version }}
@@ -27,13 +26,6 @@ jobs:
                 with:
                     python-version: ${{ matrix.python-version }}
                     architecture: x64
-            -   name: Configure git
-                run: |
-                    email_author="$(git log -1 --pretty=format:'%an <%ce>')"
-                    author="${email_author% *}"
-                    email="${email_author#*<}"; email="${email::-1}"
-                    git config --global user.name "$author"
-                    git config --global user.email "$email"
             -   name: Install dependencies
                 run: |
                     python -m pip install --upgrade pip
@@ -67,6 +59,13 @@ jobs:
                         pip install interrogate codecov coverage
                         interrogate --generate-badge '.github/doccoverage.svg'
                         sed -i 's/interrogate/doc coverage/g' .github/doccoverage.svg
+                        # Setup git config
+                        email_author="$(git log -1 --pretty=format:'%an <%ce>')"
+                        author="${email_author% *}"
+                        email="${email_author#*<}"; email="${email::-1}"
+                        git config --global user.name "$author"
+                        git config --global user.email "$email"
+                        # Only commit and push if there's a change
                         if git diff --name-only --diff-filter='M' | grep -qF '.github/doccoverage.svg'; then
                             git add .github/doccoverage.svg
                             git commit -m '[.github/doccoverage.svg] Updated coverage'
