@@ -105,7 +105,7 @@ class TestCli(TestCase):
                                 'delete_this_1{}'.format(os.path.basename(__file__)))
 
         self.run_cli_test(
-            ['--config', filename, '--truth', 'config'],
+            ['--config', filename.replace('\\\\', '\\'), '--truth', 'config'],
             exit_code=2,
             output='--truth must be choose an existent file. Got: \'{}\'\n'.format(filename),
         )
