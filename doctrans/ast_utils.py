@@ -176,9 +176,11 @@ def determine_quoting(node):
                    for elt in get_value(node.slice).elts):
                 return any(determine_quoting(elt)
                            for elt in get_value(node.slice).elts)
-            return any(isinstance(elt, Constant) and elt.kind is None and isinstance(elt.value, str)
-                       or (isinstance(elt, Str) or elt.id == 'str')
-                       for elt in get_value(node.slice).elts)
+            return any(
+                (isinstance(elt, Constant) and elt.kind is None and isinstance(elt.value, str) or (
+                    isinstance(elt, Str) or elt.id == 'str'))
+                for elt in get_value(node.slice).elts
+            )
         elif node.value.id == 'Tuple':
             return any(determine_quoting(elt)
                        for elt in get_value(node.slice).elts)

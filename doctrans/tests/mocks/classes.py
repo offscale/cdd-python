@@ -138,9 +138,7 @@ class_ast = ClassDef(
                                                             ctx=Load(),
                                                             value=Name(ctx=Load(),
                                                                        id='np'))
-                                              ]
-                                          )
-                                      ),
+                                              ])),
                                       value=Name(ctx=Load(),
                                                  id='Tuple'))])),
                 value=Name(ctx=Load(),
