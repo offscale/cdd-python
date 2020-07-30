@@ -202,7 +202,6 @@ def set_cli_args(argument_parser):
   - Add 5th 'type' of SQLalchemy model
   - Add 6th type of routing layer
   - Add 7th type of Open API (at this point, rename to `cdd-python`)
-  - Backporting below Python 3.8 (argparse might stop this… the only other thing I use is `Literal`; but this has been [backported](https://pypi.org/project/typing-extensions))
   - Move to https://github.com/offscale then upload to PyPi
 
 ---

@@ -46,34 +46,30 @@ def to_argparse(docstring_structure, emit_default_doc, function_name='set_cli_ar
                        kwonlyargs=[],
                        posonlyargs=[],
                        vararg=None),
-        body=[
-                 Expr(
+        body=[Expr(value=set_value(kind=None,
+                                   value='\n    Set CLI arguments\n\n    '
+                                         ':param argument_parser: argument parser\n    '
+                                         ':type argument_parser: ```ArgumentParser```\n\n    '
+                                         ':return: argument_parser, {returns[doc]}\n    '
+                                         ':rtype: ```Tuple[ArgumentParser,'
+                                         ' {returns[typ]}]```\n    '.format(returns=docstring_structure['returns']))
+                   ),
+              Assign(targets=[Attribute(attr='description',
+                                        ctx=Store(),
+                                        value=Name(ctx=Load(),
+                                                   id='argument_parser'))],
+                     type_comment=None,
                      value=set_value(
                          kind=None,
-                         value='\n    Set CLI arguments\n\n    '
-                               ':param argument_parser: argument parser\n    '
-                               ':type argument_parser: ```ArgumentParser```\n\n    '
-                               ':return: argument_parser, {returns[doc]}\n    '
-                               ':rtype: ```Tuple[ArgumentParser,'
-                               ' {returns[typ]}]```\n    '.format(returns=docstring_structure['returns']))),
-                 Assign(targets=[Attribute(attr='description',
-                                           ctx=Store(),
-                                           value=Name(ctx=Load(),
-                                                      id='argument_parser'))],
-                        type_comment=None,
-                        value=set_value(
-                            kind=None,
-                            value=docstring_structure['long_description'] or docstring_structure['short_description']))
-             ] + list(map(partial(param2argparse_param, emit_default_doc=emit_default_doc),
-                          docstring_structure['params'])) + [
-                 Return(
-                     value=Tuple(
-                         ctx=Load(),
-                         elts=[
-                             Name(ctx=Load(),
-                                  id='argument_parser'),
-                             parse(docstring_structure['returns']['default']).body[0].value
-                         ]))],
+                         value=docstring_structure['long_description'] or docstring_structure['short_description'])
+                     )
+              ] + list(map(partial(param2argparse_param, emit_default_doc=emit_default_doc),
+                           docstring_structure['params'])
+                       ) + [Return(value=Tuple(ctx=Load(),
+                                               elts=[
+                                                   Name(ctx=Load(),
+                                                        id='argument_parser'),
+                                                   parse(docstring_structure['returns']['default']).body[0].value]))],
         decorator_list=[],
         name=function_name,
         returns=None,
@@ -108,20 +104,18 @@ def to_class(docstring_structure, class_name='TargetClass', class_bases=('object
         bases=[Name(ctx=Load(),
                     id=base_class)
                for base_class in class_bases],
-        body=[
-                 Expr(
-                     value=set_value(
-                         kind=None,
-                         value='\n    {description}\n\n{cvars}'.format(
-                             description=docstring_structure['long_description'] or docstring_structure[
-                                 'short_description'],
-                             cvars='\n'.join(
-                                 '{tab}:cvar {param[name]}: {param[doc]}'.format(tab=tab, param=param)
-                                 for param in docstring_structure['params'] + returns
-                             )
-                         )
-                     ))
-             ] + list(map(param2ast, docstring_structure['params'] + returns)),
+        body=[Expr(
+            value=set_value(
+                kind=None,
+                value='\n    {description}\n\n{cvars}'.format(
+                    description=docstring_structure['long_description'] or docstring_structure[
+                        'short_description'],
+                    cvars='\n'.join(
+                        '{tab}:cvar {param[name]}: {param[doc]}'.format(tab=tab, param=param)
+                        for param in docstring_structure['params'] + returns
+                    )
+                )
+            ))] + list(map(param2ast, docstring_structure['params'] + returns)),
         decorator_list=[],
         keywords=[],
         name=class_name
@@ -250,12 +244,13 @@ def to_function(docstring_structure, emit_default_doc, function_name,
                                                                  type_comment=None),
                  *map(lambda param:
                       arg(
-                          annotation=(Name(
-                              ctx=Load(),
-                              id=param['typ']
-                          )
-                                      if param['typ'] in simple_types
-                                      else parse(param['typ']).body[0].value)
+                          annotation=(
+                              Name(
+                                  ctx=Load(),
+                                  id=param['typ']
+                              )
+                              if param['typ'] in simple_types
+                              else parse(param['typ']).body[0].value)
                           if inline_types and 'typ' in param else None,
                           arg=param['name'],
                           type_comment=None
@@ -306,7 +301,7 @@ def to_function(docstring_structure, emit_default_doc, function_name,
         decorator_list=[],
         name=function_name,
         returns=(parse(docstring_structure['returns']['typ']).body[0].value
-                 if 'returns' in docstring_structure
-                    and 'typ' in docstring_structure['returns'] else None) if inline_types else None,
+                 if 'returns' in docstring_structure and 'typ' in docstring_structure[
+            'returns'] else None) if inline_types else None,
         type_comment=None
     )

@@ -11,7 +11,7 @@ jobs:
         runs-on: ${{ matrix.os.runs-on }}
         strategy:
             matrix:
-                python-version: [3.6, 3.7, 3.8, 3.9.0-beta.5]
+                python-version: [3.6, 3.7, 3.8, '3.9.0-alpha - 3.9.0']
                 os:
                     -   name: Linux
                         runs-on: ubuntu-latest
@@ -58,10 +58,7 @@ jobs:
             -   name: Lint with flake8
                 run: |
                     pip install flake8
-                    # stop the build if there are Python syntax errors or undefined names
-                    flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-                    # exit-zero treats all errors as warnings.
-                    flake8 . --count --exit-zero --max-complexity=10 --max-line-length=119 --statistics
+                    flake8 . --count --select='A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z' --show-source --max-complexity=10 --max-line-length=119 --statistics
             -   name: Doc coverage
                 run: |
                     pip install interrogate codecov coverage

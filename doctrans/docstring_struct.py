@@ -146,8 +146,7 @@ def from_argparse_ast(function_def, emit_default_doc=False):
                 # docstring_structure['short_description'] = '\n'.join(
                 #     takewhile(lambda l: not l.lstrip().startswith(':param'),
                 #               expr.value.value.split('\n'))).strip()
-            elif (isinstance(e.value, Call) and len(e.value.args) == 1 and
-                  isinstance(e.value.args[0], (Constant, Str))):
+            elif isinstance(e.value, Call) and len(e.value.args) == 1 and isinstance(e.value.args[0], (Constant, Str)):
                 docstring_structure['params'].append(parse_out_param(e, emit_default_doc=emit_default_doc))
         elif isinstance(e, Assign):
             if all((len(e.targets) == 1,
