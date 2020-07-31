@@ -246,7 +246,7 @@ class_with_method_and_body_types_ast = ClassDef(
     decorator_list=[],
     keywords=[],
     name='C'
-)
+) if PY3_8 else parse(class_with_method_and_body_types_str).body[0]
 
 class_with_method_ast = ClassDef(
     bases=[Name(ctx=Load(),
