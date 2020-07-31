@@ -38,7 +38,7 @@ jobs:
                 run: |
                     python setup.py test
     lint_and_coverage:
-        name: Linting and coverage
+        name: Linting and coverage on Linux ${{ matrix.python-version }}
         runs-on: ubuntu-latest
         strategy:
             matrix:

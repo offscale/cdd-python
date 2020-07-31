@@ -86,6 +86,9 @@ def from_function(function_def):
     function_type = get_function_type(function_def)
     offset = 0 if function_type is None else 1
 
+    if len(function_def.body) > 2:
+        docstring_structure['_internal'] = {'body': function_def.body[1:-1]}
+
     for idx, arg in enumerate(function_def.args.args):
         if arg.annotation is not None:
             docstring_structure['params'][idx - offset]['typ'] = to_code(arg.annotation).rstrip('\n')
@@ -96,6 +99,10 @@ def from_function(function_def):
         value = get_value(const)
         if value is not None:
             docstring_structure['params'][idx]['default'] = value
+
+    if function_def.args.kwarg:
+        assert docstring_structure['params'][-1]['name'] == function_def.args.kwarg.arg
+        docstring_structure['params'][-1]['typ'] = 'dict'
 
     # Convention - the final top-level `return` is the default
     return_ast = next(filter(rpartial(isinstance, Return), function_def.body[::-1]), None)

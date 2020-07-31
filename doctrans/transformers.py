@@ -301,6 +301,9 @@ def to_function(docstring_structure, emit_default_doc, function_name,
                         emit_separating_tab=emit_separating_tab
                     )
                 )),
+                *(docstring_structure['_internal']['body']
+                  if '_internal' in docstring_structure and docstring_structure['_internal'].get('body')
+                  else tuple()),
                 Return(value=parse(docstring_structure['returns']['default']).body[0].value)
                 if 'returns' in docstring_structure and docstring_structure['returns'].get('default')
                 else None
