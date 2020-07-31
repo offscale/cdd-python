@@ -13,8 +13,8 @@ def to_code(node):
     """
 
     if python_version_tuple() < ('3', '9'):
-        from ast import unparse
-        return unparse(node)
-    else:
         from astor import to_source
         return to_source(node)
+    else:
+        from ast import unparse
+        return unparse(node)

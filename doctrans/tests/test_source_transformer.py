@@ -19,7 +19,7 @@ class TestSourceTransformer(TestCase):
         Tests to_source in Python 3.9 and < 3.9
         """
         class_def = ClassDef(name='Classy', bases=tuple(), decorator_list=[], body=[], keywords=tuple())
-        versions = ('8', '9') if python_version_tuple() > ('3', '7') else ('7', '8')
+        versions = ('8', '9') if python_version_tuple() >= ('3', '9') else ('7', '8')
         for version in versions:
             with patch('doctrans.source_transformer.python_version_tuple', lambda: ('3', version, '0')):
                 import doctrans.source_transformer
