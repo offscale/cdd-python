@@ -5,15 +5,17 @@ Transform from string or AST representations of input, to docstring_structure di
             'parameters': ..., 'schema': ...,'returns': ...}.
 """
 
-from ast import AnnAssign, Name, FunctionDef, Return, Expr, Constant, Call, \
-    Assign, Attribute, Tuple, get_docstring, Subscript, Str, NameConstant
+from ast import AnnAssign, FunctionDef, Return, Constant, Assign, Tuple, get_docstring, Subscript, Str, NameConstant, \
+    Expr
 from collections import OrderedDict
 from functools import partial
+from itertools import filterfalse
 from operator import itemgetter
 
 from docstring_parser import DocstringParam, DocstringMeta
 
-from doctrans.ast_utils import to_class_def, get_function_type, get_value
+from doctrans.ast_utils import to_class_def, get_function_type, get_value, is_argparse_add_argument, \
+    is_argparse_description
 from doctrans.defaults_utils import extract_default, set_default_doc
 from doctrans.docstring_structure_utils import parse_out_param, _parse_return
 from doctrans.pure_utils import tab, rpartial
@@ -125,33 +127,37 @@ def from_argparse_ast(function_def):
     :return: docstring structure
     :rtype: ```dict```
     """
+    docstring = get_docstring(function_def)
     docstring_structure = {'short_description': '', 'long_description': '', 'params': []}
-    _docstring_struct = parse_docstring(get_docstring(function_def), emit_default_doc=True)
+    _docstring_struct = parse_docstring(docstring, emit_default_doc=True)
 
     for e in function_def.body:
-        if isinstance(e, Expr):
-            if isinstance(e.value, Constant):
-                if e.value.kind is not None:
-                    raise NotImplementedError('kind')
-                # docstring_structure['short_description'] = '\n'.join(
-                #     takewhile(lambda l: not l.lstrip().startswith(':param'),
-                #               expr.value.value.split('\n'))).strip()
-            elif isinstance(e.value, Call) and len(e.value.args) == 1 and isinstance(e.value.args[0], (Constant, Str)):
-                docstring_structure['params'].append(parse_out_param(e))
+        if is_argparse_add_argument(e):
+            docstring_structure['params'].append(parse_out_param(e))
         elif isinstance(e, Assign):
-            if all((len(e.targets) == 1,
-                    isinstance(e.targets[0], Attribute),
-                    e.targets[0].attr == 'description',
-                    isinstance(e.targets[0].value, Name),
-                    e.targets[0].value.id == 'argument_parser',
-                    isinstance(e.value, (Constant, Str)))):
+            if is_argparse_description(e):
                 docstring_structure['short_description'] = get_value(e.value)
         elif isinstance(e, Return) and isinstance(e.value, Tuple):
             docstring_structure['returns'] = _parse_return(e, docstring_structure=_docstring_struct,
                                                            function_def=function_def,
                                                            emit_default_doc=True)
     if len(function_def.body) > len(docstring_structure['params']) + 3:
-        docstring_structure['_internal'] = {'body': function_def.body[len(docstring_structure['params']) + 2:-1]}
+        docstring_structure['_internal'] = {
+            'body': list(
+                filterfalse(
+                    lambda node: (
+                        isinstance(node,
+                                   Expr) and isinstance(get_value(node),
+                                                        (Constant, Str)
+                                                        ) and docstring == to_docstring(_docstring_struct,
+                                                                                        emit_types=True,
+                                                                                        emit_separating_tab=False,
+                                                                                        indent_level=0
+                                                                                        )[1:-1]),
+                    filterfalse(is_argparse_description,
+                                filterfalse(is_argparse_add_argument,
+                                            function_def.body))))[:-1]
+        }
 
     return docstring_structure
 
