@@ -13,7 +13,8 @@ from doctrans.pure_utils import rpartial, PY3_8
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import class_ast
 from doctrans.tests.mocks.docstrings import docstring_str, docstring_structure
-from doctrans.tests.mocks.methods import class_with_method_types_ast, class_with_method_ast
+from doctrans.tests.mocks.methods import class_with_method_types_ast, class_with_method_ast, \
+    class_with_method_and_body_types_ast
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
 
 
@@ -177,6 +178,20 @@ class TestTransformers(TestCase):
                                      emit_separating_tab=PY3_8),
             gold=function_def
         )
+
+    def test_from_class_with_body_in_method_to_method_with_body(self):
+        """ Tests if this can make the roundtrip from a full function to a full function """
+        run_ast_test(self,
+                     transformers.to_function(
+                         docstring_struct.from_class_with_method(class_with_method_and_body_types_ast,
+                                                                 'method_name'),
+                         emit_default_doc=False,
+                         function_name='method_name',
+                         function_type='self',
+                         indent_level=2
+                     ),
+                     next(filter(rpartial(isinstance, FunctionDef),
+                                 class_with_method_and_body_types_ast.body)))
 
 
 unittest_main()
