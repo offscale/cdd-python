@@ -196,12 +196,14 @@ class TestTransformers(TestCase):
     def test_from_argparse_with_extra_body_to_argparse_with_extra_body(self):
         """ Tests if this can make the roundtrip from a full argparse function to a argparse full function """
 
-        run_ast_test(self,
-                     transformers.to_argparse(
-                         docstring_struct.from_argparse_ast(argparse_func_with_body_ast),
-                         emit_default_doc=False, emit_default_doc_in_return=False
-                     ),
-                     argparse_func_with_body_ast)
+        run_ast_test(
+            self,
+            transformers.to_argparse(
+                docstring_struct.from_argparse_ast(argparse_func_with_body_ast),
+                emit_default_doc=False, emit_default_doc_in_return=False
+            ),
+            argparse_func_with_body_ast
+        )
 
 
 unittest_main()

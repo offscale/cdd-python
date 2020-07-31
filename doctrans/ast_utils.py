@@ -1,8 +1,28 @@
 """
 ast_utils, bunch of helpers for converting input into ast.* output
 """
-from ast import AnnAssign, Name, Load, Store, Constant, Dict, Module, ClassDef, Subscript, Tuple, Expr, Call, \
-    Attribute, keyword, parse, walk, FunctionDef, Str, NameConstant
+from ast import (
+    AnnAssign,
+    Name,
+    Load,
+    Store,
+    Constant,
+    Dict,
+    Module,
+    ClassDef,
+    Subscript,
+    Tuple,
+    Expr,
+    Call,
+    Attribute,
+    keyword,
+    parse,
+    walk,
+    FunctionDef,
+    Str,
+    NameConstant,
+    Assign,
+)
 
 from doctrans.defaults_utils import extract_default
 from doctrans.pure_utils import simple_types, rpartial, PY3_8
@@ -18,38 +38,39 @@ def param2ast(param):
     :return: AST node (AnnAssign)
     :rtype: ```AnnAssign```
     """
-    if param['typ'] in simple_types:
-        return AnnAssign(annotation=Name(ctx=Load(),
-                                         id=param['typ']),
-                         simple=1,
-                         target=Name(ctx=Store(),
-                                     id=param['name']),
-                         value=set_value(kind=None,
-                                         value=param.get('default', simple_types[param['typ']])))
-    elif param['typ'] == 'dict' or param['typ'].startswith('*'):
-        return AnnAssign(annotation=Name(ctx=Load(),
-                                         id='dict'),
-                         simple=1,
-                         target=Name(ctx=Store(),
-                                     id=param['name']),
-                         value=Dict(keys=[],
-                                    values=param.get('default', [])))
+    if param["typ"] in simple_types:
+        return AnnAssign(
+            annotation=Name(ctx=Load(), id=param["typ"]),
+            simple=1,
+            target=Name(ctx=Store(), id=param["name"]),
+            value=set_value(
+                kind=None, value=param.get("default", simple_types[param["typ"]])
+            ),
+        )
+    elif param["typ"] == "dict" or param["typ"].startswith("*"):
+        return AnnAssign(
+            annotation=Name(ctx=Load(), id="dict"),
+            simple=1,
+            target=Name(ctx=Store(), id=param["name"]),
+            value=Dict(keys=[], values=param.get("default", [])),
+        )
     else:
-        annotation = parse(param['typ']).body[0].value
+        annotation = parse(param["typ"]).body[0].value
 
-        if param.get('default') and not determine_quoting(annotation):
-            value = parse(param['default']).body[0].value if 'default' in param \
+        if param.get("default") and not determine_quoting(annotation):
+            value = (
+                parse(param["default"]).body[0].value
+                if "default" in param
                 else Name(ctx=Load(), id=None)
+            )
         else:
-            value = set_value(kind=None,
-                              value=param.get('default'))
+            value = set_value(kind=None, value=param.get("default"))
 
         return AnnAssign(
             annotation=annotation,
             simple=1,
-            target=Name(ctx=Store(),
-                        id=param['name']),
-            value=value
+            target=Name(ctx=Store(), id=param["name"]),
+            value=value,
         )
 
 
@@ -64,14 +85,13 @@ def to_class_def(ast):
     :rtype: ```ast.ClassDef```
     """
     if isinstance(ast, Module):
-        classes = tuple(filter(rpartial(isinstance, ClassDef),
-                               ast.body))
+        classes = tuple(filter(rpartial(isinstance, ClassDef), ast.body))
         if len(classes) > 1:  # We can filter by name I guess? - Or convert every one?
             raise NotImplementedError()
         elif len(classes) > 0:
             return classes[0]
         else:
-            raise TypeError('No ClassDef in AST')
+            raise TypeError("No ClassDef in AST")
     elif isinstance(ast, ClassDef):
         return ast
     else:
@@ -91,70 +111,93 @@ def param2argparse_param(param, emit_default_doc=True):
     :return: `argparse.add_argument` call—with arguments—as an AST node
     :rtype: ```Expr```
     """
-    typ, choices, required = 'str', None, True
-    if param['typ'] in simple_types:
-        typ = param['typ']
-    elif param['typ'] == 'dict':
-        typ = 'loads'
-        required = not param['name'].endswith('kwargs')
+    typ, choices, required = "str", None, True
+    if param["typ"] in simple_types:
+        typ = param["typ"]
+    elif param["typ"] == "dict":
+        typ = "loads"
+        required = not param["name"].endswith("kwargs")
     else:
-        parsed_type = parse(param['typ']).body[0]
+        parsed_type = parse(param["typ"]).body[0]
 
         for node in walk(parsed_type):
             if isinstance(node, Tuple):
-                maybe_choices = tuple(get_value(elt)
-                                      for elt in node.elts
-                                      if isinstance(elt, (Constant, Str)))
+                maybe_choices = tuple(
+                    get_value(elt)
+                    for elt in node.elts
+                    if isinstance(elt, (Constant, Str))
+                )
                 if len(maybe_choices) == len(node.elts):
                     choices = maybe_choices
             elif isinstance(node, Name):
-                if node.id == 'Optional':
+                if node.id == "Optional":
                     required = False
                 elif node.id in simple_types:
                     typ = node.id
-                elif node.id not in frozenset(('Union',)):
-                    typ = 'globals().__getitem__'
+                elif node.id not in frozenset(("Union",)):
+                    typ = "globals().__getitem__"
 
-    doc, _default = extract_default(param['doc'], emit_default_doc=emit_default_doc)
-    default = param.get('default', _default)
+    doc, _default = extract_default(param["doc"], emit_default_doc=emit_default_doc)
+    default = param.get("default", _default)
 
     return Expr(
-        value=Call(args=[set_value(kind=None,
-                                   value='--{param[name]}'.format(param=param))],
-                   func=Attribute(attr='add_argument',
-                                  ctx=Load(),
-                                  value=Name(ctx=Load(),
-                                             id='argument_parser')),
-                   keywords=list(filter(None, (
-                       keyword(
-                           arg='type',
-                           value=Attribute(
-                               attr='__getitem__',
-                               ctx=Load(),
-                               value=Call(args=[],
-                                          func=Name(ctx=Load(),
-                                                    id='globals'),
-                                          keywords=[])
-                           ) if typ == 'globals().__getitem__'
-                           else Name(ctx=Load(), id=typ)
-                       ),
-                       choices if choices is None
-                       else keyword(arg='choices',
-                                    value=Tuple(ctx=Load(),
-                                                elts=[set_value(kind=None,
-                                                                value=choice)
-                                                      for choice in choices])),
-                       keyword(arg='help',
-                               value=set_value(kind=None,
-                                               value=doc)),
-                       keyword(arg='required',
-                               value=(Constant(kind=None, value=True) if PY3_8
-                                      else NameConstant(value=True))) if required else None,
-                       default if default is None
-                       else keyword(arg='default',
-                                    value=set_value(kind=None,
-                                                    value=default))
-                   ))))
+        value=Call(
+            args=[set_value(kind=None, value="--{param[name]}".format(param=param))],
+            func=Attribute(
+                attr="add_argument",
+                ctx=Load(),
+                value=Name(ctx=Load(), id="argument_parser"),
+            ),
+            keywords=list(
+                filter(
+                    None,
+                    (
+                        keyword(
+                            arg="type",
+                            value=Attribute(
+                                attr="__getitem__",
+                                ctx=Load(),
+                                value=Call(
+                                    args=[],
+                                    func=Name(ctx=Load(), id="globals"),
+                                    keywords=[],
+                                ),
+                            )
+                            if typ == "globals().__getitem__"
+                            else Name(ctx=Load(), id=typ),
+                        ),
+                        choices
+                        if choices is None
+                        else keyword(
+                            arg="choices",
+                            value=Tuple(
+                                ctx=Load(),
+                                elts=[
+                                    set_value(kind=None, value=choice)
+                                    for choice in choices
+                                ],
+                            ),
+                        ),
+                        keyword(arg="help", value=set_value(kind=None, value=doc)),
+                        keyword(
+                            arg="required",
+                            value=(
+                                Constant(kind=None, value=True)
+                                if PY3_8
+                                else NameConstant(value=True)
+                            ),
+                        )
+                        if required
+                        else None,
+                        default
+                        if default is None
+                        else keyword(
+                            arg="default", value=set_value(kind=None, value=default)
+                        ),
+                    ),
+                )
+            ),
+        )
     )
 
 
@@ -169,25 +212,26 @@ def determine_quoting(node):
     :rtype: ```bool```
     """
     if isinstance(node, Subscript) and isinstance(node.value, Name):
-        if node.value.id == 'Optional':
+        if node.value.id == "Optional":
             return determine_quoting(get_value(node.slice))
-        elif node.value.id in frozenset(('Union', 'Literal')):
-            if all(isinstance(elt, Subscript)
-                   for elt in get_value(node.slice).elts):
-                return any(determine_quoting(elt)
-                           for elt in get_value(node.slice).elts)
+        elif node.value.id in frozenset(("Union", "Literal")):
+            if all(isinstance(elt, Subscript) for elt in get_value(node.slice).elts):
+                return any(determine_quoting(elt) for elt in get_value(node.slice).elts)
             return any(
-                (isinstance(elt, Constant) and elt.kind is None and isinstance(elt.value, str) or (
-                    isinstance(elt, Str) or elt.id == 'str'))
+                (
+                    isinstance(elt, Constant) and
+                    elt.kind is None and
+                    isinstance(elt.value, str) or
+                    (isinstance(elt, Str) or elt.id == "str")
+                )
                 for elt in get_value(node.slice).elts
             )
-        elif node.value.id == 'Tuple':
-            return any(determine_quoting(elt)
-                       for elt in get_value(node.slice).elts)
+        elif node.value.id == "Tuple":
+            return any(determine_quoting(elt) for elt in get_value(node.slice).elts)
         else:
             raise NotImplementedError(node.value.id)
     elif isinstance(node, Name):
-        return node.id == 'str'
+        return node.id == "str"
     elif isinstance(node, Attribute):
         return determine_quoting(node.value)
     else:
@@ -207,7 +251,7 @@ def get_function_type(function):
     assert isinstance(function, FunctionDef)
     if function.args is None or len(function.args.args) == 0:
         return None
-    elif function.args.args[0].arg in frozenset(('self', 'cls')):
+    elif function.args.args[0].arg in frozenset(("self", "cls")):
         return function.args.args[0].arg
     return None
 
@@ -224,7 +268,7 @@ def get_value(node):
     """
     if isinstance(node, Str):
         return node.s
-    elif isinstance(node, Constant) or hasattr(node, 'value'):
+    elif isinstance(node, Constant) or hasattr(node, "value"):
         return node.value
     elif isinstance(node, (Tuple, Name)):  # It used to be Index in Python < 3.9
         return node
@@ -251,3 +295,44 @@ def set_value(value, kind=None):
         elif value is None:
             return NameConstant(value=value)
     return Constant(kind=kind, value=value)
+
+
+def is_argparse_add_argument(node):
+    """
+    Checks if AST node is a call to `argument_parser.add_argument`
+
+    :param node: AST node
+    :type node: ```AST```
+
+    :returns: Whether the input is the call to `argument_parser.add_argument`
+    :rtype: ```bool```
+    """
+    return (
+        isinstance(node, Expr)
+        and isinstance(node.value, Call)
+        and isinstance(node.value.func, Attribute)
+        and isinstance(node.value.func.value, Name)
+        and node.value.func.value.id == "argument_parser"
+        and node.value.func.attr == "add_argument"
+    )
+
+
+def is_argparse_description(node):
+    """
+    Checks if AST node is `argument_parser.description`
+
+    :param node: AST node
+    :type node: ```AST```
+
+    :returns: Whether the input is the call to `argument_parser.description`
+    :rtype: ```bool```
+    """
+    return (
+        isinstance(node, Assign)
+        and len(node.targets) == 1
+        and isinstance(node.targets[0], Attribute)
+        and node.targets[0].attr == "description"
+        and isinstance(node.targets[0].value, Name)
+        and node.targets[0].value.id == "argument_parser"
+        and isinstance(node.value, (Constant, Str))
+    )

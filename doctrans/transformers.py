@@ -51,35 +51,39 @@ def to_argparse(docstring_structure, emit_default_doc, emit_default_doc_in_retur
                        kwonlyargs=[],
                        posonlyargs=[],
                        vararg=None),
-        body=[Expr(value=set_value(kind=None,
-                                   value='\n    Set CLI arguments\n\n    '
-                                         ':param argument_parser: argument parser\n    '
-                                         ':type argument_parser: ```ArgumentParser```\n\n    '
-                                         ':return: argument_parser, {returns[doc]}\n    '
-                                         ':rtype: ```Tuple[ArgumentParser,'
-                                         ' {returns[typ]}]```\n    '
-                                         ''.format(returns=set_default_doc(docstring_structure['returns'],
-                                                                           emit_default_doc=emit_default_doc_in_return)
-                                                   )
-                                   )
-                   ),
-              Assign(targets=[Attribute(attr='description',
-                                        ctx=Store(),
-                                        value=Name(ctx=Load(),
-                                                   id='argument_parser'))],
-                     type_comment=None,
-                     value=set_value(
-                         kind=None,
-                         value=docstring_structure['long_description'] or docstring_structure['short_description']),
-                     lineno=None),
-              ] + list(map(partial(param2argparse_param, emit_default_doc=emit_default_doc),
-                           docstring_structure['params'])
-                       ) + get_internal_body(docstring_structure) + [
-                 Return(value=Tuple(ctx=Load(),
-                                    elts=[
-                                        Name(ctx=Load(),
-                                             id='argument_parser'),
-                                        parse(docstring_structure['returns']['default']).body[0].value]))],
+        body=list(filter(None, (
+            Expr(value=set_value(kind=None,
+                                 value='\n    Set CLI arguments\n\n    '
+                                       ':param argument_parser: argument parser\n    '
+                                       ':type argument_parser: ```ArgumentParser```\n\n    '
+                                       ':return: argument_parser, {returns[doc]}\n    '
+                                       ':rtype: ```Tuple[ArgumentParser,'
+                                       ' {returns[typ]}]```\n    '
+                                       ''.format(returns=set_default_doc(docstring_structure['returns'],
+                                                                         emit_default_doc=emit_default_doc_in_return)
+                                                 ))
+                 ) if 'returns' in docstring_structure else None,
+            Assign(targets=[Attribute(attr='description',
+                                      ctx=Store(),
+                                      value=Name(ctx=Load(),
+                                                 id='argument_parser'))],
+                   type_comment=None,
+                   value=set_value(
+                       kind=None,
+                       value=docstring_structure['long_description'] or docstring_structure['short_description']),
+                   lineno=None),
+            *(list(map(partial(param2argparse_param, emit_default_doc=emit_default_doc),
+                       docstring_structure['params']))
+              if 'params' in docstring_structure else tuple()),
+            *get_internal_body(docstring_structure),
+
+            Return(value=Tuple(ctx=Load(),
+                               elts=[
+                                   Name(ctx=Load(),
+                                        id='argument_parser'),
+                                   parse(docstring_structure['returns']['default']).body[0].value]))
+            if 'returns' in docstring_structure else None
+        ))),
         decorator_list=[],
         name=function_name,
         returns=None,

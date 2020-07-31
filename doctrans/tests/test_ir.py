@@ -1,12 +1,12 @@
 """
 Tests for the Intermediate Representation
 """
-from ast import FunctionDef, Expr, Constant
+from ast import FunctionDef
 from unittest import TestCase
 
 from docstring_parser.rest import parse
 
-from doctrans import docstring_struct
+from doctrans import docstring_struct, transformers
 from doctrans.docstring_struct import to_docstring
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import class_ast
@@ -30,6 +30,7 @@ class TestIntermediateRepresentation(TestCase):
     """
 
     maxDiff = 55555
+
     def test_from_argparse_ast(self) -> None:
         """
         Tests whether `from_argparse_ast` produces `docstring_structure_no_default_doc_or_prop`
@@ -37,14 +38,17 @@ class TestIntermediateRepresentation(TestCase):
         self.assertDictEqual(docstring_struct.from_argparse_ast(argparse_func_ast),
                              docstring_structure)
 
-    def test_from_argparse_ast_fails(self) -> None:
+    def test_from_argparse_ast_empty(self) -> None:
         """
-        Tests `from_argparse_ast` failure condition
+        Tests `from_argparse_ast` empty condition
         """
-        self.assertRaises(NotImplementedError,
-                          lambda: docstring_struct.from_argparse_ast(FunctionDef(body=[
-                              Expr(value=Constant(value='wow', kind='choco'))])),
-                          )
+        self.assertEqual(
+            transformers.to_code(transformers.to_argparse(
+                docstring_struct.from_argparse_ast(FunctionDef(body=[])),
+                emit_default_doc=True
+            )).rstrip('\n'),
+            'def set_cli_args(argument_parser):\n    argument_parser.description = \'\''
+        )
 
     def test_from_class(self) -> None:
         """
