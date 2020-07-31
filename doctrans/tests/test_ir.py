@@ -29,6 +29,7 @@ class TestIntermediateRepresentation(TestCase):
               }
     """
 
+    maxDiff = 55555
     def test_from_argparse_ast(self) -> None:
         """
         Tests whether `from_argparse_ast` produces `docstring_structure_no_default_doc_or_prop`

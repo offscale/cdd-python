@@ -5,7 +5,7 @@ from unittest import TestCase
 
 from doctrans.docstring_structure_utils import parse_out_param, interpolate_defaults
 from doctrans.pure_utils import rpartial
-from doctrans.tests.mocks.argparse import argparse_func_ast
+from doctrans.tests.mocks.argparse import argparse_func_ast, argparse_add_argument_ast
 from doctrans.tests.mocks.docstrings import docstring_structure
 from doctrans.tests.utils_for_tests import unittest_main
 
@@ -23,21 +23,9 @@ class TestDocstringStructureUtils(TestCase):
 
     def test_parse_out_param_default(self) -> None:
         """ Test that parse_out_param sets default when required and unset """
+
         self.assertDictEqual(
-            parse_out_param(
-                Expr(value=Call(args=[Constant(kind=None,
-                                               value='--num')],
-                                func=Attribute(attr='add_argument',
-                                               ctx=Load(),
-                                               value=Name(ctx=Load(),
-                                                          id='argument_parser')),
-                                keywords=[keyword(arg='type',
-                                                  value=Name(ctx=Load(),
-                                                             id='int')),
-                                          keyword(arg='required',
-                                                  value=Constant(kind=None,
-                                                                 value=True))]))
-            ),
+            parse_out_param(argparse_add_argument_ast),
             {'default': 0,
              'doc': None,
              'name': 'num',

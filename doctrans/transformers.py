@@ -11,11 +11,12 @@ from black import format_str, FileMode
 from doctrans import docstring_struct
 from doctrans.ast_utils import param2argparse_param, param2ast, set_value
 from doctrans.defaults_utils import set_default_doc
+from doctrans.docstring_structure_utils import get_internal_body
 from doctrans.pure_utils import tab, simple_types, PY_GTE_3_9
 from doctrans.source_transformer import to_code
 
 
-def to_argparse(docstring_structure, emit_default_doc, function_name='set_cli_args'):
+def to_argparse(docstring_structure, emit_default_doc, emit_default_doc_in_return=True, function_name='set_cli_args'):
     """
     Convert to an argparse function definition
 
@@ -30,6 +31,9 @@ def to_argparse(docstring_structure, emit_default_doc, function_name='set_cli_ar
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
+
+    :param emit_default_doc_in_return: Whether help/docstring in return should include 'With default' text
+    :type emit_default_doc_in_return: ```bool```
 
     :param function_name: name of function
     :type function_name: ```str```
@@ -53,7 +57,11 @@ def to_argparse(docstring_structure, emit_default_doc, function_name='set_cli_ar
                                          ':type argument_parser: ```ArgumentParser```\n\n    '
                                          ':return: argument_parser, {returns[doc]}\n    '
                                          ':rtype: ```Tuple[ArgumentParser,'
-                                         ' {returns[typ]}]```\n    '.format(returns=docstring_structure['returns']))
+                                         ' {returns[typ]}]```\n    '
+                                         ''.format(returns=set_default_doc(docstring_structure['returns'],
+                                                                           emit_default_doc=emit_default_doc_in_return)
+                                                   )
+                                   )
                    ),
               Assign(targets=[Attribute(attr='description',
                                         ctx=Store(),
@@ -66,11 +74,12 @@ def to_argparse(docstring_structure, emit_default_doc, function_name='set_cli_ar
                      lineno=None),
               ] + list(map(partial(param2argparse_param, emit_default_doc=emit_default_doc),
                            docstring_structure['params'])
-                       ) + [Return(value=Tuple(ctx=Load(),
-                                               elts=[
-                                                   Name(ctx=Load(),
-                                                        id='argument_parser'),
-                                                   parse(docstring_structure['returns']['default']).body[0].value]))],
+                       ) + get_internal_body(docstring_structure) + [
+                 Return(value=Tuple(ctx=Load(),
+                                    elts=[
+                                        Name(ctx=Load(),
+                                             id='argument_parser'),
+                                        parse(docstring_structure['returns']['default']).body[0].value]))],
         decorator_list=[],
         name=function_name,
         returns=None,
@@ -301,9 +310,7 @@ def to_function(docstring_structure, emit_default_doc, function_name,
                         emit_separating_tab=emit_separating_tab
                     )
                 )),
-                *(docstring_structure['_internal']['body']
-                  if '_internal' in docstring_structure and docstring_structure['_internal'].get('body')
-                  else tuple()),
+                *(get_internal_body(docstring_structure)),
                 Return(value=parse(docstring_structure['returns']['default']).body[0].value)
                 if 'returns' in docstring_structure and docstring_structure['returns'].get('default')
                 else None

@@ -197,7 +197,27 @@ def _parse_return(e, docstring_structure, function_def, emit_default_doc):
             get_value(parse(docstring_structure['returns']['typ']).body[0].value.slice).elts[1]
         ).rstrip()
         # 'Tuple[ArgumentParser, {typ}]'.format(typ=_docstring_structure['returns']['typ'])
-    })
+    }, emit_default_doc=emit_default_doc)
+
+
+def get_internal_body(docstring_structure):
+    """
+    :param docstring_structure: a dictionary of form
+          {
+              'short_description': ...,
+              'long_description': ...,
+              '_internal': {'body': [...]},
+              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+          }
+    :type docstring_structure: ```dict```
+
+    :returns: Internal body or an empty tuple
+    :rtype: ```list```
+    """
+    return (docstring_structure['_internal']['body']
+            if '_internal' in docstring_structure and docstring_structure['_internal'].get('body')
+            else [])
 
 
 __all__ = ['parse_out_param', 'interpolate_defaults']
