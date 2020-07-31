@@ -19,12 +19,20 @@ class TestSourceTransformer(TestCase):
         Tests to_source in Python 3.9 and < 3.9
         """
         class_def = ClassDef(name='Classy', bases=tuple(), decorator_list=[], body=[], keywords=tuple())
-        versions = ('8', '9') if python_version_tuple() >= ('3', '9') else ('7', '8')
-        for version in versions:
-            with patch('doctrans.source_transformer.python_version_tuple', lambda: ('3', version, '0')):
-                import doctrans.source_transformer
-                self.assertEqual(doctrans.source_transformer.to_code(class_def).rstrip('\n'),
-                                 'class Classy:')
+
+        lt_39 = python_version_tuple() < ('3', '9')
+
+        with patch('doctrans.source_transformer.python_version_tuple', lambda: ('3', '9', '0')):
+            import doctrans.source_transformer
+            self.assertRaises(ImportError, lambda: doctrans.source_transformer.to_code(class_def)) if lt_39 \
+                else self.assertEqual(doctrans.source_transformer.to_code(class_def).rstrip('\n'),
+                                      'class Classy:')
+
+        with patch('doctrans.source_transformer.python_version_tuple', lambda: ('3', '8', '0')):
+            import doctrans.source_transformer
+            self.assertEqual(doctrans.source_transformer.to_code(class_def).rstrip('\n'),
+                             'class Classy:') if lt_39 \
+                else self.assertRaises(ImportError, lambda: doctrans.source_transformer.to_code(class_def))
 
 
 unittest_main()
