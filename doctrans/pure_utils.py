@@ -1,7 +1,7 @@
 """
 Pure utils for pure functions. For the same input will always produce the same output.
 """
-
+from platform import python_version_tuple
 from pprint import PrettyPrinter
 from sys import version
 
@@ -30,3 +30,4 @@ def identity(s):
 
 
 PY3_8 = version.startswith('3.8')
+PY_GTE_3_9 = python_version_tuple() >= ('3', '9')

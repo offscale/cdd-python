@@ -24,15 +24,14 @@ class TestSourceTransformer(TestCase):
 
         with patch('doctrans.source_transformer.python_version_tuple', lambda: ('3', '9', '0')):
             import doctrans.source_transformer
-            self.assertRaises(ImportError, lambda: doctrans.source_transformer.to_code(class_def)) if lt_39 \
+            self.assertRaises(AttributeError, lambda: doctrans.source_transformer.to_code(class_def)) if lt_39 \
                 else self.assertEqual(doctrans.source_transformer.to_code(class_def).rstrip('\n'),
                                       'class Classy:')
 
         with patch('doctrans.source_transformer.python_version_tuple', lambda: ('3', '8', '0')):
             import doctrans.source_transformer
             self.assertEqual(doctrans.source_transformer.to_code(class_def).rstrip('\n'),
-                             'class Classy:') if lt_39 \
-                else self.assertRaises(ImportError, lambda: doctrans.source_transformer.to_code(class_def))
+                             'class Classy:')
 
 
 unittest_main()
