@@ -46,20 +46,22 @@ class TestDocstringStructureUtils(TestCase):
 
     def test_parse_out_param_fails(self) -> None:
         """ Test that parse_out_param throws NotImplementedError when unsupported type given """
-        self.assertRaises(NotImplementedError,
-                          lambda: parse_out_param(
-                              Expr(value=Call(args=[Constant(kind=None,
-                                                             value='--num')],
-                                              func=Attribute(attr='add_argument',
-                                                             ctx=Load(),
-                                                             value=Name(ctx=Load(),
-                                                                        id='argument_parser')),
-                                              keywords=[keyword(arg='type',
-                                                                value=Subscript()),
-                                                        keyword(arg='required',
-                                                                value=Constant(kind=None,
-                                                                               value=True))]))
-                          ))
+        self.assertRaises(
+            NotImplementedError,
+            lambda: parse_out_param(
+                Expr(value=Call(args=[Constant(kind=None,
+                                               value='--num')],
+                                func=Attribute(attr='add_argument',
+                                               ctx=Load(),
+                                               value=Name(ctx=Load(),
+                                                          id='argument_parser')),
+                                keywords=[keyword(arg='type',
+                                                  value=Subscript()),
+                                          keyword(arg='required',
+                                                  value=Constant(kind=None,
+                                                                 value=True))]))
+            )
+        )
 
     def test_interpolate_defaults(self) -> None:
         """ Test that interpolate_defaults corrects sets the default property """

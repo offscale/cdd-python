@@ -11,7 +11,6 @@ from collections import OrderedDict
 from functools import partial
 from operator import itemgetter
 
-from astor import to_source
 from docstring_parser import DocstringParam, DocstringMeta
 
 from doctrans.ast_utils import to_class_def, get_function_type, get_value
@@ -19,6 +18,7 @@ from doctrans.defaults_utils import extract_default, set_default_doc
 from doctrans.docstring_structure_utils import parse_out_param, _parse_return
 from doctrans.pure_utils import tab, rpartial
 from doctrans.rest_docstring_parser import parse_docstring
+from doctrans.source_transformer import to_code
 
 
 def from_class(class_def):
@@ -40,7 +40,7 @@ def from_class(class_def):
 
     for e in filter(rpartial(isinstance, AnnAssign), class_def.body):
         docstring_structure['returns' if e.target.id == 'return_type' else 'params'][e.target.id]['typ'] = \
-            to_source(e.annotation)[:-1]
+            to_code(e.annotation)[:-1]
 
     docstring_structure['params'] = [
         dict(name=k, **v)
@@ -88,7 +88,7 @@ def from_function(function_def):
 
     for idx, arg in enumerate(function_def.args.args):
         if arg.annotation is not None:
-            docstring_structure['params'][idx - offset]['typ'] = to_source(arg.annotation)[:-1]
+            docstring_structure['params'][idx - offset]['typ'] = to_code(arg.annotation)[:-1]
 
     for idx, const in enumerate(function_def.args.defaults):
         assert isinstance(const, Constant) and const.kind is None or isinstance(const, (Str, NameConstant)), type(
@@ -100,10 +100,10 @@ def from_function(function_def):
     # Convention - the final top-level `return` is the default
     return_ast = next(filter(rpartial(isinstance, Return), function_def.body[::-1]), None)
     if return_ast is not None and return_ast.value is not None:
-        docstring_structure['returns']['default'] = to_source(return_ast.value)[:-1]
+        docstring_structure['returns']['default'] = to_code(return_ast.value)[:-1]
 
     if isinstance(function_def.returns, Subscript):
-        docstring_structure['returns']['typ'] = to_source(function_def.returns)[:-1]
+        docstring_structure['returns']['typ'] = to_code(function_def.returns)[:-1]
 
     return docstring_structure
 

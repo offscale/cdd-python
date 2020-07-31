@@ -48,10 +48,6 @@ class TestTransformers(TestCase):
         """
         Tests whether `to_argparse` produces `argparse_func_ast` given `class_ast`
         """
-        self.assertEqual(transformers.to_source(transformers.to_argparse(
-            docstring_struct.from_class(class_ast),
-            emit_default_doc=False
-        )), transformers.to_source(argparse_func_ast))
         run_ast_test(
             self,
             transformers.to_argparse(
