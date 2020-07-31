@@ -58,7 +58,7 @@ jobs:
             -   name: Lint with flake8
                 run: |
                     pip install flake8
-                    flake8 . --count --select=$(printf '%s,' {A..Z}) --show-source --max-complexity=10 --max-line-length=119 --statistics
+                    flake8 . --count --select=$(printf '%s,' {A..Z}) --ignore='W503,E203' --show-source --max-complexity=10 --max-line-length=119 --statistics
             -   name: Doc coverage
                 run: |
                     pip install interrogate codecov coverage

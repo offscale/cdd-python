@@ -18,25 +18,39 @@ def _build_parser():
     :rtype: ```ArgumentParser```
     """
     parser = ArgumentParser(
-        prog='python -m doctrans',
-        description='Translate between docstrings, classes, and argparse'
+        prog="python -m doctrans",
+        description="Translate between docstrings, classes, and argparse",
     )
-    parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
+    parser.add_argument(
+        "--version", action="version", version="%(prog)s {}".format(__version__)
+    )
 
-    parser.add_argument('--config', help='File where config `class` is declared.')
-    parser.add_argument('--config-name', help='Name of `class`', default='Config')
+    parser.add_argument("--config", help="File where config `class` is declared.")
+    parser.add_argument("--config-name", help="Name of `class`", default="Config")
 
-    parser.add_argument('--function', help='File where function is `def`ined.')
-    parser.add_argument('--function-name', help='Name of Function. If method, use C++ syntax, '
-                                                'i.e., ClassName::method_name',
-                        default='train')
+    parser.add_argument("--function", help="File where function is `def`ined.")
+    parser.add_argument(
+        "--function-name",
+        help="Name of Function. If method, use C++ syntax, "
+        "i.e., ClassName::method_name",
+        default="train",
+    )
 
-    parser.add_argument('--argparse-function', help='File where argparse function is `def`ined.')
-    parser.add_argument('--argparse-function-name', help='Name of argparse function.',
-                        default='set_cli_args')
+    parser.add_argument(
+        "--argparse-function", help="File where argparse function is `def`ined."
+    )
+    parser.add_argument(
+        "--argparse-function-name",
+        help="Name of argparse function.",
+        default="set_cli_args",
+    )
 
-    parser.add_argument('--truth', help='Single source of truth. Others will be generated from this.',
-                        choices=('argparse_function', 'config', 'function'), required=True)
+    parser.add_argument(
+        "--truth",
+        help="Single source of truth. Others will be generated from this.",
+        choices=("argparse_function", "config", "function"),
+        required=True,
+    )
 
     return parser
 
@@ -62,13 +76,17 @@ def main(cli_argv=None, return_args=False):
     args.truth = getattr(args, args.truth)
 
     if args.argparse_function is None:
-        _parser.error('One or more of `--argparse-function`, `--config`, and `--function` must be specified.')
+        _parser.error(
+            "One or more of `--argparse-function`, `--config`, and `--function` must be specified."
+        )
     elif not path.isfile(args.truth):
-        _parser.error('--truth must be choose an existent file. Got: {!r}'.format(args.truth))
+        _parser.error(
+            "--truth must be choose an existent file. Got: {!r}".format(args.truth)
+        )
 
     if return_args:
         return args
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

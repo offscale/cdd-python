@@ -35,8 +35,11 @@ from doctrans.defaults_utils import extract_default
 
 PARAM_OR_RETURNS_REGEX = re.compile(":(?:param|returns?)")
 RETURNS_REGEX = re.compile(":returns?: (?P<doc>.*)", re.S)
-PARAM_REGEX = re.compile(r":param (?P<name>[\w]+): (?P<doc>.*?)"
-                         r"(?:(?=:param)|(?=:return)|(?=:raises)|\Z)", re.S)
+PARAM_REGEX = re.compile(
+    r":param (?P<name>[\w]+): (?P<doc>.*?)"
+    r"(?:(?=:param)|(?=:return)|(?=:raises)|\Z)",
+    re.S,
+)
 
 
 def trim(docstring):
@@ -70,11 +73,11 @@ def trim(docstring):
     # Current code/unittests expects a line return at
     # end of multiline docstrings
     # workaround expected behavior from unittests
-    if '\n' in docstring:
+    if "\n" in docstring:
         trimmed.append("")
 
     # Return a single string:
-    return '\n'.join(trimmed)
+    return "\n".join(trimmed)
 
 
 def reindent(s):
@@ -87,7 +90,7 @@ def reindent(s):
     :return: reindented—and stripped—string
     :rtype: ```str```
     """
-    return '\n'.join(line.strip() for line in s.strip().split('\n'))
+    return "\n".join(line.strip() for line in s.strip().split("\n"))
 
 
 def _parse_line(line, name, default, docs, typ, emit_default_doc):
@@ -115,15 +118,15 @@ def _parse_line(line, name, default, docs, typ, emit_default_doc):
     :returns: Default value
     :rtype: ```Optional[str]```
     """
-    if line.startswith(':type'):
-        line = line[len(':type '):]
-        colon_at = line.find(':')
+    if line.startswith(":type"):
+        line = line[len(":type ") :]
+        colon_at = line.find(":")
         found_name = line[:colon_at]
-        assert name == found_name, '{!r} != {!r}'.format(name, found_name)
-        line = line[colon_at + 2:]
-        typ.append(line[3:-3]
-                   if line.startswith('```') and line.endswith('```')
-                   else line)
+        assert name == found_name, "{!r} != {!r}".format(name, found_name)
+        line = line[colon_at + 2 :]
+        typ.append(
+            line[3:-3] if line.startswith("```") and line.endswith("```") else line
+        )
     elif len(typ):
         typ.append(line)
     else:
@@ -153,9 +156,17 @@ def doc_to_type_doc(name, doc, emit_default_doc=True):
     docs, typ, default = [], [], None
     for line in doc:
         default = _parse_line(line, name, default, docs, typ, emit_default_doc)
-    return dict(doc='\n'.join(docs), **{'default': default} if default else {},
-                **{'typ': (lambda typ: 'dict' if typ.endswith('kwargs') else typ)('\n'.join(typ))}
-                if len(typ) else {})
+    return dict(
+        doc="\n".join(docs),
+        **{"default": default} if default else {},
+        **{
+            "typ": (lambda typ: "dict" if typ.endswith("kwargs") else typ)(
+                "\n".join(typ)
+            )
+        }
+        if len(typ)
+        else {}
+    )
 
 
 def parse_docstring(docstring, emit_default_doc=False):
@@ -181,9 +192,9 @@ def parse_docstring(docstring, emit_default_doc=False):
     params = []
 
     if docstring:
-        docstring = trim(docstring.lstrip('\n'))
+        docstring = trim(docstring.lstrip("\n"))
 
-        lines = docstring.split('\n', 1)
+        lines = docstring.split("\n", 1)
         short_description = lines[0]
 
         if len(lines) > 1:
@@ -199,17 +210,22 @@ def parse_docstring(docstring, emit_default_doc=False):
 
             if params_returns_desc:
                 params = [
-                    dict(name=name, **doc_to_type_doc(name, doc, emit_default_doc=emit_default_doc))
+                    dict(
+                        name=name,
+                        **doc_to_type_doc(name, doc, emit_default_doc=emit_default_doc)
+                    )
                     for name, doc in PARAM_REGEX.findall(params_returns_desc)
                 ]
 
-                returns = extract_return_params(params_returns_desc, emit_default_doc=emit_default_doc)
+                returns = extract_return_params(
+                    params_returns_desc, emit_default_doc=emit_default_doc
+                )
 
     return {
-        'short_description': short_description,
-        'long_description': long_description,
-        'params': params,
-        'returns': returns
+        "short_description": short_description,
+        "long_description": long_description,
+        "params": params,
+        "returns": returns,
     }
 
 
@@ -229,24 +245,22 @@ def extract_return_params(params_returns_desc, emit_default_doc):
     match = RETURNS_REGEX.search(params_returns_desc)
     returns = None
     if match:
-        returns = reindent(match.group('doc'))
+        returns = reindent(match.group("doc"))
     if returns:
-        r_dict = {'doc': ''}
+        r_dict = {"doc": ""}
         for idx, char in enumerate(returns):
-            if char == ':':
-                r_dict['typ'] = returns[idx + len(':rtype:'):].strip()
-                if r_dict['typ'].startswith('```') and r_dict['typ'].endswith('```'):
-                    r_dict['typ'] = r_dict['typ'][3:-3]
+            if char == ":":
+                r_dict["typ"] = returns[idx + len(":rtype:") :].strip()
+                if r_dict["typ"].startswith("```") and r_dict["typ"].endswith("```"):
+                    r_dict["typ"] = r_dict["typ"][3:-3]
                 break
             else:
-                r_dict['doc'] += char
-        doc, default = extract_default(r_dict['doc'].rstrip('\n'), emit_default_doc=emit_default_doc)
-        r_dict.update({
-            'name': 'return_type',
-            'doc': doc,
-            'default': default
-        })
-        if not r_dict.get('default', True):
-            del r_dict['default']
+                r_dict["doc"] += char
+        doc, default = extract_default(
+            r_dict["doc"].rstrip("\n"), emit_default_doc=emit_default_doc
+        )
+        r_dict.update({"name": "return_type", "doc": doc, "default": default})
+        if not r_dict.get("default", True):
+            del r_dict["default"]
         returns = r_dict
     return returns

@@ -6,8 +6,8 @@ from pprint import PrettyPrinter
 from sys import version
 
 pp = PrettyPrinter(indent=4).pprint
-tab = ' ' * 4
-simple_types = {'int': 0, float: .0, 'str': '', 'bool': False}
+tab = " " * 4
+simple_types = {"int": 0, float: 0.0, "str": "", "bool": False}
 
 
 # From https://github.com/Suor/funcy/blob/0ee7ae8/funcy/funcs.py#L34-L36
@@ -29,5 +29,5 @@ def identity(s):
     return s
 
 
-PY3_8 = version.startswith('3.8')
-PY_GTE_3_9 = python_version_tuple() >= ('3', '9')
+PY3_8 = version.startswith("3.8")
+PY_GTE_3_9 = python_version_tuple() >= ("3", "9")

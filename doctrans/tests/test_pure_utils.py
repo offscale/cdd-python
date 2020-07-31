@@ -10,24 +10,26 @@ class TestPureUtils(TestCase):
 
     def test_pp(self) -> None:
         """ Test that pp is from the right module """
-        self.assertEqual(pp.__module__, 'pprint')
+        self.assertEqual(pp.__module__, "pprint")
 
     def test_tab(self) -> None:
         """ Test that tab is of right length """
-        self.assertEqual(tab, '    ')
+        self.assertEqual(tab, "    ")
 
     def test_simple_types(self) -> None:
         """ Tests that simple types only includes int,str,float,bool with right default values """
-        self.assertDictEqual(simple_types, {'int': 0, float: .0, 'str': '', 'bool': False})
+        self.assertDictEqual(
+            simple_types, {"int": 0, float: 0.0, "str": "", "bool": False}
+        )
 
     def test_rpartial(self) -> None:
         """ Test that rpartial works as advertised """
-        self.assertTrue(rpartial(isinstance, str)(''))
+        self.assertTrue(rpartial(isinstance, str)(""))
         self.assertFalse(rpartial(isinstance, str)(0))
 
     def test_identity(self) -> None:
         """ Tests that ident returns itself """
-        self.assertEqual(identity(''), '')
+        self.assertEqual(identity(""), "")
         self.assertFalse(identity(False))
         self.assertTrue(identity(True))
         self.assertIsNone(identity(None))
