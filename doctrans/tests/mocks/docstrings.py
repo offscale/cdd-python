@@ -72,9 +72,53 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """
 
-docstring_structure_no_default_doc = remove_defaults_from_docstring_structure(
+docstring_structure_no_default_doc_or_prop = remove_defaults_from_docstring_structure(
     deepcopy(docstring_structure), emit_defaults=False
 )
+
+docstring_structure_no_default_doc = {
+    'short_description': 'Acquire from the official tensorflow_datasets model '
+                         'zoo, or the ophthalmology focussed ml-prepare '
+                         'library',
+    'long_description': '',
+    'params': [
+        {
+            'default': 'mnist',
+            'doc': 'name of dataset.',
+            'name': 'dataset_name',
+            'typ': 'str'
+        },
+        {
+            'default': '~/tensorflow_datasets',
+            'doc': 'directory to look for models in.',
+            'name': 'tfds_dir',
+            'typ': 'Optional[str]'
+        },
+        {
+            'default': 'np',
+            'doc': 'backend engine, e.g., `np` or `tf`.',
+            'name': 'K',
+            'typ': "Literal['np', 'tf']"
+        },
+        {
+            'doc': 'Convert to numpy ndarrays',
+            'name': 'as_numpy',
+            'typ': 'Optional[bool]'
+        },
+        {
+            'doc': 'pass this as arguments to data_loader function',
+            'name': 'data_loader_kwargs',
+            'typ': 'dict'
+        }
+    ],
+    'returns': {
+        'default': '(np.empty(0), np.empty(0))',
+        'doc': 'Train and tests dataset splits.',
+        'name': 'return_type',
+        'typ': 'Union[Tuple[tf.data.Dataset, tf.data.Dataset], '
+               'Tuple[np.ndarray, np.ndarray]]'
+    }
+}
 
 docstring_str_no_default_doc = """
 Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
