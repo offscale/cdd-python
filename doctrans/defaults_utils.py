@@ -16,13 +16,16 @@ def extract_default(line, emit_default_doc=True):
     :returns: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
     :rtype: Tuple[str, Optional[str]]
     """
-    search_str = 'defaults to '
+    search_str = "defaults to "
     if line is None:
         return line, line
-    doc, _, default = (lambda parts: parts if parts[1] else line.partition(search_str.capitalize()))(
-        line.partition(search_str)
+    doc, _, default = (
+        lambda parts: parts if parts[1] else line.partition(search_str.capitalize())
+    )(line.partition(search_str))
+    return (
+        line if emit_default_doc else doc.rstrip(";\n, "),
+        default if len(default) else None,
     )
-    return line if emit_default_doc else doc.rstrip(';\n, '), default if len(default) else None
 
 
 def remove_defaults_from_docstring_structure(docstring_structure, emit_defaults=True):
@@ -59,17 +62,16 @@ def remove_defaults_from_docstring_structure(docstring_structure, emit_defaults=
         :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
         :rtype: ```dict```
         """
-        doc, default = extract_default(param['doc'], emit_default_doc=False)
-        param.update({
-            'doc': doc,
-            'default': default
-        })
+        doc, default = extract_default(param["doc"], emit_default_doc=False)
+        param.update({"doc": doc, "default": default})
         if default is None or not emit_defaults:
-            del param['default']
+            del param["default"]
         return param
 
-    docstring_structure['params'] = list(map(handle_param, docstring_structure['params']))
-    docstring_structure['returns'] = handle_param(docstring_structure['returns'])
+    docstring_structure["params"] = list(
+        map(handle_param, docstring_structure["params"])
+    )
+    docstring_structure["returns"] = handle_param(docstring_structure["returns"])
     return docstring_structure
 
 
@@ -87,15 +89,20 @@ def set_default_doc(param, emit_default_doc=True):
     :rtype: ```dict``
     """
 
-    has_defaults = 'Defaults' in param['doc'] or 'defaults' in param['doc']
+    has_defaults = "Defaults" in param["doc"] or "defaults" in param["doc"]
 
-    if emit_default_doc and 'default' in param and not has_defaults:
-        param['doc'] = '{doc} Defaults to {default}'.format(
-            doc=(param['doc'] if param['doc'][-1] in frozenset(('.', ','))
-                 else '{doc}.'.format(doc=param['doc'])),
-            default=param['default']
+    if emit_default_doc and "default" in param and not has_defaults:
+        param["doc"] = "{doc} Defaults to {default}".format(
+            doc=(
+                param["doc"]
+                if param["doc"][-1] in frozenset((".", ","))
+                else "{doc}.".format(doc=param["doc"])
+            ),
+            default=param["default"],
         )
     elif has_defaults:
-        param['doc'] = extract_default(param['doc'], emit_default_doc=emit_default_doc)[0]
+        param["doc"] = extract_default(param["doc"], emit_default_doc=emit_default_doc)[
+            0
+        ]
 
     return param

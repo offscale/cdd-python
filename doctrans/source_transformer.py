@@ -16,5 +16,8 @@ def to_code(node):
     :rtype: ```str```
     """
 
-    return (getattr(import_module('astor'), 'to_source') if python_version_tuple() < ('3', '9')
-            else getattr(import_module('ast'), 'unparse'))(node)
+    return (
+        getattr(import_module("astor"), "to_source")
+        if python_version_tuple() < ("3", "9")
+        else getattr(import_module("ast"), "unparse")
+    )(node)

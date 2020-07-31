@@ -16,9 +16,10 @@ class TestDocstringStructureUtils(TestCase):
     def test_parse_out_param(self) -> None:
         """ Test that parse_out_param parses out the right dict """
         self.assertDictEqual(
-            parse_out_param(next(filter(rpartial(isinstance, Expr),
-                                        argparse_func_ast.body[::-1]))),
-            docstring_structure['params'][-1]
+            parse_out_param(
+                next(filter(rpartial(isinstance, Expr), argparse_func_ast.body[::-1]))
+            ),
+            docstring_structure["params"][-1],
         )
 
     def test_parse_out_param_default(self) -> None:
@@ -26,10 +27,7 @@ class TestDocstringStructureUtils(TestCase):
 
         self.assertDictEqual(
             parse_out_param(argparse_add_argument_ast),
-            {'default': 0,
-             'doc': None,
-             'name': 'num',
-             'typ': 'int'}
+            {"default": 0, "doc": None, "name": "num", "typ": "int"},
         )
 
     def test_parse_out_param_fails(self) -> None:
@@ -37,29 +35,31 @@ class TestDocstringStructureUtils(TestCase):
         self.assertRaises(
             NotImplementedError,
             lambda: parse_out_param(
-                Expr(value=Call(args=[Constant(kind=None,
-                                               value='--num')],
-                                func=Attribute(attr='add_argument',
-                                               ctx=Load(),
-                                               value=Name(ctx=Load(),
-                                                          id='argument_parser')),
-                                keywords=[keyword(arg='type',
-                                                  value=Subscript()),
-                                          keyword(arg='required',
-                                                  value=Constant(kind=None,
-                                                                 value=True))]))
-            )
+                Expr(
+                    value=Call(
+                        args=[Constant(kind=None, value="--num")],
+                        func=Attribute(
+                            attr="add_argument",
+                            ctx=Load(),
+                            value=Name(ctx=Load(), id="argument_parser"),
+                        ),
+                        keywords=[
+                            keyword(arg="type", value=Subscript()),
+                            keyword(
+                                arg="required", value=Constant(kind=None, value=True)
+                            ),
+                        ],
+                    )
+                )
+            ),
         )
 
     def test_interpolate_defaults(self) -> None:
         """ Test that interpolate_defaults corrects sets the default property """
-        param = deepcopy(docstring_structure['params'][2])
+        param = deepcopy(docstring_structure["params"][2])
         param_with_correct_default = deepcopy(param)
-        del param['default']
-        self.assertDictEqual(
-            interpolate_defaults(param),
-            param_with_correct_default
-        )
+        del param["default"]
+        self.assertDictEqual(interpolate_defaults(param), param_with_correct_default)
 
 
 unittest_main()
