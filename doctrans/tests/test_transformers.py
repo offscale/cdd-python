@@ -10,7 +10,7 @@ from meta.asttools import cmp_ast
 from doctrans import transformers, docstring_struct
 from doctrans.ast_utils import get_function_type
 from doctrans.pure_utils import rpartial, PY3_8
-from doctrans.tests.mocks.argparse import argparse_func_ast
+from doctrans.tests.mocks.argparse import argparse_func_ast, argparse_func_with_body_ast
 from doctrans.tests.mocks.classes import class_ast
 from doctrans.tests.mocks.docstrings import docstring_str, docstring_structure
 from doctrans.tests.mocks.methods import class_with_method_types_ast, class_with_method_ast, \
@@ -53,7 +53,7 @@ class TestTransformers(TestCase):
             self,
             transformers.to_argparse(
                 docstring_struct.from_class(class_ast),
-                emit_default_doc=False
+                emit_default_doc=False, emit_default_doc_in_return=False
             ),
             gold=argparse_func_ast
         )
@@ -192,6 +192,16 @@ class TestTransformers(TestCase):
                      ),
                      next(filter(rpartial(isinstance, FunctionDef),
                                  class_with_method_and_body_types_ast.body)))
+
+    def test_from_argparse_with_extra_body_to_argparse_with_extra_body(self):
+        """ Tests if this can make the roundtrip from a full argparse function to a argparse full function """
+
+        run_ast_test(self,
+                     transformers.to_argparse(
+                         docstring_struct.from_argparse_ast(argparse_func_with_body_ast),
+                         emit_default_doc=False, emit_default_doc_in_return=False
+                     ),
+                     argparse_func_with_body_ast)
 
 
 unittest_main()

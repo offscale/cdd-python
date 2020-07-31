@@ -126,7 +126,8 @@ def from_argparse_ast(function_def):
     :rtype: ```dict```
     """
     docstring_structure = {'short_description': '', 'long_description': '', 'params': []}
-    _docstring_struct = parse_docstring(get_docstring(function_def))
+    _docstring_struct = parse_docstring(get_docstring(function_def), emit_default_doc=True)
+
     for e in function_def.body:
         if isinstance(e, Expr):
             if isinstance(e.value, Constant):
@@ -149,6 +150,9 @@ def from_argparse_ast(function_def):
             docstring_structure['returns'] = _parse_return(e, docstring_structure=_docstring_struct,
                                                            function_def=function_def,
                                                            emit_default_doc=True)
+    if len(function_def.body) > len(docstring_structure['params']) + 3:
+        docstring_structure['_internal'] = {'body': function_def.body[len(docstring_structure['params']) + 2:-1]}
+
     return docstring_structure
 
 

@@ -87,11 +87,15 @@ def set_default_doc(param, emit_default_doc=True):
     :rtype: ```dict``
     """
 
-    if emit_default_doc and 'default' in param and 'Defaults' not in param['doc'] and 'defaults' not in param['doc']:
+    has_defaults = 'Defaults' in param['doc'] or 'defaults' in param['doc']
+
+    if emit_default_doc and 'default' in param and not has_defaults:
         param['doc'] = '{doc} Defaults to {default}'.format(
             doc=(param['doc'] if param['doc'][-1] in frozenset(('.', ','))
                  else '{doc}.'.format(doc=param['doc'])),
             default=param['default']
         )
+    elif has_defaults:
+        param['doc'] = extract_default(param['doc'], emit_default_doc=emit_default_doc)[0]
 
     return param

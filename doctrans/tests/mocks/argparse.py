@@ -1,7 +1,6 @@
 """
 Mocks for the argparse function
 """
-
 from ast import FunctionDef, arguments, arg, Expr, Constant, Assign, Store, \
     Attribute, Name, Load, Call, keyword, Return, Tuple, parse
 
@@ -42,6 +41,49 @@ def set_cli_args(argument_parser):
     argument_parser.add_argument(
         '--data_loader_kwargs', type=loads, help='pass this as arguments to data_loader function'
     )
+    return argument_parser, (np.empty(0), np.empty(0))
+'''
+
+argparse_func_with_body_str = '''
+def set_cli_args(argument_parser):
+    """
+    Set CLI arguments
+
+    :param argument_parser: argument parser
+    :type argument_parser: ```ArgumentParser```
+
+    :return: argument_parser, Train and tests dataset splits.
+    :rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]]```
+    """
+    argument_parser.description = (
+        'Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library'
+    )
+    argument_parser.add_argument(
+        '--dataset_name', type=str, help='name of dataset.', required=True, default='mnist'
+    )
+    argument_parser.add_argument(
+        '--tfds_dir',
+        type=str,
+        help='directory to look for models in.',
+        default='~/tensorflow_datasets',
+    )
+    argument_parser.add_argument(
+        '--K',
+        type=globals().__getitem__,
+        choices=('np', 'tf'),
+        help='backend engine, e.g., `np` or `tf`.',
+        required=True,
+        default='np',
+    )
+    argument_parser.add_argument('--as_numpy', type=bool, help='Convert to numpy ndarrays')
+    argument_parser.add_argument(
+        '--data_loader_kwargs', type=loads, help='pass this as arguments to data_loader function'
+    )
+    # some comment
+    print(5*5)
+    if True:
+        print(True)
+        return 5
     return argument_parser, (np.empty(0), np.empty(0))
 '''
 
@@ -183,3 +225,18 @@ argparse_func_ast = FunctionDef(
     returns=None,
     type_comment=None
 ) if PY3_8 else parse(argparse_func_str).body[0]
+
+argparse_func_with_body_ast = parse(argparse_func_with_body_str).body[0]
+
+argparse_add_argument_ast = Expr(value=Call(args=[Constant(kind=None,
+                                                           value='--num')],
+                                            func=Attribute(attr='add_argument',
+                                                           ctx=Load(),
+                                                           value=Name(ctx=Load(),
+                                                                      id='argument_parser')),
+                                            keywords=[keyword(arg='type',
+                                                              value=Name(ctx=Load(),
+                                                                         id='int')),
+                                                      keyword(arg='required',
+                                                              value=Constant(kind=None,
+                                                                             value=True))]))
