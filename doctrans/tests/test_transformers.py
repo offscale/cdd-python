@@ -27,8 +27,7 @@ class TestTransformers(TestCase):
         run_ast_test(
             self,
             transformers.to_class(
-                docstring_struct.from_argparse_ast(argparse_func_ast,
-                                                   emit_default_doc=True)
+                docstring_struct.from_argparse_ast(argparse_func_ast)
             ),
             gold=class_ast
         )
@@ -40,7 +39,7 @@ class TestTransformers(TestCase):
         run_ast_test(
             self,
             transformers.to_class(
-                docstring_struct.from_docstring(docstring_str)
+                docstring_struct.from_docstring(docstring_str),
             ),
             gold=class_ast
         )
@@ -49,10 +48,14 @@ class TestTransformers(TestCase):
         """
         Tests whether `to_argparse` produces `argparse_func_ast` given `class_ast`
         """
+        self.assertEqual(transformers.to_source(transformers.to_argparse(
+            docstring_struct.from_class(class_ast),
+            emit_default_doc=False
+        )), transformers.to_source(argparse_func_ast))
         run_ast_test(
             self,
             transformers.to_argparse(
-                docstring_struct.from_class(class_ast, emit_default_doc=False),
+                docstring_struct.from_class(class_ast),
                 emit_default_doc=False
             ),
             gold=argparse_func_ast
@@ -134,8 +137,7 @@ class TestTransformers(TestCase):
                                    class_with_method_types_ast.body))
         run_ast_test(
             self,
-            transformers.to_function(docstring_struct.from_docstring(docstring_str,
-                                                                     emit_default_doc=True),
+            transformers.to_function(docstring_struct.from_docstring(docstring_str),
                                      function_name=function_def.name,
                                      function_type=get_function_type(function_def),
                                      emit_default_doc=False,
@@ -171,8 +173,7 @@ class TestTransformers(TestCase):
         # transformers.to_file(gen_ast, os.path.join(os.path.dirname(__file__), 'delme.py'))
         run_ast_test(
             self,
-            transformers.to_function(docstring_struct.from_function(function_def,
-                                                                    emit_default_doc=True),
+            transformers.to_function(docstring_struct.from_function(function_def),
                                      function_name=function_def.name,
                                      function_type=get_function_type(function_def),
                                      emit_default_doc=False,

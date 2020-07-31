@@ -7,7 +7,7 @@ from typing import Any
 from astor import to_source
 
 from doctrans.ast_utils import get_value
-from doctrans.defaults_utils import extract_default
+from doctrans.defaults_utils import extract_default, set_default_doc
 from doctrans.pure_utils import simple_types
 
 
@@ -185,32 +185,20 @@ def _parse_return(e, docstring_structure, function_def, emit_default_doc):
     :rtype: ```dict```
     """
     assert isinstance(e, Return)
-    default = to_source(e.value.elts[1]).replace('\n', '')
-    doc = next(
-        line.partition(',')[2].lstrip()
-        for line in get_value(function_def.body[0].value).split('\n')
-        if line.lstrip().startswith(':return')
-    )
-    if not emit_default_doc:
-        doc, _ = extract_default(doc, emit_default_doc=emit_default_doc)
 
-    return {
+    return set_default_doc({
         'name': 'return_type',
-        'doc': '{doc}{maybe_dot} Defaults to {default}'.format(
-            maybe_dot='' if doc.endswith('.') else '.',
-            doc=doc,
-            default=default
-        ) if all((default is not None,
-                  emit_default_doc,
-                  'Defaults to' not in doc,
-                  'defaults to' not in doc))
-        else doc,
-        'default': default,
+        'doc': extract_default(next(
+            line.partition(',')[2].lstrip()
+            for line in get_value(function_def.body[0].value).split('\n')
+            if line.lstrip().startswith(':return')
+        ), emit_default_doc=emit_default_doc)[0],
+        'default': to_source(e.value.elts[1])[:-1],
         'typ': to_source(
             get_value(parse(docstring_structure['returns']['typ']).body[0].value.slice).elts[1]
         ).rstrip()
         # 'Tuple[ArgumentParser, {typ}]'.format(typ=_docstring_structure['returns']['typ'])
-    }
+    })
 
 
 __all__ = ['parse_out_param', 'interpolate_defaults']

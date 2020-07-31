@@ -5,7 +5,9 @@ Shared utility function used by many tests
 from ast import parse
 from unittest import main
 
-from meta.asttools import cmp_ast, str_ast
+from meta.asttools import cmp_ast
+
+from doctrans import transformers
 
 
 def run_ast_test(test_case_instance, gen_ast, gold):
@@ -30,8 +32,7 @@ def run_ast_test(test_case_instance, gen_ast, gold):
                                        get_docstring(gold))
     '''
 
-    test_case_instance.assertTupleEqual(*tuple(map(lambda ast: tuple(str_ast(ast).split('\n')),
-                                                   (gen_ast, gold))))
+    test_case_instance.assertEqual(*map(transformers.to_source, (gen_ast, gold)))
     # if PY3_8:
     test_case_instance.assertTrue(cmp_ast(gen_ast, gold), 'Generated AST doesn\'t match reference AST')
 

@@ -58,7 +58,7 @@ jobs:
             -   name: Lint with flake8
                 run: |
                     pip install flake8
-                    flake8 . --count --select='A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z' --show-source --max-complexity=10 --max-line-length=119 --statistics
+                    flake8 . --count --select=$(printf '%s,' {A..Z}) --show-source --max-complexity=10 --max-line-length=119 --statistics
             -   name: Doc coverage
                 run: |
                     pip install interrogate codecov coverage

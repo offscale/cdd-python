@@ -11,6 +11,7 @@ from black import format_str, FileMode
 
 from doctrans import docstring_struct
 from doctrans.ast_utils import param2argparse_param, param2ast, set_value
+from doctrans.defaults_utils import set_default_doc
 from doctrans.pure_utils import tab, simple_types
 
 
@@ -108,10 +109,9 @@ def to_class(docstring_structure, class_name='TargetClass', class_bases=('object
             value=set_value(
                 kind=None,
                 value='\n    {description}\n\n{cvars}'.format(
-                    description=docstring_structure['long_description'] or docstring_structure[
-                        'short_description'],
+                    description=docstring_structure['long_description'] or docstring_structure['short_description'],
                     cvars='\n'.join(
-                        '{tab}:cvar {param[name]}: {param[doc]}'.format(tab=tab, param=param)
+                        '{tab}:cvar {param[name]}: {param[doc]}'.format(tab=tab, param=set_default_doc(param))
                         for param in docstring_structure['params'] + returns
                     )
                 )
@@ -122,7 +122,7 @@ def to_class(docstring_structure, class_name='TargetClass', class_bases=('object
     )
 
 
-def to_docstring(docstring_structure, docstring_format='rest'):
+def to_docstring(docstring_structure, docstring_format='rest', emit_default_doc=True):
     """
     Converts an AST to a docstring
 
@@ -138,23 +138,30 @@ def to_docstring(docstring_structure, docstring_format='rest'):
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpy', 'google']```
 
+    :param emit_default_doc: Whether help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
+
     :returns: docstring
     :rtype: ```str``
     """
     if docstring_format != 'rest':
         raise NotImplementedError()
+
     return '''\n{description}\n\n{params}\n{returns}\n'''.format(
         description=docstring_structure['long_description'] or docstring_structure['short_description'],
         params='\n'.join(
             ':param {param[name]}: {param[doc]}\n'
-            ':type {param[name]}: ```{typ}```\n'.format(param=param,
-                                                        typ=('**{name}'.format(name=param['name'])
-                                                             if 'kwargs' in param['name']
-                                                             else param['typ']))
+            ':type {param[name]}: ```{typ}```\n'.format(
+                param=set_default_doc(param),
+                typ=('**{name}'.format(name=param['name'])
+                     if 'kwargs' in param['name']
+                     else param['typ']))
             for param in docstring_structure['params']
         ),
         returns=':return: {param[doc]}\n'
-                ':rtype: ```{param[typ]}```'.format(param=docstring_structure['returns'])
+                ':rtype: ```{param[typ]}```'.format(
+            param=set_default_doc(docstring_structure['returns'])
+        )
     )
 
 

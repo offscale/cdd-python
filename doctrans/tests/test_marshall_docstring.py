@@ -7,7 +7,7 @@ from unittest import TestCase
 from doctrans import docstring_struct
 from doctrans.rest_docstring_parser import parse_docstring, _parse_line
 from doctrans.tests.mocks.docstrings import docstring_str, docstring_structure, docstring_str_no_default_doc, \
-    docstring_structure_no_default_doc
+    docstring_structure_no_default_doc_or_prop, docstring_structure_no_default_doc
 from doctrans.tests.utils_for_tests import unittest_main
 
 
@@ -22,7 +22,7 @@ class TestMarshallDocstring(TestCase):
               from `docstring_str` """
         self.assertDictEqual(
             parse_docstring(docstring_str),
-            docstring_structure
+            docstring_structure_no_default_doc
         )
 
     def test_docstring_structure_no_default_doc_equality(self) -> None:
@@ -31,7 +31,7 @@ class TestMarshallDocstring(TestCase):
               from `docstring_str_no_default_doc` """
         self.assertDictEqual(
             parse_docstring(docstring_str_no_default_doc, emit_default_doc=False),
-            docstring_structure_no_default_doc
+            docstring_structure_no_default_doc_or_prop
         )
 
     def test_docstring_struct_equality_fails(self) -> None:

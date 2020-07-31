@@ -158,7 +158,7 @@ def doc_to_type_doc(name, doc, emit_default_doc=True):
                 if len(typ) else {})
 
 
-def parse_docstring(docstring, emit_default_doc=True):
+def parse_docstring(docstring, emit_default_doc=False):
     """Parse the docstring into its components.
 
     :param docstring: the docstring
