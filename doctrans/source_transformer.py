@@ -1,3 +1,7 @@
+"""
+Source transformer module. Uses astor on Python < 3.9
+"""
+
 from platform import python_version_tuple
 
 
