@@ -4,11 +4,10 @@ Functions which produce docstring_structure from various different inputs
 from ast import Constant, Name, Attribute, Return, parse
 from typing import Any
 
-from astor import to_source
-
 from doctrans.ast_utils import get_value
 from doctrans.defaults_utils import extract_default, set_default_doc
 from doctrans.pure_utils import simple_types
+from doctrans.source_transformer import to_code
 
 
 def _handle_value(node):
@@ -193,8 +192,8 @@ def _parse_return(e, docstring_structure, function_def, emit_default_doc):
             for line in get_value(function_def.body[0].value).split('\n')
             if line.lstrip().startswith(':return')
         ), emit_default_doc=emit_default_doc)[0],
-        'default': to_source(e.value.elts[1])[:-1],
-        'typ': to_source(
+        'default': to_code(e.value.elts[1])[:-1],
+        'typ': to_code(
             get_value(parse(docstring_structure['returns']['typ']).body[0].value.slice).elts[1]
         ).rstrip()
         # 'Tuple[ArgumentParser, {typ}]'.format(typ=_docstring_structure['returns']['typ'])

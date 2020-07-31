@@ -6,13 +6,13 @@ from ast import parse, ClassDef, Name, Load, Expr, Module, \
     FunctionDef, arguments, Assign, Attribute, Store, Tuple, Return, arg
 from functools import partial
 
-from astor import to_source
 from black import format_str, FileMode
 
 from doctrans import docstring_struct
 from doctrans.ast_utils import param2argparse_param, param2ast, set_value
 from doctrans.defaults_utils import set_default_doc
 from doctrans.pure_utils import tab, simple_types
+from doctrans.source_transformer import to_code
 
 
 def to_argparse(docstring_structure, emit_default_doc, function_name='set_cli_args'):
@@ -186,7 +186,7 @@ def to_file(ast, filename, mode='a', skip_black=False):
     """
     if isinstance(ast, (ClassDef, FunctionDef)):
         ast = Module(body=[ast], type_ignores=[])
-    src = to_source(ast)
+    src = to_code(ast)
     if not skip_black:
         src = format_str(src, mode=FileMode(
             target_versions=set(),
