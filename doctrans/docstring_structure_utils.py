@@ -192,7 +192,7 @@ def _parse_return(e, docstring_structure, function_def, emit_default_doc):
             for line in get_value(function_def.body[0].value).split('\n')
             if line.lstrip().startswith(':return')
         ), emit_default_doc=emit_default_doc)[0],
-        'default': to_code(e.value.elts[1])[:-1],
+        'default': to_code(e.value.elts[1]).rstrip('\n'),
         'typ': to_code(
             get_value(parse(docstring_structure['returns']['typ']).body[0].value.slice).elts[1]
         ).rstrip()

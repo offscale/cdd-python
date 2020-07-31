@@ -11,7 +11,7 @@ from black import format_str, FileMode
 from doctrans import docstring_struct
 from doctrans.ast_utils import param2argparse_param, param2ast, set_value
 from doctrans.defaults_utils import set_default_doc
-from doctrans.pure_utils import tab, simple_types
+from doctrans.pure_utils import tab, simple_types, PY_GTE_3_9
 from doctrans.source_transformer import to_code
 
 
@@ -62,8 +62,8 @@ def to_argparse(docstring_structure, emit_default_doc, function_name='set_cli_ar
                      type_comment=None,
                      value=set_value(
                          kind=None,
-                         value=docstring_structure['long_description'] or docstring_structure['short_description'])
-                     )
+                         value=docstring_structure['long_description'] or docstring_structure['short_description']),
+                     lineno=None),
               ] + list(map(partial(param2argparse_param, emit_default_doc=emit_default_doc),
                            docstring_structure['params'])
                        ) + [Return(value=Tuple(ctx=Load(),
@@ -74,7 +74,8 @@ def to_argparse(docstring_structure, emit_default_doc, function_name='set_cli_ar
         decorator_list=[],
         name=function_name,
         returns=None,
-        type_comment=None
+        type_comment=None,
+        lineno=None
     )
 
 
@@ -165,7 +166,7 @@ def to_docstring(docstring_structure, docstring_format='rest', emit_default_doc=
     )
 
 
-def to_file(ast, filename, mode='a', skip_black=False):
+def to_file(ast, filename, mode='a', skip_black=PY_GTE_3_9):
     """
     Convert AST to a file
 
@@ -310,5 +311,6 @@ def to_function(docstring_structure, emit_default_doc, function_name,
         returns=(parse(docstring_structure['returns']['typ']).body[0].value
                  if 'returns' in docstring_structure and 'typ' in docstring_structure[
             'returns'] else None) if inline_types else None,
-        type_comment=None
+        type_comment=None,
+        lineno=None
     )

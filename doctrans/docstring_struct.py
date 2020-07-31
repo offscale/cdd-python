@@ -40,7 +40,7 @@ def from_class(class_def):
 
     for e in filter(rpartial(isinstance, AnnAssign), class_def.body):
         docstring_structure['returns' if e.target.id == 'return_type' else 'params'][e.target.id]['typ'] = \
-            to_code(e.annotation)[:-1]
+            to_code(e.annotation).rstrip('\n')
 
     docstring_structure['params'] = [
         dict(name=k, **v)
@@ -88,7 +88,7 @@ def from_function(function_def):
 
     for idx, arg in enumerate(function_def.args.args):
         if arg.annotation is not None:
-            docstring_structure['params'][idx - offset]['typ'] = to_code(arg.annotation)[:-1]
+            docstring_structure['params'][idx - offset]['typ'] = to_code(arg.annotation).rstrip('\n')
 
     for idx, const in enumerate(function_def.args.defaults):
         assert isinstance(const, Constant) and const.kind is None or isinstance(const, (Str, NameConstant)), type(
@@ -100,10 +100,10 @@ def from_function(function_def):
     # Convention - the final top-level `return` is the default
     return_ast = next(filter(rpartial(isinstance, Return), function_def.body[::-1]), None)
     if return_ast is not None and return_ast.value is not None:
-        docstring_structure['returns']['default'] = to_code(return_ast.value)[:-1]
+        docstring_structure['returns']['default'] = to_code(return_ast.value).rstrip('\n')
 
     if isinstance(function_def.returns, Subscript):
-        docstring_structure['returns']['typ'] = to_code(function_def.returns)[:-1]
+        docstring_structure['returns']['typ'] = to_code(function_def.returns).rstrip('\n')
 
     return docstring_structure
 

@@ -1,7 +1,7 @@
 """
 Source transformer module. Uses astor on Python < 3.9
 """
-
+from importlib import import_module
 from platform import python_version_tuple
 
 
@@ -16,9 +16,5 @@ def to_code(node):
     :rtype: ```str```
     """
 
-    if python_version_tuple() < ('3', '9'):
-        from astor import to_source
-        return to_source(node)
-    else:
-        from ast import unparse
-        return unparse(node)
+    return (getattr(import_module('astor'), 'to_source') if python_version_tuple() < ('3', '9')
+            else getattr(import_module('ast'), 'unparse'))(node)

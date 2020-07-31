@@ -12,7 +12,7 @@ class TestAstUtils(TestCase):
 
     def test_to_class_def(self) -> None:
         """ Test that to_class_def gives the wrapped class back """
-        class_def = ClassDef(name='', bases=tuple(), decorator_list=[], body=[])
+        class_def = ClassDef(name='', bases=tuple(), keywords=tuple(), decorator_list=[], body=[])
         run_ast_test(self, to_class_def(Module(body=[class_def])), class_def)
 
     def test_to_class_def_fails(self) -> None:
