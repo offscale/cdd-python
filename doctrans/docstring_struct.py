@@ -39,17 +39,20 @@ from doctrans.rest_docstring_parser import parse_docstring
 from doctrans.source_transformer import to_code
 
 
-def from_class(class_def):
+def from_class(class_def, config_name=None):
     """
     Converts an AST to a docstring structure
 
     :param class_def: Class AST or Module AST with a ClassDef inside
     :type class_def: ```Union[Module, ClassDef]```
 
+    :param config_name: Name of `class`. If None, gives first found.
+    :type config_name: ```Optional[str]```
+
     :return: docstring structure
     :rtype: ```dict```
     """
-    class_def = to_class_def(class_def)
+    class_def = to_class_def(class_def, config_name)
     docstring_structure = from_docstring(
         get_docstring(class_def).replace(":cvar", ":param")
     )

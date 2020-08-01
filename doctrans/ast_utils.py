@@ -74,12 +74,15 @@ def param2ast(param):
         )
 
 
-def to_class_def(ast):
+def to_class_def(ast, class_name=None):
     """
     Converts an AST to an `ast.ClassDef`
 
     :param ast: Class AST or Module AST
     :type ast: ```Union[ast.Module, ast.ClassDef]```
+
+    :param class_name: Name of `class`. If None, gives first found.
+    :type class_name: ```Optional[str]```
 
     :return: ClassDef
     :rtype: ```ast.ClassDef```
@@ -248,7 +251,9 @@ def get_function_type(function):
     :returns: None is a loose function (def f()`), others self-explanatory
     :rtype: ```Optional[Literal['self', 'cls']]```
     """
-    assert isinstance(function, FunctionDef)
+    assert isinstance(function, FunctionDef), "{typ} != FunctionDef".format(
+        typ=type(function).__name__
+    )
     if function.args is None or len(function.args.args) == 0:
         return None
     elif function.args.args[0].arg in frozenset(("self", "cls")):

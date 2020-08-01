@@ -29,8 +29,14 @@ class_with_method_str = '''
 class C(object):
     """ C class (mocked!) """
 
-    def method_name(self, dataset_name='mnist', tfds_dir='~/tensorflow_datasets',
-                    K='np', as_numpy=None, **data_loader_kwargs):
+    def method_name(
+        self,
+        dataset_name="mnist",
+        tfds_dir="~/tensorflow_datasets",
+        K="np",
+        as_numpy=None,
+        **data_loader_kwargs
+    ):
         """
         Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
 
@@ -61,9 +67,9 @@ class C(object):
 
     def method_name(
         self,
-        dataset_name: str = 'mnist',
-        tfds_dir: Optional[str] = '~/tensorflow_datasets',
-        K: Literal['np', 'tf'] = 'np',
+        dataset_name: str = "mnist",
+        tfds_dir: Optional[str] = "~/tensorflow_datasets",
+        K: Literal["np", "tf"] = "np",
         as_numpy: Optional[bool] = None,
         **data_loader_kwargs
     ) -> Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
@@ -91,9 +97,9 @@ class C(object):
 
     def method_name(
         self,
-        dataset_name: str = 'mnist',
-        tfds_dir: Optional[str] = '~/tensorflow_datasets',
-        K: Literal['np', 'tf'] = 'np',
+        dataset_name: str = "mnist",
+        tfds_dir: Optional[str] = "~/tensorflow_datasets",
+        K: Literal["np", "tf"] = "np",
         as_numpy: Optional[bool] = None,
         **data_loader_kwargs
     ) -> Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
@@ -113,7 +119,7 @@ class C(object):
         :return: Train and tests dataset splits.
         """
         # some comment
-        print(5*5)
+        print(5 * 5)
         if True:
             print(True)
             return 5
