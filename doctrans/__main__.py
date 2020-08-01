@@ -8,6 +8,7 @@ from argparse import ArgumentParser
 from os import path
 
 from doctrans import __version__
+from doctrans.conformance import ground_truth
 
 
 def _build_parser():
@@ -25,15 +26,15 @@ def _build_parser():
         "--version", action="version", version="%(prog)s {}".format(__version__)
     )
 
-    parser.add_argument("--config", help="File where config `class` is declared.")
-    parser.add_argument("--config-name", help="Name of `class`", default="Config")
+    parser.add_argument("--class", help="File where class `class` is declared.")
+    parser.add_argument("--class-name", help="Name of `class`", default="ConfigClass")
 
     parser.add_argument("--function", help="File where function is `def`ined.")
     parser.add_argument(
         "--function-name",
-        help="Name of Function. If method, use C++ syntax, "
-        "i.e., ClassName::method_name",
-        default="train",
+        help="Name of Function. If method, use Python resolution syntax,"
+        " i.e., ClassName.method_name",
+        default="C.method_name",
     )
 
     parser.add_argument(
@@ -48,7 +49,7 @@ def _build_parser():
     parser.add_argument(
         "--truth",
         help="Single source of truth. Others will be generated from this.",
-        choices=("argparse_function", "config", "function"),
+        choices=("argparse_function", "class", "function"),
         required=True,
     )
 
@@ -70,22 +71,23 @@ def main(cli_argv=None, return_args=False):
     """
     _parser = _build_parser()
     args = _parser.parse_args(args=cli_argv)
-    args.argparse_function = args.argparse_function or args.config or args.function
-    args.config = args.config or args.argparse_function
-    args.function = args.function or args.config
-    args.truth = getattr(args, args.truth)
+    args.argparse_function = (
+        args.argparse_function or getattr(args, "class") or args.function
+    )
+    setattr(args, "class", getattr(args, "class") or args.argparse_function)
+    args.function = args.function or getattr(args, "class")
+    truth_file = getattr(args, args.truth)
 
     if args.argparse_function is None:
         _parser.error(
-            "One or more of `--argparse-function`, `--config`, and `--function` must be specified."
+            "One or more of `--argparse-function`, `--class`, and `--function` must be specified."
         )
-    elif not path.isfile(args.truth):
+    elif not path.isfile(truth_file):
         _parser.error(
-            "--truth must be choose an existent file. Got: {!r}".format(args.truth)
+            "--truth must be choose an existent file. Got: {!r}".format(truth_file)
         )
 
-    if return_args:
-        return args
+    return args if return_args else ground_truth(args, truth_file)
 
 
 if __name__ == "__main__":

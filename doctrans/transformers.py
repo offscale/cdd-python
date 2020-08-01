@@ -147,7 +147,7 @@ def to_argparse(
     )
 
 
-def to_class(docstring_structure, class_name="TargetClass", class_bases=("object",)):
+def to_class(docstring_structure, class_name="ConfigClass", class_bases=("object",)):
     """
     Construct a class
 
@@ -283,9 +283,9 @@ def to_file(ast, filename, mode="a", skip_black=PY_GTE_3_9):
 
 def to_function(
     docstring_structure,
-    emit_default_doc,
     function_name,
     function_type,
+    emit_default_doc=False,
     docstring_format="rest",
     indent_level=2,
     emit_separating_tab=False,
@@ -303,9 +303,6 @@ def to_function(
           }
     :type docstring_structure: ```dict```
 
-    :param emit_default_doc: Whether help/docstring should include 'With default' text
-    :type emit_default_doc: ```bool``
-
     :param function_name: name of function
     :type function_name: ```str```
 
@@ -314,6 +311,9 @@ def to_function(
 
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpy', 'google']```
+
+    :param emit_default_doc: Whether help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
 
     :param indent_level: docstring indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
     :type indent_level: ```int```

@@ -22,7 +22,7 @@ from ast import (
 from doctrans.pure_utils import PY3_8
 
 class_str = '''
-class TargetClass(object):
+class ConfigClass(object):
     """
     Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
 
@@ -33,12 +33,14 @@ class TargetClass(object):
     :cvar data_loader_kwargs: pass this as arguments to data_loader function
     :cvar return_type: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))"""
 
-    dataset_name: str = 'mnist'
-    tfds_dir: Optional[str] = '~/tensorflow_datasets'
-    K: Literal['np', 'tf'] = 'np'
+    dataset_name: str = "mnist"
+    tfds_dir: Optional[str] = "~/tensorflow_datasets"
+    K: Literal["np", "tf"] = "np"
     as_numpy: Optional[bool] = None
     data_loader_kwargs: dict = {}
-    return_type: Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]] = (
+    return_type: Union[
+        Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]
+    ] = (
         np.empty(0),
         np.empty(0),
     )
@@ -202,7 +204,7 @@ class_ast = (
         ],
         decorator_list=[],
         keywords=[],
-        name="TargetClass",
+        name="ConfigClass",
     )
     if PY3_8
     else parse(class_str).body[0]

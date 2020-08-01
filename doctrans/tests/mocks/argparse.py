@@ -32,29 +32,35 @@ def set_cli_args(argument_parser):
     :return: argument_parser, Train and tests dataset splits.
     :rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]]```
     """
-    argument_parser.description = (
-        'Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library'
-    )
+    argument_parser.description = "Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library"
     argument_parser.add_argument(
-        '--dataset_name', type=str, help='name of dataset.', required=True, default='mnist'
-    )
-    argument_parser.add_argument(
-        '--tfds_dir',
+        "--dataset_name",
         type=str,
-        help='directory to look for models in.',
-        default='~/tensorflow_datasets',
-    )
-    argument_parser.add_argument(
-        '--K',
-        type=globals().__getitem__,
-        choices=('np', 'tf'),
-        help='backend engine, e.g., `np` or `tf`.',
+        help="name of dataset.",
         required=True,
-        default='np',
+        default="mnist",
     )
-    argument_parser.add_argument('--as_numpy', type=bool, help='Convert to numpy ndarrays')
     argument_parser.add_argument(
-        '--data_loader_kwargs', type=loads, help='pass this as arguments to data_loader function'
+        "--tfds_dir",
+        type=str,
+        help="directory to look for models in.",
+        default="~/tensorflow_datasets",
+    )
+    argument_parser.add_argument(
+        "--K",
+        type=globals().__getitem__,
+        choices=("np", "tf"),
+        help="backend engine, e.g., `np` or `tf`.",
+        required=True,
+        default="np",
+    )
+    argument_parser.add_argument(
+        "--as_numpy", type=bool, help="Convert to numpy ndarrays"
+    )
+    argument_parser.add_argument(
+        "--data_loader_kwargs",
+        type=loads,
+        help="pass this as arguments to data_loader function",
     )
     return argument_parser, (np.empty(0), np.empty(0))
 '''

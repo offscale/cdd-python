@@ -102,7 +102,7 @@ class TestCli(TestCase):
             f.write(class_str)
         try:
             _, args = self.run_cli_test(
-                ["--config", filename, "--truth", "config"],
+                ["--class", filename, "--truth", "class"],
                 exit_code=None,
                 output=None,
                 return_args=True,
@@ -113,11 +113,11 @@ class TestCli(TestCase):
 
         self.assertEqual(args.argparse_function, filename)
         self.assertEqual(args.argparse_function_name, "set_cli_args")
-        self.assertEqual(args.config, filename)
-        self.assertEqual(args.config_name, "Config")
+        self.assertEqual(getattr(args, "class"), filename)
+        self.assertEqual(args.class_name, "ConfigClass")
         self.assertEqual(args.function, filename)
-        self.assertEqual(args.function_name, "train")
-        self.assertEqual(args.truth, filename)
+        self.assertEqual(args.function_name, "C.method_name")
+        self.assertEqual(args.truth, "class")
 
     def test_non_existent_file_fails(self) -> None:
         """ Tests nonexistent file throws the right error """
@@ -127,7 +127,7 @@ class TestCli(TestCase):
         )
 
         self.run_cli_test(
-            ["--config", filename, "--truth", "config"],
+            ["--class", filename, "--truth", "class"],
             exit_code=2,
             output="--truth must be choose an existent file. Got: '{}'\n".format(
                 filename.replace("\\", "\\\\")
@@ -137,9 +137,9 @@ class TestCli(TestCase):
     def test_missing_argument_fails(self) -> None:
         """ Tests missing argument throws the right error """
         self.run_cli_test(
-            ["--truth", "config"],
+            ["--truth", "class"],
             exit_code=2,
-            output="One or more of `--argparse-function`, `--config`, and `--function` must be specified.\n",
+            output="One or more of `--argparse-function`, `--class`, and `--function` must be specified.\n",
         )
 
     def test_incorrect_arg_fails(self) -> None:
