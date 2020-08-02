@@ -52,7 +52,7 @@ class TestTransformers(TestCase):
         """
         run_ast_test(
             self,
-            transformers.to_argparse(
+            transformers.to_argparse_function(
                 docstring_struct.from_class(class_ast),
                 emit_default_doc=False,
                 emit_default_doc_in_return=False,
@@ -209,7 +209,7 @@ class TestTransformers(TestCase):
 
         run_ast_test(
             self,
-            transformers.to_argparse(
+            transformers.to_argparse_function(
                 docstring_struct.from_argparse_ast(argparse_func_with_body_ast),
                 emit_default_doc=False,
                 emit_default_doc_in_return=False,
