@@ -4,6 +4,7 @@ Given the truth, show others the path
 from argparse import Namespace
 from ast import parse, walk, FunctionDef, ClassDef, Module
 from copy import deepcopy
+from functools import partial
 
 from meta.asttools import cmp_ast
 
@@ -55,7 +56,11 @@ def ground_truth(args, truth_file):
                 )
             )
         )
-    for fun_name in filter(lambda arg: arg != args.truth, arg_name_to_func_typ.keys()):
+    for (
+        fun_name
+    ) in (
+        arg_name_to_func_typ
+    ):  # filter(lambda arg: arg != args.truth, arg_name_to_func_typ.keys()):
         from_func, typ = arg_name_to_func_typ[fun_name]
 
         name = get_name(fun_name)
@@ -72,6 +77,15 @@ def ground_truth(args, truth_file):
         assert isinstance(parsed_ast, Module)
 
         for idx, outer_node in enumerate(parsed_ast.body):
+            replace_node_f = partial(
+                replace_node,
+                fun_name=fun_name,
+                from_func=from_func,
+                outer_node=outer_node,
+                outer_name=outer_name,
+                docstring_structure=true_docstring_structure,
+                typ=typ,
+            )
             if hasattr(outer_node, "name") and outer_node.name == outer_name:
                 if inner_name:
                     for i, inner_node in enumerate(outer_node.body):
@@ -79,26 +93,12 @@ def ground_truth(args, truth_file):
                             isinstance(inner_node, typ)
                             and inner_node.name == inner_name
                         ):
-                            unchanged, parsed_ast.body[idx].body[i] = replace_node(
-                                fun_name=fun_name,
-                                from_func=from_func,
-                                outer_name=outer_name,
-                                inner_name=inner_name,
-                                outer_node=outer_node,
-                                inner_node=inner_node,
-                                docstring_structure=true_docstring_structure,
-                                typ=typ,
+                            unchanged, parsed_ast.body[idx].body[i] = replace_node_f(
+                                inner_node=inner_node, inner_name=inner_name
                             )
                 elif isinstance(outer_node, typ):
-                    unchanged, parsed_ast.body[idx] = replace_node(
-                        fun_name=fun_name,
-                        from_func=from_func,
-                        outer_name=outer_name,
-                        inner_name=None,
-                        outer_node=outer_node,
-                        inner_node=None,
-                        docstring_structure=true_docstring_structure,
-                        typ=typ,
+                    unchanged, parsed_ast.body[idx] = replace_node_f(
+                        inner_node=None, inner_name=None
                     )
 
         print("unchanged" if unchanged else "modified", filename, sep="\t")
@@ -149,11 +149,9 @@ def replace_node(
     :returns: Whether the created AST node is equal to the previous one, the created AST node
     :rtype: ```Tuple[bool, AST]```
     """
-
-    if inner_name is None:
-        name, node = outer_name, outer_node
-    else:
-        name, node = inner_name, inner_node
+    name, node = (
+        (outer_name, outer_node) if inner_name is None else (inner_name, inner_node)
+    )
     previous = deepcopy(node)
     options = {
         "FunctionDef": lambda: {
@@ -162,7 +160,9 @@ def replace_node(
         }
     }.get(typ.__name__, lambda: {})
 
-    found = from_func(outer_node, name)
+    found = from_func(
+        outer_node, *tuple() if fun_name == "argparse_function" else (name,)
+    )
 
     if "_internal" in found:
         raise NotImplementedError()

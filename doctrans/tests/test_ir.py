@@ -51,7 +51,7 @@ class TestIntermediateRepresentation(TestCase):
         """
         self.assertEqual(
             transformers.to_code(
-                transformers.to_argparse(
+                transformers.to_argparse_function(
                     docstring_struct.from_argparse_ast(FunctionDef(body=[])),
                     emit_default_doc=True,
                 )

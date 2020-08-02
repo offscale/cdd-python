@@ -30,11 +30,12 @@ from doctrans.pure_utils import tab, simple_types, PY_GTE_3_9
 from doctrans.source_transformer import to_code
 
 
-def to_argparse(
+def to_argparse_function(
     docstring_structure,
-    emit_default_doc,
-    emit_default_doc_in_return=True,
+    emit_default_doc=False,
+    emit_default_doc_in_return=False,
     function_name="set_cli_args",
+    function_type=None,
 ):
     """
     Convert to an argparse function definition
@@ -57,12 +58,25 @@ def to_argparse(
     :param function_name: name of function
     :type function_name: ```str```
 
+    :param function_type: None is a loose function (def f()`), others self-explanatory
+    :type function_type: ```Optional[Literal['self', 'cls']]```
+
     :returns: function which constructs argparse
     :rtype: ```FunctionDef``
     """
     return FunctionDef(
         args=arguments(
-            args=[arg(annotation=None, arg="argument_parser", type_comment=None)],
+            args=list(
+                filter(
+                    None,
+                    (
+                        function_type
+                        if function_type is None
+                        else arg(annotation=None, arg=function_type, type_comment=None),
+                        arg(annotation=None, arg="argument_parser", type_comment=None),
+                    ),
+                )
+            ),
             defaults=[],
             kw_defaults=[],
             kwarg=None,
