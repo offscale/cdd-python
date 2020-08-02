@@ -1,7 +1,7 @@
 """
 Given the truth, show others the path
 """
-from argparse import Namespace
+
 from ast import parse, walk, FunctionDef, ClassDef, Module
 from copy import deepcopy
 from functools import partial
@@ -12,6 +12,26 @@ from doctrans import docstring_struct
 from doctrans import transformers
 from doctrans.ast_utils import get_function_type
 from doctrans.pure_utils import rpartial
+
+
+def _get_name_from_namespace(args, fun_name):
+    """
+    Gets the arg from the namespace which matches the given prefix
+
+    :param args: Namespace with the values of the CLI arguments
+    :type args: ```Namespace```
+
+    :param fun_name: Name of the start of the function
+    :type fun_name: ```str```
+
+    :returns: Argument from Namespace object
+    :rtype: ```str```
+    """
+    return next(
+        getattr(args, arg)
+        for arg in args.__dict__.keys()
+        if arg == "_".join((fun_name, "name"))
+    )
 
 
 def ground_truth(args, truth_file):
@@ -30,28 +50,12 @@ def ground_truth(args, truth_file):
         "function": (docstring_struct.from_class_with_method, FunctionDef),
     }
 
-    def get_name(fun_name):
-        """
-        Gets the arg from the namespace which matches the given prefix
-
-        :param fun_name: Name of the start of the function
-        :type fun_name: ```str```
-
-        :returns: Argument from Namespace object
-        :rtype: ```str```
-        """
-        return next(
-            getattr(args, arg)
-            for arg in args.__dict__.keys()
-            if arg == "_".join((fun_name, "name"))
-        )
-
     from_func, typ = arg_name_to_func_typ[args.truth]
     with open(truth_file, "rt") as f:
         true_docstring_structure = from_func(
             next(
                 filter(
-                    lambda fun: fun.name == get_name(args.truth),
+                    lambda fun: fun.name == _get_name_from_namespace(args, args.truth),
                     filter(rpartial(isinstance, typ), walk(parse(f.read()))),
                 )
             )
@@ -63,7 +67,7 @@ def ground_truth(args, truth_file):
     ):  # filter(lambda arg: arg != args.truth, arg_name_to_func_typ.keys()):
         from_func, typ = arg_name_to_func_typ[fun_name]
 
-        name = get_name(fun_name)
+        name = _get_name_from_namespace(args, fun_name)
         if name.count(".") > 1:
             raise NotImplementedError(
                 "We can only go one deep; e.g., `F.a.b` is not supported"

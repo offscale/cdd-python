@@ -2,19 +2,18 @@
 Tests for reeducation
 """
 from _ast import ClassDef, FunctionDef
+from argparse import Namespace
 from copy import deepcopy
 from unittest import TestCase
 
 from doctrans import docstring_struct
-from doctrans.conformance import replace_node
+from doctrans.conformance import replace_node, _get_name_from_namespace
 from doctrans.pure_utils import rpartial
 from doctrans.source_transformer import to_code
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import class_ast
 from doctrans.tests.mocks.docstrings import docstring_structure
-from doctrans.tests.mocks.methods import (
-    class_with_method_types_ast,
-)
+from doctrans.tests.mocks.methods import class_with_method_types_ast
 from doctrans.tests.utils_for_tests import unittest_main
 
 
@@ -26,6 +25,11 @@ class TestConformance(TestCase):
     def test_ground_truth(self) -> None:
         """ Straight from the ministry. Absolutely. """
         # ground_truth()
+
+    def test__get_name_from_namespace(self) -> None:
+        """ Test `_get_name_from_namespace` """
+        args = Namespace(foo_name="bar")
+        self.assertEqual(_get_name_from_namespace(args, "foo"), args.foo_name)
 
     def test_replace_node(self) -> None:
         """ Tests `replace_node` """
