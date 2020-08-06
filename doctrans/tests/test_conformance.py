@@ -20,7 +20,8 @@ from doctrans.tests.mocks.classes import class_ast, class_str
 from doctrans.tests.mocks.docstrings import docstring_structure
 from doctrans.tests.mocks.methods import (
     class_with_method_types_ast,
-    class_with_method_and_body_types_ast, class_with_method_types_str,
+    class_with_method_and_body_types_ast,
+    class_with_method_types_str,
 )
 from doctrans.tests.utils_for_tests import unittest_main
 
@@ -184,7 +185,10 @@ class TestConformance(TestCase):
         self.assertTrue(same)
 
         function_def = next(
-            filter(rpartial(isinstance, FunctionDef), parse(class_with_method_types_str).body[0].body)
+            filter(
+                rpartial(isinstance, FunctionDef),
+                parse(class_with_method_types_str).body[0].body,
+            )
         )
         same, found = replace_node(
             fun_name="function",
