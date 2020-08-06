@@ -2,7 +2,7 @@
 Tests for reeducation
 """
 from argparse import Namespace
-from ast import ClassDef, FunctionDef
+from ast import ClassDef, FunctionDef, parse
 from copy import deepcopy
 from functools import partial
 from io import StringIO
@@ -15,12 +15,12 @@ from doctrans import docstring_struct, transformers
 from doctrans.conformance import replace_node, _get_name_from_namespace, ground_truth
 from doctrans.pure_utils import rpartial
 from doctrans.source_transformer import to_code
-from doctrans.tests.mocks.argparse import argparse_func_ast
-from doctrans.tests.mocks.classes import class_ast
+from doctrans.tests.mocks.argparse import argparse_func_ast, argparse_func_str
+from doctrans.tests.mocks.classes import class_ast, class_str
 from doctrans.tests.mocks.docstrings import docstring_structure
 from doctrans.tests.mocks.methods import (
     class_with_method_types_ast,
-    class_with_method_and_body_types_ast,
+    class_with_method_and_body_types_ast, class_with_method_types_str,
 )
 from doctrans.tests.utils_for_tests import unittest_main
 
@@ -36,9 +36,9 @@ class TestConformance(TestCase):
         with TemporaryDirectory() as tmpdir:
             self.ground_truth_tester(
                 tmpdir=tmpdir,
-                _argparse_func_ast=argparse_func_ast,
-                _class_ast=class_ast,
-                _class_with_method_ast=class_with_method_types_ast,
+                _argparse_func_ast=parse(argparse_func_str).body[0],
+                _class_ast=parse(class_str).body[0],
+                _class_with_method_ast=parse(class_with_method_types_str).body[0],
             )
 
     def test_ground_truth_fails(self) -> None:
@@ -47,9 +47,9 @@ class TestConformance(TestCase):
         with TemporaryDirectory() as tmpdir:
             args = self.ground_truth_tester(
                 tmpdir=tmpdir,
-                _argparse_func_ast=argparse_func_ast,
-                _class_ast=class_ast,
-                _class_with_method_ast=class_with_method_types_ast,
+                _argparse_func_ast=parse(argparse_func_str).body[0],
+                _class_ast=parse(class_str).body[0],
+                _class_with_method_ast=parse(class_with_method_types_str).body[0],
             )
 
             self.assertRaises(
@@ -79,9 +79,9 @@ class TestConformance(TestCase):
         with TemporaryDirectory() as tmpdir:
             self.ground_truth_tester(
                 tmpdir=tmpdir,
-                _argparse_func_ast=argparse_func_ast,
+                _argparse_func_ast=parse(argparse_func_str).body[0],
                 _class_ast=transformers.to_class(_docstring_structure),
-                _class_with_method_ast=class_with_method_types_ast,
+                _class_with_method_ast=parse(class_with_method_types_str).body[0],
                 expected_result=("unchanged", "modified", "unchanged"),
             )
 
@@ -162,7 +162,7 @@ class TestConformance(TestCase):
             from_func=docstring_struct.from_argparse_ast,
             outer_name="set_cli_args",
             inner_name=None,
-            outer_node=argparse_func_ast,
+            outer_node=parse(argparse_func_str).body[0],
             inner_node=None,
             docstring_structure=_docstring_structure,
             typ=FunctionDef,
@@ -184,7 +184,7 @@ class TestConformance(TestCase):
         self.assertTrue(same)
 
         function_def = next(
-            filter(rpartial(isinstance, FunctionDef), class_with_method_types_ast.body)
+            filter(rpartial(isinstance, FunctionDef), parse(class_with_method_types_str).body[0].body)
         )
         same, found = replace_node(
             fun_name="function",

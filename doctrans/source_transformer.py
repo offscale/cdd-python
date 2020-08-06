@@ -17,7 +17,10 @@ def to_code(node):
     """
 
     return (
-        getattr(import_module("astor"), "to_source")
+        # (lambda f: lambda _: ('({})'.format(f(node))
+        #                      if isinstance(node, Tuple)
+        #                      else f(node)))(getattr(import_module("astor"), "to_source"))
+               getattr(import_module("astor"), "to_source")
         if python_version_tuple() < ("3", "9")
         else getattr(import_module("ast"), "unparse")
     )(node)

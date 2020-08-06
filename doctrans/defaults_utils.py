@@ -1,6 +1,7 @@
 """
 Functions to handle default parameterisation
 """
+from copy import deepcopy
 
 
 def extract_default(line, emit_default_doc=True):
@@ -53,6 +54,7 @@ def remove_defaults_from_docstring_structure(docstring_structure, emit_defaults=
               }
     :rtype: ```dict```
     """
+    _docstring_structure = deepcopy(docstring_structure)
 
     def handle_param(param):
         """
@@ -68,11 +70,11 @@ def remove_defaults_from_docstring_structure(docstring_structure, emit_defaults=
             del param["default"]
         return param
 
-    docstring_structure["params"] = list(
-        map(handle_param, docstring_structure["params"])
+    _docstring_structure["params"] = list(
+        map(handle_param, _docstring_structure["params"])
     )
-    docstring_structure["returns"] = handle_param(docstring_structure["returns"])
-    return docstring_structure
+    _docstring_structure["returns"] = handle_param(_docstring_structure["returns"])
+    return _docstring_structure
 
 
 def set_default_doc(param, emit_default_doc=True):
