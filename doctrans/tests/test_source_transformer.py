@@ -1,7 +1,7 @@
 """
 Tests for source_transformer
 """
-from _ast import ClassDef
+from ast import ClassDef
 from platform import python_version_tuple
 from unittest import TestCase
 from unittest.mock import patch

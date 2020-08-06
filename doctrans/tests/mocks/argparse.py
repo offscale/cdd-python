@@ -63,8 +63,10 @@ def set_cli_args(argument_parser):
         help="pass this as arguments to data_loader function",
     )
     return argument_parser, (np.empty(0), np.empty(0))
-'''.format(description='Acquire from the official tensorflow_datasets model zoo,'
-                       ' or the ophthalmology focussed ml-prepare library')
+'''.format(
+    description="Acquire from the official tensorflow_datasets model zoo,"
+    " or the ophthalmology focussed ml-prepare library"
+)
 
 argparse_func_with_body_str = '''
 def set_cli_args(argument_parser):
