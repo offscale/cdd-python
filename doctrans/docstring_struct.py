@@ -146,7 +146,9 @@ def from_function(function_def):
         filter(rpartial(isinstance, Return), function_def.body[::-1]), None
     )
     if return_ast is not None and return_ast.value is not None:
-        docstring_structure["returns"]["default"] = to_code(return_ast.value).rstrip("\n")
+        docstring_structure["returns"]["default"] = to_code(return_ast.value).rstrip(
+            "\n"
+        )
 
     if isinstance(function_def.returns, Subscript):
         docstring_structure["returns"]["typ"] = to_code(function_def.returns).rstrip(
