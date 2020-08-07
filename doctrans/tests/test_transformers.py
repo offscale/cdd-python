@@ -195,6 +195,7 @@ class TestTransformers(TestCase):
                 function_name="method_name",
                 function_type="self",
                 indent_level=2,
+                emit_separating_tab=False,
             ),
             next(
                 filter(
