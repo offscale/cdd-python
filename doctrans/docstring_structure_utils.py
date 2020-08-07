@@ -239,15 +239,18 @@ def get_internal_body(docstring_structure):
           }
     :type docstring_structure: ```dict```
 
-    :returns: Internal body or an empty tuple
+    :returns: Internal body or an empty list
     :rtype: ```list```
     """
-    return (
+    res = (
         docstring_structure["_internal"]["body"]
         if "_internal" in docstring_structure
         and docstring_structure["_internal"].get("body")
         else []
     )
+    # pp(docstring_structure["_internal"]["body"])
+    # pp(tuple(map(astor.to_source, res)))
+    return res
 
 
 __all__ = ["parse_out_param", "interpolate_defaults"]

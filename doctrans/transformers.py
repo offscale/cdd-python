@@ -26,7 +26,7 @@ from doctrans import docstring_struct
 from doctrans.ast_utils import param2argparse_param, param2ast, set_value
 from doctrans.defaults_utils import set_default_doc
 from doctrans.docstring_structure_utils import get_internal_body
-from doctrans.pure_utils import tab, simple_types, PY_GTE_3_9
+from doctrans.pure_utils import tab, simple_types, PY_GTE_3_9, PY3_8
 from doctrans.source_transformer import to_code
 
 
@@ -302,7 +302,7 @@ def to_function(
     emit_default_doc=False,
     docstring_format="rest",
     indent_level=2,
-    emit_separating_tab=False,
+    emit_separating_tab=PY3_8,
     inline_types=True,
 ):
     """

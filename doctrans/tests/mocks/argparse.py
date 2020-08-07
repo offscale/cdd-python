@@ -17,6 +17,9 @@ from ast import (
     Return,
     Tuple,
     parse,
+    BinOp,
+    Mult,
+    If,
 )
 
 from doctrans.pure_utils import PY3_8
@@ -316,7 +319,236 @@ argparse_func_ast = (
     else parse(argparse_func_str).body[0]
 )
 
-argparse_func_with_body_ast = parse(argparse_func_with_body_str).body[0]
+argparse_func_with_body_ast = (
+    FunctionDef(
+        args=arguments(
+            args=[arg(annotation=None, arg="argument_parser", type_comment=None)],
+            defaults=[],
+            kw_defaults=[],
+            kwarg=None,
+            kwonlyargs=[],
+            posonlyargs=[],
+            vararg=None,
+        ),
+        body=[
+            Expr(
+                value=Constant(
+                    kind=None,
+                    value="\n    Set CLI arguments\n\n    "
+                    ":param argument_parser: argument parser\n    "
+                    ":type argument_parser: ```ArgumentParser```\n\n    "
+                    ":return: argument_parser, Train and tests dataset splits.\n    "
+                    ":rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset],"
+                    " Tuple[np.ndarray, np.ndarray]]]```\n    ",
+                )
+            ),
+            Assign(
+                targets=[
+                    Attribute(
+                        attr="description",
+                        ctx=Store(),
+                        value=Name(ctx=Load(), id="argument_parser"),
+                    )
+                ],
+                type_comment=None,
+                value=Constant(
+                    kind=None,
+                    value="Acquire from the official tensorflow_datasets model zoo,"
+                    " or the ophthalmology focussed ml-prepare library",
+                ),
+            ),
+            Expr(
+                value=Call(
+                    args=[Constant(kind=None, value="--dataset_name")],
+                    func=Attribute(
+                        attr="add_argument",
+                        ctx=Load(),
+                        value=Name(ctx=Load(), id="argument_parser"),
+                    ),
+                    keywords=[
+                        keyword(arg="type", value=Name(ctx=Load(), id="str")),
+                        keyword(
+                            arg="help",
+                            value=Constant(kind=None, value="name of dataset."),
+                        ),
+                        keyword(arg="required", value=Constant(kind=None, value=True)),
+                        keyword(
+                            arg="default", value=Constant(kind=None, value="mnist")
+                        ),
+                    ],
+                )
+            ),
+            Expr(
+                value=Call(
+                    args=[Constant(kind=None, value="--tfds_dir")],
+                    func=Attribute(
+                        attr="add_argument",
+                        ctx=Load(),
+                        value=Name(ctx=Load(), id="argument_parser"),
+                    ),
+                    keywords=[
+                        keyword(arg="type", value=Name(ctx=Load(), id="str")),
+                        keyword(
+                            arg="help",
+                            value=Constant(
+                                kind=None, value="directory to look for models in."
+                            ),
+                        ),
+                        keyword(
+                            arg="default",
+                            value=Constant(kind=None, value="~/tensorflow_datasets"),
+                        ),
+                    ],
+                )
+            ),
+            Expr(
+                value=Call(
+                    args=[Constant(kind=None, value="--K")],
+                    func=Attribute(
+                        attr="add_argument",
+                        ctx=Load(),
+                        value=Name(ctx=Load(), id="argument_parser"),
+                    ),
+                    keywords=[
+                        keyword(
+                            arg="type",
+                            value=Attribute(
+                                attr="__getitem__",
+                                ctx=Load(),
+                                value=Call(
+                                    args=[],
+                                    func=Name(ctx=Load(), id="globals"),
+                                    keywords=[],
+                                ),
+                            ),
+                        ),
+                        keyword(
+                            arg="choices",
+                            value=Tuple(
+                                ctx=Load(),
+                                elts=[
+                                    Constant(kind=None, value="np"),
+                                    Constant(kind=None, value="tf"),
+                                ],
+                            ),
+                        ),
+                        keyword(
+                            arg="help",
+                            value=Constant(
+                                kind=None, value="backend engine, e.g., `np` or `tf`."
+                            ),
+                        ),
+                        keyword(arg="required", value=Constant(kind=None, value=True)),
+                        keyword(arg="default", value=Constant(kind=None, value="np")),
+                    ],
+                )
+            ),
+            Expr(
+                value=Call(
+                    args=[Constant(kind=None, value="--as_numpy")],
+                    func=Attribute(
+                        attr="add_argument",
+                        ctx=Load(),
+                        value=Name(ctx=Load(), id="argument_parser"),
+                    ),
+                    keywords=[
+                        keyword(arg="type", value=Name(ctx=Load(), id="bool")),
+                        keyword(
+                            arg="help",
+                            value=Constant(
+                                kind=None, value="Convert to numpy ndarrays"
+                            ),
+                        ),
+                    ],
+                )
+            ),
+            Expr(
+                value=Call(
+                    args=[Constant(kind=None, value="--data_loader_kwargs")],
+                    func=Attribute(
+                        attr="add_argument",
+                        ctx=Load(),
+                        value=Name(ctx=Load(), id="argument_parser"),
+                    ),
+                    keywords=[
+                        keyword(arg="type", value=Name(ctx=Load(), id="loads")),
+                        keyword(
+                            arg="help",
+                            value=Constant(
+                                kind=None,
+                                value="pass this as arguments to data_loader function",
+                            ),
+                        ),
+                    ],
+                )
+            ),
+            Expr(
+                value=Call(
+                    args=[
+                        BinOp(
+                            left=Constant(kind=None, value=5),
+                            op=Mult(),
+                            right=Constant(kind=None, value=5),
+                        )
+                    ],
+                    func=Name(ctx=Load(), id="print"),
+                    keywords=[],
+                )
+            ),
+            If(
+                body=[
+                    Expr(
+                        value=Call(
+                            args=[Constant(kind=None, value=True)],
+                            func=Name(ctx=Load(), id="print"),
+                            keywords=[],
+                        )
+                    ),
+                    Return(value=Constant(kind=None, value=5)),
+                ],
+                orelse=[],
+                test=Constant(kind=None, value=True),
+            ),
+            Return(
+                value=Tuple(
+                    ctx=Load(),
+                    elts=[
+                        Name(ctx=Load(), id="argument_parser"),
+                        Tuple(
+                            ctx=Load(),
+                            elts=[
+                                Call(
+                                    args=[Constant(kind=None, value=0)],
+                                    func=Attribute(
+                                        attr="empty",
+                                        ctx=Load(),
+                                        value=Name(ctx=Load(), id="np"),
+                                    ),
+                                    keywords=[],
+                                ),
+                                Call(
+                                    args=[Constant(kind=None, value=0)],
+                                    func=Attribute(
+                                        attr="empty",
+                                        ctx=Load(),
+                                        value=Name(ctx=Load(), id="np"),
+                                    ),
+                                    keywords=[],
+                                ),
+                            ],
+                        ),
+                    ],
+                )
+            ),
+        ],
+        decorator_list=[],
+        name="set_cli_args",
+        returns=None,
+        type_comment=None,
+    )
+    if PY3_8
+    else parse(argparse_func_with_body_str).body[0]
+)
 
 argparse_add_argument_ast = Expr(
     value=Call(
