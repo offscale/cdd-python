@@ -34,11 +34,19 @@ class TestUtilsForTests(TestCase):
 
     def test_run_ast_test(self) -> None:
         """
-        Tests whether `parse_docstring` produces `docstring_structure`
-              from `docstring_str` """
+        Tests whether `run_ast_test` correct avoids running the AST comparison dependent on Python version
+        """
 
-        def count_true(a, msg):
-            assert a is True, msg
+        def count_true(value, msg):
+            """ Version of `self.assertTrue` which also keeps count
+
+            :param value: Potentialy `True`
+            :type value: ```Union[Literal[True], Any]```
+
+            :param msg: Message to raise in error
+            :type msg: ```str```
+            """
+            assert value is True, msg
             count_true.i += 1
 
         count_true.i = 0
