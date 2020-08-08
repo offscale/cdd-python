@@ -183,7 +183,7 @@ class TestTransformers(TestCase):
             gold=function_def,
         )
 
-    def test_from_class_with_body_in_method_to_method_with_body(self):
+    def test_from_class_with_body_in_method_to_method_with_body(self) -> None:
         """ Tests if this can make the roundtrip from a full function to a full function """
         run_ast_test(
             self,
@@ -205,7 +205,7 @@ class TestTransformers(TestCase):
             ),
         )
 
-    def test_from_argparse_with_extra_body_to_argparse_with_extra_body(self):
+    def test_from_argparse_with_extra_body_to_argparse_with_extra_body(self) -> None:
         """ Tests if this can make the roundtrip from a full argparse function to a argparse full function """
 
         run_ast_test(

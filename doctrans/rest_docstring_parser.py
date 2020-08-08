@@ -264,3 +264,6 @@ def extract_return_params(params_returns_desc, emit_default_doc):
             del r_dict["default"]
         returns = r_dict
     return returns
+
+
+__all__ = ["parse_docstring"]

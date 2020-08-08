@@ -468,3 +468,14 @@ def from_docstring_parser(docstring):
         ]
 
     return docstring_structure
+
+
+__all__ = [
+    "from_class",
+    "from_class_with_method",
+    "from_function",
+    "from_argparse_ast",
+    "from_docstring",
+    "to_docstring",
+    "from_docstring_parser",
+]

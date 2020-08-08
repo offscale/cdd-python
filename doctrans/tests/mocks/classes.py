@@ -209,3 +209,5 @@ class_ast = (
     if PY3_8
     else parse(class_str).body[0]
 )
+
+__all__ = ["class_str", "class_ast"]

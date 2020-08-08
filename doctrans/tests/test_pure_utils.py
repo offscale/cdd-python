@@ -1,7 +1,7 @@
 """ Tests for pure utils """
 from unittest import TestCase
 
-from doctrans.pure_utils import rpartial, pp, tab, simple_types, identity
+from doctrans.pure_utils import rpartial, pp, tab, simple_types, identity, pluralise
 from doctrans.tests.utils_for_tests import unittest_main
 
 
@@ -33,6 +33,24 @@ class TestPureUtils(TestCase):
         self.assertFalse(identity(False))
         self.assertTrue(identity(True))
         self.assertIsNone(identity(None))
+
+    def test_pluralises(self) -> None:
+        """ Tests that pluralises pluralises """
+        self.assertEqual(pluralise(""), "")
+        self.assertEqual(pluralise("goose"), "geese")
+        self.assertEqual(pluralise("dolly"), "dollies")
+        self.assertEqual(pluralise("genius"), "genii")
+        self.assertEqual(pluralise("pass"), "passes")
+        self.assertEqual(pluralise("zero"), "zeros")
+        self.assertEqual(pluralise("casino"), "casinos")
+        self.assertEqual(pluralise("hero"), "heroes")
+        self.assertEqual(pluralise("church"), "churches")
+        self.assertEqual(pluralise("x"), "xs")
+        self.assertEqual(pluralise("ant"), "ants")
+        self.assertEqual(pluralise("car"), "cars")
+        self.assertEqual(pluralise("wish"), "wishes")
+        self.assertEqual(pluralise("morphosis"), "morphosises")
+        self.assertEqual(pluralise("s"), "ss")
 
 
 unittest_main()

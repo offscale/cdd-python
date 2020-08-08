@@ -593,3 +593,12 @@ class_with_method_types_ast = (
     if PY3_8
     else parse(class_with_method_types_str).body[0]
 )
+
+__all__ = [
+    "class_with_method_str",
+    "class_with_method_types_str",
+    "class_with_method_and_body_types_str",
+    "class_with_method_and_body_types_ast",
+    "class_with_method_ast",
+    "class_with_method_types_ast",
+]

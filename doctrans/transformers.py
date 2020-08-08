@@ -439,3 +439,6 @@ def to_function(
         type_comment=None,
         lineno=None,
     )
+
+
+__all__ = ["to_argparse_function", "to_class", "to_docstring", "to_file", "to_function"]

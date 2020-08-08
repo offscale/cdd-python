@@ -253,4 +253,4 @@ def get_internal_body(docstring_structure):
     return res
 
 
-__all__ = ["parse_out_param", "interpolate_defaults"]
+__all__ = ["parse_out_param", "interpolate_defaults", "get_internal_body"]

@@ -196,6 +196,38 @@ def set_cli_args(argument_parser):
   - Switch between docstring formats (WiP, SDK can go from {numpy, ReST, google} to ReST; but not to others)
   - Desktop GUI with wxWidgets, from the argparse layer through [Gooey](https://github.com/chriskiehl/Gooey) [one liner]
 
+## CLI interface for this project
+
+    $ python -m doctrans --help
+
+    usage: python -m doctrans [-h] [--version] [--class CLASSES]
+                              [--class-name CLASS_NAMES] [--function FUNCTIONS]
+                              [--function-name FUNCTION_NAMES]
+                              [--argparse-function ARGPARSE_FUNCTIONS]
+                              [--argparse-function-name ARGPARSE_FUNCTION_NAMES]
+                              --truth {argparse_function,class,function}
+    
+    Translate between docstrings, classes, and argparse
+    
+    optional arguments:
+      -h, --help            show this help message and exit
+      --version             show program's version number and exit
+      --class CLASSES       File where class `class` is declared.
+      --class-name CLASS_NAMES
+                            Name of `class`
+      --function FUNCTIONS  File where function is `def`ined.
+      --function-name FUNCTION_NAMES
+                            Name of Function. If method, use Python resolution
+                            syntax, i.e., ClassName.method_name
+      --argparse-function ARGPARSE_FUNCTIONS
+                            File where argparse function is `def`ined.
+      --argparse-function-name ARGPARSE_FUNCTION_NAMES
+                            Name of argparse function.
+      --truth {argparse_function,class,function}
+                            Single source of truth. Others will be generated from
+                            this. Will run with first found choice.
+
+
 ## Future work
 
   - Proper CLI to manage what function, class, and argparse is generated, and from which source-of-truth
