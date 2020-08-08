@@ -136,8 +136,8 @@ class TestCli(TestCase):
         self.run_cli_test(
             ["--argparse-function", filename, "--class", filename, "--truth", "class"],
             exit_code=2,
-            output="--truth must be choose an existent file. Got: {!r}\n".format(
-                filename.replace("\\", "\\\\")
+            output="--truth must be an existent file. Got: {!r}\n".format(
+                filename  # .replace("\\", "\\\\")
             ),
         )
 
@@ -146,14 +146,14 @@ class TestCli(TestCase):
         self.run_cli_test(
             ["--truth", "class"],
             exit_code=2,
-            output="--truth must be choose an existent file. Got: None\n",
+            output="--truth must be an existent file. Got: None\n",
         )
 
     def test_missing_argument_fails_insufficient_args(self) -> None:
         """ Tests missing argument throws the right error """
         filename = os.path.join(
             os.path.dirname(__file__),
-            "delete_this_1{}".format(os.path.basename(__file__)),
+            "delete_this_2{}".format(os.path.basename(__file__)),
         )
         self.run_cli_test(
             ["--truth", "class", "--class", filename],
