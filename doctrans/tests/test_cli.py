@@ -22,7 +22,7 @@ class TestCli(TestCase):
         parser = _build_parser()
         self.assertIsInstance(parser, ArgumentParser)
         self.assertEqual(
-            parser.description, "Translate between docstrings, classes, and argparse"
+            parser.description, "Translate between docstrings, classes, methods, and argparse."
         )
 
     def run_cli_test(
@@ -136,9 +136,7 @@ class TestCli(TestCase):
         self.run_cli_test(
             ["--argparse-function", filename, "--class", filename, "--truth", "class"],
             exit_code=2,
-            output="--truth must be an existent file. Got: {!r}\n".format(
-                filename  # .replace("\\", "\\\\")
-            ),
+            output="--truth must be an existent file. Got: {!r}\n".format(filename),
         )
 
     def test_missing_argument_fails(self) -> None:

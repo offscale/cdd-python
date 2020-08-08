@@ -21,7 +21,7 @@ def _build_parser():
     """
     parser = ArgumentParser(
         prog="python -m doctrans",
-        description="Translate between docstrings, classes, and argparse",
+        description="Translate between docstrings, classes, methods, and argparse.",
     )
     parser.add_argument(
         "--version", action="version", version="%(prog)s {}".format(__version__)
