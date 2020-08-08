@@ -102,7 +102,14 @@ class TestCli(TestCase):
             f.write(class_str)
         try:
             _, args = self.run_cli_test(
-                ["--class", filename, "--truth", "class"],
+                [
+                    "--class",
+                    filename,
+                    "--argparse-function",
+                    filename,
+                    "--truth",
+                    "class",
+                ],
                 exit_code=None,
                 output=None,
                 return_args=True,
@@ -111,12 +118,12 @@ class TestCli(TestCase):
             if os.path.isfile(filename):
                 os.remove(filename)
 
-        self.assertEqual(args.argparse_function, filename)
-        self.assertEqual(args.argparse_function_name, "set_cli_args")
-        self.assertEqual(getattr(args, "class"), filename)
-        self.assertEqual(args.class_name, "ConfigClass")
-        self.assertEqual(args.function, filename)
-        self.assertEqual(args.function_name, "C.method_name")
+        self.assertListEqual(args.argparse_functions, [filename])
+        self.assertListEqual(args.argparse_function_names, ["set_cli_args"])
+
+        self.assertListEqual(args.classes, [filename])
+        self.assertListEqual(args.class_names, ["ConfigClass"])
+
         self.assertEqual(args.truth, "class")
 
     def test_non_existent_file_fails(self) -> None:
@@ -127,9 +134,9 @@ class TestCli(TestCase):
         )
 
         self.run_cli_test(
-            ["--class", filename, "--truth", "class"],
+            ["--argparse-function", filename, "--class", filename, "--truth", "class"],
             exit_code=2,
-            output="--truth must be choose an existent file. Got: '{}'\n".format(
+            output="--truth must be choose an existent file. Got: {!r}\n".format(
                 filename.replace("\\", "\\\\")
             ),
         )
@@ -139,7 +146,19 @@ class TestCli(TestCase):
         self.run_cli_test(
             ["--truth", "class"],
             exit_code=2,
-            output="One or more of `--argparse-function`, `--class`, and `--function` must be specified.\n",
+            output="--truth must be choose an existent file. Got: None\n",
+        )
+
+    def test_missing_argument_fails_insufficient_args(self) -> None:
+        """ Tests missing argument throws the right error """
+        filename = os.path.join(
+            os.path.dirname(__file__),
+            "delete_this_1{}".format(os.path.basename(__file__)),
+        )
+        self.run_cli_test(
+            ["--truth", "class", "--class", filename],
+            exit_code=2,
+            output="Two or more of `--argparse-function`, `--class`, and `--function` must be specified\n",
         )
 
     def test_incorrect_arg_fails(self) -> None:

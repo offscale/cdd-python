@@ -21,8 +21,15 @@ from doctrans.tests.mocks.docstrings import docstring_structure
 from doctrans.tests.mocks.methods import (
     class_with_method_types_ast,
     class_with_method_and_body_types_ast,
+    class_with_method_ast,
 )
 from doctrans.tests.utils_for_tests import unittest_main
+
+"""
+# type: Final[bool]
+"""
+unchanged = True
+modified = False
 
 
 class TestConformance(TestCase):
@@ -35,8 +42,64 @@ class TestConformance(TestCase):
 
         with TemporaryDirectory() as tmpdir:
             self.assertTupleEqual(
-                self.ground_truth_tester(tmpdir=tmpdir,)[0],
-                ("unchanged", "unchanged", "unchanged"),
+                tuple(self.ground_truth_tester(tmpdir=tmpdir,)[0].values()),
+                (unchanged, unchanged, unchanged),
+            )
+
+    def test_ground_truths(self) -> None:
+        """ My truth is being tested. """
+
+        with TemporaryDirectory() as tmpdir:
+            tmpdir_join = partial(path.join, tmpdir)
+
+            argparse_functions = [
+                (
+                    lambda argparse_function: transformers.to_file(
+                        argparse_func_ast, argparse_function, mode="wt"
+                    )
+                    or argparse_function
+                )(tmpdir_join("argparse{i}.py".format(i=i)))
+                for i in range(10)
+            ]
+
+            class_ = tmpdir_join("classes.py")
+            transformers.to_file(class_ast, class_, mode="wt")
+
+            function = tmpdir_join("methods.py")
+            transformers.to_file(class_with_method_ast, function, mode="wt")
+
+            args = Namespace(
+                **{
+                    "argparse_functions": argparse_functions,
+                    "argparse_function_names": ("set_cli_args",),
+                    "classes": (class_,),
+                    "class_names": ("ConfigClass",),
+                    "functions": (function,),
+                    "function_names": ("C.method_name",),
+                    "truth": "argparse_function",
+                }
+            )
+            with patch("sys.stdout", new_callable=StringIO), patch(
+                "sys.stderr", new_callable=StringIO
+            ):
+                res = ground_truth(args, argparse_functions[0],)
+
+            self.assertTupleEqual(
+                tuple(res.values()),
+                (
+                    unchanged,
+                    unchanged,
+                    unchanged,
+                    unchanged,
+                    unchanged,
+                    unchanged,
+                    unchanged,
+                    unchanged,
+                    unchanged,
+                    unchanged,
+                    unchanged,
+                    modified,
+                ),
             )
 
     def test_ground_truth_fails(self) -> None:
@@ -53,16 +116,16 @@ class TestConformance(TestCase):
                     lambda: ground_truth(
                         Namespace(
                             **{
-                                "argparse_function": args.argparse_function,
-                                "argparse_function_name": "set_cli_args",
-                                "class": getattr(args, "class"),
-                                "class_name": "ConfigClass",
-                                "function": args.function,
-                                "function_name": "C.method_name.A",
+                                "argparse_functions": args.argparse_functions,
+                                "argparse_function_names": ("set_cli_args",),
+                                "classes": args.classes,
+                                "class_names": ("ConfigClass",),
+                                "functions": args.functions,
+                                "function_names": ("C.method_name.A",),
                                 "truth": "argparse_function",
                             }
                         ),
-                        args.argparse_function,
+                        args.argparse_functions[0],
                     ),
                 )
 
@@ -74,11 +137,13 @@ class TestConformance(TestCase):
 
         with TemporaryDirectory() as tmpdir:
             self.assertTupleEqual(
-                self.ground_truth_tester(
-                    tmpdir=tmpdir,
-                    _class_ast=transformers.to_class(_docstring_structure),
-                )[0],
-                ("unchanged", "modified", "unchanged"),
+                tuple(
+                    self.ground_truth_tester(
+                        tmpdir=tmpdir,
+                        _class_ast=transformers.to_class(_docstring_structure),
+                    )[0].values()
+                ),
+                (unchanged, modified, unchanged),
             )
 
     @staticmethod
@@ -115,35 +180,27 @@ class TestConformance(TestCase):
         transformers.to_file(_class_ast, class_, mode="wt")
         function = tmpdir_join("methods.py")
         transformers.to_file(_class_with_method_ast, function, mode="wt")
-        stdout_sio = StringIO()
+
         args = Namespace(
             **{
-                "argparse_function": argparse_function,
-                "argparse_function_name": "set_cli_args",
-                "class": class_,
-                "class_name": "ConfigClass",
-                "function": function,
-                "function_name": "C.method_name",
+                "argparse_functions": (argparse_function,),
+                "argparse_function_names": ("set_cli_args",),
+                "classes": (class_,),
+                "class_names": ("ConfigClass",),
+                "functions": (function,),
+                "function_names": ("C.method_name",),
                 "truth": "argparse_function",
             }
         )
-        with patch("sys.stdout", stdout_sio), patch(
+        with patch("sys.stdout", new_callable=StringIO), patch(
             "sys.stderr", new_callable=StringIO
         ):
-            ground_truth(
-                args, argparse_function,
-            )
-        stdout_sio.seek(0)
-
-        return (
-            tuple(map(lambda s: s.partition("\t")[0], stdout_sio.read().splitlines())),
-            args,
-        )
+            return ground_truth(args, argparse_function,), args
 
     def test__get_name_from_namespace(self) -> None:
         """ Test `_get_name_from_namespace` """
-        args = Namespace(foo_name="bar")
-        self.assertEqual(_get_name_from_namespace(args, "foo"), args.foo_name)
+        args = Namespace(foo_names=("bar",))
+        self.assertEqual(_get_name_from_namespace(args, "foo"), args.foo_names[0])
 
     def test_replace_node(self) -> None:
         """ Tests `replace_node` """

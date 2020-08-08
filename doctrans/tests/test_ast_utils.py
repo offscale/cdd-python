@@ -92,7 +92,7 @@ class TestAstUtils(TestCase):
             "cls",
         )
 
-    def test_set_value(self):
+    def test_set_value(self) -> None:
         """ Tests that `set_value` returns the right type for the right Python version """
         with patch("doctrans.ast_utils.PY3_8", True):
             import doctrans.ast_utils
@@ -116,7 +116,7 @@ class TestAstUtils(TestCase):
 
             self.assertIsInstance(doctrans.ast_utils.set_value("foo", None), Str)
 
-    def test_get_value(self):
+    def test_get_value(self) -> None:
         """ Tests get_value succeeds """
         val = "foo"
         self.assertEqual(get_value(Str(s=val)), val)
@@ -125,7 +125,7 @@ class TestAstUtils(TestCase):
         self.assertIsInstance(get_value(Tuple()), Tuple)
         self.assertIsInstance(get_value(Name()), Name)
 
-    def test_get_value_fails(self):
+    def test_get_value_fails(self) -> None:
         """ Tests get_value fails properly """
         self.assertRaises(NotImplementedError, lambda: get_value(None))
         self.assertRaises(NotImplementedError, lambda: get_value(""))

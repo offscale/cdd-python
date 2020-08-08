@@ -108,3 +108,10 @@ def set_default_doc(param, emit_default_doc=True):
         ]
 
     return param
+
+
+__all__ = [
+    "extract_default",
+    "remove_defaults_from_docstring_structure",
+    "set_default_doc",
+]

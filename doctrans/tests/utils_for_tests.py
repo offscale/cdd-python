@@ -47,3 +47,6 @@ def unittest_main():
     """ Runs unittest.main if __main__ """
     if __name__ == "__main__":
         main()
+
+
+__all__ = ["run_ast_test", "unittest_main"]

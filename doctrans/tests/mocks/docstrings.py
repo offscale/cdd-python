@@ -141,3 +141,11 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 :return: Train and tests dataset splits.
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """
+
+__all__ = [
+    "docstring_structure",
+    "docstring_str",
+    "docstring_structure_no_default_doc_or_prop",
+    "docstring_structure_no_default_doc",
+    "docstring_str_no_default_doc",
+]

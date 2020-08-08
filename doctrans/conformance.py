@@ -2,7 +2,8 @@
 Given the truth, show others the path
 """
 
-from ast import parse, walk, FunctionDef, ClassDef, Module
+from ast import parse, FunctionDef, ClassDef, Module
+from collections import OrderedDict
 from copy import deepcopy
 from functools import partial
 
@@ -11,7 +12,7 @@ from meta.asttools import cmp_ast
 from doctrans import docstring_struct
 from doctrans import transformers
 from doctrans.ast_utils import get_function_type
-from doctrans.pure_utils import rpartial
+from doctrans.pure_utils import rpartial, pluralise
 
 
 def _get_name_from_namespace(args, fun_name):
@@ -28,9 +29,9 @@ def _get_name_from_namespace(args, fun_name):
     :rtype: ```str```
     """
     return next(
-        getattr(args, arg)
-        for arg in args.__dict__.keys()
-        if arg == "_".join((fun_name, "name"))
+        getattr(args, pluralise(arg))[0]
+        for arg in vars(args).keys()
+        if arg == "_".join((fun_name, "names"))
     )
 
 
@@ -43,6 +44,9 @@ def ground_truth(args, truth_file):
 
     :param truth_file: contains the filename of the one true source
     :type truth_file: ```str```
+
+    :returns: Filenames and whether they were changed
+    :rtype: ```OrderedDict```
     """
     arg_name_to_func_typ = {
         "argparse_function": (docstring_struct.from_argparse_ast, FunctionDef),
@@ -51,63 +55,127 @@ def ground_truth(args, truth_file):
     }
 
     from_func, typ = arg_name_to_func_typ[args.truth]
+    fun_name = _get_name_from_namespace(args, args.truth)
+
     with open(truth_file, "rt") as f:
-        true_docstring_structure = from_func(
-            next(
-                filter(
-                    lambda fun: fun.name == _get_name_from_namespace(args, args.truth),
-                    filter(rpartial(isinstance, typ), walk(parse(f.read()))),
-                )
+        parsed_truth_file = parse(f.read(), filename=truth_file)
+
+    true_docstring_structure = from_func(
+        next(
+            filter(
+                lambda fun: fun.name == fun_name,
+                filter(rpartial(isinstance, typ), parsed_truth_file.body),
             )
         )
-    for (
-        fun_name
-    ) in (
-        arg_name_to_func_typ
-    ):  # filter(lambda arg: arg != args.truth, arg_name_to_func_typ.keys()):
-        from_func, typ = arg_name_to_func_typ[fun_name]
+    )
 
+    effect = OrderedDict()
+    # filter(lambda arg: arg != args.truth, arg_name_to_func_typ.keys()):
+    for fun_name in arg_name_to_func_typ:
         name = _get_name_from_namespace(args, fun_name)
+
         if name.count(".") > 1:
             raise NotImplementedError(
                 "We can only go one deep; e.g., `F.a.b` is not supported"
                 " given `class F: def a(): def b(): pass; pass;`"
             )
+
+        filenames = getattr(args, pluralise(fun_name))
+        assert isinstance(
+            filenames, (list, tuple)
+        ), "Expected Union[list, tuple] got {!r}".format(type(filenames).__name__)
+
+        from_func, typ = arg_name_to_func_typ[fun_name]
         outer_name, _, inner_name = name.partition(".")
-
-        unchanged, filename = True, getattr(args, fun_name)
-        with open(filename, "rt") as f:
-            parsed_ast = parse(f.read())
-        assert isinstance(parsed_ast, Module)
-
-        for idx, outer_node in enumerate(parsed_ast.body):
-            replace_node_f = partial(
-                replace_node,
-                fun_name=fun_name,
-                from_func=from_func,
-                outer_node=outer_node,
-                outer_name=outer_name,
-                docstring_structure=true_docstring_structure,
-                typ=typ,
+        effect.update(
+            map(
+                partial(
+                    _conform_filename,
+                    fun_name=fun_name,
+                    from_func=from_func,
+                    outer_name=outer_name,
+                    true_docstring_structure=true_docstring_structure,
+                    typ=typ,
+                    inner_name=inner_name,
+                ),
+                filenames,
             )
-            if hasattr(outer_node, "name") and outer_node.name == outer_name:
-                if inner_name:
-                    for i, inner_node in enumerate(outer_node.body):
-                        if (
-                            isinstance(inner_node, typ)
-                            and inner_node.name == inner_name
-                        ):
-                            unchanged, parsed_ast.body[idx].body[i] = replace_node_f(
-                                inner_node=inner_node, inner_name=inner_name
-                            )
-                elif isinstance(outer_node, typ):
-                    unchanged, parsed_ast.body[idx] = replace_node_f(
-                        inner_node=None, inner_name=None
-                    )
+        )
 
-        print("unchanged" if unchanged else "modified", filename, sep="\t")
-        if not unchanged:
-            transformers.to_file(parsed_ast, filename, mode="wt")
+    return effect
+
+
+def _conform_filename(
+    filename,
+    fun_name,
+    from_func,
+    outer_name,
+    inner_name,
+    true_docstring_structure,
+    typ,
+):
+    """
+    Conform the given file to the `true_docstring_structure`
+
+    :param filename: Location of file
+    :type filename: ```str```
+
+    :param fun_name: Function/Class/AST name
+    :type fun_name: ```AST```
+
+    :param from_func: One docstring_struct.from_* function
+    :type from_func: ```Callable[[AST, str, ...], dict]```
+
+    :param outer_name: Name of the outer node
+    :type outer_name: ```str```
+
+    :param inner_name: Name of the inner node. If unset then don't traverse to inner node.
+    :type inner_name: ```Optional[str]```
+
+    :param true_docstring_structure: dict of shape {
+            'name': ..., 'platform': ...,
+            'module': ..., 'title': ..., 'description': ...,
+            'parameters': ..., 'schema': ...,'returns': ...}
+    :type true_docstring_structure: ```dict```
+
+    :param typ: AST instance
+    :type typ: ```AST```
+
+    :returns: filename, whether the file was modified
+    :rtype: ```Tuple[str, bool]```
+    """
+    unchanged = True
+    with open(filename, "rt") as f:
+        parsed_ast = parse(f.read())
+    assert isinstance(parsed_ast, Module)
+
+    for idx, outer_node in enumerate(parsed_ast.body):
+        replace_node_f = partial(
+            replace_node,
+            fun_name=fun_name,
+            from_func=from_func,
+            outer_node=outer_node,
+            outer_name=outer_name,
+            docstring_structure=true_docstring_structure,
+            typ=typ,
+        )
+        if hasattr(outer_node, "name") and outer_node.name == outer_name:
+            if inner_name:
+                for i, inner_node in enumerate(outer_node.body):
+                    if isinstance(inner_node, typ) and inner_node.name == inner_name:
+                        unchanged, parsed_ast.body[idx].body[i] = replace_node_f(
+                            inner_node=inner_node, inner_name=inner_name
+                        )
+            elif isinstance(outer_node, typ):
+                unchanged, parsed_ast.body[idx] = replace_node_f(
+                    inner_node=None, inner_name=None
+                )
+
+    print("unchanged" if unchanged else "modified", filename, sep="\t")
+    if not unchanged:
+        transformers.to_file(parsed_ast, filename, mode="wt")
+
+    return filename, unchanged
 
 
 def replace_node(
@@ -176,3 +244,6 @@ def replace_node(
         )
 
     return cmp_ast(previous, node), node
+
+
+__all__ = ["ground_truth", "replace_node"]

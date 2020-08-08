@@ -11,7 +11,7 @@ from os import path
 import yaml
 
 __author__ = "Samuel Marks"
-__version__ = "0.0.16-alpha"
+__version__ = "0.0.16"
 
 
 def get_logger(name=None):
@@ -32,3 +32,5 @@ def get_logger(name=None):
 
 root_logger = get_logger()
 logging.getLogger("blib2to3").setLevel(logging.WARNING)
+
+__all__ = ["get_logger", "root_logger"]

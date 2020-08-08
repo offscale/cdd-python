@@ -3,3 +3,4 @@ astor
 black
 pyyaml
 docstring_parser
+typing-extensions

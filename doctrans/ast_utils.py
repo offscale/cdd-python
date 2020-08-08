@@ -341,3 +341,16 @@ def is_argparse_description(node):
         and node.targets[0].value.id == "argument_parser"
         and isinstance(node.value, (Constant, Str))
     )
+
+
+__all__ = [
+    "param2ast",
+    "to_class_def",
+    "param2argparse_param",
+    "determine_quoting",
+    "get_function_type",
+    "get_value",
+    "set_value",
+    "is_argparse_add_argument",
+    "is_argparse_description",
+]
