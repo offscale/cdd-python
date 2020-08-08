@@ -103,7 +103,7 @@ def main(cli_argv=None, return_args=False):
 
     truth_file = getattr(args, pluralise(args.truth))
     if truth_file is None:
-        _parser.error("--truth must be choose an existent file. Got: None")
+        _parser.error("--truth must be an existent file. Got: None")
     else:
         truth_file = truth_file[0]
 
@@ -118,9 +118,7 @@ def main(cli_argv=None, return_args=False):
             "Two or more of `--argparse-function`, `--class`, and `--function` must be specified"
         )
     elif truth_file is None or not path.isfile(truth_file):
-        _parser.error(
-            "--truth must be choose an existent file. Got: {!r}".format(truth_file)
-        )
+        _parser.error("--truth must be an existent file. Got: {!r}".format(truth_file))
 
     return args if return_args else ground_truth(args, truth_file)
 
