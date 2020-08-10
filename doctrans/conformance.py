@@ -60,7 +60,7 @@ def ground_truth(args, truth_file):
     with open(truth_file, "rt") as f:
         parsed_truth_file = ast.parse(f.read(), filename=truth_file)
 
-    true_docstring_structure = from_func(
+    gold_ir = from_func(
         next(
             filter(
                 lambda fun: fun.name == fun_name,
@@ -95,7 +95,7 @@ def ground_truth(args, truth_file):
                     fun_name=fun_name,
                     from_func=from_func,
                     outer_name=outer_name,
-                    true_docstring_structure=true_docstring_structure,
+                    intermediate_repr=gold_ir,
                     typ=typ,
                     inner_name=inner_name,
                 ),
@@ -107,16 +107,10 @@ def ground_truth(args, truth_file):
 
 
 def _conform_filename(
-    filename,
-    fun_name,
-    from_func,
-    outer_name,
-    inner_name,
-    true_docstring_structure,
-    typ,
+    filename, fun_name, from_func, outer_name, inner_name, intermediate_repr, typ,
 ):
     """
-    Conform the given file to the `true_docstring_structure`
+    Conform the given file to the `intermediate_repr`
 
     :param filename: Location of file
     :type filename: ```str```
@@ -124,7 +118,7 @@ def _conform_filename(
     :param fun_name: Function/Class/AST name
     :type fun_name: ```AST```
 
-    :param from_func: One docstring_struct.from_* function
+    :param from_func: One parse._* function
     :type from_func: ```Callable[[AST, str, ...], dict]```
 
     :param outer_name: Name of the outer node
@@ -133,11 +127,11 @@ def _conform_filename(
     :param inner_name: Name of the inner node. If unset then don't traverse to inner node.
     :type inner_name: ```Optional[str]```
 
-    :param true_docstring_structure: dict of shape {
+    :param intermediate_repr: dict of shape {
             'name': ..., 'platform': ...,
             'module': ..., 'title': ..., 'description': ...,
             'parameters': ..., 'schema': ...,'returns': ...}
-    :type true_docstring_structure: ```dict```
+    :type intermediate_repr: ```dict```
 
     :param typ: AST instance
     :type typ: ```AST```
@@ -157,7 +151,7 @@ def _conform_filename(
             from_func=from_func,
             outer_node=outer_node,
             outer_name=outer_name,
-            docstring_structure=true_docstring_structure,
+            intermediate_repr=intermediate_repr,
             typ=typ,
         )
         if hasattr(outer_node, "name") and outer_node.name == outer_name:
@@ -186,7 +180,7 @@ def replace_node(
     inner_name,
     outer_node,
     inner_node,
-    docstring_structure,
+    intermediate_repr,
     typ,
 ):
     """
@@ -195,7 +189,7 @@ def replace_node(
     :param fun_name: Name of function, e.g., argparse, class, method
     :type fun_name: ```str```
 
-    :param from_func: One docstring_struct.from_* function
+    :param from_func: One parse.* function
     :type from_func: ```Callable[[AST, str, ...], dict]```
 
     :param outer_name: Name of the outer node
@@ -210,11 +204,11 @@ def replace_node(
     :param inner_node: The inner node. If unset then don't [try and] traverse down to it.
     :type inner_node: ```Optional[AST]```
 
-    :param docstring_structure: dict of shape {
+    :param intermediate_repr: dict of shape {
             'name': ..., 'platform': ...,
             'module': ..., 'title': ..., 'description': ...,
             'parameters': ..., 'schema': ...,'returns': ...}
-    :type docstring_structure: ```dict```
+    :type intermediate_repr: ```dict```
 
     :param typ: AST instance
     :type typ: ```AST```
@@ -240,7 +234,7 @@ def replace_node(
     if "_internal" in found:
         raise NotImplementedError()
     else:
-        node = getattr(emit, sanitise(fun_name),)(docstring_structure, **options())
+        node = getattr(emit, sanitise(fun_name),)(intermediate_repr, **options())
 
     return cmp_ast(previous, node), node
 

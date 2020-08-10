@@ -1,12 +1,12 @@
 """
-Functions which produce docstring_structure from various different inputs
+Functions which produce intermediate_repr from various different inputs
 """
 from ast import Constant, Name, Attribute, Return, parse
 from typing import Any
 
 from doctrans.ast_utils import get_value
 from doctrans.defaults_utils import extract_default, set_default_doc
-from doctrans.pure_utils import simple_types
+from doctrans.pure_utils import simple_types, identity
 from doctrans.source_transformer import to_code
 
 
@@ -40,7 +40,7 @@ def _handle_keyword(keyword, typ):
     :returns: string representation of type
     :rtype: ```str``
     """
-    global quote_f
+    quote_f = identity
 
     type_ = "Union"
     if typ == Any or typ in simple_types:
@@ -105,17 +105,18 @@ def parse_out_param(expr, emit_default_doc=True):
         None,
     )
     doc = (
-        lambda help: help
-        if help is None
+        lambda help_: help_
+        if help_ is None
         else (
-            help
+            help_
             if default is None
             or emit_default_doc is False
             or (hasattr(default, "__len__") and len(default) == 0)
-            or "defaults to" in help
-            or "Defaults to" in help
+            or "defaults to" in help_
+            or "Defaults to" in help_
             else "{help} Defaults to {default}".format(
-                help=help if help.endswith(".") else "{}.".format(help), default=default
+                help=help_ if help_.endswith(".") else "{}.".format(help_),
+                default=default,
             )
         )
     )(
@@ -137,13 +138,13 @@ def parse_out_param(expr, emit_default_doc=True):
         name=name,
         doc=doc,
         typ=(
-            lambda typ: (
-                typ
+            lambda typ_: (
+                typ_
                 if required or name.endswith("kwargs")
-                else "Optional[{typ}]".format(typ=typ)
+                else "Optional[{typ}]".format(typ=typ_)
             )
         )(
-            typ=next(
+            typ_=next(
                 (
                     _handle_keyword(keyword, typ)
                     for keyword in expr.value.keywords
@@ -177,21 +178,21 @@ def interpolate_defaults(param, emit_default_doc=True):
     return param
 
 
-def _parse_return(e, docstring_structure, function_def, emit_default_doc):
+def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
     """
     Parse return into a param dict
 
     :param e: Return AST node
     :type e: Return
 
-    :param docstring_structure: a dictionary of form
+    :param intermediate_repr: a dictionary of form
           {
               'short_description': ...,
               'long_description': ...,
               'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
               "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
           }
-    :type docstring_structure: ```dict```
+    :type intermediate_repr: ```dict```
 
     :param function_def: FunctionDef
     :type function_def: ```FunctionDef```
@@ -218,18 +219,18 @@ def _parse_return(e, docstring_structure, function_def, emit_default_doc):
             "default": to_code(e.value.elts[1]).rstrip("\n"),
             "typ": to_code(
                 get_value(
-                    parse(docstring_structure["returns"]["typ"]).body[0].value.slice
+                    parse(intermediate_repr["returns"]["typ"]).body[0].value.slice
                 ).elts[1]
             ).rstrip()
-            # 'Tuple[ArgumentParser, {typ}]'.format(typ=_docstring_structure['returns']['typ'])
+            # 'Tuple[ArgumentParser, {typ}]'.format(typ=ir['returns']['typ'])
         },
         emit_default_doc=emit_default_doc,
     )
 
 
-def get_internal_body(docstring_structure):
+def get_internal_body(intermediate_repr):
     """
-    :param docstring_structure: a dictionary of form
+    :param intermediate_repr: a dictionary of form
           {
               'short_description': ...,
               'long_description': ...,
@@ -237,18 +238,18 @@ def get_internal_body(docstring_structure):
               'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
               "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
           }
-    :type docstring_structure: ```dict```
+    :type intermediate_repr: ```dict```
 
     :returns: Internal body or an empty list
     :rtype: ```list```
     """
     res = (
-        docstring_structure["_internal"]["body"]
-        if "_internal" in docstring_structure
-        and docstring_structure["_internal"].get("body")
+        intermediate_repr["_internal"]["body"]
+        if "_internal" in intermediate_repr
+        and intermediate_repr["_internal"].get("body")
         else []
     )
-    # pp(docstring_structure["_internal"]["body"])
+    # pp(intermediate_repr["_internal"]["body"])
     # pp(tuple(map(astor.to_source, res)))
     return res
 

@@ -1,4 +1,4 @@
-""" Tests for docstring_structure_utils """
+""" Tests for emitter_utils """
 from ast import Expr, Call, Constant, Attribute, Load, Name, keyword, Subscript
 from copy import deepcopy
 from unittest import TestCase
@@ -6,7 +6,7 @@ from unittest import TestCase
 from doctrans.emitter_utils import parse_out_param, interpolate_defaults
 from doctrans.pure_utils import rpartial
 from doctrans.tests.mocks.argparse import argparse_func_ast, argparse_add_argument_ast
-from doctrans.tests.mocks.docstrings import docstring_structure
+from doctrans.tests.mocks.docstrings import intermediate_repr
 from doctrans.tests.utils_for_tests import unittest_main
 
 
@@ -19,7 +19,7 @@ class TestEmitterUtils(TestCase):
             parse_out_param(
                 next(filter(rpartial(isinstance, Expr), argparse_func_ast.body[::-1]))
             ),
-            docstring_structure["params"][-1],
+            intermediate_repr["params"][-1],
         )
 
     def test_parse_out_param_default(self) -> None:
@@ -56,7 +56,7 @@ class TestEmitterUtils(TestCase):
 
     def test_interpolate_defaults(self) -> None:
         """ Test that interpolate_defaults corrects sets the default property """
-        param = deepcopy(docstring_structure["params"][2])
+        param = deepcopy(intermediate_repr["params"][2])
         param_with_correct_default = deepcopy(param)
         del param["default"]
         self.assertDictEqual(interpolate_defaults(param), param_with_correct_default)

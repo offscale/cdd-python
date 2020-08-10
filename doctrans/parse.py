@@ -1,5 +1,5 @@
 """
-Transform from string or AST representations of input, to docstring_structure dict of shape {
+Transform from string or AST representations of input, to intermediate_repr dict of shape {
             'name': ..., 'platform': ...,
             'module': ..., 'title': ..., 'description': ...,
             'parameters': ..., 'schema': ...,'returns': ...}.
@@ -22,6 +22,7 @@ from collections import OrderedDict
 from functools import partial
 from itertools import filterfalse
 from operator import itemgetter
+from typing import Any
 
 from docstring_parser import DocstringParam, DocstringMeta
 
@@ -41,7 +42,7 @@ from doctrans.source_transformer import to_code
 
 def class_(class_def, config_name=None):
     """
-    Converts an AST to a docstring structure
+    Converts an AST to our IR
 
     :param class_def: Class AST or Module AST with a ClassDef inside
     :type class_def: ```Union[Module, ClassDef]```
@@ -49,37 +50,43 @@ def class_(class_def, config_name=None):
     :param config_name: Name of `class`. If None, gives first found.
     :type config_name: ```Optional[str]```
 
-    :return: docstring structure
+    :return: a dictionary of form
+          {
+              'short_description': ...,
+              'long_description': ...,
+              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+          }
     :rtype: ```dict```
     """
     class_def = to_class_def(class_def, config_name)
-    docstring_structure = docstring(get_docstring(class_def).replace(":cvar", ":param"))
-    docstring_structure["params"] = OrderedDict(
-        (param.pop("name"), param) for param in docstring_structure["params"]
+    intermediate_repr = docstring(get_docstring(class_def).replace(":cvar", ":param"))
+    intermediate_repr["params"] = OrderedDict(
+        (param.pop("name"), param) for param in intermediate_repr["params"]
     )
-    if "return_type" in docstring_structure["params"]:
-        docstring_structure["returns"] = {
-            "return_type": docstring_structure["params"].pop("return_type")
+    if "return_type" in intermediate_repr["params"]:
+        intermediate_repr["returns"] = {
+            "return_type": intermediate_repr["params"].pop("return_type")
         }
 
     for e in filter(rpartial(isinstance, AnnAssign), class_def.body):
-        docstring_structure["returns" if e.target.id == "return_type" else "params"][
+        intermediate_repr["returns" if e.target.id == "return_type" else "params"][
             e.target.id
         ]["typ"] = to_code(e.annotation).rstrip("\n")
 
-    docstring_structure["params"] = [
-        dict(name=k, **v) for k, v in docstring_structure["params"].items()
+    intermediate_repr["params"] = [
+        dict(name=k, **v) for k, v in intermediate_repr["params"].items()
     ]
-    docstring_structure["returns"] = (
-        lambda k: dict(name=k, **docstring_structure["returns"][k])
+    intermediate_repr["returns"] = (
+        lambda k: dict(name=k, **intermediate_repr["returns"][k])
     )("return_type")
 
-    return docstring_structure
+    return intermediate_repr
 
 
 def class_with_method(class_def, method_name):
     """
-    Converts an AST of a class with a method to a docstring structure
+    Converts an AST of a class with a method to our IR
 
     :param class_def: Class AST or Module AST with a ClassDef inside
     :type class_def: ```Union[Module, ClassDef]```
@@ -87,7 +94,13 @@ def class_with_method(class_def, method_name):
     :param method_name: Method name
     :type method_name: ```str```
 
-    :return: docstring structure
+    :return: a dictionary of form
+          {
+              'short_description': ...,
+              'long_description': ...,
+              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+          }
     :rtype: ```dict```
     """
     return function(
@@ -101,27 +114,33 @@ def class_with_method(class_def, method_name):
 
 def function(function_def):
     """
-    Converts an AST of a class with a method to a docstring structure
+    Converts an AST of a class with a method to our IR
 
     :param function_def: FunctionDef
     :type function_def: ```FunctionDef```
 
-    :return: docstring structure
+    :return: a dictionary of form
+          {
+              'short_description': ...,
+              'long_description': ...,
+              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+          }
     :rtype: ```dict```
     """
 
-    docstring_structure = docstring(
+    intermediate_repr = docstring(
         get_docstring(function_def).replace(":cvar", ":param")
     )
     function_type = get_function_type(function_def)
     offset = 0 if function_type is None else 1
 
     if len(function_def.body) > 2:
-        docstring_structure["_internal"] = {"body": function_def.body[1:-1]}
+        intermediate_repr["_internal"] = {"body": function_def.body[1:-1]}
 
     for idx, arg in enumerate(function_def.args.args):
         if arg.annotation is not None:
-            docstring_structure["params"][idx - offset]["typ"] = to_code(
+            intermediate_repr["params"][idx - offset]["typ"] = to_code(
                 arg.annotation
             ).rstrip("\n")
 
@@ -133,18 +152,18 @@ def function(function_def):
         ), type(const).__name__
         value = get_value(const)
         if value is not None:
-            docstring_structure["params"][idx]["default"] = value
+            intermediate_repr["params"][idx]["default"] = value
 
     if function_def.args.kwarg:
-        assert docstring_structure["params"][-1]["name"] == function_def.args.kwarg.arg
-        docstring_structure["params"][-1]["typ"] = "dict"
+        assert intermediate_repr["params"][-1]["name"] == function_def.args.kwarg.arg
+        intermediate_repr["params"][-1]["typ"] = "dict"
 
     # Convention - the final top-level `return` is the default
     return_ast = next(
         filter(rpartial(isinstance, Return), function_def.body[::-1]), None
     )
     if return_ast is not None and return_ast.value is not None:
-        docstring_structure["returns"]["default"] = (
+        intermediate_repr["returns"]["default"] = (
             lambda default: "({})".format(default)
             if isinstance(return_ast.value, Tuple)
             and (not default.startswith("(") or not default.endswith(")"))
@@ -152,54 +171,58 @@ def function(function_def):
         )(to_code(return_ast.value).rstrip("\n"))
 
     if isinstance(function_def.returns, Subscript):
-        docstring_structure["returns"]["typ"] = to_code(function_def.returns).rstrip(
-            "\n"
-        )
+        intermediate_repr["returns"]["typ"] = to_code(function_def.returns).rstrip("\n")
 
-    return docstring_structure
+    return intermediate_repr
 
 
 def argparse_ast(function_def):
     """
-    Converts an AST to a docstring structure
+    Converts an AST to our IR
 
     :param function_def: AST of argparse function
     :type function_def: ```FunctionDef``
 
-    :return: docstring structure
+    :return: a dictionary of form
+          {
+              'short_description': ...,
+              'long_description': ...,
+              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+          }
     :rtype: ```dict```
     """
-    docstring = get_docstring(function_def)
-    docstring_structure = {
+    doc_string = get_docstring(function_def)
+    intermediate_repr = {
         "short_description": "",
         "long_description": "",
         "params": [],
     }
-    _docstring_struct = parse_docstring(docstring, emit_default_doc=True)
+    ir = parse_docstring(doc_string, emit_default_doc=True)
 
     for e in function_def.body:
         if is_argparse_add_argument(e):
-            docstring_structure["params"].append(parse_out_param(e))
+            intermediate_repr["params"].append(parse_out_param(e))
         elif isinstance(e, Assign):
             if is_argparse_description(e):
-                docstring_structure["short_description"] = get_value(e.value)
+                intermediate_repr["short_description"] = get_value(e.value)
         elif isinstance(e, Return) and isinstance(e.value, Tuple):
-            docstring_structure["returns"] = _parse_return(
+            intermediate_repr["returns"] = _parse_return(
                 e,
-                docstring_structure=_docstring_struct,
+                intermediate_repr=ir,
                 function_def=function_def,
                 emit_default_doc=True,
             )
-    if len(function_def.body) > len(docstring_structure["params"]) + 3:
-        docstring_structure["_internal"] = {
+    if len(function_def.body) > len(intermediate_repr["params"]) + 3:
+        intermediate_repr["_internal"] = {
             "body": list(
                 filterfalse(
                     lambda node: (
                         isinstance(node, Expr)
                         and isinstance(get_value(node), (Constant, Str))
-                        and docstring
+                        and doc_string
                         == to_docstring(
-                            _docstring_struct,
+                            ir,
                             emit_types=True,
                             emit_separating_tab=False,
                             indent_level=0,
@@ -213,23 +236,23 @@ def argparse_ast(function_def):
             )[:-1]
         }
 
-    return docstring_structure
+    return intermediate_repr
 
 
-def docstring(docstring, return_tuple=False):
+def docstring(doc_string, return_tuple=False):
     """
     Converts a docstring to an AST
 
-    :param docstring: docstring portion
-    :type docstring: ```Union[str, Dict]```
+    :param doc_string: docstring portion
+    :type doc_string: ```Union[str, Dict]```
 
-    :param return_tuple: Whether to return a tuple, or just the docstring_struct
+    :param return_tuple: Whether to return a tuple, or just the intermediate_repr
     :type return_tuple: ```bool```
 
-    :return: docstring_structure, whether it returns or not
+    :return: intermediate_repr, whether it returns or not
     :rtype: ```Optional[Union[dict, Tuple[dict, bool]]]```
     """
-    parsed = docstring if isinstance(docstring, dict) else parse_docstring(docstring)
+    parsed = doc_string if isinstance(doc_string, dict) else parse_docstring(doc_string)
     returns = (
         "returns" in parsed
         and parsed["returns"] is not None
@@ -248,7 +271,7 @@ def docstring(docstring, return_tuple=False):
 
 
 def to_docstring(
-    docstring_structure,
+    intermediate_repr,
     emit_default_doc=True,
     docstring_format="rest",
     indent_level=2,
@@ -258,8 +281,14 @@ def to_docstring(
     """
     Converts a docstring to an AST
 
-    :param docstring_structure: docstring struct
-    :type docstring_structure: ```dict```
+    :param intermediate_repr: a dictionary of form
+          {
+              'short_description': ...,
+              'long_description': ...,
+              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+          }
+    :type intermediate_repr: ```dict```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
@@ -290,7 +319,7 @@ def to_docstring(
         emit_types=False,
     ):
         """
-        Converts param dict from docstring_structure to the right string representation
+        Converts param dict from intermediate_repr to the right string representation
 
         :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
         :type param: ```dict```
@@ -345,17 +374,17 @@ def to_docstring(
     return "\n{tab}{description}\n{sep}\n{params}\n{sep}\n{returns}\n{tab}".format(
         sep=sep,
         tab=tab * indent_level,
-        description=docstring_structure.get("long_description")
-        or docstring_structure["short_description"],
+        description=intermediate_repr.get("long_description")
+        or intermediate_repr["short_description"],
         params="\n{sep}\n".format(sep=sep).join(
-            map(param2docstring_param, docstring_structure["params"])
+            map(param2docstring_param, intermediate_repr["params"])
         ),
         returns=(
-            param2docstring_param(docstring_structure["returns"])
+            param2docstring_param(intermediate_repr["returns"])
             .replace(":param return_type:", ":return:")
             .replace(":type return_type:", ":rtype:")
         )
-        if docstring_structure.get("returns")
+        if intermediate_repr.get("returns")
         else "",
     )
 
@@ -392,7 +421,8 @@ def _evaluate_to_docstring_value(name_value):
     :return: Same shape as input
     :rtype: ```Tuple[str, Tuple[Union[str, int, bool, float]]]```
     """
-    name, value = name_value
+    name: str = name_value[0]
+    value: Any = name_value[1]
     if isinstance(value, (list, tuple)):
         value = list(
             map(
@@ -432,40 +462,46 @@ def _evaluate_to_docstring_value(name_value):
     return name, value
 
 
-def docstring_parser(docstring):
+def docstring_parser(doc_string):
     """
-    Converts Docstring from the docstring_parser library to our internal representation / docstring structure
+    Converts Docstring from the docstring_parser library to our internal representation
 
-    :param docstring: Docstring from the docstring_parser library
-    :type docstring: ```docstring_parser.common.Docstring```
+    :param doc_string: Docstring from the docstring_parser library
+    :type doc_string: ```docstring_parser.common.Docstring```
 
-    :return: docstring structure
+    :return: a dictionary of form
+          {
+              'short_description': ...,
+              'long_description': ...,
+              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+          }
     :rtype: ```dict```
     """
 
-    docstring_structure = dict(
+    intermediate_repr = dict(
         map(
             _evaluate_to_docstring_value,
             filter(
                 lambda k_v: not isinstance(k_v[1], (type(None), bool)),
                 map(
-                    lambda attr: (attr, getattr(docstring, attr)),
-                    filter(lambda attr: not attr.startswith("_"), dir(docstring)),
+                    lambda attr: (attr, getattr(doc_string, attr)),
+                    filter(lambda attr: not attr.startswith("_"), dir(doc_string)),
                 ),
             ),
         )
     )
-    if "meta" in docstring_structure and "params" in docstring_structure:
-        meta = {e["name"]: e for e in docstring_structure.pop("meta")}
-        docstring_structure["params"] = [
+    if "meta" in intermediate_repr and "params" in intermediate_repr:
+        meta = {e["name"]: e for e in intermediate_repr.pop("meta")}
+        intermediate_repr["params"] = [
             dict(
                 **param,
                 **{k: v for k, v in meta[param["name"]].items() if k not in param}
             )
-            for param in docstring_structure["params"]
+            for param in intermediate_repr["params"]
         ]
 
-    return docstring_structure
+    return intermediate_repr
 
 
 __all__ = [

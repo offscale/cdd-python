@@ -160,7 +160,7 @@ def doc_to_type_doc(name, doc, emit_default_doc=True):
         doc="\n".join(docs),
         **{"default": default} if default else {},
         **{
-            "typ": (lambda typ: "dict" if typ.endswith("kwargs") else typ)(
+            "typ": (lambda typ_: "dict" if typ_.endswith("kwargs") else typ_)(
                 "\n".join(typ)
             )
         }
@@ -240,7 +240,7 @@ def extract_return_params(params_returns_desc, emit_default_doc):
     :type emit_default_doc: ```bool``
 
     :return: dict of shape {'typ': ..., 'doc': ..., 'default': ...}
-    :rdict: ```dict```
+    :rtype: ```dict```
     """
     match = RETURNS_REGEX.search(params_returns_desc)
     returns = None

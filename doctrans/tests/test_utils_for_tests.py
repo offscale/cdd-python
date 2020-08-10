@@ -40,7 +40,7 @@ class TestUtilsForTests(TestCase):
         def count_true(value, msg):
             """ Version of `self.assertTrue` which also keeps count
 
-            :param value: Potentialy `True`
+            :param value: Potentially `True`
             :type value: ```Union[Literal[True], Any]```
 
             :param msg: Message to raise in error
