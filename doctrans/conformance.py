@@ -2,7 +2,7 @@
 Given the truth, show others the path
 """
 import ast
-from ast import parse, FunctionDef, ClassDef, Module
+from ast import FunctionDef, ClassDef, Module
 from collections import OrderedDict
 from copy import deepcopy
 from functools import partial
