@@ -27,7 +27,9 @@ def _build_parser():
         "--version", action="version", version="%(prog)s {}".format(__version__)
     )
 
-    subparsers = parser.add_subparsers(required=True, dest="command")
+    subparsers = parser.add_subparsers()
+    subparsers.required = True
+    subparsers.dest = "command"
     property_parser = subparsers.add_parser(
         "property",
         help="Synchronise just one property on one class, method, or argparse",
