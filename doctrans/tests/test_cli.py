@@ -196,13 +196,14 @@ class TestCli(TestCase):
         ), self.assertRaises(SystemExit) as e:
             loader.exec_module(module_from_spec(spec_from_loader(loader.name, loader)))
         self.assertEqual(e.exception.code, SystemExit(2).code)
+
         self.assertEqual(
-            (lambda output: output[(output.rfind(" ") + 1) :][:-1])(
+            (lambda output: output[(output.find("error:")) :output.rfind(':')])(
                 (argparse_mock.call_args.args if PY3_8 else argparse_mock.call_args[0])[
                     0
                 ]
             ),
-            "command",
+            "error: the following arguments are required",
         )
 
 
