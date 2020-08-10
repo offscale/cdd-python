@@ -10,6 +10,7 @@ from os import path
 from doctrans import __version__
 from doctrans.conformance import ground_truth
 from doctrans.pure_utils import pluralise
+from doctrans.sync_property import sync_property
 
 
 def _build_parser():
@@ -40,12 +41,12 @@ def _build_parser():
     )
 
     property_parser.add_argument(
-        "--input-file", help="File to find --input-param from", required=True,
+        "--input-file", help="File to find `--input-param` from", required=True,
     )
     property_parser.add_argument(
         "--input-param",
         help="Location within file of property."
-        " Can be top level like `a` for `a=5` or with the `.` syntax as in -`-output-param`.",
+        " Can be top level like `a` for `a=5` or with the `.` syntax as in `--output-param`.",
         required=True,
     )
     property_parser.add_argument(
@@ -54,19 +55,13 @@ def _build_parser():
         action="store_true",
     )
     property_parser.add_argument(
-        "--output-type",
-        help="What type to parse/emit into",
-        choices=("argparse_function", "class", "function"),
-        required=True,
-    )
-    property_parser.add_argument(
         "--output-file",
         help="Edited in place, the property within this file (to update) is selected by --output-param",
         required=True,
     )
     property_parser.add_argument(
         "--output-param",
-        help="Parameter to update. E.g., `A.F` for `class A: F`, `f.g` for `def f(g): pass",
+        help="Parameter to update. E.g., `A.F` for `class A: F`, `f.g` for `def f(g): pass`",
         required=True,
     )
 
@@ -176,6 +171,20 @@ def main(cli_argv=None, return_args=False):
             )
 
         return args if return_args else ground_truth(args, truth_file)
+    elif command == "sync_property":
+        if args.input_file is None or not path.isfile(args.input_file):
+            _parser.error(
+                "--input-file must be an existent file. Got: {!r}".format(
+                    args.input_file
+                )
+            )
+        elif args.output_file is None or not path.isfile(args.output_file):
+            _parser.error(
+                "--output-file must be an existent file. Got: {!r}".format(
+                    args.output_file
+                )
+            )
+        sync_property(**{k: v for k, v in vars(args).items() if k != "command"})
 
 
 if __name__ == "__main__":

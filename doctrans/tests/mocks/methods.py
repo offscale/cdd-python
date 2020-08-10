@@ -125,6 +125,27 @@ class C(object):
         return np.empty(0), np.empty(0)
 '''
 
+class_with_optional_arg_method_str = '''
+class C(object):
+    """ C class (mocked!) """
+
+    def method_name(
+        self,
+        dataset_name: str,
+        K: Optional[Literal["np", "tf"]] = None
+    ) -> Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
+        """
+        Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
+
+        :param dataset_name: name of dataset.
+
+        :param K: backend engine, e.g., `np` or `tf`.
+
+        :return: Train and tests dataset splits.
+        """
+        return np.empty(0), np.empty(0)
+'''
+
 class_with_method_and_body_types_ast = ClassDef(
     bases=[Name(ctx=Load(), id="object")],
     body=[
@@ -593,11 +614,169 @@ class_with_method_types_ast = (
     else ast.parse(class_with_method_types_str).body[0]
 )
 
+class_with_optional_arg_method_ast = (
+    ClassDef(
+        bases=[Name(ctx=Load(), id="object")],
+        body=[
+            Expr(value=Constant(kind=None, value=" C class (mocked!) ")),
+            FunctionDef(
+                args=arguments(
+                    args=[
+                        arg(annotation=None, arg="self", type_comment=None),
+                        arg(
+                            annotation=Name(ctx=Load(), id="str"),
+                            arg="dataset_name",
+                            type_comment=None,
+                        ),
+                        arg(
+                            annotation=Subscript(
+                                ctx=Load(),
+                                slice=Index(
+                                    value=Subscript(
+                                        ctx=Load(),
+                                        slice=Index(
+                                            value=Tuple(
+                                                ctx=Load(),
+                                                elts=[
+                                                    Constant(kind=None, value="np"),
+                                                    Constant(kind=None, value="tf"),
+                                                ],
+                                            )
+                                        ),
+                                        value=Name(ctx=Load(), id="Literal"),
+                                    )
+                                ),
+                                value=Name(ctx=Load(), id="Optional"),
+                            ),
+                            arg="K",
+                            type_comment=None,
+                        ),
+                    ],
+                    defaults=[Constant(kind=None, value=None)],
+                    kw_defaults=[],
+                    kwarg=None,
+                    kwonlyargs=[],
+                    posonlyargs=[],
+                    vararg=None,
+                ),
+                body=[
+                    Expr(
+                        value=Constant(
+                            kind=None,
+                            value="\n        Acquire from the official tensorflow_datasets model zoo,"
+                            " or the ophthalmology focussed ml-prepare library\n\n        "
+                            ":param dataset_name: name of dataset.\n\n        "
+                            ":param K: backend engine, e.g., `np` or `tf`.\n\n        "
+                            ":return: Train and tests dataset splits.\n        ",
+                        )
+                    ),
+                    Return(
+                        value=Tuple(
+                            ctx=Load(),
+                            elts=[
+                                Call(
+                                    args=[Constant(kind=None, value=0)],
+                                    func=Attribute(
+                                        attr="empty",
+                                        ctx=Load(),
+                                        value=Name(ctx=Load(), id="np"),
+                                    ),
+                                    keywords=[],
+                                ),
+                                Call(
+                                    args=[Constant(kind=None, value=0)],
+                                    func=Attribute(
+                                        attr="empty",
+                                        ctx=Load(),
+                                        value=Name(ctx=Load(), id="np"),
+                                    ),
+                                    keywords=[],
+                                ),
+                            ],
+                        )
+                    ),
+                ],
+                decorator_list=[],
+                name="method_name",
+                returns=Subscript(
+                    ctx=Load(),
+                    slice=Index(
+                        value=Tuple(
+                            ctx=Load(),
+                            elts=[
+                                Subscript(
+                                    ctx=Load(),
+                                    slice=Index(
+                                        value=Tuple(
+                                            ctx=Load(),
+                                            elts=[
+                                                Attribute(
+                                                    attr="Dataset",
+                                                    ctx=Load(),
+                                                    value=Attribute(
+                                                        attr="data",
+                                                        ctx=Load(),
+                                                        value=Name(ctx=Load(), id="tf"),
+                                                    ),
+                                                ),
+                                                Attribute(
+                                                    attr="Dataset",
+                                                    ctx=Load(),
+                                                    value=Attribute(
+                                                        attr="data",
+                                                        ctx=Load(),
+                                                        value=Name(ctx=Load(), id="tf"),
+                                                    ),
+                                                ),
+                                            ],
+                                        )
+                                    ),
+                                    value=Name(ctx=Load(), id="Tuple"),
+                                ),
+                                Subscript(
+                                    ctx=Load(),
+                                    slice=Index(
+                                        value=Tuple(
+                                            ctx=Load(),
+                                            elts=[
+                                                Attribute(
+                                                    attr="ndarray",
+                                                    ctx=Load(),
+                                                    value=Name(ctx=Load(), id="np"),
+                                                ),
+                                                Attribute(
+                                                    attr="ndarray",
+                                                    ctx=Load(),
+                                                    value=Name(ctx=Load(), id="np"),
+                                                ),
+                                            ],
+                                        )
+                                    ),
+                                    value=Name(ctx=Load(), id="Tuple"),
+                                ),
+                            ],
+                        )
+                    ),
+                    value=Name(ctx=Load(), id="Union"),
+                ),
+                type_comment=None,
+            ),
+        ],
+        decorator_list=[],
+        keywords=[],
+        name="C",
+    )
+    if PY3_8
+    else ast.parse(class_with_optional_arg_method_str).body[0]
+)
+
 __all__ = [
     "class_with_method_str",
     "class_with_method_types_str",
+    "class_with_optional_arg_method_str",
     "class_with_method_and_body_types_str",
     "class_with_method_and_body_types_ast",
     "class_with_method_ast",
     "class_with_method_types_ast",
+    "class_with_optional_arg_method_ast",
 ]

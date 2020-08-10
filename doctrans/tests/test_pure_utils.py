@@ -1,7 +1,15 @@
 """ Tests for pure utils """
 from unittest import TestCase
 
-from doctrans.pure_utils import rpartial, pp, tab, simple_types, identity, pluralise
+from doctrans.pure_utils import (
+    rpartial,
+    pp,
+    tab,
+    simple_types,
+    identity,
+    pluralise,
+    strip_split,
+)
 from doctrans.tests.utils_for_tests import unittest_main
 
 
@@ -51,6 +59,11 @@ class TestPureUtils(TestCase):
         self.assertEqual(pluralise("wish"), "wishes")
         self.assertEqual(pluralise("morphosis"), "morphosises")
         self.assertEqual(pluralise("s"), "ss")
+
+    def test_strip_split(self) -> None:
+        """ Tests that strip_split works on separated input and separator free input """
+        self.assertTupleEqual(tuple(strip_split("foo.bar", ".")), ("foo", "bar"))
+        self.assertTupleEqual(tuple(strip_split("foo", " ")), ("foo",))
 
 
 unittest_main()
