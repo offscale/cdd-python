@@ -17,7 +17,7 @@ from doctrans.pure_utils import rpartial
 from doctrans.source_transformer import to_code
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import class_ast
-from doctrans.tests.mocks.docstrings import docstring_structure
+from doctrans.tests.mocks.docstrings import intermediate_repr
 from doctrans.tests.mocks.methods import (
     class_with_method_types_ast,
     class_with_method_and_body_types_ast,
@@ -132,14 +132,14 @@ class TestConformance(TestCase):
     def test_ground_truth_changes(self) -> None:
         """ Time for a new master. """
 
-        _docstring_structure = deepcopy(docstring_structure)
-        _docstring_structure["returns"]["typ"] = "Tuple[np.ndarray, np.ndarray]"
+        ir = deepcopy(intermediate_repr)
+        ir["returns"]["typ"] = "Tuple[np.ndarray, np.ndarray]"
 
         with TemporaryDirectory() as tmpdir:
             self.assertTupleEqual(
                 tuple(
                     self.ground_truth_tester(
-                        tmpdir=tmpdir, _class_ast=emit.class_(_docstring_structure),
+                        tmpdir=tmpdir, _class_ast=emit.class_(ir),
                     )[0].values()
                 ),
                 (unchanged, modified, unchanged),
@@ -203,7 +203,7 @@ class TestConformance(TestCase):
 
     def test_replace_node(self) -> None:
         """ Tests `replace_node` """
-        _docstring_structure = deepcopy(docstring_structure)
+        ir = deepcopy(intermediate_repr)
         same, found = replace_node(
             fun_name="argparse_function",
             from_func=parse.argparse_ast,
@@ -211,7 +211,7 @@ class TestConformance(TestCase):
             inner_name=None,
             outer_node=argparse_func_ast,
             inner_node=None,
-            docstring_structure=_docstring_structure,
+            intermediate_repr=ir,
             typ=FunctionDef,
         )
         self.assertEqual(*map(to_code, (argparse_func_ast, found)))
@@ -224,7 +224,7 @@ class TestConformance(TestCase):
             inner_name=None,
             outer_node=class_ast,
             inner_node=None,
-            docstring_structure=_docstring_structure,
+            intermediate_repr=ir,
             typ=ClassDef,
         )
         self.assertEqual(*map(to_code, (class_ast, found)))
@@ -240,7 +240,7 @@ class TestConformance(TestCase):
             inner_name="method_name",
             outer_node=class_with_method_types_ast,
             inner_node=function_def,
-            docstring_structure=_docstring_structure,
+            intermediate_repr=ir,
             typ=FunctionDef,
         )
         self.assertEqual(*map(to_code, (function_def, found)))
@@ -262,7 +262,7 @@ class TestConformance(TestCase):
                         class_with_method_types_ast.body,
                     )
                 ),
-                docstring_structure=deepcopy(docstring_structure),
+                intermediate_repr=deepcopy(intermediate_repr),
                 typ=FunctionDef,
             ),
         )

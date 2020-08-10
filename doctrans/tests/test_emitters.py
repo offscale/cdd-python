@@ -13,7 +13,7 @@ from doctrans.ast_utils import get_function_type
 from doctrans.pure_utils import rpartial, PY3_8
 from doctrans.tests.mocks.argparse import argparse_func_ast, argparse_func_with_body_ast
 from doctrans.tests.mocks.classes import class_ast
-from doctrans.tests.mocks.docstrings import docstring_str, docstring_structure
+from doctrans.tests.mocks.docstrings import docstring_str, intermediate_repr
 from doctrans.tests.mocks.methods import (
     class_with_method_types_ast,
     class_with_method_ast,
@@ -69,7 +69,7 @@ class TestEmitters(TestCase):
         """
         self.assertRaises(
             NotImplementedError,
-            lambda: emit.docstring(docstring_structure, docstring_format="numpy"),
+            lambda: emit.docstring(intermediate_repr, docstring_format="numpy"),
         )
 
     def test_to_google_docstring_fails(self) -> None:
@@ -78,7 +78,7 @@ class TestEmitters(TestCase):
         """
         self.assertRaises(
             NotImplementedError,
-            lambda: emit.docstring(docstring_structure, docstring_format="google"),
+            lambda: emit.docstring(intermediate_repr, docstring_format="google"),
         )
 
     def test_to_file(self) -> None:

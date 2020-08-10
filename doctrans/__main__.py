@@ -30,17 +30,49 @@ def _build_parser():
     subparsers = parser.add_subparsers()
     subparsers.required = True
     subparsers.dest = "command"
+
+    ############
+    # Property #
+    ############
     property_parser = subparsers.add_parser(
-        "property",
+        "sync_property",
         help="Synchronise just one property on one class, method, or argparse",
     )
+
     property_parser.add_argument(
-        "--prop",
-        help="File where class `class` is declared.",
-        action="append",
-        dest="classes",
+        "--input-file", help="File to find --input-param from", required=True,
+    )
+    property_parser.add_argument(
+        "--input-param",
+        help="Location within file of property."
+        " Can be top level like `a` for `a=5` or with the `.` syntax as in -`-output-param`.",
+        required=True,
+    )
+    property_parser.add_argument(
+        "--input-eval",
+        help="Whether to evaluate the input-param, or just leave it",
+        action="store_true",
+    )
+    property_parser.add_argument(
+        "--output-type",
+        help="What type to parse/emit into",
+        choices=("argparse_function", "class", "function"),
+        required=True,
+    )
+    property_parser.add_argument(
+        "--output-file",
+        help="Edited in place, the property within this file (to update) is selected by --output-param",
+        required=True,
+    )
+    property_parser.add_argument(
+        "--output-param",
+        help="Parameter to update. E.g., `A.F` for `class A: F`, `f.g` for `def f(g): pass",
+        required=True,
     )
 
+    ########
+    # Sync #
+    ########
     sync_parser = subparsers.add_parser(
         "sync", help="Force classes, methods, and/or argparse to be equivalent"
     )

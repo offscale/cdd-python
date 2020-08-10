@@ -4,9 +4,9 @@ Mocks for docstrings
 
 from copy import deepcopy
 
-from doctrans.defaults_utils import remove_defaults_from_docstring_structure
+from doctrans.defaults_utils import remove_defaults_from_intermediate_repr
 
-docstring_structure = {
+intermediate_repr = {
     "short_description": "Acquire from the official tensorflow_datasets model "
     "zoo, or the ophthalmology focussed ml-prepare "
     "library",
@@ -72,11 +72,11 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """
 
-docstring_structure_no_default_doc_or_prop = remove_defaults_from_docstring_structure(
-    deepcopy(docstring_structure), emit_defaults=False
+intermediate_repr_no_default_doc_or_prop = remove_defaults_from_intermediate_repr(
+    deepcopy(intermediate_repr), emit_defaults=False
 )
 
-docstring_structure_no_default_doc = {
+intermediate_repr_no_default_doc = {
     "short_description": "Acquire from the official tensorflow_datasets model "
     "zoo, or the ophthalmology focussed ml-prepare "
     "library",
@@ -143,9 +143,9 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 """
 
 __all__ = [
-    "docstring_structure",
+    "intermediate_repr",
     "docstring_str",
-    "docstring_structure_no_default_doc_or_prop",
-    "docstring_structure_no_default_doc",
+    "intermediate_repr_no_default_doc_or_prop",
+    "intermediate_repr_no_default_doc",
     "docstring_str_no_default_doc",
 ]

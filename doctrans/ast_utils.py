@@ -96,6 +96,7 @@ def to_class_def(ast, class_name=None):
         else:
             raise TypeError("No ClassDef in AST")
     elif isinstance(ast, ClassDef):
+        assert class_name is None or ast.name == class_name
         return ast
     else:
         raise NotImplementedError(type(ast).__name__)

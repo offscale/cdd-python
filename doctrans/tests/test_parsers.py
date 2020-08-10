@@ -11,9 +11,9 @@ from doctrans.parse import to_docstring
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import class_ast
 from doctrans.tests.mocks.docstrings import (
-    docstring_structure,
+    intermediate_repr,
     docstring_str,
-    docstring_structure_no_default_doc,
+    intermediate_repr_no_default_doc,
 )
 from doctrans.tests.mocks.methods import (
     class_with_method_ast,
@@ -39,9 +39,9 @@ class TestIntermediateRepresentation(TestCase):
 
     def test_from_argparse_ast(self) -> None:
         """
-        Tests whether `argparse_ast` produces `docstring_structure_no_default_doc_or_prop`
+        Tests whether `argparse_ast` produces `intermediate_repr_no_default_doc_or_prop`
               from `argparse_func_ast` """
-        self.assertDictEqual(parse.argparse_ast(argparse_func_ast), docstring_structure)
+        self.assertDictEqual(parse.argparse_ast(argparse_func_ast), intermediate_repr)
 
     def test_from_argparse_ast_empty(self) -> None:
         """
@@ -58,40 +58,36 @@ class TestIntermediateRepresentation(TestCase):
 
     def test_from_class(self) -> None:
         """
-        Tests whether `class_` produces `docstring_structure_no_default_doc`
+        Tests whether `class_` produces `intermediate_repr_no_default_doc`
               from `class_ast`
         """
-        self.assertDictEqual(
-            parse.class_(class_ast), docstring_structure_no_default_doc
-        )
+        self.assertDictEqual(parse.class_(class_ast), intermediate_repr_no_default_doc)
 
     def test_from_class_with_method(self) -> None:
         """
-        Tests whether `class_with_method` produces `docstring_structure_no_default_doc`
+        Tests whether `class_with_method` produces `intermediate_repr_no_default_doc`
               from `class_with_method_ast` """
         self.assertDictEqual(
             parse.class_with_method(class_with_method_ast, "method_name"),
-            docstring_structure_no_default_doc,
+            intermediate_repr_no_default_doc,
         )
 
     def test_from_class_with_method_types(self) -> None:
         """
-        Tests whether `class_with_method` produces `docstring_structure_no_default_doc`
+        Tests whether `class_with_method` produces `intermediate_repr_no_default_doc`
               from `class_with_method_types_ast` """
         self.assertDictEqual(
             parse.class_with_method(class_with_method_types_ast, "method_name"),
-            docstring_structure_no_default_doc,
+            intermediate_repr_no_default_doc,
         )
 
     def test_from_docstring(self) -> None:
         """
-        Tests whether `docstring` produces `docstring_structure_no_default_doc`
+        Tests whether `docstring` produces `intermediate_repr_no_default_doc`
               from `docstring_str` """
-        _docstring_structure, returns = parse.docstring(
-            docstring_str, return_tuple=True
-        )
+        ir, returns = parse.docstring(docstring_str, return_tuple=True)
         self.assertTrue(returns)
-        self.assertDictEqual(_docstring_structure, docstring_structure_no_default_doc)
+        self.assertDictEqual(ir, intermediate_repr_no_default_doc)
 
     def test_to_docstring_fails(self) -> None:
         """

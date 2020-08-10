@@ -29,18 +29,18 @@ def extract_default(line, emit_default_doc=True):
     )
 
 
-def remove_defaults_from_docstring_structure(docstring_structure, emit_defaults=True):
+def remove_defaults_from_intermediate_repr(intermediate_repr, emit_defaults=True):
     """
-    Remove "Default of" text from docstring structure
+    Remove "Default of" text from IR
 
-    :param docstring_structure: a dictionary of form
+    :param intermediate_repr: a dictionary of form
               {
                   'short_description': ...,
                   'long_description': ...,
                   'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
                   "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
               }
-    :type docstring_structure: ```dict```
+    :type intermediate_repr: ```dict```
 
     :param emit_defaults: Whether to emit default property
     :type emit_defaults: ```bool```
@@ -54,7 +54,7 @@ def remove_defaults_from_docstring_structure(docstring_structure, emit_defaults=
               }
     :rtype: ```dict```
     """
-    _docstring_structure = deepcopy(docstring_structure)
+    ir = deepcopy(intermediate_repr)
 
     def handle_param(param):
         """
@@ -70,11 +70,9 @@ def remove_defaults_from_docstring_structure(docstring_structure, emit_defaults=
             del param["default"]
         return param
 
-    _docstring_structure["params"] = list(
-        map(handle_param, _docstring_structure["params"])
-    )
-    _docstring_structure["returns"] = handle_param(_docstring_structure["returns"])
-    return _docstring_structure
+    ir["params"] = list(map(handle_param, ir["params"]))
+    ir["returns"] = handle_param(ir["returns"])
+    return ir
 
 
 def set_default_doc(param, emit_default_doc=True):
@@ -112,6 +110,6 @@ def set_default_doc(param, emit_default_doc=True):
 
 __all__ = [
     "extract_default",
-    "remove_defaults_from_docstring_structure",
+    "remove_defaults_from_intermediate_repr",
     "set_default_doc",
 ]

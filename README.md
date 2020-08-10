@@ -200,19 +200,20 @@ def set_cli_args(argument_parser):
 
     $ python -m doctrans --help
 
-    usage: python -m doctrans [-h] [--version] {property,sync} ...
+    usage: python -m doctrans [-h] [--version] {sync_property,sync} ...
     
     Translate between docstrings, classes, methods, and argparse.
     
     positional arguments:
-      {property,sync}
-        property       Synchronise just one property on one class, method, or
-                       argparse
-        sync           Force classes, methods, and/or argparse to be equivalent
+      {sync_property,sync}
+        sync_property       Synchronise just one property on one class, method, or
+                            argparse
+        sync                Force classes, methods, and/or argparse to be
+                            equivalent
     
     optional arguments:
-      -h, --help       show this help message and exit
-      --version        show program's version number and exit
+      -h, --help            show this help message and exit
+      --version             show program's version number and exit
 
 
 ### sync
@@ -243,6 +244,36 @@ def set_cli_args(argument_parser):
       --truth {argparse_function,class,function}
                             Single source of truth. Others will be generated from
                             this. Will run with first found choice.
+
+
+### sync_property
+
+    $ python -m doctrans sync_property --help
+
+    usage: python -m doctrans sync_property [-h] --input-file INPUT_FILE
+                                            --input-param INPUT_PARAM
+                                            [--input-eval] --output-type
+                                            {argparse_function,class,function}
+                                            --output-file OUTPUT_FILE
+                                            --output-param OUTPUT_PARAM
+    
+    optional arguments:
+      -h, --help            show this help message and exit
+      --input-file INPUT_FILE
+                            File to find --input-param from
+      --input-param INPUT_PARAM
+                            Location within file of property. Can be top level
+                            like `a` for `a=5` or with the `.` syntax as in
+                            -`-output-param`.
+      --input-eval          Whether to evaluate the input-param, or just leave it
+      --output-type {argparse_function,class,function}
+                            What type to parse/emit into
+      --output-file OUTPUT_FILE
+                            Edited in place, the property within this file (to
+                            update) is selected by --output-param
+      --output-param OUTPUT_PARAM
+                            Parameter to update. E.g., `A.F` for `class A: F`,
+                            `f.g` for `def f(g): pass
 
 
 ## Future work
