@@ -191,19 +191,18 @@ class TestCli(TestCase):
             "__main__",
             os.path.join(os.path.dirname(os.path.dirname(__file__)), "__main__.py"),
         )
-        with patch(
-            "argparse.ArgumentParser._print_message", argparse_mock
-        ), self.assertRaises(SystemExit) as e:
+        with patch("argparse.ArgumentParser._print_message", argparse_mock), \
+             patch("sys.argv", []), self.assertRaises(SystemExit) as e:
             loader.exec_module(module_from_spec(spec_from_loader(loader.name, loader)))
         self.assertEqual(e.exception.code, SystemExit(2).code)
 
         self.assertEqual(
-            (lambda output: output[(output.find("error:")) :output.rfind(':')])(
+            (lambda output: output[(output.rfind(" ") + 1) :][:-1])(
                 (argparse_mock.call_args.args if PY3_8 else argparse_mock.call_args[0])[
                     0
                 ]
             ),
-            "error: the following arguments are required",
+            "command",
         )
 
 
