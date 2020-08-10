@@ -200,18 +200,35 @@ def set_cli_args(argument_parser):
 
     $ python -m doctrans --help
 
-    usage: python -m doctrans [-h] [--version] [--class CLASSES]
-                              [--class-name CLASS_NAMES] [--function FUNCTIONS]
-                              [--function-name FUNCTION_NAMES]
-                              [--argparse-function ARGPARSE_FUNCTIONS]
-                              [--argparse-function-name ARGPARSE_FUNCTION_NAMES]
-                              --truth {argparse_function,class,function}
+    usage: python -m doctrans [-h] [--version] {property,sync} ...
     
-    Translate between docstrings, classes, and argparse
+    Translate between docstrings, classes, methods, and argparse.
+    
+    positional arguments:
+      {property,sync}
+        property       Synchronise just one property on one class, method, or
+                       argparse
+        sync           Force classes, methods, and/or argparse to be equivalent
+    
+    optional arguments:
+      -h, --help       show this help message and exit
+      --version        show program's version number and exit
+
+
+### sync
+
+    $ python -m doctrans sync --help
+
+    usage: python -m doctrans sync [-h] [--class CLASSES]
+                                   [--class-name CLASS_NAMES]
+                                   [--function FUNCTIONS]
+                                   [--function-name FUNCTION_NAMES]
+                                   [--argparse-function ARGPARSE_FUNCTIONS]
+                                   [--argparse-function-name ARGPARSE_FUNCTION_NAMES]
+                                   --truth {argparse_function,class,function}
     
     optional arguments:
       -h, --help            show this help message and exit
-      --version             show program's version number and exit
       --class CLASSES       File where class `class` is declared.
       --class-name CLASS_NAMES
                             Name of `class`

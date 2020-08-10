@@ -38,28 +38,12 @@ jobs:
             -   name: Test with unittest
                 run: |
                     python setup.py test
-    lint_and_coverage:
-        name: Linting and coverage on Linux ${{ matrix.python-version }}
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                python-version: [3.8]
-        steps:
-            -   uses: actions/checkout@v2
-            -   name: Set up Python ${{ matrix.python-version }}
-                uses: actions/setup-python@v2
-                with:
-                    python-version: ${{ matrix.python-version }}
-                    architecture: x64
-            -   name: install_dependencies
-                run: |
-                    python -m pip install --upgrade pip
-                    python -m pip install --upgrade setuptools wheel
-                    pip install -r requirements.txt
+
             -   name: Lint with flake8
                 run: |
                     pip install flake8
                     flake8 . --count --select=$(printf '%s,' {A..Z}) --ignore='W503,E203' --show-source --max-complexity=10 --max-line-length=119 --statistics
+                if: matrix.python-version == '3.8' && matrix.os.name == 'Linux'
             -   name: Doc coverage
                 run: |
                     pip install interrogate codecov coverage
@@ -78,9 +62,11 @@ jobs:
                         git commit -m '[.github/doccoverage.svg] Updated coverage'
                         git push origin master
                     fi
+                if: matrix.python-version == '3.8' && matrix.os.name == 'Linux'
             -   name: Test coverage
                 run: |
                     coverage run -m unittest discover
                     bash <(curl -s https://codecov.io/bash)
                 env:
                     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+                if: matrix.python-version == '3.8' && matrix.os.name == 'Linux'

@@ -3,7 +3,6 @@ Transform from string or AST representations of input, to AST, file, or str outp
 """
 import ast
 from ast import (
-    parse,
     ClassDef,
     Name,
     Load,

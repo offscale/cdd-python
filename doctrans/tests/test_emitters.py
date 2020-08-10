@@ -3,7 +3,7 @@ Tests for marshalling between formats
 """
 import ast
 import os
-from ast import FunctionDef, parse
+from ast import FunctionDef
 from unittest import TestCase
 
 from meta.asttools import cmp_ast
