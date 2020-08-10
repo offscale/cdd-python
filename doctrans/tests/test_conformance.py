@@ -40,17 +40,17 @@ class TestConformance(TestCase):
     def test_ground_truth(self) -> None:
         """ Straight from the ministry. Absolutely. """
 
-        with TemporaryDirectory() as tmpdir:
+        with TemporaryDirectory() as tempdir:
             self.assertTupleEqual(
-                tuple(self.ground_truth_tester(tmpdir=tmpdir,)[0].values()),
+                tuple(self.ground_truth_tester(tempdir=tempdir,)[0].values()),
                 (unchanged, unchanged, unchanged),
             )
 
     def test_ground_truths(self) -> None:
         """ My truth is being tested. """
 
-        with TemporaryDirectory() as tmpdir:
-            tmpdir_join = partial(path.join, tmpdir)
+        with TemporaryDirectory() as tempdir:
+            tempdir_join = partial(path.join, tempdir)
 
             argparse_functions = [
                 (
@@ -58,14 +58,14 @@ class TestConformance(TestCase):
                         argparse_func_ast, argparse_function, mode="wt"
                     )
                     or argparse_function
-                )(tmpdir_join("argparse{i}.py".format(i=i)))
+                )(tempdir_join("argparse{i}.py".format(i=i)))
                 for i in range(10)
             ]
 
-            class_ = tmpdir_join("classes.py")
+            class_ = tempdir_join("classes.py")
             emit.file(class_ast, class_, mode="wt")
 
-            function = tmpdir_join("methods.py")
+            function = tempdir_join("methods.py")
             emit.file(class_with_method_ast, function, mode="wt")
 
             args = Namespace(
@@ -105,8 +105,8 @@ class TestConformance(TestCase):
     def test_ground_truth_fails(self) -> None:
         """ Straight from the fake news ministry. """
 
-        with TemporaryDirectory() as tmpdir:
-            args = self.ground_truth_tester(tmpdir=tmpdir,)[1]
+        with TemporaryDirectory() as tempdir:
+            args = self.ground_truth_tester(tempdir=tempdir,)[1]
 
             with patch("sys.stdout", new_callable=StringIO), patch(
                 "sys.stderr", new_callable=StringIO
@@ -135,11 +135,11 @@ class TestConformance(TestCase):
         ir = deepcopy(intermediate_repr)
         ir["returns"]["typ"] = "Tuple[np.ndarray, np.ndarray]"
 
-        with TemporaryDirectory() as tmpdir:
+        with TemporaryDirectory() as tempdir:
             self.assertTupleEqual(
                 tuple(
                     self.ground_truth_tester(
-                        tmpdir=tmpdir, _class_ast=emit.class_(ir),
+                        tempdir=tempdir, _class_ast=emit.class_(ir),
                     )[0].values()
                 ),
                 (unchanged, modified, unchanged),
@@ -147,7 +147,7 @@ class TestConformance(TestCase):
 
     @staticmethod
     def ground_truth_tester(
-        tmpdir,
+        tempdir,
         _argparse_func_ast=argparse_func_ast,
         _class_ast=class_ast,
         _class_with_method_ast=class_with_method_types_ast,
@@ -155,8 +155,8 @@ class TestConformance(TestCase):
         """
         Helper for ground_truth tests
 
-        :param tmpdir: temporary directory
-        :type tmpdir: ```str```
+        :param tempdir: temporary directory
+        :type tempdir: ```str```
 
         :param _argparse_func_ast: AST node
         :type _argparse_func_ast: ```FunctionDef```
@@ -172,12 +172,12 @@ class TestConformance(TestCase):
                                Literal['unchanged', 'modified'],
                                Literal['unchanged', 'modified']], Namespace]```
         """
-        tmpdir_join = partial(path.join, tmpdir)
-        argparse_function = tmpdir_join("argparse.py")
+        tempdir_join = partial(path.join, tempdir)
+        argparse_function = tempdir_join("argparse.py")
         emit.file(_argparse_func_ast, argparse_function, mode="wt")
-        class_ = tmpdir_join("classes.py")
+        class_ = tempdir_join("classes.py")
         emit.file(_class_ast, class_, mode="wt")
-        function = tmpdir_join("methods.py")
+        function = tempdir_join("methods.py")
         emit.file(_class_with_method_ast, function, mode="wt")
 
         args = Namespace(

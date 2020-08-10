@@ -4,6 +4,7 @@ Tests for marshalling between formats
 import ast
 import os
 from ast import FunctionDef
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 from meta.asttools import cmp_ast
@@ -86,30 +87,31 @@ class TestEmitters(TestCase):
         Tests whether `file` constructs a file, and fills it with the right content
         """
 
-        filename = os.path.join(os.path.dirname(__file__), "delete_me.py")
-        try:
-            emit.file(class_ast, filename, skip_black=True)
+        with TemporaryDirectory() as tempdir:
+            filename = os.path.join(tempdir, "delete_me.py")
+            try:
+                emit.file(class_ast, filename, skip_black=True)
 
-            with open(filename, "rt") as f:
-                ugly = f.read()
+                with open(filename, "rt") as f:
+                    ugly = f.read()
 
-            os.remove(filename)
-
-            emit.file(class_ast, filename, skip_black=False)
-
-            with open(filename, "rt") as f:
-                blacked = f.read()
-
-            self.assertNotEqual(ugly, blacked)
-            # if PY3_8:
-            self.assertTrue(
-                cmp_ast(ast.parse(ugly), ast.parse(blacked)),
-                "Ugly AST doesn't match blacked AST",
-            )
-
-        finally:
-            if os.path.isfile(filename):
                 os.remove(filename)
+
+                emit.file(class_ast, filename, skip_black=False)
+
+                with open(filename, "rt") as f:
+                    blacked = f.read()
+
+                self.assertNotEqual(ugly, blacked)
+                # if PY3_8:
+                self.assertTrue(
+                    cmp_ast(ast.parse(ugly), ast.parse(blacked)),
+                    "Ugly AST doesn't match blacked AST",
+                )
+
+            finally:
+                if os.path.isfile(filename):
+                    os.remove(filename)
 
     def test_to_function(self) -> None:
         """
