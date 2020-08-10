@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from functools import partial
 from importlib.machinery import SourceFileLoader
 from importlib.util import spec_from_loader, module_from_spec
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
@@ -22,7 +23,8 @@ class TestCli(TestCase):
         parser = _build_parser()
         self.assertIsInstance(parser, ArgumentParser)
         self.assertEqual(
-            parser.description, "Translate between docstrings, classes, methods, and argparse."
+            parser.description,
+            "Translate between docstrings, classes, methods, and argparse.",
         )
 
     def run_cli_test(
@@ -103,6 +105,7 @@ class TestCli(TestCase):
         try:
             _, args = self.run_cli_test(
                 [
+                    "sync",
                     "--class",
                     filename,
                     "--argparse-function",
@@ -134,7 +137,15 @@ class TestCli(TestCase):
         )
 
         self.run_cli_test(
-            ["--argparse-function", filename, "--class", filename, "--truth", "class"],
+            [
+                "sync",
+                "--argparse-function",
+                filename,
+                "--class",
+                filename,
+                "--truth",
+                "class",
+            ],
             exit_code=2,
             output="--truth must be an existent file. Got: {!r}\n".format(filename),
         )
@@ -142,27 +153,29 @@ class TestCli(TestCase):
     def test_missing_argument_fails(self) -> None:
         """ Tests missing argument throws the right error """
         self.run_cli_test(
-            ["--truth", "class"],
+            ["sync", "--truth", "class"],
             exit_code=2,
             output="--truth must be an existent file. Got: None\n",
         )
 
     def test_missing_argument_fails_insufficient_args(self) -> None:
         """ Tests missing argument throws the right error """
-        filename = os.path.join(
-            os.path.dirname(__file__),
-            "delete_this_2{}".format(os.path.basename(__file__)),
-        )
-        self.run_cli_test(
-            ["--truth", "class", "--class", filename],
-            exit_code=2,
-            output="Two or more of `--argparse-function`, `--class`, and `--function` must be specified\n",
-        )
+        with TemporaryDirectory() as tmpdir:
+            filename = os.path.join(
+                tmpdir, "delete_this_2{}".format(os.path.basename(__file__)),
+            )
+            with open(filename, "wt") as f:
+                f.write(class_str)
+            self.run_cli_test(
+                ["sync", "--truth", "class", "--class", filename],
+                exit_code=2,
+                output="Two or more of `--argparse-function`, `--class`, and `--function` must be specified\n",
+            )
 
     def test_incorrect_arg_fails(self) -> None:
         """ Tests CLI interface failure cases """
         self.run_cli_test(
-            ["--wrong"],
+            ["sync", "--wrong"],
             exit_code=2,
             output="the following arguments are required: --truth\n",
         )
@@ -189,7 +202,7 @@ class TestCli(TestCase):
                     0
                 ]
             ),
-            "--truth",
+            "command",
         )
 
 

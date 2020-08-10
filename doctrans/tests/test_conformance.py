@@ -11,7 +11,7 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch
 
-from doctrans import docstring_struct, transformers
+from doctrans import parse, emit
 from doctrans.conformance import replace_node, _get_name_from_namespace, ground_truth
 from doctrans.pure_utils import rpartial
 from doctrans.source_transformer import to_code
@@ -54,7 +54,7 @@ class TestConformance(TestCase):
 
             argparse_functions = [
                 (
-                    lambda argparse_function: transformers.to_file(
+                    lambda argparse_function: emit.file(
                         argparse_func_ast, argparse_function, mode="wt"
                     )
                     or argparse_function
@@ -63,10 +63,10 @@ class TestConformance(TestCase):
             ]
 
             class_ = tmpdir_join("classes.py")
-            transformers.to_file(class_ast, class_, mode="wt")
+            emit.file(class_ast, class_, mode="wt")
 
             function = tmpdir_join("methods.py")
-            transformers.to_file(class_with_method_ast, function, mode="wt")
+            emit.file(class_with_method_ast, function, mode="wt")
 
             args = Namespace(
                 **{
@@ -139,8 +139,7 @@ class TestConformance(TestCase):
             self.assertTupleEqual(
                 tuple(
                     self.ground_truth_tester(
-                        tmpdir=tmpdir,
-                        _class_ast=transformers.to_class(_docstring_structure),
+                        tmpdir=tmpdir, _class_ast=emit.class_(_docstring_structure),
                     )[0].values()
                 ),
                 (unchanged, modified, unchanged),
@@ -175,11 +174,11 @@ class TestConformance(TestCase):
         """
         tmpdir_join = partial(path.join, tmpdir)
         argparse_function = tmpdir_join("argparse.py")
-        transformers.to_file(_argparse_func_ast, argparse_function, mode="wt")
+        emit.file(_argparse_func_ast, argparse_function, mode="wt")
         class_ = tmpdir_join("classes.py")
-        transformers.to_file(_class_ast, class_, mode="wt")
+        emit.file(_class_ast, class_, mode="wt")
         function = tmpdir_join("methods.py")
-        transformers.to_file(_class_with_method_ast, function, mode="wt")
+        emit.file(_class_with_method_ast, function, mode="wt")
 
         args = Namespace(
             **{
@@ -207,7 +206,7 @@ class TestConformance(TestCase):
         _docstring_structure = deepcopy(docstring_structure)
         same, found = replace_node(
             fun_name="argparse_function",
-            from_func=docstring_struct.from_argparse_ast,
+            from_func=parse.argparse_ast,
             outer_name="set_cli_args",
             inner_name=None,
             outer_node=argparse_func_ast,
@@ -220,7 +219,7 @@ class TestConformance(TestCase):
 
         same, found = replace_node(
             fun_name="class",
-            from_func=docstring_struct.from_class,
+            from_func=parse.class_,
             outer_name="ConfigClass",
             inner_name=None,
             outer_node=class_ast,
@@ -236,7 +235,7 @@ class TestConformance(TestCase):
         )
         same, found = replace_node(
             fun_name="function",
-            from_func=docstring_struct.from_class_with_method,
+            from_func=parse.class_with_method,
             outer_name="C",
             inner_name="method_name",
             outer_node=class_with_method_types_ast,
@@ -253,7 +252,7 @@ class TestConformance(TestCase):
             NotImplementedError,
             lambda: replace_node(
                 fun_name="function",
-                from_func=docstring_struct.from_class_with_method,
+                from_func=parse.class_with_method,
                 outer_name="C",
                 inner_name="method_name",
                 outer_node=class_with_method_and_body_types_ast,

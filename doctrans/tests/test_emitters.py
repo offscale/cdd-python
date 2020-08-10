@@ -1,13 +1,14 @@
 """
 Tests for marshalling between formats
 """
+import ast
 import os
 from ast import FunctionDef, parse
 from unittest import TestCase
 
 from meta.asttools import cmp_ast
 
-from doctrans import transformers, docstring_struct
+from doctrans import emit, parse
 from doctrans.ast_utils import get_function_type
 from doctrans.pure_utils import rpartial, PY3_8
 from doctrans.tests.mocks.argparse import argparse_func_ast, argparse_func_with_body_ast
@@ -21,29 +22,23 @@ from doctrans.tests.mocks.methods import (
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
 
 
-class TestTransformers(TestCase):
+class TestEmitters(TestCase):
     """ Tests whether conversion between formats works """
 
     def test_to_class_from_argparse_ast(self) -> None:
         """
-        Tests whether `to_class` produces `class_ast` given `argparse_func_ast`
+        Tests whether `class_` produces `class_ast` given `argparse_func_ast`
         """
         run_ast_test(
-            self,
-            transformers.to_class(
-                docstring_struct.from_argparse_ast(argparse_func_ast)
-            ),
-            gold=class_ast,
+            self, emit.class_(parse.argparse_ast(argparse_func_ast)), gold=class_ast,
         )
 
     def test_to_class_from_docstring_str(self) -> None:
         """
-        Tests whether `to_class` produces `class_ast` given `docstring_str`
+        Tests whether `class_` produces `class_ast` given `docstring_str`
         """
         run_ast_test(
-            self,
-            transformers.to_class(docstring_struct.from_docstring(docstring_str),),
-            gold=class_ast,
+            self, emit.class_(parse.docstring(docstring_str),), gold=class_ast,
         )
 
     def test_to_argparse(self) -> None:
@@ -52,8 +47,8 @@ class TestTransformers(TestCase):
         """
         run_ast_test(
             self,
-            transformers.to_argparse_function(
-                docstring_struct.from_class(class_ast),
+            emit.argparse_function(
+                parse.class_(class_ast),
                 emit_default_doc=False,
                 emit_default_doc_in_return=False,
             ),
@@ -62,50 +57,45 @@ class TestTransformers(TestCase):
 
     def test_to_docstring(self) -> None:
         """
-        Tests whether `to_docstring` produces `docstring_str` given `class_ast`
+        Tests whether `docstring` produces `docstring_str` given `class_ast`
         """
         self.assertEqual(
-            transformers.to_docstring(docstring_struct.from_class(class_ast)),
-            docstring_str,
+            emit.docstring(parse.class_(class_ast)), docstring_str,
         )
 
     def test_to_numpy_docstring_fails(self) -> None:
         """
-        Tests whether `to_docstring` fails when `docstring_format` is 'numpy'
+        Tests whether `docstring` fails when `docstring_format` is 'numpy'
         """
         self.assertRaises(
             NotImplementedError,
-            lambda: transformers.to_docstring(
-                docstring_structure, docstring_format="numpy"
-            ),
+            lambda: emit.docstring(docstring_structure, docstring_format="numpy"),
         )
 
     def test_to_google_docstring_fails(self) -> None:
         """
-        Tests whether `to_docstring` fails when `docstring_format` is 'google'
+        Tests whether `docstring` fails when `docstring_format` is 'google'
         """
         self.assertRaises(
             NotImplementedError,
-            lambda: transformers.to_docstring(
-                docstring_structure, docstring_format="google"
-            ),
+            lambda: emit.docstring(docstring_structure, docstring_format="google"),
         )
 
     def test_to_file(self) -> None:
         """
-        Tests whether `to_file` constructs a file, and fills it with the right content
+        Tests whether `file` constructs a file, and fills it with the right content
         """
 
         filename = os.path.join(os.path.dirname(__file__), "delete_me.py")
         try:
-            transformers.to_file(class_ast, filename, skip_black=True)
+            emit.file(class_ast, filename, skip_black=True)
 
             with open(filename, "rt") as f:
                 ugly = f.read()
 
             os.remove(filename)
 
-            transformers.to_file(class_ast, filename, skip_black=False)
+            emit.file(class_ast, filename, skip_black=False)
 
             with open(filename, "rt") as f:
                 blacked = f.read()
@@ -113,7 +103,7 @@ class TestTransformers(TestCase):
             self.assertNotEqual(ugly, blacked)
             # if PY3_8:
             self.assertTrue(
-                cmp_ast(parse(ugly), parse(blacked)),
+                cmp_ast(ast.parse(ugly), ast.parse(blacked)),
                 "Ugly AST doesn't match blacked AST",
             )
 
@@ -123,15 +113,15 @@ class TestTransformers(TestCase):
 
     def test_to_function(self) -> None:
         """
-        Tests whether `to_function` produces method from `class_with_method_types_ast` given `docstring_str`
+        Tests whether `function` produces method from `class_with_method_types_ast` given `docstring_str`
         """
         function_def = next(
             filter(rpartial(isinstance, FunctionDef), class_with_method_types_ast.body)
         )
         run_ast_test(
             self,
-            transformers.to_function(
-                docstring_struct.from_docstring(docstring_str),
+            emit.function(
+                parse.docstring(docstring_str),
                 function_name=function_def.name,
                 function_type=get_function_type(function_def),
                 emit_default_doc=False,
@@ -143,15 +133,15 @@ class TestTransformers(TestCase):
 
     def test_to_function_with_docstring_types(self) -> None:
         """
-        Tests that `to_function` can generate a function with types in docstring
+        Tests that `function` can generate a function with types in docstring
         """
         function_def = next(
             filter(rpartial(isinstance, FunctionDef), class_with_method_ast.body)
         )
         run_ast_test(
             self,
-            transformers.to_function(
-                docstring_struct.from_function(function_def),
+            emit.function(
+                parse.function(function_def),
                 function_name=function_def.name,
                 function_type=get_function_type(function_def),
                 emit_default_doc=False,
@@ -164,16 +154,16 @@ class TestTransformers(TestCase):
 
     def test_to_function_with_inline_types(self) -> None:
         """
-        Tests that `to_function` can generate a function with inline types
+        Tests that `function` can generate a function with inline types
         """
         function_def = next(
             filter(rpartial(isinstance, FunctionDef), class_with_method_types_ast.body)
         )
-        # transformers.to_file(gen_ast, os.path.join(os.path.dirname(__file__), 'delme.py'))
+        # transformers.file(gen_ast, os.path.join(os.path.dirname(__file__), 'delme.py'))
         run_ast_test(
             self,
-            transformers.to_function(
-                docstring_struct.from_function(function_def),
+            emit.function(
+                parse.function(function_def),
                 function_name=function_def.name,
                 function_type=get_function_type(function_def),
                 emit_default_doc=False,
@@ -187,8 +177,8 @@ class TestTransformers(TestCase):
         """ Tests if this can make the roundtrip from a full function to a full function """
         run_ast_test(
             self,
-            transformers.to_function(
-                docstring_struct.from_class_with_method(
+            emit.function(
+                parse.class_with_method(
                     class_with_method_and_body_types_ast, "method_name"
                 ),
                 emit_default_doc=False,
@@ -210,8 +200,8 @@ class TestTransformers(TestCase):
 
         run_ast_test(
             self,
-            transformers.to_argparse_function(
-                docstring_struct.from_argparse_ast(argparse_func_with_body_ast),
+            emit.argparse_function(
+                parse.argparse_ast(argparse_func_with_body_ast),
                 emit_default_doc=False,
                 emit_default_doc_in_return=False,
             ),

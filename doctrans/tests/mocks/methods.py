@@ -1,7 +1,7 @@
 """
 Mocks for methods
 """
-
+import ast
 from ast import (
     Return,
     Tuple,
@@ -17,7 +17,6 @@ from ast import (
     Attribute,
     Name,
     Subscript,
-    parse,
     BinOp,
     Mult,
     If,
@@ -412,7 +411,7 @@ class_with_method_ast = (
         name="C",
     )
     if PY3_8
-    else parse(class_with_method_str).body[0]
+    else ast.parse(class_with_method_str).body[0]
 )
 
 class_with_method_types_ast = (
@@ -591,7 +590,7 @@ class_with_method_types_ast = (
         name="C",
     )
     if PY3_8
-    else parse(class_with_method_types_str).body[0]
+    else ast.parse(class_with_method_types_str).body[0]
 )
 
 __all__ = [

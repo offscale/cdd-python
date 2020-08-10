@@ -1,7 +1,7 @@
 """
 Given the truth, show others the path
 """
-
+import ast
 from ast import parse, FunctionDef, ClassDef, Module
 from collections import OrderedDict
 from copy import deepcopy
@@ -9,10 +9,10 @@ from functools import partial
 
 from meta.asttools import cmp_ast
 
-from doctrans import docstring_struct
-from doctrans import transformers
+from doctrans import emit
+from doctrans import parse
 from doctrans.ast_utils import get_function_type
-from doctrans.pure_utils import rpartial, pluralise
+from doctrans.pure_utils import rpartial, pluralise, sanitise
 
 
 def _get_name_from_namespace(args, fun_name):
@@ -49,16 +49,16 @@ def ground_truth(args, truth_file):
     :rtype: ```OrderedDict```
     """
     arg_name_to_func_typ = {
-        "argparse_function": (docstring_struct.from_argparse_ast, FunctionDef),
-        "class": (docstring_struct.from_class, ClassDef),
-        "function": (docstring_struct.from_class_with_method, FunctionDef),
+        "argparse_function": (parse.argparse_ast, FunctionDef),
+        "class": (parse.class_, ClassDef),
+        "function": (parse.class_with_method, FunctionDef),
     }
 
     from_func, typ = arg_name_to_func_typ[args.truth]
     fun_name = _get_name_from_namespace(args, args.truth)
 
     with open(truth_file, "rt") as f:
-        parsed_truth_file = parse(f.read(), filename=truth_file)
+        parsed_truth_file = ast.parse(f.read(), filename=truth_file)
 
     true_docstring_structure = from_func(
         next(
@@ -81,6 +81,7 @@ def ground_truth(args, truth_file):
             )
 
         filenames = getattr(args, pluralise(fun_name))
+        print("filenames:", filenames, ";")
         assert isinstance(
             filenames, (list, tuple)
         ), "Expected Union[list, tuple] got {!r}".format(type(filenames).__name__)
@@ -146,7 +147,7 @@ def _conform_filename(
     """
     unchanged = True
     with open(filename, "rt") as f:
-        parsed_ast = parse(f.read())
+        parsed_ast = ast.parse(f.read())
     assert isinstance(parsed_ast, Module)
 
     for idx, outer_node in enumerate(parsed_ast.body):
@@ -173,7 +174,7 @@ def _conform_filename(
 
     print("unchanged" if unchanged else "modified", filename, sep="\t")
     if not unchanged:
-        transformers.to_file(parsed_ast, filename, mode="wt")
+        emit.file(parsed_ast, filename, mode="wt")
 
     return filename, unchanged
 
@@ -239,9 +240,7 @@ def replace_node(
     if "_internal" in found:
         raise NotImplementedError()
     else:
-        node = getattr(transformers, "to_{fun_name}".format(fun_name=fun_name),)(
-            docstring_structure, **options()
-        )
+        node = getattr(emit, sanitise(fun_name),)(docstring_structure, **options())
 
     return cmp_ast(previous, node), node
 

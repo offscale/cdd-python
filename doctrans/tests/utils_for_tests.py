@@ -1,9 +1,8 @@
 """
 Shared utility function used by many tests
 """
-
+import ast
 import platform
-from ast import parse
 from unittest import main
 
 from meta.asttools import cmp_ast
@@ -25,7 +24,7 @@ def run_ast_test(test_case_instance, gen_ast, gold):
     :type gold: Union[ast.Module, ast.ClassDef, ast.FunctionDef]
     """
     if isinstance(gen_ast, str):
-        gen_ast = parse(gen_ast).body[0]
+        gen_ast = ast.parse(gen_ast).body[0]
 
     """
     if hasattr(gen_ast, 'body') and len(gen_ast.body) > 0 and hasattr(gen_ast.body, 'value'):

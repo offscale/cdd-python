@@ -27,13 +27,28 @@ def _build_parser():
         "--version", action="version", version="%(prog)s {}".format(__version__)
     )
 
-    parser.add_argument(
+    subparsers = parser.add_subparsers(required=True, dest="command")
+    property_parser = subparsers.add_parser(
+        "property",
+        help="Synchronise just one property on one class, method, or argparse",
+    )
+    property_parser.add_argument(
+        "--prop",
+        help="File where class `class` is declared.",
+        action="append",
+        dest="classes",
+    )
+
+    sync_parser = subparsers.add_parser(
+        "sync", help="Force classes, methods, and/or argparse to be equivalent"
+    )
+    sync_parser.add_argument(
         "--class",
         help="File where class `class` is declared.",
         action="append",
         dest="classes",
     )
-    parser.add_argument(
+    sync_parser.add_argument(
         "--class-name",
         help="Name of `class`",
         default="ConfigClass",
@@ -41,13 +56,13 @@ def _build_parser():
         dest="class_names",
     )
 
-    parser.add_argument(
+    sync_parser.add_argument(
         "--function",
         help="File where function is `def`ined.",
         action="append",
         dest="functions",
     )
-    parser.add_argument(
+    sync_parser.add_argument(
         "--function-name",
         help="Name of Function. If method, use Python resolution syntax,"
         " i.e., ClassName.method_name",
@@ -56,13 +71,13 @@ def _build_parser():
         dest="function_names",
     )
 
-    parser.add_argument(
+    sync_parser.add_argument(
         "--argparse-function",
         help="File where argparse function is `def`ined.",
         action="append",
         dest="argparse_functions",
     )
-    parser.add_argument(
+    sync_parser.add_argument(
         "--argparse-function-name",
         help="Name of argparse function.",
         default="set_cli_args",
@@ -70,7 +85,7 @@ def _build_parser():
         dest="argparse_function_names",
     )
 
-    parser.add_argument(
+    sync_parser.add_argument(
         "--truth",
         help="Single source of truth. Others will be generated from this. Will run with first found choice.",
         choices=("argparse_function", "class", "function"),
@@ -94,33 +109,39 @@ def main(cli_argv=None, return_args=False):
     :rtype: ```Optional[Namespace]```
     """
     _parser = _build_parser()
-    args = Namespace(
-        **{
-            k: v if k == "truth" or isinstance(v, list) or v is None else [v]
-            for k, v in vars(_parser.parse_args(args=cli_argv)).items()
-        }
-    )
-
-    truth_file = getattr(args, pluralise(args.truth))
-    if truth_file is None:
-        _parser.error("--truth must be an existent file. Got: None")
-    else:
-        truth_file = truth_file[0]
-
-    number_of_files = sum(
-        len(val)
-        for key, val in vars(args).items()
-        if isinstance(val, list) and not key.endswith("_names")
-    )
-
-    if number_of_files < 2:
-        _parser.error(
-            "Two or more of `--argparse-function`, `--class`, and `--function` must be specified"
+    args = _parser.parse_args(args=cli_argv)
+    command = args.command
+    if command == "sync":
+        args = Namespace(
+            **{
+                k: v if k == "truth" or isinstance(v, list) or v is None else [v]
+                for k, v in vars(args).items()
+                if k != "command"
+            }
         )
-    elif truth_file is None or not path.isfile(truth_file):
-        _parser.error("--truth must be an existent file. Got: {!r}".format(truth_file))
 
-    return args if return_args else ground_truth(args, truth_file)
+        truth_file = getattr(args, pluralise(args.truth))
+        if truth_file is None:
+            _parser.error("--truth must be an existent file. Got: None")
+        else:
+            truth_file = truth_file[0]
+
+        number_of_files = sum(
+            len(val)
+            for key, val in vars(args).items()
+            if isinstance(val, list) and not key.endswith("_names")
+        )
+
+        if number_of_files < 2:
+            _parser.error(
+                "Two or more of `--argparse-function`, `--class`, and `--function` must be specified"
+            )
+        elif truth_file is None or not path.isfile(truth_file):
+            _parser.error(
+                "--truth must be an existent file. Got: {!r}".format(truth_file)
+            )
+
+        return args if return_args else ground_truth(args, truth_file)
 
 
 if __name__ == "__main__":

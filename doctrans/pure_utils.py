@@ -1,6 +1,7 @@
 """
 Pure utils for pure functions. For the same input will always produce the same output.
 """
+from keyword import iskeyword
 from platform import python_version_tuple
 from pprint import PrettyPrinter
 from sys import version
@@ -110,6 +111,19 @@ def pluralise(singular):
     return root + suffix
 
 
+def sanitise(s):
+    """
+    Sanitise the input string, appending an `_` if it's a keyword
+
+    :param s: Input string
+    :type s: ```str```
+
+    :returns: input string with '_' append if it's a keyword else input string
+    :rtype: ```str```
+    """
+    return "{}_".format(s) if iskeyword(s) else s
+
+
 __all__ = [
     "pp",
     "tab",
@@ -119,4 +133,5 @@ __all__ = [
     "PY3_8",
     "PY_GTE_3_9",
     "pluralise",
+    "sanitise",
 ]
