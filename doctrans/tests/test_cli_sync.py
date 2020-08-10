@@ -24,31 +24,32 @@ class TestCliSync(TestCase):
 
     def test_args(self) -> None:
         """ Tests CLI interface sets namespace correctly """
-        filename = os.path.join(
-            os.path.dirname(__file__),
-            "delete_this_0{}".format(os.path.basename(__file__)),
-        )
-        with open(filename, "wt") as f:
-            f.write(class_str)
-        try:
-            _, args = run_cli_test(
-                self,
-                [
-                    "sync",
-                    "--class",
-                    filename,
-                    "--argparse-function",
-                    filename,
-                    "--truth",
-                    "class",
-                ],
-                exit_code=None,
-                output=None,
-                return_args=True,
+        with TemporaryDirectory() as tempdir:
+            filename = os.path.join(
+                tempdir,
+                "delete_this_0{}".format(os.path.basename(__file__)),
             )
-        finally:
-            if os.path.isfile(filename):
-                os.remove(filename)
+            with open(filename, "wt") as f:
+                f.write(class_str)
+            try:
+                _, args = run_cli_test(
+                    self,
+                    [
+                        "sync",
+                        "--class",
+                        filename,
+                        "--argparse-function",
+                        filename,
+                        "--truth",
+                        "class",
+                    ],
+                    exit_code=None,
+                    output=None,
+                    return_args=True,
+                )
+            finally:
+                if os.path.isfile(filename):
+                    os.remove(filename)
 
         self.assertListEqual(args.argparse_functions, [filename])
         self.assertListEqual(args.argparse_function_names, ["set_cli_args"])
@@ -60,25 +61,26 @@ class TestCliSync(TestCase):
 
     def test_non_existent_file_fails(self) -> None:
         """ Tests nonexistent file throws the right error """
-        filename = os.path.join(
-            os.path.dirname(__file__),
-            "delete_this_1{}".format(os.path.basename(__file__)),
-        )
+        with TemporaryDirectory() as tempdir:
+            filename = os.path.join(
+                tempdir,
+                "delete_this_1{}".format(os.path.basename(__file__)),
+            )
 
-        run_cli_test(
-            self,
-            [
-                "sync",
-                "--argparse-function",
-                filename,
-                "--class",
-                filename,
-                "--truth",
-                "class",
-            ],
-            exit_code=2,
-            output="--truth must be an existent file. Got: {!r}\n".format(filename),
-        )
+            run_cli_test(
+                self,
+                [
+                    "sync",
+                    "--argparse-function",
+                    filename,
+                    "--class",
+                    filename,
+                    "--truth",
+                    "class",
+                ],
+                exit_code=2,
+                output="--truth must be an existent file. Got: {!r}\n".format(filename),
+            )
 
     def test_missing_argument_fails(self) -> None:
         """ Tests missing argument throws the right error """
@@ -91,9 +93,9 @@ class TestCliSync(TestCase):
 
     def test_missing_argument_fails_insufficient_args(self) -> None:
         """ Tests missing argument throws the right error """
-        with TemporaryDirectory() as tmpdir:
+        with TemporaryDirectory() as tempdir:
             filename = os.path.join(
-                tmpdir, "delete_this_2{}".format(os.path.basename(__file__)),
+                tempdir, "delete_this_2{}".format(os.path.basename(__file__)),
             )
             with open(filename, "wt") as f:
                 f.write(class_str)
