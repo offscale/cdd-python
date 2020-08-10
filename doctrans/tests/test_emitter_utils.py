@@ -3,15 +3,15 @@ from ast import Expr, Call, Constant, Attribute, Load, Name, keyword, Subscript
 from copy import deepcopy
 from unittest import TestCase
 
-from doctrans.docstring_structure_utils import parse_out_param, interpolate_defaults
+from doctrans.emitter_utils import parse_out_param, interpolate_defaults
 from doctrans.pure_utils import rpartial
 from doctrans.tests.mocks.argparse import argparse_func_ast, argparse_add_argument_ast
 from doctrans.tests.mocks.docstrings import docstring_structure
 from doctrans.tests.utils_for_tests import unittest_main
 
 
-class TestDocstringStructureUtils(TestCase):
-    """ Test class for docstring_structure_utils """
+class TestEmitterUtils(TestCase):
+    """ Test class for emitter_utils """
 
     def test_parse_out_param(self) -> None:
         """ Test that parse_out_param parses out the right dict """

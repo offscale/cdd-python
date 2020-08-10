@@ -16,8 +16,8 @@ class TestUtilsForTests(TestCase):
 
     def test_unittest_main(self) -> None:
         """
-        Tests whether `parse_docstring` produces `docstring_structure`
-              from `docstring_str` """
+        Tests whether `unittest_main` is called when `__name__ == '__main__'`
+        """
         self.assertEqual(type(unittest_main).__name__, "function")
         self.assertIsNone(unittest_main())
         argparse_mock = MagicMock()

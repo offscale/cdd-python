@@ -1,7 +1,7 @@
 """
 Transform from string or AST representations of input, to AST, file, or str output.
 """
-
+import ast
 from ast import (
     parse,
     ClassDef,
@@ -22,15 +22,15 @@ from functools import partial
 
 from black import format_str, FileMode
 
-from doctrans import docstring_struct
+from doctrans import parse
 from doctrans.ast_utils import param2argparse_param, param2ast, set_value
 from doctrans.defaults_utils import set_default_doc
-from doctrans.docstring_structure_utils import get_internal_body
+from doctrans.emitter_utils import get_internal_body
 from doctrans.pure_utils import tab, simple_types, PY_GTE_3_9, PY3_8
 from doctrans.source_transformer import to_code
 
 
-def to_argparse_function(
+def argparse_function(
     docstring_structure,
     emit_default_doc=False,
     emit_default_doc_in_return=False,
@@ -142,7 +142,7 @@ def to_argparse_function(
                             ctx=Load(),
                             elts=[
                                 Name(ctx=Load(), id="argument_parser"),
-                                parse(docstring_structure["returns"]["default"])
+                                ast.parse(docstring_structure["returns"]["default"])
                                 .body[0]
                                 .value,
                             ],
@@ -161,7 +161,7 @@ def to_argparse_function(
     )
 
 
-def to_class(docstring_structure, class_name="ConfigClass", class_bases=("object",)):
+def class_(docstring_structure, class_name="ConfigClass", class_bases=("object",)):
     """
     Construct a class
 
@@ -212,7 +212,7 @@ def to_class(docstring_structure, class_name="ConfigClass", class_bases=("object
     )
 
 
-def to_docstring(docstring_structure, docstring_format="rest", emit_default_doc=True):
+def docstring(docstring_structure, docstring_format="rest", emit_default_doc=True):
     """
     Converts an AST to a docstring
 
@@ -243,7 +243,7 @@ def to_docstring(docstring_structure, docstring_format="rest", emit_default_doc=
         params="\n".join(
             ":param {param[name]}: {param[doc]}\n"
             ":type {param[name]}: ```{typ}```\n".format(
-                param=set_default_doc(param),
+                param=set_default_doc(param, emit_default_doc=emit_default_doc),
                 typ=(
                     "**{name}".format(name=param["name"])
                     if "kwargs" in param["name"]
@@ -254,12 +254,14 @@ def to_docstring(docstring_structure, docstring_format="rest", emit_default_doc=
         ),
         returns=":return: {param[doc]}\n"
         ":rtype: ```{param[typ]}```".format(
-            param=set_default_doc(docstring_structure["returns"])
+            param=set_default_doc(
+                docstring_structure["returns"], emit_default_doc=emit_default_doc
+            )
         ),
     )
 
 
-def to_file(ast, filename, mode="a", skip_black=PY_GTE_3_9):
+def file(ast, filename, mode="a", skip_black=PY_GTE_3_9):
     """
     Convert AST to a file
 
@@ -295,7 +297,7 @@ def to_file(ast, filename, mode="a", skip_black=PY_GTE_3_9):
         f.write(src)
 
 
-def to_function(
+def function(
     docstring_structure,
     function_name,
     function_type,
@@ -362,7 +364,7 @@ def to_function(
                                 annotation=(
                                     Name(ctx=Load(), id=param["typ"])
                                     if param["typ"] in simple_types
-                                    else parse(param["typ"]).body[0].value
+                                    else ast.parse(param["typ"]).body[0].value
                                 )
                                 if inline_types and "typ" in param
                                 else None,
@@ -404,7 +406,7 @@ def to_function(
                     Expr(
                         value=set_value(
                             kind=None,
-                            value=docstring_struct.to_docstring(
+                            value=parse.to_docstring(
                                 docstring_structure,
                                 emit_default_doc=emit_default_doc,
                                 docstring_format=docstring_format,
@@ -416,7 +418,7 @@ def to_function(
                     ),
                     *(get_internal_body(docstring_structure)),
                     Return(
-                        value=parse(docstring_structure["returns"]["default"])
+                        value=ast.parse(docstring_structure["returns"]["default"])
                         .body[0]
                         .value
                     )
@@ -429,7 +431,7 @@ def to_function(
         decorator_list=[],
         name=function_name,
         returns=(
-            parse(docstring_structure["returns"]["typ"]).body[0].value
+            ast.parse(docstring_structure["returns"]["typ"]).body[0].value
             if "returns" in docstring_structure
             and "typ" in docstring_structure["returns"]
             else None
@@ -441,4 +443,4 @@ def to_function(
     )
 
 
-__all__ = ["to_argparse_function", "to_class", "to_docstring", "to_file", "to_function"]
+__all__ = ["argparse_function", "class_", "docstring", "file", "function"]

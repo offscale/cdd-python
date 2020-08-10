@@ -4,7 +4,7 @@ Tests for docstring parsing
 from copy import deepcopy
 from unittest import TestCase
 
-from doctrans import docstring_struct
+from doctrans import parse
 from doctrans.rest_docstring_parser import parse_docstring, _parse_line
 from doctrans.tests.mocks.docstrings import (
     docstring_str,
@@ -51,7 +51,7 @@ class TestMarshallDocstring(TestCase):
         Tests whether `docstring_structure2docstring` produces `docstring_str`
               from `docstring_structure` """
         self.assertEqual(
-            docstring_struct.to_docstring(
+            parse.to_docstring(
                 deepcopy(docstring_structure),
                 indent_level=0,
                 emit_types=True,

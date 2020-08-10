@@ -33,13 +33,13 @@ from doctrans.ast_utils import (
     is_argparse_description,
 )
 from doctrans.defaults_utils import extract_default, set_default_doc
-from doctrans.docstring_structure_utils import parse_out_param, _parse_return
+from doctrans.emitter_utils import parse_out_param, _parse_return
 from doctrans.pure_utils import tab, rpartial
 from doctrans.rest_docstring_parser import parse_docstring
 from doctrans.source_transformer import to_code
 
 
-def from_class(class_def, config_name=None):
+def class_(class_def, config_name=None):
     """
     Converts an AST to a docstring structure
 
@@ -53,9 +53,7 @@ def from_class(class_def, config_name=None):
     :rtype: ```dict```
     """
     class_def = to_class_def(class_def, config_name)
-    docstring_structure = from_docstring(
-        get_docstring(class_def).replace(":cvar", ":param")
-    )
+    docstring_structure = docstring(get_docstring(class_def).replace(":cvar", ":param"))
     docstring_structure["params"] = OrderedDict(
         (param.pop("name"), param) for param in docstring_structure["params"]
     )
@@ -79,7 +77,7 @@ def from_class(class_def, config_name=None):
     return docstring_structure
 
 
-def from_class_with_method(class_def, method_name):
+def class_with_method(class_def, method_name):
     """
     Converts an AST of a class with a method to a docstring structure
 
@@ -92,7 +90,7 @@ def from_class_with_method(class_def, method_name):
     :return: docstring structure
     :rtype: ```dict```
     """
-    return from_function(
+    return function(
         function_def=next(
             node
             for node in to_class_def(class_def).body
@@ -101,7 +99,7 @@ def from_class_with_method(class_def, method_name):
     )
 
 
-def from_function(function_def):
+def function(function_def):
     """
     Converts an AST of a class with a method to a docstring structure
 
@@ -112,7 +110,7 @@ def from_function(function_def):
     :rtype: ```dict```
     """
 
-    docstring_structure = from_docstring(
+    docstring_structure = docstring(
         get_docstring(function_def).replace(":cvar", ":param")
     )
     function_type = get_function_type(function_def)
@@ -161,7 +159,7 @@ def from_function(function_def):
     return docstring_structure
 
 
-def from_argparse_ast(function_def):
+def argparse_ast(function_def):
     """
     Converts an AST to a docstring structure
 
@@ -218,7 +216,7 @@ def from_argparse_ast(function_def):
     return docstring_structure
 
 
-def from_docstring(docstring, return_tuple=False):
+def docstring(docstring, return_tuple=False):
     """
     Converts a docstring to an AST
 
@@ -434,7 +432,7 @@ def _evaluate_to_docstring_value(name_value):
     return name, value
 
 
-def from_docstring_parser(docstring):
+def docstring_parser(docstring):
     """
     Converts Docstring from the docstring_parser library to our internal representation / docstring structure
 
@@ -471,11 +469,11 @@ def from_docstring_parser(docstring):
 
 
 __all__ = [
-    "from_class",
-    "from_class_with_method",
-    "from_function",
-    "from_argparse_ast",
-    "from_docstring",
+    "class_",
+    "class_with_method",
+    "function",
+    "argparse_ast",
+    "docstring",
     "to_docstring",
-    "from_docstring_parser",
+    "docstring_parser",
 ]

@@ -1,7 +1,7 @@
 """
 Mocks for the `class`
 """
-
+import ast
 from ast import (
     ClassDef,
     Name,
@@ -16,7 +16,6 @@ from ast import (
     Attribute,
     Index,
     Call,
-    parse,
 )
 
 from doctrans.pure_utils import PY3_8
@@ -207,7 +206,7 @@ class_ast = (
         name="ConfigClass",
     )
     if PY3_8
-    else parse(class_str).body[0]
+    else ast.parse(class_str).body[0]
 )
 
 __all__ = ["class_str", "class_ast"]

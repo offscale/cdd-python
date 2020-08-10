@@ -1,6 +1,7 @@
 """
 Mocks for the argparse function
 """
+import ast
 from ast import (
     FunctionDef,
     arguments,
@@ -16,7 +17,6 @@ from ast import (
     keyword,
     Return,
     Tuple,
-    parse,
     BinOp,
     Mult,
     If,
@@ -316,7 +316,7 @@ argparse_func_ast = (
         type_comment=None,
     )
     if PY3_8
-    else parse(argparse_func_str).body[0]
+    else ast.parse(argparse_func_str).body[0]
 )
 
 argparse_func_with_body_ast = (
@@ -547,7 +547,7 @@ argparse_func_with_body_ast = (
         type_comment=None,
     )
     if PY3_8
-    else parse(argparse_func_with_body_str).body[0]
+    else ast.parse(argparse_func_with_body_str).body[0]
 )
 
 argparse_add_argument_ast = Expr(
