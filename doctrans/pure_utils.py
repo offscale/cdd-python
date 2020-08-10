@@ -124,6 +124,22 @@ def sanitise(s):
     return "{}_".format(s) if iskeyword(s) else s
 
 
+def strip_split(param, sep):
+    """
+    Split and strip the input string on given separator
+
+    :param param: Module/function resolver with a dot syntax.
+    :type param: ```str```
+
+    :param sep: Separator
+    :type sep: ```str```
+
+    :returns: Iterator of each element of the hierarchy
+    :rtype: ```Iterator[str, ...]```
+    """
+    return (loc.strip() for loc in param.split(sep))
+
+
 __all__ = [
     "pp",
     "tab",
@@ -134,4 +150,5 @@ __all__ = [
     "PY_GTE_3_9",
     "pluralise",
     "sanitise",
+    "strip_split",
 ]

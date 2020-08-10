@@ -25,7 +25,7 @@ from ast import (
 )
 
 from doctrans.defaults_utils import extract_default
-from doctrans.pure_utils import simple_types, rpartial, PY3_8
+from doctrans.pure_utils import simple_types, rpartial, PY3_8, strip_split
 
 
 def param2ast(param):
@@ -88,8 +88,11 @@ def to_class_def(ast, class_name=None):
     :rtype: ```ast.ClassDef```
     """
     if isinstance(ast, Module):
-        classes = tuple(filter(rpartial(isinstance, ClassDef), ast.body))
-        if len(classes) > 1:  # We can filter by name I guess? - Or convert every one?
+        classes_it = filter(rpartial(isinstance, ClassDef), ast.body)
+        if class_name is not None:
+            return next(filter(lambda node: node.name == class_name, classes_it,))
+        classes = tuple(classes_it)
+        if len(classes) > 1:  # We could convert every one I guess?
             raise NotImplementedError()
         elif len(classes) > 0:
             return classes[0]
@@ -344,11 +347,57 @@ def is_argparse_description(node):
     )
 
 
+def find_in_ast(query, node):
+    """
+    Find and return the param from within the value
+
+    :param query: Location within AST of property.
+       Can be top level like `a` for `a=5` or E.g., `A.F` for `class A: F`, `f.g` for `def f(g): pass`
+    :type query: ```str```
+
+    :param node: AST node (must have a `body`)
+    :type node: ```AST```
+
+    :returns: AST node that was found, or None if nothing was found
+    :rtype: ```Optional[AST]```
+    """
+    query_l = list(strip_split(query, "."))
+    cursor = node.body
+    while len(query_l):
+        search = query_l.pop(0)
+        if len(query_l) == 0 and hasattr(node, "name") and node.name == search:
+            return node
+
+        for node in cursor:
+            if isinstance(node, FunctionDef):
+                if len(query_l):
+                    search = query_l.pop(0)
+                _cursor = next(
+                    filter(lambda arg: arg.arg == search, node.args.args), None
+                )
+                if _cursor is not None:
+                    cursor = _cursor
+                    if len(query_l) == 0:
+                        return _cursor
+            elif (
+                isinstance(node, AnnAssign)
+                and isinstance(node.target, Name)
+                and node.target.id == search
+            ):
+                return node
+            elif hasattr(node, "name") and node.name == search:
+                cursor = node.body
+                break
+
+    return None
+
+
 __all__ = [
     "param2ast",
     "to_class_def",
     "param2argparse_param",
     "determine_quoting",
+    "find_in_ast",
     "get_function_type",
     "get_value",
     "set_value",
