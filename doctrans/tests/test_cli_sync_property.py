@@ -2,12 +2,12 @@
 import os
 from tempfile import TemporaryDirectory
 from unittest import TestCase
+from unittest.mock import patch
 
-from doctrans.pure_utils import tab
 from doctrans.tests.utils_for_tests import unittest_main, run_cli_test
 
 
-class TestCliSync(TestCase):
+class TestCliSyncProperty(TestCase):
     """ Test class for __main__.py """
 
     def test_sync_property_fails(self) -> None:
@@ -71,43 +71,35 @@ class TestCliSync(TestCase):
             )
 
     def test_sync_property(self) -> None:
-        """ Tests CLI interface failure cases """
+        """ Tests CLI interface gets all the way to the sync_property call without error """
         with TemporaryDirectory() as tempdir:
             class_py = os.path.join(tempdir, "class_.py")
             method_py = os.path.join(tempdir, "method.py")
-            with open(class_py, "wt") as f:
-                f.write(
-                    "from typing import Literal\n\n"
-                    "class Foo(object):\n"
-                    "{tab}def g(f: Literal['a']):\n"
-                    "{tab}{tab}pass".format(tab=tab)
-                )
-            with open(method_py, "wt") as f:
-                f.write(
-                    "from typing import Literal\n\n"
-                    "def f(h: Literal['b']):"
-                    "{tab}{tab}pass".format(tab=tab)
-                )
+            open(class_py, "wt").close()
+            open(method_py, "wt").close()
 
-            self.assertRaises(
-                NotImplementedError,
-                lambda: run_cli_test(
-                    self,
-                    [
-                        "sync_property",
-                        "--input-file",
-                        class_py,
-                        "--input-param",
-                        "Foo.g.f",
-                        "--output-file",
-                        method_py,
-                        "--output-param",
-                        "f.h",
-                    ],
-                    exit_code=0,
-                    output="the following arguments are required:",
-                ),
-            )
+            def _sync_property(*args, **kwargs):
+                return True
+
+            with patch("doctrans.__main__.sync_property", _sync_property):
+                self.assertTrue(
+                    run_cli_test(
+                        self,
+                        [
+                            "sync_property",
+                            "--input-file",
+                            class_py,
+                            "--input-param",
+                            "Foo.g.f",
+                            "--output-file",
+                            method_py,
+                            "--output-param",
+                            "f.h",
+                        ],
+                        exit_code=None,
+                        output=None,
+                    ),
+                )
 
 
 unittest_main()

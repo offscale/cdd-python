@@ -22,6 +22,7 @@ from ast import (
     Str,
     NameConstant,
     Assign,
+    arg,
 )
 
 from doctrans.defaults_utils import extract_default
@@ -373,12 +374,19 @@ def find_in_ast(query, node):
                 if len(query_l):
                     search = query_l.pop(0)
                 _cursor = next(
-                    filter(lambda arg: arg.arg == search, node.args.args), None
+                    filter(
+                        lambda idx_arg: idx_arg[1].arg == search,
+                        enumerate(node.args.args),
+                    ),
+                    None,
                 )
                 if _cursor is not None:
-                    cursor = _cursor
+                    if len(node.args.defaults) > _cursor[0]:
+                        setattr(_cursor[1], "default", node.args.defaults[_cursor[0]])
+                    cursor = _cursor[1]
+                    # print_ast(cursor)
                     if len(query_l) == 0:
-                        return _cursor
+                        return cursor
             elif (
                 isinstance(node, AnnAssign)
                 and isinstance(node.target, Name)
@@ -392,6 +400,104 @@ def find_in_ast(query, node):
     return None
 
 
+# def replace_in_ast(query, node, replacement_node):
+#     """
+#     Find and return the param from within the value
+#
+#     :param query: Location within AST of property.
+#        Can be top level like `a` for `a=5` or E.g., `A.F` for `class A: F`, `f.g` for `def f(g): pass`
+#     :type query: ```str```
+#
+#     :param node: AST node (must have a `body`)
+#     :type node: ```AST```
+#
+#     :param replacement_node: Replacement AST node
+#     :type replacement_node: ```AST```
+#
+#     :returns: AST node that was found, or None if nothing was found
+#     :rtype: ```Optional[AST]```
+#     """
+#     return RewriteAtQuery(query).visit(node)
+#
+#
+# class RewriteAtQuery(NodeTransformer):
+#     def __init__(self, query):
+#         self.i = 0
+#         self.query = tuple(strip_split(query, "."))
+#         self.max_i = len(self.query)
+#         self.found = [[]]
+#
+#     def visit_Module(self, node: Module):
+#         self.found[self.i].append(node.name)
+#         return node
+#
+#     def visit_ClassDef(self, node: ClassDef):
+#         self.found[self.i].append(node.name)
+#         return node
+#
+#     def visit_FunctionDef(self, node: FunctionDef):
+#         self.found[self.i].append(node.name)
+#         return node
+#
+#     def visit_arg(self, node: arg):
+#         self.found[self.i].append(node.name)
+#         pp(self.found)
+#         return node
+#
+#     def visit_arguments(self, node: arguments):
+#         self.found[self.i].append(node.name)
+#         pp(self.found)
+#         return node
+#
+#     '''
+#     def generic_visit(self, node):
+#         print(self.i, 'found node:', node, ';')
+#         if self.i < self.max_i:
+#             self.i += 1
+#             if isinstance(node, FunctionDef):
+#                 _cursor = next(
+#                     filter(
+#                         lambda idx_arg: idx_arg[1].arg == search,
+#                         enumerate(node.args.args),
+#                     ),
+#                     None,
+#                 )
+#                 if _cursor is not None:
+#                     if len(node.args.defaults) > _cursor[0]:
+#                         setattr(_cursor[1], "default", node.args.defaults[_cursor[0]])
+#                     cursor = _cursor[1]
+#                     # print_ast(cursor)
+#                     if len(query_l) == 0:
+#                         return cursor
+#             if hasattr(node, 'body'):
+#                 for _node in node.body:
+#                     self.generic_visit(_node)
+#     '''
+
+
+def emit_ann_assign(node):
+    """
+    Produce an `AnnAssign` from the input
+
+    :param node: AST node
+    :type node: ```AST```
+
+    :returns: Something which parses to the form of `a=5`
+    :rtype: ```AnnAssign```
+    """
+    if isinstance(node, AnnAssign):
+        return node
+    elif isinstance(node, arg):
+        return AnnAssign(
+            annotation=node.annotation,
+            simple=1,
+            target=Name(ctx=Store(), id=node.arg),
+            value=node.default if hasattr(node, "default") else None,
+        )
+    else:
+        raise NotImplementedError(type(node).__name__)
+
+
 __all__ = [
     "param2ast",
     "to_class_def",
@@ -399,6 +505,7 @@ __all__ = [
     "determine_quoting",
     "find_in_ast",
     "get_function_type",
+    "emit_ann_assign",
     "get_value",
     "set_value",
     "is_argparse_add_argument",

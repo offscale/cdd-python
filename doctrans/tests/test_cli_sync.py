@@ -26,8 +26,7 @@ class TestCliSync(TestCase):
         """ Tests CLI interface sets namespace correctly """
         with TemporaryDirectory() as tempdir:
             filename = os.path.join(
-                tempdir,
-                "delete_this_0{}".format(os.path.basename(__file__)),
+                tempdir, "delete_this_0{}".format(os.path.basename(__file__)),
             )
             with open(filename, "wt") as f:
                 f.write(class_str)
@@ -63,8 +62,7 @@ class TestCliSync(TestCase):
         """ Tests nonexistent file throws the right error """
         with TemporaryDirectory() as tempdir:
             filename = os.path.join(
-                tempdir,
-                "delete_this_1{}".format(os.path.basename(__file__)),
+                tempdir, "delete_this_1{}".format(os.path.basename(__file__)),
             )
 
             run_cli_test(
