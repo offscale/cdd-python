@@ -18,54 +18,64 @@ from ast import (
 from unittest import TestCase
 from unittest.mock import patch
 
+from meta.asttools import cmp_ast
+
 from doctrans.ast_utils import (
     to_class_def,
     determine_quoting,
     get_function_type,
     get_value,
     find_in_ast,
+    emit_ann_assign,
 )
 from doctrans.tests.mocks.classes import class_ast
-from doctrans.tests.mocks.methods import class_with_optional_arg_method_ast
+from doctrans.tests.mocks.methods import (
+    class_with_optional_arg_method_ast,
+    class_with_method_and_body_types_ast,
+)
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
 
 
 class TestAstUtils(TestCase):
     """ Test class for ast_utils """
 
-    def test_to_class_def(self) -> None:
-        """ Test that to_class_def gives the wrapped class back """
-
-        class_def = ClassDef(
-            name="", bases=tuple(), keywords=tuple(), decorator_list=[], body=[]
+    def test_determine_quoting_fails(self) -> None:
+        """" Tests that determine_quoting fails on unknown input """
+        self.assertRaises(
+            NotImplementedError,
+            lambda: determine_quoting(Subscript(value=Name(id="impossibru"))),
         )
-        run_ast_test(self, to_class_def(Module(body=[class_def])), class_def)
+        self.assertRaises(NotImplementedError, lambda: determine_quoting(FunctionDef()))
+        self.assertRaises(NotImplementedError, lambda: determine_quoting(ClassDef()))
+        self.assertRaises(NotImplementedError, lambda: determine_quoting(Module()))
 
-    def test_to_named_class_def(self) -> None:
-        """ Test that to_class_def gives the wrapped named class back """
-
-        class_def = ClassDef(
-            name="foo", bases=tuple(), keywords=tuple(), decorator_list=[], body=[]
+    def test_emit_ann_assign(self) -> None:
+        """ Tests that AnnAssign is emitted from `emit_ann_assign` """
+        self.assertIsInstance(class_ast.body[1], AnnAssign)
+        self.assertIsInstance(emit_ann_assign(class_ast.body[1]), AnnAssign)
+        self.assertIsInstance(emit_ann_assign(class_ast.body[1]), AnnAssign)
+        gen_ast = emit_ann_assign(
+            find_in_ast(
+                "C.method_name.dataset_name", class_with_method_and_body_types_ast
+            )
         )
+        self.assertIsInstance(gen_ast, AnnAssign)
         run_ast_test(
             self,
-            to_class_def(
-                Module(
-                    body=[
-                        ClassDef(
-                            name="bar",
-                            bases=tuple(),
-                            keywords=tuple(),
-                            decorator_list=[],
-                            body=[],
-                        ),
-                        class_def,
-                    ]
-                ),
-                class_name="foo",
+            gen_ast,
+            AnnAssign(
+                annotation=Name(ctx=Load(), id="str"),
+                simple=1,
+                target=Name(ctx=Store(), id="dataset_name"),
+                value=Constant(kind=None, value="~/tensorflow_datasets"),
             ),
-            class_def,
         )
+
+    def test_emit_ann_assign_fails(self) -> None:
+        """ Tests that `emit_ann_assign` raised the right error """
+        self.assertRaises(NotImplementedError, lambda: emit_ann_assign(FunctionDef))
+        self.assertRaises(NotImplementedError, lambda: emit_ann_assign(ClassDef))
+        self.assertRaises(NotImplementedError, lambda: emit_ann_assign(Module))
 
     def test_find_in_ast(self) -> None:
         """ Tests that `find_in_ast` successfully finds nodes in AST """
@@ -103,27 +113,39 @@ class TestAstUtils(TestCase):
             ),
         )
 
-    def test_to_class_def_fails(self) -> None:
-        """ Test that to_class_def throws the right errors """
-
-        self.assertRaises(NotImplementedError, lambda: to_class_def(None))
-        self.assertRaises(NotImplementedError, lambda: to_class_def(""))
-        self.assertRaises(NotImplementedError, lambda: to_class_def(FunctionDef()))
-        self.assertRaises(TypeError, lambda: to_class_def(Module(body=[])))
-        self.assertRaises(
-            NotImplementedError,
-            lambda: to_class_def(Module(body=[ClassDef(), ClassDef()])),
+    def test_find_in_ast_with_val(self) -> None:
+        """ Tests that `find_in_ast` correctly gives AST node from
+         `def class C(object): def method_name(self,dataset_name: str='foo',…)`"""
+        gen_ast = find_in_ast(
+            "C.method_name.dataset_name", class_with_method_and_body_types_ast
+        )
+        self.assertTrue(
+            cmp_ast(gen_ast.default, Constant(kind=None, value="~/tensorflow_datasets"))
+        )
+        run_ast_test(
+            self,
+            gen_ast,
+            arg(
+                annotation=Name(ctx=Load(), id="str"),
+                arg="dataset_name",
+                type_comment=None,
+            ),
         )
 
-    def test_determine_quoting_fails(self) -> None:
-        """" Tests that determine_quoting fails on unknown input """
-        self.assertRaises(
-            NotImplementedError,
-            lambda: determine_quoting(Subscript(value=Name(id="impossibru"))),
-        )
-        self.assertRaises(NotImplementedError, lambda: determine_quoting(FunctionDef()))
-        self.assertRaises(NotImplementedError, lambda: determine_quoting(ClassDef()))
-        self.assertRaises(NotImplementedError, lambda: determine_quoting(Module()))
+    # def test_replace_in_ast_with_val(self) -> None:
+    #     """ Tests that `replace_in_ast` correctly gives AST node from
+    #      `def class C(object): def method_name(self,dataset_name: str='foo',…)`"""
+    #     gen_ast = replace_in_ast(
+    #         "C.method_name.dataset_name",
+    #         class_with_method_and_body_types_ast,
+    #         Constant(kind=None, value="~/jax_datasets")
+    #     )
+    #
+    #     run_ast_test(
+    #         self,
+    #         gen_ast,
+    #         ast.parse(class_with_method_and_body_types_str.replace('~/tensorflow_datasets', '~/jax_datasets'))
+    #     )
 
     def test_get_function_type(self) -> None:
         """ Test get_function_type returns the right type """
@@ -162,6 +184,23 @@ class TestAstUtils(TestCase):
             "cls",
         )
 
+    def test_get_value(self) -> None:
+        """ Tests get_value succeeds """
+        val = "foo"
+        self.assertEqual(get_value(Str(s=val)), val)
+        self.assertEqual(get_value(Constant(value=val)), val)
+        self.assertIsInstance(get_value(Tuple()), Tuple)
+        self.assertIsInstance(get_value(Tuple()), Tuple)
+        self.assertIsInstance(get_value(Name()), Name)
+
+    def test_get_value_fails(self) -> None:
+        """ Tests get_value fails properly """
+        self.assertRaises(NotImplementedError, lambda: get_value(None))
+        self.assertRaises(NotImplementedError, lambda: get_value(""))
+        self.assertRaises(NotImplementedError, lambda: get_value(0))
+        self.assertRaises(NotImplementedError, lambda: get_value(0.0))
+        self.assertRaises(NotImplementedError, lambda: get_value([]))
+
     def test_set_value(self) -> None:
         """ Tests that `set_value` returns the right type for the right Python version """
         with patch("doctrans.ast_utils.PY3_8", True):
@@ -186,22 +225,51 @@ class TestAstUtils(TestCase):
 
             self.assertIsInstance(doctrans.ast_utils.set_value("foo", None), Str)
 
-    def test_get_value(self) -> None:
-        """ Tests get_value succeeds """
-        val = "foo"
-        self.assertEqual(get_value(Str(s=val)), val)
-        self.assertEqual(get_value(Constant(value=val)), val)
-        self.assertIsInstance(get_value(Tuple()), Tuple)
-        self.assertIsInstance(get_value(Tuple()), Tuple)
-        self.assertIsInstance(get_value(Name()), Name)
+    def test_to_class_def(self) -> None:
+        """ Test that to_class_def gives the wrapped class back """
 
-    def test_get_value_fails(self) -> None:
-        """ Tests get_value fails properly """
-        self.assertRaises(NotImplementedError, lambda: get_value(None))
-        self.assertRaises(NotImplementedError, lambda: get_value(""))
-        self.assertRaises(NotImplementedError, lambda: get_value(0))
-        self.assertRaises(NotImplementedError, lambda: get_value(0.0))
-        self.assertRaises(NotImplementedError, lambda: get_value([]))
+        class_def = ClassDef(
+            name="", bases=tuple(), keywords=tuple(), decorator_list=[], body=[]
+        )
+        run_ast_test(self, to_class_def(Module(body=[class_def])), class_def)
+
+    def test_to_class_def_fails(self) -> None:
+        """ Test that to_class_def throws the right errors """
+
+        self.assertRaises(NotImplementedError, lambda: to_class_def(None))
+        self.assertRaises(NotImplementedError, lambda: to_class_def(""))
+        self.assertRaises(NotImplementedError, lambda: to_class_def(FunctionDef()))
+        self.assertRaises(TypeError, lambda: to_class_def(Module(body=[])))
+        self.assertRaises(
+            NotImplementedError,
+            lambda: to_class_def(Module(body=[ClassDef(), ClassDef()])),
+        )
+
+    def test_to_named_class_def(self) -> None:
+        """ Test that to_class_def gives the wrapped named class back """
+
+        class_def = ClassDef(
+            name="foo", bases=tuple(), keywords=tuple(), decorator_list=[], body=[]
+        )
+        run_ast_test(
+            self,
+            to_class_def(
+                Module(
+                    body=[
+                        ClassDef(
+                            name="bar",
+                            bases=tuple(),
+                            keywords=tuple(),
+                            decorator_list=[],
+                            body=[],
+                        ),
+                        class_def,
+                    ]
+                ),
+                class_name="foo",
+            ),
+            class_def,
+        )
 
 
 unittest_main()

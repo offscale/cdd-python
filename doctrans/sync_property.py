@@ -7,7 +7,7 @@ from ast import Module
 from astor import to_source
 from meta.asttools import print_ast
 
-from doctrans.ast_utils import find_in_ast
+from doctrans.ast_utils import find_in_ast, emit_ann_assign
 
 
 def sync_property(
@@ -39,5 +39,6 @@ def sync_property(
     assert isinstance(parsed_ast, Module)
     cursor = find_in_ast(input_param, parsed_ast)
     print("cursor: {!r};".format(to_source(cursor).rstrip("\n")))
+    print("cursor: {!r};".format(to_source(emit_ann_assign(cursor)).rstrip("\n")))
     print_ast(cursor)
     raise NotImplementedError("WiP")
