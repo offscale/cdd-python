@@ -1,4 +1,5 @@
 """ Tests for ast_utils """
+import ast
 from ast import (
     FunctionDef,
     Module,
@@ -27,11 +28,15 @@ from doctrans.ast_utils import (
     get_value,
     find_in_ast,
     emit_ann_assign,
+    annotate_ancestry,
+    RewriteAtQuery,
+    emit_arg,
 )
 from doctrans.tests.mocks.classes import class_ast
 from doctrans.tests.mocks.methods import (
     class_with_optional_arg_method_ast,
     class_with_method_and_body_types_ast,
+    class_with_method_and_body_types_str,
 )
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
 
@@ -56,7 +61,8 @@ class TestAstUtils(TestCase):
         self.assertIsInstance(emit_ann_assign(class_ast.body[1]), AnnAssign)
         gen_ast = emit_ann_assign(
             find_in_ast(
-                "C.method_name.dataset_name", class_with_method_and_body_types_ast
+                "C.method_name.dataset_name".split("."),
+                class_with_method_and_body_types_ast,
             )
         )
         self.assertIsInstance(gen_ast, AnnAssign)
@@ -73,15 +79,28 @@ class TestAstUtils(TestCase):
 
     def test_emit_ann_assign_fails(self) -> None:
         """ Tests that `emit_ann_assign` raised the right error """
-        self.assertRaises(NotImplementedError, lambda: emit_ann_assign(FunctionDef))
-        self.assertRaises(NotImplementedError, lambda: emit_ann_assign(ClassDef))
-        self.assertRaises(NotImplementedError, lambda: emit_ann_assign(Module))
+        for typ_ in FunctionDef, ClassDef, Module:
+            self.assertRaises(NotImplementedError, lambda: emit_ann_assign(typ_))
+
+    def test_emit_arg(self) -> None:
+        """ Tests that `arg` is emitted from `emit_arg` """
+        self.assertIsInstance(
+            class_with_method_and_body_types_ast.body[1].args.args[1], arg
+        )
+        self.assertIsInstance(
+            emit_arg(class_with_method_and_body_types_ast.body[1].args.args[1]), arg
+        )
+
+    def test_emit_arg_fails(self) -> None:
+        """ Tests that `emit_arg` raised the right error """
+        for typ_ in FunctionDef, ClassDef, Module:
+            self.assertRaises(NotImplementedError, lambda: emit_arg(typ_))
 
     def test_find_in_ast(self) -> None:
         """ Tests that `find_in_ast` successfully finds nodes in AST """
         run_ast_test(
             self,
-            find_in_ast("ConfigClass.dataset_name", class_ast),
+            find_in_ast("ConfigClass.dataset_name".split("."), class_ast),
             AnnAssign(
                 annotation=Name(ctx=Load(), id="str"),
                 simple=1,
@@ -92,11 +111,11 @@ class TestAstUtils(TestCase):
 
     def test_find_in_ast_self(self) -> None:
         """ Tests that `find_in_ast` successfully finds itself in AST """
-        run_ast_test(self, find_in_ast("ConfigClass", class_ast), class_ast)
+        run_ast_test(self, find_in_ast(["ConfigClass"], class_ast), class_ast)
 
     def test_find_in_ast_None(self) -> None:
         """ Tests that `find_in_ast` fails correctly in AST """
-        self.assertIsNone(find_in_ast("John Galt", class_ast))
+        self.assertIsNone(find_in_ast(["John Galt"], class_ast))
 
     def test_find_in_ast_no_val(self) -> None:
         """ Tests that `find_in_ast` correctly gives AST node from
@@ -104,7 +123,8 @@ class TestAstUtils(TestCase):
         run_ast_test(
             self,
             find_in_ast(
-                "C.method_name.dataset_name", class_with_optional_arg_method_ast
+                "C.method_name.dataset_name".split("."),
+                class_with_optional_arg_method_ast,
             ),
             arg(
                 annotation=Name(ctx=Load(), id="str"),
@@ -117,7 +137,8 @@ class TestAstUtils(TestCase):
         """ Tests that `find_in_ast` correctly gives AST node from
          `def class C(object): def method_name(self,dataset_name: str='foo',…)`"""
         gen_ast = find_in_ast(
-            "C.method_name.dataset_name", class_with_method_and_body_types_ast
+            "C.method_name.dataset_name".split("."),
+            class_with_method_and_body_types_ast,
         )
         self.assertTrue(
             cmp_ast(gen_ast.default, Constant(kind=None, value="~/tensorflow_datasets"))
@@ -132,20 +153,34 @@ class TestAstUtils(TestCase):
             ),
         )
 
-    # def test_replace_in_ast_with_val(self) -> None:
-    #     """ Tests that `replace_in_ast` correctly gives AST node from
-    #      `def class C(object): def method_name(self,dataset_name: str='foo',…)`"""
-    #     gen_ast = replace_in_ast(
-    #         "C.method_name.dataset_name",
-    #         class_with_method_and_body_types_ast,
-    #         Constant(kind=None, value="~/jax_datasets")
-    #     )
-    #
-    #     run_ast_test(
-    #         self,
-    #         gen_ast,
-    #         ast.parse(class_with_method_and_body_types_str.replace('~/tensorflow_datasets', '~/jax_datasets'))
-    #     )
+    def test_replace_in_ast_with_val(self) -> None:
+        """
+        Tests that `RewriteAtQuery` can actually replace a node at given location
+        """
+        parsed_ast = ast.parse(class_with_method_and_body_types_str)
+        annotate_ancestry(parsed_ast)
+        rewrite_at_query = RewriteAtQuery(
+            search="C.method_name.dataset_name".split("."),
+            replacement_node=AnnAssign(
+                annotation=Name(ctx=Load(), id="int"),
+                simple=1,
+                target=Name(ctx=Store(), id="dataset_name"),
+                value=Constant(kind=None, value=15),
+            ),
+            root=parsed_ast,
+        )
+        gen_ast = rewrite_at_query.visit(parsed_ast)
+        self.assertTrue(rewrite_at_query.replaced, True)
+
+        run_ast_test(
+            self,
+            gen_ast,
+            ast.parse(
+                class_with_method_and_body_types_str.replace(
+                    'dataset_name: str = "mnist"', "dataset_name: int = 15"
+                )
+            ),
+        )
 
     def test_get_function_type(self) -> None:
         """ Test get_function_type returns the right type """

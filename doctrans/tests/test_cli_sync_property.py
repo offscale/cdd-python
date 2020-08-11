@@ -79,6 +79,12 @@ class TestCliSyncProperty(TestCase):
             open(method_py, "wt").close()
 
             def _sync_property(*args, **kwargs):
+                """
+                Mock function to check if it is called
+
+                :returns: True
+                :rtype: ```Literal[True]```
+                """
                 return True
 
             with patch("doctrans.__main__.sync_property", _sync_property):

@@ -7,7 +7,7 @@ from functools import partial
 from unittest import main
 from unittest.mock import MagicMock, patch
 
-from meta.asttools import cmp_ast, print_ast
+from meta.asttools import cmp_ast
 
 import doctrans.source_transformer
 from doctrans.pure_utils import PY3_8
@@ -40,8 +40,6 @@ def run_ast_test(test_case_instance, gen_ast, gold):
     )
 
     if platform.python_version_tuple() >= ("3", "8"):
-        print_ast(gen_ast)
-        print_ast(gold)
         test_case_instance.assertTrue(
             cmp_ast(gen_ast, gold), "Generated AST doesn't match reference AST"
         )
