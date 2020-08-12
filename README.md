@@ -252,28 +252,25 @@ def set_cli_args(argument_parser):
 
     usage: python -m doctrans sync_property [-h] --input-file INPUT_FILE
                                             --input-param INPUT_PARAM
-                                            [--input-eval] --output-type
-                                            {argparse_function,class,function}
-                                            --output-file OUTPUT_FILE
-                                            --output-param OUTPUT_PARAM
+                                            [--input-eval] --output-file
+                                            OUTPUT_FILE --output-param
+                                            OUTPUT_PARAM
     
     optional arguments:
       -h, --help            show this help message and exit
       --input-file INPUT_FILE
-                            File to find --input-param from
+                            File to find `--input-param` from
       --input-param INPUT_PARAM
                             Location within file of property. Can be top level
                             like `a` for `a=5` or with the `.` syntax as in
-                            -`-output-param`.
+                            `--output-param`.
       --input-eval          Whether to evaluate the input-param, or just leave it
-      --output-type {argparse_function,class,function}
-                            What type to parse/emit into
       --output-file OUTPUT_FILE
                             Edited in place, the property within this file (to
                             update) is selected by --output-param
       --output-param OUTPUT_PARAM
                             Parameter to update. E.g., `A.F` for `class A: F`,
-                            `f.g` for `def f(g): pass
+                            `f.g` for `def f(g): pass`
 
 
 ## Future work

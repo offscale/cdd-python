@@ -25,7 +25,10 @@ from ast import (
     Assign,
     arg,
     AST,
+    Index,
 )
+from copy import deepcopy
+from functools import partial
 from typing import Optional
 
 from doctrans.defaults_utils import extract_default
@@ -365,37 +368,52 @@ def find_in_ast(search, node):
     :returns: AST node that was found, or None if nothing was found
     :rtype: ```Optional[AST]```
     """
-    cursor = node.body
+    if len(search) == 0 or hasattr(node, "_location") and node._location == search:
+        return node
+
+    child_node, cursor, original_search = node, node.body, deepcopy(search)
     while len(search):
         query = search.pop(0)
-        if len(search) == 0 and hasattr(node, "name") and node.name == query:
-            return node
+        if (
+            len(search) == 0
+            and hasattr(child_node, "name")
+            and child_node.name == query
+        ):
+            return child_node
 
-        for node in cursor:
-            if isinstance(node, FunctionDef):
+        for child_node in cursor:
+            if (
+                hasattr(child_node, "_location")
+                and child_node._location == original_search
+            ):
+                return child_node
+
+            elif isinstance(child_node, FunctionDef):
                 if len(search):
                     query = search.pop(0)
                 _cursor = next(
                     filter(
                         lambda idx_arg: idx_arg[1].arg == query,
-                        enumerate(node.args.args),
+                        enumerate(child_node.args.args),
                     ),
                     None,
                 )
                 if _cursor is not None:
-                    if len(node.args.defaults) > _cursor[0]:
-                        setattr(_cursor[1], "default", node.args.defaults[_cursor[0]])
+                    if len(child_node.args.defaults) > _cursor[0]:
+                        setattr(
+                            _cursor[1], "default", child_node.args.defaults[_cursor[0]]
+                        )
                     cursor = _cursor[1]
                     if len(search) == 0:
                         return cursor
             elif (
-                isinstance(node, AnnAssign)
-                and isinstance(node.target, Name)
-                and node.target.id == query
+                isinstance(child_node, AnnAssign)
+                and isinstance(child_node.target, Name)
+                and child_node.target.id == query
             ):
-                return node
-            elif hasattr(node, "name") and node.name == query:
-                cursor = node.body
+                return child_node
+            elif hasattr(child_node, "name") and child_node.name == query:
+                cursor = child_node.body
                 break
 
 
@@ -411,8 +429,8 @@ def annotate_ancestry(node):
     parent_location = []
     for _node in ast.walk(node):
         name = [_node.name] if hasattr(_node, "name") else []
-        for child in ast.iter_child_nodes(_node):
-            if isinstance(child, FunctionDef):
+        for child_node in ast.iter_child_nodes(_node):
+            if isinstance(child_node, FunctionDef):
 
                 def set_index(idx_arg):
                     """
@@ -425,26 +443,36 @@ def annotate_ancestry(node):
                     idx_arg[1]._idx = idx_arg[0]
                     return idx_arg[1]
 
-                child.args.args = list(
+                child_node.args.args = list(
                     map(
                         set_index,
                         enumerate(
-                            child.args.args,
+                            child_node.args.args,
                             -1
-                            if len(child.args.args) > 0
-                            and child.args.args[0].arg in frozenset(("self", "cls"))
+                            if len(child_node.args.args) > 0
+                            and child_node.args.args[0].arg
+                            in frozenset(("self", "cls"))
                             else 0,
                         ),
                     )
                 )
 
-            if hasattr(child, "name") and not isinstance(child, ast.alias):
-                child._location = name + [child.name]
-                parent_location = child._location
-            elif isinstance(child, ast.arg):
-                child._location = parent_location + [child.arg]
-            elif isinstance(child, (Constant, Str)):
-                child._location = parent_location + [get_value(child)]
+            if hasattr(child_node, "name") and not isinstance(child_node, ast.alias):
+                child_node._location = name + [child_node.name]
+                parent_location = child_node._location
+            elif isinstance(child_node, ast.arg):
+                child_node._location = parent_location + [child_node.arg]
+            elif isinstance(child_node, (Constant, Str)):
+                child_node._location = parent_location + [get_value(child_node)]
+            elif isinstance(child_node, Assign) and all(
+                map(rpartial(isinstance, Name), child_node.targets)
+            ):
+                for target in child_node.targets:
+                    child_node._location = name + [target.id]
+            elif isinstance(child_node, AnnAssign) and isinstance(
+                child_node.target, Name
+            ):
+                child_node._location = name + [child_node.target.id]
 
 
 class RewriteAtQuery(ast.NodeTransformer):
@@ -470,14 +498,11 @@ class RewriteAtQuery(ast.NodeTransformer):
         self.replacement_node = replacement_node
         self.replaced = False
         self.root = root
-        print("search:", search, ";")
 
     def generic_visit(self, node: AST) -> Optional[AST]:
         """
         Visit every node, replace once, and only if found
         """
-        if hasattr(node, "_location"):
-            print(node._location, ":", node, ";")
         if (
             not self.replaced
             and hasattr(node, "_location")
@@ -486,7 +511,7 @@ class RewriteAtQuery(ast.NodeTransformer):
             # if isinstance(node, AnnAssign):
             #     node = emit_ann_assign(self.replacement_node)
             if isinstance(node, arg):
-                if not isinstance(self.replacement_node, arg):
+                if not isinstance(self.replacement_node, (arg, Subscript)):
                     # Set the default
                     value = get_value(self.replacement_node)
                     if value is not None:
@@ -498,9 +523,14 @@ class RewriteAtQuery(ast.NodeTransformer):
                         )
                         raq.visit(self.root)
                         assert raq.replaced is True
-                node = emit_arg(self.replacement_node)
-            elif isinstance(node, FunctionDef) and hasattr(
-                self.replacement_node, "_idx"
+                if isinstance(self.replacement_node, Subscript):
+                    node.annotation = self.replacement_node
+                else:
+                    node = emit_arg(self.replacement_node)
+            elif (
+                isinstance(node, FunctionDef)
+                and hasattr(self.replacement_node, "_idx")
+                and len(node.args.defaults) > self.replacement_node._idx
             ):
                 node.args.defaults[self.replacement_node._idx] = self.replacement_node
             # else:
@@ -550,8 +580,35 @@ def emit_arg(node):
         return node
     elif isinstance(node, AnnAssign) and isinstance(node.target, Name):
         return arg(annotation=node.annotation, arg=node.target.id, type_comment=None,)
+    elif (
+        isinstance(node, Assign)
+        and len(node.targets) == 1
+        and isinstance(node.targets[0], Name)
+    ):
+        return arg(annotation=None, arg=node.targets[0].id, type_comment=None,)
     else:
         raise NotImplementedError(type(node).__name__)
+
+
+def it2literal(it):
+    """
+    Convert a collection of constants into a type annotation
+
+    :param it: collection of constants
+    :type it: ```Union[Tuple[Union[str, int, float], ...], List[Union[str, int, float], ...]]```
+
+    :return: Subscript Literal for annotation
+    :rtype: ```Subscript```
+    """
+    return Subscript(
+        ctx=Load(),
+        slice=Index(
+            value=Tuple(ctx=Load(), elts=list(map(partial(Constant, kind=None), it)))
+            if len(it) > 1
+            else Constant(kind=None, value=it[0])
+        ),
+        value=Name(ctx=Load(), id="Literal"),
+    )
 
 
 __all__ = [
