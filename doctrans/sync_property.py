@@ -43,12 +43,10 @@ def sync_property(
         if input_param.count(".") != 0:
             raise NotImplementedError("Anything not on the top-level of the module")
 
-        local, world = {}, {}
-        output = eval(
-            compile(parsed_ast, filename=input_file, mode="exec"), local, world
-        )
+        local = {}
+        output = eval(compile(parsed_ast, filename=input_file, mode="exec"), local)
         assert output is None
-        replacement_node = it2literal(world[input_param])
+        replacement_node = it2literal(local[input_param])
     else:
         annotate_ancestry(parsed_ast)
         assert isinstance(parsed_ast, Module)

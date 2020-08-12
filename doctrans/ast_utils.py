@@ -626,4 +626,5 @@ __all__ = [
     "set_value",
     "is_argparse_add_argument",
     "is_argparse_description",
+    "it2literal",
 ]
