@@ -148,7 +148,7 @@ class TestAstUtils(TestCase):
     def test_find_in_ast_self(self) -> None:
         """ Tests that `find_in_ast` successfully finds itself in AST """
         run_ast_test(self, find_in_ast(["ConfigClass"], class_ast), class_ast)
-        module = Module(body=[])
+        module = Module(body=[], type_ignores=[])
         run_ast_test(self, find_in_ast([], module), module)
         module_with_fun = Module(
             body=[
@@ -165,6 +165,7 @@ class TestAstUtils(TestCase):
                     ),
                     body=[],
                     decorator_list=[],
+                    lineno=None,
                 )
             ]
         )
