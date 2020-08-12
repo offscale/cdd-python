@@ -81,7 +81,6 @@ def ground_truth(args, truth_file):
             )
 
         filenames = getattr(args, pluralise(fun_name))
-        print("filenames:", filenames, ";")
         assert isinstance(
             filenames, (list, tuple)
         ), "Expected Union[list, tuple] got {!r}".format(type(filenames).__name__)

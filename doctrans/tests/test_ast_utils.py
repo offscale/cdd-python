@@ -15,6 +15,7 @@ from ast import (
     AnnAssign,
     Load,
     Store,
+    Assign,
 )
 from unittest import TestCase
 from unittest.mock import patch
@@ -43,6 +44,30 @@ from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
 
 class TestAstUtils(TestCase):
     """ Test class for ast_utils """
+
+    def test_annotate_ancestry(self) -> None:
+        """ Tests that `annotate_ancestry` properly decorates """
+        node = Module(
+            body=[
+                AnnAssign(
+                    annotation=Name(ctx=Load(), id="str"),
+                    simple=1,
+                    target=Name(ctx=Store(), id="dataset_name"),
+                    value=Constant(kind=None, value="~/tensorflow_datasets"),
+                ),
+                Assign(
+                    annotation=None,
+                    simple=1,
+                    targets=[Name(ctx=Store(), id="epochs")],
+                    value=Constant(kind=None, value="333"),
+                ),
+            ]
+        )
+        self.assertFalse(hasattr(node.body[0], "_location"))
+        self.assertFalse(hasattr(node.body[1], "_location"))
+        annotate_ancestry(node)
+        self.assertEqual(node.body[0]._location, ["dataset_name"])
+        self.assertEqual(node.body[1]._location, ["epochs"])
 
     def test_determine_quoting_fails(self) -> None:
         """" Tests that determine_quoting fails on unknown input """
@@ -90,6 +115,17 @@ class TestAstUtils(TestCase):
         self.assertIsInstance(
             emit_arg(class_with_method_and_body_types_ast.body[1].args.args[1]), arg
         )
+        assign = Assign(
+            targets=[Name(ctx=Store(), id="yup")],
+            value=Constant(kind=None, value="nup"),
+        )
+        gen_ast = emit_arg(assign)
+        self.assertIsInstance(gen_ast, arg)
+        run_ast_test(
+            self,
+            gen_ast=gen_ast,
+            gold=arg(annotation=None, arg="yup", type_comment=None),
+        )
 
     def test_emit_arg_fails(self) -> None:
         """ Tests that `emit_arg` raised the right error """
@@ -112,6 +148,30 @@ class TestAstUtils(TestCase):
     def test_find_in_ast_self(self) -> None:
         """ Tests that `find_in_ast` successfully finds itself in AST """
         run_ast_test(self, find_in_ast(["ConfigClass"], class_ast), class_ast)
+        module = Module(body=[])
+        run_ast_test(self, find_in_ast([], module), module)
+        module_with_fun = Module(
+            body=[
+                FunctionDef(
+                    name="call_peril",
+                    args=arguments(
+                        args=[],
+                        defaults=[],
+                        kw_defaults=[],
+                        kwarg=None,
+                        kwonlyargs=[],
+                        posonlyargs=[],
+                        vararg=None,
+                    ),
+                    body=[],
+                    decorator_list=[],
+                )
+            ]
+        )
+        annotate_ancestry(module_with_fun)
+        run_ast_test(
+            self, find_in_ast(["call_peril"], module_with_fun), module_with_fun.body[0]
+        )
 
     def test_find_in_ast_None(self) -> None:
         """ Tests that `find_in_ast` fails correctly in AST """

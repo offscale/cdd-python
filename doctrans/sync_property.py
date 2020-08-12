@@ -5,7 +5,12 @@ import ast
 from ast import Module
 
 from doctrans import emit
-from doctrans.ast_utils import find_in_ast, annotate_ancestry, RewriteAtQuery
+from doctrans.ast_utils import (
+    find_in_ast,
+    annotate_ancestry,
+    RewriteAtQuery,
+    it2literal,
+)
 from doctrans.pure_utils import strip_split
 
 
@@ -34,15 +39,27 @@ def sync_property(
     """
     with open(input_file, "rt") as f:
         parsed_ast = ast.parse(f.read())
+    if input_eval:
+        if input_param.count(".") != 0:
+            raise NotImplementedError("Anything not on the top-level of the module")
 
-    assert isinstance(parsed_ast, Module)
-    replacement_node = find_in_ast(list(strip_split(input_param, ".")), parsed_ast)
+        local, world = {}, {}
+        output = eval(
+            compile(parsed_ast, filename=input_file, mode="exec"), local, world
+        )
+        assert output is None
+        replacement_node = it2literal(world[input_param])
+    else:
+        annotate_ancestry(parsed_ast)
+        assert isinstance(parsed_ast, Module)
+        replacement_node = find_in_ast(list(strip_split(input_param, ".")), parsed_ast)
+
     assert replacement_node is not None
 
     with open(output_file, "rt") as f:
         parsed_ast = ast.parse(f.read())
+
     annotate_ancestry(parsed_ast)
-    print("replacement_node:", replacement_node, ";")
     rewrite_at_query = RewriteAtQuery(
         search=list(strip_split(output_param, ".")),
         replacement_node=replacement_node,
