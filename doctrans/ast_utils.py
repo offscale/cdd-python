@@ -78,12 +78,12 @@ def param2ast(param):
         )
 
 
-def to_class_def(ast, class_name=None):
+def to_class_def(node, class_name=None):
     """
     Converts an AST to an `ast.ClassDef`
 
-    :param ast: Class AST or Module AST
-    :type ast: ```Union[ast.Module, ast.ClassDef]```
+    :param node: Class AST or Module AST
+    :type node: ```Union[ast.Module, ast.ClassDef]```
 
     :param class_name: Name of `class`. If None, gives first found.
     :type class_name: ```Optional[str]```
@@ -91,8 +91,8 @@ def to_class_def(ast, class_name=None):
     :return: ClassDef
     :rtype: ```ast.ClassDef```
     """
-    if isinstance(ast, Module):
-        classes_it = filter(rpartial(isinstance, ClassDef), ast.body)
+    if isinstance(node, Module):
+        classes_it = filter(rpartial(isinstance, ClassDef), node.body)
         if class_name is not None:
             return next(filter(lambda node: node.name == class_name, classes_it,))
         classes = tuple(classes_it)
@@ -102,11 +102,11 @@ def to_class_def(ast, class_name=None):
             return classes[0]
         else:
             raise TypeError("No ClassDef in AST")
-    elif isinstance(ast, ClassDef):
-        assert class_name is None or ast.name == class_name
-        return ast
+    elif isinstance(node, ClassDef):
+        assert class_name is None or node.name == class_name
+        return node
     else:
-        raise NotImplementedError(type(ast).__name__)
+        raise NotImplementedError(type(node).__name__)
 
 
 def param2argparse_param(param, emit_default_doc=True):
@@ -394,9 +394,9 @@ def find_in_ast(search, node):
                 and node.target.id == query
             ):
                 return node
-            # elif hasattr(node, "name") and node.name == query:
-            #     cursor = node.body
-            #     break
+            elif hasattr(node, "name") and node.name == query:
+                cursor = node.body
+                break
 
 
 def annotate_ancestry(node):
@@ -438,11 +438,13 @@ def annotate_ancestry(node):
                     )
                 )
 
-            if hasattr(child, "name"):
+            if hasattr(child, "name") and not isinstance(child, ast.alias):
                 child._location = name + [child.name]
                 parent_location = child._location
             elif isinstance(child, ast.arg):
                 child._location = parent_location + [child.arg]
+            elif isinstance(child, (Constant, Str)):
+                child._location = parent_location + [get_value(child)]
 
 
 class RewriteAtQuery(ast.NodeTransformer):
@@ -468,11 +470,14 @@ class RewriteAtQuery(ast.NodeTransformer):
         self.replacement_node = replacement_node
         self.replaced = False
         self.root = root
+        print("search:", search, ";")
 
     def generic_visit(self, node: AST) -> Optional[AST]:
         """
         Visit every node, replace once, and only if found
         """
+        if hasattr(node, "_location"):
+            print(node._location, ":", node, ";")
         if (
             not self.replaced
             and hasattr(node, "_location")
@@ -480,15 +485,19 @@ class RewriteAtQuery(ast.NodeTransformer):
         ):
             # if isinstance(node, AnnAssign):
             #     node = emit_ann_assign(self.replacement_node)
-            # elif
             if isinstance(node, arg):
-                value = get_value(self.replacement_node)
-                value._idx = node._idx
-                raq = RewriteAtQuery(
-                    search=self.search[:-1], root=self.root, replacement_node=value
-                )
-                raq.visit(self.root)
-                assert raq.replaced is True
+                if not isinstance(self.replacement_node, arg):
+                    # Set the default
+                    value = get_value(self.replacement_node)
+                    if value is not None:
+                        value._idx = node._idx
+                        raq = RewriteAtQuery(
+                            search=self.search[:-1],
+                            root=self.root,
+                            replacement_node=value,
+                        )
+                        raq.visit(self.root)
+                        assert raq.replaced is True
                 node = emit_arg(self.replacement_node)
             elif isinstance(node, FunctionDef) and hasattr(
                 self.replacement_node, "_idx"
@@ -546,6 +555,8 @@ def emit_arg(node):
 
 
 __all__ = [
+    "annotate_ancestry",
+    "RewriteAtQuery",
     "param2ast",
     "to_class_def",
     "param2argparse_param",
@@ -553,6 +564,7 @@ __all__ = [
     "find_in_ast",
     "get_function_type",
     "emit_ann_assign",
+    "emit_arg",
     "get_value",
     "set_value",
     "is_argparse_add_argument",

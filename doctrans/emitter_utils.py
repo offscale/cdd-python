@@ -32,7 +32,7 @@ def _handle_keyword(keyword, typ):
     Decide which type to wrap the keyword tuples in
 
     :param keyword: AST keyword
-    :type keyword: ```keyword```
+    :type keyword: ```ast.keyword```
 
     :param typ: string representation of type
     :type typ: ```str```
@@ -60,9 +60,9 @@ def _handle_keyword(keyword, typ):
 
         type_ = "Literal"
 
-    return "{type}[{typs}]".format(
+    return "{type}[{types}]".format(
         type=type_,
-        typs=", ".join(quote_f(get_value(elt)) for elt in keyword.value.elts),
+        types=", ".join(quote_f(get_value(elt)) for elt in keyword.value.elts),
     )
 
 

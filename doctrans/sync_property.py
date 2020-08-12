@@ -4,6 +4,10 @@ Functionality to synchronise properties
 import ast
 from ast import Module
 
+from doctrans import emit
+from doctrans.ast_utils import find_in_ast, annotate_ancestry, RewriteAtQuery
+from doctrans.pure_utils import strip_split
+
 
 def sync_property(
     input_eval, input_file, input_param, output_file, output_param,
@@ -32,5 +36,18 @@ def sync_property(
         parsed_ast = ast.parse(f.read())
 
     assert isinstance(parsed_ast, Module)
-    # cursor = find_in_ast(input_param.split("."), parsed_ast)
-    raise NotImplementedError("WiP")
+    replacement_node = find_in_ast(list(strip_split(input_param, ".")), parsed_ast)
+    assert replacement_node is not None
+
+    with open(output_file, "rt") as f:
+        parsed_ast = ast.parse(f.read())
+    annotate_ancestry(parsed_ast)
+    print("replacement_node:", replacement_node, ";")
+    rewrite_at_query = RewriteAtQuery(
+        search=list(strip_split(output_param, ".")),
+        replacement_node=replacement_node,
+        root=parsed_ast,
+    )
+    gen_ast = rewrite_at_query.visit(parsed_ast)
+    assert rewrite_at_query.replaced is True
+    emit.file(gen_ast, output_file, mode="wt")
