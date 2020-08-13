@@ -17,7 +17,7 @@ class TestCliSyncProperty(TestCase):
             ["sync_properties", "--wrong"],
             exit_code=2,
             output="the following arguments are required:"
-            " --input-file, --input-param, --output-file, --output-param\n",
+            " --input-filename, --input-param, --output-filename, --output-param\n",
         )
 
     def test_non_existent_file_fails(self) -> None:
@@ -47,36 +47,36 @@ class TestCliSyncProperty(TestCase):
             )
 
         with TemporaryDirectory() as tempdir:
-            input_file = os.path.join(tempdir, "input_file.py",)
-            output_file = os.path.join(tempdir, "output_file.py",)
-            open(input_file, "wt").close()
+            input_filename = os.path.join(tempdir, "input_filename.py",)
+            output_filename = os.path.join(tempdir, "output_filename.py",)
+            open(input_filename, "wt").close()
 
             run_cli_test(
                 self,
                 [
                     "sync_properties",
                     "--input-file",
-                    input_file,
+                    input_filename,
                     "--input-param",
                     "Foo.g.f",
                     "--output-file",
-                    output_file,
+                    output_filename,
                     "--output-param",
                     "f.h",
                 ],
                 exit_code=2,
                 output="--output-file must be an existent file. Got: {!r}\n".format(
-                    output_file
+                    output_filename
                 ),
             )
 
     def test_sync_properties(self) -> None:
         """ Tests CLI interface gets all the way to the sync_properties call without error """
         with TemporaryDirectory() as tempdir:
-            class_py = os.path.join(tempdir, "class_.py")
-            method_py = os.path.join(tempdir, "method.py")
-            open(class_py, "wt").close()
-            open(method_py, "wt").close()
+            input_filename = os.path.join(tempdir, "class_.py")
+            output_filename = os.path.join(tempdir, "method.py")
+            open(input_filename, "wt").close()
+            open(output_filename, "wt").close()
 
             def _sync_properties(*args, **kwargs):
                 """
@@ -94,11 +94,11 @@ class TestCliSyncProperty(TestCase):
                         [
                             "sync_properties",
                             "--input-file",
-                            class_py,
+                            input_filename,
                             "--input-param",
                             "Foo.g.f",
                             "--output-file",
-                            method_py,
+                            output_filename,
                             "--output-param",
                             "f.h",
                         ],

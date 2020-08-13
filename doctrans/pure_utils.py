@@ -1,5 +1,5 @@
 """
-Pure utils for pure functions. For the same input will always produce the same output.
+Pure utils for pure functions. For the same input will always produce the same input_str.
 """
 from keyword import iskeyword
 from platform import python_version_tuple

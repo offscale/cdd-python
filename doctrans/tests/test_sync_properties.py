@@ -1,4 +1,5 @@
 """ Tests for sync_properties """
+
 import ast
 import os
 from sys import modules
@@ -13,82 +14,109 @@ from doctrans.tests.mocks.eval import get_modules
 from doctrans.tests.utils_for_tests import unittest_main, run_ast_test
 
 
-class TestSyncProperties(TestCase):
-    """ Test class for sync_properties.py """
+def populate_files(tempdir, input_str=None, output_str=None):
+    """
+    Populate files in the tempdir
 
-    method_py_str = (
+    :param tempdir: Temporary directory
+    :type tempdir: ```str```
+
+    :param input_str: Input string to write to the input_filename
+    :type input_str: ```Optional[str]```
+
+    :param output_str: Output string to write to the output_filename
+    :type output_str: ```Optional[str]```
+
+    :returns: input filename, input str, input_str filename
+    :rtype: ```Tuple[str, str, str]```
+    """
+    input_filename = os.path.join(tempdir, "class_.py")
+    output_filename = os.path.join(tempdir, "method.py")
+    input_str = input_str or (
+        "from typing import Literal\n\n"
+        "class Foo(object):\n"
+        "{tab}def g(f: Literal['a']):\n"
+        "{tab}{tab}pass".format(tab=tab)
+    )
+    output_str = output_str or (
         "from typing import Literal\n\n"
         "def f(h: Literal['b']):"
         "{tab}{tab}pass".format(tab=tab)
     )
+    with open(input_filename, "wt") as f:
+        f.write(input_str)
+    with open(output_filename, "wt") as f:
+        f.write(output_str)
+    return input_filename, input_str, output_filename, output_str
+
+
+class TestSyncProperties(TestCase):
+    """ Test class for sync_properties.py """
 
     def test_sync_properties(self) -> None:
         """ Tests `sync_properties` with `call=False` """
 
         with TemporaryDirectory() as tempdir:
-            class_py, class_py_str, method_py = self.populate_files(tempdir)
+            (input_filename, input_str, output_filename, output_str,) = populate_files(
+                tempdir
+            )
 
             self.assertIsNone(
                 sync_properties(
-                    input_file=class_py,
+                    input_filename=input_filename,
                     input_params=("Foo.g.f",),
                     input_eval=False,
-                    output_file=method_py,
+                    output_filename=output_filename,
                     output_params=("f.h",),
                 )
             )
 
             self.run_sync_properties_test(
-                class_py,
-                class_py_str,
-                method_py,
-                ast.parse(
-                    self.method_py_str.replace("h: Literal['b']", "f: Literal['a']")
-                ),
+                input_filename,
+                input_str,
+                output_filename,
+                ast.parse(output_str.replace("h: Literal['b']", "f: Literal['a']")),
             )
 
     def test_sync_properties_eval(self) -> None:
         """ Tests `sync_properties` with `call=True` """
 
-        eval_mock_py = os.path.join(
-            os.path.dirname(
+        with open(
+            os.path.join(
                 os.path.dirname(
-                    resource_filename(modules[__name__].__name__, "__init__.py")
-                )
+                    os.path.dirname(
+                        resource_filename(modules[__name__].__name__, "__init__.py")
+                    )
+                ),
+                "tests",
+                "mocks",
+                "eval.py",
             ),
-            "tests",
-            "mocks",
-            "eval.py",
-        )
+            "rt",
+        ) as f:
+            eval_mock_str = f.read()
 
         with TemporaryDirectory() as tempdir:
-            input_file = os.path.join(tempdir, "input_.py")
-            output_file = os.path.join(tempdir, "output.py")
-
-            with open(eval_mock_py, "rt") as f:
-                eval_mock_str = f.read()
-
-            with open(input_file, "wt") as f:
-                f.write(eval_mock_str)
-            with open(output_file, "wt") as f:
-                f.write(self.method_py_str)
+            (input_filename, input_str, output_filename, output_str,) = populate_files(
+                tempdir, input_str=eval_mock_str
+            )
 
             self.assertIsNone(
                 sync_properties(
-                    input_file=input_file,
+                    input_filename=input_filename,
                     input_params=("get_modules",),
                     input_eval=True,
-                    output_file=output_file,
+                    output_filename=output_filename,
                     output_params=("f.h",),
                 )
             )
 
             self.run_sync_properties_test(
-                input_filename=input_file,
-                output_filename=output_file,
-                output=eval_mock_str,
+                input_filename=input_filename,
+                output_filename=output_filename,
+                input_str=eval_mock_str,
                 gold=ast.parse(
-                    self.method_py_str.replace("h: Literal['b']", "h: Literal['mocks']")
+                    output_str.replace("h: Literal['b']", "h: Literal['mocks']")
                 ),
             )
 
@@ -96,70 +124,223 @@ class TestSyncProperties(TestCase):
         """ Tests `sync_properties` with `output_param_wrap` set """
 
         with TemporaryDirectory() as tempdir:
-            input_file, output, output_file = self.populate_files(tempdir)
+            (input_filename, input_str, output_filename, output_str,) = populate_files(
+                tempdir
+            )
 
             self.assertIsNone(
                 sync_properties(
-                    input_file=input_file,
+                    input_filename=input_filename,
                     input_params=("Foo.g.f",),
                     input_eval=False,
-                    output_file=output_file,
+                    output_filename=output_filename,
                     output_params=("f.h",),
                     output_param_wrap="Optional[List[Union[{output_param}, str]]]",
                 )
             )
 
             self.run_sync_properties_test(
-                input_filename=input_file,
-                output_filename=output_file,
-                output=output,
+                input_filename=input_filename,
+                output_filename=output_filename,
+                input_str=input_str,
                 gold=ast.parse(
-                    self.method_py_str.replace(
+                    output_str.replace(
                         "h: Literal['b']", "f: Optional[List[Union[Literal['a'], str]]]"
                     )
                 ),
             )
 
-    def populate_files(self, tempdir):
-        """
-        Populate files in the tempdir
+    def test_sync_properties_output_param_wrap_no_annotation(self) -> None:
+        """ Tests `sync_properties` with `output_param_wrap` set when type annotation isn't being replaced """
 
-        :param tempdir: Temporary directory
-        :type tempdir: ```str```
-
-        :returns: input filename, output str, output filename
-        :rtype: ```Tuple[str, str, str]```
-        """
-        class_py = os.path.join(tempdir, "class_.py")
-        method_py = os.path.join(tempdir, "method.py")
-        class_py_str = (
-            "from typing import Literal\n\n"
-            "class Foo(object):\n"
-            "{tab}def g(f: Literal['a']):\n"
-            "{tab}{tab}pass".format(tab=tab)
-        )
-        with open(class_py, "wt") as f:
-            f.write(class_py_str)
-        with open(method_py, "wt") as f:
-            f.write(self.method_py_str)
-        return class_py, class_py_str, method_py
-
-    def test_sync_properties_eval_fails(self) -> None:
-        """ Tests `sync_properties` fails with `call=True` and dots """
         with TemporaryDirectory() as tempdir:
-            input_file = os.path.join(tempdir, "input_.py")
-            output_file = os.path.join(tempdir, "output.py")
+            (input_filename, input_str, output_filename, output_str,) = populate_files(
+                tempdir,
+                input_str=(
+                    "from typing import Literal\n\n"
+                    "class Foo(object):\n"
+                    "{tab}def g(f):\n"
+                    "{tab}{tab}pass".format(tab=tab)
+                ),
+            )
 
-            open(input_file, "wt").close()
-            open(output_file, "wt").close()
+            self.assertIsNone(
+                sync_properties(
+                    input_filename=input_filename,
+                    input_params=("Foo.g.f",),
+                    input_eval=False,
+                    output_filename=output_filename,
+                    output_params=("f.h",),
+                    output_param_wrap="Optional[List[Union[{output_param}, str]]]",
+                )
+            )
+
+            self.run_sync_properties_test(
+                input_filename=input_filename,
+                output_filename=output_filename,
+                input_str=input_str,
+                gold=ast.parse(output_str.replace("h: Literal['b']", "f")),
+            )
+
+    def test_sync_properties_output_param_wrap_no_type(self) -> None:
+        """ Tests `sync_properties` with `output_param_wrap` set when replacement_node has no type """
+
+        with TemporaryDirectory() as tempdir:
+            (input_filename, input_str, output_filename, output_str,) = populate_files(
+                tempdir,
+                output_str=(
+                    "from typing import Literal\n\n"
+                    "class Foo(object):\n"
+                    "{tab}def f(h):\n"
+                    "{tab}{tab}pass".format(tab=tab)
+                ),
+            )
+
+            self.assertIsNone(
+                sync_properties(
+                    input_filename=input_filename,
+                    input_params=("Foo.g.f",),
+                    input_eval=False,
+                    output_filename=output_filename,
+                    output_params=("Foo.f.h",),
+                    output_param_wrap="Optional[List[Union[{output_param}, str]]]",
+                )
+            )
+
+            self.run_sync_properties_test(
+                input_filename=input_filename,
+                output_filename=output_filename,
+                input_str=input_str,
+                gold=ast.parse(
+                    output_str.replace(
+                        "(h)", "(f: Optional[List[Union[Literal['a'], str]]])"
+                    )
+                ),
+            )
+
+    def test_sync_properties_output_param_wrap_subscript(self) -> None:
+        """ Tests `sync_properties` with `output_param_wrap` set when replacement_node is subscript and !input_eval """
+
+        with TemporaryDirectory() as tempdir:
+            (input_filename, input_str, output_filename, output_str,) = populate_files(
+                tempdir,
+                input_str="a = tuple(range(5))",
+                output_str="def j(k):\n" "{tab}pass\n".format(tab=tab),
+            )
+
+            self.assertIsNone(
+                sync_properties(
+                    input_filename=input_filename,
+                    input_params=("a",),
+                    input_eval=False,
+                    output_filename=output_filename,
+                    output_params=("j.k",),
+                    output_param_wrap=None,
+                )
+            )
+
+            with open(output_filename, "rt") as f:
+                # Technically this produces an invalid AST, but we don't care… `input_eval is False`
+                self.assertEqual(
+                    f.read(), output_str.replace("(k)", "(a: tuple(range(5)))")
+                )
+
+    def test_sync_properties_output_param_wrap_subscript_eval0(self) -> None:
+        """ Tests `sync_properties` with `output_param_wrap` set when replacement_node is subscript """
+
+        with TemporaryDirectory() as tempdir:
+            (input_filename, input_str, output_filename, output_str,) = populate_files(
+                tempdir, input_str="a = tuple(range(5))", output_str="def j(k): pass"
+            )
+
+            self.assertIsNone(
+                sync_properties(
+                    input_filename=input_filename,
+                    input_params=("a",),
+                    input_eval=True,
+                    output_filename=output_filename,
+                    output_params=("j.k",),
+                    output_param_wrap=None,
+                )
+            )
+
+            self.run_sync_properties_test(
+                input_filename=input_filename,
+                output_filename=output_filename,
+                input_str=input_str,
+                gold=ast.parse(
+                    output_str.replace("(k)", "(k: Literal[0, 1, 2, 3, 4])")
+                ),
+            )
+
+    def test_sync_properties_output_param_wrap_subscript_eval1(self) -> None:
+        """ Tests `sync_properties` with `output_param_wrap` set when replacement_node is subscript """
+
+        with TemporaryDirectory() as tempdir:
+            (input_filename, input_str, output_filename, output_str,) = populate_files(
+                tempdir,
+                input_str="import pip;"
+                "c = {k: getattr(pip, k) for k in dir(pip) if k in frozenset(('__version__', '__name__'))};"
+                "a = tuple(sorted(c.keys()))",
+                output_str="def j(k): pass",
+            )
+
+            self.assertIsNone(
+                sync_properties(
+                    input_filename=input_filename,
+                    input_params=("a",),
+                    input_eval=True,
+                    output_filename=output_filename,
+                    output_params=("j.k",),
+                    output_param_wrap=None,
+                )
+            )
+
+            self.run_sync_properties_test(
+                input_filename=input_filename,
+                output_filename=output_filename,
+                input_str=input_str,
+                gold=ast.parse(
+                    output_str.replace("(k)", "(k: Literal['__name__', '__version__'])")
+                ),
+            )
+
+    def test_sync_properties_output_param_wrap_fails(self) -> None:
+        """ Tests `sync_properties` fails with `output_param_wrap` set when replacement_node is unknown """
+
+        with TemporaryDirectory() as tempdir:
+            (input_filename, input_str, output_filename, output_str,) = populate_files(
+                tempdir, input_str="local = locals()"
+            )
 
             self.assertRaises(
                 NotImplementedError,
                 lambda: sync_properties(
-                    input_file=input_file,
+                    input_filename=input_filename,
+                    input_params=("local",),
+                    input_eval=False,
+                    output_filename=output_filename,
+                    output_params=("f.h",),
+                    output_param_wrap="Optional[List[Union[{output_param}, str]]]",
+                ),
+            )
+
+    def test_sync_properties_eval_fails(self) -> None:
+        """ Tests `sync_properties` fails with `call=True` and dots """
+        with TemporaryDirectory() as tempdir:
+            input_filename = os.path.join(tempdir, "input_.py")
+            output_filename = os.path.join(tempdir, "input_str.py")
+
+            open(input_filename, "wt").close()
+            open(output_filename, "wt").close()
+
+            self.assertRaises(
+                NotImplementedError,
+                lambda: sync_properties(
+                    input_filename=input_filename,
                     input_params=("foo.bar",),
                     input_eval=True,
-                    output_file=output_file,
+                    output_filename=output_filename,
                     output_params=("f.h",),
                 ),
             )
@@ -168,15 +349,17 @@ class TestSyncProperties(TestCase):
         """ Ensure mock returns the right result """
         self.assertTupleEqual(get_modules, ("mocks",))
 
-    def run_sync_properties_test(self, input_filename, output, output_filename, gold):
+    def run_sync_properties_test(
+        self, input_filename, input_str, output_filename, gold
+    ):
         """
         Common test for the suite
 
         :param input_filename: Filename of input
         :type input_filename: ```str```
 
-        :param output: Python source
-        :type output: ```str```
+        :param input_str: Python source
+        :type input_str: ```str```
 
         :param output_filename: Filename of output
         :type output_filename: ```str```
@@ -184,10 +367,12 @@ class TestSyncProperties(TestCase):
         :param gold: Gold standard AST
         :type gold: ```Union[ast.Module, ast.ClassDef, ast.FunctionDef]```
         """
-        # Confirm that the class is unedited
+
+        # Confirm that the input_filename is unedited
         with open(input_filename, "rt") as f:
-            run_ast_test(self, gen_ast=ast.parse(output), gold=ast.parse(f.read()))
-        # Confirm that the method is edited correctly
+            run_ast_test(self, gen_ast=ast.parse(input_str), gold=ast.parse(f.read()))
+
+        # Confirm that the output_filename is edited correctly
         with open(output_filename, "rt") as f:
             run_ast_test(
                 self, gen_ast=ast.parse(f.read()), gold=gold,

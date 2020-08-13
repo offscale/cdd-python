@@ -249,31 +249,32 @@ def set_cli_args(argument_parser):
 
     $ python -m doctrans sync_properties --help
 
-    usage: python -m doctrans sync_properties [-h] --input-file INPUT_FILE
+    usage: python -m doctrans sync_properties [-h] --input-filename INPUT_FILENAME
                                               --input-param INPUT_PARAMS
-                                              [--input-eval] --output-file
-                                              OUTPUT_FILE --output-param
+                                              [--input-eval] --output-filename
+                                              OUTPUT_FILENAME --output-param
                                               OUTPUT_PARAMS
                                               [--output-param-wrap OUTPUT_PARAM_WRAP]
     
     optional arguments:
       -h, --help            show this help message and exit
-      --input-file INPUT_FILE
+      --input-filename INPUT_FILENAME
                             File to find `--input-param` from
       --input-param INPUT_PARAMS
                             Location within file of property. Can be top level
                             like `a` for `a=5` or with the `.` syntax as in
                             `--output-param`.
       --input-eval          Whether to evaluate the input-param, or just leave it
-      --output-file OUTPUT_FILE
+      --output-filename OUTPUT_FILENAME
                             Edited in place, the property within this file (to
                             update) is selected by --output-param
       --output-param OUTPUT_PARAMS
                             Parameter to update. E.g., `A.F` for `class A: F`,
                             `f.g` for `def f(g): pass`
       --output-param-wrap OUTPUT_PARAM_WRAP
-                            Wrap all output params with this. E.g.,
+                            Wrap all input_str params with this. E.g.,
                             `Optional[Union[{output_param}, str]]`
+
 
 ## Future work
 
