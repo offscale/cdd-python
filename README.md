@@ -254,6 +254,7 @@ def set_cli_args(argument_parser):
                                               [--input-eval] --output-file
                                               OUTPUT_FILE --output-param
                                               OUTPUT_PARAMS
+                                              [--output-param-wrap OUTPUT_PARAM_WRAP]
     
     optional arguments:
       -h, --help            show this help message and exit
@@ -270,6 +271,9 @@ def set_cli_args(argument_parser):
       --output-param OUTPUT_PARAMS
                             Parameter to update. E.g., `A.F` for `class A: F`,
                             `f.g` for `def f(g): pass`
+      --output-param-wrap OUTPUT_PARAM_WRAP
+                            Wrap all output params with this. E.g.,
+                            `Optional[Union[{output_param}, str]]`
 
 ## Future work
 

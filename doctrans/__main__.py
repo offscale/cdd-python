@@ -68,6 +68,10 @@ def _build_parser():
         action="append",
         dest="output_params",
     )
+    property_parser.add_argument(
+        "--output-param-wrap",
+        help="Wrap all output params with this. E.g., `Optional[Union[{output_param}, str]]`",
+    )
 
     ########
     # Sync #
