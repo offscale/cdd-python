@@ -242,7 +242,8 @@ class TestSyncProperties(TestCase):
             with open(output_filename, "rt") as f:
                 # Technically this produces an invalid AST, but we don't care… `input_eval is False`
                 self.assertEqual(
-                    f.read(), output_str.replace("(k)", "(a: tuple(range(5)))")
+                    f.read().rstrip(),
+                    output_str.replace("(k)", "(a: tuple(range(5)))").rstrip(),
                 )
 
     def test_sync_properties_output_param_wrap_subscript_eval0(self) -> None:
