@@ -56,7 +56,7 @@ def run_cli_test(
     return_args=False,
 ):
     """
-    CLI test helper, wraps exit code and stdout/stderr output
+    CLI test helper, wraps exit code and stdout/stderr input_str
 
     :param test_case_instance: instance of `TestCase`
     :type test_case_instance: ```unittest.TestCase```
@@ -70,13 +70,13 @@ def run_cli_test(
     :param output: string representation (from stdout/stderr)
     :type output: ```Optional[str]```
 
-    :param output_checker: Function to check the output with
+    :param output_checker: Function to check the input_str with
     :type output_checker: ```Callable[[str], bool]```
 
     :param return_args: Primarily use is for tests. Returns the args rather than executing anything.
     :type return_args: ```bool```
 
-    :return: output
+    :return: input_str
     :rtype: ```Tuple[str, Optional[Namespace]]```
     """
     argparse_mock, args = MagicMock(), None

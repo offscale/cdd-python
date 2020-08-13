@@ -1,5 +1,5 @@
 """
-ast_utils, bunch of helpers for converting input into ast.* output
+ast_utils, bunch of helpers for converting input into ast.* input_str
 """
 import ast
 from ast import (
@@ -24,12 +24,10 @@ from ast import (
     NameConstant,
     Assign,
     arg,
-    AST,
     Index,
 )
 from copy import deepcopy
 from functools import partial
-from typing import Optional
 
 from doctrans.defaults_utils import extract_default
 from doctrans.pure_utils import simple_types, rpartial, PY3_8
@@ -430,38 +428,9 @@ def annotate_ancestry(node):
     for _node in ast.walk(node):
         name = [_node.name] if hasattr(_node, "name") else []
         for child_node in ast.iter_child_nodes(_node):
-            if isinstance(child_node, FunctionDef):
-
-                def set_index(idx_arg):
-                    """
-                    :param idx_arg: Index and Any; probably out of `enumerate`
-                    :type idx_arg: ```Tuple[int, Any]```
-
-                    :returns: Second element, with _idx set with value of first
-                    :rtype: ```Any```
-                    """
-                    idx_arg[1]._idx = idx_arg[0]
-                    return idx_arg[1]
-
-                child_node.args.args = list(
-                    map(
-                        set_index,
-                        enumerate(
-                            child_node.args.args,
-                            -1
-                            if len(child_node.args.args) > 0
-                            and child_node.args.args[0].arg
-                            in frozenset(("self", "cls"))
-                            else 0,
-                        ),
-                    )
-                )
-
             if hasattr(child_node, "name") and not isinstance(child_node, ast.alias):
                 child_node._location = name + [child_node.name]
                 parent_location = child_node._location
-            elif isinstance(child_node, ast.arg):
-                child_node._location = parent_location + [child_node.arg]
             elif isinstance(child_node, (Constant, Str)):
                 child_node._location = parent_location + [get_value(child_node)]
             elif isinstance(child_node, Assign) and all(
@@ -474,6 +443,34 @@ def annotate_ancestry(node):
             ):
                 child_node._location = name + [child_node.target.id]
 
+            if isinstance(child_node, FunctionDef):
+
+                def set_index_and_location(idx_arg):
+                    """
+                    :param idx_arg: Index and Any; probably out of `enumerate`
+                    :type idx_arg: ```Tuple[int, Any]```
+
+                    :returns: Second element, with _idx set with value of first
+                    :rtype: ```Any```
+                    """
+                    idx_arg[1]._idx = idx_arg[0]
+                    idx_arg[1]._location = child_node._location + [idx_arg[1].arg]
+                    return idx_arg[1]
+
+                child_node.args.args = list(
+                    map(
+                        set_index_and_location,
+                        enumerate(
+                            child_node.args.args,
+                            -1
+                            if len(child_node.args.args) > 0
+                            and child_node.args.args[0].arg
+                            in frozenset(("self", "cls"))
+                            else 0,
+                        ),
+                    )
+                )
+
 
 class RewriteAtQuery(ast.NodeTransformer):
     """
@@ -481,62 +478,101 @@ class RewriteAtQuery(ast.NodeTransformer):
 
     :ivar search: Search query, e.g., ['class_name', 'method_name', 'arg_name']
     :ivar replacement_node: Node to replace this search
+    :ivar replaced: whether a node has been replaced (only replaces first occurrence)
     """
 
-    def __init__(self, search, replacement_node, root):
+    def __init__(self, search, replacement_node):
         """
         :param search: Search query, e.g., ['class_name', 'method_name', 'arg_name']
         :type search: ```List[str]```
 
         :param replacement_node: Node to replace this search
         :type replacement_node: ```ast.AST```
-
-        :param root: Root node (in case one of the visitors wants to start search over)
-        :type root: ```ast.AST```
         """
         self.search = search
         self.replacement_node = replacement_node
         self.replaced = False
-        self.root = root
 
-    def generic_visit(self, node: AST) -> Optional[AST]:
+    def visit_FunctionDef(self, node):
         """
-        Visit every node, replace once, and only if found
+        visits the FunctionDef, if it's the right one will be replaced
+
+        :param node: FunctionDef
+        :type node: ```FunctionDef```
+
+        :returns: Potentially changed FunctionDef
+        :rtype: ```FunctionDef```
         """
         if (
             not self.replaced
             and hasattr(node, "_location")
-            and node._location == self.search
+            and node._location == self.search[:-1]
         ):
-            # if isinstance(node, AnnAssign):
-            #     node = emit_ann_assign(self.replacement_node)
-            if isinstance(node, arg):
-                if not isinstance(self.replacement_node, (arg, Subscript)):
-                    # Set the default
-                    value = get_value(self.replacement_node)
-                    if value is not None:
-                        value._idx = node._idx
-                        raq = RewriteAtQuery(
-                            search=self.search[:-1],
-                            root=self.root,
-                            replacement_node=value,
-                        )
-                        raq.visit(self.root)
-                        assert raq.replaced is True
-                if isinstance(self.replacement_node, Subscript):
-                    node.annotation = self.replacement_node
+            if isinstance(self.replacement_node, (AnnAssign, Assign)):
+                # Set default
+                if isinstance(self.replacement_node, AnnAssign):
+                    idx = next(
+                        (
+                            arg._idx
+                            for arg in node.args.args
+                            if arg.arg == self.replacement_node.target.id
+                            and hasattr(arg, "_idx")
+                        ),
+                        None,
+                    )
                 else:
-                    node = emit_arg(self.replacement_node)
-            elif (
-                isinstance(node, FunctionDef)
-                and hasattr(self.replacement_node, "_idx")
-                and len(node.args.defaults) > self.replacement_node._idx
-            ):
-                node.args.defaults[self.replacement_node._idx] = self.replacement_node
-            # else:
-            #    node = self.replacement_node
+                    idx = next(
+                        filter(
+                            None,
+                            (
+                                arg._idx if arg.arg == target.id else None
+                                for target in self.replacement_node.targets
+                                for arg in node.args.args
+                                if hasattr(arg, "_idx")
+                            ),
+                        ),
+                        None,
+                    )
+                    self.replacement_node = ast.arg(
+                        arg=self.replacement_node.targets[0].id,
+                        annotation=self.replacement_node.value,
+                    )
+
+                if idx is not None and len(node.args.defaults) > idx:
+                    node.args.defaults[idx] = get_value(self.replacement_node)
+
+                self.replacement_node = emit_arg(self.replacement_node)
+
+            elif isinstance(self.replacement_node, ast.Subscript):
+                self.replacement_node = ast.arg(
+                    arg=next(
+                        (
+                            arg.arg
+                            for arg in node.args.args
+                            if hasattr(arg, "_location")
+                            and arg._location == self.search
+                        ),
+                        self.search[-1],
+                    ),
+                    annotation=self.replacement_node,
+                )
+
+            assert isinstance(
+                self.replacement_node, ast.arg
+            ), "Expected ast.arg got {!r}".format(type(self.replacement_node))
+
+            node.args.args = list(
+                map(
+                    lambda arg: emit_arg(self.replacement_node)
+                    if hasattr(arg, "_location") and arg._location == self.search
+                    else arg,
+                    node.args.args,
+                )
+            )
+
             self.replaced = True
-        return ast.NodeTransformer.generic_visit(self, node)
+
+        return node
 
 
 def emit_ann_assign(node):

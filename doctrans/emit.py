@@ -1,5 +1,5 @@
 """
-Transform from string or AST representations of input, to AST, file, or str output.
+Transform from string or AST representations of input, to AST, file, or str input_str.
 """
 import ast
 from ast import (

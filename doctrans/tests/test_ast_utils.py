@@ -228,7 +228,6 @@ class TestAstUtils(TestCase):
                 target=Name(ctx=Store(), id="dataset_name"),
                 value=Constant(kind=None, value=15),
             ),
-            root=parsed_ast,
         )
         gen_ast = rewrite_at_query.visit(parsed_ast)
         self.assertTrue(rewrite_at_query.replaced, True)

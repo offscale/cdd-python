@@ -37,11 +37,11 @@ def _build_parser():
     ############
     property_parser = subparsers.add_parser(
         "sync_properties",
-        help="Synchronise one or more properties between input and output Python files",
+        help="Synchronise one or more properties between input and input_str Python files",
     )
 
     property_parser.add_argument(
-        "--input-file", help="File to find `--input-param` from", required=True,
+        "--input-filename", help="File to find `--input-param` from", required=True,
     )
     property_parser.add_argument(
         "--input-param",
@@ -57,7 +57,7 @@ def _build_parser():
         action="store_true",
     )
     property_parser.add_argument(
-        "--output-file",
+        "--output-filename",
         help="Edited in place, the property within this file (to update) is selected by --output-param",
         required=True,
     )
@@ -70,7 +70,7 @@ def _build_parser():
     )
     property_parser.add_argument(
         "--output-param-wrap",
-        help="Wrap all output params with this. E.g., `Optional[Union[{output_param}, str]]`",
+        help="Wrap all input_str params with this. E.g., `Optional[Union[{output_param}, str]]`",
     )
 
     ########
@@ -180,16 +180,16 @@ def main(cli_argv=None, return_args=False):
 
         return args if return_args else ground_truth(args, truth_file)
     elif command == "sync_properties":
-        if args.input_file is None or not path.isfile(args.input_file):
+        if args.input_filename is None or not path.isfile(args.input_filename):
             _parser.error(
                 "--input-file must be an existent file. Got: {!r}".format(
-                    args.input_file
+                    args.input_filename
                 )
             )
-        elif args.output_file is None or not path.isfile(args.output_file):
+        elif args.output_filename is None or not path.isfile(args.output_filename):
             _parser.error(
                 "--output-file must be an existent file. Got: {!r}".format(
-                    args.output_file
+                    args.output_filename
                 )
             )
         sync_properties(**{k: v for k, v in vars(args).items() if k != "command"})
