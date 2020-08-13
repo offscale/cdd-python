@@ -10,7 +10,7 @@ from os import path
 from doctrans import __version__
 from doctrans.conformance import ground_truth
 from doctrans.pure_utils import pluralise
-from doctrans.sync_property import sync_property
+from doctrans.sync_properties import sync_properties
 
 
 def _build_parser():
@@ -36,8 +36,8 @@ def _build_parser():
     # Property #
     ############
     property_parser = subparsers.add_parser(
-        "sync_property",
-        help="Synchronise just one property on one class, method, or argparse",
+        "sync_properties",
+        help="Synchronise one or more properties between input and output Python files",
     )
 
     property_parser.add_argument(
@@ -48,6 +48,8 @@ def _build_parser():
         help="Location within file of property."
         " Can be top level like `a` for `a=5` or with the `.` syntax as in `--output-param`.",
         required=True,
+        action="append",
+        dest="input_params",
     )
     property_parser.add_argument(
         "--input-eval",
@@ -63,6 +65,8 @@ def _build_parser():
         "--output-param",
         help="Parameter to update. E.g., `A.F` for `class A: F`, `f.g` for `def f(g): pass`",
         required=True,
+        action="append",
+        dest="output_params",
     )
 
     ########
@@ -171,7 +175,7 @@ def main(cli_argv=None, return_args=False):
             )
 
         return args if return_args else ground_truth(args, truth_file)
-    elif command == "sync_property":
+    elif command == "sync_properties":
         if args.input_file is None or not path.isfile(args.input_file):
             _parser.error(
                 "--input-file must be an existent file. Got: {!r}".format(
@@ -184,7 +188,7 @@ def main(cli_argv=None, return_args=False):
                     args.output_file
                 )
             )
-        sync_property(**{k: v for k, v in vars(args).items() if k != "command"})
+        sync_properties(**{k: v for k, v in vars(args).items() if k != "command"})
 
 
 if __name__ == "__main__":

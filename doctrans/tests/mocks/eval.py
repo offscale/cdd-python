@@ -1,4 +1,4 @@
-""" eval.py for testing with `sync_property` """
+""" eval.py for testing with `sync_properties` """
 
 import doctrans.tests.mocks
 

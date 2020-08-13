@@ -1,4 +1,4 @@
-""" Tests for CLI sync_property subparser (__main__.py) """
+""" Tests for CLI sync_properties subparser (__main__.py) """
 import os
 from tempfile import TemporaryDirectory
 from unittest import TestCase
@@ -10,11 +10,11 @@ from doctrans.tests.utils_for_tests import unittest_main, run_cli_test
 class TestCliSyncProperty(TestCase):
     """ Test class for __main__.py """
 
-    def test_sync_property_fails(self) -> None:
+    def test_sync_properties_fails(self) -> None:
         """ Tests CLI interface failure cases """
         run_cli_test(
             self,
-            ["sync_property", "--wrong"],
+            ["sync_properties", "--wrong"],
             exit_code=2,
             output="the following arguments are required:"
             " --input-file, --input-param, --output-file, --output-param\n",
@@ -30,7 +30,7 @@ class TestCliSyncProperty(TestCase):
             run_cli_test(
                 self,
                 [
-                    "sync_property",
+                    "sync_properties",
                     "--input-file",
                     filename,
                     "--input-param",
@@ -54,7 +54,7 @@ class TestCliSyncProperty(TestCase):
             run_cli_test(
                 self,
                 [
-                    "sync_property",
+                    "sync_properties",
                     "--input-file",
                     input_file,
                     "--input-param",
@@ -70,15 +70,15 @@ class TestCliSyncProperty(TestCase):
                 ),
             )
 
-    def test_sync_property(self) -> None:
-        """ Tests CLI interface gets all the way to the sync_property call without error """
+    def test_sync_properties(self) -> None:
+        """ Tests CLI interface gets all the way to the sync_properties call without error """
         with TemporaryDirectory() as tempdir:
             class_py = os.path.join(tempdir, "class_.py")
             method_py = os.path.join(tempdir, "method.py")
             open(class_py, "wt").close()
             open(method_py, "wt").close()
 
-            def _sync_property(*args, **kwargs):
+            def _sync_properties(*args, **kwargs):
                 """
                 Mock function to check if it is called
 
@@ -87,12 +87,12 @@ class TestCliSyncProperty(TestCase):
                 """
                 return True
 
-            with patch("doctrans.__main__.sync_property", _sync_property):
+            with patch("doctrans.__main__.sync_properties", _sync_properties):
                 self.assertTrue(
                     run_cli_test(
                         self,
                         [
-                            "sync_property",
+                            "sync_properties",
                             "--input-file",
                             class_py,
                             "--input-param",

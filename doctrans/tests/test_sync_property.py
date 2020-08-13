@@ -1,4 +1,4 @@
-""" Tests for sync_property """
+""" Tests for sync_properties """
 import ast
 import os
 from sys import modules
@@ -8,16 +8,16 @@ from unittest import TestCase
 from pkg_resources import resource_filename
 
 from doctrans.pure_utils import tab
-from doctrans.sync_property import sync_property
+from doctrans.sync_properties import sync_properties
 from doctrans.tests.mocks.eval import get_modules
 from doctrans.tests.utils_for_tests import unittest_main, run_ast_test
 
 
-class TestSyncProperty(TestCase):
-    """ Test class for sync_property.py """
+class TestSyncProperties(TestCase):
+    """ Test class for sync_properties.py """
 
-    def test_sync_property(self) -> None:
-        """ Tests `sync_property` with `call=False` """
+    def test_sync_properties(self) -> None:
+        """ Tests `sync_properties` with `call=False` """
 
         with TemporaryDirectory() as tempdir:
             class_py = os.path.join(tempdir, "class_.py")
@@ -29,24 +29,24 @@ class TestSyncProperty(TestCase):
                 "{tab}def g(f: Literal['a']):\n"
                 "{tab}{tab}pass".format(tab=tab)
             )
-
             method_py_str = (
                 "from typing import Literal\n\n"
                 "def f(h: Literal['b']):"
                 "{tab}{tab}pass".format(tab=tab)
             )
+
             with open(class_py, "wt") as f:
                 f.write(class_py_str)
             with open(method_py, "wt") as f:
                 f.write(method_py_str)
 
             self.assertIsNone(
-                sync_property(
+                sync_properties(
                     input_file=class_py,
-                    input_param="Foo.g.f",
+                    input_params=("Foo.g.f",),
                     input_eval=False,
                     output_file=method_py,
-                    output_param="f.h",
+                    output_params=("f.h",),
                 )
             )
 
@@ -66,8 +66,8 @@ class TestSyncProperty(TestCase):
                     ),
                 )
 
-    def test_sync_property_eval(self) -> None:
-        """ Tests `sync_property` with `call=True` """
+    def test_sync_properties_eval(self) -> None:
+        """ Tests `sync_properties` with `call=True` """
 
         eval_mock_py = os.path.join(
             os.path.dirname(
@@ -98,12 +98,12 @@ class TestSyncProperty(TestCase):
                 f.write(method_py_str)
 
             self.assertIsNone(
-                sync_property(
+                sync_properties(
                     input_file=input_file,
-                    input_param="get_modules",
+                    input_params=("get_modules",),
                     input_eval=True,
                     output_file=output_file,
-                    output_param="f.h",
+                    output_params=("f.h",),
                 )
             )
 
@@ -123,24 +123,23 @@ class TestSyncProperty(TestCase):
                     ),
                 )
 
-    def test_sync_property_eval_fails(self) -> None:
-        """ Tests `sync_property` fails with `call=True` and dots """
+    def test_sync_properties_eval_fails(self) -> None:
+        """ Tests `sync_properties` fails with `call=True` and dots """
         with TemporaryDirectory() as tempdir:
             input_file = os.path.join(tempdir, "input_.py")
             output_file = os.path.join(tempdir, "output.py")
 
-            with open(input_file, "wt") as f0, open(output_file, "wt") as f1:
-                f0.write("")
-                f1.write("")
+            open(input_file, "wt").close()
+            open(output_file, "wt").close()
 
             self.assertRaises(
                 NotImplementedError,
-                lambda: sync_property(
+                lambda: sync_properties(
                     input_file=input_file,
-                    input_param="foo.bar",
+                    input_params=("foo.bar",),
                     input_eval=True,
                     output_file=output_file,
-                    output_param="f.h",
+                    output_params=("f.h",),
                 ),
             )
 
