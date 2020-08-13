@@ -200,21 +200,20 @@ def set_cli_args(argument_parser):
 
     $ python -m doctrans --help
 
-    usage: python -m doctrans [-h] [--version] {sync_property,sync} ...
+    usage: python -m doctrans [-h] [--version] {sync_properties,sync} ...
     
     Translate between docstrings, classes, methods, and argparse.
     
     positional arguments:
-      {sync_property,sync}
-        sync_property       Synchronise just one property on one class, method, or
-                            argparse
+      {sync_properties,sync}
+        sync_properties     Synchronise one or more properties between input and
+                            output Python files
         sync                Force classes, methods, and/or argparse to be
                             equivalent
     
     optional arguments:
       -h, --help            show this help message and exit
       --version             show program's version number and exit
-
 
 ### sync
 
@@ -246,21 +245,21 @@ def set_cli_args(argument_parser):
                             this. Will run with first found choice.
 
 
-### sync_property
+### sync_properties
 
-    $ python -m doctrans sync_property --help
+    $ python -m doctrans sync_properties --help
 
-    usage: python -m doctrans sync_property [-h] --input-file INPUT_FILE
-                                            --input-param INPUT_PARAM
-                                            [--input-eval] --output-file
-                                            OUTPUT_FILE --output-param
-                                            OUTPUT_PARAM
+    usage: python -m doctrans sync_properties [-h] --input-file INPUT_FILE
+                                              --input-param INPUT_PARAMS
+                                              [--input-eval] --output-file
+                                              OUTPUT_FILE --output-param
+                                              OUTPUT_PARAMS
     
     optional arguments:
       -h, --help            show this help message and exit
       --input-file INPUT_FILE
                             File to find `--input-param` from
-      --input-param INPUT_PARAM
+      --input-param INPUT_PARAMS
                             Location within file of property. Can be top level
                             like `a` for `a=5` or with the `.` syntax as in
                             `--output-param`.
@@ -268,10 +267,9 @@ def set_cli_args(argument_parser):
       --output-file OUTPUT_FILE
                             Edited in place, the property within this file (to
                             update) is selected by --output-param
-      --output-param OUTPUT_PARAM
+      --output-param OUTPUT_PARAMS
                             Parameter to update. E.g., `A.F` for `class A: F`,
                             `f.g` for `def f(g): pass`
-
 
 ## Future work
 
