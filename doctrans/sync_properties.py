@@ -105,6 +105,7 @@ def sync_property(
     :returns: New AST derived from `output_ast`
     :rtype: ```AST```
     """
+    search = list(strip_split(output_param, "."))
     if input_eval:
         if input_param.count(".") != 0:
             raise NotImplementedError("Anything not on the top-level of the module")
@@ -112,7 +113,16 @@ def sync_property(
         local = {}
         output = eval(compile(input_ast, filename=input_filename, mode="exec"), local)
         assert output is None
-        replacement_node = it2literal(local[input_param])
+        replacement_node = ast.AnnAssign(
+            annotation=it2literal(local[input_param]),
+            simple=1,
+            target=ast.Name(
+                ctx=ast.Store(),
+                # id=input_param
+                id=search[-1],
+            ),
+            value=None,
+        )
     else:
         annotate_ancestry(input_ast)
         assert isinstance(input_ast, ast.Module)
@@ -134,9 +144,7 @@ def sync_property(
         else:
             raise NotImplementedError(type(replacement_node))
 
-    rewrite_at_query = RewriteAtQuery(
-        search=list(strip_split(output_param, ".")), replacement_node=replacement_node,
-    )
+    rewrite_at_query = RewriteAtQuery(search=search, replacement_node=replacement_node,)
 
     gen_ast = rewrite_at_query.visit(output_ast)
     assert rewrite_at_query.replaced is True, "Failed to update with {!r}".format(

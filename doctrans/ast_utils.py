@@ -539,38 +539,24 @@ class RewriteAtQuery(ast.NodeTransformer):
                     )
 
                 if idx is not None and len(node.args.defaults) > idx:
-                    node.args.defaults[idx] = get_value(self.replacement_node)
+                    new_default = get_value(self.replacement_node)
+                    if new_default is not None:
+                        node.args.defaults[idx] = new_default
 
                 self.replacement_node = emit_arg(self.replacement_node)
-
-            elif isinstance(self.replacement_node, ast.Subscript):
-                self.replacement_node = ast.arg(
-                    arg=next(
-                        (
-                            arg.arg
-                            for arg in node.args.args
-                            if hasattr(arg, "_location")
-                            and arg._location == self.search
-                        ),
-                        self.search[-1],
-                    ),
-                    annotation=self.replacement_node,
-                )
 
             assert isinstance(
                 self.replacement_node, ast.arg
             ), "Expected ast.arg got {!r}".format(type(self.replacement_node))
 
-            node.args.args = list(
-                map(
-                    lambda arg: emit_arg(self.replacement_node)
-                    if hasattr(arg, "_location") and arg._location == self.search
-                    else arg,
-                    node.args.args,
-                )
-            )
-
-            self.replaced = True
+            for idx in range(len(node.args.args)):
+                if (
+                    hasattr(node.args.args[idx], "_location")
+                    and node.args.args[idx]._location == self.search
+                ):
+                    node.args.args[idx] = emit_arg(self.replacement_node)
+                    self.replaced = True
+                    break
 
         return node
 

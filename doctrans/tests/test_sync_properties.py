@@ -280,10 +280,14 @@ class TestSyncProperties(TestCase):
         with TemporaryDirectory() as tempdir:
             (input_filename, input_str, output_filename, output_str,) = populate_files(
                 tempdir,
-                input_str="import pip;"
-                "c = {k: getattr(pip, k) for k in dir(pip) if k in frozenset(('__version__', '__name__'))};"
-                "a = tuple(sorted(c.keys()))",
-                output_str="def j(k): pass",
+                input_str="import pip\n"
+                "c = { attr: getattr(pip, attr)"
+                "      for attr in dir(pip)"
+                "      if attr in frozenset(('__version__', '__name__')) }\n"
+                "a = tuple(sorted(c.keys()))\n",
+                output_str="class C(object):\n"
+                "{tab}def j(k: str):\n"
+                "{tab}{tab}pass\n".format(tab=tab),
             )
 
             self.assertIsNone(
@@ -292,7 +296,7 @@ class TestSyncProperties(TestCase):
                     input_params=("a",),
                     input_eval=True,
                     output_filename=output_filename,
-                    output_params=("j.k",),
+                    output_params=("C.j.k",),
                     output_param_wrap=None,
                 )
             )
@@ -302,7 +306,9 @@ class TestSyncProperties(TestCase):
                 output_filename=output_filename,
                 input_str=input_str,
                 gold=ast.parse(
-                    output_str.replace("(k)", "(k: Literal['__name__', '__version__'])")
+                    output_str.replace(
+                        "(k: str)", "(k: Literal['__name__', '__version__'])"
+                    )
                 ),
             )
 
