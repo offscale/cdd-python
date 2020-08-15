@@ -493,9 +493,29 @@ class RewriteAtQuery(ast.NodeTransformer):
         self.replacement_node = replacement_node
         self.replaced = False
 
+    def generic_visit(self, node):
+        """
+        visits the `AST`, if it's the right one, replace it
+
+        :param node: The AST node
+        :type node: ```AST```
+
+        :returns: Potentially changed AST node
+        :rtype: ```AST```
+        """
+        if (
+            not self.replaced
+            and hasattr(node, "_location")
+            and node._location == self.search
+        ):
+            self.replaced = True
+            return self.replacement_node
+        else:
+            return ast.NodeTransformer.generic_visit(self, node)
+
     def visit_FunctionDef(self, node):
         """
-        visits the FunctionDef, if it's the right one will be replaced
+        visits the `FunctionDef`, if it's the right one, replace it
 
         :param node: FunctionDef
         :type node: ```FunctionDef```
