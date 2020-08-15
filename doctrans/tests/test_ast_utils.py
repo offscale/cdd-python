@@ -33,7 +33,7 @@ from doctrans.ast_utils import (
     RewriteAtQuery,
     emit_arg,
 )
-from doctrans.tests.mocks.classes import class_ast
+from doctrans.tests.mocks.classes import class_ast, class_str
 from doctrans.tests.mocks.methods import (
     class_with_optional_arg_method_ast,
     class_with_method_and_body_types_ast,
@@ -237,6 +237,34 @@ class TestAstUtils(TestCase):
             gen_ast,
             ast.parse(
                 class_with_method_and_body_types_str.replace(
+                    'dataset_name: str = "mnist"', "dataset_name: int = 15"
+                )
+            ),
+        )
+
+    def test_replace_in_ast_with_val_on_non_function(self) -> None:
+        """
+        Tests that `RewriteAtQuery` can actually replace a node at given location
+        """
+        parsed_ast = ast.parse(class_str)
+        annotate_ancestry(parsed_ast)
+        rewrite_at_query = RewriteAtQuery(
+            search="ConfigClass.dataset_name".split("."),
+            replacement_node=AnnAssign(
+                annotation=Name(ctx=Load(), id="int"),
+                simple=1,
+                target=Name(ctx=Store(), id="dataset_name"),
+                value=Constant(kind=None, value=15),
+            ),
+        )
+        gen_ast = rewrite_at_query.visit(parsed_ast)
+        self.assertTrue(rewrite_at_query.replaced, True)
+
+        run_ast_test(
+            self,
+            gen_ast,
+            ast.parse(
+                class_str.replace(
                     'dataset_name: str = "mnist"', "dataset_name: int = 15"
                 )
             ),
