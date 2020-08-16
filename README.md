@@ -1,9 +1,10 @@
 doctrans
 ========
-![Python version range](https://img.shields.io/badge/python-3.6%20|%203.7%20|%203.8%20|%203.9b5-blue.svg)
+![Python version range](https://img.shields.io/badge/python-3.6%20|%203.7%20|%203.8%20|%203.9rc1-blue.svg)
 ![Python implementation](https://img.shields.io/badge/implementation-cpython-blue.svg)
 [![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Linting, testing, and coverage](https://github.com/SamuelMarks/doctrans/workflows/Linting,%20testing,%20and%20coverage/badge.svg)](https://github.com/SamuelMarks/doctrans/actions)
+![Tested OSs, others may work](https://img.shields.io/badge/Tested%20on-Linux%20|%20macOS%20|%20Windows-green)
 ![Documentation coverage](.github/doccoverage.svg)
 [![codecov](https://codecov.io/gh/SamuelMarks/doctrans/branch/master/graph/badge.svg)](https://codecov.io/gh/SamuelMarks/doctrans)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -35,9 +36,11 @@ With current tooling there is no way to know:
 Some of these problems can be solved dynamically, however in doing so one loses developer-tool insights. There is no code-completion, and likely the CLI parser won't provide you with the enumeration of possibilities.
 
 ### Approach
+
 Traverse the AST, and emit the modifications, such that each of these 4 can convert to each other.
 
 #### Docstring
+
 ```reStructuredText
 Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
 
@@ -61,6 +64,7 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 ```
 
 ##### `class`
+
 ```python
 from typing import Optional, Union, Tuple, Literal
 
@@ -91,6 +95,7 @@ class TargetClass(object):
 ```
 
 ##### `class` method
+
 ```python
 from typing import Optional, Union, Tuple, Literal
 
@@ -127,6 +132,7 @@ class C(object):
 ```
 
 ##### Argparse augmenting function
+
 ```python
 from typing import Union, Tuple
 from json import loads
@@ -215,7 +221,7 @@ def set_cli_args(argument_parser):
       -h, --help            show this help message and exit
       --version             show program's version number and exit
 
-### sync
+### `sync`
 
     $ python -m doctrans sync --help
 
@@ -244,8 +250,7 @@ def set_cli_args(argument_parser):
                             Single source of truth. Others will be generated from
                             this. Will run with first found choice.
 
-
-### sync_properties
+### `sync_properties`
 
     $ python -m doctrans sync_properties --help
 
@@ -274,7 +279,6 @@ def set_cli_args(argument_parser):
       --output-param-wrap OUTPUT_PARAM_WRAP
                             Wrap all input_str params with this. E.g.,
                             `Optional[Union[{output_param}, str]]`
-
 
 ## Future work
 

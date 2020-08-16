@@ -23,7 +23,7 @@ from unittest.mock import patch
 from meta.asttools import cmp_ast
 
 from doctrans.ast_utils import (
-    to_class_def,
+    find_ast_type,
     determine_quoting,
     get_function_type,
     get_value,
@@ -348,35 +348,35 @@ class TestAstUtils(TestCase):
 
             self.assertIsInstance(doctrans.ast_utils.set_value("foo", None), Str)
 
-    def test_to_class_def(self) -> None:
-        """ Test that to_class_def gives the wrapped class back """
+    def test_find_ast_type(self) -> None:
+        """ Test that `find_ast_type` gives the wrapped class back """
 
         class_def = ClassDef(
             name="", bases=tuple(), keywords=tuple(), decorator_list=[], body=[]
         )
-        run_ast_test(self, to_class_def(Module(body=[class_def])), class_def)
+        run_ast_test(self, find_ast_type(Module(body=[class_def])), class_def)
 
-    def test_to_class_def_fails(self) -> None:
-        """ Test that to_class_def throws the right errors """
+    def test_find_ast_type_fails(self) -> None:
+        """ Test that `find_ast_type` throws the right errors """
 
-        self.assertRaises(NotImplementedError, lambda: to_class_def(None))
-        self.assertRaises(NotImplementedError, lambda: to_class_def(""))
-        self.assertRaises(NotImplementedError, lambda: to_class_def(FunctionDef()))
-        self.assertRaises(TypeError, lambda: to_class_def(Module(body=[])))
+        self.assertRaises(NotImplementedError, lambda: find_ast_type(None))
+        self.assertRaises(NotImplementedError, lambda: find_ast_type(""))
+        self.assertRaises(NotImplementedError, lambda: find_ast_type(FunctionDef()))
+        self.assertRaises(TypeError, lambda: find_ast_type(Module(body=[])))
         self.assertRaises(
             NotImplementedError,
-            lambda: to_class_def(Module(body=[ClassDef(), ClassDef()])),
+            lambda: find_ast_type(Module(body=[ClassDef(), ClassDef()])),
         )
 
     def test_to_named_class_def(self) -> None:
-        """ Test that to_class_def gives the wrapped named class back """
+        """ Test that find_ast_type gives the wrapped named class back """
 
         class_def = ClassDef(
             name="foo", bases=tuple(), keywords=tuple(), decorator_list=[], body=[]
         )
         run_ast_test(
             self,
-            to_class_def(
+            find_ast_type(
                 Module(
                     body=[
                         ClassDef(
@@ -389,7 +389,7 @@ class TestAstUtils(TestCase):
                         class_def,
                     ]
                 ),
-                class_name="foo",
+                node_name="foo",
             ),
             class_def,
         )

@@ -142,7 +142,7 @@ def sync_property(
                     .value
                 )
         else:
-            raise NotImplementedError(type(replacement_node))
+            raise NotImplementedError(type(replacement_node).__name__)
 
     rewrite_at_query = RewriteAtQuery(search=search, replacement_node=replacement_node,)
 
