@@ -4,15 +4,20 @@ Given the truth, show others the path
 import ast
 from ast import FunctionDef, ClassDef, Module
 from collections import OrderedDict
-from copy import deepcopy
 from functools import partial
 
 from meta.asttools import cmp_ast
 
 from doctrans import emit
 from doctrans import parse
-from doctrans.ast_utils import get_function_type
-from doctrans.pure_utils import rpartial, pluralise, sanitise
+from doctrans.ast_utils import (
+    annotate_ancestry,
+    find_in_ast,
+    RewriteAtQuery,
+    get_function_type,
+    find_ast_type,
+)
+from doctrans.pure_utils import pluralise
 
 
 def _get_name_from_namespace(args, fun_name):
@@ -48,55 +53,39 @@ def ground_truth(args, truth_file):
     :returns: Filenames and whether they were changed
     :rtype: ```OrderedDict```
     """
-    arg_name_to_func_typ = {
-        "argparse_function": (parse.argparse_ast, FunctionDef),
-        "class": (parse.class_, ClassDef),
-        "function": (parse.class_with_method, FunctionDef),
+    arg2parse_emit_type = {
+        "argparse_function": (parse.argparse_ast, emit.argparse_function, FunctionDef),
+        "class": (parse.class_, emit.class_, ClassDef),
+        "function": (parse.class_with_method, emit.function, FunctionDef),
     }
 
-    from_func, typ = arg_name_to_func_typ[args.truth]
+    parse_func, emit_func, type_wanted = arg2parse_emit_type[args.truth]
     fun_name = _get_name_from_namespace(args, args.truth)
 
     with open(truth_file, "rt") as f:
-        parsed_truth_file = ast.parse(f.read(), filename=truth_file)
+        true_ast = ast.parse(f.read(), filename=truth_file)
+    annotate_ancestry(true_ast)
 
-    gold_ir = from_func(
-        next(
-            filter(
-                lambda fun: fun.name == fun_name,
-                filter(rpartial(isinstance, typ), parsed_truth_file.body),
-            )
-        )
-    )
+    gold_ir = parse_func(find_in_ast(fun_name.split("."), true_ast))
 
     effect = OrderedDict()
-    # filter(lambda arg: arg != args.truth, arg_name_to_func_typ.keys()):
-    for fun_name in arg_name_to_func_typ:
+    # filter(lambda arg: arg != args.truth, arg2parse_emit_type.keys()):
+    for fun_name, (parse_func, emit_func, type_wanted) in arg2parse_emit_type.items():
         name = _get_name_from_namespace(args, fun_name)
-
-        if name.count(".") > 1:
-            raise NotImplementedError(
-                "We can only go one deep; e.g., `F.a.b` is not supported"
-                " given `class F: def a(): def b(): pass; pass;`"
-            )
 
         filenames = getattr(args, pluralise(fun_name))
         assert isinstance(
             filenames, (list, tuple)
         ), "Expected Union[list, tuple] got {!r}".format(type(filenames).__name__)
 
-        from_func, typ = arg_name_to_func_typ[fun_name]
-        outer_name, _, inner_name = name.partition(".")
         effect.update(
             map(
                 partial(
                     _conform_filename,
-                    fun_name=fun_name,
-                    from_func=from_func,
-                    outer_name=outer_name,
-                    intermediate_repr=gold_ir,
-                    typ=typ,
-                    inner_name=inner_name,
+                    search=name.split("."),
+                    emit_func=emit_func,
+                    replacement_node_ir=gold_ir,
+                    type_wanted=type_wanted,
                 ),
                 filenames,
             )
@@ -106,7 +95,7 @@ def ground_truth(args, truth_file):
 
 
 def _conform_filename(
-    filename, fun_name, from_func, outer_name, inner_name, intermediate_repr, typ,
+    filename, search, emit_func, replacement_node_ir, type_wanted,
 ):
     """
     Conform the given file to the `intermediate_repr`
@@ -114,128 +103,53 @@ def _conform_filename(
     :param filename: Location of file
     :type filename: ```str```
 
-    :param fun_name: Function/Class/AST name
-    :type fun_name: ```AST```
+    :param search: Search query, e.g., ['node_name', 'method_name', 'arg_name']
+    :type search: ```List[str]```
 
-    :param from_func: One parse._* function
-    :type from_func: ```Callable[[AST, str, ...], dict]```
+    :param replacement_node_ir: Replace what is found with the contents of this param
+    :type replacement_node_ir: ```dict```
 
-    :param outer_name: Name of the outer node
-    :type outer_name: ```str```
-
-    :param inner_name: Name of the inner node. If unset then don't traverse to inner node.
-    :type inner_name: ```Optional[str]```
-
-    :param intermediate_repr: dict of shape {
-            'name': ..., 'platform': ...,
-            'module': ..., 'title': ..., 'description': ...,
-            'parameters': ..., 'schema': ...,'returns': ...}
-    :type intermediate_repr: ```dict```
-
-    :param typ: AST instance
-    :type typ: ```AST```
+    :param type_wanted: AST instance
+    :type type_wanted: ```AST```
 
     :returns: filename, whether the file was modified
     :rtype: ```Tuple[str, bool]```
     """
-    unchanged = True
     with open(filename, "rt") as f:
         parsed_ast = ast.parse(f.read())
+    annotate_ancestry(parsed_ast)
     assert isinstance(parsed_ast, Module)
 
-    for idx, outer_node in enumerate(parsed_ast.body):
-        replace_node_f = partial(
-            replace_node,
-            fun_name=fun_name,
-            from_func=from_func,
-            outer_node=outer_node,
-            outer_name=outer_name,
-            intermediate_repr=intermediate_repr,
-            typ=typ,
-        )
-        if hasattr(outer_node, "name") and outer_node.name == outer_name:
-            if inner_name:
-                for i, inner_node in enumerate(outer_node.body):
-                    if isinstance(inner_node, typ) and inner_node.name == inner_name:
-                        unchanged, parsed_ast.body[idx].body[i] = replace_node_f(
-                            inner_node=inner_node, inner_name=inner_name
-                        )
-            elif isinstance(outer_node, typ):
-                unchanged, parsed_ast.body[idx] = replace_node_f(
-                    inner_node=None, inner_name=None
-                )
-
-    print("unchanged" if unchanged else "modified", filename, sep="\t")
-    if not unchanged:
-        emit.file(parsed_ast, filename, mode="wt")
-
-    return filename, unchanged
-
-
-def replace_node(
-    fun_name,
-    from_func,
-    outer_name,
-    inner_name,
-    outer_node,
-    inner_node,
-    intermediate_repr,
-    typ,
-):
-    """
-    They will not replace us. Except you will, with this function.
-
-    :param fun_name: Name of function, e.g., argparse, class, method
-    :type fun_name: ```str```
-
-    :param from_func: One parse.* function
-    :type from_func: ```Callable[[AST, str, ...], dict]```
-
-    :param outer_name: Name of the outer node
-    :type outer_name: ```str```
-
-    :param inner_name: Name of the inner node. If unset then don't traverse to inner node.
-    :type inner_name: ```Optional[str]```
-
-    :param outer_node: The outer node.
-    :type outer_node: ```AST```
-
-    :param inner_node: The inner node. If unset then don't [try and] traverse down to it.
-    :type inner_node: ```Optional[AST]```
-
-    :param intermediate_repr: dict of shape {
-            'name': ..., 'platform': ...,
-            'module': ..., 'title': ..., 'description': ...,
-            'parameters': ..., 'schema': ...,'returns': ...}
-    :type intermediate_repr: ```dict```
-
-    :param typ: AST instance
-    :type typ: ```AST```
-
-    :returns: Whether the created AST node is equal to the previous one, the created AST node
-    :rtype: ```Tuple[bool, AST]```
-    """
-    name, node = (
-        (outer_name, outer_node) if inner_name is None else (inner_name, inner_node)
-    )
-    previous = deepcopy(node)
+    original_node = find_in_ast(search, parsed_ast)
     options = {
         "FunctionDef": lambda: {
-            "function_type": get_function_type(node),
-            "function_name": name,
+            "function_type": get_function_type(
+                find_ast_type(original_node, of_type=FunctionDef)
+            ),
+            "function_name": search[-1] if len(search) else "set_cli_args",
         }
-    }.get(typ.__name__, lambda: {})
-
-    found = from_func(
-        outer_node, *tuple() if fun_name == "argparse_function" else (name,)
+    }.get(type_wanted.__name__, lambda: {})
+    replacement_node = emit_func(replacement_node_ir, **options())
+    assert type(replacement_node) == type_wanted, "Expected {!r} got {!r}".format(
+        type_wanted, type(replacement_node).__name__
     )
 
-    if "_internal" in found:
-        raise NotImplementedError()
-    else:
-        node = getattr(emit, sanitise(fun_name),)(intermediate_repr, **options())
+    replaced = False
+    if not cmp_ast(original_node, replacement_node):
+        rewrite_at_query = RewriteAtQuery(
+            search=search, replacement_node=replacement_node,
+        )
+        rewrite_at_query.visit(parsed_ast)
 
-    return cmp_ast(previous, node), node
+        print(
+            "modified" if rewrite_at_query.replaced else "unchanged", filename, sep="\t"
+        )
+        if rewrite_at_query.replaced:
+            emit.file(parsed_ast, filename, mode="wt", skip_black=False)
+
+        replaced = rewrite_at_query.replaced
+
+    return filename, replaced
 
 
-__all__ = ["ground_truth", "replace_node"]
+__all__ = ["ground_truth"]

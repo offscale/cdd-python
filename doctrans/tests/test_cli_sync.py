@@ -5,7 +5,9 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 from doctrans import __version__
+from doctrans.tests.mocks.argparse import argparse_func_str
 from doctrans.tests.mocks.classes import class_str
+from doctrans.tests.mocks.methods import class_with_method_types_str
 from doctrans.tests.utils_for_tests import unittest_main, run_cli_test
 
 
@@ -22,7 +24,7 @@ class TestCliSync(TestCase):
             output_checker=lambda output: output[output.rfind(" ") + 1 :][:-1],
         )
 
-    def test_args(self) -> None:
+    def test_args_example0(self) -> None:
         """ Tests CLI interface sets namespace correctly """
         with TemporaryDirectory() as tempdir:
             filename = os.path.join(
@@ -37,8 +39,12 @@ class TestCliSync(TestCase):
                         "sync",
                         "--class",
                         filename,
+                        "--class-name",
+                        "ConfigClass",
                         "--argparse-function",
                         filename,
+                        "--argparse-function-name",
+                        "set_cli_args",
                         "--truth",
                         "class",
                     ],
@@ -57,6 +63,52 @@ class TestCliSync(TestCase):
         self.assertListEqual(args.class_names, ["ConfigClass"])
 
         self.assertEqual(args.truth, "class")
+
+    def test_args_example1(self) -> None:
+        """ Tests CLI interface sets namespace correctly """
+        with TemporaryDirectory() as tempdir:
+            argparse_filename = os.path.join(tempdir, "argparse.py",)
+            class_filename = os.path.join(tempdir, "class_.py",)
+            method_filename = os.path.join(tempdir, "method.py",)
+
+            with open(argparse_filename, "wt") as f:
+                f.write(argparse_func_str)
+            with open(class_filename, "wt") as f:
+                f.write(class_str)
+            with open(method_filename, "wt") as f:
+                f.write(class_with_method_types_str)
+
+            _, args = run_cli_test(
+                self,
+                [
+                    "sync",
+                    "--class",
+                    class_filename,
+                    "--class-name",
+                    "ConfigClass",
+                    "--function",
+                    method_filename,
+                    "--function-name",
+                    "train",
+                    "--argparse-function",
+                    argparse_filename,
+                    "--argparse-function-name",
+                    "set_cli_args",
+                    "--truth",
+                    "function",
+                ],
+                exit_code=None,
+                output=None,
+                return_args=True,
+            )
+
+            self.assertListEqual(args.argparse_functions, [argparse_filename])
+            self.assertListEqual(args.argparse_function_names, ["set_cli_args"])
+
+            self.assertListEqual(args.classes, [class_filename])
+            self.assertListEqual(args.class_names, ["ConfigClass"])
+
+            self.assertEqual(args.truth, "function")
 
     def test_non_existent_file_fails(self) -> None:
         """ Tests nonexistent file throws the right error """

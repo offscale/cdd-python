@@ -79,32 +79,39 @@ def param2ast(param):
         )
 
 
-def to_class_def(node, class_name=None):
+def find_ast_type(node, node_name=None, of_type=ClassDef):
     """
     Converts an AST to an `ast.ClassDef`
 
-    :param node: Class AST or Module AST
-    :type node: ```Union[ast.Module, ast.ClassDef]```
+    :param node: Any AST node
+    :type node: ```AST```
 
-    :param class_name: Name of `class`. If None, gives first found.
-    :type class_name: ```Optional[str]```
+    :param node_name: Name of AST node. If None, gives first found.
+    :type node_name: ```Optional[str]```
 
-    :return: ClassDef
-    :rtype: ```ast.ClassDef```
+    :param of_type: Of which type to find
+    :type of_type: ```AST```
+
+    :return: Found AST node
+    :rtype: ```AST```
     """
     if isinstance(node, Module):
-        classes_it = filter(rpartial(isinstance, ClassDef), node.body)
-        if class_name is not None:
-            return next(filter(lambda node: node.name == class_name, classes_it,))
-        classes = tuple(classes_it)
-        if len(classes) > 1:  # We could convert every one I guess?
+        it = filter(rpartial(isinstance, of_type), node.body)
+        if node_name is not None:
+            return next(
+                filter(
+                    lambda node: hasattr(node, "name") and node.name == node_name, it,
+                )
+            )
+        matching_nodes = tuple(it)
+        if len(matching_nodes) > 1:  # We could convert every one I guess?
             raise NotImplementedError()
-        elif len(classes) > 0:
-            return classes[0]
+        elif len(matching_nodes) > 0:
+            return matching_nodes[0]
         else:
-            raise TypeError("No ClassDef in AST")
-    elif isinstance(node, ClassDef):
-        assert class_name is None or node.name == class_name
+            raise TypeError("No {!r} in AST".format(type(of_type).__name__))
+    elif isinstance(node, of_type):
+        assert node_name is None or not hasattr(node, "name") or node.name == node_name
         return node
     else:
         raise NotImplementedError(type(node).__name__)
@@ -476,14 +483,14 @@ class RewriteAtQuery(ast.NodeTransformer):
     """
     Replace the node at query with given node
 
-    :ivar search: Search query, e.g., ['class_name', 'method_name', 'arg_name']
+    :ivar search: Search query, e.g., ['node_name', 'method_name', 'arg_name']
     :ivar replacement_node: Node to replace this search
     :ivar replaced: whether a node has been replaced (only replaces first occurrence)
     """
 
     def __init__(self, search, replacement_node):
         """
-        :param search: Search query, e.g., ['class_name', 'method_name', 'arg_name']
+        :param search: Search query, e.g., ['node_name', 'method_name', 'arg_name']
         :type search: ```List[str]```
 
         :param replacement_node: Node to replace this search
@@ -567,7 +574,7 @@ class RewriteAtQuery(ast.NodeTransformer):
 
             assert isinstance(
                 self.replacement_node, ast.arg
-            ), "Expected ast.arg got {!r}".format(type(self.replacement_node))
+            ), "Expected ast.arg got {!r}".format(type(self.replacement_node).__name__)
 
             for idx in range(len(node.args.args)):
                 if (
@@ -657,7 +664,7 @@ __all__ = [
     "annotate_ancestry",
     "RewriteAtQuery",
     "param2ast",
-    "to_class_def",
+    "find_ast_type",
     "param2argparse_param",
     "determine_quoting",
     "find_in_ast",

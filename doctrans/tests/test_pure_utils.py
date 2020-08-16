@@ -8,7 +8,7 @@ from doctrans.pure_utils import (
     simple_types,
     identity,
     pluralise,
-    strip_split,
+    strip_split, sanitise,
 )
 from doctrans.tests.utils_for_tests import unittest_main
 
@@ -59,6 +59,10 @@ class TestPureUtils(TestCase):
         self.assertEqual(pluralise("wish"), "wishes")
         self.assertEqual(pluralise("morphosis"), "morphosises")
         self.assertEqual(pluralise("s"), "ss")
+
+    def test_sanitise(self) -> None:
+        """ Tests sanity """
+        self.assertEqual(sanitise("class"), "class_")
 
     def test_strip_split(self) -> None:
         """ Tests that strip_split works on separated input and separator free input """

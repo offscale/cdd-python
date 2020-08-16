@@ -17,6 +17,8 @@ from ast import (
     Str,
     NameConstant,
     Expr,
+    Module,
+    ClassDef,
 )
 from collections import OrderedDict
 from functools import partial
@@ -24,10 +26,10 @@ from itertools import filterfalse
 from operator import itemgetter
 from typing import Any
 
-from docstring_parser import DocstringParam, DocstringMeta
+from docstring_parser import DocstringParam, DocstringMeta, Docstring
 
 from doctrans.ast_utils import (
-    to_class_def,
+    find_ast_type,
     get_function_type,
     get_value,
     is_argparse_add_argument,
@@ -59,7 +61,10 @@ def class_(class_def, config_name=None):
           }
     :rtype: ```dict```
     """
-    class_def = to_class_def(class_def, config_name)
+    assert isinstance(
+        class_def, (Module, ClassDef)
+    ), "Expected 'Union[Module, ClassDef]' got `{!r}`".format(type(class_def).__name__)
+    class_def = find_ast_type(class_def, config_name)
     intermediate_repr = docstring(get_docstring(class_def).replace(":cvar", ":param"))
     intermediate_repr["params"] = OrderedDict(
         (param.pop("name"), param) for param in intermediate_repr["params"]
@@ -103,10 +108,13 @@ def class_with_method(class_def, method_name):
           }
     :rtype: ```dict```
     """
+    assert isinstance(class_def, ClassDef), "Expected 'ClassDef' got {!r}".format(
+        type(class_def).__name__
+    )
     return function(
         function_def=next(
             node
-            for node in to_class_def(class_def).body
+            for node in find_ast_type(class_def).body
             if isinstance(node, FunctionDef) and node.name == method_name
         )
     )
@@ -128,6 +136,9 @@ def function(function_def):
           }
     :rtype: ```dict```
     """
+    assert isinstance(
+        function_def, FunctionDef
+    ), "Expected 'FunctionDef' got `{!r}`".format(type(function_def).__name__)
 
     intermediate_repr = docstring(
         get_docstring(function_def).replace(":cvar", ":param")
@@ -192,6 +203,10 @@ def argparse_ast(function_def):
           }
     :rtype: ```dict```
     """
+    assert isinstance(
+        function_def, FunctionDef
+    ), "Expected 'FunctionDef' got `{!r}`".format(type(function_def).__name__)
+
     doc_string = get_docstring(function_def)
     intermediate_repr = {
         "short_description": "",
@@ -252,6 +267,9 @@ def docstring(doc_string, return_tuple=False):
     :return: intermediate_repr, whether it returns or not
     :rtype: ```Optional[Union[dict, Tuple[dict, bool]]]```
     """
+    assert isinstance(doc_string, str), "Expected 'str' got `{!r}`".format(
+        type(doc_string).__name__
+    )
     parsed = doc_string if isinstance(doc_string, dict) else parse_docstring(doc_string)
     returns = (
         "returns" in parsed
@@ -308,6 +326,9 @@ def to_docstring(
     :return: docstring
     :rtype: ```str```
     """
+    assert isinstance(intermediate_repr, dict), "Expected 'dict' got `{!r}`".format(
+        type(intermediate_repr).__name__
+    )
     if docstring_format != "rest":
         raise NotImplementedError(docstring_format)
 
@@ -336,6 +357,9 @@ def to_docstring(
         :param emit_types: whether to show `:type` lines
         :type emit_types: ```bool```
         """
+        assert isinstance(param, dict), "Expected 'dict' got `{!r}`".format(
+            type(param).__name__
+        )
         doc, default = extract_default(param["doc"], emit_default_doc=False)
         if default is not None:
             param["default"] = default
@@ -399,6 +423,7 @@ def _parse_dict(d):
     :returns: restructured dict
     :rtype: ```dict```
     """
+    assert isinstance(d, dict), "Expected 'dict' got `{!r}`".format(type(d).__name__)
     if "args" in d and len(d["args"]) in frozenset((1, 2)):
         d["name"] = d.pop("args")[0]
         if d["name"] == "return":
@@ -421,6 +446,9 @@ def _evaluate_to_docstring_value(name_value):
     :return: Same shape as input
     :rtype: ```Tuple[str, Tuple[Union[str, int, bool, float]]]```
     """
+    assert (
+        isinstance(name_value, tuple) and len(name_value) == 2
+    ), "Expected input of type `Tuple[str, Any]' got value of `{!r}`".format(name_value)
     name: str = name_value[0]
     value: Any = name_value[1]
     if isinstance(value, (list, tuple)):
@@ -478,6 +506,9 @@ def docstring_parser(doc_string):
           }
     :rtype: ```dict```
     """
+    assert isinstance(doc_string, Docstring), "Expected 'Docstring' got `{!r}`".format(
+        type(doc_string).__name__
+    )
 
     intermediate_repr = dict(
         map(

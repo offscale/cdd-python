@@ -95,7 +95,9 @@ class TestIntermediateRepresentation(TestCase):
         """
         self.assertRaises(
             NotImplementedError,
-            lambda: to_docstring(docstring_str, docstring_format="numpy"),
+            lambda: to_docstring(
+                intermediate_repr_no_default_doc, docstring_format="numpy"
+            ),
         )
 
     def test_from_docstring_parser(self) -> None:
