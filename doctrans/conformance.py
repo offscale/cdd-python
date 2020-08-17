@@ -4,7 +4,6 @@ Given the truth, show others the path
 import ast
 from ast import FunctionDef, ClassDef, Module
 from collections import OrderedDict
-from functools import partial
 
 from meta.asttools import cmp_ast
 
@@ -15,9 +14,32 @@ from doctrans.ast_utils import (
     find_in_ast,
     RewriteAtQuery,
     get_function_type,
-    find_ast_type,
 )
-from doctrans.pure_utils import pluralise
+from doctrans.pure_utils import pluralise, strip_split
+
+
+def _default_options(node, search, type_wanted):
+    """
+    Conform the given file to the `intermediate_repr`
+
+    :param node: AST node
+    :type node: ```AST```
+
+    :param search: Search query, e.g., ['node_name', 'function_name', 'arg_name']
+    :type search: ```List[str]```
+
+    :param type_wanted: AST instance
+    :type type_wanted: ```AST```
+
+    :returns: Arguments to pass to `emit.*` function
+    :rtype: ```Callable[[], dict]```
+    """
+    return {
+        "FunctionDef": lambda: {
+            "function_type": get_function_type(node),
+            "function_name": search[-1] if len(search) else "set_cli_args",
+        }
+    }.get(type_wanted.__name__, lambda: {})
 
 
 def _get_name_from_namespace(args, fun_name):
@@ -56,22 +78,26 @@ def ground_truth(args, truth_file):
     arg2parse_emit_type = {
         "argparse_function": (parse.argparse_ast, emit.argparse_function, FunctionDef),
         "class": (parse.class_, emit.class_, ClassDef),
-        "function": (parse.class_with_method, emit.function, FunctionDef),
+        "function": (parse.function, emit.function, FunctionDef),
     }
 
     parse_func, emit_func, type_wanted = arg2parse_emit_type[args.truth]
-    fun_name = _get_name_from_namespace(args, args.truth)
+    search = _get_name_from_namespace(args, args.truth).split(".")
 
     with open(truth_file, "rt") as f:
         true_ast = ast.parse(f.read(), filename=truth_file)
     annotate_ancestry(true_ast)
 
-    gold_ir = parse_func(find_in_ast(fun_name.split("."), true_ast))
+    original_node = find_in_ast(search, true_ast)
+    gold_ir = parse_func(
+        original_node,
+        **_default_options(node=original_node, search=search, type_wanted=type_wanted)()
+    )
 
     effect = OrderedDict()
     # filter(lambda arg: arg != args.truth, arg2parse_emit_type.keys()):
     for fun_name, (parse_func, emit_func, type_wanted) in arg2parse_emit_type.items():
-        name = _get_name_from_namespace(args, fun_name)
+        search = list(strip_split(_get_name_from_namespace(args, fun_name), "."))
 
         filenames = getattr(args, pluralise(fun_name))
         assert isinstance(
@@ -80,9 +106,9 @@ def ground_truth(args, truth_file):
 
         effect.update(
             map(
-                partial(
-                    _conform_filename,
-                    search=name.split("."),
+                lambda filename: _conform_filename(
+                    filename=filename,
+                    search=search,
                     emit_func=emit_func,
                     replacement_node_ir=gold_ir,
                     type_wanted=type_wanted,
@@ -103,7 +129,7 @@ def _conform_filename(
     :param filename: Location of file
     :type filename: ```str```
 
-    :param search: Search query, e.g., ['node_name', 'method_name', 'arg_name']
+    :param search: Search query, e.g., ['node_name', 'function_name', 'arg_name']
     :type search: ```List[str]```
 
     :param replacement_node_ir: Replace what is found with the contents of this param
@@ -121,15 +147,11 @@ def _conform_filename(
     assert isinstance(parsed_ast, Module)
 
     original_node = find_in_ast(search, parsed_ast)
-    options = {
-        "FunctionDef": lambda: {
-            "function_type": get_function_type(
-                find_ast_type(original_node, of_type=FunctionDef)
-            ),
-            "function_name": search[-1] if len(search) else "set_cli_args",
-        }
-    }.get(type_wanted.__name__, lambda: {})
-    replacement_node = emit_func(replacement_node_ir, **options())
+    assert len(search) > 0
+    replacement_node = emit_func(
+        replacement_node_ir,
+        **_default_options(node=original_node, search=search, type_wanted=type_wanted)()
+    )
     assert type(replacement_node) == type_wanted, "Expected {!r} got {!r}".format(
         type_wanted, type(replacement_node).__name__
     )

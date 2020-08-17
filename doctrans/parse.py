@@ -89,37 +89,6 @@ def class_(class_def, config_name=None):
     return intermediate_repr
 
 
-def class_with_method(class_def, method_name):
-    """
-    Converts an AST of a class with a method to our IR
-
-    :param class_def: Class AST or Module AST with a ClassDef inside
-    :type class_def: ```Union[Module, ClassDef]```
-
-    :param method_name: Method name
-    :type method_name: ```str```
-
-    :return: a dictionary of form
-          {
-              'short_description': ...,
-              'long_description': ...,
-              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-          }
-    :rtype: ```dict```
-    """
-    assert isinstance(class_def, ClassDef), "Expected 'ClassDef' got {!r}".format(
-        type(class_def).__name__
-    )
-    return function(
-        function_def=next(
-            node
-            for node in find_ast_type(class_def).body
-            if isinstance(node, FunctionDef) and node.name == method_name
-        )
-    )
-
-
 def function(function_def):
     """
     Converts an AST of a class with a method to our IR
@@ -187,12 +156,18 @@ def function(function_def):
     return intermediate_repr
 
 
-def argparse_ast(function_def):
+def argparse_ast(function_def, function_type=None, function_name=None):
     """
     Converts an AST to our IR
 
     :param function_def: AST of argparse function
     :type function_def: ```FunctionDef``
+
+    :param function_type: None is a loose function (def f()`), others self-explanatory
+    :type function_type: ```Optional[Literal['self', 'cls']]```
+
+    :param function_name: name of function
+    :type function_name: ```str```
 
     :return: a dictionary of form
           {
@@ -209,6 +184,8 @@ def argparse_ast(function_def):
 
     doc_string = get_docstring(function_def)
     intermediate_repr = {
+        "name": function_name,
+        "type": function_type,
         "short_description": "",
         "long_description": "",
         "params": [],
@@ -537,7 +514,6 @@ def docstring_parser(doc_string):
 
 __all__ = [
     "class_",
-    "class_with_method",
     "function",
     "argparse_ast",
     "docstring",

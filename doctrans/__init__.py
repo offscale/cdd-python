@@ -11,7 +11,7 @@ from os import path
 import yaml
 
 __author__ = "Samuel Marks"
-__version__ = "0.0.23-alpha"
+__version__ = "0.0.23-beta"
 
 
 def get_logger(name=None):

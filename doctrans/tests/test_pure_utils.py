@@ -8,7 +8,8 @@ from doctrans.pure_utils import (
     simple_types,
     identity,
     pluralise,
-    strip_split, sanitise,
+    strip_split,
+    sanitise,
 )
 from doctrans.tests.utils_for_tests import unittest_main
 

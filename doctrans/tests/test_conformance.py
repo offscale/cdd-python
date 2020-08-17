@@ -47,7 +47,7 @@ class TestConformance(TestCase):
                         self.ground_truth_tester(tempdir=tempdir,)[0].items(),
                     )
                 ),
-                (("argparse.py", False), ("classes.py", False), ("methods.py", True)),
+                (("argparse.py", False), ("classes.py", False), ("methods.py", False)),
             )
 
     def test_ground_truths(self) -> None:
@@ -79,7 +79,7 @@ class TestConformance(TestCase):
                     "classes": (class_,),
                     "class_names": ("ConfigClass",),
                     "functions": (function,),
-                    "function_names": ("C.method_name",),
+                    "function_names": ("C.function_name",),
                     "truth": "argparse_function",
                 }
             )
@@ -100,17 +100,17 @@ class TestConformance(TestCase):
                 ),
                 (
                     ("argparse0.py", False),
-                    ("argparse1.py", True),
-                    ("argparse2.py", True),
-                    ("argparse3.py", True),
-                    ("argparse4.py", True),
-                    ("argparse5.py", True),
-                    ("argparse6.py", True),
-                    ("argparse7.py", True),
-                    ("argparse8.py", True),
-                    ("argparse9.py", True),
+                    ("argparse1.py", False),
+                    ("argparse2.py", False),
+                    ("argparse3.py", False),
+                    ("argparse4.py", False),
+                    ("argparse5.py", False),
+                    ("argparse6.py", False),
+                    ("argparse7.py", False),
+                    ("argparse8.py", False),
+                    ("argparse9.py", False),
                     ("classes.py", False),
-                    ("methods.py", True),
+                    ("methods.py", False),
                 ),
             )
 
@@ -124,7 +124,7 @@ class TestConformance(TestCase):
                 "sys.stderr", new_callable=StringIO
             ):
                 self.assertRaises(
-                    NotImplementedError,
+                    AssertionError,
                     lambda: ground_truth(
                         Namespace(
                             **{
@@ -133,7 +133,7 @@ class TestConformance(TestCase):
                                 "classes": args.classes,
                                 "class_names": ("ConfigClass",),
                                 "functions": args.functions,
-                                "function_names": ("C.method_name.A",),
+                                "function_names": ("C.function_name.A",),
                                 "truth": "argparse_function",
                             }
                         ),
@@ -160,7 +160,7 @@ class TestConformance(TestCase):
                         )[0].items(),
                     )
                 ),
-                (("argparse.py", False), ("classes.py", True), ("methods.py", True)),
+                (("argparse.py", False), ("classes.py", True), ("methods.py", False)),
             )
 
     @staticmethod
@@ -204,15 +204,13 @@ class TestConformance(TestCase):
                 "classes": (class_,),
                 "class_names": ("ConfigClass",),
                 "functions": (function,),
-                "function_names": ("C.method_name",),
+                "function_names": ("C.function_name",),
                 "truth": "argparse_function",
             }
         )
 
-        with patch("sys.stdout", new_callable=StringIO), patch(
-            "sys.stderr", new_callable=StringIO
-        ):
-            return ground_truth(args, argparse_function,), args
+        # with patch("sys.stdout", new_callable=StringIO), patch("sys.stderr", new_callable=StringIO):
+        return ground_truth(args, argparse_function,), args
 
     def test__get_name_from_namespace(self) -> None:
         """ Test `_get_name_from_namespace` """
