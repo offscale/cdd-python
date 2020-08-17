@@ -126,7 +126,7 @@ def _build_parser():
     sync_parser.add_argument(
         "--function-name",
         help="Name of Function. If method, use Python resolution syntax,"
-        " i.e., ClassName.method_name",
+        " i.e., ClassName.function_name",
         action="append",
         type=str,
         dest="function_names",

@@ -110,7 +110,7 @@ def find_ast_type(node, node_name=None, of_type=ClassDef):
             return matching_nodes[0]
         else:
             raise TypeError("No {!r} in AST".format(type(of_type).__name__))
-    elif isinstance(node, of_type):
+    elif isinstance(node, ast.AST):
         assert node_name is None or not hasattr(node, "name") or node.name == node_name
         return node
     else:
@@ -376,26 +376,23 @@ def find_in_ast(search, node):
     if len(search) == 0 or hasattr(node, "_location") and node._location == search:
         return node
 
-    child_node, cursor, original_search = node, node.body, deepcopy(search)
-    while len(search):
-        query = search.pop(0)
+    child_node, cursor, current_search = node, node.body, deepcopy(search)
+    while len(current_search):
+        query = current_search.pop(0)
         if (
-            len(search) == 0
+            len(current_search) == 0
             and hasattr(child_node, "name")
             and child_node.name == query
         ):
             return child_node
 
         for child_node in cursor:
-            if (
-                hasattr(child_node, "_location")
-                and child_node._location == original_search
-            ):
+            if hasattr(child_node, "_location") and child_node._location == search:
                 return child_node
 
             elif isinstance(child_node, FunctionDef):
-                if len(search):
-                    query = search.pop(0)
+                if len(current_search):
+                    query = current_search.pop(0)
                 _cursor = next(
                     filter(
                         lambda idx_arg: idx_arg[1].arg == query,
@@ -409,7 +406,7 @@ def find_in_ast(search, node):
                             _cursor[1], "default", child_node.args.defaults[_cursor[0]]
                         )
                     cursor = _cursor[1]
-                    if len(search) == 0:
+                    if len(current_search) == 0:
                         return cursor
             elif (
                 isinstance(child_node, AnnAssign)
@@ -483,14 +480,14 @@ class RewriteAtQuery(ast.NodeTransformer):
     """
     Replace the node at query with given node
 
-    :ivar search: Search query, e.g., ['node_name', 'method_name', 'arg_name']
+    :ivar search: Search query, e.g., ['node_name', 'function_name', 'arg_name']
     :ivar replacement_node: Node to replace this search
     :ivar replaced: whether a node has been replaced (only replaces first occurrence)
     """
 
     def __init__(self, search, replacement_node):
         """
-        :param search: Search query, e.g., ['node_name', 'method_name', 'arg_name']
+        :param search: Search query, e.g., ['node_name', 'function_name', 'arg_name']
         :type search: ```List[str]```
 
         :param replacement_node: Node to replace this search

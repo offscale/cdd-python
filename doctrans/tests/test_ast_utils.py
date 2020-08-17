@@ -86,7 +86,7 @@ class TestAstUtils(TestCase):
         self.assertIsInstance(emit_ann_assign(class_ast.body[1]), AnnAssign)
         gen_ast = emit_ann_assign(
             find_in_ast(
-                "C.method_name.dataset_name".split("."),
+                "C.function_name.dataset_name".split("."),
                 class_with_method_and_body_types_ast,
             )
         )
@@ -180,11 +180,11 @@ class TestAstUtils(TestCase):
 
     def test_find_in_ast_no_val(self) -> None:
         """ Tests that `find_in_ast` correctly gives AST node from
-         `def class C(object): def method_name(self,dataset_name: str,…)`"""
+         `def class C(object): def function_name(self,dataset_name: str,…)`"""
         run_ast_test(
             self,
             find_in_ast(
-                "C.method_name.dataset_name".split("."),
+                "C.function_name.dataset_name".split("."),
                 class_with_optional_arg_method_ast,
             ),
             arg(
@@ -196,9 +196,9 @@ class TestAstUtils(TestCase):
 
     def test_find_in_ast_with_val(self) -> None:
         """ Tests that `find_in_ast` correctly gives AST node from
-         `def class C(object): def method_name(self,dataset_name: str='foo',…)`"""
+         `def class C(object): def function_name(self,dataset_name: str='foo',…)`"""
         gen_ast = find_in_ast(
-            "C.method_name.dataset_name".split("."),
+            "C.function_name.dataset_name".split("."),
             class_with_method_and_body_types_ast,
         )
         self.assertTrue(
@@ -221,7 +221,7 @@ class TestAstUtils(TestCase):
         parsed_ast = ast.parse(class_with_method_and_body_types_str)
         annotate_ancestry(parsed_ast)
         rewrite_at_query = RewriteAtQuery(
-            search="C.method_name.dataset_name".split("."),
+            search="C.function_name.dataset_name".split("."),
             replacement_node=AnnAssign(
                 annotation=Name(ctx=Load(), id="int"),
                 simple=1,
@@ -361,7 +361,6 @@ class TestAstUtils(TestCase):
 
         self.assertRaises(NotImplementedError, lambda: find_ast_type(None))
         self.assertRaises(NotImplementedError, lambda: find_ast_type(""))
-        self.assertRaises(NotImplementedError, lambda: find_ast_type(FunctionDef()))
         self.assertRaises(TypeError, lambda: find_ast_type(Module(body=[])))
         self.assertRaises(
             NotImplementedError,

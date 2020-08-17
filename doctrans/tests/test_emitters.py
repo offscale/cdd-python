@@ -10,7 +10,7 @@ from unittest import TestCase
 from meta.asttools import cmp_ast
 
 from doctrans import emit, parse
-from doctrans.ast_utils import get_function_type
+from doctrans.ast_utils import get_function_type, find_in_ast, annotate_ancestry
 from doctrans.pure_utils import rpartial, PY3_8
 from doctrans.tests.mocks.argparse import argparse_func_ast, argparse_func_with_body_ast
 from doctrans.tests.mocks.classes import class_ast
@@ -177,14 +177,18 @@ class TestEmitters(TestCase):
 
     def test_from_class_with_body_in_method_to_method_with_body(self) -> None:
         """ Tests if this can make the roundtrip from a full function to a full function """
+        annotate_ancestry(class_with_method_and_body_types_ast)
         run_ast_test(
             self,
             emit.function(
-                parse.class_with_method(
-                    class_with_method_and_body_types_ast, "method_name"
+                parse.function(
+                    find_in_ast(
+                        "C.function_name".split("."),
+                        class_with_method_and_body_types_ast,
+                    )
                 ),
                 emit_default_doc=False,
-                function_name="method_name",
+                function_name="function_name",
                 function_type="self",
                 indent_level=2,
                 emit_separating_tab=False,

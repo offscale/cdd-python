@@ -28,7 +28,7 @@ class_with_method_str = '''
 class C(object):
     """ C class (mocked!) """
 
-    def method_name(
+    def function_name(
         self,
         dataset_name="mnist",
         tfds_dir="~/tensorflow_datasets",
@@ -64,7 +64,7 @@ class_with_method_types_str = '''
 class C(object):
     """ C class (mocked!) """
 
-    def method_name(
+    def function_name(
         self,
         dataset_name: str = "mnist",
         tfds_dir: Optional[str] = "~/tensorflow_datasets",
@@ -94,7 +94,7 @@ class_with_method_and_body_types_str = '''
 class C(object):
     """ C class (mocked!) """
 
-    def method_name(
+    def function_name(
         self,
         dataset_name: str = "mnist",
         tfds_dir: Optional[str] = "~/tensorflow_datasets",
@@ -129,7 +129,7 @@ class_with_optional_arg_method_str = '''
 class C(object):
     """ C class (mocked!) """
 
-    def method_name(
+    def function_name(
         self,
         dataset_name: str,
         K: Optional[Literal["np", "tf"]] = None
@@ -275,7 +275,7 @@ class_with_method_and_body_types_ast = ClassDef(
                 ),
             ],
             decorator_list=[],
-            name="method_name",
+            name="function_name",
             returns=Subscript(
                 ctx=Load(),
                 slice=Index(
@@ -422,7 +422,7 @@ class_with_method_ast = (
                     ),
                 ],
                 decorator_list=[],
-                name="method_name",
+                name="function_name",
                 returns=None,
                 type_comment=None,
             ),
@@ -541,7 +541,7 @@ class_with_method_types_ast = (
                     ),
                 ],
                 decorator_list=[],
-                name="method_name",
+                name="function_name",
                 returns=Subscript(
                     ctx=Load(),
                     slice=Index(
@@ -697,7 +697,7 @@ class_with_optional_arg_method_ast = (
                     ),
                 ],
                 decorator_list=[],
-                name="method_name",
+                name="function_name",
                 returns=Subscript(
                     ctx=Load(),
                     slice=Index(

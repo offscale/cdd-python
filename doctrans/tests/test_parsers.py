@@ -15,10 +15,6 @@ from doctrans.tests.mocks.docstrings import (
     docstring_str,
     intermediate_repr_no_default_doc,
 )
-from doctrans.tests.mocks.methods import (
-    class_with_method_ast,
-    class_with_method_types_ast,
-)
 from doctrans.tests.utils_for_tests import unittest_main
 
 
@@ -62,24 +58,6 @@ class TestIntermediateRepresentation(TestCase):
               from `class_ast`
         """
         self.assertDictEqual(parse.class_(class_ast), intermediate_repr_no_default_doc)
-
-    def test_from_class_with_method(self) -> None:
-        """
-        Tests whether `class_with_method` produces `intermediate_repr_no_default_doc`
-              from `class_with_method_ast` """
-        self.assertDictEqual(
-            parse.class_with_method(class_with_method_ast, "method_name"),
-            intermediate_repr_no_default_doc,
-        )
-
-    def test_from_class_with_method_types(self) -> None:
-        """
-        Tests whether `class_with_method` produces `intermediate_repr_no_default_doc`
-              from `class_with_method_types_ast` """
-        self.assertDictEqual(
-            parse.class_with_method(class_with_method_types_ast, "method_name"),
-            intermediate_repr_no_default_doc,
-        )
 
     def test_from_docstring(self) -> None:
         """
