@@ -1,8 +1,9 @@
 """
-Shared utility function used by many tests
+Shared utility functions used by many tests
 """
 import ast
 import platform
+from copy import deepcopy
 from functools import partial
 from unittest import main
 from unittest.mock import MagicMock, patch
@@ -29,11 +30,19 @@ def run_ast_test(test_case_instance, gen_ast, gold):
     if isinstance(gen_ast, str):
         gen_ast = ast.parse(gen_ast).body[0]
 
-    """
-    if hasattr(gen_ast, 'body') and len(gen_ast.body) > 0 and hasattr(gen_ast.body, 'value'):
-        test_case_instance.assertEqual(get_docstring(gen_ast),
-                                       get_docstring(gold))
-    """
+    gen_ast = deepcopy(gen_ast)
+    gold = deepcopy(gold)
+
+    if hasattr(gen_ast, "body") and len(gen_ast.body) > 0:
+        gen_docstring = ast.get_docstring(gen_ast)
+        gold_docstring = ast.get_docstring(gold)
+        if gen_docstring is not None and gold_docstring is not None:
+            test_case_instance.assertEqual(
+                gen_docstring.strip(), gold_docstring.strip()
+            )
+            # Following issues with docstring indentation, so now that we've confirmed they're identical, remove them
+            gen_ast.body.pop(0)
+            gold.body.pop(0)
 
     test_case_instance.assertEqual(
         *map(doctrans.source_transformer.to_code, (gen_ast, gold))

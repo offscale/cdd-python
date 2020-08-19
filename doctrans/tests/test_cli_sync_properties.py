@@ -80,7 +80,7 @@ class TestCliSyncProperty(TestCase):
 
             def _sync_properties(*args, **kwargs):
                 """
-                Mock function to check if it is called
+                Mock `_sync_properties` function to check if it is called
 
                 :returns: True
                 :rtype: ```Literal[True]```

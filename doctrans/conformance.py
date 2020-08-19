@@ -1,7 +1,6 @@
 """
 Given the truth, show others the path
 """
-import ast
 from ast import FunctionDef, ClassDef, Module
 from collections import OrderedDict
 
@@ -10,12 +9,12 @@ from meta.asttools import cmp_ast
 from doctrans import emit
 from doctrans import parse
 from doctrans.ast_utils import (
-    annotate_ancestry,
     find_in_ast,
     RewriteAtQuery,
     get_function_type,
 )
 from doctrans.pure_utils import pluralise, strip_split
+from doctrans.source_transformer import ast_parse
 
 
 def _default_options(node, search, type_wanted):
@@ -85,8 +84,7 @@ def ground_truth(args, truth_file):
     search = _get_name_from_namespace(args, args.truth).split(".")
 
     with open(truth_file, "rt") as f:
-        true_ast = ast.parse(f.read(), filename=truth_file)
-    annotate_ancestry(true_ast)
+        true_ast = ast_parse(f.read(), filename=truth_file)
 
     original_node = find_in_ast(search, true_ast)
     gold_ir = parse_func(
@@ -142,8 +140,7 @@ def _conform_filename(
     :rtype: ```Tuple[str, bool]```
     """
     with open(filename, "rt") as f:
-        parsed_ast = ast.parse(f.read())
-    annotate_ancestry(parsed_ast)
+        parsed_ast = ast_parse(f.read())
     assert isinstance(parsed_ast, Module)
 
     original_node = find_in_ast(search, parsed_ast)

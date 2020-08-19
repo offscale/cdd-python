@@ -209,8 +209,10 @@ class TestConformance(TestCase):
             }
         )
 
-        # with patch("sys.stdout", new_callable=StringIO), patch("sys.stderr", new_callable=StringIO):
-        return ground_truth(args, argparse_function,), args
+        with patch("sys.stdout", new_callable=StringIO), patch(
+            "sys.stderr", new_callable=StringIO
+        ):
+            return ground_truth(args, argparse_function,), args
 
     def test__get_name_from_namespace(self) -> None:
         """ Test `_get_name_from_namespace` """

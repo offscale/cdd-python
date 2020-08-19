@@ -88,7 +88,7 @@ def set_default_doc(param, emit_default_doc=True):
     :returns: Same shape as input but with Default append to doc.
     :rtype: ```dict``
     """
-
+    # if param is None: param = {"doc": "", "typ": "Any"}
     has_defaults = "Defaults" in param["doc"] or "defaults" in param["doc"]
 
     if emit_default_doc and "default" in param and not has_defaults:

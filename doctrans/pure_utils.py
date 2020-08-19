@@ -111,6 +111,45 @@ def pluralise(singular):
     return root + suffix
 
 
+def deindent(s):
+    """
+    Remove all indentation from the input string
+
+    :param s: Input string
+    :type s: ```AnyStr```
+
+    :returns: Deindented string
+    :rtype: ```AnyStr```
+    """
+    return "\n".join(map(str.lstrip, s.split("\n"),))
+
+
+def reindent(s, indent_level=1, join_on="\n"):
+    """
+    Reindent the input string
+
+    :param s: Input string
+    :type s: ```AnyStr```
+
+    :param indent_level: docstring indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
+    :type indent_level: ```int```
+
+    :param join_on: What to join on, e.g., '\n'
+    :type join_on: ```str```
+
+    :returns: Reindented string
+    :rtype: ```AnyStr```
+    """
+    return join_on.join(
+        map(
+            lambda line: "{tab}{line}".format(
+                tab=indent_level * tab, line=line.lstrip()
+            ),
+            s.split("\n"),
+        )
+    ).replace(tab, "", 1)
+
+
 def sanitise(s):
     """
     Sanitise the input string, appending an `_` if it's a keyword
@@ -128,7 +167,7 @@ def strip_split(param, sep):
     """
     Split and strip the input string on given separator
 
-    :param param: Module/function resolver with a dot syntax.
+    :param param: Module/ClassDef/FunctionDef/AnnAssign/Assign resolver with a dot syntax.
     :type param: ```str```
 
     :param sep: Separator
@@ -149,6 +188,7 @@ __all__ = [
     "PY3_8",
     "PY_GTE_3_9",
     "pluralise",
+    "reindent",
     "sanitise",
     "strip_split",
 ]

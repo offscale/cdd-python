@@ -16,30 +16,31 @@ from ast import (
     Subscript,
     Str,
     NameConstant,
-    Expr,
     Module,
     ClassDef,
 )
 from collections import OrderedDict
-from functools import partial
 from itertools import filterfalse
 from operator import itemgetter
 from typing import Any
 
 from docstring_parser import DocstringParam, DocstringMeta, Docstring
 
+from doctrans import get_logger
 from doctrans.ast_utils import (
     find_ast_type,
-    get_function_type,
     get_value,
     is_argparse_add_argument,
     is_argparse_description,
+    get_function_type,
 )
-from doctrans.defaults_utils import extract_default, set_default_doc
+from doctrans.defaults_utils import extract_default
 from doctrans.emitter_utils import parse_out_param, _parse_return
-from doctrans.pure_utils import tab, rpartial
+from doctrans.pure_utils import rpartial
 from doctrans.rest_docstring_parser import parse_docstring
 from doctrans.source_transformer import to_code
+
+logger = get_logger("doctrans.parse")
 
 
 def class_(class_def, config_name=None):
@@ -89,12 +90,18 @@ def class_(class_def, config_name=None):
     return intermediate_repr
 
 
-def function(function_def):
+def function(function_def, function_type=None, function_name=None):
     """
-    Converts an AST of a class with a method to our IR
+    Converts a method to our IR
 
-    :param function_def: FunctionDef
+    :param function_def: AST node for function definition
     :type function_def: ```FunctionDef```
+
+    :param function_type: None is a loose function (def f()`), others self-explanatory
+    :type function_type: ```Optional[Literal['self', 'cls']]```
+
+    :param function_name: name of function_def
+    :type function_name: ```str```
 
     :return: a dictionary of form
           {
@@ -108,23 +115,43 @@ def function(function_def):
     assert isinstance(
         function_def, FunctionDef
     ), "Expected 'FunctionDef' got `{!r}`".format(type(function_def).__name__)
+    assert (
+        function_name is None or function_def.name == function_name
+    ), "Expected {!r} got {!r}".format(function_name, function_def.name)
 
     intermediate_repr = docstring(
         get_docstring(function_def).replace(":cvar", ":param")
     )
-    function_type = get_function_type(function_def)
-    offset = 0 if function_type is None else 1
+    intermediate_repr.update(
+        {
+            "name": function_name,
+            "type": function_type or get_function_type(function_def),
+        }
+    )
+    # _function_type = get_function_type(function_def)
+    offset = 0 if intermediate_repr["type"] is None else 1
 
     if len(function_def.body) > 2:
         intermediate_repr["_internal"] = {"body": function_def.body[1:-1]}
 
     for idx, arg in enumerate(function_def.args.args):
         if arg.annotation is not None:
-            intermediate_repr["params"][idx - offset]["typ"] = to_code(
-                arg.annotation
-            ).rstrip("\n")
+            i = idx - offset
+            if i < len(intermediate_repr["params"]):
+                intermediate_repr["params"][i]["typ"] = to_code(arg.annotation).rstrip(
+                    "\n"
+                )
+            # else:
+            #     logger.warning(
+            #         "Ignoring {!r} function argument: {!r}".format(
+            #             function_name, to_code(arg.annotation).rstrip("\n")
+            #         )
+            #     )
 
     for idx, const in enumerate(function_def.args.defaults):
+        # if isinstance(const, Name):
+        #     value = const
+        # else:
         assert (
             isinstance(const, Constant)
             and const.kind is None
@@ -135,14 +162,23 @@ def function(function_def):
             intermediate_repr["params"][idx]["default"] = value
 
     if function_def.args.kwarg:
-        assert intermediate_repr["params"][-1]["name"] == function_def.args.kwarg.arg
+        # if intermediate_repr["params"][-1]["name"] != function_def.args.kwarg.arg:
+        #     logger.warning(
+        #         "Expected {!r} to be {!r}".format(
+        #             intermediate_repr["params"][-1]["name"], function_def.args.kwarg.arg
+        #         )
+        #     )
         intermediate_repr["params"][-1]["typ"] = "dict"
 
     # Convention - the final top-level `return` is the default
     return_ast = next(
         filter(rpartial(isinstance, Return), function_def.body[::-1]), None
     )
-    if return_ast is not None and return_ast.value is not None:
+    if (
+        return_ast is not None
+        and return_ast.value is not None
+        and intermediate_repr.get("returns")
+    ):
         intermediate_repr["returns"]["default"] = (
             lambda default: "({})".format(default)
             if isinstance(return_ast.value, Tuple)
@@ -160,13 +196,13 @@ def argparse_ast(function_def, function_type=None, function_name=None):
     """
     Converts an AST to our IR
 
-    :param function_def: AST of argparse function
+    :param function_def: AST of argparse function_def
     :type function_def: ```FunctionDef``
 
     :param function_type: None is a loose function (def f()`), others self-explanatory
     :type function_type: ```Optional[Literal['self', 'cls']]```
 
-    :param function_name: name of function
+    :param function_name: name of function_def
     :type function_name: ```str```
 
     :return: a dictionary of form
@@ -185,22 +221,22 @@ def argparse_ast(function_def, function_type=None, function_name=None):
     doc_string = get_docstring(function_def)
     intermediate_repr = {
         "name": function_name,
-        "type": function_type,
+        "type": function_type or get_function_type(function_def),
         "short_description": "",
         "long_description": "",
         "params": [],
     }
     ir = parse_docstring(doc_string, emit_default_doc=True)
 
-    for e in function_def.body:
-        if is_argparse_add_argument(e):
-            intermediate_repr["params"].append(parse_out_param(e))
-        elif isinstance(e, Assign):
-            if is_argparse_description(e):
-                intermediate_repr["short_description"] = get_value(e.value)
-        elif isinstance(e, Return) and isinstance(e.value, Tuple):
+    for node in function_def.body[1:]:
+        if is_argparse_add_argument(node):
+            intermediate_repr["params"].append(parse_out_param(node))
+        elif isinstance(node, Assign):
+            if is_argparse_description(node):
+                intermediate_repr["short_description"] = get_value(node.value)
+        elif isinstance(node, Return) and isinstance(node.value, Tuple):
             intermediate_repr["returns"] = _parse_return(
-                e,
+                node,
                 intermediate_repr=ir,
                 function_def=function_def,
                 emit_default_doc=True,
@@ -209,23 +245,10 @@ def argparse_ast(function_def, function_type=None, function_name=None):
         intermediate_repr["_internal"] = {
             "body": list(
                 filterfalse(
-                    lambda node: (
-                        isinstance(node, Expr)
-                        and isinstance(get_value(node), (Constant, Str))
-                        and doc_string
-                        == to_docstring(
-                            ir,
-                            emit_types=True,
-                            emit_separating_tab=False,
-                            indent_level=0,
-                        )[1:-1]
-                    ),
-                    filterfalse(
-                        is_argparse_description,
-                        filterfalse(is_argparse_add_argument, function_def.body),
-                    ),
+                    is_argparse_description,
+                    filterfalse(is_argparse_add_argument, function_def.body[1:-1]),
                 )
-            )[:-1]
+            )
         }
 
     return intermediate_repr
@@ -263,131 +286,6 @@ def docstring(doc_string, return_tuple=False):
         return parsed, returns
 
     return parsed
-
-
-def to_docstring(
-    intermediate_repr,
-    emit_default_doc=True,
-    docstring_format="rest",
-    indent_level=2,
-    emit_types=False,
-    emit_separating_tab=True,
-):
-    """
-    Converts a docstring to an AST
-
-    :param intermediate_repr: a dictionary of form
-          {
-              'short_description': ...,
-              'long_description': ...,
-              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-          }
-    :type intermediate_repr: ```dict```
-
-    :param emit_default_doc: Whether help/docstring should include 'With default' text
-    :type emit_default_doc: ```bool``
-
-    :param docstring_format: Format of docstring
-    :type docstring_format: ```Literal['rest', 'numpy', 'google']```
-
-    :param indent_level: indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
-    :type indent_level: ```int```
-
-    :param emit_types: whether to show `:type` lines
-    :type emit_types: ```bool```
-
-    :param emit_separating_tab: whether to put a tab between :param and return and desc
-    :type emit_separating_tab: ```bool```
-
-    :return: docstring
-    :rtype: ```str```
-    """
-    assert isinstance(intermediate_repr, dict), "Expected 'dict' got `{!r}`".format(
-        type(intermediate_repr).__name__
-    )
-    if docstring_format != "rest":
-        raise NotImplementedError(docstring_format)
-
-    def param2docstring_param(
-        param,
-        docstring_format="rest",
-        emit_default_doc=True,
-        indent_level=1,
-        emit_types=False,
-    ):
-        """
-        Converts param dict from intermediate_repr to the right string representation
-
-        :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-        :type param: ```dict```
-
-        :param docstring_format: Format of docstring
-        :type docstring_format: ```Literal['rest', 'numpy', 'google']```
-
-        :param emit_default_doc: Whether help/docstring should include 'With default' text
-        :type emit_default_doc: ```bool``
-
-        :param indent_level: indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
-        :type indent_level: ```int```
-
-        :param emit_types: whether to show `:type` lines
-        :type emit_types: ```bool```
-        """
-        assert isinstance(param, dict), "Expected 'dict' got `{!r}`".format(
-            type(param).__name__
-        )
-        doc, default = extract_default(param["doc"], emit_default_doc=False)
-        if default is not None:
-            param["default"] = default
-
-        param["typ"] = (
-            "**{param[name]}".format(param=param)
-            if param.get("typ") == "dict" and param["name"].endswith("kwargs")
-            else param.get("typ")
-        )
-
-        return "".join(
-            filter(
-                None,
-                (
-                    "{tab}:param {param[name]}: {param[doc]}".format(
-                        tab=tab * indent_level,
-                        param=set_default_doc(param, emit_default_doc=emit_default_doc),
-                    ),
-                    None
-                    if param["typ"] is None or not emit_types
-                    else "\n{tab}:type {param[name]}: ```{param[typ]}```".format(
-                        tab=tab * indent_level, param=param
-                    ),
-                ),
-            )
-        )
-
-    param2docstring_param = partial(
-        param2docstring_param,
-        emit_default_doc=emit_default_doc,
-        docstring_format=docstring_format,
-        indent_level=indent_level,
-        emit_types=emit_types,
-    )
-    sep = tab if emit_separating_tab else ""
-    return "\n{tab}{description}\n{sep}\n{params}\n{sep}\n{returns}\n{tab}".format(
-        sep=sep,
-        tab=tab * indent_level,
-        description=intermediate_repr.get("long_description")
-        or intermediate_repr["short_description"],
-        params="\n{sep}\n".format(sep=sep).join(
-            map(param2docstring_param, intermediate_repr["params"])
-        ),
-        returns=(
-            param2docstring_param(intermediate_repr["returns"])
-            .replace(":param return_type:", ":return:")
-            .replace(":type return_type:", ":rtype:")
-        )
-        if intermediate_repr.get("returns")
-        else "",
-    )
 
 
 def _parse_dict(d):
@@ -517,6 +415,5 @@ __all__ = [
     "function",
     "argparse_ast",
     "docstring",
-    "to_docstring",
     "docstring_parser",
 ]

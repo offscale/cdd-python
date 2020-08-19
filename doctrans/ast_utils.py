@@ -60,11 +60,21 @@ def param2ast(param):
             value=Dict(keys=[], values=param.get("default", [])),
         )
     else:
-        annotation = parse(param["typ"]).body[0].value
+        annotation = ast.parse(param["typ"]).body[0].value
 
-        if param.get("default") and not determine_quoting(annotation):
+        if param.get("default"):
+            parsed_default = (
+                set_value(value=param["default"])
+                if isinstance(param["default"], (float, int, str))
+                and not param["default"][0] + param["default"][-1]
+                in frozenset(("()", "[]", "{}"))
+                else ast.parse(param["default"])
+            )
+
             value = (
-                parse(param["default"]).body[0].value
+                parsed_default.body[0].value
+                if hasattr(parsed_default, "body")
+                else parsed_default
                 if "default" in param
                 else Name(ctx=Load(), id=None)
             )
@@ -131,6 +141,7 @@ def param2argparse_param(param, emit_default_doc=True):
     :rtype: ```Expr```
     """
     typ, choices, required = "str", None, True
+    param.setdefault("typ", "Any")
     if param["typ"] in simple_types:
         typ = param["typ"]
     elif param["typ"] == "dict":
@@ -220,60 +231,58 @@ def param2argparse_param(param, emit_default_doc=True):
     )
 
 
-def determine_quoting(node):
-    """
-    Determine whether the input needs to be quoted
-
-    :param node: AST node
-    :type node: ```Union[Subscript, Tuple, Name, Attribute]```
-
-    :returns: True if input needs quoting
-    :rtype: ```bool```
-    """
-    if isinstance(node, Subscript) and isinstance(node.value, Name):
-        if node.value.id == "Optional":
-            return determine_quoting(get_value(node.slice))
-        elif node.value.id in frozenset(("Union", "Literal")):
-            if all(isinstance(elt, Subscript) for elt in get_value(node.slice).elts):
-                return any(determine_quoting(elt) for elt in get_value(node.slice).elts)
-            return any(
-                (
-                    isinstance(elt, Constant)
-                    and elt.kind is None
-                    and isinstance(elt.value, str)
-                    or (isinstance(elt, Str) or elt.id == "str")
-                )
-                for elt in get_value(node.slice).elts
-            )
-        elif node.value.id == "Tuple":
-            return any(determine_quoting(elt) for elt in get_value(node.slice).elts)
-        else:
-            raise NotImplementedError(node.value.id)
-    elif isinstance(node, Name):
-        return node.id == "str"
-    elif isinstance(node, Attribute):
-        return determine_quoting(node.value)
-    else:
-        raise NotImplementedError(type(node).__name__)
+# def determine_quoting(node):
+#     """
+#     Determine whether the input needs to be quoted
+#
+#     :param node: AST node
+#     :type node: ```Union[Subscript, Tuple, Name, Attribute]```
+#
+#     :returns: True if input needs quoting
+#     :rtype: ```bool```
+#     """
+#     for _node in walk(node):
+#         if isinstance(_node, Name):
+#             if _node.id == "str":
+#                 return True
+#         elif isinstance(_node, Subscript):
+#             if isinstance(_node.value, Name):
+#                 if _node.value.id in frozenset(("Literal", "Optional")):
+#                     if isinstance(_node.slice, Index):
+#                         if isinstance(_node.slice.value, Tuple):
+#                             if any(
+#                                 isinstance(e, Constant) for e in _node.slice.value.elts
+#                             ):
+#                                 return True
+#                         elif (
+#                             isinstance(_node.slice.value, Name)
+#                             and _node.slice.value.id == "str"
+#                         ):
+#                             return True
+#     return False
 
 
-def get_function_type(function):
+def get_function_type(function_def):
     """
     Get the type of the function
 
-    :param function: AST function node
-    :type function: ```FunctionDef```
+    :param function_def: AST node for function definition
+    :type function_def: ```FunctionDef```
 
     :returns: None is a loose function (def f()`), others self-explanatory
     :rtype: ```Optional[Literal['self', 'cls']]```
     """
-    assert isinstance(function, FunctionDef), "{typ} != FunctionDef".format(
-        typ=type(function).__name__
+    assert isinstance(function_def, FunctionDef), "{typ} != FunctionDef".format(
+        typ=type(function_def).__name__
     )
-    if function.args is None or len(function.args.args) == 0:
+    if (
+        not hasattr(function_def, "args")
+        or function_def.args is None
+        or len(function_def.args.args) == 0
+    ):
         return None
-    elif function.args.args[0].arg in frozenset(("self", "cls")):
-        return function.args.args[0].arg
+    elif function_def.args.args[0].arg in frozenset(("self", "cls")):
+        return function_def.args.args[0].arg
     return None
 
 
@@ -291,10 +300,9 @@ def get_value(node):
         return node.s
     elif isinstance(node, Constant) or hasattr(node, "value"):
         return node.value
-    elif isinstance(node, (Tuple, Name)):  # It used to be Index in Python < 3.9
-        return node
+    # elif isinstance(node, (Tuple, Name)):  # It used to be Index in Python < 3.9
     else:
-        raise NotImplementedError(type(node).__name__)
+        return node
 
 
 def set_value(value, kind=None):
@@ -651,7 +659,7 @@ def it2literal(it):
         slice=Index(
             value=Tuple(ctx=Load(), elts=list(map(partial(Constant, kind=None), it)))
             if len(it) > 1
-            else Constant(kind=None, value=it[0])
+            else set_value(kind=None, value=it[0])
         ),
         value=Name(ctx=Load(), id="Literal"),
     )
@@ -663,7 +671,6 @@ __all__ = [
     "param2ast",
     "find_ast_type",
     "param2argparse_param",
-    "determine_quoting",
     "find_in_ast",
     "get_function_type",
     "emit_ann_assign",

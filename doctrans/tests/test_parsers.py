@@ -7,7 +7,7 @@ from unittest import TestCase
 from docstring_parser import rest
 
 from doctrans import parse, emit
-from doctrans.parse import to_docstring
+from doctrans.emitter_utils import to_docstring
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import class_ast
 from doctrans.tests.mocks.docstrings import (
