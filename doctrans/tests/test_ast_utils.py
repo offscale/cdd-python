@@ -19,8 +19,6 @@ from ast import (
 from unittest import TestCase
 from unittest.mock import patch
 
-from meta.asttools import cmp_ast
-
 from doctrans.ast_utils import (
     find_ast_type,
     get_function_type,
@@ -39,6 +37,7 @@ from doctrans.tests.mocks.methods import (
     class_with_method_and_body_types_str,
 )
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
+from meta.asttools import cmp_ast
 
 
 class TestAstUtils(TestCase):

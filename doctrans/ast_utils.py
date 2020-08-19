@@ -49,7 +49,7 @@ def param2ast(param):
             simple=1,
             target=Name(ctx=Store(), id=param["name"]),
             value=set_value(
-                kind=None, value=param.get("default", simple_types[param["typ"]])
+                kind=None, value=param.get("default") or simple_types[param["typ"]]
             ),
         )
     elif param["typ"] == "dict" or param["typ"].startswith("*"):
@@ -63,11 +63,16 @@ def param2ast(param):
         annotation = ast.parse(param["typ"]).body[0].value
 
         if param.get("default"):
+            default_value = param["default"]
             parsed_default = (
-                set_value(value=param["default"])
+                set_value(value=default_value)
                 if isinstance(param["default"], (float, int, str))
-                and not param["default"][0] + param["default"][-1]
-                in frozenset(("()", "[]", "{}"))
+                and not isinstance(param["default"], str)
+                and not (
+                    isinstance(param["default"], str)
+                    and param["default"][0] + param["default"][-1]
+                    in frozenset(("()", "[]", "{}"))
+                )
                 else ast.parse(param["default"])
             )
 
@@ -79,7 +84,7 @@ def param2ast(param):
                 else Name(ctx=Load(), id=None)
             )
         else:
-            value = set_value(kind=None, value=param.get("default"))
+            value = set_value(None)
 
         return AnnAssign(
             annotation=annotation,
@@ -147,9 +152,8 @@ def param2argparse_param(param, emit_default_doc=True):
     elif param["typ"] == "dict":
         typ = "loads"
         required = not param["name"].endswith("kwargs")
-    else:
+    elif param["typ"]:
         parsed_type = parse(param["typ"]).body[0]
-
         for node in walk(parsed_type):
             if isinstance(node, Tuple):
                 maybe_choices = tuple(
@@ -231,34 +235,46 @@ def param2argparse_param(param, emit_default_doc=True):
     )
 
 
-# def determine_quoting(node):
+def argparse_param2param(argparse_param):
+    """
+    Converts a param to an Expr `argparse.add_argument` call
+
+    :param argparse_param: argparse.add_argument` call—with arguments—as an AST node
+    :type argparse_param: ```AST.arg```
+
+    :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    :rtype: ```dict```
+    """
+    return dict(
+        name=argparse_param.arg,
+        doc=argparse_param.type_comment,
+        **{
+            "typ": None
+            if argparse_param.annotation is None
+            else ast.parse(argparse_param.annotation)
+        }
+    )
+
+
+# def needs_quoting(node):
 #     """
 #     Determine whether the input needs to be quoted
 #
 #     :param node: AST node
-#     :type node: ```Union[Subscript, Tuple, Name, Attribute]```
+#     :type node: ```Union[AST, AnyStr]```
 #
 #     :returns: True if input needs quoting
 #     :rtype: ```bool```
 #     """
+#     if isinstance(node, str):
+#         if node == "str":
+#             return True
+#         node = ast.parse(node)
+#     elif type(node).__name__ == "_SpecialForm":
+#         return False
 #     for _node in walk(node):
-#         if isinstance(_node, Name):
-#             if _node.id == "str":
-#                 return True
-#         elif isinstance(_node, Subscript):
-#             if isinstance(_node.value, Name):
-#                 if _node.value.id in frozenset(("Literal", "Optional")):
-#                     if isinstance(_node.slice, Index):
-#                         if isinstance(_node.slice.value, Tuple):
-#                             if any(
-#                                 isinstance(e, Constant) for e in _node.slice.value.elts
-#                             ):
-#                                 return True
-#                         elif (
-#                             isinstance(_node.slice.value, Name)
-#                             and _node.slice.value.id == "str"
-#                         ):
-#                             return True
+#         if hasattr(_node, "id") and _node.id == "str":
+#             return True
 #     return False
 
 
@@ -305,7 +321,7 @@ def get_value(node):
         return node
 
 
-def set_value(value, kind=None):
+def set_value(value, kind=None, unquote=True):
     """
     Creates a Constant or a Str depending on Python version in use
 
@@ -315,9 +331,18 @@ def set_value(value, kind=None):
     :param kind: AST node
     :type kind: ```Optional[Any]```
 
+    :param unquote: Whether to unquote the input value
+    :type unquote: ```bool```
+
     :returns: Probably a string, but could be any constant value
     :rtype: ```Union[Constant, Str, NameConstant]```
     """
+    if (
+        value is not None
+        and len(value) > 2
+        and value[0] + value[-1] in frozenset(('""', "''"))
+    ):
+        value = value[1:-1]
     if not PY3_8:
         if isinstance(value, str):
             return Str(s=value)

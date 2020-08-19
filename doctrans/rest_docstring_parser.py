@@ -163,9 +163,9 @@ def doc_to_type_doc(name, doc, emit_default_doc=True):
             "typ": (lambda typ_: "dict" if typ_.endswith("kwargs") else typ_)(
                 "\n".join(typ)
             )
+            if len(typ)
+            else None
         }
-        if len(typ)
-        else {}
     )
 
 

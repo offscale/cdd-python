@@ -25,9 +25,9 @@ class ConfigClass(object):
     """
     Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
 
-    :cvar dataset_name: name of dataset. Defaults to mnist
-    :cvar tfds_dir: directory to look for models in. Defaults to ~/tensorflow_datasets
-    :cvar K: backend engine, e.g., `np` or `tf`. Defaults to np
+    :cvar dataset_name: name of dataset. Defaults to "mnist"
+    :cvar tfds_dir: directory to look for models in. Defaults to "~/tensorflow_datasets"
+    :cvar K: backend engine, e.g., `np` or `tf`. Defaults to "np"
     :cvar as_numpy: Convert to numpy ndarrays
     :cvar data_loader_kwargs: pass this as arguments to data_loader function
     :cvar return_type: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))"""
@@ -54,9 +54,9 @@ class_ast = (
                     kind=None,
                     value="\n    Acquire from the official tensorflow_datasets model zoo,"
                     " or the ophthalmology focussed ml-prepare library\n\n    "
-                    ":cvar dataset_name: name of dataset. Defaults to mnist\n    "
-                    ":cvar tfds_dir: directory to look for models in. Defaults to ~/tensorflow_datasets\n    "
-                    ":cvar K: backend engine, e.g., `np` or `tf`. Defaults to np\n    "
+                    ':cvar dataset_name: name of dataset. Defaults to "mnist"\n    '
+                    ':cvar tfds_dir: directory to look for models in. Defaults to "~/tensorflow_datasets"\n    '
+                    ':cvar K: backend engine, e.g., `np` or `tf`. Defaults to "np"\n    '
                     ":cvar as_numpy: Convert to numpy ndarrays\n    "
                     ":cvar data_loader_kwargs: pass this as arguments to data_loader function\n    "
                     ":cvar return_type: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))",

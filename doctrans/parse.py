@@ -18,6 +18,7 @@ from ast import (
     NameConstant,
     Module,
     ClassDef,
+    Name,
 )
 from collections import OrderedDict
 from itertools import filterfalse
@@ -25,7 +26,6 @@ from operator import itemgetter
 from typing import Any
 
 from docstring_parser import DocstringParam, DocstringMeta, Docstring
-
 from doctrans import get_logger
 from doctrans.ast_utils import (
     find_ast_type,
@@ -33,6 +33,7 @@ from doctrans.ast_utils import (
     is_argparse_add_argument,
     is_argparse_description,
     get_function_type,
+    argparse_param2param,
 )
 from doctrans.defaults_utils import extract_default
 from doctrans.emitter_utils import parse_out_param, _parse_return
@@ -119,9 +120,19 @@ def function(function_def, function_type=None, function_name=None):
         function_name is None or function_def.name == function_name
     ), "Expected {!r} got {!r}".format(function_name, function_def.name)
 
-    intermediate_repr = docstring(
-        get_docstring(function_def).replace(":cvar", ":param")
-    )
+    intermediate_repr_docstring = get_docstring(function_def)
+    if intermediate_repr_docstring is None:
+        intermediate_repr = {"description": "", "params": [], "returns": None}
+        for arg in function_def.args.args:
+            intermediate_repr["params"].append(argparse_param2param(arg))
+
+        # TODO: Returns when no docstring is provided
+        # intermediate_repr["returns"].append(argparse_param2param(function_def.returns))
+
+    else:
+        intermediate_repr = docstring(
+            intermediate_repr_docstring.replace(":cvar", ":param")
+        )
     intermediate_repr.update(
         {
             "name": function_name,
@@ -149,15 +160,15 @@ def function(function_def, function_type=None, function_name=None):
             #     )
 
     for idx, const in enumerate(function_def.args.defaults):
-        # if isinstance(const, Name):
-        #     value = const
-        # else:
-        assert (
-            isinstance(const, Constant)
-            and const.kind is None
-            or isinstance(const, (Str, NameConstant))
-        ), type(const).__name__
-        value = get_value(const)
+        if isinstance(const, Name):
+            value = const
+        else:
+            assert (
+                isinstance(const, Constant)
+                and const.kind is None
+                or isinstance(const, (Str, NameConstant))
+            ), type(const).__name__
+            value = get_value(const)
         if value is not None:
             intermediate_repr["params"][idx]["default"] = value
 
@@ -186,7 +197,7 @@ def function(function_def, function_type=None, function_name=None):
             else default
         )(to_code(return_ast.value).rstrip("\n"))
 
-    if isinstance(function_def.returns, Subscript):
+    if hasattr(function_def, "returns") and isinstance(function_def.returns, Subscript):
         intermediate_repr["returns"]["typ"] = to_code(function_def.returns).rstrip("\n")
 
     return intermediate_repr
@@ -230,7 +241,9 @@ def argparse_ast(function_def, function_type=None, function_name=None):
 
     for node in function_def.body[1:]:
         if is_argparse_add_argument(node):
-            intermediate_repr["params"].append(parse_out_param(node))
+            intermediate_repr["params"].append(
+                parse_out_param(node, emit_default_doc=False)
+            )
         elif isinstance(node, Assign):
             if is_argparse_description(node):
                 intermediate_repr["short_description"] = get_value(node.value)
@@ -239,7 +252,7 @@ def argparse_ast(function_def, function_type=None, function_name=None):
                 node,
                 intermediate_repr=ir,
                 function_def=function_def,
-                emit_default_doc=True,
+                emit_default_doc=False,
             )
     if len(function_def.body) > len(intermediate_repr["params"]) + 3:
         intermediate_repr["_internal"] = {
@@ -267,7 +280,7 @@ def docstring(doc_string, return_tuple=False):
     :return: intermediate_repr, whether it returns or not
     :rtype: ```Optional[Union[dict, Tuple[dict, bool]]]```
     """
-    assert isinstance(doc_string, str), "Expected 'str' got `{!r}`".format(
+    assert isinstance(doc_string, str), "Expected 'str' got {!r}".format(
         type(doc_string).__name__
     )
     parsed = doc_string if isinstance(doc_string, dict) else parse_docstring(doc_string)

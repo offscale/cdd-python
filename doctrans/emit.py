@@ -20,11 +20,10 @@ from ast import (
 from functools import partial
 
 from black import format_str, FileMode
-
 from doctrans.ast_utils import param2argparse_param, param2ast, set_value
 from doctrans.defaults_utils import set_default_doc
 from doctrans.emitter_utils import get_internal_body, to_docstring
-from doctrans.pure_utils import tab, simple_types, PY_GTE_3_9, PY3_8
+from doctrans.pure_utils import tab, simple_types, PY3_8
 from doctrans.source_transformer import to_code
 
 
@@ -105,7 +104,7 @@ def argparse_function(
                             ),
                         )
                     )
-                    if "returns" in intermediate_repr
+                    if intermediate_repr.get("returns")
                     else None,
                     Assign(
                         targets=[
@@ -263,7 +262,7 @@ def docstring(intermediate_repr, docstring_format="rest", emit_default_doc=True)
     )
 
 
-def file(node, filename, mode="a", skip_black=PY_GTE_3_9):
+def file(node, filename, mode="a", skip_black=True):
     """
     Convert AST to a file
 

@@ -8,10 +8,9 @@ from functools import partial
 from unittest import main
 from unittest.mock import MagicMock, patch
 
-from meta.asttools import cmp_ast
-
 import doctrans.source_transformer
 from doctrans.pure_utils import PY3_8
+from meta.asttools import cmp_ast
 
 
 def run_ast_test(test_case_instance, gen_ast, gold):

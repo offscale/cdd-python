@@ -1,10 +1,10 @@
 """
 Given the truth, show others the path
 """
+
 from ast import FunctionDef, ClassDef, Module
 from collections import OrderedDict
-
-from meta.asttools import cmp_ast
+from os import path
 
 from doctrans import emit
 from doctrans import parse
@@ -15,6 +15,7 @@ from doctrans.ast_utils import (
 )
 from doctrans.pure_utils import pluralise, strip_split
 from doctrans.source_transformer import ast_parse
+from meta.asttools import cmp_ast
 
 
 def _default_options(node, search, type_wanted):
@@ -35,7 +36,7 @@ def _default_options(node, search, type_wanted):
     """
     return {
         "FunctionDef": lambda: {
-            "function_type": get_function_type(node),
+            "function_type": node if node is None else get_function_type(node),
             "function_name": search[-1] if len(search) else "set_cli_args",
         }
     }.get(type_wanted.__name__, lambda: {})
@@ -139,11 +140,27 @@ def _conform_filename(
     :returns: filename, whether the file was modified
     :rtype: ```Tuple[str, bool]```
     """
+    if not path.isfile(filename):
+        emit.file(emit_func(replacement_node_ir), filename=filename, mode="wt")
+        return filename, True
+
     with open(filename, "rt") as f:
         parsed_ast = ast_parse(f.read())
     assert isinstance(parsed_ast, Module)
 
     original_node = find_in_ast(search, parsed_ast)
+    if original_node is None:
+        emit.file(
+            emit_func(
+                replacement_node_ir,
+                **_default_options(
+                    node=original_node, search=search, type_wanted=type_wanted
+                )()
+            ),
+            filename=filename,
+            mode="a",
+        )
+        return filename, True
     assert len(search) > 0
     replacement_node = emit_func(
         replacement_node_ir,

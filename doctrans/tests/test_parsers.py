@@ -1,24 +1,22 @@
 """
 Tests for the Intermediate Representation produced by the parsers
 """
-from ast import FunctionDef
+from ast import FunctionDef, arguments, Name, Load, arg, Constant
 from unittest import TestCase
 
 from docstring_parser import rest
-
 from doctrans import parse, emit
 from doctrans.emitter_utils import to_docstring
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import class_ast
 from doctrans.tests.mocks.docstrings import (
-    intermediate_repr,
     docstring_str,
     intermediate_repr_no_default_doc,
 )
 from doctrans.tests.utils_for_tests import unittest_main
 
 
-class TestIntermediateRepresentation(TestCase):
+class TestParsers(TestCase):
     """
     Tests whether the intermediate representation is consistent when parsed from different inputs.
 
@@ -31,13 +29,15 @@ class TestIntermediateRepresentation(TestCase):
               }
     """
 
-    maxDiff = 55555
+    maxDiff = 5555
 
     def test_from_argparse_ast(self) -> None:
         """
         Tests whether `argparse_ast` produces `intermediate_repr_no_default_doc_or_prop`
               from `argparse_func_ast` """
-        self.assertDictEqual(parse.argparse_ast(argparse_func_ast), intermediate_repr)
+        self.assertDictEqual(
+            parse.argparse_ast(argparse_func_ast), intermediate_repr_no_default_doc
+        )
 
     def test_from_argparse_ast_empty(self) -> None:
         """
@@ -110,6 +110,59 @@ class TestIntermediateRepresentation(TestCase):
                 ],
                 "returns": {"doc": "[ReturnDescription]", "name": "return_type"},
                 "short_description": "[Summary]",
+            },
+        )
+
+    def test_from_function(self) -> None:
+        """
+        Tests that parse.function produces properly
+        """
+        function_def = FunctionDef(
+            name="call_peril",
+            args=arguments(
+                args=[
+                    arg(
+                        annotation=Name(ctx=Load(), id="str"),
+                        arg="dataset_name",
+                        type_comment=None,
+                    ),
+                    arg(annotation=None, arg="writer", type_comment=None,),
+                ],
+                defaults=[
+                    Constant(kind=None, value="mnist"),
+                    Name(ctx=Load(), id="stdout"),
+                ],
+                kw_defaults=[],
+                kwarg=None,
+                kwonlyargs=[],
+                posonlyargs=[],
+                vararg=None,
+            ),
+            body=[],
+            decorator_list=[],
+            lineno=None,
+        )
+        self.assertDictEqual(
+            parse.function(function_def),
+            {
+                "description": "",
+                "name": None,
+                "params": [
+                    {
+                        "default": "mnist",
+                        "name": "dataset_name",
+                        "typ": "str",
+                        "doc": None,
+                    },
+                    {
+                        "default": function_def.args.defaults[1],
+                        "name": "writer",
+                        "typ": None,
+                        "doc": None,
+                    },
+                ],
+                "returns": None,
+                "type": None,
             },
         )
 

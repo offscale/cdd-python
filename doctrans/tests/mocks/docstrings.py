@@ -15,20 +15,20 @@ intermediate_repr = {
     "long_description": "",
     "params": [
         {
-            "default": "mnist",
-            "doc": "name of dataset. Defaults to mnist",
+            "default": '"mnist"',
+            "doc": 'name of dataset. Defaults to "mnist"',
             "name": "dataset_name",
             "typ": "str",
         },
         {
-            "default": "~/tensorflow_datasets",
-            "doc": "directory to look for models in. Defaults to ~/tensorflow_datasets",
+            "default": '"~/tensorflow_datasets"',
+            "doc": 'directory to look for models in. Defaults to "~/tensorflow_datasets"',
             "name": "tfds_dir",
             "typ": "Optional[str]",
         },
         {
-            "default": "np",
-            "doc": "backend engine, e.g., `np` or `tf`. Defaults to np",
+            "default": '"np"',
+            "doc": 'backend engine, e.g., `np` or `tf`. Defaults to "np"',
             "name": "K",
             "typ": "Literal['np', 'tf']",
         },
@@ -55,13 +55,13 @@ intermediate_repr = {
 docstring_str = """
 Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
 
-:param dataset_name: name of dataset. Defaults to mnist
+:param dataset_name: name of dataset. Defaults to "mnist"
 :type dataset_name: ```str```
 
-:param tfds_dir: directory to look for models in. Defaults to ~/tensorflow_datasets
+:param tfds_dir: directory to look for models in. Defaults to "~/tensorflow_datasets"
 :type tfds_dir: ```Optional[str]```
 
-:param K: backend engine, e.g., `np` or `tf`. Defaults to np
+:param K: backend engine, e.g., `np` or `tf`. Defaults to "np"
 :type K: ```Literal['np', 'tf']```
 
 :param as_numpy: Convert to numpy ndarrays
@@ -87,19 +87,19 @@ intermediate_repr_no_default_doc = {
     "long_description": "",
     "params": [
         {
-            "default": "mnist",
+            "default": '"mnist"',
             "doc": "name of dataset.",
             "name": "dataset_name",
             "typ": "str",
         },
         {
-            "default": "~/tensorflow_datasets",
+            "default": '"~/tensorflow_datasets"',
             "doc": "directory to look for models in.",
             "name": "tfds_dir",
             "typ": "Optional[str]",
         },
         {
-            "default": "np",
+            "default": '"np"',
             "doc": "backend engine, e.g., `np` or `tf`.",
             "name": "K",
             "typ": "Literal['np', 'tf']",
