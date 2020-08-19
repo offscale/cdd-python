@@ -4,7 +4,8 @@ Tests for docstring parsing
 from copy import deepcopy
 from unittest import TestCase
 
-from doctrans import parse
+import doctrans.emit
+import doctrans.emitter_utils
 from doctrans.rest_docstring_parser import parse_docstring, _parse_line
 from doctrans.tests.mocks.docstrings import (
     docstring_str,
@@ -49,14 +50,14 @@ class TestMarshallDocstring(TestCase):
     def test_ir2docstring(self) -> None:
         """ Tests whether `to_docstring` produces `docstring_str` from `intermediate_repr` """
         self.assertEqual(
-            parse.to_docstring(
+            doctrans.emitter_utils.to_docstring(
                 deepcopy(intermediate_repr),
                 indent_level=0,
                 emit_types=True,
                 emit_default_doc=True,
                 emit_separating_tab=False,
-            ),
-            docstring_str,
+            ).strip(),
+            docstring_str.strip(),
         )
 
     def test_docstring_line_parsing(self) -> None:

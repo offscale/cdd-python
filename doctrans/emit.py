@@ -21,10 +21,9 @@ from functools import partial
 
 from black import format_str, FileMode
 
-from doctrans import parse
 from doctrans.ast_utils import param2argparse_param, param2ast, set_value
 from doctrans.defaults_utils import set_default_doc
-from doctrans.emitter_utils import get_internal_body
+from doctrans.emitter_utils import get_internal_body, to_docstring
 from doctrans.pure_utils import tab, simple_types, PY_GTE_3_9, PY3_8
 from doctrans.source_transformer import to_code
 
@@ -37,7 +36,7 @@ def argparse_function(
     function_type=None,
 ):
     """
-    Convert to an argparse function definition
+    Convert to an argparse function_def definition
 
     :param intermediate_repr: a dictionary of form
           {
@@ -54,15 +53,17 @@ def argparse_function(
     :param emit_default_doc_in_return: Whether help/docstring in return should include 'With default' text
     :type emit_default_doc_in_return: ```bool```
 
-    :param function_name: name of function
+    :param function_name: name of function_def
     :type function_name: ```str```
 
     :param function_type: None is a loose function (def f()`), others self-explanatory
     :type function_type: ```Optional[Literal['self', 'cls']]```
 
-    :returns: function which constructs argparse
+    :returns:  AST node for function definition which constructs argparse
     :rtype: ```FunctionDef``
     """
+    function_name = function_name or intermediate_repr["name"]
+    function_type = function_type or intermediate_repr["type"]
     return FunctionDef(
         args=arguments(
             args=list(
@@ -147,7 +148,7 @@ def argparse_function(
                             ],
                         )
                     )
-                    if "returns" in intermediate_repr
+                    if intermediate_repr.get("returns")
                     else None,
                 ),
             )
@@ -183,26 +184,30 @@ def class_(intermediate_repr, class_name="ConfigClass", class_bases=("object",))
     :rtype: ```ClassDef```
     """
     returns = [intermediate_repr["returns"]] if intermediate_repr.get("returns") else []
+
+    intermediate_repr["params"] = intermediate_repr["params"] + returns
+    del intermediate_repr["returns"]
+
     return ClassDef(
         bases=[Name(ctx=Load(), id=base_class) for base_class in class_bases],
         body=[
             Expr(
                 value=set_value(
                     kind=None,
-                    value="\n    {description}\n\n{cvars}".format(
-                        description=intermediate_repr["long_description"]
-                        or intermediate_repr["short_description"],
-                        cvars="\n".join(
-                            "{tab}:cvar {param[name]}: {param[doc]}".format(
-                                tab=tab, param=set_default_doc(param)
-                            )
-                            for param in intermediate_repr["params"] + returns
-                        ),
-                    ),
+                    value=to_docstring(
+                        intermediate_repr, indent_level=0, emit_separating_tab=False
+                    )
+                    .replace("\n:param ", "{tab}:cvar ".format(tab=tab))
+                    .replace(
+                        "{tab}:cvar ".format(tab=tab),
+                        "\n{tab}:cvar ".format(tab=tab),
+                        1,
+                    )
+                    .rstrip(),
                 )
             )
         ]
-        + list(map(param2ast, intermediate_repr["params"] + returns)),
+        + list(map(param2ast, intermediate_repr["params"])),
         decorator_list=[],
         keywords=[],
         name=class_name,
@@ -316,7 +321,7 @@ def function(
           }
     :type intermediate_repr: ```dict```
 
-    :param function_name: name of function
+    :param function_name: name of function_def
     :type function_name: ```str```
 
     :param function_type: None is a loose function (def f()`), others self-explanatory
@@ -337,7 +342,7 @@ def function(
     :param inline_types: Whether the type should be inline or in docstring
     :type inline_types: ```bool```
 
-    :returns: function (could be a method on a class)
+    :returns: AST node for function definition
     :rtype: ```FunctionDef``
     """
     params_no_kwargs = tuple(
@@ -346,6 +351,9 @@ def function(
             intermediate_repr["params"],
         )
     )
+
+    function_name = function_name or intermediate_repr["name"]
+    function_type = function_type or intermediate_repr["type"]
 
     return FunctionDef(
         args=arguments(
@@ -403,7 +411,7 @@ def function(
                     Expr(
                         value=set_value(
                             kind=None,
-                            value=parse.to_docstring(
+                            value=to_docstring(
                                 intermediate_repr,
                                 emit_default_doc=emit_default_doc,
                                 docstring_format=docstring_format,

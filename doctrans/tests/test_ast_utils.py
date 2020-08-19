@@ -4,7 +4,6 @@ from ast import (
     FunctionDef,
     Module,
     ClassDef,
-    Subscript,
     Name,
     arguments,
     arg,
@@ -24,7 +23,6 @@ from meta.asttools import cmp_ast
 
 from doctrans.ast_utils import (
     find_ast_type,
-    determine_quoting,
     get_function_type,
     get_value,
     find_in_ast,
@@ -33,6 +31,7 @@ from doctrans.ast_utils import (
     RewriteAtQuery,
     emit_arg,
 )
+from doctrans.source_transformer import ast_parse
 from doctrans.tests.mocks.classes import class_ast, class_str
 from doctrans.tests.mocks.methods import (
     class_with_optional_arg_method_ast,
@@ -68,16 +67,6 @@ class TestAstUtils(TestCase):
         annotate_ancestry(node)
         self.assertEqual(node.body[0]._location, ["dataset_name"])
         self.assertEqual(node.body[1]._location, ["epochs"])
-
-    def test_determine_quoting_fails(self) -> None:
-        """" Tests that determine_quoting fails on unknown input """
-        self.assertRaises(
-            NotImplementedError,
-            lambda: determine_quoting(Subscript(value=Name(id="impossibru"))),
-        )
-        self.assertRaises(NotImplementedError, lambda: determine_quoting(FunctionDef()))
-        self.assertRaises(NotImplementedError, lambda: determine_quoting(ClassDef()))
-        self.assertRaises(NotImplementedError, lambda: determine_quoting(Module()))
 
     def test_emit_ann_assign(self) -> None:
         """ Tests that AnnAssign is emitted from `emit_ann_assign` """
@@ -218,8 +207,7 @@ class TestAstUtils(TestCase):
         """
         Tests that `RewriteAtQuery` can actually replace a node at given location
         """
-        parsed_ast = ast.parse(class_with_method_and_body_types_str)
-        annotate_ancestry(parsed_ast)
+        parsed_ast = ast_parse(class_with_method_and_body_types_str)
         rewrite_at_query = RewriteAtQuery(
             search="C.function_name.dataset_name".split("."),
             replacement_node=AnnAssign(
@@ -246,8 +234,7 @@ class TestAstUtils(TestCase):
         """
         Tests that `RewriteAtQuery` can actually replace a node at given location
         """
-        parsed_ast = ast.parse(class_str)
-        annotate_ancestry(parsed_ast)
+        parsed_ast = ast_parse(class_str)
         rewrite_at_query = RewriteAtQuery(
             search="ConfigClass.dataset_name".split("."),
             replacement_node=AnnAssign(
@@ -315,14 +302,6 @@ class TestAstUtils(TestCase):
         self.assertIsInstance(get_value(Tuple()), Tuple)
         self.assertIsInstance(get_value(Tuple()), Tuple)
         self.assertIsInstance(get_value(Name()), Name)
-
-    def test_get_value_fails(self) -> None:
-        """ Tests get_value fails properly """
-        self.assertRaises(NotImplementedError, lambda: get_value(None))
-        self.assertRaises(NotImplementedError, lambda: get_value(""))
-        self.assertRaises(NotImplementedError, lambda: get_value(0))
-        self.assertRaises(NotImplementedError, lambda: get_value(0.0))
-        self.assertRaises(NotImplementedError, lambda: get_value([]))
 
     def test_set_value(self) -> None:
         """ Tests that `set_value` returns the right type for the right Python version """

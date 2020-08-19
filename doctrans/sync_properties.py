@@ -12,7 +12,7 @@ from doctrans.ast_utils import (
     it2literal,
 )
 from doctrans.pure_utils import strip_split
-from doctrans.source_transformer import to_code
+from doctrans.source_transformer import to_code, ast_parse
 
 
 def sync_properties(
@@ -47,14 +47,13 @@ def sync_properties(
     :param output_param_wrap: ```Optional[str]```
     """
     with open(input_filename, "rt") as f:
-        input_ast = ast.parse(f.read())
+        input_ast = ast_parse(f.read(), filename=input_filename)
 
     with open(output_filename, "rt") as f:
-        output_ast = ast.parse(f.read())
+        output_ast = ast_parse(f.read(), filename=output_filename)
 
     assert len(input_params) == len(output_params)
     for (input_param, output_param) in zip(input_params, output_params):
-        annotate_ancestry(output_ast)
         output_ast = sync_property(
             input_eval,
             input_param,

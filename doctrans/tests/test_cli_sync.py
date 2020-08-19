@@ -66,6 +66,7 @@ class TestCliSync(TestCase):
 
     def test_args_example1(self) -> None:
         """ Tests CLI interface sets namespace correctly """
+
         with TemporaryDirectory() as tempdir:
             argparse_filename = os.path.join(tempdir, "argparse.py",)
             class_filename = os.path.join(tempdir, "class_.py",)
