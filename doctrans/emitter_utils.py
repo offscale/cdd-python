@@ -7,7 +7,7 @@ from typing import Any
 
 from doctrans.ast_utils import get_value
 from doctrans.defaults_utils import extract_default, set_default_doc
-from doctrans.pure_utils import simple_types, identity, tab
+from doctrans.pure_utils import simple_types, identity, tab, quote
 from doctrans.source_transformer import to_code
 
 
@@ -135,26 +135,28 @@ def parse_out_param(expr, emit_default_doc=True):
     if default is None and typ in simple_types and required:
         default = simple_types[typ]
 
+    typ = (
+        lambda typ_: (
+            typ_
+            if required or name.endswith("kwargs")
+            else "Optional[{typ}]".format(typ=typ_)
+        )
+    )(
+        typ_=next(
+            (
+                _handle_keyword(keyword, typ)
+                for keyword in expr.value.keywords
+                if keyword.arg == "choices"
+            ),
+            typ,
+        )
+    )
+
+    if "str" in typ or "Literal" in typ and (typ.count("'") > 1 or typ.count('"') > 1):
+        default = quote(default)
+
     return dict(
-        name=name,
-        doc=doc,
-        typ=(
-            lambda typ_: (
-                typ_
-                if required or name.endswith("kwargs")
-                else "Optional[{typ}]".format(typ=typ_)
-            )
-        )(
-            typ_=next(
-                (
-                    _handle_keyword(keyword, typ)
-                    for keyword in expr.value.keywords
-                    if keyword.arg == "choices"
-                ),
-                typ,
-            )
-        ),
-        **({} if default is None else {"default": default})
+        name=name, doc=doc, typ=typ, **({} if default is None else {"default": default})
     )
 
 

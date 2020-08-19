@@ -7,7 +7,7 @@ from unittest.mock import patch
 from doctrans.tests.utils_for_tests import unittest_main, run_cli_test
 
 
-class TestCliSyncProperty(TestCase):
+class TestCliSyncProperties(TestCase):
     """ Test class for __main__.py """
 
     def test_sync_properties_fails(self) -> None:

@@ -2,6 +2,7 @@
 Tests for reeducation
 """
 import os
+from _ast import FunctionDef
 from argparse import Namespace
 from copy import deepcopy
 from functools import partial
@@ -12,7 +13,11 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from doctrans import emit
-from doctrans.conformance import _get_name_from_namespace, ground_truth
+from doctrans.conformance import (
+    _get_name_from_namespace,
+    ground_truth,
+    _conform_filename,
+)
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import class_ast
 from doctrans.tests.mocks.docstrings import intermediate_repr
@@ -65,6 +70,11 @@ class TestConformance(TestCase):
                 )(tempdir_join("argparse{i}.py".format(i=i)))
                 for i in range(10)
             ]
+            # Test if can create missing file
+            argparse_functions.append(tempdir_join("argparse_missing.py"))
+
+            # Test if can fill in empty file
+            argparse_functions.append(tempdir_join("argparse_empty.py"))
 
             class_ = tempdir_join("classes.py")
             emit.file(class_ast, class_, mode="wt")
@@ -109,37 +119,12 @@ class TestConformance(TestCase):
                     ("argparse7.py", False),
                     ("argparse8.py", False),
                     ("argparse9.py", False),
+                    ("argparse_missing.py", True),
+                    ("argparse_empty.py", True),
                     ("classes.py", False),
                     ("methods.py", False),
                 ),
             )
-
-    def test_ground_truth_fails(self) -> None:
-        """ Straight from the fake news ministry. """
-
-        with TemporaryDirectory() as tempdir:
-            args = self.ground_truth_tester(tempdir=tempdir,)[1]
-
-            with patch("sys.stdout", new_callable=StringIO), patch(
-                "sys.stderr", new_callable=StringIO
-            ):
-                self.assertRaises(
-                    AssertionError,
-                    lambda: ground_truth(
-                        Namespace(
-                            **{
-                                "argparse_functions": args.argparse_functions,
-                                "argparse_function_names": ("set_cli_args",),
-                                "classes": args.classes,
-                                "class_names": ("ConfigClass",),
-                                "functions": args.functions,
-                                "function_names": ("C.function_name.A",),
-                                "truth": "argparse_function",
-                            }
-                        ),
-                        args.argparse_functions[0],
-                    ),
-                )
 
     def test_ground_truth_changes(self) -> None:
         """ Time for a new master. """
@@ -218,6 +203,47 @@ class TestConformance(TestCase):
         """ Test `_get_name_from_namespace` """
         args = Namespace(foo_names=("bar",))
         self.assertEqual(_get_name_from_namespace(args, "foo"), args.foo_names[0])
+
+    def test__conform_filename(self) -> None:
+        """ Tests that _conform_filename returns the right result """
+
+        with TemporaryDirectory() as tempdir:
+            argparse_function_filename = os.path.join(tempdir, "argparse0.py")
+
+            self.assertTupleEqual(
+                _conform_filename(
+                    filename=argparse_function_filename,
+                    search=["set_cli_args"],
+                    emit_func=emit.argparse_function,
+                    replacement_node_ir=intermediate_repr,
+                    type_wanted=FunctionDef,
+                ),
+                (argparse_function_filename, True),
+            )
+
+            emit.file(argparse_func_ast, argparse_function_filename, mode="wt")
+
+            self.assertTupleEqual(
+                _conform_filename(
+                    filename=argparse_function_filename,
+                    search=["impossibru"],
+                    emit_func=emit.argparse_function,
+                    replacement_node_ir=intermediate_repr,
+                    type_wanted=FunctionDef,
+                ),
+                (argparse_function_filename, True),
+            )
+
+            self.assertTupleEqual(
+                _conform_filename(
+                    filename=argparse_function_filename,
+                    search=["set_cli_args"],
+                    emit_func=emit.argparse_function,
+                    replacement_node_ir=intermediate_repr,
+                    type_wanted=FunctionDef,
+                ),
+                (argparse_function_filename, False),
+            )
 
 
 unittest_main()

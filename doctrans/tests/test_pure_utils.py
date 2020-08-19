@@ -10,6 +10,7 @@ from doctrans.pure_utils import (
     pluralise,
     strip_split,
     sanitise,
+    quote,
 )
 from doctrans.tests.utils_for_tests import unittest_main
 
@@ -69,6 +70,16 @@ class TestPureUtils(TestCase):
         """ Tests that strip_split works on separated input and separator free input """
         self.assertTupleEqual(tuple(strip_split("foo.bar", ".")), ("foo", "bar"))
         self.assertTupleEqual(tuple(strip_split("foo", " ")), ("foo",))
+
+    def test_quote(self) -> None:
+        """ Tests quote edge cases """
+        self.assertEqual(quote(""), "")
+        self.assertIsNone(quote(None))
+        self.assertEqual(quote('""'), '""')
+        self.assertEqual(quote("''"), "''")
+        self.assertEqual(quote('"foo"'), '"foo"')
+        self.assertEqual(quote("'bar'"), "'bar'")
+        self.assertEqual(quote("haz"), '"haz"')
 
 
 unittest_main()

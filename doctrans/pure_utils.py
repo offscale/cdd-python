@@ -179,6 +179,24 @@ def strip_split(param, sep):
     return (loc.strip() for loc in param.split(sep))
 
 
+def quote(s, mark='"'):
+    """
+    Quote the input string if it's not already quoted
+
+    :param s: Input string
+    :type s: ```str```
+
+    :param mark: Quote mark to wrap with
+    :type mark: ```str```
+
+    :returns: Quoted string
+    :rtype: ```str```
+    """
+    if s is None or len(s) == 0 or s[0] == s[-1] and s[0] in frozenset(("'", '"')):
+        return s
+    return "{mark}{s}{mark}".format(mark=mark, s=s)
+
+
 __all__ = [
     "pp",
     "tab",

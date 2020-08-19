@@ -8,8 +8,6 @@ from copy import deepcopy
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-from meta.asttools import cmp_ast
-
 from doctrans import emit, parse
 from doctrans.ast_utils import (
     get_function_type,
@@ -26,6 +24,7 @@ from doctrans.tests.mocks.methods import (
     class_with_method_and_body_types_ast,
 )
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
+from meta.asttools import cmp_ast
 
 
 class TestEmitters(TestCase):
@@ -255,13 +254,12 @@ class TestEmitters(TestCase):
     def test_from_argparse_with_extra_body_to_argparse_with_extra_body(self) -> None:
         """ Tests if this can make the roundtrip from a full argparse function to a argparse full function """
 
-        ir = parse.argparse_ast(argparse_func_with_body_ast)
-        # for e in ir["_internal"]['body']: print_ast(e)
-
         run_ast_test(
             self,
             emit.argparse_function(
-                ir, emit_default_doc=False, emit_default_doc_in_return=False,
+                parse.argparse_ast(argparse_func_with_body_ast),
+                emit_default_doc=False,
+                emit_default_doc_in_return=False,
             ),
             argparse_func_with_body_ast,
         )

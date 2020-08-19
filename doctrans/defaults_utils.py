@@ -2,6 +2,7 @@
 Functions to handle default parameterisation
 """
 from copy import deepcopy
+from functools import partial
 
 
 def extract_default(line, emit_default_doc=True):
@@ -56,23 +57,30 @@ def remove_defaults_from_intermediate_repr(intermediate_repr, emit_defaults=True
     """
     ir = deepcopy(intermediate_repr)
 
-    def handle_param(param):
-        """
-        :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-        :type param: ```dict```
-
-        :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-        :rtype: ```dict```
-        """
-        doc, default = extract_default(param["doc"], emit_default_doc=False)
-        param.update({"doc": doc, "default": default})
-        if default is None or not emit_defaults:
-            del param["default"]
-        return param
-
-    ir["params"] = list(map(handle_param, ir["params"]))
-    ir["returns"] = handle_param(ir["returns"])
+    remove_default_from_param = partial(
+        _remove_default_from_param, emit_defaults=emit_defaults
+    )
+    ir["params"] = list(map(remove_default_from_param, ir["params"]))
+    ir["returns"] = remove_default_from_param(ir["returns"])
     return ir
+
+
+def _remove_default_from_param(param, emit_defaults=True):
+    """
+    :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    :type param: ```dict```
+
+    :param emit_defaults: Whether to emit default property
+    :type emit_defaults: ```bool```
+
+    :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    :rtype: ```dict```
+    """
+    doc, default = extract_default(param["doc"], emit_default_doc=False)
+    param.update({"doc": doc, "default": default})
+    if default is None or not emit_defaults:
+        del param["default"]
+    return param
 
 
 def set_default_doc(param, emit_default_doc=True):
