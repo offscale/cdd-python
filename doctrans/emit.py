@@ -92,20 +92,20 @@ def argparse_function(
                             kind=None,
                             value="\n    Set CLI arguments\n\n    "
                             ":param argument_parser: argument parser\n    "
-                            ":type argument_parser: ```ArgumentParser```\n\n    "
-                            ":return: argument_parser, {returns[doc]}\n    "
-                            ":rtype: ```Tuple[ArgumentParser,"
-                            " {returns[typ]}]```\n    "
-                            "".format(
-                                returns=set_default_doc(
-                                    intermediate_repr["returns"],
-                                    emit_default_doc=emit_default_doc_in_return,
+                            ":type argument_parser: ```ArgumentParser```\n\n    {return_params}".format(
+                                return_params=":return: argument_parser, {returns[doc]}\n    "
+                                ":rtype: ```Tuple[ArgumentParser, {returns[typ]}]```\n    ".format(
+                                    returns=set_default_doc(
+                                        intermediate_repr["returns"],
+                                        emit_default_doc=emit_default_doc_in_return,
+                                    )
                                 )
+                                if intermediate_repr.get("returns")
+                                else ":return: argument_parser\n    "
+                                ":rtype: ```ArgumentParser```\n    "
                             ),
                         )
-                    )
-                    if intermediate_repr.get("returns")
-                    else None,
+                    ),
                     Assign(
                         targets=[
                             Attribute(

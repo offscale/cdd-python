@@ -339,6 +339,7 @@ def set_value(value, kind=None, unquote=True):
     """
     if (
         value is not None
+        and isinstance(value, str)
         and len(value) > 2
         and value[0] + value[-1] in frozenset(('""', "''"))
     ):
