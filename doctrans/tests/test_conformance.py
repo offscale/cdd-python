@@ -204,11 +204,11 @@ class TestConformance(TestCase):
         args = Namespace(foo_names=("bar",))
         self.assertEqual(_get_name_from_namespace(args, "foo"), args.foo_names[0])
 
-    def test__conform_filename(self) -> None:
+    def test__conform_filename_nonexistent(self) -> None:
         """ Tests that _conform_filename returns the right result """
 
         with TemporaryDirectory() as tempdir:
-            argparse_function_filename = os.path.join(tempdir, "argparse0.py")
+            argparse_function_filename = os.path.join(tempdir, "no_file_here.py")
 
             self.assertTupleEqual(
                 _conform_filename(
@@ -220,6 +220,12 @@ class TestConformance(TestCase):
                 ),
                 (argparse_function_filename, True),
             )
+
+    def test__conform_filename_filled(self) -> None:
+        """ Tests that _conform_filename returns the right result """
+
+        with TemporaryDirectory() as tempdir:
+            argparse_function_filename = os.path.join(tempdir, "correct_contents.py")
 
             emit.file(argparse_func_ast, argparse_function_filename, mode="wt")
 
@@ -234,6 +240,13 @@ class TestConformance(TestCase):
                 (argparse_function_filename, True),
             )
 
+    def test__conform_filename_unchanged(self) -> None:
+        """ Tests that _conform_filename returns the right result """
+
+        with TemporaryDirectory() as tempdir:
+            argparse_function_filename = os.path.join(tempdir, "do_not_touch_this.py")
+
+            emit.file(argparse_func_ast, argparse_function_filename, mode="wt")
             self.assertTupleEqual(
                 _conform_filename(
                     filename=argparse_function_filename,

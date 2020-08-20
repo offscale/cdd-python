@@ -6,6 +6,8 @@ from ast import FunctionDef, ClassDef, Module
 from collections import OrderedDict
 from os import path
 
+from meta.asttools import cmp_ast
+
 from doctrans import emit
 from doctrans import parse
 from doctrans.ast_utils import (
@@ -15,7 +17,6 @@ from doctrans.ast_utils import (
 )
 from doctrans.pure_utils import pluralise, strip_split
 from doctrans.source_transformer import ast_parse
-from meta.asttools import cmp_ast
 
 
 def _default_options(node, search, type_wanted):
@@ -145,7 +146,9 @@ def _conform_filename(
         return filename, True
 
     with open(filename, "rt") as f:
-        parsed_ast = ast_parse(f.read())
+        source = f.read()
+        print(source)
+    parsed_ast = ast_parse(source, filename=filename)
     assert isinstance(parsed_ast, Module)
 
     original_node = find_in_ast(search, parsed_ast)
