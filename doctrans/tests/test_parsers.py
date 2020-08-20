@@ -7,6 +7,7 @@ from unittest import TestCase
 from docstring_parser import rest
 from doctrans import parse, emit
 from doctrans.emitter_utils import to_docstring
+from doctrans.pure_utils import tab
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import class_ast
 from doctrans.tests.mocks.docstrings import (
@@ -49,7 +50,15 @@ class TestParsers(TestCase):
                     parse.argparse_ast(FunctionDef(body=[])), emit_default_doc=True,
                 )
             ).rstrip("\n"),
-            "def set_cli_args(argument_parser):\n    argument_parser.description = ''",
+            "def set_cli_args(argument_parser):\n"
+            '{tab}"""\n'
+            "{tab}Set CLI arguments\n\n"
+            "{tab}:param argument_parser: argument parser\n"
+            "{tab}:type argument_parser: ```ArgumentParser```\n\n"
+            "{tab}:return: argument_parser\n"
+            "{tab}:rtype: ```ArgumentParser```\n"
+            '{tab}"""\n'
+            "{tab}argument_parser.description = ''".format(tab=tab),
         )
 
     def test_from_class(self) -> None:
