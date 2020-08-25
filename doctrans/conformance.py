@@ -142,33 +142,28 @@ def _conform_filename(
     :rtype: ```Tuple[str, bool]```
     """
     if not path.isfile(filename):
-        emit.file(emit_func(replacement_node_ir), filename=filename, mode="wt")
+        emit.file(emit_func(replacement_node_ir), filename=filename, mode="wt", skip_black=False)
         return filename, True
 
     with open(filename, "rt") as f:
-        source = f.read()
-        print(source)
-    parsed_ast = ast_parse(source, filename=filename)
+        parsed_ast = ast_parse(f.read(), filename=filename)
     assert isinstance(parsed_ast, Module)
 
     original_node = find_in_ast(search, parsed_ast)
-    if original_node is None:
-        emit.file(
-            emit_func(
-                replacement_node_ir,
-                **_default_options(
-                    node=original_node, search=search, type_wanted=type_wanted
-                )()
-            ),
-            filename=filename,
-            mode="a",
-        )
-        return filename, True
-    assert len(search) > 0
     replacement_node = emit_func(
         replacement_node_ir,
         **_default_options(node=original_node, search=search, type_wanted=type_wanted)()
     )
+    if original_node is None:
+        emit.file(
+            replacement_node,
+            filename=filename,
+            mode="a",
+            skip_black=True
+        )
+        return filename, True
+    assert len(search) > 0
+
     assert type(replacement_node) == type_wanted, "Expected {!r} got {!r}".format(
         type_wanted, type(replacement_node).__name__
     )

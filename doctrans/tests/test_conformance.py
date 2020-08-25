@@ -227,7 +227,7 @@ class TestConformance(TestCase):
         with TemporaryDirectory() as tempdir:
             argparse_function_filename = os.path.join(tempdir, "correct_contents.py")
 
-            emit.file(argparse_func_ast, argparse_function_filename, mode="wt")
+            emit.file(argparse_func_ast, argparse_function_filename, mode="wt", skip_black=True)
 
             self.assertTupleEqual(
                 _conform_filename(

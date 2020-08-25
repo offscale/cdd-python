@@ -64,7 +64,7 @@ def sync_properties(
             output_ast,
         )
 
-    emit.file(output_ast, output_filename, mode="wt")
+    emit.file(output_ast, output_filename, mode="wt", skip_black=False)
 
 
 def sync_property(

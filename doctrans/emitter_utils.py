@@ -231,8 +231,16 @@ def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
     )
 
 
-def get_internal_body(intermediate_repr):
+def get_internal_body(target_name, target_type, intermediate_repr):
     """
+    Get the internal body from our IR
+
+    :param target_name: name of target. If both `target_name` and `target_type` match internal body extract, then emit
+    :type target_name: ```str```
+
+    :param target_type: Type of target, static is static or global method, others just become first arg
+    :type target_type: ```Literal['self', 'cls', 'static']```
+
     :param intermediate_repr: a dictionary of form
           {
               'short_description': ...,
@@ -250,7 +258,9 @@ def get_internal_body(intermediate_repr):
         intermediate_repr["_internal"]["body"]
         if "_internal" in intermediate_repr
         and intermediate_repr["_internal"].get("body")
-        else []
+        and intermediate_repr["_internal"]["from_name"] == target_name
+        and intermediate_repr["_internal"]["from_type"] == target_type
+        else tuple()
     )
 
 
@@ -326,6 +336,7 @@ def to_docstring(
         assert isinstance(param, dict), "Expected 'dict' got `{!r}`".format(
             type(param).__name__
         )
+        assert docstring_format == "rest", docstring_format
         doc, default = extract_default(param["doc"], emit_default_doc=False)
         if default is not None:
             param["default"] = default
