@@ -26,6 +26,7 @@ from operator import itemgetter
 from typing import Any
 
 from docstring_parser import DocstringParam, DocstringMeta, Docstring
+
 from doctrans import get_logger
 from doctrans.ast_utils import (
     find_ast_type,
@@ -98,8 +99,8 @@ def function(function_def, function_type=None, function_name=None):
     :param function_def: AST node for function definition
     :type function_def: ```FunctionDef```
 
-    :param function_type: None is a loose function (def f()`), others self-explanatory
-    :type function_type: ```Optional[Literal['self', 'cls']]```
+    :param function_type: Type of function, static is static or global method, others just become first arg
+    :type function_type: ```Literal['self', 'cls', 'static']```
 
     :param function_name: name of function_def
     :type function_name: ```str```
@@ -133,17 +134,20 @@ def function(function_def, function_type=None, function_name=None):
         intermediate_repr = docstring(
             intermediate_repr_docstring.replace(":cvar", ":param")
         )
+
+    found_type = get_function_type(function_def)
     intermediate_repr.update(
-        {
-            "name": function_name,
-            "type": function_type or get_function_type(function_def),
-        }
+        {"name": function_name, "type": function_type or found_type,}
     )
     # _function_type = get_function_type(function_def)
-    offset = 0 if intermediate_repr["type"] is None else 1
+    offset = 0 if (intermediate_repr["type"] or "static") == "static" else 1
 
     if len(function_def.body) > 2:
-        intermediate_repr["_internal"] = {"body": function_def.body[1:-1]}
+        intermediate_repr["_internal"] = {
+            "body": function_def.body[1:-1],
+            "from_name": function_def.name,
+            "from_type": found_type,
+        }
 
     for idx, arg in enumerate(function_def.args.args):
         if arg.annotation is not None:
@@ -205,13 +209,13 @@ def function(function_def, function_type=None, function_name=None):
 
 def argparse_ast(function_def, function_type=None, function_name=None):
     """
-    Converts an AST to our IR
+    Converts an argparse AST to our IR
 
     :param function_def: AST of argparse function_def
     :type function_def: ```FunctionDef``
 
-    :param function_type: None is a loose function (def f()`), others self-explanatory
-    :type function_type: ```Optional[Literal['self', 'cls']]```
+    :param function_type: Type of function, static is static or global method, others just become first arg
+    :type function_type: ```Literal['self', 'cls', 'static']```
 
     :param function_name: name of function_def
     :type function_name: ```str```
@@ -261,7 +265,9 @@ def argparse_ast(function_def, function_type=None, function_name=None):
                     is_argparse_description,
                     filterfalse(is_argparse_add_argument, function_def.body[1:-1]),
                 )
-            )
+            ),
+            "from_name": function_def.name,
+            "from_type": "static",
         }
 
     return intermediate_repr

@@ -20,6 +20,7 @@ from ast import (
 from functools import partial
 
 from black import format_str, FileMode
+
 from doctrans.ast_utils import param2argparse_param, param2ast, set_value
 from doctrans.defaults_utils import set_default_doc
 from doctrans.emitter_utils import get_internal_body, to_docstring
@@ -32,7 +33,7 @@ def argparse_function(
     emit_default_doc=False,
     emit_default_doc_in_return=False,
     function_name="set_cli_args",
-    function_type=None,
+    function_type="static",
 ):
     """
     Convert to an argparse function_def definition
@@ -55,8 +56,8 @@ def argparse_function(
     :param function_name: name of function_def
     :type function_name: ```str```
 
-    :param function_type: None is a loose function (def f()`), others self-explanatory
-    :type function_type: ```Optional[Literal['self', 'cls']]```
+    :param function_type: Type of function, static is static or global method, others just become first arg
+    :type function_type: ```Literal['self', 'cls', 'static']```
 
     :returns:  AST node for function definition which constructs argparse
     :rtype: ```FunctionDef``
@@ -69,8 +70,8 @@ def argparse_function(
                 filter(
                     None,
                     (
-                        function_type
-                        if function_type is None
+                        None
+                        if function_type == "static"
                         else arg(annotation=None, arg=function_type, type_comment=None),
                         arg(annotation=None, arg="argument_parser", type_comment=None),
                     ),
@@ -92,7 +93,8 @@ def argparse_function(
                             kind=None,
                             value="\n    Set CLI arguments\n\n    "
                             ":param argument_parser: argument parser\n    "
-                            ":type argument_parser: ```ArgumentParser```\n\n    {return_params}".format(
+                            ":type argument_parser: ```ArgumentParser```\n\n    "
+                            "{return_params}".format(
                                 return_params=":return: argument_parser, {returns[doc]}\n    "
                                 ":rtype: ```Tuple[ArgumentParser, {returns[typ]}]```\n    ".format(
                                     returns=set_default_doc(
@@ -101,8 +103,10 @@ def argparse_function(
                                     )
                                 )
                                 if intermediate_repr.get("returns")
-                                else ":return: argument_parser\n    "
-                                ":rtype: ```ArgumentParser```\n    "
+                                else (
+                                    ":return: argument_parser\n    "
+                                    ":rtype: ```ArgumentParser```\n    "
+                                )
                             ),
                         )
                     ),
@@ -135,7 +139,8 @@ def argparse_function(
                         if "params" in intermediate_repr
                         else tuple()
                     ),
-                    *get_internal_body(intermediate_repr),
+                    *get_internal_body(target_name=function_name, target_type=function_type,
+                                       intermediate_repr=intermediate_repr),
                     Return(
                         value=Tuple(
                             ctx=Load(),
@@ -309,7 +314,7 @@ def function(
     inline_types=True,
 ):
     """
-    Construct a function
+    Construct a function from our IR
 
     :param intermediate_repr: a dictionary of form
           {
@@ -321,10 +326,10 @@ def function(
     :type intermediate_repr: ```dict```
 
     :param function_name: name of function_def
-    :type function_name: ```str```
+    :type function_name: ```Optional[str]```
 
-    :param function_type: None is a loose function (def f()`), others self-explanatory
-    :type function_type: ```Optional[Literal['self', 'cls']]```
+    :param function_type: Type of function, static is static or global method, others just become first arg
+    :type function_type: ```Optional[Literal['self', 'cls', 'static']]```
 
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpy', 'google']```
@@ -420,7 +425,9 @@ def function(
                             ),
                         )
                     ),
-                    *(get_internal_body(intermediate_repr)),
+                    *(get_internal_body(target_name=function_name,
+                                        target_type=function_type,
+                                        intermediate_repr=intermediate_repr)),
                     Return(
                         value=ast.parse(intermediate_repr["returns"]["default"])
                         .body[0]
