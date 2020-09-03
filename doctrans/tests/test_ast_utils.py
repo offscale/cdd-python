@@ -48,18 +48,35 @@ class TestAstUtils(TestCase):
         node = Module(
             body=[
                 AnnAssign(
-                    annotation=Name(ctx=Load(), id="str"),
+                    annotation=Name(
+                        "str",
+                        Load(),
+                    ),
                     simple=1,
-                    target=Name(ctx=Store(), id="dataset_name"),
-                    value=Constant(kind=None, value="~/tensorflow_datasets"),
+                    target=Name("dataset_name", Store()),
+                    value=Constant(
+                        kind=None,
+                        value="~/tensorflow_datasets",
+                        constant_value=None,
+                        string=None,
+                    ),
+                    expr=None,
+                    expr_target=None,
+                    expr_annotation=None,
                 ),
                 Assign(
                     annotation=None,
                     simple=1,
-                    targets=[Name(ctx=Store(), id="epochs")],
-                    value=Constant(kind=None, value="333"),
+                    targets=[Name("epochs", Store())],
+                    value=Constant(
+                        kind=None, value="333", constant_value=None, string=None
+                    ),
+                    expr=None,
+                    expr_target=None,
+                    expr_annotation=None,
                 ),
-            ]
+            ],
+            stmt=None,
         )
         self.assertFalse(hasattr(node.body[0], "_location"))
         self.assertFalse(hasattr(node.body[1], "_location"))
@@ -83,10 +100,21 @@ class TestAstUtils(TestCase):
             self,
             gen_ast,
             AnnAssign(
-                annotation=Name(ctx=Load(), id="str"),
+                annotation=Name(
+                    "str",
+                    Load(),
+                ),
                 simple=1,
-                target=Name(ctx=Store(), id="dataset_name"),
-                value=Constant(kind=None, value="~/tensorflow_datasets"),
+                target=Name("dataset_name", Store()),
+                value=Constant(
+                    kind=None,
+                    value="~/tensorflow_datasets",
+                    constant_value=None,
+                    string=None,
+                ),
+                expr=None,
+                expr_target=None,
+                expr_annotation=None,
             ),
         )
 
@@ -104,15 +132,22 @@ class TestAstUtils(TestCase):
             emit_arg(class_with_method_and_body_types_ast.body[1].args.args[1]), arg
         )
         assign = Assign(
-            targets=[Name(ctx=Store(), id="yup")],
-            value=Constant(kind=None, value="nup"),
+            targets=[Name("yup", Store())],
+            value=Constant(kind=None, value="nup", constant_value=None, string=None),
+            expr=None,
         )
         gen_ast = emit_arg(assign)
         self.assertIsInstance(gen_ast, arg)
         run_ast_test(
             self,
             gen_ast=gen_ast,
-            gold=arg(annotation=None, arg="yup", type_comment=None),
+            gold=arg(
+                annotation=None,
+                arg="yup",
+                type_comment=None,
+                expr=None,
+                identifier_arg=None,
+            ),
         )
 
     def test_emit_arg_fails(self) -> None:
@@ -126,17 +161,25 @@ class TestAstUtils(TestCase):
             self,
             find_in_ast("ConfigClass.dataset_name".split("."), class_ast),
             AnnAssign(
-                annotation=Name(ctx=Load(), id="str"),
+                annotation=Name(
+                    "str",
+                    Load(),
+                ),
                 simple=1,
-                target=Name(ctx=Store(), id="dataset_name"),
-                value=Constant(kind=None, value="mnist"),
+                target=Name("dataset_name", Store()),
+                value=Constant(
+                    kind=None, value="mnist", constant_value=None, string=None
+                ),
+                expr=None,
+                expr_target=None,
+                expr_annotation=None,
             ),
         )
 
     def test_find_in_ast_self(self) -> None:
         """ Tests that `find_in_ast` successfully finds itself in AST """
         run_ast_test(self, find_in_ast(["ConfigClass"], class_ast), class_ast)
-        module = Module(body=[], type_ignores=[])
+        module = Module(body=[], type_ignores=[], stmt=None)
         run_ast_test(self, find_in_ast([], module), module)
         module_with_fun = Module(
             body=[
@@ -150,12 +193,17 @@ class TestAstUtils(TestCase):
                         kwonlyargs=[],
                         posonlyargs=[],
                         vararg=None,
+                        arg=None,
                     ),
                     body=[],
                     decorator_list=[],
                     lineno=None,
+                    arguments_args=None,
+                    identifier_name=None,
+                    stmt=None,
                 )
-            ]
+            ],
+            stmt=None,
         )
         annotate_ancestry(module_with_fun)
         run_ast_test(
@@ -167,8 +215,8 @@ class TestAstUtils(TestCase):
         self.assertIsNone(find_in_ast(["John Galt"], class_ast))
 
     def test_find_in_ast_no_val(self) -> None:
-        """ Tests that `find_in_ast` correctly gives AST node from
-         `def class C(object): def function_name(self,dataset_name: str,…)`"""
+        """Tests that `find_in_ast` correctly gives AST node from
+        `def class C(object): def function_name(self,dataset_name: str,…)`"""
         run_ast_test(
             self,
             find_in_ast(
@@ -176,29 +224,47 @@ class TestAstUtils(TestCase):
                 class_with_optional_arg_method_ast,
             ),
             arg(
-                annotation=Name(ctx=Load(), id="str"),
+                annotation=Name(
+                    "str",
+                    Load(),
+                ),
                 arg="dataset_name",
                 type_comment=None,
+                expr=None,
+                identifier_arg=None,
             ),
         )
 
     def test_find_in_ast_with_val(self) -> None:
-        """ Tests that `find_in_ast` correctly gives AST node from
-         `def class C(object): def function_name(self,dataset_name: str='foo',…)`"""
+        """Tests that `find_in_ast` correctly gives AST node from
+        `def class C(object): def function_name(self,dataset_name: str='foo',…)`"""
         gen_ast = find_in_ast(
             "C.function_name.dataset_name".split("."),
             class_with_method_and_body_types_ast,
         )
         self.assertTrue(
-            cmp_ast(gen_ast.default, Constant(kind=None, value="~/tensorflow_datasets"))
+            cmp_ast(
+                gen_ast.default,
+                Constant(
+                    kind=None,
+                    value="~/tensorflow_datasets",
+                    constant_value=None,
+                    string=None,
+                ),
+            )
         )
         run_ast_test(
             self,
             gen_ast,
             arg(
-                annotation=Name(ctx=Load(), id="str"),
+                annotation=Name(
+                    "str",
+                    Load(),
+                ),
                 arg="dataset_name",
                 type_comment=None,
+                expr=None,
+                identifier_arg=None,
             ),
         )
 
@@ -210,10 +276,13 @@ class TestAstUtils(TestCase):
         rewrite_at_query = RewriteAtQuery(
             search="C.function_name.dataset_name".split("."),
             replacement_node=AnnAssign(
-                annotation=Name(ctx=Load(), id="int"),
+                annotation=Name("int", Load()),
                 simple=1,
-                target=Name(ctx=Store(), id="dataset_name"),
-                value=Constant(kind=None, value=15),
+                target=Name("dataset_name", Store()),
+                value=Constant(kind=None, value=15, constant_value=None, string=None),
+                expr=None,
+                expr_annotation=None,
+                expr_target=None,
             ),
         )
         gen_ast = rewrite_at_query.visit(parsed_ast)
@@ -237,10 +306,13 @@ class TestAstUtils(TestCase):
         rewrite_at_query = RewriteAtQuery(
             search="ConfigClass.dataset_name".split("."),
             replacement_node=AnnAssign(
-                annotation=Name(ctx=Load(), id="int"),
+                annotation=Name("int", Load()),
                 simple=1,
-                target=Name(ctx=Store(), id="dataset_name"),
-                value=Constant(kind=None, value=15),
+                target=Name("dataset_name", Store()),
+                value=Constant(kind=None, value=15, constant_value=None, string=None),
+                expr=None,
+                expr_target=None,
+                expr_annotation=None,
             ),
         )
         gen_ast = rewrite_at_query.visit(parsed_ast)
@@ -264,20 +336,49 @@ class TestAstUtils(TestCase):
                     args=arguments(
                         args=[
                             arg(
-                                annotation=None, arg="something else", type_comment=None
+                                annotation=None,
+                                arg="something else",
+                                type_comment=None,
+                                expr=None,
+                                identifier_arg=None,
                             )
-                        ]
-                    )
+                        ],
+                        arg=None,
+                    ),
+                    arguments_args=None,
+                    identifier_name=None,
+                    stmt=None,
                 )
             )
         )
-        self.assertIsNone(get_function_type(FunctionDef(args=arguments(args=[]))))
+        self.assertIsNone(
+            get_function_type(
+                FunctionDef(
+                    args=arguments(args=[], arg=None),
+                    arguments_args=None,
+                    identifier_name=None,
+                    stmt=None,
+                )
+            )
+        )
         self.assertEqual(
             get_function_type(
                 FunctionDef(
                     args=arguments(
-                        args=[arg(annotation=None, arg="self", type_comment=None)]
-                    )
+                        args=[
+                            arg(
+                                annotation=None,
+                                arg="self",
+                                type_comment=None,
+                                expr=None,
+                                identifier_arg=None,
+                            )
+                        ],
+                        arg=None,
+                    ),
+                    arguments_args=None,
+                    identifier_name=None,
+                    stmt=None,
                 )
             ),
             "self",
@@ -286,8 +387,20 @@ class TestAstUtils(TestCase):
             get_function_type(
                 FunctionDef(
                     args=arguments(
-                        args=[arg(annotation=None, arg="cls", type_comment=None)]
-                    )
+                        args=[
+                            arg(
+                                annotation=None,
+                                arg="cls",
+                                type_comment=None,
+                                expr=None,
+                                identifier_arg=None,
+                            )
+                        ],
+                        arg=None,
+                    ),
+                    arguments_args=None,
+                    identifier_name=None,
+                    stmt=None,
                 )
             ),
             "cls",
@@ -296,11 +409,13 @@ class TestAstUtils(TestCase):
     def test_get_value(self) -> None:
         """ Tests get_value succeeds """
         val = "foo"
-        self.assertEqual(get_value(Str(s=val)), val)
-        self.assertEqual(get_value(Constant(value=val)), val)
-        self.assertIsInstance(get_value(Tuple()), Tuple)
-        self.assertIsInstance(get_value(Tuple()), Tuple)
-        self.assertIsInstance(get_value(Name()), Name)
+        self.assertEqual(get_value(Str(s=val, constant_value=None, string=None)), val)
+        self.assertEqual(
+            get_value(Constant(value=val, constant_value=None, string=None)), val
+        )
+        self.assertIsInstance(get_value(Tuple(expr=None)), Tuple)
+        self.assertIsInstance(get_value(Tuple(expr=None)), Tuple)
+        self.assertIsInstance(get_value(Name(None, None)), Name)
 
     def test_set_value(self) -> None:
         """ Tests that `set_value` returns the right type for the right Python version """
@@ -330,26 +445,48 @@ class TestAstUtils(TestCase):
         """ Test that `find_ast_type` gives the wrapped class back """
 
         class_def = ClassDef(
-            name="", bases=tuple(), keywords=tuple(), decorator_list=[], body=[]
+            name="",
+            bases=tuple(),
+            keywords=tuple(),
+            decorator_list=[],
+            body=[],
+            expr=None,
+            identifier_name=None,
         )
-        run_ast_test(self, find_ast_type(Module(body=[class_def])), class_def)
+        run_ast_test(
+            self, find_ast_type(Module(body=[class_def], stmt=None)), class_def
+        )
 
     def test_find_ast_type_fails(self) -> None:
         """ Test that `find_ast_type` throws the right errors """
 
         self.assertRaises(NotImplementedError, lambda: find_ast_type(None))
         self.assertRaises(NotImplementedError, lambda: find_ast_type(""))
-        self.assertRaises(TypeError, lambda: find_ast_type(Module(body=[])))
+        self.assertRaises(TypeError, lambda: find_ast_type(Module(body=[], stmt=None)))
         self.assertRaises(
             NotImplementedError,
-            lambda: find_ast_type(Module(body=[ClassDef(), ClassDef()])),
+            lambda: find_ast_type(
+                Module(
+                    body=[
+                        ClassDef(expr=None, identifier_name=None),
+                        ClassDef(expr=None, identifier_name=None),
+                    ],
+                    stmt=None,
+                )
+            ),
         )
 
     def test_to_named_class_def(self) -> None:
         """ Test that find_ast_type gives the wrapped named class back """
 
         class_def = ClassDef(
-            name="foo", bases=tuple(), keywords=tuple(), decorator_list=[], body=[]
+            name="foo",
+            bases=tuple(),
+            keywords=tuple(),
+            decorator_list=[],
+            body=[],
+            expr=None,
+            identifier_name=None,
         )
         run_ast_test(
             self,
@@ -362,9 +499,12 @@ class TestAstUtils(TestCase):
                             keywords=tuple(),
                             decorator_list=[],
                             body=[],
+                            expr=None,
+                            identifier_name=None,
                         ),
                         class_def,
-                    ]
+                    ],
+                    stmt=None,
                 ),
                 node_name="foo",
             ),

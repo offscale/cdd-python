@@ -19,7 +19,13 @@ class TestSourceTransformer(TestCase):
         Tests to_source in Python 3.9 and < 3.9
         """
         class_def = ClassDef(
-            name="Classy", bases=tuple(), decorator_list=[], body=[], keywords=tuple()
+            name="Classy",
+            bases=tuple(),
+            decorator_list=[],
+            body=[],
+            keywords=tuple(),
+            identifier_name=None,
+            expr=None,
         )
 
         lt_39 = python_version_tuple() < ("3", "9")

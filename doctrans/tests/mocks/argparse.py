@@ -117,17 +117,26 @@ def set_cli_args(argument_parser):
 argparse_func_ast = (
     FunctionDef(
         args=arguments(
-            args=[arg(annotation=None, arg="argument_parser", type_comment=None)],
+            args=[
+                arg(
+                    annotation=None,
+                    arg="argument_parser",
+                    type_comment=None,
+                    expr=None,
+                    identifier_arg=None,
+                )
+            ],
             defaults=[],
             kw_defaults=[],
             kwarg=None,
             kwonlyargs=[],
             posonlyargs=[],
             vararg=None,
+            arg=None,
         ),
         body=[
             Expr(
-                value=Constant(
+                Constant(
                     kind=None,
                     value="\n    Set CLI arguments\n\n    "
                     ":param argument_parser: argument parser\n    "
@@ -136,14 +145,16 @@ argparse_func_ast = (
                     ":rtype: ```Tuple[ArgumentParser,"
                     " Union[Tuple[tf.data.Dataset, tf.data.Dataset],"
                     " Tuple[np.ndarray, np.ndarray]]]```\n    ",
+                    constant_value=None,
+                    string=None,
                 )
             ),
             Assign(
                 targets=[
                     Attribute(
-                        attr="description",
-                        ctx=Store(),
-                        value=Name(ctx=Load(), id="argument_parser"),
+                        Name("argument_parser", Load()),
+                        "description",
+                        Store(),
                     )
                 ],
                 type_comment=None,
@@ -151,169 +162,309 @@ argparse_func_ast = (
                     kind=None,
                     value="Acquire from the official tensorflow_datasets model zoo,"
                     " or the ophthalmology focussed ml-prepare library",
+                    constant_value=None,
+                    string=None,
                 ),
+                expr=None,
             ),
             Expr(
-                value=Call(
-                    args=[Constant(kind=None, value="--dataset_name")],
-                    func=Attribute(
-                        attr="add_argument",
-                        ctx=Load(),
-                        value=Name(ctx=Load(), id="argument_parser"),
-                    ),
-                    keywords=[
-                        keyword(arg="type", value=Name(ctx=Load(), id="str")),
-                        keyword(
-                            arg="help",
-                            value=Constant(kind=None, value="name of dataset."),
-                        ),
-                        keyword(arg="required", value=Constant(kind=None, value=True)),
-                        keyword(
-                            arg="default", value=Constant(kind=None, value="mnist")
-                        ),
+                Call(
+                    args=[
+                        Constant(
+                            kind=None,
+                            value="--dataset_name",
+                            constant_value=None,
+                            string=None,
+                        )
                     ],
-                )
-            ),
-            Expr(
-                value=Call(
-                    args=[Constant(kind=None, value="--tfds_dir")],
                     func=Attribute(
-                        attr="add_argument",
-                        ctx=Load(),
-                        value=Name(ctx=Load(), id="argument_parser"),
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
                     ),
                     keywords=[
-                        keyword(arg="type", value=Name(ctx=Load(), id="str")),
+                        keyword(arg="type", value=Name("str", Load()), identifier=None),
                         keyword(
                             arg="help",
                             value=Constant(
-                                kind=None, value="directory to look for models in."
+                                kind=None,
+                                value="name of dataset.",
+                                constant_value=None,
+                                string=None,
                             ),
+                            identifier=None,
+                        ),
+                        keyword(
+                            arg="required",
+                            value=Constant(
+                                kind=None, value=True, constant_value=None, string=None
+                            ),
+                            identifier=None,
                         ),
                         keyword(
                             arg="default",
-                            value=Constant(kind=None, value="~/tensorflow_datasets"),
+                            value=Constant(
+                                kind=None,
+                                value="mnist",
+                                constant_value=None,
+                                string=None,
+                            ),
+                            identifier=None,
                         ),
                     ],
+                    expr=None,
+                    expr_func=None,
                 )
             ),
             Expr(
-                value=Call(
-                    args=[Constant(kind=None, value="--K")],
+                Call(
+                    args=[
+                        Constant(
+                            kind=None,
+                            value="--tfds_dir",
+                            constant_value=None,
+                            string=None,
+                        )
+                    ],
                     func=Attribute(
-                        attr="add_argument",
-                        ctx=Load(),
-                        value=Name(ctx=Load(), id="argument_parser"),
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
+                    ),
+                    keywords=[
+                        keyword(arg="type", value=Name("str", Load()), identifier=None),
+                        keyword(
+                            arg="help",
+                            value=Constant(
+                                kind=None,
+                                value="directory to look for models in.",
+                                constant_value=None,
+                                string=None,
+                            ),
+                            identifier=None,
+                        ),
+                        keyword(
+                            arg="default",
+                            value=Constant(
+                                kind=None,
+                                value="~/tensorflow_datasets",
+                                constant_value=None,
+                                string=None,
+                            ),
+                            identifier=None,
+                        ),
+                    ],
+                    expr=None,
+                    expr_func=None,
+                )
+            ),
+            Expr(
+                Call(
+                    args=[
+                        Constant(
+                            kind=None, value="--K", constant_value=None, string=None
+                        )
+                    ],
+                    func=Attribute(
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
                     ),
                     keywords=[
                         keyword(
                             arg="type",
                             value=Attribute(
-                                attr="__getitem__",
-                                ctx=Load(),
-                                value=Call(
+                                Call(
                                     args=[],
-                                    func=Name(ctx=Load(), id="globals"),
+                                    func=Name("globals", Load()),
                                     keywords=[],
+                                    expr=None,
+                                    expr_func=None,
                                 ),
+                                "__getitem__",
+                                Load(),
                             ),
+                            identifier=None,
                         ),
                         keyword(
                             arg="choices",
                             value=Tuple(
                                 ctx=Load(),
                                 elts=[
-                                    Constant(kind=None, value="np"),
-                                    Constant(kind=None, value="tf"),
+                                    Constant(
+                                        kind=None,
+                                        value="np",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        kind=None,
+                                        value="tf",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
                                 ],
+                                expr=None,
                             ),
+                            identifier=None,
                         ),
                         keyword(
                             arg="help",
                             value=Constant(
-                                kind=None, value="backend engine, e.g., `np` or `tf`."
+                                kind=None,
+                                value="backend engine, e.g., `np` or `tf`.",
+                                constant_value=None,
+                                string=None,
                             ),
+                            identifier=None,
                         ),
-                        keyword(arg="required", value=Constant(kind=None, value=True)),
-                        keyword(arg="default", value=Constant(kind=None, value="np")),
+                        keyword(
+                            arg="required",
+                            value=Constant(
+                                kind=None, value=True, constant_value=None, string=None
+                            ),
+                            identifier=None,
+                        ),
+                        keyword(
+                            arg="default",
+                            value=Constant(
+                                kind=None, value="np", constant_value=None, string=None
+                            ),
+                            identifier=None,
+                        ),
                     ],
+                    expr=None,
+                    expr_func=None,
                 )
             ),
             Expr(
-                value=Call(
-                    args=[Constant(kind=None, value="--as_numpy")],
+                Call(
+                    args=[
+                        Constant(
+                            kind=None,
+                            value="--as_numpy",
+                            constant_value=None,
+                            string=None,
+                        )
+                    ],
                     func=Attribute(
-                        attr="add_argument",
-                        ctx=Load(),
-                        value=Name(ctx=Load(), id="argument_parser"),
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
                     ),
                     keywords=[
-                        keyword(arg="type", value=Name(ctx=Load(), id="bool")),
+                        keyword(
+                            arg="type", value=Name("bool", Load()), identifier=None
+                        ),
                         keyword(
                             arg="help",
                             value=Constant(
-                                kind=None, value="Convert to numpy ndarrays"
+                                kind=None,
+                                value="Convert to numpy ndarrays",
+                                constant_value=None,
+                                string=None,
                             ),
+                            identifier=None,
                         ),
                     ],
+                    expr=None,
+                    expr_func=None,
                 )
             ),
             Expr(
-                value=Call(
-                    args=[Constant(kind=None, value="--data_loader_kwargs")],
+                Call(
+                    args=[
+                        Constant(
+                            kind=None,
+                            value="--data_loader_kwargs",
+                            constant_value=None,
+                            string=None,
+                        )
+                    ],
                     func=Attribute(
-                        attr="add_argument",
-                        ctx=Load(),
-                        value=Name(ctx=Load(), id="argument_parser"),
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
                     ),
                     keywords=[
-                        keyword(arg="type", value=Name(ctx=Load(), id="loads")),
+                        keyword(
+                            arg="type", value=Name("loads", Load()), identifier=None
+                        ),
                         keyword(
                             arg="help",
                             value=Constant(
                                 kind=None,
                                 value="pass this as arguments to data_loader function",
+                                constant_value=None,
+                                string=None,
                             ),
+                            identifier=None,
                         ),
                     ],
+                    expr=None,
+                    expr_func=None,
                 )
             ),
             Return(
                 value=Tuple(
                     ctx=Load(),
                     elts=[
-                        Name(ctx=Load(), id="argument_parser"),
+                        Name("argument_parser", Load()),
                         Tuple(
                             ctx=Load(),
                             elts=[
                                 Call(
-                                    args=[Constant(kind=None, value=0)],
+                                    args=[
+                                        Constant(
+                                            kind=None,
+                                            value=0,
+                                            constant_value=None,
+                                            string=None,
+                                        )
+                                    ],
                                     func=Attribute(
-                                        attr="empty",
-                                        ctx=Load(),
-                                        value=Name(ctx=Load(), id="np"),
+                                        Name("np", Load()),
+                                        "empty",
+                                        Load(),
                                     ),
                                     keywords=[],
+                                    expr=None,
+                                    expr_func=None,
                                 ),
                                 Call(
-                                    args=[Constant(kind=None, value=0)],
+                                    args=[
+                                        Constant(
+                                            kind=None,
+                                            value=0,
+                                            constant_value=None,
+                                            string=None,
+                                        )
+                                    ],
                                     func=Attribute(
-                                        attr="empty",
-                                        ctx=Load(),
-                                        value=Name(ctx=Load(), id="np"),
+                                        Name("np", Load()),
+                                        "empty",
+                                        Load(),
                                     ),
                                     keywords=[],
+                                    expr=None,
+                                    expr_func=None,
                                 ),
                             ],
+                            expr=None,
                         ),
                     ],
-                )
+                    expr=None,
+                ),
+                expr=None,
             ),
         ],
         decorator_list=[],
         name="set_cli_args",
         returns=None,
         type_comment=None,
+        arguments_args=None,
+        stmt=None,
+        identifier_name=None,
     )
     if PY3_8
     else ast.parse(argparse_func_str).body[0]
@@ -322,17 +473,26 @@ argparse_func_ast = (
 argparse_func_with_body_ast = (
     FunctionDef(
         args=arguments(
-            args=[arg(annotation=None, arg="argument_parser", type_comment=None)],
+            args=[
+                arg(
+                    annotation=None,
+                    arg="argument_parser",
+                    type_comment=None,
+                    expr=None,
+                    identifier_arg=None,
+                )
+            ],
             defaults=[],
             kw_defaults=[],
             kwarg=None,
             kwonlyargs=[],
             posonlyargs=[],
             vararg=None,
+            arg=None,
         ),
         body=[
             Expr(
-                value=Constant(
+                Constant(
                     kind=None,
                     value="\n    Set CLI arguments\n\n    "
                     ":param argument_parser: argument parser\n    "
@@ -340,14 +500,16 @@ argparse_func_with_body_ast = (
                     ":return: argument_parser, Train and tests dataset splits.\n    "
                     ":rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset],"
                     " Tuple[np.ndarray, np.ndarray]]]```\n    ",
+                    constant_value=None,
+                    string=None,
                 )
             ),
             Assign(
                 targets=[
                     Attribute(
-                        attr="description",
-                        ctx=Store(),
-                        value=Name(ctx=Load(), id="argument_parser"),
+                        Name("argument_parser", Load()),
+                        "description",
+                        Store(),
                     )
                 ],
                 type_comment=None,
@@ -355,213 +517,395 @@ argparse_func_with_body_ast = (
                     kind=None,
                     value="Acquire from the official tensorflow_datasets model zoo,"
                     " or the ophthalmology focussed ml-prepare library",
+                    constant_value=None,
+                    string=None,
                 ),
+                expr=None,
             ),
             Expr(
-                value=Call(
-                    args=[Constant(kind=None, value="--dataset_name")],
-                    func=Attribute(
-                        attr="add_argument",
-                        ctx=Load(),
-                        value=Name(ctx=Load(), id="argument_parser"),
-                    ),
-                    keywords=[
-                        keyword(arg="type", value=Name(ctx=Load(), id="str")),
-                        keyword(
-                            arg="help",
-                            value=Constant(kind=None, value="name of dataset."),
-                        ),
-                        keyword(arg="required", value=Constant(kind=None, value=True)),
-                        keyword(
-                            arg="default", value=Constant(kind=None, value="mnist")
-                        ),
+                Call(
+                    args=[
+                        Constant(
+                            kind=None,
+                            value="--dataset_name",
+                            constant_value=None,
+                            string=None,
+                        )
                     ],
-                )
-            ),
-            Expr(
-                value=Call(
-                    args=[Constant(kind=None, value="--tfds_dir")],
                     func=Attribute(
-                        attr="add_argument",
-                        ctx=Load(),
-                        value=Name(ctx=Load(), id="argument_parser"),
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
                     ),
                     keywords=[
-                        keyword(arg="type", value=Name(ctx=Load(), id="str")),
+                        keyword(
+                            arg="type",
+                            value=Name(
+                                "str",
+                                Load(),
+                            ),
+                            identifier=None,
+                        ),
                         keyword(
                             arg="help",
                             value=Constant(
-                                kind=None, value="directory to look for models in."
+                                kind=None,
+                                value="name of dataset.",
+                                constant_value=None,
+                                string=None,
                             ),
+                            identifier=None,
+                        ),
+                        keyword(
+                            arg="required",
+                            value=Constant(
+                                kind=None, value=True, constant_value=None, string=None
+                            ),
+                            identifier=None,
                         ),
                         keyword(
                             arg="default",
-                            value=Constant(kind=None, value="~/tensorflow_datasets"),
+                            value=Constant(
+                                kind=None,
+                                value="mnist",
+                                constant_value=None,
+                                string=None,
+                            ),
+                            identifier=None,
                         ),
                     ],
+                    expr=None,
+                    expr_func=None,
                 )
             ),
             Expr(
-                value=Call(
-                    args=[Constant(kind=None, value="--K")],
+                Call(
+                    args=[
+                        Constant(
+                            kind=None,
+                            value="--tfds_dir",
+                            constant_value=None,
+                            string=None,
+                        )
+                    ],
                     func=Attribute(
-                        attr="add_argument",
-                        ctx=Load(),
-                        value=Name(ctx=Load(), id="argument_parser"),
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
+                    ),
+                    keywords=[
+                        keyword(
+                            arg="type",
+                            value=Name(
+                                "str",
+                                Load(),
+                            ),
+                            identifier=None,
+                        ),
+                        keyword(
+                            arg="help",
+                            value=Constant(
+                                kind=None,
+                                value="directory to look for models in.",
+                                constant_value=None,
+                                string=None,
+                            ),
+                            identifier=None,
+                        ),
+                        keyword(
+                            arg="default",
+                            value=Constant(
+                                kind=None,
+                                value="~/tensorflow_datasets",
+                                constant_value=None,
+                                string=None,
+                            ),
+                            identifier=None,
+                        ),
+                    ],
+                    expr=None,
+                    expr_func=None,
+                )
+            ),
+            Expr(
+                Call(
+                    args=[
+                        Constant(
+                            kind=None, value="--K", constant_value=None, string=None
+                        )
+                    ],
+                    func=Attribute(
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
                     ),
                     keywords=[
                         keyword(
                             arg="type",
                             value=Attribute(
-                                attr="__getitem__",
-                                ctx=Load(),
-                                value=Call(
+                                Call(
                                     args=[],
-                                    func=Name(ctx=Load(), id="globals"),
+                                    func=Name("globals", Load()),
                                     keywords=[],
+                                    expr=None,
+                                    expr_func=None,
                                 ),
+                                "__getitem__",
+                                Load(),
                             ),
+                            identifier=None,
                         ),
                         keyword(
                             arg="choices",
                             value=Tuple(
                                 ctx=Load(),
                                 elts=[
-                                    Constant(kind=None, value="np"),
-                                    Constant(kind=None, value="tf"),
+                                    Constant(
+                                        kind=None,
+                                        value="np",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        kind=None,
+                                        value="tf",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
                                 ],
+                                expr=None,
                             ),
+                            identifier=None,
                         ),
                         keyword(
                             arg="help",
                             value=Constant(
-                                kind=None, value="backend engine, e.g., `np` or `tf`."
+                                kind=None,
+                                value="backend engine, e.g., `np` or `tf`.",
+                                constant_value=None,
+                                string=None,
                             ),
+                            identifier=None,
                         ),
-                        keyword(arg="required", value=Constant(kind=None, value=True)),
-                        keyword(arg="default", value=Constant(kind=None, value="np")),
+                        keyword(
+                            arg="required",
+                            value=Constant(
+                                kind=None, value=True, constant_value=None, string=None
+                            ),
+                            identifier=None,
+                        ),
+                        keyword(
+                            arg="default",
+                            value=Constant(
+                                kind=None, value="np", constant_value=None, string=None
+                            ),
+                            identifier=None,
+                        ),
                     ],
+                    expr=None,
+                    expr_func=None,
                 )
             ),
             Expr(
-                value=Call(
-                    args=[Constant(kind=None, value="--as_numpy")],
+                Call(
+                    args=[
+                        Constant(
+                            kind=None,
+                            value="--as_numpy",
+                            constant_value=None,
+                            string=None,
+                        )
+                    ],
                     func=Attribute(
-                        attr="add_argument",
-                        ctx=Load(),
-                        value=Name(ctx=Load(), id="argument_parser"),
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
                     ),
                     keywords=[
-                        keyword(arg="type", value=Name(ctx=Load(), id="bool")),
+                        keyword(
+                            arg="type", value=Name("bool", Load()), identifier=None
+                        ),
                         keyword(
                             arg="help",
                             value=Constant(
-                                kind=None, value="Convert to numpy ndarrays"
+                                kind=None,
+                                value="Convert to numpy ndarrays",
+                                constant_value=None,
+                                string=None,
                             ),
+                            identifier=None,
                         ),
                     ],
+                    expr=None,
+                    expr_func=None,
                 )
             ),
             Expr(
-                value=Call(
-                    args=[Constant(kind=None, value="--data_loader_kwargs")],
+                Call(
+                    args=[
+                        Constant(
+                            kind=None,
+                            value="--data_loader_kwargs",
+                            constant_value=None,
+                            string=None,
+                        )
+                    ],
                     func=Attribute(
-                        attr="add_argument",
-                        ctx=Load(),
-                        value=Name(ctx=Load(), id="argument_parser"),
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
                     ),
                     keywords=[
-                        keyword(arg="type", value=Name(ctx=Load(), id="loads")),
+                        keyword(
+                            arg="type", value=Name("loads", Load()), identifier=None
+                        ),
                         keyword(
                             arg="help",
                             value=Constant(
                                 kind=None,
                                 value="pass this as arguments to data_loader function",
+                                constant_value=None,
+                                string=None,
                             ),
+                            identifier=None,
                         ),
                     ],
+                    expr=None,
+                    expr_func=None,
                 )
             ),
             Expr(
-                value=Call(
+                Call(
                     args=[
                         BinOp(
-                            left=Constant(kind=None, value=5),
-                            op=Mult(),
-                            right=Constant(kind=None, value=5),
+                            Constant(
+                                kind=None, value=5, constant_value=None, string=None
+                            ),
+                            Mult(),
+                            Constant(
+                                kind=None, value=5, constant_value=None, string=None
+                            ),
                         )
                     ],
-                    func=Name(ctx=Load(), id="print"),
+                    func=Name("print", Load()),
                     keywords=[],
+                    expr=None,
+                    expr_func=None,
                 )
             ),
             If(
                 body=[
                     Expr(
-                        value=Call(
-                            args=[Constant(kind=None, value=True)],
-                            func=Name(ctx=Load(), id="print"),
+                        Call(
+                            args=[
+                                Constant(
+                                    kind=None,
+                                    value=True,
+                                    constant_value=None,
+                                    string=None,
+                                )
+                            ],
+                            func=Name("print", Load()),
                             keywords=[],
+                            expr=None,
+                            expr_func=None,
                         )
                     ),
-                    Return(value=Constant(kind=None, value=5)),
+                    Return(
+                        value=Constant(
+                            kind=None, value=5, constant_value=None, string=None
+                        ),
+                        expr=None,
+                    ),
                 ],
                 orelse=[],
-                test=Constant(kind=None, value=True),
+                test=Constant(kind=None, value=True, constant_value=None, string=None),
+                expr_test=None,
+                stmt=None,
             ),
             Return(
                 value=Tuple(
                     ctx=Load(),
                     elts=[
-                        Name(ctx=Load(), id="argument_parser"),
+                        Name("argument_parser", Load()),
                         Tuple(
                             ctx=Load(),
                             elts=[
                                 Call(
-                                    args=[Constant(kind=None, value=0)],
+                                    args=[
+                                        Constant(
+                                            kind=None,
+                                            value=0,
+                                            constant_value=None,
+                                            string=None,
+                                        )
+                                    ],
                                     func=Attribute(
-                                        attr="empty",
-                                        ctx=Load(),
-                                        value=Name(ctx=Load(), id="np"),
+                                        Name("np", Load()),
+                                        "empty",
+                                        Load(),
                                     ),
                                     keywords=[],
+                                    expr=None,
+                                    expr_func=None,
                                 ),
                                 Call(
-                                    args=[Constant(kind=None, value=0)],
+                                    args=[
+                                        Constant(
+                                            kind=None,
+                                            value=0,
+                                            constant_value=None,
+                                            string=None,
+                                        )
+                                    ],
                                     func=Attribute(
-                                        attr="empty",
-                                        ctx=Load(),
-                                        value=Name(ctx=Load(), id="np"),
+                                        Name("np", Load()),
+                                        "empty",
+                                        Load(),
                                     ),
                                     keywords=[],
+                                    expr=None,
+                                    expr_func=None,
                                 ),
                             ],
+                            expr=None,
                         ),
                     ],
-                )
+                    expr=None,
+                ),
+                expr=None,
             ),
         ],
         decorator_list=[],
         name="set_cli_args",
         returns=None,
         type_comment=None,
+        arguments_args=None,
+        identifier_name=None,
+        stmt=None,
     )
     if PY3_8
     else ast.parse(argparse_func_with_body_str).body[0]
 )
 
 argparse_add_argument_ast = Expr(
-    value=Call(
-        args=[Constant(kind=None, value="--num")],
+    Call(
+        args=[Constant(kind=None, value="--num", constant_value=None, string=None)],
         func=Attribute(
-            attr="add_argument",
-            ctx=Load(),
-            value=Name(ctx=Load(), id="argument_parser"),
+            Name("argument_parser", Load()),
+            "add_argument",
+            Load(),
         ),
         keywords=[
-            keyword(arg="type", value=Name(ctx=Load(), id="int")),
-            keyword(arg="required", value=Constant(kind=None, value=True)),
+            keyword(arg="type", value=Name("int", Load()), identifier=None),
+            keyword(
+                arg="required",
+                value=Constant(kind=None, value=True, constant_value=None, string=None),
+                identifier=None,
+            ),
         ],
+        expr=None,
+        expr_func=None,
     )
 )
 

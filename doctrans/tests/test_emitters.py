@@ -22,6 +22,7 @@ from doctrans.tests.mocks.methods import (
     class_with_method_types_ast,
     class_with_method_ast,
     class_with_method_and_body_types_ast,
+    class_with_method_types_str,
 )
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
 from meta.asttools import cmp_ast
@@ -37,7 +38,9 @@ class TestEmitters(TestCase):
         a = parse.argparse_ast(argparse_func_ast)
         gen_ast = emit.class_(a)
         run_ast_test(
-            self, gen_ast=gen_ast, gold=class_ast,
+            self,
+            gen_ast=gen_ast,
+            gold=class_ast,
         )
 
     def test_to_class_from_docstring_str(self) -> None:
@@ -45,7 +48,11 @@ class TestEmitters(TestCase):
         Tests whether `class_` produces `class_ast` given `docstring_str`
         """
         run_ast_test(
-            self, emit.class_(parse.docstring(docstring_str),), gold=class_ast,
+            self,
+            emit.class_(
+                parse.docstring(docstring_str),
+            ),
+            gold=class_ast,
         )
 
     def test_to_argparse(self) -> None:
@@ -67,7 +74,8 @@ class TestEmitters(TestCase):
         Tests whether `docstring` produces `docstring_str` given `class_ast`
         """
         self.assertEqual(
-            emit.docstring(parse.class_(class_ast)), docstring_str,
+            emit.docstring(parse.class_(class_ast)),
+            docstring_str,
         )
 
     def test_to_numpy_docstring_fails(self) -> None:
@@ -133,7 +141,10 @@ class TestEmitters(TestCase):
         )
         # Reindent docstring
         function_def.body[0].value.value = "\n{tab}{docstring}\n{tab}".format(
-            tab=tab, docstring=reindent(deindent(ast.get_docstring(function_def)),),
+            tab=tab,
+            docstring=reindent(
+                deindent(ast.get_docstring(function_def)),
+            ),
         )
 
         function_name = function_def.name
@@ -147,6 +158,7 @@ class TestEmitters(TestCase):
             inline_types=True,
             emit_separating_tab=PY3_8,
             indent_level=0,
+            emit_as_kwonlyargs=False,
         )
 
         gen_ast.body[0].value.value = "\n{tab}{docstring}".format(
@@ -154,7 +166,9 @@ class TestEmitters(TestCase):
         )
 
         run_ast_test(
-            self, gen_ast=gen_ast, gold=function_def,
+            self,
+            gen_ast=gen_ast,
+            gold=function_def,
         )
 
     def test_to_function_with_docstring_types(self) -> None:
@@ -177,13 +191,16 @@ class TestEmitters(TestCase):
             inline_types=False,
             indent_level=1,
             emit_separating_tab=True,
+            emit_as_kwonlyargs=False,
         )
         gen_ast.body[0].value.value = "\n{tab}{docstring}\n{tab}".format(
             tab=tab, docstring=reindent(ast.get_docstring(gen_ast))
         )
 
         run_ast_test(
-            self, gen_ast=gen_ast, gold=function_def,
+            self,
+            gen_ast=gen_ast,
+            gold=function_def,
         )
 
     def test_to_function_with_inline_types(self) -> None:
@@ -212,10 +229,60 @@ class TestEmitters(TestCase):
             inline_types=True,
             emit_separating_tab=True,
             indent_level=1,
+            emit_as_kwonlyargs=False,
         )
         # emit.file(gen_ast, os.path.join(os.path.dirname(__file__), 'delme.py'), mode='wt')
         run_ast_test(
-            self, gen_ast=gen_ast, gold=function_def,
+            self,
+            gen_ast=gen_ast,
+            gold=function_def,
+        )
+
+    def test_to_function_emit_as_kwonlyargs(self) -> None:
+        """
+        Tests whether `function` produces method with keyword only arguments
+        """
+
+        function_def = deepcopy(
+            next(
+                filter(
+                    rpartial(isinstance, FunctionDef),
+                    ast.parse(class_with_method_types_str.replace("self", "self, *"))
+                    .body[0]
+                    .body,
+                )
+            )
+        )
+        # Reindent docstring
+        function_def.body[0].value.value = "\n{tab}{docstring}\n{tab}".format(
+            tab=tab,
+            docstring=reindent(
+                deindent(ast.get_docstring(function_def)),
+            ),
+        )
+
+        function_name = function_def.name
+        function_type = get_function_type(function_def)
+
+        gen_ast = emit.function(
+            parse.docstring(docstring_str),
+            function_name=function_name,
+            function_type=function_type,
+            emit_default_doc=False,
+            inline_types=True,
+            emit_separating_tab=PY3_8,
+            indent_level=0,
+            emit_as_kwonlyargs=True,
+        )
+
+        gen_ast.body[0].value.value = "\n{tab}{docstring}".format(
+            tab=tab, docstring=reindent(deindent(ast.get_docstring(gen_ast)))
+        )
+
+        run_ast_test(
+            self,
+            gen_ast=gen_ast,
+            gold=function_def,
         )
 
     def test_from_class_with_body_in_method_to_method_with_body(self) -> None:
@@ -247,6 +314,7 @@ class TestEmitters(TestCase):
                 function_type="self",
                 indent_level=1,
                 emit_separating_tab=True,
+                emit_as_kwonlyargs=False,
             ),
             gold=function_def,
         )

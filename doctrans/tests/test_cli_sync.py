@@ -28,7 +28,8 @@ class TestCliSync(TestCase):
         """ Tests CLI interface sets namespace correctly """
         with TemporaryDirectory() as tempdir:
             filename = os.path.join(
-                tempdir, "delete_this_0{}".format(os.path.basename(__file__)),
+                tempdir,
+                "delete_this_0{}".format(os.path.basename(__file__)),
             )
             with open(filename, "wt") as f:
                 f.write(class_str)
@@ -68,9 +69,18 @@ class TestCliSync(TestCase):
         """ Tests CLI interface sets namespace correctly """
 
         with TemporaryDirectory() as tempdir:
-            argparse_filename = os.path.join(tempdir, "argparse.py",)
-            class_filename = os.path.join(tempdir, "class_.py",)
-            method_filename = os.path.join(tempdir, "method.py",)
+            argparse_filename = os.path.join(
+                tempdir,
+                "argparse.py",
+            )
+            class_filename = os.path.join(
+                tempdir,
+                "class_.py",
+            )
+            method_filename = os.path.join(
+                tempdir,
+                "method.py",
+            )
 
             with open(argparse_filename, "wt") as f:
                 f.write(argparse_func_str)
@@ -115,7 +125,8 @@ class TestCliSync(TestCase):
         """ Tests nonexistent file throws the right error """
         with TemporaryDirectory() as tempdir:
             filename = os.path.join(
-                tempdir, "delete_this_1{}".format(os.path.basename(__file__)),
+                tempdir,
+                "delete_this_1{}".format(os.path.basename(__file__)),
             )
 
             run_cli_test(
@@ -146,7 +157,8 @@ class TestCliSync(TestCase):
         """ Tests missing argument throws the right error """
         with TemporaryDirectory() as tempdir:
             filename = os.path.join(
-                tempdir, "delete_this_2{}".format(os.path.basename(__file__)),
+                tempdir,
+                "delete_this_2{}".format(os.path.basename(__file__)),
             )
             with open(filename, "wt") as f:
                 f.write(class_str)
