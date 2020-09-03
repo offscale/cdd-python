@@ -35,7 +35,7 @@ class TestParsers(TestCase):
     def test_from_argparse_ast(self) -> None:
         """
         Tests whether `argparse_ast` produces `intermediate_repr_no_default_doc_or_prop`
-              from `argparse_func_ast` """
+              from `argparse_func_ast`"""
         self.assertDictEqual(
             parse.argparse_ast(argparse_func_ast), intermediate_repr_no_default_doc
         )
@@ -47,7 +47,15 @@ class TestParsers(TestCase):
         self.assertEqual(
             emit.to_code(
                 emit.argparse_function(
-                    parse.argparse_ast(FunctionDef(body=[])), emit_default_doc=True,
+                    parse.argparse_ast(
+                        FunctionDef(
+                            body=[],
+                            arguments_args=None,
+                            identifier_name=None,
+                            stmt=None,
+                        )
+                    ),
+                    emit_default_doc=True,
                 )
             ).rstrip("\n"),
             "def set_cli_args(argument_parser):\n"
@@ -71,7 +79,7 @@ class TestParsers(TestCase):
     def test_from_docstring(self) -> None:
         """
         Tests whether `docstring` produces `intermediate_repr_no_default_doc`
-              from `docstring_str` """
+              from `docstring_str`"""
         ir, returns = parse.docstring(docstring_str, return_tuple=True)
         self.assertTrue(returns)
         self.assertDictEqual(ir, intermediate_repr_no_default_doc)
@@ -131,25 +139,42 @@ class TestParsers(TestCase):
             args=arguments(
                 args=[
                     arg(
-                        annotation=Name(ctx=Load(), id="str"),
+                        annotation=Name(
+                            "str",
+                            Load(),
+                        ),
                         arg="dataset_name",
                         type_comment=None,
+                        expr=None,
+                        identifier_arg=None,
                     ),
-                    arg(annotation=None, arg="writer", type_comment=None,),
+                    arg(
+                        annotation=None,
+                        arg="writer",
+                        type_comment=None,
+                        expr=None,
+                        identifier_arg=None,
+                    ),
                 ],
                 defaults=[
-                    Constant(kind=None, value="mnist"),
-                    Name(ctx=Load(), id="stdout"),
+                    Constant(
+                        kind=None, value="mnist", constant_value=None, string=None
+                    ),
+                    Name("stdout", Load()),
                 ],
                 kw_defaults=[],
                 kwarg=None,
                 kwonlyargs=[],
                 posonlyargs=[],
                 vararg=None,
+                arg=None,
             ),
             body=[],
             decorator_list=[],
             lineno=None,
+            arguments_args=None,
+            identifier_name=None,
+            stmt=None,
         )
         self.assertDictEqual(
             parse.function(function_def),

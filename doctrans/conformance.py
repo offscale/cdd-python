@@ -121,7 +121,11 @@ def ground_truth(args, truth_file):
 
 
 def _conform_filename(
-    filename, search, emit_func, replacement_node_ir, type_wanted,
+    filename,
+    search,
+    emit_func,
+    replacement_node_ir,
+    type_wanted,
 ):
     """
     Conform the given file to the `intermediate_repr`
@@ -142,7 +146,12 @@ def _conform_filename(
     :rtype: ```Tuple[str, bool]```
     """
     if not path.isfile(filename):
-        emit.file(emit_func(replacement_node_ir), filename=filename, mode="wt", skip_black=False)
+        emit.file(
+            emit_func(replacement_node_ir),
+            filename=filename,
+            mode="wt",
+            skip_black=False,
+        )
         return filename, True
 
     with open(filename, "rt") as f:
@@ -155,12 +164,7 @@ def _conform_filename(
         **_default_options(node=original_node, search=search, type_wanted=type_wanted)()
     )
     if original_node is None:
-        emit.file(
-            replacement_node,
-            filename=filename,
-            mode="a",
-            skip_black=True
-        )
+        emit.file(replacement_node, filename=filename, mode="a", skip_black=True)
         return filename, True
     assert len(search) > 0
 
@@ -171,7 +175,8 @@ def _conform_filename(
     replaced = False
     if not cmp_ast(original_node, replacement_node):
         rewrite_at_query = RewriteAtQuery(
-            search=search, replacement_node=replacement_node,
+            search=search,
+            replacement_node=replacement_node,
         )
         rewrite_at_query.visit(parsed_ast)
 

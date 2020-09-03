@@ -25,7 +25,7 @@ class TestMarshallDocstring(TestCase):
     def test_ir_equality(self) -> None:
         """
         Tests whether `parse_docstring` produces `intermediate_repr`
-              from `docstring_str` """
+              from `docstring_str`"""
         self.assertDictEqual(
             parse_docstring(docstring_str), intermediate_repr_no_default_doc
         )
@@ -33,7 +33,7 @@ class TestMarshallDocstring(TestCase):
     def test_intermediate_repr_no_default_doc_equality(self) -> None:
         """
         Tests whether `parse_docstring` produces `docstring_str_no_default_doc`
-              from `docstring_str_no_default_doc` """
+              from `docstring_str_no_default_doc`"""
         self.assertDictEqual(
             parse_docstring(docstring_str_no_default_doc, emit_default_doc=False),
             intermediate_repr_no_default_doc_or_prop,
@@ -42,7 +42,7 @@ class TestMarshallDocstring(TestCase):
     def test_ir_equality_fails(self) -> None:
         """
         Tests whether `parse_docstring` produces `intermediate_repr`
-              from and incorrect docstring """
+              from and incorrect docstring"""
         with self.assertRaises(AssertionError) as cte:
             parse_docstring(docstring_str.replace(":type K", ":type notOK"))
         self.assertEqual("'K' != 'notOK'", cte.exception.__str__())

@@ -56,9 +56,12 @@ class TestSyncProperties(TestCase):
         """ Tests `sync_properties` with `call=False` """
 
         with TemporaryDirectory() as tempdir:
-            (input_filename, input_str, output_filename, output_str,) = populate_files(
-                tempdir
-            )
+            (
+                input_filename,
+                input_str,
+                output_filename,
+                output_str,
+            ) = populate_files(tempdir)
 
             self.assertIsNone(
                 sync_properties(
@@ -96,9 +99,12 @@ class TestSyncProperties(TestCase):
             eval_mock_str = f.read()
 
         with TemporaryDirectory() as tempdir:
-            (input_filename, input_str, output_filename, output_str,) = populate_files(
-                tempdir, input_str=eval_mock_str
-            )
+            (
+                input_filename,
+                input_str,
+                output_filename,
+                output_str,
+            ) = populate_files(tempdir, input_str=eval_mock_str)
 
             self.assertIsNone(
                 sync_properties(
@@ -123,9 +129,12 @@ class TestSyncProperties(TestCase):
         """ Tests `sync_properties` with `output_param_wrap` set """
 
         with TemporaryDirectory() as tempdir:
-            (input_filename, input_str, output_filename, output_str,) = populate_files(
-                tempdir
-            )
+            (
+                input_filename,
+                input_str,
+                output_filename,
+                output_str,
+            ) = populate_files(tempdir)
 
             self.assertIsNone(
                 sync_properties(
@@ -315,9 +324,12 @@ class TestSyncProperties(TestCase):
         """ Tests `sync_properties` fails with `output_param_wrap` set when replacement_node is unknown """
 
         with TemporaryDirectory() as tempdir:
-            (input_filename, input_str, output_filename, output_str,) = populate_files(
-                tempdir, input_str="local = locals()"
-            )
+            (
+                input_filename,
+                input_str,
+                output_filename,
+                output_str,
+            ) = populate_files(tempdir, input_str="local = locals()")
 
             self.assertRaises(
                 NotImplementedError,
@@ -381,7 +393,9 @@ class TestSyncProperties(TestCase):
         # Confirm that the output_filename is edited correctly
         with open(output_filename, "rt") as f:
             run_ast_test(
-                self, gen_ast=ast.parse(f.read()), gold=gold,
+                self,
+                gen_ast=ast.parse(f.read()),
+                gold=gold,
             )
 
 

@@ -19,7 +19,7 @@ from ast import (
 )
 from functools import partial
 
-from black import format_str, FileMode
+from black import format_str, Mode
 
 from doctrans.ast_utils import param2argparse_param, param2ast, set_value
 from doctrans.defaults_utils import set_default_doc
@@ -71,9 +71,21 @@ def argparse_function(
                     None,
                     (
                         None
-                        if function_type == "static"
-                        else arg(annotation=None, arg=function_type, type_comment=None),
-                        arg(annotation=None, arg="argument_parser", type_comment=None),
+                        if function_type is None or function_type == "static"
+                        else arg(
+                            annotation=None,
+                            arg=function_type,
+                            type_comment=None,
+                            expr=None,
+                            identifier_arg=None,
+                        ),
+                        arg(
+                            annotation=None,
+                            arg="argument_parser",
+                            type_comment=None,
+                            expr=None,
+                            identifier_arg=None,
+                        ),
                     ),
                 )
             ),
@@ -83,13 +95,14 @@ def argparse_function(
             kwonlyargs=[],
             posonlyargs=[],
             vararg=None,
+            arg=None,
         ),
         body=list(
             filter(
                 None,
                 (
                     Expr(
-                        value=set_value(
+                        set_value(
                             kind=None,
                             value="\n    Set CLI arguments\n\n    "
                             ":param argument_parser: argument parser\n    "
@@ -113,9 +126,9 @@ def argparse_function(
                     Assign(
                         targets=[
                             Attribute(
-                                attr="description",
-                                ctx=Store(),
-                                value=Name(ctx=Load(), id="argument_parser"),
+                                Name("argument_parser", Load()),
+                                "description",
+                                Store(),
                             )
                         ],
                         type_comment=None,
@@ -125,6 +138,7 @@ def argparse_function(
                             or intermediate_repr["short_description"],
                         ),
                         lineno=None,
+                        expr=None,
                     ),
                     *(
                         list(
@@ -139,18 +153,23 @@ def argparse_function(
                         if "params" in intermediate_repr
                         else tuple()
                     ),
-                    *get_internal_body(target_name=function_name, target_type=function_type,
-                                       intermediate_repr=intermediate_repr),
+                    *get_internal_body(
+                        target_name=function_name,
+                        target_type=function_type,
+                        intermediate_repr=intermediate_repr,
+                    ),
                     Return(
                         value=Tuple(
                             ctx=Load(),
                             elts=[
-                                Name(ctx=Load(), id="argument_parser"),
+                                Name("argument_parser", Load()),
                                 ast.parse(intermediate_repr["returns"]["default"])
                                 .body[0]
                                 .value,
                             ],
-                        )
+                            expr=None,
+                        ),
+                        expr=None,
                     )
                     if intermediate_repr.get("returns")
                     else None,
@@ -162,6 +181,9 @@ def argparse_function(
         returns=None,
         type_comment=None,
         lineno=None,
+        arguments_args=None,
+        identifier_name=None,
+        stmt=None,
     )
 
 
@@ -193,10 +215,10 @@ def class_(intermediate_repr, class_name="ConfigClass", class_bases=("object",))
     del intermediate_repr["returns"]
 
     return ClassDef(
-        bases=[Name(ctx=Load(), id=base_class) for base_class in class_bases],
+        bases=[Name(base_class, Load()) for base_class in class_bases],
         body=[
             Expr(
-                value=set_value(
+                set_value(
                     kind=None,
                     value=to_docstring(
                         intermediate_repr, indent_level=0, emit_separating_tab=False
@@ -215,6 +237,8 @@ def class_(intermediate_repr, class_name="ConfigClass", class_bases=("object",))
         decorator_list=[],
         keywords=[],
         name=class_name,
+        expr=None,
+        identifier_name=None,
     )
 
 
@@ -287,12 +311,12 @@ def file(node, filename, mode="a", skip_black=True):
     :rtype: ```NoneType```
     """
     if isinstance(node, (ClassDef, FunctionDef)):
-        node = Module(body=[node], type_ignores=[])
+        node = Module(body=[node], type_ignores=[], stmt=None)
     src = to_code(node)
     if not skip_black:
         src = format_str(
             src,
-            mode=FileMode(
+            mode=Mode(
                 target_versions=set(),
                 line_length=119,
                 is_pyi=False,
@@ -312,6 +336,7 @@ def function(
     indent_level=2,
     emit_separating_tab=PY3_8,
     inline_types=True,
+    emit_as_kwonlyargs=True,
 ):
     """
     Construct a function from our IR
@@ -346,6 +371,9 @@ def function(
     :param inline_types: Whether the type should be inline or in docstring
     :type inline_types: ```bool```
 
+    :param emit_as_kwonlyargs: Whether argument(s) emitted must be keyword only
+    :type emit_as_kwonlyargs: ```bool```
+
     :returns: AST node for function definition
     :rtype: ```FunctionDef``
     """
@@ -359,44 +387,67 @@ def function(
     function_name = function_name or intermediate_repr["name"]
     function_type = function_type or intermediate_repr["type"]
 
+    args = (
+        []
+        if function_type is None or function_type == "static"
+        else [
+            arg(
+                annotation=None,
+                arg=function_type,
+                type_comment=None,
+                expr=None,
+                identifier_arg=None,
+            )
+        ]
+    )
+    args_from_params = list(
+        map(
+            lambda param: arg(
+                annotation=(
+                    Name(param["typ"], Load())
+                    if param["typ"] in simple_types
+                    else ast.parse(param["typ"]).body[0].value
+                )
+                if inline_types and "typ" in param
+                else None,
+                arg=param["name"],
+                type_comment=None,
+                expr=None,
+                identifier_arg=None,
+            ),
+            params_no_kwargs,
+        ),
+    )
+    defaults_from_params = (
+        list(
+            map(
+                lambda param: set_value(kind=None, value=param["default"]),
+                filter(lambda param: "default" in param, params_no_kwargs),
+            )
+        )
+        + [set_value(kind=None, value=None)]
+    )
+    if emit_as_kwonlyargs:
+        kwonlyargs, kw_defaults = args_from_params, defaults_from_params
+        defaults = []
+    else:
+        kwonlyargs, kw_defaults = [], []
+        defaults = defaults_from_params
+        args += args_from_params
+
     return FunctionDef(
         args=arguments(
-            args=list(
-                filter(
-                    None,
-                    (
-                        function_type
-                        if function_type is None
-                        else arg(annotation=None, arg=function_type, type_comment=None),
-                        *map(
-                            lambda param: arg(
-                                annotation=(
-                                    Name(ctx=Load(), id=param["typ"])
-                                    if param["typ"] in simple_types
-                                    else ast.parse(param["typ"]).body[0].value
-                                )
-                                if inline_types and "typ" in param
-                                else None,
-                                arg=param["name"],
-                                type_comment=None,
-                            ),
-                            params_no_kwargs,
-                        ),
-                    ),
-                )
-            ),
-            defaults=list(
-                map(
-                    lambda param: set_value(kind=None, value=param["default"]),
-                    filter(lambda param: "default" in param, params_no_kwargs),
-                )
-            )
-            + [set_value(kind=None, value=None)],
-            kw_defaults=[],
+            args=args,
+            defaults=defaults,
+            kw_defaults=kw_defaults,
             kwarg=next(
                 map(
                     lambda param: arg(
-                        annotation=None, arg=param["name"], type_comment=None
+                        annotation=None,
+                        arg=param["name"],
+                        type_comment=None,
+                        expr=None,
+                        identifier_arg=None,
                     ),
                     filter(
                         lambda param: param["name"].endswith("kwargs"),
@@ -404,16 +455,17 @@ def function(
                     ),
                 )
             ),
-            kwonlyargs=[],
+            kwonlyargs=kwonlyargs,
             posonlyargs=[],
             vararg=None,
+            arg=None,
         ),
         body=list(
             filter(
                 None,
                 (
                     Expr(
-                        value=set_value(
+                        set_value(
                             kind=None,
                             value=to_docstring(
                                 intermediate_repr,
@@ -425,13 +477,18 @@ def function(
                             ),
                         )
                     ),
-                    *(get_internal_body(target_name=function_name,
-                                        target_type=function_type,
-                                        intermediate_repr=intermediate_repr)),
+                    *(
+                        get_internal_body(
+                            target_name=function_name,
+                            target_type=function_type,
+                            intermediate_repr=intermediate_repr,
+                        )
+                    ),
                     Return(
                         value=ast.parse(intermediate_repr["returns"]["default"])
                         .body[0]
-                        .value
+                        .value,
+                        expr=None,
                     )
                     if "returns" in intermediate_repr
                     and intermediate_repr["returns"].get("default")
@@ -450,6 +507,9 @@ def function(
         else None,
         type_comment=None,
         lineno=None,
+        arguments_args=None,
+        identifier_name=None,
+        stmt=None,
     )
 
 

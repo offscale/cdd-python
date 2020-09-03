@@ -85,7 +85,7 @@ def parse_out_param(expr, emit_default_doc=True):
     """
     required = next(
         (keyword for keyword in expr.value.keywords if keyword.arg == "required"),
-        Constant(value=False),
+        Constant(value=False, constant_value=None, string=None),
     ).value
 
     typ = next(
@@ -399,4 +399,5 @@ __all__ = [
     "interpolate_defaults",
     "get_internal_body",
     "to_docstring",
+    "_parse_return",
 ]

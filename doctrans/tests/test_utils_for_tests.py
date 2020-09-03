@@ -38,7 +38,7 @@ class TestUtilsForTests(TestCase):
         """
 
         def count_true(value, msg):
-            """ Version of `self.assertTrue` which also keeps count
+            """Version of `self.assertTrue` which also keeps count
 
             :param value: Potentially `True`
             :type value: ```Union[Literal[True], Any]```
@@ -52,7 +52,7 @@ class TestUtilsForTests(TestCase):
         count_true.i = 0
 
         assert_true = self.assertTrue
-        module = Module(body=[], type_ignores=[])
+        module = Module(body=[], type_ignores=[], stmt=None)
         with patch("platform.python_version_tuple", lambda: ("3", "7")):
             import doctrans.tests.utils_for_tests
 

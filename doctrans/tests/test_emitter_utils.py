@@ -36,19 +36,43 @@ class TestEmitterUtils(TestCase):
             NotImplementedError,
             lambda: parse_out_param(
                 Expr(
-                    value=Call(
-                        args=[Constant(kind=None, value="--num")],
+                    Call(
+                        args=[
+                            Constant(
+                                kind=None,
+                                value="--num",
+                                constant_value=None,
+                                string=None,
+                            )
+                        ],
                         func=Attribute(
-                            attr="add_argument",
-                            ctx=Load(),
-                            value=Name(ctx=Load(), id="argument_parser"),
+                            Name("argument_parser", Load()),
+                            "add_argument",
+                            Load(),
                         ),
                         keywords=[
-                            keyword(arg="type", value=Subscript()),
                             keyword(
-                                arg="required", value=Constant(kind=None, value=True)
+                                arg="type",
+                                value=Subscript(
+                                    expr_context_ctx=None,
+                                    expr_slice=None,
+                                    expr_value=None,
+                                ),
+                                identifier=None,
+                            ),
+                            keyword(
+                                arg="required",
+                                value=Constant(
+                                    kind=None,
+                                    value=True,
+                                    constant_value=None,
+                                    string=None,
+                                ),
+                                identifier=None,
                             ),
                         ],
+                        expr=None,
+                        expr_func=None,
                     )
                 )
             ),

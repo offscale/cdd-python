@@ -116,11 +116,14 @@ def sync_property(
             annotation=it2literal(local[input_param]),
             simple=1,
             target=ast.Name(
-                ctx=ast.Store(),
-                # id=input_param
-                id=search[-1],
+                # input_param
+                search[-1],
+                ast.Store(),
             ),
             value=None,
+            expr=None,
+            expr_annotation=None,
+            expr_target=None,
         )
     else:
         annotate_ancestry(input_ast)
@@ -143,7 +146,10 @@ def sync_property(
         else:
             raise NotImplementedError(type(replacement_node).__name__)
 
-    rewrite_at_query = RewriteAtQuery(search=search, replacement_node=replacement_node,)
+    rewrite_at_query = RewriteAtQuery(
+        search=search,
+        replacement_node=replacement_node,
+    )
 
     gen_ast = rewrite_at_query.visit(output_ast)
     assert rewrite_at_query.replaced is True, "Failed to update with {!r}".format(

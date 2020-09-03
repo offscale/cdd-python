@@ -121,7 +121,12 @@ def deindent(s):
     :returns: Deindented string
     :rtype: ```AnyStr```
     """
-    return "\n".join(map(str.lstrip, s.split("\n"),))
+    return "\n".join(
+        map(
+            str.lstrip,
+            s.split("\n"),
+        )
+    )
 
 
 def reindent(s, indent_level=1, join_on="\n"):
@@ -200,6 +205,7 @@ def quote(s, mark='"'):
 __all__ = [
     "pp",
     "tab",
+    "quote",
     "simple_types",
     "rpartial",
     "identity",

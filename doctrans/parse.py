@@ -137,7 +137,10 @@ def function(function_def, function_type=None, function_name=None):
 
     found_type = get_function_type(function_def)
     intermediate_repr.update(
-        {"name": function_name, "type": function_type or found_type,}
+        {
+            "name": function_name,
+            "type": function_type or found_type,
+        }
     )
     # _function_type = get_function_type(function_def)
     offset = 0 if (intermediate_repr["type"] or "static") == "static" else 1

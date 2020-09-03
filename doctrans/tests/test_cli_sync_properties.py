@@ -24,7 +24,8 @@ class TestCliSyncProperties(TestCase):
         """ Tests nonexistent file throws the right error """
         with TemporaryDirectory() as tempdir:
             filename = os.path.join(
-                tempdir, "delete_this_1{}".format(os.path.basename(__file__)),
+                tempdir,
+                "delete_this_1{}".format(os.path.basename(__file__)),
             )
 
             run_cli_test(
@@ -47,8 +48,14 @@ class TestCliSyncProperties(TestCase):
             )
 
         with TemporaryDirectory() as tempdir:
-            input_filename = os.path.join(tempdir, "input_filename.py",)
-            output_filename = os.path.join(tempdir, "output_filename.py",)
+            input_filename = os.path.join(
+                tempdir,
+                "input_filename.py",
+            )
+            output_filename = os.path.join(
+                tempdir,
+                "output_filename.py",
+            )
             open(input_filename, "wt").close()
 
             run_cli_test(

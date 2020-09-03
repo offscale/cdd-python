@@ -49,7 +49,9 @@ class TestConformance(TestCase):
                             os.path.basename(filename_unmodified[0]),
                             filename_unmodified[1],
                         ),
-                        self.ground_truth_tester(tempdir=tempdir,)[0].items(),
+                        self.ground_truth_tester(
+                            tempdir=tempdir,
+                        )[0].items(),
                     )
                 ),
                 (("argparse.py", False), ("classes.py", False), ("methods.py", False)),
@@ -96,7 +98,10 @@ class TestConformance(TestCase):
             with patch("sys.stdout", new_callable=StringIO), patch(
                 "sys.stderr", new_callable=StringIO
             ):
-                res = ground_truth(args, argparse_functions[0],)
+                res = ground_truth(
+                    args,
+                    argparse_functions[0],
+                )
 
             self.assertTupleEqual(
                 tuple(
@@ -141,7 +146,8 @@ class TestConformance(TestCase):
                             filename_unmodified[1],
                         ),
                         self.ground_truth_tester(
-                            tempdir=tempdir, _class_ast=emit.class_(ir),
+                            tempdir=tempdir,
+                            _class_ast=emit.class_(ir),
                         )[0].items(),
                     )
                 ),
@@ -197,7 +203,13 @@ class TestConformance(TestCase):
         with patch("sys.stdout", new_callable=StringIO), patch(
             "sys.stderr", new_callable=StringIO
         ):
-            return ground_truth(args, argparse_function,), args
+            return (
+                ground_truth(
+                    args,
+                    argparse_function,
+                ),
+                args,
+            )
 
     def test__get_name_from_namespace(self) -> None:
         """ Test `_get_name_from_namespace` """
@@ -227,7 +239,12 @@ class TestConformance(TestCase):
         with TemporaryDirectory() as tempdir:
             argparse_function_filename = os.path.join(tempdir, "correct_contents.py")
 
-            emit.file(argparse_func_ast, argparse_function_filename, mode="wt", skip_black=True)
+            emit.file(
+                argparse_func_ast,
+                argparse_function_filename,
+                mode="wt",
+                skip_black=True,
+            )
 
             self.assertTupleEqual(
                 _conform_filename(

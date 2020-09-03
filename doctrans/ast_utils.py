@@ -28,6 +28,7 @@ from ast import (
 )
 from copy import deepcopy
 from functools import partial
+from platform import python_version_tuple
 
 from doctrans.defaults_utils import extract_default
 from doctrans.pure_utils import simple_types, rpartial, PY3_8
@@ -45,19 +46,25 @@ def param2ast(param):
     """
     if param["typ"] in simple_types:
         return AnnAssign(
-            annotation=Name(ctx=Load(), id=param["typ"]),
+            annotation=Name(param["typ"], Load()),
             simple=1,
-            target=Name(ctx=Store(), id=param["name"]),
+            target=Name(param["name"], Store()),
             value=set_value(
                 kind=None, value=param.get("default") or simple_types[param["typ"]]
             ),
+            expr=None,
+            expr_target=None,
+            expr_annotation=None,
         )
     elif param["typ"] == "dict" or param["typ"].startswith("*"):
         return AnnAssign(
-            annotation=Name(ctx=Load(), id="dict"),
+            annotation=Name("dict", Load()),
             simple=1,
-            target=Name(ctx=Store(), id=param["name"]),
-            value=Dict(keys=[], values=param.get("default", [])),
+            target=Name(param["name"], Store()),
+            value=Dict(keys=[], values=param.get("default", []), expr=None),
+            expr=None,
+            expr_target=None,
+            expr_annotation=None,
         )
     else:
         annotation = ast.parse(param["typ"]).body[0].value
@@ -81,7 +88,7 @@ def param2ast(param):
                 if hasattr(parsed_default, "body")
                 else parsed_default
                 if "default" in param
-                else Name(ctx=Load(), id=None)
+                else Name(None, Load())
             )
         else:
             value = set_value(None)
@@ -89,8 +96,11 @@ def param2ast(param):
         return AnnAssign(
             annotation=annotation,
             simple=1,
-            target=Name(ctx=Store(), id=param["name"]),
+            target=Name(param["name"], Store()),
             value=value,
+            expr=None,
+            expr_target=None,
+            expr_annotation=None,
         )
 
 
@@ -115,7 +125,8 @@ def find_ast_type(node, node_name=None, of_type=ClassDef):
         if node_name is not None:
             return next(
                 filter(
-                    lambda node: hasattr(node, "name") and node.name == node_name, it,
+                    lambda node: hasattr(node, "name") and node.name == node_name,
+                    it,
                 )
             )
         matching_nodes = tuple(it)
@@ -175,12 +186,12 @@ def param2argparse_param(param, emit_default_doc=True):
     default = param.get("default", _default)
 
     return Expr(
-        value=Call(
+        Call(
             args=[set_value(kind=None, value="--{param[name]}".format(param=param))],
             func=Attribute(
-                attr="add_argument",
-                ctx=Load(),
-                value=Name(ctx=Load(), id="argument_parser"),
+                Name("argument_parser", Load()),
+                "add_argument",
+                Load(),
             ),
             keywords=list(
                 filter(
@@ -189,16 +200,19 @@ def param2argparse_param(param, emit_default_doc=True):
                         keyword(
                             arg="type",
                             value=Attribute(
-                                attr="__getitem__",
-                                ctx=Load(),
-                                value=Call(
+                                Call(
                                     args=[],
-                                    func=Name(ctx=Load(), id="globals"),
+                                    func=Name("globals", Load()),
                                     keywords=[],
+                                    expr=None,
+                                    expr_func=None,
                                 ),
+                                "__getitem__",
+                                Load(),
                             )
                             if typ == "globals().__getitem__"
-                            else Name(ctx=Load(), id=typ),
+                            else Name(typ, Load()),
+                            identifier=None,
                         ),
                         choices
                         if choices is None
@@ -210,27 +224,45 @@ def param2argparse_param(param, emit_default_doc=True):
                                     set_value(kind=None, value=choice)
                                     for choice in choices
                                 ],
+                                expr=None,
                             ),
+                            identifier=None,
                         ),
-                        keyword(arg="help", value=set_value(kind=None, value=doc)),
+                        keyword(
+                            arg="help",
+                            value=set_value(kind=None, value=doc),
+                            identifier=None,
+                        ),
                         keyword(
                             arg="required",
                             value=(
-                                Constant(kind=None, value=True)
-                                if PY3_8
-                                else NameConstant(value=True)
+                                Constant(
+                                    kind=None,
+                                    value=True,
+                                    constant_value=None,
+                                    string=None,
+                                )
+                                if python_version_tuple() >= ("3", "8")
+                                else NameConstant(
+                                    value=True, constant_value=None, string=None
+                                )
                             ),
+                            identifier=None,
                         )
                         if required
                         else None,
                         default
                         if default is None
                         else keyword(
-                            arg="default", value=set_value(kind=None, value=default)
+                            arg="default",
+                            value=set_value(kind=None, value=default),
+                            identifier=None,
                         ),
                     ),
                 )
             ),
+            expr=None,
+            expr_func=None,
         )
     )
 
@@ -321,7 +353,7 @@ def get_value(node):
         return node
 
 
-def set_value(value, kind=None, unquote=True):
+def set_value(value, kind=None):
     """
     Creates a Constant or a Str depending on Python version in use
 
@@ -330,9 +362,6 @@ def set_value(value, kind=None, unquote=True):
 
     :param kind: AST node
     :type kind: ```Optional[Any]```
-
-    :param unquote: Whether to unquote the input value
-    :type unquote: ```bool```
 
     :returns: Probably a string, but could be any constant value
     :rtype: ```Union[Constant, Str, NameConstant]```
@@ -344,12 +373,12 @@ def set_value(value, kind=None, unquote=True):
         and value[0] + value[-1] in frozenset(('""', "''"))
     ):
         value = value[1:-1]
-    if not PY3_8:
+    if python_version_tuple() < ("3", "8"):
         if isinstance(value, str):
-            return Str(s=value)
+            return Str(s=value, constant_value=None, string=None)
         elif value is None:
-            return NameConstant(value=value)
-    return Constant(kind=kind, value=value)
+            return NameConstant(value=value, constant_value=None, string=None)
+    return Constant(kind=kind, value=value, constant_value=None, string=None)
 
 
 def is_argparse_add_argument(node):
@@ -594,6 +623,8 @@ class RewriteAtQuery(ast.NodeTransformer):
                     self.replacement_node = ast.arg(
                         arg=self.replacement_node.targets[0].id,
                         annotation=self.replacement_node.value,
+                        expr=None,
+                        identifier_arg=None,
                     )
 
                 if idx is not None and len(node.args.defaults) > idx:
@@ -635,12 +666,15 @@ def emit_ann_assign(node):
         return AnnAssign(
             annotation=node.annotation,
             simple=1,
-            target=Name(ctx=Store(), id=node.arg),
+            target=Name(node.arg, Store()),
             value=node.default if hasattr(node, "default") else None,
             lineno=None,
             col_offset=None,
             end_lineno=None,
             end_col_offset=None,
+            expr=None,
+            expr_target=None,
+            expr_annotation=None,
         )
     else:
         raise NotImplementedError(type(node).__name__)
@@ -659,13 +693,25 @@ def emit_arg(node):
     if isinstance(node, ast.arg):
         return node
     elif isinstance(node, AnnAssign) and isinstance(node.target, Name):
-        return arg(annotation=node.annotation, arg=node.target.id, type_comment=None,)
+        return arg(
+            annotation=node.annotation,
+            arg=node.target.id,
+            type_comment=None,
+            expr=None,
+            identifier_arg=None,
+        )
     elif (
         isinstance(node, Assign)
         and len(node.targets) == 1
         and isinstance(node.targets[0], Name)
     ):
-        return arg(annotation=None, arg=node.targets[0].id, type_comment=None,)
+        return arg(
+            annotation=None,
+            arg=node.targets[0].id,
+            type_comment=None,
+            expr=None,
+            identifier_arg=None,
+        )
     else:
         raise NotImplementedError(type(node).__name__)
 
@@ -681,13 +727,15 @@ def it2literal(it):
     :rtype: ```Subscript```
     """
     return Subscript(
-        ctx=Load(),
-        slice=Index(
-            value=Tuple(ctx=Load(), elts=list(map(partial(Constant, kind=None), it)))
+        Name("Literal", Load()),
+        Index(
+            value=Tuple(
+                ctx=Load(), elts=list(map(partial(Constant, kind=None), it)), expr=None
+            )
             if len(it) > 1
             else set_value(kind=None, value=it[0])
         ),
-        value=Name(ctx=Load(), id="Literal"),
+        Load(),
     )
 
 
@@ -706,4 +754,5 @@ __all__ = [
     "is_argparse_add_argument",
     "is_argparse_description",
     "it2literal",
+    "argparse_param2param",
 ]
