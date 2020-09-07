@@ -30,9 +30,10 @@ def identity(s):
 
 
 _python_version_tuple = python_version_tuple()
-PY3_8 = _python_version_tuple[:2] == ("3", "8")
-PY_GTE_3_8 = _python_version_tuple >= ("3", "8")
-PY_GTE_3_9 = _python_version_tuple >= ("3", "9")
+_python_major_minor = int(_python_version_tuple[0]), int(_python_version_tuple[1])
+PY3_8 = _python_major_minor == (3, 8)
+PY_GTE_3_8 = _python_major_minor >= (3, 8)
+PY_GTE_3_9 = _python_major_minor >= (3, 9)
 
 
 _ABERRANT_PLURAL_MAP = {
@@ -212,6 +213,7 @@ __all__ = [
     "rpartial",
     "identity",
     "PY3_8",
+    "PY_GTE_3_8",
     "PY_GTE_3_9",
     "pluralise",
     "reindent",

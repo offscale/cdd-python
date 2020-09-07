@@ -10,10 +10,10 @@ from unittest.mock import MagicMock, patch
 from meta.asttools import cmp_ast
 
 import doctrans.source_transformer
-from doctrans.pure_utils import PY3_8, PY_GTE_3_8
+from doctrans.pure_utils import PY3_8
 
 
-def run_ast_test(test_case_instance, gen_ast, gold, run_cmp_ast=PY_GTE_3_8):
+def run_ast_test(test_case_instance, gen_ast, gold, run_cmp_ast=True):
     """
     Compares `gen_ast` with `gold` standard
 

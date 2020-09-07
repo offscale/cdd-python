@@ -28,7 +28,6 @@ from ast import (
 )
 from copy import deepcopy
 from functools import partial
-from platform import python_version_tuple
 
 from doctrans.defaults_utils import extract_default
 from doctrans.pure_utils import simple_types, rpartial, PY_GTE_3_8
@@ -373,12 +372,12 @@ def set_value(value, kind=None):
         and value[0] + value[-1] in frozenset(('""', "''"))
     ):
         value = value[1:-1]
-    if python_version_tuple() < ("3", "8"):
-        if isinstance(value, str):
-            return Str(s=value, constant_value=None, string=None)
-        elif value is None:
-            return NameConstant(value=value, constant_value=None, string=None)
-    return Constant(kind=kind, value=value, constant_value=None, string=None)
+    if PY_GTE_3_8:
+        return Constant(kind=kind, value=value, constant_value=None, string=None)
+    elif isinstance(value, str):
+        return Str(s=value, constant_value=None, string=None)
+    elif value is None:
+        return NameConstant(value=value, constant_value=None, string=None)
 
 
 def is_argparse_add_argument(node):

@@ -17,7 +17,6 @@ from ast import (
     Assign,
 )
 from unittest import TestCase
-from unittest.mock import patch
 
 from doctrans.ast_utils import (
     find_ast_type,
@@ -29,7 +28,7 @@ from doctrans.ast_utils import (
     RewriteAtQuery,
     emit_arg,
 )
-from doctrans.pure_utils import PY_GTE_3_9
+from doctrans.pure_utils import PY_GTE_3_9, PY3_8, PY_GTE_3_8
 from doctrans.source_transformer import ast_parse
 from doctrans.tests.mocks.classes import class_ast, class_str
 from doctrans.tests.mocks.methods import (
@@ -175,6 +174,7 @@ class TestAstUtils(TestCase):
                 expr_target=None,
                 expr_annotation=None,
             ),
+            run_cmp_ast=PY_GTE_3_8,
         )
 
     def test_find_in_ast_self(self) -> None:
@@ -244,8 +244,9 @@ class TestAstUtils(TestCase):
             class_with_method_and_body_types_ast,
         )
 
-        self.assertIsInstance(gen_ast.default, Constant)
-        self.assertEqual(gen_ast.default.value, "~/tensorflow_datasets")
+        self.assertIsInstance(gen_ast.default, Constant if PY_GTE_3_8 else Str)
+
+        self.assertEqual(get_value(gen_ast.default), "~/tensorflow_datasets")
         run_ast_test(
             self,
             gen_ast,
@@ -290,6 +291,7 @@ class TestAstUtils(TestCase):
                     'dataset_name: str = "mnist"', "dataset_name: int = 15"
                 )
             ),
+            run_cmp_ast=PY_GTE_3_8,
         )
 
     def test_replace_in_ast_with_val_on_non_function(self) -> None:
@@ -320,6 +322,7 @@ class TestAstUtils(TestCase):
                     'dataset_name: str = "mnist"', "dataset_name: int = 15"
                 )
             ),
+            run_cmp_ast=PY_GTE_3_8,
         )
 
     def test_get_function_type(self) -> None:
@@ -415,27 +418,34 @@ class TestAstUtils(TestCase):
 
     def test_set_value(self) -> None:
         """ Tests that `set_value` returns the right type for the right Python version """
-        with patch("doctrans.ast_utils.PY3_8", True):
-            import doctrans.ast_utils
+        import doctrans.ast_utils
 
-            self.assertIsInstance(doctrans.ast_utils.set_value(None, None), Constant)
+        _doctrans_ast_utils_PY3_8_orig = PY3_8
+        # patch stopped working, getattr failed also ^
+        try:
+            doctrans.ast_utils.PY3_8 = True
 
-        with patch("doctrans.ast_utils.PY3_8", False):
-            import doctrans.ast_utils
+            self.assertIsInstance(
+                doctrans.ast_utils.set_value(None, None),
+                Constant if PY_GTE_3_8 else NameConstant,
+            )
+
+            doctrans.ast_utils.PY3_8 = False
 
             self.assertIsInstance(
                 doctrans.ast_utils.set_value(None, None), NameConstant
             )
 
-        with patch("doctrans.ast_utils.PY3_8", True):
-            import doctrans.ast_utils
+            doctrans.ast_utils.PY3_8 = True
+            self.assertIsInstance(
+                doctrans.ast_utils.set_value("foo", None),
+                Constant if PY_GTE_3_8 else Str,
+            )
 
-            self.assertIsInstance(doctrans.ast_utils.set_value("foo", None), Constant)
-
-        with patch("doctrans.ast_utils.PY3_8", False):
-            import doctrans.ast_utils
-
+            doctrans.ast_utils.PY3_8 = False
             self.assertIsInstance(doctrans.ast_utils.set_value("foo", None), Str)
+        finally:
+            doctrans.ast_utils = _doctrans_ast_utils_PY3_8_orig
 
     def test_find_ast_type(self) -> None:
         """ Test that `find_ast_type` gives the wrapped class back """
