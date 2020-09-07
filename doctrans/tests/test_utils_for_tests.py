@@ -2,10 +2,13 @@
 Tests for docstring parsing
 """
 from ast import Module
+from collections import namedtuple
 from io import StringIO
+from typing import Any
 from unittest import TestCase
 from unittest.mock import patch, MagicMock
 
+from doctrans.pure_utils import PY_GTE_3_8
 from doctrans.tests.utils_for_tests import unittest_main
 
 
@@ -37,44 +40,83 @@ class TestUtilsForTests(TestCase):
         Tests whether `run_ast_test` correct avoids running the AST comparison dependent on Python version
         """
 
-        def count_true(value, msg):
+        def assert_true(value, msg=None):
             """Version of `self.assertTrue` which also keeps count
 
             :param value: Potentially `True`
             :type value: ```Union[Literal[True], Any]```
 
             :param msg: Message to raise in error
-            :type msg: ```str```
+            :type msg: ```Optional[str]```
             """
-            assert value is True, msg
-            count_true.i += 1
+            TestUtilsForTests.i += TestUtilsForTests.increment
+            assert value, msg or "{!r} not truthy".format(value)
 
-        count_true.i = 0
+        def assert_equal(a, b, msg=None):
+            """Version of `self.assertEqual` which also keeps count
 
-        assert_true = self.assertTrue
+            :param a: Any value that can be compared. Compared with `b`.
+            :type a: ```Any```
+
+            :param b: Any value that can be compared. Compared with `a`.
+            :type b: ```Any```
+
+            :param msg: Message to raise in error
+            :type msg: ```Optional[str]```
+            """
+            TestUtilsForTests.i += TestUtilsForTests.increment
+            assert a == b, msg or "{!r} != {!r}".format(a, b)
+
+        TestUtilsForTests.increment = 2 if PY_GTE_3_8 else 1
+        TestUtilsForTests.i = 0
+
+        test_case_module: Any = namedtuple("TestCase", ("assertTrue", "assertEqual"))(
+            assert_true,
+            assert_equal,
+        )
+
         module = Module(body=[], type_ignores=[], stmt=None)
-        with patch("platform.python_version_tuple", lambda: ("3", "7")):
-            import doctrans.tests.utils_for_tests
 
-            self.assertTrue = count_true
-            doctrans.tests.utils_for_tests.run_ast_test(self, module, module)
-            self.assertEqual(count_true.i, 1)
+        import doctrans.tests.utils_for_tests
 
-        with patch("platform.python_version_tuple", lambda: ("3", "8")):
-            import doctrans.tests.utils_for_tests
+        _orig_doctrans_tests_utils_for_tests_PY3_8 = (
+            doctrans.tests.utils_for_tests.PY3_8
+        )
 
-            self.assertTrue = count_true
-            doctrans.tests.utils_for_tests.run_ast_test(self, module, module)
-            self.assertEqual(count_true.i, 2)
+        try:
+            with patch("platform.python_version_tuple", lambda: ("3", "7")):
+                doctrans.tests.utils_for_tests.PY_GTE_3_8 = (
+                    doctrans.tests.utils_for_tests.PY3_8
+                ) = False
 
-        with patch("platform.python_version_tuple", lambda: ("3", "9")):
-            import doctrans.tests.utils_for_tests
+                doctrans.tests.utils_for_tests.run_ast_test(
+                    test_case_module, module, module
+                )
+                self.assertEqual(TestUtilsForTests.increment * 2, TestUtilsForTests.i)
 
-            self.assertTrue = count_true
-            doctrans.tests.utils_for_tests.run_ast_test(self, module, module)
-            self.assertEqual(count_true.i, 3)
+            with patch("platform.python_version_tuple", lambda: ("3", "8")):
+                doctrans.tests.utils_for_tests.PY_GTE_3_8 = (
+                    doctrans.tests.utils_for_tests.PY3_8
+                ) = True
 
-        self.assertTrue = assert_true
+                doctrans.tests.utils_for_tests.run_ast_test(
+                    test_case_module, module, module
+                )
+                self.assertEqual(TestUtilsForTests.increment * 4, TestUtilsForTests.i)
+
+            with patch("platform.python_version_tuple", lambda: ("3", "9")):
+                doctrans.tests.utils_for_tests.PY_GTE_3_8 = (
+                    doctrans.tests.utils_for_tests.PY3_8
+                ) = True
+
+                doctrans.tests.utils_for_tests.run_ast_test(
+                    test_case_module, module, module
+                )
+                self.assertEqual(TestUtilsForTests.increment * 6, TestUtilsForTests.i)
+        finally:
+            doctrans.tests.utils_for_tests.PY3_8 = (
+                _orig_doctrans_tests_utils_for_tests_PY3_8
+            )
 
 
 unittest_main()
