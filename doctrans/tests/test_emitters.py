@@ -8,13 +8,15 @@ from copy import deepcopy
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
+from meta.asttools import cmp_ast
+
 from doctrans import emit, parse
 from doctrans.ast_utils import (
     get_function_type,
     find_in_ast,
     annotate_ancestry,
 )
-from doctrans.pure_utils import rpartial, reindent, tab, deindent, PY3_8
+from doctrans.pure_utils import rpartial, reindent, tab, deindent, PY3_8, PY_GTE_3_9
 from doctrans.tests.mocks.argparse import argparse_func_ast, argparse_func_with_body_ast
 from doctrans.tests.mocks.classes import class_ast
 from doctrans.tests.mocks.docstrings import docstring_str, intermediate_repr
@@ -25,7 +27,6 @@ from doctrans.tests.mocks.methods import (
     class_with_method_types_str,
 )
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
-from meta.asttools import cmp_ast
 
 
 class TestEmitters(TestCase):
@@ -302,7 +303,7 @@ class TestEmitters(TestCase):
 
         run_ast_test(
             self,
-            emit.function(
+            gen_ast=emit.function(
                 parse.function(
                     find_in_ast(
                         "C.function_name".split("."),
@@ -317,6 +318,7 @@ class TestEmitters(TestCase):
                 emit_as_kwonlyargs=False,
             ),
             gold=function_def,
+            run_cmp_ast=PY_GTE_3_9,
         )
 
     def test_from_argparse_with_extra_body_to_argparse_with_extra_body(self) -> None:

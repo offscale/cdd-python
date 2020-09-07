@@ -2,18 +2,18 @@
 Shared utility functions used by many tests
 """
 import ast
-import platform
 from copy import deepcopy
 from functools import partial
 from unittest import main
 from unittest.mock import MagicMock, patch
 
-import doctrans.source_transformer
-from doctrans.pure_utils import PY3_8
 from meta.asttools import cmp_ast
 
+import doctrans.source_transformer
+from doctrans.pure_utils import PY3_8, PY_GTE_3_8
 
-def run_ast_test(test_case_instance, gen_ast, gold):
+
+def run_ast_test(test_case_instance, gen_ast, gold, run_cmp_ast=PY_GTE_3_8):
     """
     Compares `gen_ast` with `gold` standard
 
@@ -22,6 +22,9 @@ def run_ast_test(test_case_instance, gen_ast, gold):
 
     :param gen_ast: generated AST
     :type gen_ast: ```Union[ast.Module, ast.ClassDef, ast.FunctionDef]```
+
+    :param run_cmp_ast: whether to `cmp_ast` on output; otherwise only compare string representation
+    :type run_cmp_ast: ```bool```
 
     :param gold: mocked AST
     :type gold: ```Union[ast.Module, ast.ClassDef, ast.FunctionDef]```
@@ -47,7 +50,7 @@ def run_ast_test(test_case_instance, gen_ast, gold):
         *map(doctrans.source_transformer.to_code, (gen_ast, gold))
     )
 
-    if platform.python_version_tuple() >= ("3", "8"):
+    if run_cmp_ast:
         test_case_instance.assertTrue(
             cmp_ast(gen_ast, gold), "Generated AST doesn't match reference AST"
         )

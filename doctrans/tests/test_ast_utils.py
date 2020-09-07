@@ -29,6 +29,7 @@ from doctrans.ast_utils import (
     RewriteAtQuery,
     emit_arg,
 )
+from doctrans.pure_utils import PY_GTE_3_9
 from doctrans.source_transformer import ast_parse
 from doctrans.tests.mocks.classes import class_ast, class_str
 from doctrans.tests.mocks.methods import (
@@ -37,7 +38,6 @@ from doctrans.tests.mocks.methods import (
     class_with_method_and_body_types_str,
 )
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
-from meta.asttools import cmp_ast
 
 
 class TestAstUtils(TestCase):
@@ -116,6 +116,7 @@ class TestAstUtils(TestCase):
                 expr_target=None,
                 expr_annotation=None,
             ),
+            run_cmp_ast=PY_GTE_3_9,
         )
 
     def test_emit_ann_assign_fails(self) -> None:
@@ -242,17 +243,9 @@ class TestAstUtils(TestCase):
             "C.function_name.dataset_name".split("."),
             class_with_method_and_body_types_ast,
         )
-        self.assertTrue(
-            cmp_ast(
-                gen_ast.default,
-                Constant(
-                    kind=None,
-                    value="~/tensorflow_datasets",
-                    constant_value=None,
-                    string=None,
-                ),
-            )
-        )
+
+        self.assertIsInstance(gen_ast.default, Constant)
+        self.assertEqual(gen_ast.default.value, "~/tensorflow_datasets")
         run_ast_test(
             self,
             gen_ast,
@@ -266,6 +259,7 @@ class TestAstUtils(TestCase):
                 expr=None,
                 identifier_arg=None,
             ),
+            run_cmp_ast=PY_GTE_3_9,
         )
 
     def test_replace_in_ast_with_val(self) -> None:
@@ -330,7 +324,7 @@ class TestAstUtils(TestCase):
 
     def test_get_function_type(self) -> None:
         """ Test get_function_type returns the right type """
-        self.assertIsNone(
+        self.assertEqual(
             get_function_type(
                 FunctionDef(
                     args=arguments(
@@ -349,9 +343,10 @@ class TestAstUtils(TestCase):
                     identifier_name=None,
                     stmt=None,
                 )
-            )
+            ),
+            "static",
         )
-        self.assertIsNone(
+        self.assertEqual(
             get_function_type(
                 FunctionDef(
                     args=arguments(args=[], arg=None),
@@ -359,7 +354,8 @@ class TestAstUtils(TestCase):
                     identifier_name=None,
                     stmt=None,
                 )
-            )
+            ),
+            "static",
         )
         self.assertEqual(
             get_function_type(

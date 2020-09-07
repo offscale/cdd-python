@@ -172,7 +172,7 @@ def function(function_def, function_type=None, function_name=None):
         else:
             assert (
                 isinstance(const, Constant)
-                and const.kind is None
+                and (not hasattr(const, "kind") or const.kind is None)
                 or isinstance(const, (Str, NameConstant))
             ), type(const).__name__
             value = get_value(const)

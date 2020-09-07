@@ -5,6 +5,7 @@ from ast import FunctionDef, arguments, Name, Load, arg, Constant
 from unittest import TestCase
 
 from docstring_parser import rest
+
 from doctrans import parse, emit
 from doctrans.emitter_utils import to_docstring
 from doctrans.pure_utils import tab
@@ -196,7 +197,7 @@ class TestParsers(TestCase):
                     },
                 ],
                 "returns": None,
-                "type": None,
+                "type": "static",
             },
         )
 

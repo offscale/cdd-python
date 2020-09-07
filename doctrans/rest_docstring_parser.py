@@ -223,7 +223,7 @@ def parse_docstring(docstring, emit_default_doc=False):
 
     return {
         "name": None,
-        "type": None,
+        "type": "static",
         "short_description": short_description,
         "long_description": long_description,
         "params": params,

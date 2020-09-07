@@ -256,8 +256,7 @@ def get_internal_body(target_name, target_type, intermediate_repr):
     """
     return (
         intermediate_repr["_internal"]["body"]
-        if "_internal" in intermediate_repr
-        and intermediate_repr["_internal"].get("body")
+        if intermediate_repr.get("_internal", {}).get("body")
         and intermediate_repr["_internal"]["from_name"] == target_name
         and intermediate_repr["_internal"]["from_type"] == target_type
         else tuple()
