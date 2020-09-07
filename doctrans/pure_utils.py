@@ -4,7 +4,6 @@ Pure utils for pure functions. For the same input will always produce the same i
 from keyword import iskeyword
 from platform import python_version_tuple
 from pprint import PrettyPrinter
-from sys import version
 
 pp = PrettyPrinter(indent=4).pprint
 tab = " " * 4
@@ -30,8 +29,11 @@ def identity(s):
     return s
 
 
-PY3_8 = version.startswith("3.8")
-PY_GTE_3_9 = python_version_tuple() >= ("3", "9")
+_python_version_tuple = python_version_tuple()
+PY3_8 = _python_version_tuple[:2] == ("3", "8")
+PY_GTE_3_8 = _python_version_tuple >= ("3", "8")
+PY_GTE_3_9 = _python_version_tuple >= ("3", "9")
+
 
 _ABERRANT_PLURAL_MAP = {
     "appendix": "appendices",

@@ -58,21 +58,21 @@ class TestUtilsForTests(TestCase):
 
             self.assertTrue = count_true
             doctrans.tests.utils_for_tests.run_ast_test(self, module, module)
-            self.assertEqual(count_true.i, 0)
+            self.assertEqual(count_true.i, 1)
 
         with patch("platform.python_version_tuple", lambda: ("3", "8")):
             import doctrans.tests.utils_for_tests
 
             self.assertTrue = count_true
             doctrans.tests.utils_for_tests.run_ast_test(self, module, module)
-            self.assertEqual(count_true.i, 1)
+            self.assertEqual(count_true.i, 2)
 
         with patch("platform.python_version_tuple", lambda: ("3", "9")):
             import doctrans.tests.utils_for_tests
 
             self.assertTrue = count_true
             doctrans.tests.utils_for_tests.run_ast_test(self, module, module)
-            self.assertEqual(count_true.i, 2)
+            self.assertEqual(count_true.i, 3)
 
         self.assertTrue = assert_true
 

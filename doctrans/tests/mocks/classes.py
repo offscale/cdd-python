@@ -109,7 +109,7 @@ class_ast = (
                     ),
                     Index(
                         value=Tuple(
-                            [
+                            elts=[
                                 Constant(
                                     kind=None,
                                     value="np",
@@ -123,7 +123,7 @@ class_ast = (
                                     string=None,
                                 ),
                             ],
-                            Load(),
+                            ctx=Load(),
                         )
                     ),
                     Load(),
@@ -204,16 +204,16 @@ class_ast = (
                                     Name("Tuple", Load()),
                                     Index(
                                         Tuple(
-                                            Load(),
-                                            [
+                                            ctx=Load(),
+                                            elts=[
                                                 Attribute(
-                                                    "ndarray",
                                                     Name("np", Load()),
+                                                    "ndarray",
                                                     Load(),
                                                 ),
                                                 Attribute(
-                                                    "ndarray",
                                                     Name("np", Load()),
+                                                    "ndarray",
                                                     Load(),
                                                 ),
                                             ],

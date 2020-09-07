@@ -8,7 +8,7 @@ from doctrans.defaults_utils import remove_defaults_from_intermediate_repr
 
 intermediate_repr = {
     "name": None,
-    "type": None,
+    "type": "static",
     "short_description": "Acquire from the official tensorflow_datasets model "
     "zoo, or the ophthalmology focussed ml-prepare "
     "library",
@@ -80,7 +80,7 @@ intermediate_repr_no_default_doc_or_prop = remove_defaults_from_intermediate_rep
 
 intermediate_repr_no_default_doc = {
     "name": None,
-    "type": None,
+    "type": "static",
     "short_description": "Acquire from the official tensorflow_datasets model "
     "zoo, or the ophthalmology focussed ml-prepare "
     "library",

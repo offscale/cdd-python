@@ -31,7 +31,7 @@ from functools import partial
 from platform import python_version_tuple
 
 from doctrans.defaults_utils import extract_default
-from doctrans.pure_utils import simple_types, rpartial, PY3_8
+from doctrans.pure_utils import simple_types, rpartial, PY_GTE_3_8
 
 
 def param2ast(param):
@@ -242,7 +242,7 @@ def param2argparse_param(param, emit_default_doc=True):
                                     constant_value=None,
                                     string=None,
                                 )
-                                if python_version_tuple() >= ("3", "8")
+                                if PY_GTE_3_8
                                 else NameConstant(
                                     value=True, constant_value=None, string=None
                                 )
@@ -317,8 +317,8 @@ def get_function_type(function_def):
     :param function_def: AST node for function definition
     :type function_def: ```FunctionDef```
 
-    :returns: None is a loose function (def f()`), others self-explanatory
-    :rtype: ```Optional[Literal['self', 'cls']]```
+    :returns: Type of target, static is static or global method, others just become first arg
+    :rtype: ```Literal['self', 'cls', 'static']```
     """
     assert isinstance(function_def, FunctionDef), "{typ} != FunctionDef".format(
         typ=type(function_def).__name__
@@ -328,10 +328,10 @@ def get_function_type(function_def):
         or function_def.args is None
         or len(function_def.args.args) == 0
     ):
-        return None
+        return "static"
     elif function_def.args.args[0].arg in frozenset(("self", "cls")):
         return function_def.args.args[0].arg
-    return None
+    return "static"
 
 
 def get_value(node):

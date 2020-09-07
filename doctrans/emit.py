@@ -36,7 +36,7 @@ def argparse_function(
     function_type="static",
 ):
     """
-    Convert to an argparse function_def definition
+    Convert to an argparse FunctionDef
 
     :param intermediate_repr: a dictionary of form
           {
@@ -71,7 +71,7 @@ def argparse_function(
                     None,
                     (
                         None
-                        if function_type is None or function_type == "static"
+                        if function_type in frozenset((None, "static"))
                         else arg(
                             annotation=None,
                             arg=function_type,
@@ -389,7 +389,7 @@ def function(
 
     args = (
         []
-        if function_type is None or function_type == "static"
+        if function_type in frozenset((None, "static"))
         else [
             arg(
                 annotation=None,
@@ -490,8 +490,7 @@ def function(
                         .value,
                         expr=None,
                     )
-                    if "returns" in intermediate_repr
-                    and intermediate_repr["returns"].get("default")
+                    if intermediate_repr.get("returns", {}).get("default")
                     else None,
                 ),
             )
@@ -500,11 +499,9 @@ def function(
         name=function_name,
         returns=(
             ast.parse(intermediate_repr["returns"]["typ"]).body[0].value
-            if "returns" in intermediate_repr and "typ" in intermediate_repr["returns"]
+            if inline_types and intermediate_repr.get("returns", {}).get("typ")
             else None
-        )
-        if inline_types
-        else None,
+        ),
         type_comment=None,
         lineno=None,
         arguments_args=None,
