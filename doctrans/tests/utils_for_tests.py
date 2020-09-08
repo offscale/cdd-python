@@ -40,14 +40,14 @@ def run_ast_test(test_case_instance, gen_ast, gold, run_cmp_ast=True):
         gold_docstring = ast.get_docstring(gold)
         if gen_docstring is not None and gold_docstring is not None:
             test_case_instance.assertEqual(
-                gen_docstring.strip(), gold_docstring.strip()
+                gold_docstring.strip(), gen_docstring.strip()
             )
-            # Following issues with docstring indentation, so now that we've confirmed they're identical, remove them
+            # Following test issue with docstring indentation, remove them from the AST, as symmetry has been confirmed
             gen_ast.body.pop(0)
             gold.body.pop(0)
 
     test_case_instance.assertEqual(
-        *map(doctrans.source_transformer.to_code, (gen_ast, gold))
+        *map(doctrans.source_transformer.to_code, (gold, gen_ast))
     )
 
     if run_cmp_ast:

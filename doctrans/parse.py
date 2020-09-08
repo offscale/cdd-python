@@ -69,25 +69,25 @@ def class_(class_def, config_name=None):
     ), "Expected 'Union[Module, ClassDef]' got `{!r}`".format(type(class_def).__name__)
     class_def = find_ast_type(class_def, config_name)
     intermediate_repr = docstring(get_docstring(class_def).replace(":cvar", ":param"))
+
     intermediate_repr["params"] = OrderedDict(
         (param.pop("name"), param) for param in intermediate_repr["params"]
     )
     if "return_type" in intermediate_repr["params"]:
-        intermediate_repr["returns"] = {
-            "return_type": intermediate_repr["params"].pop("return_type")
-        }
+        intermediate_repr["returns"] = dict(
+            name="return_type", **intermediate_repr["params"].pop("return_type")
+        )
 
     for e in filter(rpartial(isinstance, AnnAssign), class_def.body):
-        intermediate_repr["returns" if e.target.id == "return_type" else "params"][
-            e.target.id
-        ]["typ"] = to_code(e.annotation).rstrip("\n")
+        typ = to_code(e.annotation).rstrip("\n")
+        if e.target.id == "return_type":
+            intermediate_repr["returns"]["typ"] = typ
+        else:
+            intermediate_repr["params"][e.target.id]["typ"] = typ
 
     intermediate_repr["params"] = [
         dict(name=k, **v) for k, v in intermediate_repr["params"].items()
     ]
-    intermediate_repr["returns"] = (
-        lambda k: dict(name=k, **intermediate_repr["returns"][k])
-    )("return_type")
 
     return intermediate_repr
 
@@ -138,7 +138,7 @@ def function(function_def, function_type=None, function_name=None):
     found_type = get_function_type(function_def)
     intermediate_repr.update(
         {
-            "name": function_name,
+            "name": function_name or function_def.name,
             "type": function_type or found_type,
         }
     )
@@ -166,20 +166,38 @@ def function(function_def, function_type=None, function_name=None):
             #         )
             #     )
 
-    for idx, const in enumerate(function_def.args.defaults):
+    def _get_default():
+        """
+        Get the default value
+
+        :returns: Default value
+        :rtype: ```Optional[Union[Name, str, int, float, bool]]```
+        """
         if isinstance(const, Name):
-            value = const
+            val = const
         else:
             assert (
                 isinstance(const, Constant)
                 and (not hasattr(const, "kind") or const.kind is None)
                 or isinstance(const, (Str, NameConstant))
             ), type(const).__name__
-            value = get_value(const)
-        if value is not None:
-            intermediate_repr["params"][idx]["default"] = value
+            val = get_value(const)
+        return val
 
-    if function_def.args.kwarg:
+    for idx, const in enumerate(function_def.args.defaults):
+        value = _get_default()
+        if value is not None:
+            if len(intermediate_repr["params"]) > idx:
+                intermediate_repr["params"][idx]["default"] = value
+            # else: intermediate_repr["params"].append({"default": value})
+
+    offset = len(function_def.args.kw_defaults) - len(function_def.args.kwonlyargs)
+    for idx, const in enumerate(function_def.args.kw_defaults):
+        value = _get_default()
+        if value is not None:
+            intermediate_repr["params"][idx + offset]["default"] = value
+
+    if hasattr(function_def.args, "kwarg") and function_def.args.kwarg:
         # if intermediate_repr["params"][-1]["name"] != function_def.args.kwarg.arg:
         #     logger.warning(
         #         "Expected {!r} to be {!r}".format(
@@ -206,6 +224,11 @@ def function(function_def, function_type=None, function_name=None):
 
     if hasattr(function_def, "returns") and isinstance(function_def.returns, Subscript):
         intermediate_repr["returns"]["typ"] = to_code(function_def.returns).rstrip("\n")
+
+    if intermediate_repr["params"][-1]["name"] == "returns":
+        returns = intermediate_repr["params"].pop()
+        del returns["name"]
+        intermediate_repr["returns"].update(returns)
 
     return intermediate_repr
 

@@ -372,12 +372,15 @@ def set_value(value, kind=None):
         and value[0] + value[-1] in frozenset(('""', "''"))
     ):
         value = value[1:-1]
-    if PY_GTE_3_8:
-        return Constant(kind=kind, value=value, constant_value=None, string=None)
-    elif isinstance(value, str):
-        return Str(s=value, constant_value=None, string=None)
-    elif value is None:
-        return NameConstant(value=value, constant_value=None, string=None)
+    return (
+        Constant(kind=kind, value=value, constant_value=None, string=None)
+        if PY_GTE_3_8
+        else (
+            Str(s=value, constant_value=None, string=None)
+            if isinstance(value, str)
+            else NameConstant(value=value, constant_value=None, string=None)
+        )
+    )
 
 
 def is_argparse_add_argument(node):

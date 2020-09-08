@@ -55,7 +55,7 @@ def ast_parse(
     :type skip_docstring_remit: ```bool``
 
     :returns: AST node
-    :rtype node: ```AST```
+    :rtype: node: ```AST```
     """
     parsed_ast = parse(source, filename=filename, mode=mode)
     if not skip_annotate:

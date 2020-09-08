@@ -453,7 +453,8 @@ def function(
                         lambda param: param["name"].endswith("kwargs"),
                         intermediate_repr["params"],
                     ),
-                )
+                ),
+                None,
             ),
             kwonlyargs=kwonlyargs,
             posonlyargs=[],
@@ -490,7 +491,7 @@ def function(
                         .value,
                         expr=None,
                     )
-                    if intermediate_repr.get("returns", {}).get("default")
+                    if (intermediate_repr.get("returns") or {}).get("default")
                     else None,
                 ),
             )
@@ -499,7 +500,7 @@ def function(
         name=function_name,
         returns=(
             ast.parse(intermediate_repr["returns"]["typ"]).body[0].value
-            if inline_types and intermediate_repr.get("returns", {}).get("typ")
+            if inline_types and (intermediate_repr.get("returns") or {}).get("typ")
             else None
         ),
         type_comment=None,
