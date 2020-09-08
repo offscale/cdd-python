@@ -964,6 +964,71 @@ class_with_optional_arg_method_ast = (
     else ast.parse(class_with_optional_arg_method_str).body[0]
 )
 
+function_adder_str = '''
+def add_6_5(*, a=6, b=5):
+    """
+    :param a: first param
+    :type a: ```int```
+
+    :param b: second param
+    :type b: ```int```
+
+    :returns: Aggregated summation of `a` and `b`.
+    :rtype: ```int```
+    """
+    return operator.add(a, b)
+'''
+
+function_adder_ast = (
+    FunctionDef(
+        name="add_6_5",
+        args=arguments(
+            posonlyargs=[],
+            args=[],
+            kwonlyargs=[
+                arg(arg="a", expr=None, identifier_arg=None),
+                arg(arg="b", expr=None, identifier_arg=None),
+            ],
+            kw_defaults=[
+                Constant(value=6, constant_value=None, string=None),
+                Constant(value=5, constant_value=None, string=None),
+            ],
+            defaults=[],
+            arg=None,
+        ),
+        body=[
+            Expr(
+                Constant(
+                    value="\n    :param a: first param\n    "
+                    ":type a: ```int```\n\n    "
+                    ":param b: second param\n    "
+                    ":type b: ```int```\n\n    "
+                    ":returns: Aggregated summation of `a` and `b`.\n    "
+                    ":rtype: ```int```\n    ",
+                    constant_value=None,
+                    string=None,
+                )
+            ),
+            Return(
+                value=Call(
+                    func=Attribute(Name("operator", Load()), "add", Load()),
+                    args=[Name("a", Load()), Name("b", Load())],
+                    keywords=[],
+                    expr=None,
+                    expr_func=None,
+                ),
+                expr=None,
+            ),
+        ],
+        decorator_list=[],
+        arguments_args=None,
+        identifier_name=None,
+        stmt=None,
+    )
+    if PY3_8
+    else ast.parse(function_adder_str).body[0]
+)
+
 __all__ = [
     "class_with_method_str",
     "class_with_method_types_str",

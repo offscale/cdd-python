@@ -15,6 +15,7 @@ from doctrans.tests.mocks.docstrings import (
     docstring_str,
     intermediate_repr_no_default_doc,
 )
+from doctrans.tests.mocks.methods import function_adder_ast
 from doctrans.tests.utils_for_tests import unittest_main
 
 
@@ -181,7 +182,7 @@ class TestParsers(TestCase):
             parse.function(function_def),
             {
                 "description": "",
-                "name": None,
+                "name": "call_peril",
                 "params": [
                     {
                         "default": "mnist",
@@ -197,6 +198,30 @@ class TestParsers(TestCase):
                     },
                 ],
                 "returns": None,
+                "type": "static",
+            },
+        )
+
+    def test_from_function_kw_only(self):
+        """
+        Tests that parse.function produces properly from function with only keyword arguments
+        """
+        self.assertDictEqual(
+            parse.function(function_adder_ast),
+            {
+                "long_description": "",
+                "name": "add_6_5",
+                "params": [
+                    {"default": 6, "doc": "first param", "name": "a", "typ": "int"},
+                    {"default": 5, "doc": "second param", "name": "b", "typ": "int"},
+                ],
+                "returns": {
+                    "default": "operator.add(a, b)",
+                    "doc": "Aggregated summation of `a` and `b`.",
+                    "name": "return_type",
+                    "typ": "int",
+                },
+                "short_description": "",
                 "type": "static",
             },
         )

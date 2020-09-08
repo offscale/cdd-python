@@ -1,7 +1,8 @@
 """
 Functions which produce intermediate_repr from various different inputs
 """
-from ast import Constant, Name, Attribute, Return, parse
+import ast
+from ast import Constant, Name, Attribute, Return
 from functools import partial
 from typing import Any
 
@@ -81,7 +82,7 @@ def parse_out_param(expr, emit_default_doc=True):
     :type emit_default_doc: ```bool``
 
     :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-    :rtype ```dict```
+    :rtype: ```dict```
     """
     required = next(
         (keyword for keyword in expr.value.keywords if keyword.arg == "required"),
@@ -176,7 +177,7 @@ def interpolate_defaults(param, emit_default_doc=True):
     if "doc" in param:
         doc, default = extract_default(param["doc"], emit_default_doc=emit_default_doc)
         param["doc"] = doc
-        if default:
+        if default is not None:
             param["default"] = default
     return param
 
@@ -222,7 +223,7 @@ def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
             "default": to_code(e.value.elts[1]).rstrip("\n"),
             "typ": to_code(
                 get_value(
-                    parse(intermediate_repr["returns"]["typ"]).body[0].value.slice
+                    ast.parse(intermediate_repr["returns"]["typ"]).body[0].value.slice
                 ).elts[1]
             ).rstrip()
             # 'Tuple[ArgumentParser, {typ}]'.format(typ=ir['returns']['typ'])
@@ -336,9 +337,10 @@ def to_docstring(
             type(param).__name__
         )
         assert docstring_format == "rest", docstring_format
-        doc, default = extract_default(param["doc"], emit_default_doc=False)
-        if default is not None:
-            param["default"] = default
+        if "doc" in param:
+            doc, default = extract_default(param["doc"], emit_default_doc=False)
+            if default is not None:
+                param["default"] = default
 
         param["typ"] = (
             "**{param[name]}".format(param=param)
