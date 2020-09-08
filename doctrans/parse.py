@@ -92,6 +92,28 @@ def class_(class_def, config_name=None):
     return intermediate_repr
 
 
+def _get_default(const):
+    """
+    Get the default value
+
+    :param const: AST node
+    :type const: ```AST```
+
+    :returns: Default value
+    :rtype: ```Optional[Union[Name, str, int, float, bool]]```
+    """
+    if isinstance(const, Name):
+        val = const
+    else:
+        assert (
+            isinstance(const, Constant)
+            and (not hasattr(const, "kind") or const.kind is None)
+            or isinstance(const, (Str, NameConstant))
+        ), type(const).__name__
+        val = get_value(const)
+    return val
+
+
 def function(function_def, function_type=None, function_name=None):
     """
     Converts a method to our IR
@@ -166,26 +188,8 @@ def function(function_def, function_type=None, function_name=None):
             #         )
             #     )
 
-    def _get_default():
-        """
-        Get the default value
-
-        :returns: Default value
-        :rtype: ```Optional[Union[Name, str, int, float, bool]]```
-        """
-        if isinstance(const, Name):
-            val = const
-        else:
-            assert (
-                isinstance(const, Constant)
-                and (not hasattr(const, "kind") or const.kind is None)
-                or isinstance(const, (Str, NameConstant))
-            ), type(const).__name__
-            val = get_value(const)
-        return val
-
     for idx, const in enumerate(function_def.args.defaults):
-        value = _get_default()
+        value = _get_default(const)
         if value is not None:
             if len(intermediate_repr["params"]) > idx:
                 intermediate_repr["params"][idx]["default"] = value
@@ -193,7 +197,7 @@ def function(function_def, function_type=None, function_name=None):
 
     offset = len(function_def.args.kw_defaults) - len(function_def.args.kwonlyargs)
     for idx, const in enumerate(function_def.args.kw_defaults):
-        value = _get_default()
+        value = _get_default(const)
         if value is not None:
             intermediate_repr["params"][idx + offset]["default"] = value
 
@@ -207,6 +211,27 @@ def function(function_def, function_type=None, function_name=None):
         intermediate_repr["params"][-1]["typ"] = "dict"
 
     # Convention - the final top-level `return` is the default
+    _interpolate_return(function_def, intermediate_repr)
+
+    return intermediate_repr
+
+
+def _interpolate_return(function_def, intermediate_repr):
+    """
+    Interpolate the return value into the IR.
+
+    :param function_def: function definition
+    :type function_def: ```FunctionDef```
+
+    :param intermediate_repr: a dictionary of form
+              {
+                  'short_description': ...,
+                  'long_description': ...,
+                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+                  "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+              }
+    :type intermediate_repr: ```dict```
+    """
     return_ast = next(
         filter(rpartial(isinstance, Return), function_def.body[::-1]), None
     )
@@ -221,16 +246,12 @@ def function(function_def, function_type=None, function_name=None):
             and (not default.startswith("(") or not default.endswith(")"))
             else default
         )(to_code(return_ast.value).rstrip("\n"))
-
     if hasattr(function_def, "returns") and isinstance(function_def.returns, Subscript):
         intermediate_repr["returns"]["typ"] = to_code(function_def.returns).rstrip("\n")
-
     if intermediate_repr["params"][-1]["name"] == "returns":
         returns = intermediate_repr["params"].pop()
         del returns["name"]
         intermediate_repr["returns"].update(returns)
-
-    return intermediate_repr
 
 
 def argparse_ast(function_def, function_type=None, function_name=None):
