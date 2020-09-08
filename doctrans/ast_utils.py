@@ -25,6 +25,7 @@ from ast import (
     Assign,
     arg,
     Index,
+    Num,
 )
 from copy import deepcopy
 from functools import partial
@@ -345,6 +346,8 @@ def get_value(node):
     """
     if isinstance(node, Str):
         return node.s
+    elif isinstance(node, Num):
+        return node.n
     elif isinstance(node, Constant) or hasattr(node, "value"):
         return node.value
     # elif isinstance(node, (Tuple, Name)):  # It used to be Index in Python < 3.9

@@ -19,6 +19,7 @@ from ast import (
     Module,
     ClassDef,
     Name,
+    Num,
 )
 from collections import OrderedDict
 from itertools import filterfalse
@@ -108,7 +109,7 @@ def _get_default(const):
         assert (
             isinstance(const, Constant)
             and (not hasattr(const, "kind") or const.kind is None)
-            or isinstance(const, (Str, NameConstant))
+            or isinstance(const, (Str, NameConstant, Num))
         ), type(const).__name__
         val = get_value(const)
     return val
