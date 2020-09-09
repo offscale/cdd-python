@@ -323,7 +323,8 @@ class_with_method_and_body_types_ast = (
                             Return(
                                 value=Constant(
                                     value=5, constant_value=None, string=None
-                                )
+                                ),
+                                expr=None,
                             ),
                         ],
                         orelse=[],
@@ -1038,4 +1039,5 @@ __all__ = [
     "class_with_method_ast",
     "class_with_method_types_ast",
     "class_with_optional_arg_method_ast",
+    "function_adder_ast",
 ]

@@ -124,6 +124,7 @@ class_ast = (
                                 ),
                             ],
                             ctx=Load(),
+                            expr=None,
                         )
                     ),
                     Load(),
@@ -217,6 +218,7 @@ class_ast = (
                                                     Load(),
                                                 ),
                                             ],
+                                            expr=None,
                                         )
                                     ),
                                     Load(),
