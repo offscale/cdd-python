@@ -125,7 +125,7 @@ def find_ast_type(node, node_name=None, of_type=ClassDef):
         if node_name is not None:
             return next(
                 filter(
-                    lambda node: hasattr(node, "name") and node.name == node_name,
+                    lambda e: hasattr(e, "name") and e.name == node_name,
                     it,
                 )
             )
@@ -605,10 +605,10 @@ class RewriteAtQuery(ast.NodeTransformer):
                 if isinstance(self.replacement_node, AnnAssign):
                     idx = next(
                         (
-                            arg._idx
-                            for arg in node.args.args
-                            if arg.arg == self.replacement_node.target.id
-                            and hasattr(arg, "_idx")
+                            _arg._idx
+                            for _arg in node.args.args
+                            if _arg.arg == self.replacement_node.target.id
+                            and hasattr(_arg, "_idx")
                         ),
                         None,
                     )
@@ -617,10 +617,10 @@ class RewriteAtQuery(ast.NodeTransformer):
                         filter(
                             None,
                             (
-                                arg._idx if arg.arg == target.id else None
+                                _arg._idx if _arg.arg == target.id else None
                                 for target in self.replacement_node.targets
-                                for arg in node.args.args
-                                if hasattr(arg, "_idx")
+                                for _arg in node.args.args
+                                if hasattr(_arg, "_idx")
                             ),
                         ),
                         None,
