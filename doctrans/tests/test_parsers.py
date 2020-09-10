@@ -32,8 +32,6 @@ class TestParsers(TestCase):
               }
     """
 
-    maxDiff = 5555
-
     def test_from_argparse_ast(self) -> None:
         """
         Tests whether `argparse_ast` produces `intermediate_repr_no_default_doc_or_prop`
