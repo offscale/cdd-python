@@ -124,6 +124,17 @@ intermediate_repr_no_default_doc = {
     },
 }
 
+intermediate_repr_extra_colons = {
+    "long_description": "",
+    "name": None,
+    "params": [
+        {"doc": "Example: foo", "name": "dataset_name", "typ": "str"},
+    ],
+    "returns": None,
+    "short_description": "Some comment",
+    "type": "static",
+}
+
 docstring_str_no_default_doc = """
 Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
 
@@ -146,10 +157,18 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """
 
+docstring_str_extra_colons = """
+Some comment
+
+:param dataset_name: Example: foo
+:type dataset_name: ```str```
+"""
+
 __all__ = [
-    "intermediate_repr",
     "docstring_str",
+    "docstring_str_extra_colons",
+    "docstring_str_no_default_doc",
+    "intermediate_repr",
     "intermediate_repr_no_default_doc_or_prop",
     "intermediate_repr_no_default_doc",
-    "docstring_str_no_default_doc",
 ]

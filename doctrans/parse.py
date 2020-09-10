@@ -249,10 +249,6 @@ def _interpolate_return(function_def, intermediate_repr):
         )(to_code(return_ast.value).rstrip("\n"))
     if hasattr(function_def, "returns") and isinstance(function_def.returns, Subscript):
         intermediate_repr["returns"]["typ"] = to_code(function_def.returns).rstrip("\n")
-    if intermediate_repr["params"][-1]["name"] == "returns":
-        returns = intermediate_repr["params"].pop()
-        del returns["name"]
-        intermediate_repr["returns"].update(returns)
 
 
 def argparse_ast(function_def, function_type=None, function_name=None):

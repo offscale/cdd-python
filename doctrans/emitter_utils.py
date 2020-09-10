@@ -226,7 +226,7 @@ def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
                     ast.parse(intermediate_repr["returns"]["typ"]).body[0].value.slice
                 ).elts[1]
             ).rstrip()
-            # 'Tuple[ArgumentParser, {typ}]'.format(typ=ir['returns']['typ'])
+            # 'Tuple[ArgumentParser, {typ}]'.format(typ=intermediate_repr['returns']['typ'])
         },
         emit_default_doc=emit_default_doc,
     )
