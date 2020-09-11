@@ -61,38 +61,24 @@ def _scan_phase(docstring):
     :rtype: ```List[Tuple[bool, str]]```
     """
     known_tokens = ":param", ":cvar", ":ivar", ":var", ":type", ":rtype", ":return"
-    count: int = 0
-    line = False, ""  # type: Tuple[bool, str]
+    rev_known_tokens_t = tuple(map(tuple, map(reversed, known_tokens)))
     scanned: List[Tuple[bool, str]] = []
+    stack: List[str] = []
+
     for ch in docstring:
-        line = line[0], line[1] + ch
-        if ch == ":":
-            count += 1
+        stack.append(ch)
+        stack_rev = stack[::-1]
 
-            fst, col, snd = line[1].partition(":")
-            tok_col = next(
-                filter(lambda token: token != -1, map(snd.find, known_tokens)), -1
-            )
+        for token in rev_known_tokens_t:
+            token_len = len(token)
+            if tuple(stack_rev[:token_len]) == token:
+                scanned.append((bool(len(scanned)), "".join(stack[:-token_len])))
+                stack = stack[len(scanned[-1][1]) :][:token_len]
+                continue
 
-            if tok_col > -1:
-                if (
-                    len(scanned)
-                    and not any(map(fst.startswith, known_tokens))
-                    and line[0] is True
-                ):
-                    scanned[-1] = scanned[-1][0], scanned[-1][1] + fst
-                else:
-                    scanned.append((line[0], fst))
-                snd = col + snd
-                for raw in snd[:tok_col], snd[tok_col:]:
-                    raw_stripped = raw.lstrip()
-                    is_token = any(
-                        raw_stripped.startswith(token) for token in known_tokens
-                    )
-                    scanned.append((is_token, raw_stripped if is_token else raw))
-                line = is_token, ""
-    if line[1]:
-        scanned[-1] = scanned[-1][0], scanned[-1][1] + line[1]
+    if len(stack):
+        scanned.append((bool(len(scanned) and scanned[-1][0]), "".join(stack)))
+
     return scanned
 
 
