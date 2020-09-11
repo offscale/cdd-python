@@ -103,7 +103,7 @@ def _get_default(const):
     :returns: Default value
     :rtype: ```Optional[Union[Name, str, int, float, bool]]```
     """
-    if isinstance(const, Name):
+    if isinstance(const, (Name, type(None))):
         val = const
     else:
         assert (

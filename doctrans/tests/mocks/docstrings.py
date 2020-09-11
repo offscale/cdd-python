@@ -135,6 +135,25 @@ intermediate_repr_extra_colons = {
     "type": "static",
 }
 
+intermediate_repr_only_return_type = {
+    "name": None,
+    "type": "static",
+    "short_description": "Some comment",
+    "long_description": "",
+    "params": [
+        {
+            "doc": "Example: foo",
+            "name": "dataset_name",
+        }
+    ],
+    "returns": {
+        "doc": "Train and tests dataset splits.",
+        "name": "return_type",
+        "typ": "Union[Tuple[tf.data.Dataset, tf.data.Dataset], "
+        "Tuple[np.ndarray, np.ndarray]]",
+    },
+}
+
 docstring_str_no_default_doc = """
 Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
 
@@ -162,6 +181,15 @@ Some comment
 
 :param dataset_name: Example: foo
 :type dataset_name: ```str```
+"""
+
+docstring_str_only_return_type = """
+Some comment
+
+:param dataset_name: Example: foo
+
+:return: Train and tests dataset splits.
+:rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """
 
 __all__ = [

@@ -15,6 +15,8 @@ from doctrans.tests.mocks.docstrings import (
     intermediate_repr_no_default_doc,
     docstring_str_extra_colons,
     intermediate_repr_extra_colons,
+    docstring_str_only_return_type,
+    intermediate_repr_only_return_type,
 )
 from doctrans.tests.utils_for_tests import unittest_main
 
@@ -50,6 +52,18 @@ class TestMarshallDocstring(TestCase):
         self.assertDictEqual(
             parse_docstring(docstring_str_extra_colons, emit_default_doc=False),
             intermediate_repr_extra_colons,
+        )
+
+    maxDiff = 5555
+
+    def test_intermediate_repr_only_return_type_equality(self) -> None:
+        """
+        Tests whether `parse_docstring` produces `docstring_str_no_default_doc`
+              from `docstring_str_no_default_doc`"""
+
+        self.assertDictEqual(
+            parse_docstring(docstring_str_only_return_type, emit_default_doc=False),
+            intermediate_repr_only_return_type,
         )
 
     def test_ir2docstring(self) -> None:
