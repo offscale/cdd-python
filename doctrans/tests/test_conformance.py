@@ -2,7 +2,7 @@
 Tests for reeducation
 """
 import os
-from _ast import FunctionDef
+from ast import FunctionDef
 from argparse import Namespace
 from copy import deepcopy
 from functools import partial

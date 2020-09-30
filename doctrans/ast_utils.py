@@ -543,6 +543,16 @@ def annotate_ancestry(node):
                     )
                 )
 
+                child_node.args.kwonlyargs = list(
+                    map(
+                        set_index_and_location,
+                        enumerate(
+                            child_node.args.kwonlyargs,
+                            0,
+                        ),
+                    )
+                )
+
 
 class RewriteAtQuery(ast.NodeTransformer):
     """
@@ -595,6 +605,7 @@ class RewriteAtQuery(ast.NodeTransformer):
         :returns: Potentially changed FunctionDef
         :rtype: ```FunctionDef```
         """
+
         if (
             not self.replaced
             and hasattr(node, "_location")
@@ -638,19 +649,20 @@ class RewriteAtQuery(ast.NodeTransformer):
                         node.args.defaults[idx] = new_default
 
                 self.replacement_node = emit_arg(self.replacement_node)
-
             assert isinstance(
                 self.replacement_node, ast.arg
             ), "Expected ast.arg got {!r}".format(type(self.replacement_node).__name__)
 
-            for idx in range(len(node.args.args)):
-                if (
-                    hasattr(node.args.args[idx], "_location")
-                    and node.args.args[idx]._location == self.search
-                ):
-                    node.args.args[idx] = emit_arg(self.replacement_node)
-                    self.replaced = True
-                    break
+            for arg_attr in "args", "kwonlyargs":
+                arg_l = getattr(node.args, arg_attr)
+                for idx in range(len(arg_l)):
+                    if (
+                        hasattr(arg_l[idx], "_location")
+                        and arg_l[idx]._location == self.search
+                    ):
+                        arg_l[idx] = emit_arg(self.replacement_node)
+                        self.replaced = True
+                        break
 
         return node
 
