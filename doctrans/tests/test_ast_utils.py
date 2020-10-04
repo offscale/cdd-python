@@ -414,7 +414,7 @@ class TestAstUtils(TestCase):
         )
         self.assertIsInstance(get_value(Tuple(expr=None)), Tuple)
         self.assertIsInstance(get_value(Tuple(expr=None)), Tuple)
-        self.assertIsInstance(get_value(Name(None, None)), Name)
+        self.assertIsNone(get_value(Name(None, None)))
 
     def test_set_value(self) -> None:
         """ Tests that `set_value` returns the right type for the right Python version """

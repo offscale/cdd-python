@@ -54,8 +54,6 @@ class TestMarshallDocstring(TestCase):
             intermediate_repr_extra_colons,
         )
 
-    maxDiff = 5555
-
     def test_intermediate_repr_only_return_type_equality(self) -> None:
         """
         Tests whether `parse_docstring` produces `docstring_str_no_default_doc`
