@@ -15,7 +15,7 @@ from doctrans.ast_utils import (
     RewriteAtQuery,
     get_function_type,
 )
-from doctrans.pure_utils import pluralise, strip_split
+from doctrans.pure_utils import pluralise, strip_split, pp
 from doctrans.source_transformer import ast_parse
 
 
@@ -150,7 +150,7 @@ def _conform_filename(
             emit_func(replacement_node_ir),
             filename=filename,
             mode="wt",
-            skip_black=False,
+            skip_black=True,
         )
         return filename, True
 

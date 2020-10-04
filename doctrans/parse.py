@@ -21,7 +21,7 @@ from ast import (
     Name,
     Num,
 )
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple, deque
 from itertools import filterfalse
 from operator import itemgetter
 from typing import Any
@@ -93,28 +93,6 @@ def class_(class_def, config_name=None):
     return intermediate_repr
 
 
-def _get_default(const):
-    """
-    Get the default value
-
-    :param const: AST node
-    :type const: ```AST```
-
-    :returns: Default value
-    :rtype: ```Optional[Union[Name, str, int, float, bool]]```
-    """
-    if isinstance(const, (Name, type(None))):
-        val = const
-    else:
-        assert (
-            isinstance(const, Constant)
-            and (not hasattr(const, "kind") or const.kind is None)
-            or isinstance(const, (Str, NameConstant, Num))
-        ), type(const).__name__
-        val = get_value(const)
-    return val
-
-
 def function(function_def, function_type=None, function_name=None):
     """
     Converts a method to our IR
@@ -151,8 +129,6 @@ def function(function_def, function_type=None, function_name=None):
             intermediate_repr["params"].append(argparse_param2param(arg))
 
         # TODO: Returns when no docstring is provided
-        # intermediate_repr["returns"].append(argparse_param2param(function_def.returns))
-
     else:
         intermediate_repr = docstring(
             intermediate_repr_docstring.replace(":cvar", ":param")
@@ -165,8 +141,6 @@ def function(function_def, function_type=None, function_name=None):
             "type": function_type or found_type,
         }
     )
-    # _function_type = get_function_type(function_def)
-    offset = 0 if (intermediate_repr["type"] or "static") == "static" else 1
 
     if len(function_def.body) > 2:
         intermediate_repr["_internal"] = {
@@ -175,41 +149,38 @@ def function(function_def, function_type=None, function_name=None):
             "from_type": found_type,
         }
 
-    for idx, arg in enumerate(function_def.args.args):
-        if arg.annotation is not None:
-            i = idx - offset
-            if i < len(intermediate_repr["params"]):
-                intermediate_repr["params"][i]["typ"] = to_code(arg.annotation).rstrip(
-                    "\n"
-                )
-            # else:
-            #     logger.warning(
-            #         "Ignoring {!r} function argument: {!r}".format(
-            #             function_name, to_code(arg.annotation).rstrip("\n")
-            #         )
-            #     )
-
-    for idx, const in enumerate(function_def.args.defaults):
-        value = _get_default(const)
-        if value is not None:
-            if len(intermediate_repr["params"]) > idx:
-                intermediate_repr["params"][idx]["default"] = value
-            # else: intermediate_repr["params"].append({"default": value})
-
-    offset = len(function_def.args.kw_defaults) - len(function_def.args.kwonlyargs)
-    for idx, const in enumerate(function_def.args.kw_defaults):
-        value = _get_default(const)
-        if value is not None:
-            intermediate_repr["params"][idx + offset]["default"] = value
+    deque(
+        map(
+            lambda args_defaults: deque(
+                map(
+                    lambda idx_arg: intermediate_repr["params"][idx_arg[0]].update(
+                        {
+                            "name": idx_arg[1].arg,
+                            "typ": intermediate_repr["params"][idx_arg[0]].get("typ")
+                            if idx_arg[1].annotation is None
+                            else to_code(idx_arg[1].annotation).rstrip("\n"),
+                            "default": get_value(
+                                getattr(function_def.args, args_defaults[1])[idx_arg[0]]
+                            ),
+                        }
+                    ),
+                    (
+                        lambda _args: enumerate(
+                            _args if found_type == "static" else _args[1:]
+                        )
+                    )(getattr(function_def.args, args_defaults[0])),
+                ),
+                maxlen=0,
+            ),
+            (("args", "defaults"), ("kwonlyargs", "kw_defaults")),
+        ),
+        maxlen=0,
+    )
 
     if hasattr(function_def.args, "kwarg") and function_def.args.kwarg:
-        # if intermediate_repr["params"][-1]["name"] != function_def.args.kwarg.arg:
-        #     logger.warning(
-        #         "Expected {!r} to be {!r}".format(
-        #             intermediate_repr["params"][-1]["name"], function_def.args.kwarg.arg
-        #         )
-        #     )
         intermediate_repr["params"][-1]["typ"] = "dict"
+
+    # if intermediate_repr["params"][0].get("name") == "*": del intermediate_repr["params"][0]
 
     # Convention - the final top-level `return` is the default
     _interpolate_return(function_def, intermediate_repr)

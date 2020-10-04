@@ -21,7 +21,7 @@ from functools import partial
 
 from black import format_str, Mode
 
-from doctrans.ast_utils import param2argparse_param, param2ast, set_value
+from doctrans.ast_utils import param2argparse_param, param2ast, set_value, get_value
 from doctrans.defaults_utils import set_default_doc
 from doctrans.emitter_utils import get_internal_body, to_docstring
 from doctrans.pure_utils import tab, simple_types, PY3_8
@@ -418,21 +418,16 @@ def function(
             params_no_kwargs,
         ),
     )
-    defaults_from_params = (
-        list(
-            map(
-                lambda param: set_value(kind=None, value=param["default"]),
-                filter(lambda param: "default" in param, params_no_kwargs),
-            )
+    defaults_from_params = list(
+        map(
+            lambda param: set_value(kind=None, value=param.get("default")),
+            params_no_kwargs,
         )
-        + [set_value(kind=None, value=None)]
     )
     if emit_as_kwonlyargs:
-        kwonlyargs, kw_defaults = args_from_params, defaults_from_params
-        defaults = []
+        kwonlyargs, kw_defaults, defaults = args_from_params, defaults_from_params, []
     else:
-        kwonlyargs, kw_defaults = [], []
-        defaults = defaults_from_params
+        kwonlyargs, kw_defaults, defaults = [], [], defaults_from_params
         args += args_from_params
 
     return FunctionDef(

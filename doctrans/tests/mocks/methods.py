@@ -20,6 +20,7 @@ from ast import (
     BinOp,
     Mult,
     If,
+    Pass,
 )
 
 from doctrans.pure_utils import PY3_8
@@ -987,8 +988,8 @@ function_adder_ast = (
             posonlyargs=[],
             args=[],
             kwonlyargs=[
-                arg(arg="a", expr=None, identifier_arg=None),
-                arg(arg="b", expr=None, identifier_arg=None),
+                arg(annotation=None, arg="a", expr=None, identifier_arg=None),
+                arg(annotation=None, arg="b", expr=None, identifier_arg=None),
             ],
             kw_defaults=[
                 Constant(value=6, constant_value=None, string=None),
@@ -1030,6 +1031,55 @@ function_adder_ast = (
     else ast.parse(function_adder_str).body[0]
 )
 
+function_default_complex_default_arg_str = (
+    "def call_peril(dataset_name: str='mnist', writer=stdout):\n\tpass"
+)
+
+function_default_complex_default_arg_ast = (
+    FunctionDef(
+        name="call_peril",
+        args=arguments(
+            args=[
+                arg(
+                    annotation=Name(
+                        "str",
+                        Load(),
+                    ),
+                    arg="dataset_name",
+                    type_comment=None,
+                    expr=None,
+                    identifier_arg=None,
+                ),
+                arg(
+                    annotation=None,
+                    arg="writer",
+                    type_comment=None,
+                    expr=None,
+                    identifier_arg=None,
+                ),
+            ],
+            defaults=[
+                Constant(kind=None, value="mnist", constant_value=None, string=None),
+                Name("stdout", Load()),
+            ],
+            kw_defaults=[],
+            kwarg=None,
+            kwonlyargs=[],
+            posonlyargs=[],
+            vararg=None,
+            arg=None,
+        ),
+        body=[Pass()],
+        decorator_list=[],
+        lineno=None,
+        arguments_args=None,
+        identifier_name=None,
+        stmt=None,
+    )
+    if PY3_8
+    else ast.parse(function_default_complex_default_arg_str)
+)
+
 __all__ = [
     "class_with_method_str",
     "class_with_method_types_str",
@@ -1040,4 +1090,6 @@ __all__ = [
     "class_with_method_types_ast",
     "class_with_optional_arg_method_ast",
     "function_adder_ast",
+    "function_default_complex_default_arg_str",
+    "function_default_complex_default_arg_ast",
 ]

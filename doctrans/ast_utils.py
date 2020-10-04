@@ -351,6 +351,8 @@ def get_value(node):
     elif isinstance(node, Constant) or hasattr(node, "value"):
         return node.value
     # elif isinstance(node, (Tuple, Name)):  # It used to be Index in Python < 3.9
+    elif isinstance(node, Name):
+        return node.id
     else:
         return node
 

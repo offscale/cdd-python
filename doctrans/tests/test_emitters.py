@@ -16,7 +16,7 @@ from doctrans.ast_utils import (
     find_in_ast,
     annotate_ancestry,
 )
-from doctrans.pure_utils import rpartial, reindent, tab, deindent, PY3_8, PY_GTE_3_9
+from doctrans.pure_utils import rpartial, reindent, tab, deindent, PY3_8, PY_GTE_3_9, pp
 from doctrans.tests.mocks.argparse import argparse_func_ast, argparse_func_with_body_ast
 from doctrans.tests.mocks.classes import class_ast
 from doctrans.tests.mocks.docstrings import docstring_str, intermediate_repr
@@ -301,22 +301,26 @@ class TestEmitters(TestCase):
             tab=tab, docstring=reindent(ast.get_docstring(function_def))
         )
 
+        gen_ast = emit.function(
+            parse.function(
+                find_in_ast(
+                    "C.function_name".split("."),
+                    class_with_method_and_body_types_ast,
+                ),
+            ),
+            emit_default_doc=False,
+            function_name="function_name",
+            function_type="self",
+            indent_level=1,
+            emit_separating_tab=True,
+            emit_as_kwonlyargs=False,
+        )
+
+        # emit.file(gen_ast, os.path.join(os.path.dirname(__file__), "delme.py"), mode="wt")
+
         run_ast_test(
             self,
-            gen_ast=emit.function(
-                parse.function(
-                    find_in_ast(
-                        "C.function_name".split("."),
-                        class_with_method_and_body_types_ast,
-                    ),
-                ),
-                emit_default_doc=False,
-                function_name="function_name",
-                function_type="self",
-                indent_level=1,
-                emit_separating_tab=True,
-                emit_as_kwonlyargs=False,
-            ),
+            gen_ast=gen_ast,
             gold=function_def,
             run_cmp_ast=PY_GTE_3_9,
         )
