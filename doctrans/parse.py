@@ -9,19 +9,14 @@ from ast import (
     AnnAssign,
     FunctionDef,
     Return,
-    Constant,
     Assign,
     Tuple,
     get_docstring,
     Subscript,
-    Str,
-    NameConstant,
     Module,
     ClassDef,
-    Name,
-    Num,
 )
-from collections import OrderedDict, namedtuple, deque
+from collections import OrderedDict, deque
 from itertools import filterfalse
 from operator import itemgetter
 from typing import Any

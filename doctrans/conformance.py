@@ -15,7 +15,7 @@ from doctrans.ast_utils import (
     RewriteAtQuery,
     get_function_type,
 )
-from doctrans.pure_utils import pluralise, strip_split, pp
+from doctrans.pure_utils import pluralise, strip_split
 from doctrans.source_transformer import ast_parse
 
 

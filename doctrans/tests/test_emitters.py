@@ -16,7 +16,7 @@ from doctrans.ast_utils import (
     find_in_ast,
     annotate_ancestry,
 )
-from doctrans.pure_utils import rpartial, reindent, tab, deindent, PY3_8, PY_GTE_3_9, pp
+from doctrans.pure_utils import rpartial, reindent, tab, deindent, PY3_8, PY_GTE_3_9
 from doctrans.tests.mocks.argparse import argparse_func_ast, argparse_func_with_body_ast
 from doctrans.tests.mocks.classes import class_ast
 from doctrans.tests.mocks.docstrings import docstring_str, intermediate_repr
