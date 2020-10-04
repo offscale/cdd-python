@@ -1077,7 +1077,7 @@ function_default_complex_default_arg_ast = (
         stmt=None,
     )
     if PY3_8
-    else ast.parse(function_default_complex_default_arg_str)
+    else ast.parse(function_default_complex_default_arg_str).body[0]
 )
 
 __all__ = [
