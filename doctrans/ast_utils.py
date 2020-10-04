@@ -279,7 +279,7 @@ def argparse_param2param(argparse_param):
     """
     return dict(
         name=argparse_param.arg,
-        doc=argparse_param.type_comment,
+        doc=getattr(argparse_param, "type_comment", None),
         **{
             "typ": None
             if argparse_param.annotation is None
