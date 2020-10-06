@@ -19,7 +19,7 @@ def _handle_value(node):
     :param node: AST node from keyword.value
     :type node: ```Union[Attribute, Name]```
 
-    :returns: `str` or `Any`, representing the type for argparse
+    :return: `str` or `Any`, representing the type for argparse
     :rtype: ```Union[str, Any]```
     """
     if isinstance(node, Attribute):
@@ -39,7 +39,7 @@ def _handle_keyword(keyword, typ):
     :param typ: string representation of type
     :type typ: ```str```
 
-    :returns: string representation of type
+    :return: string representation of type
     :rtype: ```str``
     """
     quote_f = identity
@@ -55,7 +55,7 @@ def _handle_keyword(keyword, typ):
                 :param s: Any value
                 :type s: ```Any```
 
-                :returns: the input value
+                :return: the input value
                 :rtype: ```Any```
                 """
                 return "'{}'".format(s)
@@ -81,7 +81,7 @@ def parse_out_param(expr, emit_default_doc=True):
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
 
-    :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :rtype: ```dict```
     """
     required = next(
@@ -171,7 +171,7 @@ def interpolate_defaults(param, emit_default_doc=True):
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
 
-    :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :rtype: ```dict```
     """
     if "doc" in param:
@@ -204,7 +204,7 @@ def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
 
-    :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :rtype: ```dict```
     """
     assert isinstance(e, Return)
@@ -252,7 +252,7 @@ def get_internal_body(target_name, target_type, intermediate_repr):
           }
     :type intermediate_repr: ```dict```
 
-    :returns: Internal body or an empty list
+    :return: Internal body or an empty list
     :rtype: ```list```
     """
     return (

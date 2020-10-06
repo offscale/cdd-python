@@ -15,7 +15,7 @@ def extract_default(line, emit_default_doc=True):
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
 
-    :returns: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
+    :return: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
     :rtype: Tuple[str, Optional[str]]
     """
     search_str = "defaults to "
@@ -46,7 +46,7 @@ def remove_defaults_from_intermediate_repr(intermediate_repr, emit_defaults=True
     :param emit_defaults: Whether to emit default property
     :type emit_defaults: ```bool```
 
-    :returns: a dictionary of form
+    :return: a dictionary of form
               {
                   'short_description': ...,
                   'long_description': ...,
@@ -73,7 +73,7 @@ def _remove_default_from_param(param, emit_defaults=True):
     :param emit_defaults: Whether to emit default property
     :type emit_defaults: ```bool```
 
-    :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :rtype: ```dict```
     """
     doc, default = extract_default(param["doc"], emit_default_doc=False)
@@ -93,7 +93,7 @@ def set_default_doc(param, emit_default_doc=True):
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
 
-    :returns: Same shape as input but with Default append to doc.
+    :return: Same shape as input but with Default append to doc.
     :rtype: ```dict``
     """
     # if param is None: param = {"doc": "", "typ": "Any"}

@@ -4,7 +4,6 @@ Transform from string or AST representations of input, to intermediate_repr dict
             'module': ..., 'title': ..., 'description': ...,
             'parameters': ..., 'schema': ...,'returns': ...}.
 """
-
 from ast import (
     AnnAssign,
     FunctionDef,
@@ -17,7 +16,7 @@ from ast import (
     ClassDef,
 )
 from collections import OrderedDict, deque
-from itertools import filterfalse
+from itertools import filterfalse, count
 from operator import itemgetter
 from typing import Any
 
@@ -144,24 +143,45 @@ def function(function_def, function_type=None, function_name=None):
             "from_type": found_type,
         }
 
+    idx = count()
     deque(
         map(
             lambda args_defaults: deque(
                 map(
-                    lambda idx_arg: intermediate_repr["params"][idx_arg[0]].update(
-                        {
-                            "name": idx_arg[1].arg,
-                            "typ": intermediate_repr["params"][idx_arg[0]].get("typ")
-                            if idx_arg[1].annotation is None
-                            else to_code(idx_arg[1].annotation).rstrip("\n"),
-                            "default": get_value(
-                                getattr(function_def.args, args_defaults[1])[idx_arg[0]]
+                    lambda paramidx_idx_arg: intermediate_repr["params"][
+                        paramidx_idx_arg[0]
+                    ].update(
+                        dict(
+                            name=paramidx_idx_arg[2].arg,
+                            # typ=intermediate_repr["params"][paramidx_idx_arg[0]].get("typ")
+                            **(
+                                {}
+                                if paramidx_idx_arg[2].annotation is None
+                                else dict(
+                                    typ=to_code(paramidx_idx_arg[2].annotation).rstrip(
+                                        "\n"
+                                    )
+                                )
                             ),
-                        }
+                            **(
+                                lambda _defaults: dict(
+                                    default=get_value(_defaults[paramidx_idx_arg[1]])
+                                )
+                                if paramidx_idx_arg[1] < len(_defaults)
+                                and _defaults[paramidx_idx_arg[1]] is not None
+                                else {}
+                            )(getattr(function_def.args, args_defaults[1])),
+                        )
                     ),
                     (
-                        lambda _args: enumerate(
-                            _args if found_type == "static" else _args[1:]
+                        lambda _args: map(
+                            lambda idx_arg: (next(idx), idx_arg[0], idx_arg[1]),
+                            enumerate(
+                                _args
+                                if found_type == "static"
+                                or args_defaults[0] == "kwonlyargs"
+                                else _args[1:]
+                            ),
                         )
                     )(getattr(function_def.args, args_defaults[0])),
                 ),
@@ -173,7 +193,9 @@ def function(function_def, function_type=None, function_name=None):
     )
 
     if hasattr(function_def.args, "kwarg") and function_def.args.kwarg:
-        intermediate_repr["params"][-1]["typ"] = "dict"
+        intermediate_repr["params"][-1].update(
+            {"typ": "dict", "name": function_def.args.kwarg.arg}
+        )
 
     # if intermediate_repr["params"][0].get("name") == "*": del intermediate_repr["params"][0]
 
@@ -202,11 +224,9 @@ def _interpolate_return(function_def, intermediate_repr):
     return_ast = next(
         filter(rpartial(isinstance, Return), function_def.body[::-1]), None
     )
-    if (
-        return_ast is not None
-        and return_ast.value is not None
-        and intermediate_repr.get("returns")
-    ):
+    if return_ast is not None and return_ast.value is not None:
+        # if intermediate_repr["returns"] is None: intermediate_repr["returns"] = {"name": "return_type"}
+
         intermediate_repr["returns"]["default"] = (
             lambda default: "({})".format(default)
             if isinstance(return_ast.value, Tuple)
@@ -324,7 +344,7 @@ def _parse_dict(d):
     :param d: input dictionary
     :type d: ```dict```
 
-    :returns: restructured dict
+    :return: restructured dict
     :rtype: ```dict```
     """
     assert isinstance(d, dict), "Expected 'dict' got `{!r}`".format(type(d).__name__)
@@ -431,7 +451,7 @@ def docstring_parser(doc_string):
         intermediate_repr["params"] = [
             dict(
                 **param,
-                **{k: v for k, v in meta[param["name"]].items() if k not in param}
+                **{k: v for k, v in meta[param["name"]].items() if k not in param},
             )
             for param in intermediate_repr["params"]
         ]

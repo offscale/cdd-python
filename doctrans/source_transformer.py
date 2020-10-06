@@ -17,7 +17,7 @@ def to_code(node):
     :param node: AST node
     :type node: ```AST```
 
-    :returns: Python source
+    :return: Python source
     :rtype: ```str```
     """
 
@@ -54,7 +54,7 @@ def ast_parse(
     :param skip_docstring_remit: Don't parse & emit the docstring as a replacement for current docstring
     :type skip_docstring_remit: ```bool``
 
-    :returns: AST node
+    :return: AST node
     :rtype: node: ```AST```
     """
     parsed_ast = parse(source, filename=filename, mode=mode)
