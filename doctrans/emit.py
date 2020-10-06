@@ -59,7 +59,7 @@ def argparse_function(
     :param function_type: Type of function, static is static or global method, others just become first arg
     :type function_type: ```Literal['self', 'cls', 'static']```
 
-    :returns:  AST node for function definition which constructs argparse
+    :return:  AST node for function definition which constructs argparse
     :rtype: ```FunctionDef``
     """
     function_name = function_name or intermediate_repr["name"]
@@ -261,7 +261,7 @@ def docstring(intermediate_repr, docstring_format="rest", emit_default_doc=True)
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
 
-    :returns: docstring
+    :return: docstring
     :rtype: ```str``
     """
     if docstring_format != "rest":
@@ -374,7 +374,7 @@ def function(
     :param emit_as_kwonlyargs: Whether argument(s) emitted must be keyword only
     :type emit_as_kwonlyargs: ```bool```
 
-    :returns: AST node for function definition
+    :return: AST node for function definition
     :rtype: ```FunctionDef``
     """
     params_no_kwargs = tuple(

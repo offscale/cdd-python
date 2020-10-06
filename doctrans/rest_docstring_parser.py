@@ -19,7 +19,7 @@ def parse_docstring(docstring, emit_default_doc=False):
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
 
-    :returns: a dictionary of form
+    :return: a dictionary of form
               {
                   'name': ...,
                   'type': ...,
@@ -57,7 +57,7 @@ def _scan_phase(docstring):
     :param docstring: the docstring
     :type docstring: ```str```
 
-    :returns: List with each element a tuple of (whether value is a token, value)
+    :return: List with each element a tuple of (whether value is a token, value)
     :rtype: ```List[Tuple[bool, str]]```
     """
     known_tokens = ":param", ":cvar", ":ivar", ":var", ":type", ":rtype", ":return"
@@ -145,7 +145,7 @@ def _set_param_values(input_str, val, sw=":type"):
     :param sw: Startswith condition
     :type sw: ```str```
 
-    :returns: Properly derived key and [potentially modified] value
+    :return: Properly derived key and [potentially modified] value
     :rtype: Tuple[Literal['doc', 'typ'], str]
     """
     return (

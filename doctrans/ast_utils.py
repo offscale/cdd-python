@@ -295,7 +295,7 @@ def argparse_param2param(argparse_param):
 #     :param node: AST node
 #     :type node: ```Union[AST, AnyStr]```
 #
-#     :returns: True if input needs quoting
+#     :return: True if input needs quoting
 #     :rtype: ```bool```
 #     """
 #     if isinstance(node, str):
@@ -317,7 +317,7 @@ def get_function_type(function_def):
     :param function_def: AST node for function definition
     :type function_def: ```FunctionDef```
 
-    :returns: Type of target, static is static or global method, others just become first arg
+    :return: Type of target, static is static or global method, others just become first arg
     :rtype: ```Literal['self', 'cls', 'static']```
     """
     assert isinstance(function_def, FunctionDef), "{typ} != FunctionDef".format(
@@ -341,7 +341,7 @@ def get_value(node):
     :param node: AST node
     :type node: ```Union[Constant, Str]```
 
-    :returns: Probably a string, but could be any constant value
+    :return: Probably a string, but could be any constant value
     :rtype: ```Optional[Union[str, int, float, bool]]```
     """
     if isinstance(node, Str):
@@ -367,7 +367,7 @@ def set_value(value, kind=None):
     :param kind: AST node
     :type kind: ```Optional[Any]```
 
-    :returns: Probably a string, but could be any constant value
+    :return: Probably a string, but could be any constant value
     :rtype: ```Union[Constant, Str, NameConstant]```
     """
     if (
@@ -395,7 +395,7 @@ def is_argparse_add_argument(node):
     :param node: AST node
     :type node: ```AST```
 
-    :returns: Whether the input is the call to `argument_parser.add_argument`
+    :return: Whether the input is the call to `argument_parser.add_argument`
     :rtype: ```bool```
     """
     return (
@@ -415,7 +415,7 @@ def is_argparse_description(node):
     :param node: AST node
     :type node: ```AST```
 
-    :returns: Whether the input is the call to `argument_parser.description`
+    :return: Whether the input is the call to `argument_parser.description`
     :rtype: ```bool```
     """
     return (
@@ -440,7 +440,7 @@ def find_in_ast(search, node):
     :param node: AST node (must have a `body`)
     :type node: ```AST```
 
-    :returns: AST node that was found, or None if nothing was found
+    :return: AST node that was found, or None if nothing was found
     :rtype: ```Optional[AST]```
     """
     if len(search) == 0 or hasattr(node, "_location") and node._location == search:
@@ -524,7 +524,7 @@ def annotate_ancestry(node):
                     :param idx_arg: Index and Any; probably out of `enumerate`
                     :type idx_arg: ```Tuple[int, Any]```
 
-                    :returns: Second element, with _idx set with value of first
+                    :return: Second element, with _idx set with value of first
                     :rtype: ```Any```
                     """
                     idx_arg[1]._idx = idx_arg[0]
@@ -584,7 +584,7 @@ class RewriteAtQuery(ast.NodeTransformer):
         :param node: The AST node
         :type node: ```AST```
 
-        :returns: Potentially changed AST node
+        :return: Potentially changed AST node
         :rtype: ```AST```
         """
         if (
@@ -604,7 +604,7 @@ class RewriteAtQuery(ast.NodeTransformer):
         :param node: FunctionDef
         :type node: ```FunctionDef```
 
-        :returns: Potentially changed FunctionDef
+        :return: Potentially changed FunctionDef
         :rtype: ```FunctionDef```
         """
 
@@ -676,7 +676,7 @@ def emit_ann_assign(node):
     :param node: AST node
     :type node: ```AST```
 
-    :returns: Something which parses to the form of `a=5`
+    :return: Something which parses to the form of `a=5`
     :rtype: ```AnnAssign```
     """
     if isinstance(node, AnnAssign):
@@ -706,7 +706,7 @@ def emit_arg(node):
     :param node: AST node
     :type node: ```AST```
 
-    :returns: Something which parses to the form of `a=5`
+    :return: Something which parses to the form of `a=5`
     :rtype: ```arg```
     """
     if isinstance(node, ast.arg):

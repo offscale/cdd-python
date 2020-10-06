@@ -89,7 +89,7 @@ class TestCliSyncProperties(TestCase):
                 """
                 Mock `_sync_properties` function to check if it is called
 
-                :returns: True
+                :return: True
                 :rtype: ```Literal[True]```
                 """
                 return True

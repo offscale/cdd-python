@@ -975,7 +975,7 @@ def add_6_5(*, a=6, b=5):
     :param b: second param
     :type b: ```int```
 
-    :returns: Aggregated summation of `a` and `b`.
+    :return: Aggregated summation of `a` and `b`.
     :rtype: ```int```
     """
     return operator.add(a, b)
@@ -1005,7 +1005,7 @@ function_adder_ast = (
                     ":type a: ```int```\n\n    "
                     ":param b: second param\n    "
                     ":type b: ```int```\n\n    "
-                    ":returns: Aggregated summation of `a` and `b`.\n    "
+                    ":return: Aggregated summation of `a` and `b`.\n    "
                     ":rtype: ```int```\n    ",
                     constant_value=None,
                     string=None,
@@ -1080,6 +1080,118 @@ function_default_complex_default_arg_ast = (
     else ast.parse(function_default_complex_default_arg_str).body[0]
 )
 
+method_complex_args_variety_str = '''
+def call_cliff(
+    self,
+    dataset_name,
+    *,
+    as_numpy,
+    K: Literal["np", "tf"],
+    tfds_dir="~/tensorflow_datasets",
+    writer=stdout,
+    **kwargs
+) -> Literal["np", "tf"]:
+    """
+    Call cliff
+
+    :param dataset_name: name of dataset.
+
+    :param as_numpy: Convert to numpy ndarrays
+
+    :param K: backend engine, e.g., `np` or `tf`.
+
+    :param tfds_dir: directory to look for models in.
+
+    :param writer: IO object to write out to
+
+    :param **kwargs: additional keyword arguments
+
+    :return: backend engine
+    """
+    return K
+'''
+
+method_complex_args_variety_ast = (
+    FunctionDef(
+        name="call_cliff",
+        args=arguments(
+            posonlyargs=[],
+            args=[
+                arg(arg="self", expr=None, identifier_arg=None),
+                arg(arg="dataset_name", expr=None, identifier_arg=None),
+            ],
+            kwonlyargs=[
+                arg(arg="as_numpy", expr=None, identifier_arg=None),
+                arg(
+                    arg="K",
+                    annotation=Subscript(
+                        Name("Literal", Load()),
+                        Tuple(
+                            elts=[
+                                Constant(value="np", constant_value=None, string=None),
+                                Constant(value="tf", constant_value=None, string=None),
+                            ],
+                            ctx=Load(),
+                            expr=None,
+                        ),
+                        Load(),
+                    ),
+                    expr=None,
+                    identifier_arg=None,
+                ),
+                arg(arg="tfds_dir", expr=None, identifier_arg=None),
+                arg(arg="writer", expr=None, identifier_arg=None),
+            ],
+            kw_defaults=[
+                None,
+                None,
+                Constant(
+                    value="~/tensorflow_datasets", constant_value=None, string=None
+                ),
+                Name("stdout", Load()),
+            ],
+            kwarg=arg(arg="kwargs", expr=None, identifier_arg=None),
+            defaults=[],
+            arg=None,
+        ),
+        body=[
+            Expr(
+                Constant(
+                    value="\n    Call cliff\n\n    "
+                    ":param dataset_name: name of dataset.\n\n    "
+                    ":param as_numpy: Convert to numpy ndarrays\n\n    "
+                    ":param K: backend engine, e.g., `np` or `tf`.\n\n    "
+                    ":param tfds_dir: directory to look for models in.\n\n    "
+                    ":param writer: IO object to write out to\n\n    "
+                    ":param **kwargs: additional keyword arguments\n\n    "
+                    ":return: backend engine\n    ",
+                    constant_value=None,
+                    string=None,
+                )
+            ),
+            Return(value=Name("K", Load()), expr=None),
+        ],
+        decorator_list=[],
+        returns=Subscript(
+            Name("Literal", Load()),
+            Tuple(
+                elts=[
+                    Constant(value="np", constant_value=None, string=None),
+                    Constant(value="tf", constant_value=None, string=None),
+                ],
+                ctx=Load(),
+                expr=None,
+            ),
+            Load(),
+        ),
+        arguments_args=None,
+        identifier_name=None,
+        stmt=None,
+    )
+    if PY3_8
+    else ast.parse(method_complex_args_variety_str).body[0]
+)
+
 __all__ = [
     "class_with_method_str",
     "class_with_method_types_str",
@@ -1092,4 +1204,6 @@ __all__ = [
     "function_adder_ast",
     "function_default_complex_default_arg_str",
     "function_default_complex_default_arg_ast",
+    "method_complex_args_variety_str",
+    "method_complex_args_variety_ast",
 ]

@@ -23,7 +23,7 @@ def identity(s):
     :param s: Any value
     :type s: ```Any```
 
-    :returns: the input value
+    :return: the input value
     :rtype: ```Any```
     """
     return s
@@ -81,7 +81,7 @@ def pluralise(singular):
     :param singular: Non plural
     :type singular: ```str```
 
-    :returns: Plural version
+    :return: Plural version
     :rtype: ```str```
     """
     if not singular:
@@ -121,7 +121,7 @@ def deindent(s):
     :param s: Input string
     :type s: ```AnyStr```
 
-    :returns: Deindented string
+    :return: Deindented string
     :rtype: ```AnyStr```
     """
     return "\n".join(
@@ -145,7 +145,7 @@ def reindent(s, indent_level=1, join_on="\n"):
     :param join_on: What to join on, e.g., '\n'
     :type join_on: ```str```
 
-    :returns: Reindented string
+    :return: Reindented string
     :rtype: ```AnyStr```
     """
     return join_on.join(
@@ -165,7 +165,7 @@ def sanitise(s):
     :param s: Input string
     :type s: ```str```
 
-    :returns: input string with '_' append if it's a keyword else input string
+    :return: input string with '_' append if it's a keyword else input string
     :rtype: ```str```
     """
     return "{}_".format(s) if iskeyword(s) else s
@@ -181,7 +181,7 @@ def strip_split(param, sep):
     :param sep: Separator
     :type sep: ```str```
 
-    :returns: Iterator of each element of the hierarchy
+    :return: Iterator of each element of the hierarchy
     :rtype: ```Iterator[str, ...]```
     """
     return (loc.strip() for loc in param.split(sep))
@@ -197,7 +197,7 @@ def quote(s, mark='"'):
     :param mark: Quote mark to wrap with
     :type mark: ```str```
 
-    :returns: Quoted string
+    :return: Quoted string
     :rtype: ```str```
     """
     if s is None or len(s) == 0 or s[0] == s[-1] and s[0] in frozenset(("'", '"')):

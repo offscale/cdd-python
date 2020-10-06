@@ -21,7 +21,7 @@ def get_logger(name=None):
     :param name: Name of logger instance. Usually the module name with filename dot-appended. None gives root logger.
     :type name: Optional[str]
 
-    :returns: logger instance
+    :return: logger instance
     :rtype: ```logging.Logger```
     """
     with open(path.join(path.dirname(__file__), "_data", "logging.yml"), "rt") as f:

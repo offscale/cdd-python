@@ -19,6 +19,7 @@ from doctrans.tests.mocks.docstrings import (
 from doctrans.tests.mocks.methods import (
     function_adder_ast,
     function_default_complex_default_arg_ast,
+    method_complex_args_variety_ast,
 )
 from doctrans.tests.utils_for_tests import unittest_main
 
@@ -187,6 +188,56 @@ class TestParsers(TestCase):
                 },
                 "short_description": "",
                 "type": "static",
+            },
+        )
+
+    def test_from_method_complex_args_variety(self) -> None:
+        """
+        Tests that `parse.function` produces correctly with:
+        - kw only args;
+        - default args;
+        - annotations
+        - required;
+        - unannotated;
+        - splat
+        """
+        self.assertDictEqual(
+            parse.function(method_complex_args_variety_ast),
+            {
+                "long_description": "",
+                "name": "call_cliff",
+                "params": [
+                    {"doc": "name of dataset.", "name": "dataset_name"},
+                    {"doc": "Convert to numpy ndarrays", "name": "as_numpy"},
+                    {
+                        "doc": "backend engine, e.g., `np` or `tf`.",
+                        "name": "K",
+                        "typ": "Literal['np', 'tf']",
+                    },
+                    {
+                        "default": "~/tensorflow_datasets",
+                        "doc": "directory to look for models in.",
+                        "name": "tfds_dir",
+                    },
+                    {
+                        "default": "stdout",
+                        "doc": "IO object to write out to",
+                        "name": "writer",
+                    },
+                    {
+                        "doc": "additional keyword arguments",
+                        "name": "kwargs",
+                        "typ": "dict",
+                    },
+                ],
+                "returns": {
+                    "default": "K",
+                    "doc": "backend engine",
+                    "name": "return_type",
+                    "typ": "Literal['np', 'tf']",
+                },
+                "short_description": "Call cliff",
+                "type": "self",
             },
         )
 
