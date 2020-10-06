@@ -34,6 +34,17 @@ from doctrans.defaults_utils import extract_default
 from doctrans.pure_utils import simple_types, rpartial, PY_GTE_3_8
 
 
+# Was `"globals().__getitem__"`; this type is used for `Any` and any other unhandled
+FALLBACK_TYP = "str"
+
+# Was `Attribute(Call(args=[], func=Name("globals", Load()), keywords=[], expr=None, expr_func=None,),
+#                "__getitem__", Load(),)`; this type is used for `Any` and any other unhandled (for argparse `type=`)
+FALLBACK_ARGPARSE_TYP = Name(
+    "str",
+    Load(),
+)
+
+
 def param2ast(param):
     """
     Converts a param to an AnnAssign
@@ -180,7 +191,7 @@ def param2argparse_param(param, emit_default_doc=True):
                 elif node.id in simple_types:
                     typ = node.id
                 elif node.id not in frozenset(("Union",)):
-                    typ = "globals().__getitem__"
+                    typ = FALLBACK_TYP
 
     doc, _default = extract_default(param["doc"], emit_default_doc=emit_default_doc)
     default = param.get("default", _default)
@@ -199,17 +210,7 @@ def param2argparse_param(param, emit_default_doc=True):
                     (
                         keyword(
                             arg="type",
-                            value=Attribute(
-                                Call(
-                                    args=[],
-                                    func=Name("globals", Load()),
-                                    keywords=[],
-                                    expr=None,
-                                    expr_func=None,
-                                ),
-                                "__getitem__",
-                                Load(),
-                            )
+                            value=FALLBACK_ARGPARSE_TYP
                             if typ == "globals().__getitem__"
                             else Name(typ, Load()),
                             identifier=None,
