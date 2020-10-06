@@ -2,6 +2,7 @@
 Pure utils for pure functions. For the same input will always produce the same input_str.
 """
 from keyword import iskeyword
+from operator import eq
 from platform import python_version_tuple
 from pprint import PrettyPrinter
 
@@ -203,6 +204,26 @@ def quote(s, mark='"'):
     if s is None or len(s) == 0 or s[0] == s[-1] and s[0] in frozenset(("'", '"')):
         return s
     return "{mark}{s}{mark}".format(mark=mark, s=s)
+
+
+def assert_equal(a, b, cmp=eq):
+    """
+    assert a and b are equal
+
+    :param a: anything
+    :type a: ```Any```
+
+    :param b: anything else
+    :type b: ```Any```
+
+    :param cmp: comparator function
+    :type cmp: ```Callable[[a, b], bool]```
+
+    :return: True if equal, otherwise raises `AssertionError`
+    :rtype: ```Literal[True]```
+    """
+    assert cmp(a, b), "{!r} != {!r}".format(a, b)
+    return True
 
 
 __all__ = [

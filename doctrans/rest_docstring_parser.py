@@ -122,7 +122,8 @@ def _parse_phase(intermediate_repr, scanned, emit_default_doc):
                 name = line[fst_space + 1 : nxt_colon]
 
                 if "name" in param and not param["name"] == name:
-                    intermediate_repr["params"].append(param)
+                    if not param["name"][0] == "*":
+                        intermediate_repr["params"].append(param)
                     param = {}
 
                 val = line[nxt_colon + 1 :].strip()
