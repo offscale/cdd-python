@@ -33,7 +33,7 @@ from doctrans.ast_utils import (
 )
 from doctrans.defaults_utils import extract_default
 from doctrans.emitter_utils import parse_out_param, _parse_return
-from doctrans.pure_utils import rpartial
+from doctrans.pure_utils import rpartial, assert_equal
 from doctrans.rest_docstring_parser import parse_docstring
 from doctrans.source_transformer import to_code
 
@@ -143,32 +143,44 @@ def function(function_def, function_type=None, function_name=None):
             "from_type": found_type,
         }
 
+    params_to_append = []
+    if hasattr(function_def.args, "kwarg") and function_def.args.kwarg:
+        params_to_append.append(intermediate_repr["params"].pop())
+        params_to_append[-1].update(
+            {
+                "name": function_def.args.kwarg.arg,
+                "typ": "dict",
+            }
+        )
+
     idx = count()
     deque(
         map(
             lambda args_defaults: deque(
                 map(
-                    lambda paramidx_idx_arg: intermediate_repr["params"][
-                        paramidx_idx_arg[0]
-                    ].update(
+                    lambda idxparam_idx_arg: assert_equal(
+                        intermediate_repr["params"][idxparam_idx_arg[0]]["name"],
+                        idxparam_idx_arg[2].arg,
+                    )
+                    and intermediate_repr["params"][idxparam_idx_arg[0]].update(
                         dict(
-                            name=paramidx_idx_arg[2].arg,
-                            # typ=intermediate_repr["params"][paramidx_idx_arg[0]].get("typ")
+                            name=idxparam_idx_arg[2].arg,
                             **(
                                 {}
-                                if getattr(paramidx_idx_arg[2], 'annotation', None) is None
+                                if getattr(idxparam_idx_arg[2], "annotation", None)
+                                is None
                                 else dict(
-                                    typ=to_code(paramidx_idx_arg[2].annotation).rstrip(
+                                    typ=to_code(idxparam_idx_arg[2].annotation).rstrip(
                                         "\n"
                                     )
                                 )
                             ),
                             **(
                                 lambda _defaults: dict(
-                                    default=get_value(_defaults[paramidx_idx_arg[1]])
+                                    default=get_value(_defaults[idxparam_idx_arg[1]])
                                 )
-                                if paramidx_idx_arg[1] < len(_defaults)
-                                and _defaults[paramidx_idx_arg[1]] is not None
+                                if idxparam_idx_arg[1] < len(_defaults)
+                                and _defaults[idxparam_idx_arg[1]] is not None
                                 else {}
                             )(getattr(function_def.args, args_defaults[1])),
                         )
@@ -177,10 +189,15 @@ def function(function_def, function_type=None, function_name=None):
                         lambda _args: map(
                             lambda idx_arg: (next(idx), idx_arg[0], idx_arg[1]),
                             enumerate(
-                                _args
-                                if found_type == "static"
-                                or args_defaults[0] == "kwonlyargs"
-                                else _args[1:]
+                                filterfalse(
+                                    lambda arg: arg.arg[0] == "*",
+                                    (
+                                        _args
+                                        if found_type == "static"
+                                        or args_defaults[0] == "kwonlyargs"
+                                        else _args[1:]
+                                    ),
+                                )
                             ),
                         )
                     )(getattr(function_def.args, args_defaults[0])),
@@ -192,12 +209,7 @@ def function(function_def, function_type=None, function_name=None):
         maxlen=0,
     )
 
-    if hasattr(function_def.args, "kwarg") and function_def.args.kwarg:
-        intermediate_repr["params"][-1].update(
-            {"typ": "dict", "name": function_def.args.kwarg.arg}
-        )
-
-    # if intermediate_repr["params"][0].get("name") == "*": del intermediate_repr["params"][0]
+    intermediate_repr["params"] += params_to_append
 
     # Convention - the final top-level `return` is the default
     _interpolate_return(function_def, intermediate_repr)
