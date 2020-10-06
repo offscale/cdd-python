@@ -156,7 +156,7 @@ def function(function_def, function_type=None, function_name=None):
                             # typ=intermediate_repr["params"][paramidx_idx_arg[0]].get("typ")
                             **(
                                 {}
-                                if paramidx_idx_arg[2].annotation is None
+                                if getattr(paramidx_idx_arg[2], 'annotation', None) is None
                                 else dict(
                                     typ=to_code(paramidx_idx_arg[2].annotation).rstrip(
                                         "\n"
