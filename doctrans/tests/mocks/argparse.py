@@ -22,6 +22,7 @@ from ast import (
     If,
 )
 
+from doctrans.ast_utils import FALLBACK_TYP, FALLBACK_ARGPARSE_TYP
 from doctrans.pure_utils import PY3_8
 
 argparse_func_str = '''
@@ -51,7 +52,7 @@ def set_cli_args(argument_parser):
     )
     argument_parser.add_argument(
         "--K",
-        type=globals().__getitem__,
+        type={FALLBACK_TYP},
         choices=("np", "tf"),
         help="backend engine, e.g., `np` or `tf`.",
         required=True,
@@ -68,7 +69,8 @@ def set_cli_args(argument_parser):
     return argument_parser, (np.empty(0), np.empty(0))
 '''.format(
     description="Acquire from the official tensorflow_datasets model zoo,"
-    " or the ophthalmology focussed ml-prepare library"
+    " or the ophthalmology focussed ml-prepare library",
+    FALLBACK_TYP=FALLBACK_TYP,
 )
 
 argparse_func_with_body_str = '''
@@ -96,7 +98,7 @@ def set_cli_args(argument_parser):
     )
     argument_parser.add_argument(
         '--K',
-        type=globals().__getitem__,
+        type={FALLBACK_TYP},
         choices=('np', 'tf'),
         help='backend engine, e.g., `np` or `tf`.',
         required=True,
@@ -112,7 +114,9 @@ def set_cli_args(argument_parser):
         print(True)
         return 5
     return argument_parser, (np.empty(0), np.empty(0))
-'''
+'''.format(
+    FALLBACK_TYP=FALLBACK_TYP
+)
 
 argparse_func_ast = (
     FunctionDef(
@@ -273,17 +277,7 @@ argparse_func_ast = (
                     keywords=[
                         keyword(
                             arg="type",
-                            value=Attribute(
-                                Call(
-                                    args=[],
-                                    func=Name("globals", Load()),
-                                    keywords=[],
-                                    expr=None,
-                                    expr_func=None,
-                                ),
-                                "__getitem__",
-                                Load(),
-                            ),
+                            value=FALLBACK_ARGPARSE_TYP,
                             identifier=None,
                         ),
                         keyword(
@@ -642,17 +636,7 @@ argparse_func_with_body_ast = (
                     keywords=[
                         keyword(
                             arg="type",
-                            value=Attribute(
-                                Call(
-                                    args=[],
-                                    func=Name("globals", Load()),
-                                    keywords=[],
-                                    expr=None,
-                                    expr_func=None,
-                                ),
-                                "__getitem__",
-                                Load(),
-                            ),
+                            value=FALLBACK_ARGPARSE_TYP,
                             identifier=None,
                         ),
                         keyword(
