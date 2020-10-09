@@ -2,7 +2,7 @@
 Functions which produce intermediate_repr from various different inputs
 """
 import ast
-from ast import Constant, Name, Attribute, Return
+from ast import Constant, Name, Return
 from functools import partial
 from typing import Any
 
@@ -17,14 +17,13 @@ def _handle_value(node):
     Handle keyword.value types, returning the correct one as a `str` or `Any`
 
     :param node: AST node from keyword.value
-    :type node: ```Union[Attribute, Name]```
+    :type node: ```Name```
 
     :return: `str` or `Any`, representing the type for argparse
     :rtype: ```Union[str, Any]```
     """
-    if isinstance(node, Attribute):
-        return Any
-    elif isinstance(node, Name):
+    # if isinstance(node, Attribute): return Any
+    if isinstance(node, Name):
         return "dict" if node.id == "loads" else node.id
     raise NotImplementedError(type(node).__name__)
 

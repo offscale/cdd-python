@@ -70,15 +70,15 @@ def argparse_function(
                 filter(
                     None,
                     (
-                        None
-                        if function_type in frozenset((None, "static"))
-                        else arg(
-                            annotation=None,
-                            arg=function_type,
-                            type_comment=None,
-                            expr=None,
-                            identifier_arg=None,
-                        ),
+                        # None
+                        # if function_type in frozenset((None, "static"))
+                        # else arg(
+                        #     annotation=None,
+                        #     arg=function_type,
+                        #     type_comment=None,
+                        #     expr=None,
+                        #     identifier_arg=None,
+                        # ),
                         arg(
                             annotation=None,
                             arg="argument_parser",
@@ -291,7 +291,7 @@ def docstring(intermediate_repr, docstring_format="rest", emit_default_doc=True)
     )
 
 
-def file(node, filename, mode="a", skip_black=True):
+def file(node, filename, mode="a", skip_black=False):
     """
     Convert AST to a file
 
