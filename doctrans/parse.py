@@ -11,7 +11,6 @@ from ast import (
     Assign,
     Tuple,
     get_docstring,
-    Subscript,
     Module,
     ClassDef,
 )
@@ -245,7 +244,7 @@ def _interpolate_return(function_def, intermediate_repr):
             and (not default.startswith("(") or not default.endswith(")"))
             else default
         )(to_code(return_ast.value).rstrip("\n"))
-    if hasattr(function_def, "returns") and isinstance(function_def.returns, Subscript):
+    if hasattr(function_def, "returns") and function_def.returns is not None:
         intermediate_repr["returns"]["typ"] = to_code(function_def.returns).rstrip("\n")
 
 

@@ -39,7 +39,10 @@ def _default_options(node, search, type_wanted):
         "FunctionDef": lambda: {
             "function_type": node if node is None else get_function_type(node),
             "function_name": search[-1] if len(search) else "set_cli_args",
-        }
+        },
+        "ClassDef": lambda: {
+            "class_name": search[-1] if len(search) else "ConfigClass",
+        },
     }.get(type_wanted.__name__, lambda: {})
 
 
@@ -150,7 +153,7 @@ def _conform_filename(
             emit_func(replacement_node_ir),
             filename=filename,
             mode="wt",
-            skip_black=True,
+            skip_black=False,
         )
         return filename, True
 
@@ -164,7 +167,7 @@ def _conform_filename(
         **_default_options(node=original_node, search=search, type_wanted=type_wanted)()
     )
     if original_node is None:
-        emit.file(replacement_node, filename=filename, mode="a", skip_black=True)
+        emit.file(replacement_node, filename=filename, mode="a", skip_black=False)
         return filename, True
     assert len(search) > 0
 
