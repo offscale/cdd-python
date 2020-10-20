@@ -237,9 +237,7 @@ def param2argparse_param(param, emit_default_doc=True):
                         ),
                         keyword(
                             arg="nargs",
-                            value=Constant(
-                                value=nargs, constant_value=None, string=None
-                            ),
+                            value=set_value(value=nargs),
                             identifier=None,
                         )
                         if nargs
