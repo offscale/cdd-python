@@ -1118,7 +1118,9 @@ method_complex_args_variety_ast = (
             posonlyargs=[],
             args=[
                 arg(arg="self", expr=None, identifier_arg=None, annotation=None),
-                arg(arg="dataset_name", expr=None, identifier_arg=None, annotation=None),
+                arg(
+                    arg="dataset_name", expr=None, identifier_arg=None, annotation=None
+                ),
             ],
             kwonlyargs=[
                 arg(arg="as_numpy", expr=None, identifier_arg=None, annotation=None),
