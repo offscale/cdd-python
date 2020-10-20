@@ -22,7 +22,7 @@ from ast import (
     If,
 )
 
-from doctrans.ast_utils import FALLBACK_TYP, FALLBACK_ARGPARSE_TYP
+from doctrans.ast_utils import FALLBACK_TYP, FALLBACK_ARGPARSE_TYP, set_value
 from doctrans.pure_utils import PY3_8
 
 argparse_func_str = '''
@@ -1083,7 +1083,7 @@ argparse_func_nargs_ast = (
                         ),
                         keyword(
                             arg="nargs",
-                            value=Constant(value="?", constant_value=None, string=None),
+                            value=set_value(kind=None, value="?"),
                             identifier=None,
                         ),
                         keyword(
