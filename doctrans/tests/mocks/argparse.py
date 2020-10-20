@@ -938,7 +938,7 @@ argparse_func_nargs_ast = (
         name="set_cli_nargs",
         args=arguments(
             posonlyargs=[],
-            args=[arg("argument_parser", expr=None)],
+            args=[arg("argument_parser", expr=None, annotation=None)],
             kwonlyargs=[],
             kw_defaults=[],
             defaults=[],

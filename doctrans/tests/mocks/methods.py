@@ -1117,11 +1117,11 @@ method_complex_args_variety_ast = (
         args=arguments(
             posonlyargs=[],
             args=[
-                arg(arg="self", expr=None, identifier_arg=None),
-                arg(arg="dataset_name", expr=None, identifier_arg=None),
+                arg(arg="self", expr=None, identifier_arg=None, annotation=None),
+                arg(arg="dataset_name", expr=None, identifier_arg=None, annotation=None),
             ],
             kwonlyargs=[
-                arg(arg="as_numpy", expr=None, identifier_arg=None),
+                arg(arg="as_numpy", expr=None, identifier_arg=None, annotation=None),
                 arg(
                     arg="K",
                     annotation=Subscript(
@@ -1139,8 +1139,8 @@ method_complex_args_variety_ast = (
                     expr=None,
                     identifier_arg=None,
                 ),
-                arg(arg="tfds_dir", expr=None, identifier_arg=None),
-                arg(arg="writer", expr=None, identifier_arg=None),
+                arg(arg="tfds_dir", expr=None, identifier_arg=None, annotation=None),
+                arg(arg="writer", expr=None, identifier_arg=None, annotation=None),
             ],
             kw_defaults=[
                 None,
@@ -1150,7 +1150,7 @@ method_complex_args_variety_ast = (
                 ),
                 Name("stdout", Load()),
             ],
-            kwarg=arg(arg="kwargs", expr=None, identifier_arg=None),
+            kwarg=arg(arg="kwargs", expr=None, identifier_arg=None, annotation=None),
             defaults=[],
             arg=None,
         ),
