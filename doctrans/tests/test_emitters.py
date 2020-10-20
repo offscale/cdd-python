@@ -8,6 +8,8 @@ from copy import deepcopy
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
+from meta.asttools import cmp_ast
+
 from doctrans import emit, parse
 from doctrans.ast_utils import (
     get_function_type,
@@ -29,7 +31,6 @@ from doctrans.tests.mocks.methods import (
     class_with_method_types_str,
 )
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
-from meta.asttools import cmp_ast
 
 
 class TestEmitters(TestCase):
@@ -74,6 +75,9 @@ class TestEmitters(TestCase):
         )
 
     def test_to_argparse_func_nargs(self) -> None:
+        """
+        Tests whether an argparse function is generated with `nargs` set properly
+        """
         run_ast_test(
             self,
             emit.argparse_function(
