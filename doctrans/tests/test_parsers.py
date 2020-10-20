@@ -5,7 +5,6 @@ from ast import FunctionDef
 from unittest import TestCase
 
 from docstring_parser import rest
-
 from doctrans import parse, emit
 from doctrans.ast_utils import get_value
 from doctrans.emitter_utils import to_docstring
@@ -71,7 +70,8 @@ class TestParsers(TestCase):
             "{tab}:return: argument_parser\n"
             "{tab}:rtype: ```ArgumentParser```\n"
             '{tab}"""\n'
-            "{tab}argument_parser.description = ''".format(tab=tab),
+            "{tab}argument_parser.description = ''\n"
+            "{tab}return argument_parser".format(tab=tab),
         )
 
     def test_from_class(self) -> None:
