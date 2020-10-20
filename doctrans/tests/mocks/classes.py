@@ -45,6 +45,35 @@ class ConfigClass(object):
     )
 '''
 
+class_nargs_str = '''
+class ConfigClass(object):
+    """
+    Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
+
+    :cvar callbacks: Collection of callables that are run inside the training loop"""
+
+    callbacks: Optional[
+        List[
+            Literal[
+                "BaseLogger",
+                "CSVLogger",
+                "Callback",
+                "CallbackList",
+                "EarlyStopping",
+                "History",
+                "LambdaCallback",
+                "LearningRateScheduler",
+                "ModelCheckpoint",
+                "ProgbarLogger",
+                "ReduceLROnPlateau",
+                "RemoteMonitor",
+                "TensorBoard",
+                "TerminateOnNaN",
+            ]
+        ]
+    ] = None
+'''
+
 class_ast = (
     ClassDef(
         bases=[Name("object", Load())],
@@ -280,6 +309,126 @@ class_ast = (
     )
     if PY3_8
     else ast.parse(class_str).body[0]
+)
+
+class_nargs_ast = (
+    ClassDef(
+        name="ConfigClass",
+        bases=[Name("object", Load())],
+        keywords=[],
+        body=[
+            Expr(
+                Constant(
+                    value="\n    Acquire from the official tensorflow_datasets model zoo,"
+                    " or the ophthalmology focussed ml-prepare library\n\n    "
+                    ":cvar callbacks: Collection of callables that are run inside the training loop",
+                    constant_value=None,
+                    string=None,
+                )
+            ),
+            AnnAssign(
+                target=Name("callbacks", Store()),
+                annotation=Subscript(
+                    Name("Optional", Load()),
+                    Subscript(
+                        Name("List", Load()),
+                        Subscript(
+                            Name("Literal", Load()),
+                            Tuple(
+                                elts=[
+                                    Constant(
+                                        value="BaseLogger",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="CSVLogger",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="Callback",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="CallbackList",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="EarlyStopping",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="History",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="LambdaCallback",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="LearningRateScheduler",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="ModelCheckpoint",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="ProgbarLogger",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="ReduceLROnPlateau",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="RemoteMonitor",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="TensorBoard",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="TerminateOnNaN",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                ],
+                                ctx=Load(),
+                                expr=None,
+                            ),
+                            Load(),
+                        ),
+                        Load(),
+                    ),
+                    Load(),
+                ),
+                value=Constant(value=None, constant_value=None, string=None),
+                simple=1,
+                expr=None,
+                expr_annotation=None,
+                expr_target=None,
+            ),
+        ],
+        decorator_list=[],
+        expr=None,
+        identifier_name=None,
+    )
+    if PY3_8
+    else ast.parse(class_nargs_str).body[0]
 )
 
 __all__ = ["class_str", "class_ast"]

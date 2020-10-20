@@ -43,6 +43,7 @@ if __name__ == "__main__":
         )
 
     _data_join, _data_install_dir = to_funcs("_data")
+    _data_join, _data_install_dir = to_funcs("_data")
 
     setup(
         name=package_name,
@@ -55,7 +56,6 @@ if __name__ == "__main__":
         classifiers=[
             "Development Status :: 3 - Alpha",
             "Environment :: Console",
-            "Framework :: Sphinx",
             "Intended Audience :: Developers",
             "License :: OSI Approved",
             "License :: OSI Approved :: Apache Software License",
@@ -65,15 +65,13 @@ if __name__ == "__main__":
             "Programming Language :: Python :: 3 :: Only",
             "Programming Language :: Python :: 3.8",
             "Programming Language :: Python :: Implementation",
-            "Topic :: Documentation",
-            "Topic :: Documentation :: Sphinx",
             "Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator",
             "Topic :: Software Development",
             "Topic :: Software Development :: Build Tools",
             "Topic :: Software Development :: Code Generators",
             "Topic :: Software Development :: Compilers",
             "Topic :: Software Development :: Pre-processors",
-            "Typing :: Typed",
+            "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
         ],
         data_files=[
             (_data_install_dir(), list(map(_data_join, listdir(_data_join()))))

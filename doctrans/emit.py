@@ -20,7 +20,6 @@ from ast import (
 from functools import partial
 
 from black import format_str, Mode
-
 from doctrans.ast_utils import param2argparse_param, param2ast, set_value
 from doctrans.defaults_utils import set_default_doc
 from doctrans.emitter_utils import get_internal_body, to_docstring
@@ -172,7 +171,7 @@ def argparse_function(
                         expr=None,
                     )
                     if intermediate_repr.get("returns")
-                    else None,
+                    else Return(value=Name("argument_parser", Load()), expr=None),
                 ),
             )
         ),
