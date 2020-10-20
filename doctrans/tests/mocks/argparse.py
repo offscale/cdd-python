@@ -938,11 +938,15 @@ argparse_func_nargs_ast = (
         name="set_cli_nargs",
         args=arguments(
             posonlyargs=[],
-            args=[arg("argument_parser", expr=None, annotation=None)],
+            args=[
+                arg("argument_parser", expr=None, annotation=None, type_comment=None)
+            ],
             kwonlyargs=[],
             kw_defaults=[],
             defaults=[],
             arg=None,
+            vararg=None,
+            kwarg=None,
         ),
         body=[
             Expr(
@@ -963,8 +967,10 @@ argparse_func_nargs_ast = (
                     "Acquire from the official tensorflow_datasets model zoo,"
                     " or the ophthalmology focussed ml-prepare library",
                     string=None,
+                    kind=None,
                 ),
                 expr=None,
+                type_comment=None,
             ),
             Expr(
                 Call(
@@ -972,7 +978,12 @@ argparse_func_nargs_ast = (
                         Name("argument_parser", Load()), "add_argument", Load()
                     ),
                     args=[
-                        Constant(value="--callbacks", constant_value=None, string=None)
+                        Constant(
+                            value="--callbacks",
+                            constant_value=None,
+                            string=None,
+                            kind=None,
+                        )
                     ],
                     keywords=[
                         keyword(arg="type", value=Name("str", Load()), identifier=None),
@@ -981,71 +992,85 @@ argparse_func_nargs_ast = (
                             value=Tuple(
                                 elts=[
                                     Constant(
+                                        kind=None,
                                         value="BaseLogger",
                                         constant_value=None,
                                         string=None,
                                     ),
                                     Constant(
+                                        kind=None,
                                         value="CSVLogger",
                                         constant_value=None,
                                         string=None,
                                     ),
                                     Constant(
+                                        kind=None,
                                         value="Callback",
                                         constant_value=None,
                                         string=None,
                                     ),
                                     Constant(
+                                        kind=None,
                                         value="CallbackList",
                                         constant_value=None,
                                         string=None,
                                     ),
                                     Constant(
+                                        kind=None,
                                         value="EarlyStopping",
                                         constant_value=None,
                                         string=None,
                                     ),
                                     Constant(
+                                        kind=None,
                                         value="History",
                                         constant_value=None,
                                         string=None,
                                     ),
                                     Constant(
+                                        kind=None,
                                         value="LambdaCallback",
                                         constant_value=None,
                                         string=None,
                                     ),
                                     Constant(
+                                        kind=None,
                                         value="LearningRateScheduler",
                                         constant_value=None,
                                         string=None,
                                     ),
                                     Constant(
+                                        kind=None,
                                         value="ModelCheckpoint",
                                         constant_value=None,
                                         string=None,
                                     ),
                                     Constant(
+                                        kind=None,
                                         value="ProgbarLogger",
                                         constant_value=None,
                                         string=None,
                                     ),
                                     Constant(
+                                        kind=None,
                                         value="ReduceLROnPlateau",
                                         constant_value=None,
                                         string=None,
                                     ),
                                     Constant(
+                                        kind=None,
                                         value="RemoteMonitor",
                                         constant_value=None,
                                         string=None,
                                     ),
                                     Constant(
+                                        kind=None,
                                         value="TensorBoard",
                                         constant_value=None,
                                         string=None,
                                     ),
                                     Constant(
+                                        kind=None,
                                         value="TerminateOnNaN",
                                         constant_value=None,
                                         string=None,
@@ -1064,16 +1089,10 @@ argparse_func_nargs_ast = (
                         keyword(
                             arg="help",
                             value=Constant(
+                                kind=None,
                                 value="Collection of callables that are run inside the training loop",
                                 constant_value=None,
                                 string=None,
-                            ),
-                            identifier=None,
-                        ),
-                        keyword(
-                            arg="required",
-                            value=Constant(
-                                value=True, constant_value=None, string=None
                             ),
                             identifier=None,
                         ),
@@ -1085,6 +1104,8 @@ argparse_func_nargs_ast = (
             Return(value=Name("argument_parser", Load()), expr=None),
         ],
         decorator_list=[],
+        returns=None,
+        type_comment=None,
         arguments_args=None,
         identifier_name=None,
         stmt=None,
