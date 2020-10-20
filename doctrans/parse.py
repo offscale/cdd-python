@@ -20,7 +20,6 @@ from operator import itemgetter
 from typing import Any
 
 from docstring_parser import DocstringParam, DocstringMeta, Docstring
-
 from doctrans import get_logger
 from doctrans.ast_utils import (
     find_ast_type,

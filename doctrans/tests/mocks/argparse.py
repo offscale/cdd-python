@@ -118,6 +118,47 @@ def set_cli_args(argument_parser):
     FALLBACK_TYP=FALLBACK_TYP
 )
 
+argparse_func_nargs_str = '''
+def set_cli_nargs(argument_parser):
+    """
+    Set CLI arguments
+
+    :param argument_parser: argument parser
+    :type argument_parser: ```ArgumentParser```
+
+    :return: argument_parser
+    :rtype: ```ArgumentParser```
+    """
+    argument_parser.description = "{description}"
+    argument_parser.add_argument(
+        "--callbacks",
+        type=str,
+        choices=(
+            "BaseLogger",
+            "CSVLogger",
+            "Callback",
+            "CallbackList",
+            "EarlyStopping",
+            "History",
+            "LambdaCallback",
+            "LearningRateScheduler",
+            "ModelCheckpoint",
+            "ProgbarLogger",
+            "ReduceLROnPlateau",
+            "RemoteMonitor",
+            "TensorBoard",
+            "TerminateOnNaN",
+        ),
+        nargs="?",
+        help="Collection of callables that are run inside the training loop",
+    )
+    return argument_parser
+'''.format(
+    description="Acquire from the official tensorflow_datasets model zoo,"
+    " or the ophthalmology focussed ml-prepare library",
+    FALLBACK_TYP=FALLBACK_TYP,
+)
+
 argparse_func_ast = (
     FunctionDef(
         args=arguments(
@@ -892,6 +933,167 @@ argparse_add_argument_ast = Expr(
         expr_func=None,
     )
 )
+
+argparse_func_nargs_ast = (
+    FunctionDef(
+        name="set_cli_nargs",
+        args=arguments(
+            posonlyargs=[],
+            args=[arg("argument_parser", expr=None)],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[],
+            arg=None,
+        ),
+        body=[
+            Expr(
+                Constant(
+                    "\n    Set CLI arguments\n\n    "
+                    ":param argument_parser: argument parser\n    "
+                    ":type argument_parser: ```ArgumentParser```\n\n    "
+                    ":return: argument_parser\n    "
+                    ":rtype: ```ArgumentParser```\n    ",
+                    string=None,
+                )
+            ),
+            Assign(
+                targets=[
+                    Attribute(Name("argument_parser", Load()), "description", Store())
+                ],
+                value=Constant(
+                    "Acquire from the official tensorflow_datasets model zoo,"
+                    " or the ophthalmology focussed ml-prepare library",
+                    string=None,
+                ),
+                expr=None,
+            ),
+            Expr(
+                Call(
+                    func=Attribute(
+                        Name("argument_parser", Load()), "add_argument", Load()
+                    ),
+                    args=[
+                        Constant(value="--callbacks", constant_value=None, string=None)
+                    ],
+                    keywords=[
+                        keyword(arg="type", value=Name("str", Load()), identifier=None),
+                        keyword(
+                            arg="choices",
+                            value=Tuple(
+                                elts=[
+                                    Constant(
+                                        value="BaseLogger",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="CSVLogger",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="Callback",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="CallbackList",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="EarlyStopping",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="History",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="LambdaCallback",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="LearningRateScheduler",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="ModelCheckpoint",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="ProgbarLogger",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="ReduceLROnPlateau",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="RemoteMonitor",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="TensorBoard",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                    Constant(
+                                        value="TerminateOnNaN",
+                                        constant_value=None,
+                                        string=None,
+                                    ),
+                                ],
+                                ctx=Load(),
+                                expr=None,
+                            ),
+                            identifier=None,
+                        ),
+                        keyword(
+                            arg="nargs",
+                            value=Constant(value="?", constant_value=None, string=None),
+                            identifier=None,
+                        ),
+                        keyword(
+                            arg="help",
+                            value=Constant(
+                                value="Collection of callables that are run inside the training loop",
+                                constant_value=None,
+                                string=None,
+                            ),
+                            identifier=None,
+                        ),
+                        keyword(
+                            arg="required",
+                            value=Constant(
+                                value=True, constant_value=None, string=None
+                            ),
+                            identifier=None,
+                        ),
+                    ],
+                    expr=None,
+                    expr_func=None,
+                )
+            ),
+            Return(value=Name("argument_parser", Load()), expr=None),
+        ],
+        decorator_list=[],
+        arguments_args=None,
+        identifier_name=None,
+        stmt=None,
+    )
+    if PY3_8
+    else ast.parse(argparse_func_nargs_str).body[0]
+)
+
 
 __all__ = [
     "argparse_func_str",

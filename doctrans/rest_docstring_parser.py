@@ -77,7 +77,14 @@ def _scan_phase(docstring):
                 continue
 
     if len(stack):
-        scanned.append((bool(len(scanned) and scanned[-1][0]), "".join(stack)))
+        final = "".join(stack)
+        scanned.append(
+            (
+                bool(len(scanned) and scanned[-1][0])
+                or any(final.startswith(known_token) for known_token in known_tokens),
+                final,
+            )
+        )
 
     return scanned
 
