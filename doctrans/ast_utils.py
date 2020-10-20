@@ -33,7 +33,6 @@ from functools import partial
 from doctrans.defaults_utils import extract_default
 from doctrans.pure_utils import simple_types, rpartial, PY_GTE_3_8
 
-
 # Was `"globals().__getitem__"`; this type is used for `Any` and any other unhandled
 FALLBACK_TYP = "str"
 
@@ -167,7 +166,7 @@ def param2argparse_param(param, emit_default_doc=True):
     :return: `argparse.add_argument` call—with arguments—as an AST node
     :rtype: ```Expr```
     """
-    typ, choices, required = "str", None, True
+    typ, choices, required, nargs = "str", None, True, None
     param.setdefault("typ", "Any")
     if param["typ"] in simple_types:
         typ = param["typ"]
@@ -176,6 +175,7 @@ def param2argparse_param(param, emit_default_doc=True):
         required = not param["name"].endswith("kwargs")
     elif param["typ"]:
         parsed_type = parse(param["typ"]).body[0]
+        # print_ast(parsed_type)
         for node in walk(parsed_type):
             if isinstance(node, Tuple):
                 maybe_choices = tuple(
@@ -192,6 +192,12 @@ def param2argparse_param(param, emit_default_doc=True):
                     typ = node.id
                 elif node.id not in frozenset(("Union",)):
                     typ = FALLBACK_TYP
+
+                if node.id == "List":
+                    nargs = "+"
+
+    if required is False and nargs:
+        nargs = "?"
 
     doc, _default = extract_default(param["doc"], emit_default_doc=emit_default_doc)
     default = param.get("default", _default)
@@ -229,6 +235,15 @@ def param2argparse_param(param, emit_default_doc=True):
                             ),
                             identifier=None,
                         ),
+                        keyword(
+                            arg="nargs",
+                            value=Constant(
+                                value=nargs, constant_value=None, string=None
+                            ),
+                            identifier=None,
+                        )
+                        if nargs
+                        else None,
                         keyword(
                             arg="help",
                             value=set_value(kind=None, value=doc),

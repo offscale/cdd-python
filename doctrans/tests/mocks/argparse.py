@@ -156,7 +156,6 @@ def set_cli_nargs(argument_parser):
 '''.format(
     description="Acquire from the official tensorflow_datasets model zoo,"
     " or the ophthalmology focussed ml-prepare library",
-    FALLBACK_TYP=FALLBACK_TYP,
 )
 
 argparse_func_ast = (
