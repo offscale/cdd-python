@@ -43,7 +43,6 @@ if __name__ == "__main__":
         )
 
     _data_join, _data_install_dir = to_funcs("_data")
-    _data_join, _data_install_dir = to_funcs("_data")
 
     setup(
         name=package_name,
