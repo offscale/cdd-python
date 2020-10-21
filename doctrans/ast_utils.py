@@ -175,7 +175,6 @@ def param2argparse_param(param, emit_default_doc=True):
         required = not param["name"].endswith("kwargs")
     elif param["typ"]:
         parsed_type = parse(param["typ"]).body[0]
-        # print_ast(parsed_type)
         for node in walk(parsed_type):
             if isinstance(node, Tuple):
                 maybe_choices = tuple(
