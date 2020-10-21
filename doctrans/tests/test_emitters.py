@@ -40,12 +40,22 @@ class TestEmitters(TestCase):
         """
         Tests whether `class_` produces `class_ast` given `argparse_func_ast`
         """
-        a = parse.argparse_ast(argparse_func_ast)
-        gen_ast = emit.class_(a)
         run_ast_test(
             self,
-            gen_ast=gen_ast,
+            gen_ast=emit.class_(parse.argparse_ast(argparse_func_ast)),
             gold=class_ast,
+        )
+
+    def test_to_class_from_argparse_nargs_ast(self) -> None:
+        """
+        Tests whether a class from an argparse function with `nargs` set
+        """
+        run_ast_test(
+            self,
+            emit.class_(
+                parse.argparse_ast(argparse_func_nargs_ast),
+            ),
+            gold=class_nargs_ast,
         )
 
     def test_to_class_from_docstring_str(self) -> None:

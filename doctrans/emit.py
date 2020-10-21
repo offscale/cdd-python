@@ -20,6 +20,7 @@ from ast import (
 from functools import partial
 
 from black import format_str, Mode
+
 from doctrans.ast_utils import param2argparse_param, param2ast, set_value
 from doctrans.defaults_utils import set_default_doc
 from doctrans.emitter_utils import get_internal_body, to_docstring
@@ -210,8 +211,9 @@ def class_(intermediate_repr, class_name="ConfigClass", class_bases=("object",))
     """
     returns = [intermediate_repr["returns"]] if intermediate_repr.get("returns") else []
 
-    intermediate_repr["params"] = intermediate_repr["params"] + returns
-    del intermediate_repr["returns"]
+    if len(returns):
+        intermediate_repr["params"] = intermediate_repr["params"] + returns
+        del intermediate_repr["returns"]
 
     return ClassDef(
         bases=[Name(base_class, Load()) for base_class in class_bases],

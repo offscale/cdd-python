@@ -135,21 +135,30 @@ def parse_out_param(expr, emit_default_doc=True):
     if default is None and typ in simple_types and required:
         default = simple_types[typ]
 
+    nargs = next(
+        (
+            get_value(key_word.value)
+            for key_word in expr.value.keywords
+            if key_word.arg == "nargs"
+        ),
+        None,
+    )
+
+    typ = next(
+        (
+            _handle_keyword(keyword, typ)
+            for keyword in expr.value.keywords
+            if keyword.arg == "choices"
+        ),
+        typ,
+    )
+    if nargs:
+        typ = "List[{typ}]".format(typ=typ)
+
     typ = (
-        lambda typ_: (
-            typ_
-            if required or name.endswith("kwargs")
-            else "Optional[{typ}]".format(typ=typ_)
-        )
-    )(
-        typ_=next(
-            (
-                _handle_keyword(keyword, typ)
-                for keyword in expr.value.keywords
-                if keyword.arg == "choices"
-            ),
-            typ,
-        )
+        typ
+        if required or name.endswith("kwargs")
+        else "Optional[{typ}]".format(typ=typ)
     )
 
     if "str" in typ or "Literal" in typ and (typ.count("'") > 1 or typ.count('"') > 1):

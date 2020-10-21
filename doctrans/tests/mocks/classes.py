@@ -313,117 +313,136 @@ class_ast = (
 
 class_nargs_ast = (
     ClassDef(
-        name="ConfigClass",
-        bases=[Name("object", Load())],
-        keywords=[],
+        bases=[Name(Load(), "object")],
         body=[
             Expr(
                 Constant(
+                    kind=None,
                     value="\n    Acquire from the official tensorflow_datasets model zoo,"
                     " or the ophthalmology focussed ml-prepare library\n\n    "
                     ":cvar callbacks: Collection of callables that are run inside the training loop",
-                    constant_value=None,
-                    string=None,
                 )
             ),
             AnnAssign(
-                target=Name("callbacks", Store()),
                 annotation=Subscript(
-                    Name("Optional", Load()),
-                    Subscript(
-                        Name("List", Load()),
-                        Subscript(
-                            Name("Literal", Load()),
-                            Tuple(
-                                elts=[
-                                    Constant(
-                                        value="BaseLogger",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        value="CSVLogger",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        value="Callback",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        value="CallbackList",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        value="EarlyStopping",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        value="History",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        value="LambdaCallback",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        value="LearningRateScheduler",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        value="ModelCheckpoint",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        value="ProgbarLogger",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        value="ReduceLROnPlateau",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        value="RemoteMonitor",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        value="TensorBoard",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        value="TerminateOnNaN",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                ],
-                                ctx=Load(),
-                                expr=None,
-                            ),
-                            Load(),
-                        ),
-                        Load(),
-                    ),
                     Load(),
+                    Index(
+                        value=Subscript(
+                            Load(),
+                            Index(
+                                value=Subscript(
+                                    Load(),
+                                    Index(
+                                        value=Tuple(
+                                            ctx=Load(),
+                                            elts=[
+                                                Constant(
+                                                    kind=None,
+                                                    value="BaseLogger",
+                                                    constant_value=None,
+                                                    string=None,
+                                                ),
+                                                Constant(
+                                                    kind=None,
+                                                    value="CSVLogger",
+                                                    constant_value=None,
+                                                    string=None,
+                                                ),
+                                                Constant(
+                                                    kind=None,
+                                                    value="Callback",
+                                                    constant_value=None,
+                                                    string=None,
+                                                ),
+                                                Constant(
+                                                    kind=None,
+                                                    value="CallbackList",
+                                                    constant_value=None,
+                                                    string=None,
+                                                ),
+                                                Constant(
+                                                    kind=None,
+                                                    value="EarlyStopping",
+                                                    constant_value=None,
+                                                    string=None,
+                                                ),
+                                                Constant(
+                                                    kind=None,
+                                                    value="History",
+                                                    constant_value=None,
+                                                    string=None,
+                                                ),
+                                                Constant(
+                                                    kind=None,
+                                                    value="LambdaCallback",
+                                                    constant_value=None,
+                                                    string=None,
+                                                ),
+                                                Constant(
+                                                    kind=None,
+                                                    value="LearningRateScheduler",
+                                                    constant_value=None,
+                                                    string=None,
+                                                ),
+                                                Constant(
+                                                    kind=None,
+                                                    value="ModelCheckpoint",
+                                                    constant_value=None,
+                                                    string=None,
+                                                ),
+                                                Constant(
+                                                    kind=None,
+                                                    value="ProgbarLogger",
+                                                    constant_value=None,
+                                                    string=None,
+                                                ),
+                                                Constant(
+                                                    kind=None,
+                                                    value="ReduceLROnPlateau",
+                                                    constant_value=None,
+                                                    string=None,
+                                                ),
+                                                Constant(
+                                                    kind=None,
+                                                    value="RemoteMonitor",
+                                                    constant_value=None,
+                                                    string=None,
+                                                ),
+                                                Constant(
+                                                    kind=None,
+                                                    value="TensorBoard",
+                                                    constant_value=None,
+                                                    string=None,
+                                                ),
+                                                Constant(
+                                                    kind=None,
+                                                    value="TerminateOnNaN",
+                                                    constant_value=None,
+                                                    string=None,
+                                                ),
+                                            ],
+                                            expr=None,
+                                        )
+                                    ),
+                                    Name(Load(), "Literal"),
+                                )
+                            ),
+                            Name(Load(), "List"),
+                        )
+                    ),
+                    Name(Load(), "Optional"),
                 ),
-                value=Constant(value=None, constant_value=None, string=None),
                 simple=1,
+                target=Name(Store(), "callbacks"),
+                value=Constant(kind=None, value=None, constant_value=None, string=None),
                 expr=None,
                 expr_annotation=None,
                 expr_target=None,
             ),
         ],
         decorator_list=[],
+        keywords=[],
+        name="ConfigClass",
         expr=None,
         identifier_name=None,
     )
@@ -431,4 +450,4 @@ class_nargs_ast = (
     else ast.parse(class_nargs_str).body[0]
 )
 
-__all__ = ["class_str", "class_ast"]
+__all__ = ["class_str", "class_ast", "class_nargs_str", "class_nargs_ast"]
