@@ -313,7 +313,7 @@ class_ast = (
 
 class_nargs_ast = (
     ClassDef(
-        bases=[Name(Load(), "object")],
+        bases=[Name("object", Load())],
         body=[
             Expr(
                 Constant(
@@ -325,13 +325,13 @@ class_nargs_ast = (
             ),
             AnnAssign(
                 annotation=Subscript(
-                    Load(),
+                    Name("Optional", Load()),
                     Index(
                         value=Subscript(
-                            Load(),
+                            Name("List", Load()),
                             Index(
                                 value=Subscript(
-                                    Load(),
+                                    Name("Literal", Load()),
                                     Index(
                                         value=Tuple(
                                             ctx=Load(),
@@ -424,16 +424,16 @@ class_nargs_ast = (
                                             expr=None,
                                         )
                                     ),
-                                    Name(Load(), "Literal"),
+                                    Load(),
                                 )
                             ),
-                            Name(Load(), "List"),
+                            Load(),
                         )
                     ),
-                    Name(Load(), "Optional"),
+                    Load(),
                 ),
                 simple=1,
-                target=Name(Store(), "callbacks"),
+                target=Name("callbacks", Store()),
                 value=Constant(kind=None, value=None, constant_value=None, string=None),
                 expr=None,
                 expr_annotation=None,
