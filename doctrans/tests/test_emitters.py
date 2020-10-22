@@ -20,7 +20,7 @@ from doctrans.pure_utils import rpartial, reindent, tab, deindent, PY3_8, PY_GTE
 from doctrans.tests.mocks.argparse import (
     argparse_func_ast,
     argparse_func_with_body_ast,
-    argparse_func_nargs_ast,
+    argparse_func_action_append_ast,
 )
 from doctrans.tests.mocks.classes import class_ast, class_nargs_ast
 from doctrans.tests.mocks.docstrings import docstring_str, intermediate_repr
@@ -46,14 +46,14 @@ class TestEmitters(TestCase):
             gold=class_ast,
         )
 
-    def test_to_class_from_argparse_nargs_ast(self) -> None:
+    def test_to_class_from_argparse_action_append_ast(self) -> None:
         """
         Tests whether a class from an argparse function with `nargs` set
         """
         run_ast_test(
             self,
             emit.class_(
-                parse.argparse_ast(argparse_func_nargs_ast),
+                parse.argparse_ast(argparse_func_action_append_ast),
             ),
             gold=class_nargs_ast,
         )
@@ -86,7 +86,7 @@ class TestEmitters(TestCase):
 
     def test_to_argparse_func_nargs(self) -> None:
         """
-        Tests whether an argparse function is generated with `nargs` set properly
+        Tests whether an argparse function is generated with `action="append"` set properly
         """
         run_ast_test(
             self,
@@ -94,9 +94,9 @@ class TestEmitters(TestCase):
                 parse.class_(class_nargs_ast),
                 emit_default_doc=False,
                 emit_default_doc_in_return=False,
-                function_name="set_cli_nargs",
+                function_name="set_cli_action_append",
             ),
-            gold=argparse_func_nargs_ast,
+            gold=argparse_func_action_append_ast,
         )
 
     def test_to_docstring(self) -> None:

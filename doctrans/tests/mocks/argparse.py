@@ -118,8 +118,8 @@ def set_cli_args(argument_parser):
     FALLBACK_TYP=FALLBACK_TYP
 )
 
-argparse_func_nargs_str = '''
-def set_cli_nargs(argument_parser):
+argparse_func_action_append_str = '''
+def set_cli_action_append(argument_parser):
     """
     Set CLI arguments
 
@@ -149,7 +149,7 @@ def set_cli_nargs(argument_parser):
             "TensorBoard",
             "TerminateOnNaN",
         ),
-        nargs="?",
+        action="append",
         help="Collection of callables that are run inside the training loop",
     )
     return argument_parser
@@ -933,9 +933,9 @@ argparse_add_argument_ast = Expr(
     )
 )
 
-argparse_func_nargs_ast = (
+argparse_func_action_append_ast = (
     FunctionDef(
-        name="set_cli_nargs",
+        name="set_cli_action_append",
         args=arguments(
             posonlyargs=[],
             args=[
@@ -1082,8 +1082,8 @@ argparse_func_nargs_ast = (
                             identifier=None,
                         ),
                         keyword(
-                            arg="nargs",
-                            value=set_value(kind=None, value="?"),
+                            arg="action",
+                            value=set_value(kind=None, value="append"),
                             identifier=None,
                         ),
                         keyword(
@@ -1111,16 +1111,16 @@ argparse_func_nargs_ast = (
         stmt=None,
     )
     if PY3_8
-    else ast.parse(argparse_func_nargs_str).body[0]
+    else ast.parse(argparse_func_action_append_str).body[0]
 )
 
 
 __all__ = [
     "argparse_func_str",
     "argparse_func_with_body_str",
-    "argparse_func_nargs_str",
+    "argparse_func_action_append_str",
     "argparse_func_ast",
     "argparse_func_with_body_ast",
     "argparse_add_argument_ast",
-    "argparse_func_nargs_ast",
+    "argparse_func_action_append_ast",
 ]

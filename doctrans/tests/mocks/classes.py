@@ -321,6 +321,8 @@ class_nargs_ast = (
                     value="\n    Acquire from the official tensorflow_datasets model zoo,"
                     " or the ophthalmology focussed ml-prepare library\n\n    "
                     ":cvar callbacks: Collection of callables that are run inside the training loop",
+                    constant_value=None,
+                    string=None
                 )
             ),
             AnnAssign(
