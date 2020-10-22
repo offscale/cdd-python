@@ -166,7 +166,7 @@ def param2argparse_param(param, emit_default_doc=True):
     :return: `argparse.add_argument` call—with arguments—as an AST node
     :rtype: ```Expr```
     """
-    typ, choices, required, nargs = "str", None, True, None
+    typ, choices, required, action = "str", None, True, None
     param.setdefault("typ", "Any")
     if param["typ"] in simple_types:
         typ = param["typ"]
@@ -193,10 +193,7 @@ def param2argparse_param(param, emit_default_doc=True):
                     typ = FALLBACK_TYP
 
                 if node.id == "List":
-                    nargs = "+"
-
-    if required is False and nargs:
-        nargs = "?"
+                    action = "append"
 
     doc, _default = extract_default(param["doc"], emit_default_doc=emit_default_doc)
     default = param.get("default", _default)
@@ -234,13 +231,13 @@ def param2argparse_param(param, emit_default_doc=True):
                             ),
                             identifier=None,
                         ),
-                        keyword(
-                            arg="nargs",
-                            value=set_value(kind=None, value=nargs),
+                        action
+                        if action is None
+                        else keyword(
+                            arg="action",
+                            value=set_value(kind=None, value=action),
                             identifier=None,
-                        )
-                        if nargs
-                        else None,
+                        ),
                         keyword(
                             arg="help",
                             value=set_value(kind=None, value=doc),
