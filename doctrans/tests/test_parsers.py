@@ -5,6 +5,7 @@ from ast import FunctionDef
 from unittest import TestCase
 
 from docstring_parser import rest
+
 from doctrans import parse, emit
 from doctrans.ast_utils import get_value
 from doctrans.emitter_utils import to_docstring
@@ -188,6 +189,27 @@ class TestParsers(TestCase):
                 },
                 "short_description": "",
                 "type": "static",
+            },
+        )
+
+    def test_from_function_actual(self):
+        """
+        Tests that parse.function produces properly from an actual function
+        """
+
+        def foo(a=5, b=6):
+            pass
+
+        self.assertDictEqual(
+            parse.function(foo),
+            {
+                "long_description": None,
+                "name": "TestParsers.test_from_function_actual.<locals>.foo",
+                "params": [
+                    {"default": 5, "name": "a", "typ": "int"},
+                    {"default": 6, "name": "b", "typ": "int"},
+                ],
+                "returns": None,
             },
         )
 

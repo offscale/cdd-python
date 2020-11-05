@@ -322,7 +322,7 @@ class_nargs_ast = (
                     " or the ophthalmology focussed ml-prepare library\n\n    "
                     ":cvar callbacks: Collection of callables that are run inside the training loop",
                     constant_value=None,
-                    string=None
+                    string=None,
                 )
             ),
             AnnAssign(

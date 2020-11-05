@@ -15,11 +15,14 @@ from ast import (
     ClassDef,
 )
 from collections import OrderedDict, deque
+from inspect import signature, getdoc, _empty
 from itertools import filterfalse, count
 from operator import itemgetter
+from types import FunctionType
 from typing import Any
 
 from docstring_parser import DocstringParam, DocstringMeta, Docstring
+
 from doctrans import get_logger
 from doctrans.ast_utils import (
     find_ast_type,
@@ -90,7 +93,7 @@ def function(function_def, function_type=None, function_name=None):
     Converts a method to our IR
 
     :param function_def: AST node for function definition
-    :type function_def: ```FunctionDef```
+    :type function_def: ```Union[FunctionDef, FunctionType]```
 
     :param function_type: Type of function, static is static or global method, others just become first arg
     :type function_type: ```Literal['self', 'cls', 'static']```
@@ -107,6 +110,22 @@ def function(function_def, function_type=None, function_name=None):
           }
     :rtype: ```dict```
     """
+    if isinstance(function_def, FunctionType):
+        sig = signature(function_def)
+        return {
+            "name": function_name or function_def.__qualname__
+            if hasattr(function_def, "__qualname__")
+            else function_def.__name__,
+            "long_description": getdoc(function_def),
+            "params": [
+                {"name": k, "default": v.default, "typ": type(v.default).__name__}
+                for k, v in sig.parameters.items()
+            ],
+            "returns": None
+            if sig.return_annotation is _empty
+            else {"name": "return_type", "typ": sig.return_annotation},
+        }
+
     assert isinstance(
         function_def, FunctionDef
     ), "Expected 'FunctionDef' got `{!r}`".format(type(function_def).__name__)
@@ -114,7 +133,9 @@ def function(function_def, function_type=None, function_name=None):
         function_name is None or function_def.name == function_name
     ), "Expected {!r} got {!r}".format(function_name, function_def.name)
 
-    intermediate_repr_docstring = get_docstring(function_def)
+    intermediate_repr_docstring = (
+        get_docstring(function_def) if isinstance(function_def, FunctionDef) else None
+    )
     if intermediate_repr_docstring is None:
         intermediate_repr = {"description": "", "params": [], "returns": None}
         for arg in function_def.args.args:
