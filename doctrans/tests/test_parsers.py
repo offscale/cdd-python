@@ -198,12 +198,14 @@ class TestParsers(TestCase):
         """
 
         def foo(a=5, b=6):
+            """"""
             pass
 
         self.assertDictEqual(
             parse.function(foo),
             {
-                "long_description": None,
+                "short_description": "",
+                "long_description": "",
                 "name": "TestParsers.test_from_function_actual.<locals>.foo",
                 "params": [
                     {"default": 5, "name": "a", "typ": "int"},
