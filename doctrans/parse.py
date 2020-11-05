@@ -116,8 +116,8 @@ def function(function_def, function_type=None, function_name=None):
             "name": function_name or function_def.__qualname__
             if hasattr(function_def, "__qualname__")
             else function_def.__name__,
-            "short_description": "",
-            "long_description": getdoc(function_def) or "",
+            "short_description": getdoc(function_def) or "",
+            "long_description": "",
             "params": [
                 {"name": k, "default": v.default, "typ": type(v.default).__name__}
                 for k, v in sig.parameters.items()

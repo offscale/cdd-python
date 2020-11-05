@@ -198,14 +198,23 @@ class TestParsers(TestCase):
         """
 
         def foo(a=5, b=6):
-            """"""
+            """
+            the foo function
+
+            :param a: the a value
+            :param b: the b value
+
+            """
             pass
 
         self.assertDictEqual(
             parse.function(foo),
             {
-                "short_description": "",
                 "long_description": "",
+                "short_description": "the foo function\n"
+                "\n"
+                ":param a: the a value\n"
+                ":param b: the b value",
                 "name": "TestParsers.test_from_function_actual.<locals>.foo",
                 "params": [
                     {"default": 5, "name": "a", "typ": "int"},
