@@ -9,10 +9,9 @@ from doctrans.defaults_utils import remove_defaults_from_intermediate_repr
 intermediate_repr = {
     "name": None,
     "type": "static",
-    "short_description": "Acquire from the official tensorflow_datasets model "
+    "doc": "Acquire from the official tensorflow_datasets model "
     "zoo, or the ophthalmology focussed ml-prepare "
     "library",
-    "long_description": "",
     "params": [
         {
             "default": '"mnist"',
@@ -81,10 +80,9 @@ intermediate_repr_no_default_doc_or_prop = remove_defaults_from_intermediate_rep
 intermediate_repr_no_default_doc = {
     "name": None,
     "type": "static",
-    "short_description": "Acquire from the official tensorflow_datasets model "
+    "doc": "Acquire from the official tensorflow_datasets model "
     "zoo, or the ophthalmology focussed ml-prepare "
     "library",
-    "long_description": "",
     "params": [
         {
             "default": '"mnist"',
@@ -125,21 +123,19 @@ intermediate_repr_no_default_doc = {
 }
 
 intermediate_repr_extra_colons = {
-    "long_description": "",
     "name": None,
     "params": [
         {"doc": "Example: foo", "name": "dataset_name", "typ": "str"},
     ],
     "returns": None,
-    "short_description": "Some comment",
+    "doc": "Some comment",
     "type": "static",
 }
 
 intermediate_repr_only_return_type = {
     "name": None,
     "type": "static",
-    "short_description": "Some comment",
-    "long_description": "",
+    "doc": "Some comment",
     "params": [
         {
             "doc": "Example: foo",

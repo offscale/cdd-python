@@ -19,8 +19,7 @@ from doctrans.tests.mocks.docstrings import (
 from doctrans.tests.mocks.methods import (
     function_adder_ast,
     function_default_complex_default_arg_ast,
-    method_complex_args_variety_ast,
-)
+    method_complex_args_variety_ast, )
 from doctrans.tests.utils_for_tests import unittest_main
 
 
@@ -30,10 +29,11 @@ class TestParsers(TestCase):
 
     IR is a dictionary of form:
               {
-                  'short_description': ...,
-                  'long_description': ...,
+                  'name': ...,
+                  'type': ...,
+                  'doc': ...,
                   'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
               }
     """
 
@@ -101,6 +101,8 @@ class TestParsers(TestCase):
             ),
         )
 
+    maxDiff = None
+
     def test_from_docstring_parser(self) -> None:
         """
         Tests if it can convert from the 3rd-party libraries format to this one
@@ -132,7 +134,7 @@ class TestParsers(TestCase):
                     }
                 ],
                 "returns": {"doc": "[ReturnDescription]", "name": "return_type"},
-                "short_description": "[Summary]",
+                "doc": "[Summary]",
             },
         )
 
@@ -168,14 +170,13 @@ class TestParsers(TestCase):
             gold_ir,
         )
 
-    def test_from_function_kw_only(self):
+    def test_from_function_kw_only(self) -> None:
         """
         Tests that parse.function produces properly from function with only keyword arguments
         """
         self.assertDictEqual(
             parse.function(function_adder_ast),
             {
-                "long_description": "",
                 "name": "add_6_5",
                 "params": [
                     {"default": 6, "doc": "first param", "name": "a", "typ": "int"},
@@ -187,14 +188,14 @@ class TestParsers(TestCase):
                     "name": "return_type",
                     "typ": "int",
                 },
-                "short_description": "",
+                "doc": "",
                 "type": "static",
             },
         )
 
-    def test_from_function_actual(self):
+    def test_from_function_in_memory(self) -> None:
         """
-        Tests that parse.function produces properly from an actual function
+        Tests that parse.function produces properly from a function in memory of current interpreter
         """
 
         def foo(a=5, b=6):
@@ -210,12 +211,11 @@ class TestParsers(TestCase):
         self.assertDictEqual(
             parse.function(foo),
             {
-                "long_description": "",
-                "short_description": "the foo function\n"
+                "doc": "the foo function\n"
                 "\n"
                 ":param a: the a value\n"
                 ":param b: the b value",
-                "name": "TestParsers.test_from_function_actual.<locals>.foo",
+                "name": "TestParsers.test_from_function_in_memory.<locals>.foo",
                 "params": [
                     {"default": 5, "name": "a", "typ": "int"},
                     {"default": 6, "name": "b", "typ": "int"},
@@ -237,7 +237,6 @@ class TestParsers(TestCase):
         self.assertDictEqual(
             parse.function(method_complex_args_variety_ast),
             {
-                "long_description": "",
                 "name": "call_cliff",
                 "params": [
                     {"doc": "name of dataset.", "name": "dataset_name"},
@@ -269,8 +268,26 @@ class TestParsers(TestCase):
                     "name": "return_type",
                     "typ": "Literal['np', 'tf']",
                 },
-                "short_description": "Call cliff",
+                "doc": "Call cliff",
                 "type": "self",
+            },
+        )
+
+    def test_from_class_actual(self) -> None:
+        """
+        Tests that parse.class produces properly from a `class` in memory of current interpreter
+        """
+
+        class A(object):
+            """ A is one boring class """
+
+        self.assertDictEqual(
+            parse.class_(A),
+            {
+                "doc": "A is one boring class ",
+                "name": "TestParsers.test_from_class_actual.<locals>.A",
+                "params": [],
+                "returns": None,
             },
         )
 

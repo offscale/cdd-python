@@ -41,29 +41,33 @@ from doctrans.source_transformer import to_code
 logger = get_logger("doctrans.parse")
 
 
-def class_(class_def, config_name=None):
+def class_(class_def, class_name=None):
     """
     Converts an AST to our IR
 
     :param class_def: Class AST or Module AST with a ClassDef inside
     :type class_def: ```Union[Module, ClassDef]```
 
-    :param config_name: Name of `class`. If None, gives first found.
-    :type config_name: ```Optional[str]```
+    :param class_name: Name of `class`. If None, gives first found.
+    :type class_name: ```Optional[str]```
 
     :return: a dictionary of form
           {
-              'short_description': ...,
-              'long_description': ...,
-              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+                  'name': ...,
+                  'type': ...,
+                  'doc': ...,
+                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
           }
     :rtype: ```dict```
     """
-    assert isinstance(
-        class_def, (Module, ClassDef)
+    is_supported_ast_node = isinstance(class_def, (Module, ClassDef))
+    if not is_supported_ast_node and isinstance(object, type):
+        return _inspect(class_def, class_name)
+    assert (
+        is_supported_ast_node
     ), "Expected 'Union[Module, ClassDef]' got `{!r}`".format(type(class_def).__name__)
-    class_def = find_ast_type(class_def, config_name)
+    class_def = find_ast_type(class_def, class_name)
     intermediate_repr = docstring(get_docstring(class_def).replace(":cvar", ":param"))
 
     intermediate_repr["params"] = OrderedDict(
@@ -88,6 +92,39 @@ def class_(class_def, config_name=None):
     return intermediate_repr
 
 
+def _inspect(obj, name):
+    """
+    Uses the `inspect` module to figure out the IR from the input
+
+    :param obj: Something in memory, like a class, function, variable
+    :type obj: ```Any```
+
+    :returns: a dictionary of form
+          {
+                  'name': ...,
+                  'type': ...,
+                  'doc': ...,
+                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+          }
+    :rtype: ```dict```
+    """
+    sig = signature(obj)
+    return {
+        "name": name or obj.__qualname__
+        if hasattr(obj, "__qualname__")
+        else obj.__name__,
+        "doc": getdoc(obj) or "",
+        "params": [
+            {"name": k, "default": v.default, "typ": type(v.default).__name__}
+            for k, v in sig.parameters.items()
+        ],
+        "returns": None
+        if sig.return_annotation is _empty
+        else {"name": "return_type", "typ": sig.return_annotation},
+    }
+
+
 def function(function_def, function_type=None, function_name=None):
     """
     Converts a method to our IR
@@ -103,29 +140,16 @@ def function(function_def, function_type=None, function_name=None):
 
     :return: a dictionary of form
           {
-              'short_description': ...,
-              'long_description': ...,
-              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+                  'name': ...,
+                  'type': ...,
+                  'doc': ...,
+                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
           }
     :rtype: ```dict```
     """
     if isinstance(function_def, FunctionType):
-        sig = signature(function_def)
-        return {
-            "name": function_name or function_def.__qualname__
-            if hasattr(function_def, "__qualname__")
-            else function_def.__name__,
-            "short_description": getdoc(function_def) or "",
-            "long_description": "",
-            "params": [
-                {"name": k, "default": v.default, "typ": type(v.default).__name__}
-                for k, v in sig.parameters.items()
-            ],
-            "returns": None
-            if sig.return_annotation is _empty
-            else {"name": "return_type", "typ": sig.return_annotation},
-        }
+        return _inspect(function_def, function_name)
 
     assert isinstance(
         function_def, FunctionDef
@@ -246,10 +270,11 @@ def _interpolate_return(function_def, intermediate_repr):
 
     :param intermediate_repr: a dictionary of form
               {
-                  'short_description': ...,
-                  'long_description': ...,
+                  'name': ...,
+                  'type': ...,
+                  'doc': ...,
                   'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
               }
     :type intermediate_repr: ```dict```
     """
@@ -284,10 +309,11 @@ def argparse_ast(function_def, function_type=None, function_name=None):
 
     :return: a dictionary of form
           {
-              'short_description': ...,
-              'long_description': ...,
-              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+                  'name': ...,
+                  'type': ...,
+                  'doc': ...,
+                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
           }
     :rtype: ```dict```
     """
@@ -299,8 +325,7 @@ def argparse_ast(function_def, function_type=None, function_name=None):
     intermediate_repr = {
         "name": function_name,
         "type": function_type or get_function_type(function_def),
-        "short_description": "",
-        "long_description": "",
+        "doc": "",
         "params": [],
     }
     ir = parse_docstring(doc_string, emit_default_doc=True)
@@ -312,7 +337,7 @@ def argparse_ast(function_def, function_type=None, function_name=None):
             )
         elif isinstance(node, Assign):
             if is_argparse_description(node):
-                intermediate_repr["short_description"] = get_value(node.value)
+                intermediate_repr["doc"] = get_value(node.value)
         elif isinstance(node, Return) and isinstance(node.value, Tuple):
             intermediate_repr["returns"] = _parse_return(
                 node,
@@ -441,6 +466,8 @@ def _evaluate_to_docstring_value(name_value):
                 if not attr.startswith("_") and getattr(value, attr)
             }
         )
+    elif name == "short_description":
+        name = "doc"
     # elif not isinstance(value, (str, int, float, bool, type(None))):
     #     raise NotImplementedError(type(value).__name__)
     return name, value
@@ -455,10 +482,11 @@ def docstring_parser(doc_string):
 
     :return: a dictionary of form
           {
-              'short_description': ...,
-              'long_description': ...,
-              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+                  'name': ...,
+                  'type': ...,
+                  'doc': ...,
+                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
           }
     :rtype: ```dict```
     """
