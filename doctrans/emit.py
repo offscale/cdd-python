@@ -40,10 +40,11 @@ def argparse_function(
 
     :param intermediate_repr: a dictionary of form
           {
-              'short_description': ...,
-              'long_description': ...,
-              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+                  'name': ...,
+                  'type': ...,
+                  'doc': ...,
+                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
           }
     :type intermediate_repr: ```dict```
 
@@ -134,8 +135,7 @@ def argparse_function(
                         type_comment=None,
                         value=set_value(
                             kind=None,
-                            value=intermediate_repr["long_description"]
-                            or intermediate_repr["short_description"],
+                            value=intermediate_repr["doc"],
                         ),
                         lineno=None,
                         expr=None,
@@ -193,10 +193,11 @@ def class_(intermediate_repr, class_name="ConfigClass", class_bases=("object",))
 
     :param intermediate_repr: a dictionary of form
           {
-              'short_description': ...,
-              'long_description': ...,
-              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+                  'name': ...,
+                  'type': ...,
+                  'doc': ...,
+                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
           }
     :type intermediate_repr: ```dict```
 
@@ -249,10 +250,11 @@ def docstring(intermediate_repr, docstring_format="rest", emit_default_doc=True)
 
     :param intermediate_repr: a dictionary of form
           {
-              'short_description': ...,
-              'long_description': ...,
-              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+                  'name': ...,
+                  'type': ...,
+                  'doc': ...,
+                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
           }
     :type intermediate_repr: ```dict```
 
@@ -268,9 +270,8 @@ def docstring(intermediate_repr, docstring_format="rest", emit_default_doc=True)
     if docstring_format != "rest":
         raise NotImplementedError()
 
-    return """\n{description}\n\n{params}\n{returns}\n""".format(
-        description=intermediate_repr["long_description"]
-        or intermediate_repr["short_description"],
+    return "\n{doc}\n\n{params}\n{returns}\n".format(
+        doc=intermediate_repr["doc"],
         params="\n".join(
             ":param {param[name]}: {param[doc]}\n"
             ":type {param[name]}: ```{typ}```\n".format(
@@ -344,10 +345,11 @@ def function(
 
     :param intermediate_repr: a dictionary of form
           {
-              'short_description': ...,
-              'long_description': ...,
-              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+                  'name': ...,
+                  'type': ...,
+                  'doc': ...,
+                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
           }
     :type intermediate_repr: ```dict```
 

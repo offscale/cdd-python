@@ -36,10 +36,11 @@ def remove_defaults_from_intermediate_repr(intermediate_repr, emit_defaults=True
 
     :param intermediate_repr: a dictionary of form
               {
-                  'short_description': ...,
-                  'long_description': ...,
+                  'name': ...,
+                  'type': ...,
+                  'doc': ...,
                   'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
               }
     :type intermediate_repr: ```dict```
 
@@ -48,10 +49,11 @@ def remove_defaults_from_intermediate_repr(intermediate_repr, emit_defaults=True
 
     :return: a dictionary of form
               {
-                  'short_description': ...,
-                  'long_description': ...,
+                  'name': ...,
+                  'type': ...,
+                  'doc': ...,
                   'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
               }
     :rtype: ```dict```
     """

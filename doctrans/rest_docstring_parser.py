@@ -23,8 +23,7 @@ def parse_docstring(docstring, emit_default_doc=False):
               {
                   'name': ...,
                   'type': ...,
-                  'short_description': ...,
-                  'long_description': ...,
+                  'doc': ...,
                   'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
                   'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
               }
@@ -36,8 +35,7 @@ def parse_docstring(docstring, emit_default_doc=False):
     ir = {
         "name": None,
         "type": "static",
-        "short_description": "",
-        "long_description": "",
+        "doc": "",
         "params": [],
         "returns": None,
     }
@@ -93,10 +91,11 @@ def _parse_phase(intermediate_repr, scanned, emit_default_doc):
     """
     :param intermediate_repr: a dictionary of form
               {
-                  'short_description': ...,
-                  'long_description': ...,
+                  'name': ...,
+                  'type': ...,
+                  'doc': ...,
                   'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
               }
     :type intermediate_repr: ```dict```
 
@@ -136,8 +135,8 @@ def _parse_phase(intermediate_repr, scanned, emit_default_doc):
                 val = line[nxt_colon + 1 :].strip()
                 param.update(dict((_set_param_values(line, val),), name=name))
                 param = interpolate_defaults(param, emit_default_doc=emit_default_doc)
-        elif not intermediate_repr["short_description"]:
-            intermediate_repr["short_description"] = line.strip()
+        elif not intermediate_repr["doc"]:
+            intermediate_repr["doc"] = line.strip()
     if param:
         # if param['name'] == 'return_type': intermediate_repr['returns'] = param
         intermediate_repr["params"].append(param)

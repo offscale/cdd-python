@@ -205,10 +205,11 @@ def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
 
     :param intermediate_repr: a dictionary of form
           {
-              'short_description': ...,
-              'long_description': ...,
-              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+                  'name': ...,
+                  'type': ...,
+                  'doc': ...,
+                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
           }
     :type intermediate_repr: ```dict```
 
@@ -258,11 +259,12 @@ def get_internal_body(target_name, target_type, intermediate_repr):
 
     :param intermediate_repr: a dictionary of form
           {
-              'short_description': ...,
-              'long_description': ...,
-              '_internal': {'body': [...]},
-              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+                  'name': ...,
+                  'type': ...,
+                  '_internal': {'body': [...]},
+                  'doc': ...,
+                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
           }
     :type intermediate_repr: ```dict```
 
@@ -291,10 +293,11 @@ def to_docstring(
 
     :param intermediate_repr: a dictionary of form
           {
-              'short_description': ...,
-              'long_description': ...,
-              'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-              "returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+                  'name': ...,
+                  'type': ...,
+                  'doc': ...,
+                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
           }
     :type intermediate_repr: ```dict```
 
@@ -390,8 +393,7 @@ def to_docstring(
     return "\n{tab}{description}\n{sep}\n{params}\n{returns}".format(
         sep=sep,
         tab=tab,
-        description=intermediate_repr.get("long_description")
-        or intermediate_repr["short_description"],
+        description=intermediate_repr["doc"],
         params="\n{sep}\n".format(sep=sep).join(
             map(param2docstring_param, intermediate_repr["params"])
         ),
