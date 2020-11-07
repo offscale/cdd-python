@@ -36,7 +36,6 @@ PY3_8 = _python_major_minor == (3, 8)
 PY_GTE_3_8 = _python_major_minor >= (3, 8)
 PY_GTE_3_9 = _python_major_minor >= (3, 9)
 
-
 _ABERRANT_PLURAL_MAP = {
     "appendix": "appendices",
     "barracks": "barracks",
@@ -224,6 +223,29 @@ def assert_equal(a, b, cmp=eq):
     """
     assert cmp(a, b), "{!r} != {!r}".format(a, b)
     return True
+
+
+def update_d(d, arg=None, **kwargs):
+    """
+    Update d inplace
+
+    :param d: dict to update
+    :type d: ```dict```
+
+    :param arg: dict to update with
+    :type arg: ```Optional[dict]```
+
+    :param kwargs: keyword args to update with
+    :type kwargs: ```**kwargs```
+
+    :return: Updated dict
+    :rtype: ```dict```
+    """
+    if arg:
+        d.update(arg)
+    if kwargs:
+        d.update(kwargs)
+    return d
 
 
 __all__ = [
