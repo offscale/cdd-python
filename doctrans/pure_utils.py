@@ -248,6 +248,24 @@ def update_d(d, arg=None, **kwargs):
     return d
 
 
+def lstrip_namespace(s, namespaces):
+    """
+    Remove starting namespace
+
+    :param s: input string
+    :type s: ```AnyStr```
+
+    :param namespaces: namespaces to strip
+    :type namespaces: ```Union[List[str], Tuple[str], Generator[str], Iterator[str]]```
+
+    :return: `.lstrip`ped input (potentially just the original!)
+    :rtype: ```AnyStr```
+    """
+    for namespace in namespaces:
+        s = s.lstrip(namespace)
+    return s
+
+
 __all__ = [
     "pp",
     "tab",
@@ -262,4 +280,5 @@ __all__ = [
     "reindent",
     "sanitise",
     "strip_split",
+    "update_d",
 ]
