@@ -2,7 +2,6 @@
 Tests for the Intermediate Representation produced by the parsers
 """
 from ast import FunctionDef
-from importlib.abc import Loader
 from importlib.util import module_from_spec, spec_from_loader
 from unittest import TestCase
 
@@ -213,6 +212,8 @@ class TestParsers(TestCase):
             """
             pass
 
+        self.assertIsNone(foo(5, 6))
+
         self.assertDictEqual(
             parse.function(foo),
             {
@@ -238,18 +239,18 @@ class TestParsers(TestCase):
         - splat
         """
 
-        class MemoryInspectLoader(Loader):
-            """ Set the filename for the inspect module, but don't actually, actually give the full source """
-
-            def create_module(self, spec=None):
-                """ Stub method"""
-
-            def get_code(self):
-                """ Stub method; soon to add actual source code to """
-                raise NotImplementedError()
-
+        # class MemoryInspectLoader(Loader):
+        #     """ Set the filename for the inspect module, but don't actually, actually give the full source """
+        #
+        #     def create_module(self, spec=None):
+        #         """ Stub method"""
+        #
+        #     def get_code(self):
+        #         """ Stub method; soon to add actual source code to """
+        #         raise NotImplementedError()
+        #
         _locals = module_from_spec(
-            spec_from_loader("helper", loader=MemoryInspectLoader, origin="str")
+            spec_from_loader("helper", loader=None, origin="str")  # MemoryInspectLoader
         )
         exec(
             "from sys import stdout\n"
@@ -260,7 +261,7 @@ class TestParsers(TestCase):
             ),
             _locals.__dict__,
         )
-        setattr(getattr(_locals, "call_cliff"), "__loader__", MemoryInspectLoader)
+        # setattr(getattr(_locals, "call_cliff"), "__loader__", MemoryInspectLoader)
 
         ir = parse.function(getattr(_locals, "call_cliff"))
 

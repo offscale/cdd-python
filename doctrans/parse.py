@@ -15,6 +15,7 @@ from ast import (
     ClassDef,
 )
 from collections import OrderedDict, deque
+from functools import partial
 from inspect import signature, getdoc, _empty, isfunction
 from itertools import filterfalse, count
 from operator import itemgetter
@@ -34,7 +35,7 @@ from doctrans.ast_utils import (
 )
 from doctrans.defaults_utils import extract_default
 from doctrans.emitter_utils import parse_out_param, _parse_return
-from doctrans.pure_utils import rpartial, assert_equal
+from doctrans.pure_utils import rpartial, assert_equal, lstrip_namespace
 from doctrans.rest_docstring_parser import parse_docstring
 from doctrans.source_transformer import to_code
 
@@ -119,6 +120,9 @@ def _inspect(obj, name):
     is_function = isfunction(obj)
     if not is_function and "type" in ir:
         del ir["type"]
+
+    lstrip_typings = partial(lstrip_namespace, namespaces=("typings.", "_extensions."))
+
     if ir.get("params"):
 
         def update_param(param):
@@ -135,9 +139,9 @@ def _inspect(obj, name):
             """
             param["name"] = param["name"].lstrip("*")
             if sig.parameters[param["name"]].annotation is not _empty:
-                param["typ"] = "{!s}".format(
-                    sig.parameters[param["name"]].annotation
-                ).lstrip("typing.")
+                param["typ"] = lstrip_typings(
+                    "{!s}".format(sig.parameters[param["name"]].annotation)
+                )
             if sig.parameters[param["name"]].default is not _empty:
                 param["default"] = sig.parameters[param["name"]].default
             if param["name"].endswith("kwargs"):
@@ -158,7 +162,9 @@ def _inspect(obj, name):
                     if v.default is _empty
                     else {
                         "default": v.default,
-                        "typ": v.annotation or type(v.default).__name__,
+                        "typ": lstrip_typings(
+                            "{!s}".format(v.annotation) or type(v.default).__name__
+                        ),
                     }
                 ),
             )
@@ -167,9 +173,7 @@ def _inspect(obj, name):
 
     if ir.get("returns") and "returns" not in ir["returns"]:
         if sig.return_annotation is not _empty:
-            ir["returns"]["typ"] = "{!s}".format(sig.return_annotation).lstrip(
-                "typing."
-            )
+            ir["returns"]["typ"] = lstrip_typings("{!s}".format(sig.return_annotation))
         # TODO: Fix `getsource(obj)` and parse AST to find last `return` and set it as `ir["returns"]["default"]`
     return ir
 
