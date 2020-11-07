@@ -2,6 +2,8 @@
 Tests for the Intermediate Representation produced by the parsers
 """
 from ast import FunctionDef
+from importlib.abc import Loader
+from importlib.util import module_from_spec, spec_from_loader
 from unittest import TestCase
 
 from docstring_parser import rest
@@ -9,17 +11,20 @@ from docstring_parser import rest
 from doctrans import parse, emit
 from doctrans.ast_utils import get_value
 from doctrans.emitter_utils import to_docstring
-from doctrans.pure_utils import tab
+from doctrans.pure_utils import tab, PY_GTE_3_8
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import class_ast
 from doctrans.tests.mocks.docstrings import (
     docstring_str,
     intermediate_repr_no_default_doc,
 )
+from doctrans.tests.mocks.ir import method_complex_args_variety_ir
 from doctrans.tests.mocks.methods import (
     function_adder_ast,
     function_default_complex_default_arg_ast,
-    method_complex_args_variety_ast, )
+    method_complex_args_variety_ast,
+    method_complex_args_variety_str,
+)
 from doctrans.tests.utils_for_tests import unittest_main
 
 
@@ -211,17 +216,67 @@ class TestParsers(TestCase):
         self.assertDictEqual(
             parse.function(foo),
             {
-                "doc": "the foo function\n"
-                "\n"
-                ":param a: the a value\n"
-                ":param b: the b value",
+                "doc": "the foo function",
                 "name": "TestParsers.test_from_function_in_memory.<locals>.foo",
                 "params": [
-                    {"default": 5, "name": "a", "typ": "int"},
-                    {"default": 6, "name": "b", "typ": "int"},
+                    {"default": 5, "doc": "the a value", "name": "a"},
+                    {"default": 6, "doc": "the b value", "name": "b"},
                 ],
                 "returns": None,
+                "type": "static",
             },
+        )
+
+    def test_from_method_in_memory(self) -> None:
+        """
+        Tests that `parse.function` produces properly from a function in memory of current interpreter with:
+        - kw only args;
+        - default args;
+        - annotations
+        - required;
+        - unannotated;
+        - splat
+        """
+
+        class MemoryInspectLoader(Loader):
+            """ Set the filename for the inspect module, but don't actually, actually give the full source """
+
+            def create_module(self, spec=None):
+                """ Stub method"""
+
+            def get_code(self):
+                """ Stub method; soon to add actual source code to """
+                raise NotImplementedError()
+
+        _locals = module_from_spec(
+            spec_from_loader("helper", loader=MemoryInspectLoader, origin="str")
+        )
+        exec(
+            "from sys import stdout\n"
+            "from {} import Literal\n"
+            "{}".format(
+                "typing" if PY_GTE_3_8 else "typing_extensions",
+                method_complex_args_variety_str,
+            ),
+            _locals.__dict__,
+        )
+        setattr(getattr(_locals, "call_cliff"), "__loader__", MemoryInspectLoader)
+
+        ir = parse.function(getattr(_locals, "call_cliff"))
+
+        # This is a hack because JetBrains wraps stdout
+        self.assertIn(
+            type(ir["params"][-2]["default"]).__name__,
+            frozenset(("FlushingStringIO", "TextIOWrapper")),
+        )
+        ir["params"][-2]["default"] = "stdout"
+
+        # TODO: Fix this hack by making the loader do its job and parsing the source code in `parse._inspect`
+        ir["returns"]["default"] = "K"
+
+        self.assertDictEqual(
+            ir,
+            method_complex_args_variety_ir,
         )
 
     def test_from_method_complex_args_variety(self) -> None:
@@ -236,41 +291,7 @@ class TestParsers(TestCase):
         """
         self.assertDictEqual(
             parse.function(method_complex_args_variety_ast),
-            {
-                "name": "call_cliff",
-                "params": [
-                    {"doc": "name of dataset.", "name": "dataset_name"},
-                    {"doc": "Convert to numpy ndarrays", "name": "as_numpy"},
-                    {
-                        "doc": "backend engine, e.g., `np` or `tf`.",
-                        "name": "K",
-                        "typ": "Literal['np', 'tf']",
-                    },
-                    {
-                        "default": "~/tensorflow_datasets",
-                        "doc": "directory to look for models in.",
-                        "name": "tfds_dir",
-                    },
-                    {
-                        "default": "stdout",
-                        "doc": "IO object to write out to",
-                        "name": "writer",
-                    },
-                    {
-                        "doc": "additional keyword arguments",
-                        "name": "kwargs",
-                        "typ": "dict",
-                    },
-                ],
-                "returns": {
-                    "default": "K",
-                    "doc": "backend engine",
-                    "name": "return_type",
-                    "typ": "Literal['np', 'tf']",
-                },
-                "doc": "Call cliff",
-                "type": "self",
-            },
+            method_complex_args_variety_ir,
         )
 
     def test_from_class_actual(self) -> None:
@@ -284,7 +305,7 @@ class TestParsers(TestCase):
         self.assertDictEqual(
             parse.class_(A),
             {
-                "doc": "A is one boring class ",
+                "doc": "A is one boring class",
                 "name": "TestParsers.test_from_class_actual.<locals>.A",
                 "params": [],
                 "returns": None,

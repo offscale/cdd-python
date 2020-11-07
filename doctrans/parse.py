@@ -15,7 +15,7 @@ from ast import (
     ClassDef,
 )
 from collections import OrderedDict, deque
-from inspect import signature, getdoc, _empty
+from inspect import signature, getdoc, _empty, isfunction
 from itertools import filterfalse, count
 from operator import itemgetter
 from types import FunctionType
@@ -109,20 +109,69 @@ def _inspect(obj, name):
           }
     :rtype: ```dict```
     """
+
+    doc = getdoc(obj) or ""
+    ir = docstring(doc) if doc else {}
     sig = signature(obj)
-    return {
-        "name": name or obj.__qualname__
-        if hasattr(obj, "__qualname__")
-        else obj.__name__,
-        "doc": getdoc(obj) or "",
-        "params": [
-            {"name": k, "default": v.default, "typ": type(v.default).__name__}
+    ir["name"] = (
+        name or obj.__qualname__ if hasattr(obj, "__qualname__") else obj.__name__
+    )
+    is_function = isfunction(obj)
+    if not is_function and "type" in ir:
+        del ir["type"]
+    if ir.get("params"):
+
+        def update_param(param):
+            """
+            Update param
+
+            Internal function to update the param
+
+            :param param: dict of the param
+            :type param: ```dict```
+
+            :return: Updated param
+            :rtype: ```dict```
+            """
+            param["name"] = param["name"].lstrip("*")
+            if sig.parameters[param["name"]].annotation is not _empty:
+                param["typ"] = "{!s}".format(
+                    sig.parameters[param["name"]].annotation
+                ).lstrip("typing.")
+            if sig.parameters[param["name"]].default is not _empty:
+                param["default"] = sig.parameters[param["name"]].default
+            if param["name"].endswith("kwargs"):
+                param["typ"] = "dict"
+            return param
+
+        ir["params"] = list(map(update_param, ir["params"]))
+        if isfunction(obj):
+            ir["type"] = {"self": "self", "cls": "cls"}.get(
+                next(iter(sig.parameters.values())).name, "static"
+            )
+    else:
+        ir["params"] = [
+            dict(
+                name=k,
+                **(
+                    {}
+                    if v.default is _empty
+                    else {
+                        "default": v.default,
+                        "typ": v.annotation or type(v.default).__name__,
+                    }
+                ),
+            )
             for k, v in sig.parameters.items()
-        ],
-        "returns": None
-        if sig.return_annotation is _empty
-        else {"name": "return_type", "typ": sig.return_annotation},
-    }
+        ]
+
+    if ir.get("returns") and "returns" not in ir["returns"]:
+        if sig.return_annotation is not _empty:
+            ir["returns"]["typ"] = "{!s}".format(sig.return_annotation).lstrip(
+                "typing."
+            )
+        # TODO: Fix `getsource(obj)` and parse AST to find last `return` and set it as `ir["returns"]["default"]`
+    return ir
 
 
 def function(function_def, function_type=None, function_name=None):

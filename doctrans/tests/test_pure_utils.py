@@ -11,6 +11,7 @@ from doctrans.pure_utils import (
     strip_split,
     sanitise,
     quote,
+    update_d,
 )
 from doctrans.tests.utils_for_tests import unittest_main
 
@@ -80,6 +81,18 @@ class TestPureUtils(TestCase):
         self.assertEqual(quote('"foo"'), '"foo"')
         self.assertEqual(quote("'bar'"), "'bar'")
         self.assertEqual(quote("haz"), '"haz"')
+
+    def test_update_d(self):
+        """ Tests inline update dict """
+        d = {}
+        u = {"a": 5}
+        self.assertDictEqual(update_d(d, u), u)
+        self.assertDictEqual(d, u)
+        del d
+
+        d = {}
+        self.assertDictEqual(update_d(d, **u), u)
+        self.assertDictEqual(d, u)
 
 
 unittest_main()
