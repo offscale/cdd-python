@@ -99,9 +99,13 @@ def set_default_doc(param, emit_default_doc=True):
     :rtype: ```dict``
     """
     # if param is None: param = {"doc": "", "typ": "Any"}
-    has_defaults = "Defaults" in param["doc"] or "defaults" in param["doc"]
+    has_defaults = (
+        ("Defaults" in param["doc"] or "defaults" in param["doc"])
+        if "doc" in param
+        else False
+    )
 
-    if emit_default_doc and "default" in param and not has_defaults:
+    if emit_default_doc and not has_defaults and "default" in param:
         param["doc"] = "{doc} Defaults to {default}".format(
             doc=(
                 param["doc"]

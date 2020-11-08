@@ -4,9 +4,12 @@ ReST docstring parser.
 Translates from the [ReST docstring format (Sphinx)](
   https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html#the-sphinx-docstring-format)
 """
-
 from typing import Tuple, List
 
+from docstring_parser import parse as docstring_parser_, Style
+
+from doctrans import parse
+from doctrans.defaults_utils import extract_default
 from doctrans.emitter_utils import interpolate_defaults
 
 
@@ -31,6 +34,53 @@ def parse_docstring(docstring, emit_default_doc=False):
     """
 
     assert isinstance(docstring, (type(None), str))
+    if docstring is None or any(
+        e in docstring for e in (":param", ":cvar", ":ivar", ":return")
+    ):
+        style = Style.rest
+    elif any(e in docstring for e in ("Args:", "Kwargs:", "Returns:", "Raises:")):
+        style = Style.google
+    else:
+        style = Style.numpydoc
+
+    if style is not Style.rest:
+
+        def process_param(param):
+            """
+            Postprocess the param
+
+            :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+            :type param: ```dict``
+
+            :return: Potentially changed param
+            :rtype: ```dict```
+            """
+            if "type_name" in param:
+                param["typ"] = param.pop("type_name")
+            elif param["name"].endswith("kwargs"):
+                param.update({"typ": "dict", "name": param["name"].lstrip("*")})
+            if "is_optional" in param:
+                if param["is_optional"] and "optional" not in param["typ"].lower():
+                    param["typ"] = "Optional[{}]".format(param["typ"])
+                del param["is_optional"]
+            return param
+
+        ir = parse.docstring_parser(docstring_parser_(docstring, style=style))
+        ir.update(
+            {
+                "params": list(map(process_param, ir["params"])),
+                "type": {"self": "self", "cls": "cls"}.get(
+                    ir["params"][0]["name"] if ir["params"] else None, "static"
+                ),
+            }
+        )
+        if ir.get("returns"):
+            ir["returns"]["name"] = "return_type"
+            ir["returns"]["doc"], ir["returns"]["default"] = extract_default(
+                ir["returns"]["doc"], emit_default_doc=emit_default_doc
+            )
+        del ir["raises"]
+        return ir
 
     ir = {
         "name": None,
