@@ -79,7 +79,7 @@ def param2ast(param):
     else:
         annotation = ast.parse(param["typ"]).body[0].value
 
-        if param.get("default"):
+        if "default" in param:
             default_value = param["default"]
             parsed_default = (
                 set_value(value=default_value)

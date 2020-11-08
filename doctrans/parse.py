@@ -22,7 +22,11 @@ from operator import itemgetter
 from types import FunctionType
 from typing import Any
 
-from docstring_parser import DocstringParam, DocstringMeta, Docstring
+from docstring_parser import (
+    DocstringParam,
+    DocstringMeta,
+    Docstring,
+)
 
 from doctrans import get_logger
 from doctrans.ast_utils import (
@@ -35,7 +39,7 @@ from doctrans.ast_utils import (
 )
 from doctrans.defaults_utils import extract_default
 from doctrans.emitter_utils import parse_out_param, _parse_return
-from doctrans.pure_utils import rpartial, assert_equal, lstrip_namespace
+from doctrans.pure_utils import rpartial, assert_equal, lstrip_namespace, pp
 from doctrans.rest_docstring_parser import parse_docstring
 from doctrans.source_transformer import to_code
 
@@ -100,7 +104,7 @@ def _inspect(obj, name):
     :param obj: Something in memory, like a class, function, variable
     :type obj: ```Any```
 
-    :returns: a dictionary of form
+    :return: a dictionary of form
           {
                   'name': ...,
                   'type': ...,
@@ -125,34 +129,32 @@ def _inspect(obj, name):
 
     if ir.get("params"):
 
-        def update_param(param):
+        def process_param(param):
             """
-            Update param
+            Postprocess the param
 
-            Internal function to update the param
+            :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+            :type param: ```dict``
 
-            :param param: dict of the param
-            :type param: ```dict```
-
-            :return: Updated param
+            :return: Potentially changed param
             :rtype: ```dict```
             """
             param["name"] = param["name"].lstrip("*")
-            if sig.parameters[param["name"]].annotation is not _empty:
-                param["typ"] = lstrip_typings(
-                    "{!s}".format(sig.parameters[param["name"]].annotation)
-                )
-            if sig.parameters[param["name"]].default is not _empty:
-                param["default"] = sig.parameters[param["name"]].default
+            pp(sig.parameters)
+            if param["name"] not in sig.parameters:
+                return param
+            sig_param = sig.parameters[param["name"]]
+            if sig_param.annotation is not _empty:
+                param["typ"] = lstrip_typings("{!s}".format(sig_param.annotation))
+            if sig_param.default is not _empty:
+                param["default"] = sig_param.default
+                if param.get("typ", _empty) is _empty:
+                    param["typ"] = type(param["default"]).__name__
             if param["name"].endswith("kwargs"):
                 param["typ"] = "dict"
             return param
 
-        ir["params"] = list(map(update_param, ir["params"]))
-        if isfunction(obj):
-            ir["type"] = {"self": "self", "cls": "cls"}.get(
-                next(iter(sig.parameters.values())).name, "static"
-            )
+        ir["params"] = list(map(process_param, ir["params"]))
     else:
         ir["params"] = [
             dict(
@@ -163,7 +165,9 @@ def _inspect(obj, name):
                     else {
                         "default": v.default,
                         "typ": lstrip_typings(
-                            "{!s}".format(v.annotation) or type(v.default).__name__
+                            type(v.default).__name__
+                            if v.annotation is _empty
+                            else "{!s}".format(v.annotation)
                         ),
                     }
                 ),
@@ -171,9 +175,20 @@ def _inspect(obj, name):
             for k, v in sig.parameters.items()
         ]
 
+    if isfunction(obj):
+        ir["type"] = {"self": "self", "cls": "cls"}.get(
+            next(iter(sig.parameters.values())).name, "static"
+        )
+
     if ir.get("returns") and "returns" not in ir["returns"]:
         if sig.return_annotation is not _empty:
             ir["returns"]["typ"] = lstrip_typings("{!s}".format(sig.return_annotation))
+        # print("obj.__code__", obj.__code__, ";")
+        # print("dis(obj.__code__)", dis(obj.__code__), ";")
+        # print("show_code(obj.__code__)", show_code(obj.__code__), ";")
+
+        # print("getmembers(obj):")
+        # pp(getmembers(obj))
         # TODO: Fix `getsource(obj)` and parse AST to find last `return` and set it as `ir["returns"]["default"]`
     return ir
 
@@ -430,12 +445,14 @@ def docstring(doc_string, return_tuple=False):
         type(doc_string).__name__
     )
     parsed = doc_string if isinstance(doc_string, dict) else parse_docstring(doc_string)
+
+    pp(parsed)
+
     returns = (
         "returns" in parsed
         and parsed["returns"] is not None
         and "name" in parsed["returns"]
     )
-
     if returns:
         parsed["returns"]["doc"] = parsed["returns"].get(
             "doc", parsed["returns"]["name"]
@@ -559,16 +576,46 @@ def docstring_parser(doc_string):
             ),
         )
     )
+
+    def process_param(param):
+        """
+        Postprocess the param
+
+        :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+        :type param: ```dict``
+
+        :return: Potentially changed param
+        :rtype: ```dict```
+        """
+        if param.get("doc"):
+            # param["doc"] = param["doc"].strip()
+            for term in "Usage:", "Reference:":
+                idx = param["doc"].rfind(term)
+                if idx != -1:
+                    param["doc"] = param["doc"][:idx]
+        return param
+
     if "meta" in intermediate_repr and "params" in intermediate_repr:
         meta = {e["name"]: e for e in intermediate_repr.pop("meta")}
         intermediate_repr["params"] = [
-            dict(
-                **param,
-                **{k: v for k, v in meta[param["name"]].items() if k not in param},
+            process_param(
+                dict(
+                    **param,
+                    **{k: v for k, v in meta[param["name"]].items() if k not in param},
+                )
             )
             for param in intermediate_repr["params"]
+            if " " not in param["name"]
         ]
-
+    else:
+        intermediate_repr["params"] = list(
+            map(
+                process_param,
+                filterfalse(
+                    lambda param: " " in param["name"], intermediate_repr["params"]
+                ),
+            )
+        )
     return intermediate_repr
 
 
