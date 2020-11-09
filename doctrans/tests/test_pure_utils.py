@@ -12,6 +12,7 @@ from doctrans.pure_utils import (
     sanitise,
     quote,
     update_d,
+    lstrip_namespace,
 )
 from doctrans.tests.utils_for_tests import unittest_main
 
@@ -93,6 +94,10 @@ class TestPureUtils(TestCase):
         d = {}
         self.assertDictEqual(update_d(d, **u), u)
         self.assertDictEqual(d, u)
+
+    def test_lstrip_namespace(self) -> None:
+        """ Tests `lstrip_namespace` gives correct results """
+        self.assertEqual(lstrip_namespace("AAaBB", ("A", "a")), "BB")
 
 
 unittest_main()
