@@ -66,6 +66,19 @@ def param2ast(param):
             expr_target=None,
             expr_annotation=None,
         )
+    elif param["typ"] is None:
+        # Should I use an `Assign` instead?
+        return AnnAssign(
+            annotation=None,
+            simple=1,
+            target=Name(param["name"], Store()),
+            value=set_value(
+                kind=None, value=param.get("default") or simple_types[param["typ"]]
+            ),
+            expr=None,
+            expr_target=None,
+            expr_annotation=None,
+        )
     elif param["typ"] == "dict" or param["typ"].startswith("*"):
         return AnnAssign(
             annotation=Name("dict", Load()),
