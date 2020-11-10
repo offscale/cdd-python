@@ -51,8 +51,8 @@ def param2ast(param):
     :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :type param: ```dict```
 
-    :return: AST node (AnnAssign)
-    :rtype: ```AnnAssign```
+    :return: AST node for assignment
+    :rtype: ```Union[AnnAssign, Assign]```
     """
     if param["typ"] in simple_types:
         return AnnAssign(
@@ -67,17 +67,13 @@ def param2ast(param):
             expr_annotation=None,
         )
     elif param["typ"] is None:
-        # Should I use an `Assign` instead?
-        return AnnAssign(
-            annotation=None,
-            simple=1,
-            target=Name(param["name"], Store()),
+        return Assign(
+            targets=(Name(param["name"], Store()),),
             value=set_value(
                 kind=None, value=param.get("default") or simple_types[param["typ"]]
             ),
+            type_comment=None,
             expr=None,
-            expr_target=None,
-            expr_annotation=None,
         )
     elif param["typ"] == "dict" or param["typ"].startswith("*"):
         return AnnAssign(
