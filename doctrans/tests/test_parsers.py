@@ -231,8 +231,8 @@ class TestParsers(TestCase):
                 "doc": "the foo function",
                 "name": "TestParsers.test_from_function_in_memory.<locals>.foo",
                 "params": [
-                    {"default": 5, "doc": "the a value", "name": "a"},
-                    {"default": 6, "doc": "the b value", "name": "b"},
+                    {"default": 5, "doc": "the a value", "name": "a", "typ": "int"},
+                    {"default": 6, "doc": "the b value", "name": "b", "typ": "int"},
                 ],
                 "returns": None,
                 "type": "static",
@@ -325,7 +325,6 @@ class TestParsers(TestCase):
                 "doc": "A is one boring class",
                 "name": "TestParsers.test_from_class_actual.<locals>.A",
                 "params": [],
-                "raises": [],
             },
         )
 
