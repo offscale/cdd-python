@@ -151,7 +151,7 @@ def find_ast_type(node, node_name=None, of_type=ClassDef):
         matching_nodes = tuple(it)
         if len(matching_nodes) > 1:  # We could convert every one I guess?
             raise NotImplementedError()
-        elif len(matching_nodes) > 0:
+        elif matching_nodes:
             return matching_nodes[0]
         else:
             raise TypeError("No {!r} in AST".format(type(of_type).__name__))
@@ -232,10 +232,7 @@ def param2argparse_param(param, emit_default_doc=True):
                             arg="choices",
                             value=Tuple(
                                 ctx=Load(),
-                                elts=[
-                                    set_value(kind=None, value=choice)
-                                    for choice in choices
-                                ],
+                                elts=list(map(partial(set_value, kind=None), choices)),
                                 expr=None,
                             ),
                             identifier=None,
@@ -345,7 +342,7 @@ def get_function_type(function_def):
     if (
         not hasattr(function_def, "args")
         or function_def.args is None
-        or len(function_def.args.args) == 0
+        or not function_def.args.args
     ):
         return "static"
     elif function_def.args.args[0].arg in frozenset(("self", "cls")):
@@ -462,7 +459,7 @@ def find_in_ast(search, node):
     :return: AST node that was found, or None if nothing was found
     :rtype: ```Optional[AST]```
     """
-    if len(search) == 0 or hasattr(node, "_location") and node._location == search:
+    if not search or hasattr(node, "_location") and node._location == search:
         return node
 
     child_node, cursor, current_search = node, node.body, deepcopy(search)

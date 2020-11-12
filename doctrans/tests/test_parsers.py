@@ -325,6 +325,7 @@ class TestParsers(TestCase):
                 "doc": "A is one boring class",
                 "name": "TestParsers.test_from_class_actual.<locals>.A",
                 "params": [],
+                "returns": None,
             },
         )
 

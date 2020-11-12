@@ -24,7 +24,7 @@ from black import format_str, Mode
 from doctrans.ast_utils import param2argparse_param, param2ast, set_value
 from doctrans.defaults_utils import set_default_doc
 from doctrans.emitter_utils import get_internal_body, to_docstring
-from doctrans.pure_utils import tab, simple_types, PY3_8
+from doctrans.pure_utils import tab, simple_types, PY3_8, rpartial
 from doctrans.source_transformer import to_code
 
 
@@ -212,12 +212,12 @@ def class_(intermediate_repr, class_name="ConfigClass", class_bases=("object",))
     """
     returns = [intermediate_repr["returns"]] if intermediate_repr.get("returns") else []
 
-    if len(returns):
+    if returns:
         intermediate_repr["params"] = intermediate_repr["params"] + returns
         del intermediate_repr["returns"]
 
     return ClassDef(
-        bases=[Name(base_class, Load()) for base_class in class_bases],
+        bases=list(map(rpartial(Name, Load()), class_bases)),
         body=[
             Expr(
                 set_value(
