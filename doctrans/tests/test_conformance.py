@@ -2,8 +2,8 @@
 Tests for reeducation
 """
 import os
-from ast import FunctionDef
 from argparse import Namespace
+from ast import FunctionDef
 from copy import deepcopy
 from functools import partial
 from io import StringIO
@@ -63,15 +63,15 @@ class TestConformance(TestCase):
         with TemporaryDirectory() as tempdir:
             tempdir_join = partial(path.join, tempdir)
 
-            argparse_functions = [
-                (
+            argparse_functions = list(map(
+                lambda i: (
                     lambda argparse_function: emit.file(
                         argparse_func_ast, argparse_function, mode="wt"
                     )
                     or argparse_function
-                )(tempdir_join("argparse{i}.py".format(i=i)))
-                for i in range(10)
-            ]
+                )(tempdir_join("argparse{i}.py".format(i=i))),
+                range(10)
+            ))
             # Test if can create missing file
             argparse_functions.append(tempdir_join("argparse_missing.py"))
 

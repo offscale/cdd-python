@@ -184,7 +184,7 @@ def strip_split(param, sep):
     :return: Iterator of each element of the hierarchy
     :rtype: ```Iterator[str, ...]```
     """
-    return (loc.strip() for loc in param.split(sep))
+    return map(str.strip, param.split(sep))
 
 
 def quote(s, mark='"'):
