@@ -38,9 +38,9 @@ from doctrans.ast_utils import (
     argparse_param2param,
 )
 from doctrans.defaults_utils import extract_default
+from doctrans.docstring_parsers import parse_docstring
 from doctrans.emitter_utils import parse_out_param, _parse_return
 from doctrans.pure_utils import rpartial, assert_equal, lstrip_namespace, pp
-from doctrans.rest_docstring_parser import parse_docstring
 from doctrans.source_transformer import to_code
 
 logger = get_logger("doctrans.parse")
@@ -445,8 +445,6 @@ def docstring(doc_string, return_tuple=False):
         type(doc_string).__name__
     )
     parsed = doc_string if isinstance(doc_string, dict) else parse_docstring(doc_string)
-
-    pp(parsed)
 
     returns = (
         "returns" in parsed
