@@ -1,19 +1,23 @@
 """
-ReST docstring parser.
+Docstring parsers.
 
 Translates from the [ReST docstring format (Sphinx)](
   https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html#the-sphinx-docstring-format)
+
+Translates from the [numpydoc docstring format](https://numpydoc.readthedocs.io/en/latest/format.html)
 """
-from collections import namedtuple, OrderedDict
+from collections import namedtuple
+from copy import copy
 from functools import partial
-from itertools import filterfalse
-from operator import contains
-from typing import Tuple, List, Union
+from itertools import filterfalse, takewhile
+from operator import contains, ne
+from typing import Tuple, List, Union, Dict
 
 from docstring_parser import Style
+from flake8.utils import string_types
 
 from doctrans.emitter_utils import interpolate_defaults
-from doctrans.pure_utils import pp, rpartial, pairwise
+from doctrans.pure_utils import pairwise, BUILTIN_TYPES
 
 TOKENS = namedtuple("Tokens", ("rest", "google", "numpydoc"))(
     (":param", ":cvar", ":ivar", ":var", ":type", ":return", ":rtype"),
@@ -124,7 +128,7 @@ def _scan_phase(docstring, style=Style.rest):
     :type style: ```Style```
 
     :return: List with each element a tuple of (whether value is a token, value)
-    :rtype: ```Union[OrderedDict[str, str], List[Tuple[bool, str]]]```
+    :rtype: ```Union[Dict[str, str], List[Tuple[bool, str]]]```
     """
     known_tokens = getattr(TOKENS, style.name)
     if style is Style.rest:
@@ -146,12 +150,10 @@ def _scan_phase_numpydoc(docstring, known_tokens):
     :type known_tokens: ```Tuple[str]```
 
     :return: List with each element a tuple of (whether value is a token, value)
-    :rtype: ```OrderedDict[str, str]```
+    :rtype: ```Dict[str, str]```
     """
     stack: List[str] = []
-    scanned: OrderedDict[str, str] = OrderedDict(
-        (token, "") for token in ("doc",) + known_tokens
-    )
+    scanned: Dict[str, str] = {token: "" for token in ("doc",) + known_tokens}
 
     def add_to_scanned(scanned_str):
         """
@@ -166,7 +168,7 @@ def _scan_phase_numpydoc(docstring, known_tokens):
         )
         scanned_str = scanned_str.strip(add_to_scanned.namespace)
         if scanned_str:
-            scanned[add_to_scanned.namespace] += scanned_str
+            scanned[add_to_scanned.namespace] += "\n" + scanned_str
         stack.clear()
 
     add_to_scanned.namespace = "doc"
@@ -183,6 +185,44 @@ def _scan_phase_numpydoc(docstring, known_tokens):
     scanned_s = "".join(stack).strip()
     if scanned_s:
         add_to_scanned(scanned_s)
+
+    key = "Parameters\n----------"
+    params = copy(scanned[key])
+    stack_l = []
+    symmetric = True
+    while len(params):
+        tw = "".join(takewhile(partial(ne, ":"), params))
+        params = params[len(tw) + 1 :]
+        p, _, n = tw.rpartition("\n")
+        p, n = map(str.strip, (p, n))
+        found0, found1 = map(
+            lambda s: next(filter(s.startswith, BUILTIN_TYPES), None), (p, n)
+        )
+        if p:
+            if found0:
+                _slice_at = len(found0)
+                _nl_idx = p.find("\n", _slice_at)
+                if _nl_idx != -1:
+                    _slice_at = _nl_idx
+                stack_l += [{"typ": p[:_slice_at]}, p[_slice_at:]]
+            elif len(p):
+                stack_l.append(p)
+        else:
+            symmetric = False
+        del p
+
+        if found1:
+            _slice_at = len(found1)
+            _nl_idx = n.find("\n", _slice_at)
+            if _nl_idx != -1:
+                _slice_at = _nl_idx
+            stack_l += [{"typ": n[:_slice_at]}, n[_slice_at:]]
+        elif len(n):
+            stack_l.append(n)
+        del n
+
+    if stack_l:
+        scanned[key] = stack_l
 
     return scanned
 
@@ -243,7 +283,7 @@ def _parse_phase(intermediate_repr, scanned, emit_default_doc, style=Style.rest)
     :type intermediate_repr: ```dict```
 
     :param scanned: List with each element a tuple of (whether value is a token, value)
-    :type scanned: ```Union[OrderedDict[str, str], List[Tuple[bool, str]]]```
+    :type scanned: ```Union[Dict[str, str], List[Tuple[bool, str]]]```
 
     :param style: the style of docstring
     :type style: ```Style```
@@ -277,7 +317,7 @@ def _parse_phase_numpydoc(intermediate_repr, scanned, emit_default_doc, return_t
     :type intermediate_repr: ```dict```
 
     :param scanned: List with each element a tuple of (whether value is a token, value)
-    :type scanned: ```OrderedDict[str, str]```
+    :type scanned: ```Dict[str, str]```
 
     :param style: the style of docstring
     :type style: ```Style```
@@ -289,28 +329,21 @@ def _parse_phase_numpydoc(intermediate_repr, scanned, emit_default_doc, return_t
     params = scanned[
         next(filterfalse(partial(contains, ("doc", return_tokens[0])), scanned.keys()))
     ]
-    if params:
-        stack = []
-        for ch in params:
-            if ch == ":":
-                intermediate_repr["params"].append("".join(stack))
-                stack.clear()
-            else:
-                stack.append(ch)
-        intermediate_repr["params"].append("".join(stack))
-        pp(intermediate_repr["params"])
 
-        intermediate_repr["params"] = dict(
-            pairwise(
-                map(
-                    rpartial(str.replace, "\n", ""),
-                    map(str.strip, intermediate_repr["params"]),
-                )
-            )
-        )
-    if scanned[return_tokens[0]]:
-        pp(scanned[return_tokens[0]])
-    pp(intermediate_repr)
+    def _form_param(p_o):
+        d = {}
+        keys = "doc", "name"
+        for idx, e in enumerate(p_o):
+            if isinstance(e, string_types):
+                d[keys[idx]] = e.lstrip()
+            elif isinstance(e, dict):
+                d.update(e)
+            else:
+                raise TypeError(e)
+        return d
+
+    if params:
+        intermediate_repr["params"] = list(map(_form_param, pairwise(params)))
 
 
 def _parse_phase_rest(intermediate_repr, scanned, emit_default_doc, return_tokens):

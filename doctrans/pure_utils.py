@@ -1,7 +1,8 @@
 """
 Pure utils for pure functions. For the same input will always produce the same input_str.
 """
-from itertools import tee
+import typing
+from itertools import tee, chain
 from keyword import iskeyword
 from operator import eq
 from platform import python_version_tuple
@@ -283,7 +284,12 @@ def pairwise(iterable):
     return zip(a, b)
 
 
+BUILTIN_TYPES = frozenset(chain.from_iterable(map(lambda s: (s, 'typing.{}'.format(s), '_extensions.{}'.format(s)),
+                          filter(lambda s: s[0].isupper() and not s.isupper(), dir(typing))))
+                          ) | frozenset(("int", "float", "str", "dict", "list", "tuple"))
+
 __all__ = [
+    "BUILTIN_TYPES",
     "pp",
     "tab",
     "quote",
@@ -293,6 +299,7 @@ __all__ = [
     "PY3_8",
     "PY_GTE_3_8",
     "PY_GTE_3_9",
+    "pairwise",
     "pluralise",
     "reindent",
     "sanitise",
