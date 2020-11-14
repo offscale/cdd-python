@@ -6,7 +6,7 @@ from unittest import TestCase
 
 import doctrans.emit
 import doctrans.emitter_utils
-from doctrans.rest_docstring_parser import parse_docstring
+from doctrans.docstring_parsers import parse_docstring
 from doctrans.tests.mocks.docstrings import (
     docstring_str,
     intermediate_repr,

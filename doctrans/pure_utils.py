@@ -1,6 +1,7 @@
 """
 Pure utils for pure functions. For the same input will always produce the same input_str.
 """
+from itertools import tee
 from keyword import iskeyword
 from operator import eq
 from platform import python_version_tuple
@@ -264,6 +265,22 @@ def lstrip_namespace(s, namespaces):
     for namespace in namespaces:
         s = s.lstrip(namespace)
     return s
+
+
+def pairwise(iterable):
+    """
+    pairwise is taken from official itertools recipes
+    s -> (s0,s1), (s1,s2), (s2, s3), ...
+
+    :param iterable: An iterable
+    :type iterable: ```Iterable```
+
+    :return: pairwised iterable
+    :rtype: ```Iterable```
+    """
+    a, b = tee(iterable)
+    next(b, None)
+    return zip(a, b)
 
 
 __all__ = [
