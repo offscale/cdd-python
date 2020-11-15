@@ -27,6 +27,7 @@ from doctrans.ast_utils import (
     annotate_ancestry,
     RewriteAtQuery,
     emit_arg,
+    param2ast,
 )
 from doctrans.pure_utils import PY_GTE_3_9, PY3_8, PY_GTE_3_8
 from doctrans.source_transformer import ast_parse
@@ -516,6 +517,17 @@ class TestAstUtils(TestCase):
             ),
             class_def,
         )
+
+    def test_param2ast_with_assign(self) -> None:
+        """ Check that `param2ast` behaves correctly with a non annotated (typeless) input """
+
+        gold = Assign(
+            targets=(Name("zion", Store()),),
+            value=Constant(value=None, constant_value=None, string=None),
+            expr=None,
+            lineno=None,
+        )
+        run_ast_test(self, param2ast({"typ": None, "name": "zion"}), gold=gold)
 
 
 unittest_main()

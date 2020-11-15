@@ -111,6 +111,33 @@ Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]
 
 """
 
+docstring_numpydoc_only_params_str = """
+Parameters
+----------
+dataset_name : str
+    name of dataset. Defaults to "mnist"
+tfds_dir : Optional[str]
+    directory to look for models in. Defaults to "~/tensorflow_datasets"
+K : Literal['np', 'tf']
+    backend engine, e.g., `np` or `tf`. Defaults to "np"
+as_numpy : Optional[bool]
+    Convert to numpy ndarrays
+data_loader_kwargs : dict
+    pass this as arguments to data_loader function
+"""
+
+docstring_numpydoc_only_returns_str = """
+Returns
+-------
+Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]
+    Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
+
+"""
+
+docstring_numpydoc_only_doc_str = """
+Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
+"""
+
 intermediate_repr_no_default_doc_or_prop = remove_defaults_from_intermediate_repr(
     deepcopy(intermediate_repr), emit_defaults=False
 )
@@ -230,6 +257,11 @@ __all__ = [
     "docstring_str",
     "docstring_str_extra_colons",
     "docstring_str_no_default_doc",
+    "docstring_numpydoc_str",
+    "docstring_numpydoc_only_params_str",
+    "docstring_numpydoc_only_returns_str",
+    "docstring_numpydoc_only_doc_str",
+    "docstring_google_str",
     "intermediate_repr",
     "intermediate_repr_no_default_doc_or_prop",
     "intermediate_repr_no_default_doc",

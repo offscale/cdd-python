@@ -54,7 +54,16 @@ def param2ast(param):
     :return: AST node for assignment
     :rtype: ```Union[AnnAssign, Assign]```
     """
-    if param["typ"] in simple_types:
+    if param["typ"] is None:
+        return Assign(
+            targets=(Name(param["name"], Store()),),
+            value=set_value(
+                kind=None, value=param.get("default") or simple_types[param["typ"]]
+            ),
+            lineno=None,
+            expr=None,
+        )
+    elif param["typ"] in simple_types:
         return AnnAssign(
             annotation=Name(param["typ"], Load()),
             simple=1,
@@ -65,15 +74,6 @@ def param2ast(param):
             expr=None,
             expr_target=None,
             expr_annotation=None,
-        )
-    elif param["typ"] is None:
-        return Assign(
-            targets=(Name(param["name"], Store()),),
-            value=set_value(
-                kind=None, value=param.get("default") or simple_types[param["typ"]]
-            ),
-            type_comment=None,
-            expr=None,
         )
     elif param["typ"] == "dict" or param["typ"].startswith("*"):
         return AnnAssign(

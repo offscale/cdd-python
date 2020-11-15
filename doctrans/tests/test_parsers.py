@@ -2,15 +2,17 @@
 Tests for the Intermediate Representation produced by the parsers
 """
 from ast import FunctionDef
+from copy import deepcopy
 from importlib.abc import Loader
 from importlib.util import module_from_spec, spec_from_loader
 from inspect import getsource
 from unittest import TestCase
 
-from docstring_parser import rest
+from docstring_parser import rest, Style
 
 from doctrans import parse, emit
 from doctrans.ast_utils import get_value
+from doctrans.docstring_parsers import parse_docstring, _parse_phase
 from doctrans.emitter_utils import to_docstring
 from doctrans.pure_utils import tab, PY_GTE_3_8
 from doctrans.tests.mocks.argparse import argparse_func_ast
@@ -19,6 +21,10 @@ from doctrans.tests.mocks.docstrings import (
     docstring_str,
     intermediate_repr_no_default_doc,
     docstring_numpydoc_str,
+    docstring_numpydoc_only_params_str,
+    docstring_numpydoc_only_returns_str,
+    docstring_numpydoc_only_doc_str,
+    docstring_google_str,
 )
 from doctrans.tests.mocks.ir import method_complex_args_variety_ir
 from doctrans.tests.mocks.methods import (
@@ -104,6 +110,68 @@ class TestParsers(TestCase):
         ir, returns = parse.docstring(docstring_numpydoc_str, return_tuple=True)
         self.assertTrue(returns)
         self.assertDictEqual(ir, intermediate_repr_no_default_doc)
+
+    def test_from_docstring_numpydoc_only_params(self) -> None:
+        """
+        Tests whether `docstring` produces `intermediate_repr_no_default_doc`
+              from `docstring_numpydoc_only_params_str`"""
+        ir, returns = parse.docstring(
+            docstring_numpydoc_only_params_str, return_tuple=True
+        )
+        self.assertFalse(returns)
+        gold = deepcopy(intermediate_repr_no_default_doc)
+        del gold["returns"]
+        gold.update({"doc": "", "returns": None})
+        self.assertDictEqual(ir, gold)
+
+    def test_from_docstring_numpydoc_only_returns(self) -> None:
+        """
+        Tests whether `docstring` produces `intermediate_repr_no_default_doc`
+              from `docstring_numpydoc_only_returns_str`"""
+        ir, returns = parse.docstring(
+            docstring_numpydoc_only_returns_str, return_tuple=True
+        )
+        self.assertTrue(returns)
+        self.assertDictEqual(
+            ir,
+            {
+                "doc": "",
+                "name": None,
+                "params": [],
+                "returns": intermediate_repr_no_default_doc["returns"],
+                "type": "static",
+            },
+        )
+
+    def test_from_docstring_numpydoc_only_doc_str(self) -> None:
+        """
+        Tests whether `docstring` produces `intermediate_repr_no_default_doc`
+              from `docstring_numpydoc_only_doc_str`"""
+        ir, returns = parse.docstring(
+            docstring_numpydoc_only_doc_str, return_tuple=True
+        )
+        self.assertFalse(returns)
+        self.assertDictEqual(
+            ir,
+            {
+                "doc": intermediate_repr_no_default_doc["doc"],
+                "name": None,
+                "params": [],
+                "returns": None,
+                "type": "static",
+            },
+        )
+
+    def test_from_docstring_google_fails(self) -> None:
+        """
+        Tests for coverage. TODO: Actually implement google docstrings"""
+        self.assertRaises(
+            NotImplementedError, lambda: parse_docstring(docstring_google_str)
+        )
+        self.assertRaises(
+            NotImplementedError,
+            lambda: _parse_phase(docstring_google_str, [], True, Style.google),
+        )
 
     def test_to_docstring_fails(self) -> None:
         """
