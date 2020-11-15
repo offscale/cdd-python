@@ -301,7 +301,7 @@ def blockwise(t, size=2, fillvalue=None):
     :return: iterator with iterators inside of block size
     :rtype: ```Iterator```
     """
-    return zip_longest(*[iter(t)]*size, fillvalue=fillvalue)
+    return zip_longest(*[iter(t)] * size, fillvalue=fillvalue)
 
 
 def location_within(container, iterable):

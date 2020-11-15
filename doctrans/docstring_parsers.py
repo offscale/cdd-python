@@ -9,7 +9,7 @@ Translates from the [numpydoc docstring format](https://numpydoc.readthedocs.io/
 from collections import namedtuple
 from functools import partial
 from operator import contains
-from typing import Tuple, List, Union, Dict
+from typing import Tuple, List, Dict
 
 from docstring_parser import Style
 
@@ -149,8 +149,8 @@ def _scan_phase_numpydoc(docstring, known_tokens):
     :return: List with each element a tuple of (whether value is a token, value)
     :rtype: ```Dict[str, str]```
     """
-    scanned: Dict[str, str] = {token: [] for token in ("doc",) + known_tokens}
-    # ^ Union[Literal["doc"], known_tokens]
+    scanned: Dict[str, List[dict]] = {token: [] for token in ("doc",) + known_tokens}
+    # ^ Dict[Union[Literal["doc"], known_tokens], List[dict]]
 
     # First doc, if present
     _start_idx, _end_idx, _found = location_within(docstring, (known_tokens[0],))
@@ -182,9 +182,7 @@ def _scan_phase_numpydoc(docstring, known_tokens):
         :return: dict of shape {'name': ..., 'typ': ..., 'doc': ... }
         :rtype: ```dict``
         """
-        return {"name": "return_type",
-                "typ": typ,
-                "doc": doc.lstrip()}
+        return {"name": "return_type", "typ": typ, "doc": doc.lstrip()}
 
     if namespace == known_tokens[0]:
         _start_idx, _end_idx, _found = location_within(docstring, (known_tokens[1],))
@@ -195,37 +193,53 @@ def _scan_phase_numpydoc(docstring, known_tokens):
             scanned[_found] = parse_return(*ret_docstring.partition("\n"))
 
             # Next, separate into (namespace, name, [typ, doc, default]), updating `scanned` accordingly
-            stack, lines, cur, col_on_line = [], [], {}, False
-            for idx, ch in enumerate(docstring):
-                stack.append(ch)
-                if ch == '\n':
-                    stack_str = "".join(stack).strip()
-                    if stack_str:
-                        if col_on_line is True:
-                            col_on_line = False
-                            # cur["rest"] += stack_str
-                            cur["typ"] = stack_str
-                        else:
-                            if cur:
-                                cur["doc"] = stack_str
-                            else:
-                                cur = {"doc": stack_str}
-                    stack.clear()
-                elif ch == ':':
-                    if "name" in cur:
-                        scanned[namespace].append(cur.copy())
-                        cur.clear()
-                    stack_str = "".join(stack[:-1]).strip()
-                    if stack_str:
-                        cur = {"name": stack_str, "doc": ""}
-                        col_on_line = True
-                        stack.clear()
-            if cur:
-                scanned[namespace].append(cur)
+            _parse_params_from_numpydoc(docstring, namespace, scanned)
     else:
         scanned[known_tokens[1]] = parse_return(*docstring.partition("\n"))
 
     return scanned
+
+
+def _parse_params_from_numpydoc(docstring, namespace, scanned):
+    """
+    Internal function used by `_scan_phase_numpydoc` to extract the params into the doctrans ir
+
+    :param docstring: The docstring in numpydoc format
+    :type docstring: ```str```
+
+    :param namespace: The namespace, i.e., the key to update on the `scanned` param.
+    :type namespace: ```Literal["Parameters\n----------"]```
+
+    :param scanned: A list of dicts in docstring IR format, but with an outermost key of numpydoc known tokens
+    :type scanned: ```Dict[str, List[dict]]```
+    """
+    stack, cur, col_on_line = [], {}, False
+    for idx, ch in enumerate(docstring):
+        stack.append(ch)
+        if ch == "\n":
+            stack_str = "".join(stack).strip()
+            if stack_str:
+                if col_on_line is True:
+                    col_on_line = False
+                    # cur["rest"] += stack_str
+                    cur["typ"] = stack_str
+                else:
+                    if cur:
+                        cur["doc"] = stack_str
+                    else:
+                        cur = {"doc": stack_str}
+            stack.clear()
+        elif ch == ":":
+            if "name" in cur:
+                scanned[namespace].append(cur.copy())
+                cur.clear()
+            stack_str = "".join(stack[:-1]).strip()
+            if stack_str:
+                cur = {"name": stack_str, "doc": ""}
+                col_on_line = True
+                stack.clear()
+    if cur:
+        scanned[namespace].append(cur)
 
 
 def _scan_phase_rest(docstring, known_tokens):
@@ -255,7 +269,7 @@ def _scan_phase_rest(docstring, known_tokens):
             token_len = len(token)
             if tuple(stack_rev[:token_len]) == token:
                 scanned.append((bool(len(scanned)), "".join(stack[:-token_len])))
-                stack = stack[len(scanned[-1][1]):][:token_len]
+                stack = stack[len(scanned[-1][1]) :][:token_len]
                 continue
 
     if stack:
@@ -327,12 +341,18 @@ def _parse_phase_numpydoc(intermediate_repr, scanned, emit_default_doc, return_t
     :type emit_default_doc: ```bool``
     """
     known_tokens = getattr(TOKENS, Style.numpydoc.name)
-    _interpolate_defaults = partial(interpolate_defaults, emit_default_doc=emit_default_doc)
+    _interpolate_defaults = partial(
+        interpolate_defaults, emit_default_doc=emit_default_doc
+    )
     intermediate_repr.update(
         {
             "doc": scanned["doc"],
-            "params": list(map(_interpolate_defaults, scanned.get(known_tokens[0], []))),
-            "returns": _interpolate_defaults(scanned[return_tokens[0]]) if scanned.get(return_tokens[0]) else None
+            "params": list(
+                map(_interpolate_defaults, scanned.get(known_tokens[0], []))
+            ),
+            "returns": _interpolate_defaults(scanned[return_tokens[0]])
+            if scanned.get(return_tokens[0])
+            else None,
         }
     )
 
@@ -360,7 +380,7 @@ def _parse_phase_rest(intermediate_repr, scanned, emit_default_doc, return_token
         if is_token is True:
             if any(map(line.startswith, return_tokens)):
                 nxt_colon = line.find(":", 1)
-                val = line[nxt_colon + 1:].strip()
+                val = line[nxt_colon + 1 :].strip()
                 if intermediate_repr["returns"] is None:
                     intermediate_repr["returns"] = {}
                 intermediate_repr["returns"].update(
@@ -375,14 +395,14 @@ def _parse_phase_rest(intermediate_repr, scanned, emit_default_doc, return_token
             else:
                 fst_space = line.find(" ")
                 nxt_colon = line.find(":", fst_space)
-                name = line[fst_space + 1: nxt_colon]
+                name = line[fst_space + 1 : nxt_colon]
 
                 if "name" in param and not param["name"] == name:
                     if not param["name"][0] == "*":
                         intermediate_repr["params"].append(param)
                     param = {}
 
-                val = line[nxt_colon + 1:].strip()
+                val = line[nxt_colon + 1 :].strip()
                 param.update(dict((_set_param_values(line, val),), name=name))
                 param = interpolate_defaults(param, emit_default_doc=emit_default_doc)
         elif not intermediate_repr["doc"]:

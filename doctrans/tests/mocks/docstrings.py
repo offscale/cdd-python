@@ -84,7 +84,8 @@ Args:
   data_loader_kwargs(data_loader_kwargs: ```**data_loader_kwargs```): pass this as arguments to data_loader function
 
 Returns:
-  Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
+  Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```:
+   Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 """
 
 docstring_numpydoc_str = """
