@@ -8,7 +8,7 @@ from typing import Any
 
 from doctrans.ast_utils import get_value
 from doctrans.defaults_utils import extract_default, set_default_doc
-from doctrans.pure_utils import simple_types, identity, tab, quote, pp
+from doctrans.pure_utils import simple_types, identity, tab, quote
 from doctrans.source_transformer import to_code
 
 
@@ -390,7 +390,6 @@ def to_docstring(
         emit_types=emit_types,
     )
     sep = (tab * indent_level) if emit_separating_tab else ""
-    pp(intermediate_repr["params"])
     return "\n{tab}{description}\n{sep}\n{params}\n{returns}".format(
         sep=sep,
         tab=tab,

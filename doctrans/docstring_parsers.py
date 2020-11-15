@@ -8,13 +8,13 @@ Translates from the [numpydoc docstring format](https://numpydoc.readthedocs.io/
 """
 from collections import namedtuple
 from functools import partial
-from operator import contains, eq
+from operator import contains
 from typing import Tuple, List, Union, Dict
 
 from docstring_parser import Style
 
 from doctrans.emitter_utils import interpolate_defaults
-from doctrans.pure_utils import BUILTIN_TYPES, location_within
+from doctrans.pure_utils import location_within
 
 TOKENS = namedtuple("Tokens", ("rest", "google", "numpydoc"))(
     (":param", ":cvar", ":ivar", ":var", ":type", ":return", ":rtype"),
@@ -136,81 +136,6 @@ def _scan_phase(docstring, style=Style.rest):
         raise NotImplementedError(Style.name)
 
 
-def add_to_scanned(scanned_str):
-    """
-    Internal function to add to the internal scanned ```OrderedDict```
-
-    :param scanned_str: Scanned string
-    :type scanned_str: ```str```
-    """
-    add_to_scanned.namespace = next(
-        filter(partial(str.startswith, scanned_str), known_tokens),
-        add_to_scanned.namespace,
-    )
-    if scanned_str.startswith(add_to_scanned.namespace):
-        scanned_str = scanned_str[len(add_to_scanned.namespace):]
-    if scanned_str:
-        scanned[add_to_scanned.namespace] += "\n{}".format(scanned_str)
-
-
-def is_type(s, where=eq):
-    """
-    Checks if it's a type
-
-    :param s: input
-    :type s: ```str```
-
-    :param where: Where to look for type
-    :type where: ```Callable[[Any, Any], bool]```
-
-    :return: Whether it's a type
-    :rtype: ```bool```
-    """
-    return any(filter(partial(where, s), BUILTIN_TYPES))
-
-
-def where_type(s):
-    """
-    Finds type within str
-
-    :param s: input
-    :type s: ```str```
-
-    :return: (Start index iff found else -1, End index iff found else -1, type iff found else None)
-    :rtype: ```Tuple[int, int, Optional[str]]```
-    """
-    return location_within(s, BUILTIN_TYPES)
-
-
-def is_name(s):
-    """
-    Checks if it's a name
-
-    :param s: input
-    :type s: ```str```
-
-    :return: Whether it's a name
-    :rtype: ```bool```
-    """
-    return s.isalpha()
-
-
-def is_doc(s):
-    """
-    Checks if it's a doc
-
-    :param s: input
-    :type s: ```str```
-
-    :return: Whether it's a doc
-    :rtype: ```bool```
-    """
-    return not is_type(s) and not is_name(s)
-
-
-add_to_scanned.namespace = "doc"
-
-
 def _scan_phase_numpydoc(docstring, known_tokens):
     """
     numpydoc scanner phase. Lexical analysis; to some degree…
@@ -235,13 +160,28 @@ def _scan_phase_numpydoc(docstring, known_tokens):
 
     if _start_idx > -1:
         namespace = _found
-        scanned["doc"] = docstring[:_start_idx]
+        scanned["doc"] = docstring[:_start_idx].strip()
         docstring = docstring[_end_idx:].strip()
     else:
-        scanned["doc"] = docstring
+        scanned["doc"] = docstring.strip()
         return scanned
 
     def parse_return(typ, _, doc):
+        """
+        Internal function to parse `str.partition` output into a return param
+
+        :param typ: the type
+        :type typ: ```str```
+
+        :param _: Ignore this. It should be a newline character.
+        :type _: ```str```
+
+        :param doc: the doc
+        :type doc: ```str```
+
+        :return: dict of shape {'name': ..., 'typ': ..., 'doc': ... }
+        :rtype: ```dict``
+        """
         return {"name": "return_type",
                 "typ": typ,
                 "doc": doc.lstrip()}
@@ -260,15 +200,16 @@ def _scan_phase_numpydoc(docstring, known_tokens):
                 stack.append(ch)
                 if ch == '\n':
                     stack_str = "".join(stack).strip()
-                    if col_on_line is True:
-                        col_on_line = False
-                        # cur["rest"] += stack_str
-                        cur["typ"] = stack_str
-                    else:
-                        if cur:
-                            cur["doc"] = stack_str
+                    if stack_str:
+                        if col_on_line is True:
+                            col_on_line = False
+                            # cur["rest"] += stack_str
+                            cur["typ"] = stack_str
                         else:
-                            cur = {"doc": stack_str}
+                            if cur:
+                                cur["doc"] = stack_str
+                            else:
+                                cur = {"doc": stack_str}
                     stack.clear()
                 elif ch == ':':
                     if "name" in cur:
@@ -386,12 +327,13 @@ def _parse_phase_numpydoc(intermediate_repr, scanned, emit_default_doc, return_t
     :type emit_default_doc: ```bool``
     """
     known_tokens = getattr(TOKENS, Style.numpydoc.name)
+    _interpolate_defaults = partial(interpolate_defaults, emit_default_doc=emit_default_doc)
     intermediate_repr.update(
-        interpolate_defaults({
+        {
             "doc": scanned["doc"],
-            "params": scanned.get(known_tokens[0], []),
-            "returns": scanned.get(return_tokens[0], None)
-        }, emit_default_doc=emit_default_doc)
+            "params": list(map(_interpolate_defaults, scanned.get(known_tokens[0], []))),
+            "returns": _interpolate_defaults(scanned[return_tokens[0]]) if scanned.get(return_tokens[0]) else None
+        }
     )
 
 
@@ -409,9 +351,6 @@ def _parse_phase_rest(intermediate_repr, scanned, emit_default_doc, return_token
 
     :param scanned: List with each element a tuple of (whether value is a token, value)
     :type scanned: ```List[Tuple[bool, str]]```
-
-    :param style: the style of docstring
-    :type style: ```Style```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
