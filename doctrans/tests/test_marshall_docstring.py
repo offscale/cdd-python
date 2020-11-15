@@ -158,12 +158,13 @@ class TestMarshallDocstring(TestCase):
             },
         )
 
-    def test_from_docstring_google_fails(self) -> None:
+    def test_from_docstring_google_str(self) -> None:
         """
-        Tests for coverage. TODO: Actually implement google docstrings"""
+        Tests whether `parse_docstring` produces `intermediate_repr_no_default_doc`
+              from `docstring_google_str`
+        """
         self.assertDictEqual(
-            parse_docstring(docstring_google_str),
-            intermediate_repr_no_default_doc
+            parse_docstring(docstring_google_str), intermediate_repr_no_default_doc
         )
 
     def test_to_docstring_fails(self) -> None:
