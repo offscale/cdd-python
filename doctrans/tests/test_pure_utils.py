@@ -1,4 +1,5 @@
 """ Tests for pure utils """
+from itertools import zip_longest
 from unittest import TestCase
 
 from doctrans.pure_utils import (
@@ -14,12 +15,20 @@ from doctrans.pure_utils import (
     update_d,
     lstrip_namespace,
     location_within,
+    blockwise,
 )
 from doctrans.tests.utils_for_tests import unittest_main
 
 
 class TestPureUtils(TestCase):
     """ Test class for pure utils """
+
+    def test_blockwise(self) -> None:
+        """ Tests that blockwise produces the expected output """
+        self.assertIsInstance(blockwise(iter(())), zip_longest)
+        self.assertTupleEqual(tuple(blockwise(iter(()))), tuple())
+        self.assertTupleEqual(tuple(blockwise("ABC")), (("A", "B"), ("C", None)))
+        self.assertTupleEqual(tuple(blockwise("ABCD")), (("A", "B"), ("C", "D")))
 
     def test_pp(self) -> None:
         """ Test that pp is from the right module """
@@ -32,7 +41,7 @@ class TestPureUtils(TestCase):
     def test_simple_types(self) -> None:
         """ Tests that simple types only includes int,str,float,bool with right default values """
         self.assertDictEqual(
-            simple_types, {"int": 0, float: 0.0, "str": "", "bool": False}
+            simple_types, {None: None, "int": 0, float: 0.0, "str": "", "bool": False}
         )
 
     def test_rpartial(self) -> None:
@@ -58,8 +67,14 @@ class TestPureUtils(TestCase):
         self.assertTupleEqual(location_within(mock_str, ("can",)), can_res)
         self.assertTupleEqual(location_within(mock_str, ("bar",)), none_res)
         self.assertTupleEqual(location_within(mock_str, ("bar", "can")), can_res)
+        self.assertTupleEqual(location_within(mock_str, ("br", "can")), can_res)
         self.assertTupleEqual(
             location_within(mock_str, ("bar", "con", "bon")), none_res
+        )
+        self.assertTupleEqual(location_within("a", ("bar", "con", "bon")), none_res)
+        self.assertTupleEqual(location_within("can", ("can",)), (0, 3, "can"))
+        self.assertTupleEqual(
+            location_within(map(str, range(10)), map(str, range(10, 20))), none_res
         )
 
     def test_pluralises(self) -> None:

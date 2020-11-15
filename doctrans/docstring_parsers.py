@@ -133,7 +133,7 @@ def _scan_phase(docstring, style=Style.rest):
     elif style is Style.numpydoc:
         return _scan_phase_numpydoc(docstring, known_tokens=known_tokens)
     else:
-        raise NotImplementedError(Style.name)
+        raise NotImplementedError(style.name)
 
 
 def _scan_phase_numpydoc(docstring, known_tokens):
@@ -224,10 +224,10 @@ def _parse_params_from_numpydoc(docstring, namespace, scanned):
                     # cur["rest"] += stack_str
                     cur["typ"] = stack_str
                 else:
-                    if cur:
-                        cur["doc"] = stack_str
-                    else:
-                        cur = {"doc": stack_str}
+                    assert (
+                        cur
+                    ), "Unhandled empty `cur`, maybe try `cur = {'doc': stack_str}`"
+                    cur["doc"] = stack_str
             stack.clear()
         elif ch == ":":
             if "name" in cur:

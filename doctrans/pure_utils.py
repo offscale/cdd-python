@@ -2,7 +2,7 @@
 Pure utils for pure functions. For the same input will always produce the same input_str.
 """
 import typing
-from itertools import tee, chain, zip_longest
+from itertools import chain, zip_longest
 from keyword import iskeyword
 from operator import eq
 from platform import python_version_tuple
@@ -10,7 +10,7 @@ from pprint import PrettyPrinter
 
 pp = PrettyPrinter(indent=4).pprint
 tab = " " * 4
-simple_types = {"int": 0, float: 0.0, "str": "", "bool": False}
+simple_types = {"int": 0, float: 0.0, "str": "", "bool": False, None: None}
 
 
 # From https://github.com/Suor/funcy/blob/0ee7ae8/funcy/funcs.py#L34-L36
@@ -268,22 +268,6 @@ def lstrip_namespace(s, namespaces):
     return s
 
 
-def pairwise(iterable):
-    """
-    pairwise is taken from official itertools recipes
-    s -> (s0,s1), (s1,s2), (s2, s3), ...
-
-    :param iterable: An iterable
-    :type iterable: ```Iterable```
-
-    :return: pairwised iterable
-    :rtype: ```Iterable```
-    """
-    a, b = tee(iterable)
-    next(b, None)
-    return zip(a, b)
-
-
 def blockwise(t, size=2, fillvalue=None):
     """
     Blockwise, like pairwise but with a `size` parameter
@@ -344,6 +328,7 @@ BUILTIN_TYPES = frozenset(chain.from_iterable(map(lambda s: (s, 'typing.{}'.form
                           ) | frozenset(("int", "float", "str", "dict", "list", "tuple"))
 
 __all__ = [
+    "blockwise",
     "BUILTIN_TYPES",
     "pp",
     "tab",
@@ -354,7 +339,6 @@ __all__ = [
     "PY3_8",
     "PY_GTE_3_8",
     "PY_GTE_3_9",
-    "pairwise",
     "pluralise",
     "reindent",
     "sanitise",
