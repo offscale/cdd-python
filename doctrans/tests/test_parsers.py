@@ -12,7 +12,7 @@ from docstring_parser import rest
 from doctrans import parse, emit
 from doctrans.ast_utils import get_value
 from doctrans.emitter_utils import to_docstring
-from doctrans.pure_utils import tab, PY_GTE_3_8
+from doctrans.pure_utils import tab, PY_GTE_3_8, pp
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import class_ast
 from doctrans.tests.mocks.docstrings import (
@@ -102,6 +102,7 @@ class TestParsers(TestCase):
         Tests whether `docstring` produces `intermediate_repr_no_default_doc`
               from `docstring_numpydoc_str`"""
         ir, returns = parse.docstring(docstring_numpydoc_str, return_tuple=True)
+        pp(ir)
         self.assertTrue(returns)
         self.assertDictEqual(ir, intermediate_repr_no_default_doc)
 

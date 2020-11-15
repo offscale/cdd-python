@@ -2,7 +2,7 @@
 Pure utils for pure functions. For the same input will always produce the same input_str.
 """
 import typing
-from itertools import tee, chain
+from itertools import tee, chain, zip_longest
 from keyword import iskeyword
 from operator import eq
 from platform import python_version_tuple
@@ -282,6 +282,61 @@ def pairwise(iterable):
     a, b = tee(iterable)
     next(b, None)
     return zip(a, b)
+
+
+def blockwise(t, size=2, fillvalue=None):
+    """
+    Blockwise, like pairwise but with a `size` parameter
+    From: https://stackoverflow.com/a/4628446
+
+    :param t: iterator
+    :type t: ```Iterator```
+
+    :param size: size of each block
+    :type size: ```int```
+
+    :param fillvalue: What to use to "pair" with if uneven
+    :type fillvalue: ```Any```
+
+    :return: iterator with iterators inside of block size
+    :rtype: ```Iterator```
+    """
+    return zip_longest(*[iter(t)]*size, fillvalue=fillvalue)
+
+
+def location_within(container, iterable):
+    """
+    Finds element within iterable within container
+
+    :param container: The container, e.g., a str, or list.
+      We are looking for the subset which matches an element in `iterable`.
+    :type container: ```Any```
+
+    :param iterable: The iterable, can be constructed
+    :type iterable: ```Any```
+
+    :return: (Start index iff found else -1, End index iff found else -1, subset iff found else None)
+    :rtype: ```Tuple[int, int, Optional[Any]]```
+    """
+    if not hasattr(container, "__len__"):
+        container = tuple(container)
+    container_len = len(container)
+
+    for elem in iterable:
+        elem_len = len(elem)
+        if elem_len > container_len:
+            continue
+        elif elem == container:
+            return 0, elem_len, elem
+        else:
+            for i in range(container_len):
+                end = i + elem_len
+                el = container[i:end]
+                if el == elem:
+                    return i, end, elem
+                elif i + elem_len + 1 > container_len:
+                    break
+    return -1, -1, None
 
 
 BUILTIN_TYPES = frozenset(chain.from_iterable(map(lambda s: (s, 'typing.{}'.format(s), '_extensions.{}'.format(s)),

@@ -13,6 +13,7 @@ from doctrans.pure_utils import (
     quote,
     update_d,
     lstrip_namespace,
+    location_within,
 )
 from doctrans.tests.utils_for_tests import unittest_main
 
@@ -45,6 +46,21 @@ class TestPureUtils(TestCase):
         self.assertFalse(identity(False))
         self.assertTrue(identity(True))
         self.assertIsNone(identity(None))
+
+    def test_location_within(self) -> None:
+        """ Tests `location_within` responds with correct `start_idx`, `end_idx` and `found` elements """
+
+        mock_str = "foocanhaz"
+
+        can_res = 3, 6, "can"
+        none_res = -1, -1, None
+
+        self.assertTupleEqual(location_within(mock_str, ("can",)), can_res)
+        self.assertTupleEqual(location_within(mock_str, ("bar",)), none_res)
+        self.assertTupleEqual(location_within(mock_str, ("bar", "can")), can_res)
+        self.assertTupleEqual(
+            location_within(mock_str, ("bar", "con", "bon")), none_res
+        )
 
     def test_pluralises(self) -> None:
         """ Tests that pluralises pluralises """

@@ -7,17 +7,14 @@ Translates from the [ReST docstring format (Sphinx)](
 Translates from the [numpydoc docstring format](https://numpydoc.readthedocs.io/en/latest/format.html)
 """
 from collections import namedtuple
-from copy import copy
 from functools import partial
-from itertools import filterfalse, takewhile
-from operator import contains, ne
+from operator import contains, eq
 from typing import Tuple, List, Union, Dict
 
 from docstring_parser import Style
-from flake8.utils import string_types
 
 from doctrans.emitter_utils import interpolate_defaults
-from doctrans.pure_utils import pairwise, BUILTIN_TYPES
+from doctrans.pure_utils import BUILTIN_TYPES, location_within
 
 TOKENS = namedtuple("Tokens", ("rest", "google", "numpydoc"))(
     (":param", ":cvar", ":ivar", ":var", ":type", ":return", ":rtype"),
@@ -139,6 +136,81 @@ def _scan_phase(docstring, style=Style.rest):
         raise NotImplementedError(Style.name)
 
 
+def add_to_scanned(scanned_str):
+    """
+    Internal function to add to the internal scanned ```OrderedDict```
+
+    :param scanned_str: Scanned string
+    :type scanned_str: ```str```
+    """
+    add_to_scanned.namespace = next(
+        filter(partial(str.startswith, scanned_str), known_tokens),
+        add_to_scanned.namespace,
+    )
+    if scanned_str.startswith(add_to_scanned.namespace):
+        scanned_str = scanned_str[len(add_to_scanned.namespace):]
+    if scanned_str:
+        scanned[add_to_scanned.namespace] += "\n{}".format(scanned_str)
+
+
+def is_type(s, where=eq):
+    """
+    Checks if it's a type
+
+    :param s: input
+    :type s: ```str```
+
+    :param where: Where to look for type
+    :type where: ```Callable[[Any, Any], bool]```
+
+    :return: Whether it's a type
+    :rtype: ```bool```
+    """
+    return any(filter(partial(where, s), BUILTIN_TYPES))
+
+
+def where_type(s):
+    """
+    Finds type within str
+
+    :param s: input
+    :type s: ```str```
+
+    :return: (Start index iff found else -1, End index iff found else -1, type iff found else None)
+    :rtype: ```Tuple[int, int, Optional[str]]```
+    """
+    return location_within(s, BUILTIN_TYPES)
+
+
+def is_name(s):
+    """
+    Checks if it's a name
+
+    :param s: input
+    :type s: ```str```
+
+    :return: Whether it's a name
+    :rtype: ```bool```
+    """
+    return s.isalpha()
+
+
+def is_doc(s):
+    """
+    Checks if it's a doc
+
+    :param s: input
+    :type s: ```str```
+
+    :return: Whether it's a doc
+    :rtype: ```bool```
+    """
+    return not is_type(s) and not is_name(s)
+
+
+add_to_scanned.namespace = "doc"
+
+
 def _scan_phase_numpydoc(docstring, known_tokens):
     """
     numpydoc scanner phase. Lexical analysis; to some degree…
@@ -152,77 +224,65 @@ def _scan_phase_numpydoc(docstring, known_tokens):
     :return: List with each element a tuple of (whether value is a token, value)
     :rtype: ```Dict[str, str]```
     """
-    stack: List[str] = []
-    scanned: Dict[str, str] = {token: "" for token in ("doc",) + known_tokens}
-
-    def add_to_scanned(scanned_str):
-        """
-        Internal function to add to the internal scanned ```OrderedDict```
-
-        :param scanned_str: Scanned string
-        :type scanned_str: ```str```
-        """
-        add_to_scanned.namespace = next(
-            filter(partial(str.startswith, scanned_s), known_tokens),
-            add_to_scanned.namespace,
-        )
-        scanned_str = scanned_str.strip(add_to_scanned.namespace)
-        if scanned_str:
-            scanned[add_to_scanned.namespace] += "\n" + scanned_str
-        stack.clear()
-
-    add_to_scanned.namespace = "doc"
+    scanned: Dict[str, str] = {token: [] for token in ("doc",) + known_tokens}
     # ^ Union[Literal["doc"], known_tokens]
 
-    for ch in docstring:
-        stack.append(ch)
+    # First doc, if present
+    _start_idx, _end_idx, _found = location_within(docstring, (known_tokens[0],))
+    if _start_idx == -1:
+        # Return type no args?
+        _start_idx, _end_idx, _found = location_within(docstring, (known_tokens[1],))
 
-        if ch == "\n":
-            scanned_s = "".join(stack).strip()
-            if scanned_s and stack.count("\n") > 2:
-                add_to_scanned(scanned_s)
+    if _start_idx > -1:
+        namespace = _found
+        scanned["doc"] = docstring[:_start_idx]
+        docstring = docstring[_end_idx:].strip()
+    else:
+        scanned["doc"] = docstring
+        return scanned
 
-    scanned_s = "".join(stack).strip()
-    if scanned_s:
-        add_to_scanned(scanned_s)
+    def parse_return(typ, _, doc):
+        return {"name": "return_type",
+                "typ": typ,
+                "doc": doc.lstrip()}
 
-    key = "Parameters\n----------"
-    params = copy(scanned[key])
-    stack_l = []
-    symmetric = True
-    while len(params):
-        tw = "".join(takewhile(partial(ne, ":"), params))
-        params = params[len(tw) + 1 :]
-        p, _, n = tw.rpartition("\n")
-        p, n = map(str.strip, (p, n))
-        found0, found1 = map(
-            lambda s: next(filter(s.startswith, BUILTIN_TYPES), None), (p, n)
-        )
-        if p:
-            if found0:
-                _slice_at = len(found0)
-                _nl_idx = p.find("\n", _slice_at)
-                if _nl_idx != -1:
-                    _slice_at = _nl_idx
-                stack_l += [{"typ": p[:_slice_at]}, p[_slice_at:]]
-            elif len(p):
-                stack_l.append(p)
-        else:
-            symmetric = False
-        del p
+    if namespace == known_tokens[0]:
+        _start_idx, _end_idx, _found = location_within(docstring, (known_tokens[1],))
+        if _start_idx > -1:
+            ret_docstring = docstring[_end_idx:].lstrip()
+            docstring = docstring[:_start_idx]
 
-        if found1:
-            _slice_at = len(found1)
-            _nl_idx = n.find("\n", _slice_at)
-            if _nl_idx != -1:
-                _slice_at = _nl_idx
-            stack_l += [{"typ": n[:_slice_at]}, n[_slice_at:]]
-        elif len(n):
-            stack_l.append(n)
-        del n
+            scanned[_found] = parse_return(*ret_docstring.partition("\n"))
 
-    if stack_l:
-        scanned[key] = stack_l
+            # Next, separate into (namespace, name, [typ, doc, default]), updating `scanned` accordingly
+            stack, lines, cur, col_on_line = [], [], {}, False
+            for idx, ch in enumerate(docstring):
+                stack.append(ch)
+                if ch == '\n':
+                    stack_str = "".join(stack).strip()
+                    if col_on_line is True:
+                        col_on_line = False
+                        # cur["rest"] += stack_str
+                        cur["typ"] = stack_str
+                    else:
+                        if cur:
+                            cur["doc"] = stack_str
+                        else:
+                            cur = {"doc": stack_str}
+                    stack.clear()
+                elif ch == ':':
+                    if "name" in cur:
+                        scanned[namespace].append(cur.copy())
+                        cur.clear()
+                    stack_str = "".join(stack[:-1]).strip()
+                    if stack_str:
+                        cur = {"name": stack_str, "doc": ""}
+                        col_on_line = True
+                        stack.clear()
+            if cur:
+                scanned[namespace].append(cur)
+    else:
+        scanned[known_tokens[1]] = parse_return(*docstring.partition("\n"))
 
     return scanned
 
@@ -254,7 +314,7 @@ def _scan_phase_rest(docstring, known_tokens):
             token_len = len(token)
             if tuple(stack_rev[:token_len]) == token:
                 scanned.append((bool(len(scanned)), "".join(stack[:-token_len])))
-                stack = stack[len(scanned[-1][1]) :][:token_len]
+                stack = stack[len(scanned[-1][1]):][:token_len]
                 continue
 
     if stack:
@@ -325,25 +385,14 @@ def _parse_phase_numpydoc(intermediate_repr, scanned, emit_default_doc, return_t
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
     """
-    intermediate_repr["doc"] = scanned["doc"]
-    params = scanned[
-        next(filterfalse(partial(contains, ("doc", return_tokens[0])), scanned.keys()))
-    ]
-
-    def _form_param(p_o):
-        d = {}
-        keys = "doc", "name"
-        for idx, e in enumerate(p_o):
-            if isinstance(e, string_types):
-                d[keys[idx]] = e.lstrip()
-            elif isinstance(e, dict):
-                d.update(e)
-            else:
-                raise TypeError(e)
-        return d
-
-    if params:
-        intermediate_repr["params"] = list(map(_form_param, pairwise(params)))
+    known_tokens = getattr(TOKENS, Style.numpydoc.name)
+    intermediate_repr.update(
+        interpolate_defaults({
+            "doc": scanned["doc"],
+            "params": scanned.get(known_tokens[0], []),
+            "returns": scanned.get(return_tokens[0], None)
+        }, emit_default_doc=emit_default_doc)
+    )
 
 
 def _parse_phase_rest(intermediate_repr, scanned, emit_default_doc, return_tokens):
@@ -372,7 +421,7 @@ def _parse_phase_rest(intermediate_repr, scanned, emit_default_doc, return_token
         if is_token is True:
             if any(map(line.startswith, return_tokens)):
                 nxt_colon = line.find(":", 1)
-                val = line[nxt_colon + 1 :].strip()
+                val = line[nxt_colon + 1:].strip()
                 if intermediate_repr["returns"] is None:
                     intermediate_repr["returns"] = {}
                 intermediate_repr["returns"].update(
@@ -387,14 +436,14 @@ def _parse_phase_rest(intermediate_repr, scanned, emit_default_doc, return_token
             else:
                 fst_space = line.find(" ")
                 nxt_colon = line.find(":", fst_space)
-                name = line[fst_space + 1 : nxt_colon]
+                name = line[fst_space + 1: nxt_colon]
 
                 if "name" in param and not param["name"] == name:
                     if not param["name"][0] == "*":
                         intermediate_repr["params"].append(param)
                     param = {}
 
-                val = line[nxt_colon + 1 :].strip()
+                val = line[nxt_colon + 1:].strip()
                 param.update(dict((_set_param_values(line, val),), name=name))
                 param = interpolate_defaults(param, emit_default_doc=emit_default_doc)
         elif not intermediate_repr["doc"]:
