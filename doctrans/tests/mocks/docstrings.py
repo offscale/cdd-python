@@ -93,11 +93,11 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 Parameters
 ----------
 dataset_name : str
-    name of dataset. Defaults to mnist
+    name of dataset. Defaults to "mnist"
 tfds_dir : Optional[str]
-    directory to look for models in. Defaults to tensorflow_datasets
+    directory to look for models in. Defaults to "~/tensorflow_datasets"
 K : Literal['np', 'tf']
-    backend engine, e.g., `np` or `tf`. Defaults to np
+    backend engine, e.g., `np` or `tf`. Defaults to "np"
 as_numpy : Optional[bool]
     Convert to numpy ndarrays
 data_loader_kwargs : dict
