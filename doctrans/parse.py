@@ -580,7 +580,7 @@ def docstring_parser(doc_string):
         Postprocess the param
 
         :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-        :type param: ```dict``
+        :type param: ```dict```
 
         :return: Potentially changed param
         :rtype: ```dict```

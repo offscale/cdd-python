@@ -87,16 +87,14 @@ def _scan_phase(docstring, style=Style.rest):
     :rtype: ```Union[Dict[str, str], List[Tuple[bool, str]]]```
     """
     known_tokens = getattr(TOKENS, style.name)
-    if style is Style.rest:
-        return _scan_phase_rest(docstring, known_tokens=known_tokens)
-    elif style is Style.numpydoc:
-        return _scan_phase_numpydoc(docstring, known_tokens=known_tokens)
-    elif style is Style.google:
-        scanned = _scan_phase_google(docstring, known_tokens=known_tokens)
-        return scanned
+    return (
+        _scan_phase_rest
+        if style is Style.rest
+        else partial(_scan_phase_numpydoc_and_google, style=style)
+    )(docstring, known_tokens=known_tokens)
 
 
-def _scan_phase_numpydoc(docstring, known_tokens):
+def _scan_phase_numpydoc_and_google(docstring, known_tokens, style):
     """
     numpydoc scanner phase. Lexical analysis; to some degree…
 
@@ -105,6 +103,9 @@ def _scan_phase_numpydoc(docstring, known_tokens):
 
     :param known_tokens: Valid tokens like `"Parameters\n----------"`
     :type known_tokens: ```Tuple[str]```
+
+    :param style: the style of docstring
+    :type style: ```Style```
 
     :return: List with each element a tuple of (whether value is a token, value)
     :rtype: ```Dict[str, str]```
@@ -142,7 +143,11 @@ def _scan_phase_numpydoc(docstring, known_tokens):
         :return: dict of shape {'name': ..., 'typ': ..., 'doc': ... }
         :rtype: ```dict``
         """
-        return {"name": "return_type", "typ": typ, "doc": doc.lstrip()}
+        return {
+            "name": "return_type",
+            "typ": typ.rstrip("\n \t\r:"),
+            "doc": doc.lstrip(),
+        }
 
     if namespace == known_tokens[0]:
         _start_idx, _end_idx, _found = location_within(docstring, (known_tokens[-1],))
@@ -153,16 +158,18 @@ def _scan_phase_numpydoc(docstring, known_tokens):
             scanned[_found] = parse_return(*ret_docstring.partition("\n"))
 
             # Next, separate into (namespace, name, [typ, doc, default]), updating `scanned` accordingly
-            _parse_params_from_numpydoc(docstring, namespace, scanned)
+            _parse_params_from_numpydoc_and_google(
+                docstring, namespace, scanned, style=style
+            )
     else:
         scanned[known_tokens[-1]] = parse_return(*docstring.partition("\n"))
 
     return scanned
 
 
-def _parse_params_from_numpydoc(docstring, namespace, scanned):
+def _parse_params_from_numpydoc_and_google(docstring, namespace, scanned, style):
     """
-    Internal function used by `_scan_phase_numpydoc` to extract the params into the doctrans ir
+    Internal function used by `_scan_phase_numpydoc_and_google` to extract the params into the doctrans ir
 
     :param docstring: The docstring in numpydoc format
     :type docstring: ```str```
@@ -172,8 +179,35 @@ def _parse_params_from_numpydoc(docstring, namespace, scanned):
 
     :param scanned: A list of dicts in docstring IR format, but with an outermost key of numpydoc known tokens
     :type scanned: ```Dict[str, List[dict]]```
+
+    :param style: the style of docstring
+    :type style: ```Style```
     """
-    stack, cur, col_on_line = [], {}, False
+    stack, cur, col_on_line, fallback_name = (
+        [],
+        {},
+        False,
+        "typ" if style is Style.numpydoc else "doc",
+    )
+
+    if style is Style.numpydoc:
+        from doctrans.pure_utils import identity as _parse_param
+    else:
+
+        def _parse_param(param):
+            """
+            Parse param
+
+            :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ... }
+            :type param: ```dict```
+
+            :return: Parsed param, i.e., a maybe changed version of the input `param`
+            """
+            name, _, typ = param["name"].partition("(")
+            if typ:
+                param.update({"name": name.rstrip(), "typ": typ[:-1]})
+            return param
+
     for idx, ch in enumerate(docstring):
         stack.append(ch)
         if ch == "\n":
@@ -182,7 +216,7 @@ def _parse_params_from_numpydoc(docstring, namespace, scanned):
                 if col_on_line is True:
                     col_on_line = False
                     # cur["rest"] += stack_str
-                    cur["typ"] = stack_str
+                    cur[fallback_name] = stack_str
                 else:
                     assert (
                         cur
@@ -195,75 +229,11 @@ def _parse_params_from_numpydoc(docstring, namespace, scanned):
                 cur.clear()
             stack_str = "".join(stack[:-1]).strip()
             if stack_str:
-                cur = {"name": stack_str, "doc": ""}
+                cur = _parse_param({"name": stack_str, "doc": ""})
                 col_on_line = True
                 stack.clear()
     if cur:
         scanned[namespace].append(cur)
-
-
-def _scan_phase_google(docstring, known_tokens):
-    """
-    google docstring parser scanner phase. Lexical analysis; to some degree…
-
-    :param docstring: the docstring
-    :type docstring: ```str```
-
-    :param known_tokens: Valid tokens like `"Parameters\n----------"`
-    :type known_tokens: ```Tuple[str]```
-
-    :return: List with each element a tuple of (whether value is a token, value)
-    :rtype: ```Dict[str, str]```
-    """
-    scanned: Dict[str, List[dict]] = {token: [] for token in ("doc",) + known_tokens}
-    # ^ Dict[Union[Literal["doc"], known_tokens], List[dict]]
-
-    # First doc, if present
-    _start_idx, _end_idx, _found = location_within(docstring, (known_tokens[0],))
-    if _start_idx == -1:
-        # Return type no args?
-        _start_idx, _end_idx, _found = location_within(docstring, (known_tokens[-1],))
-
-    if _start_idx > -1:
-        namespace = _found
-        scanned["doc"] = docstring[:_start_idx].strip()
-        docstring = docstring[_end_idx:].strip()
-    else:
-        scanned["doc"] = docstring.strip()
-        return scanned
-
-    def parse_return(typ, _, doc):
-        """
-        Internal function to parse `str.partition` output into a return param
-
-        :param typ: the type
-        :type typ: ```str```
-
-        :param _: Ignore this. It should be a newline character.
-        :type _: ```str```
-
-        :param doc: the doc
-        :type doc: ```str```
-
-        :return: dict of shape {'name': ..., 'typ': ..., 'doc': ... }
-        :rtype: ```dict``
-        """
-        return {"name": "return_type", "typ": typ[:-1], "doc": doc.lstrip()}
-
-    if namespace == known_tokens[0]:
-        _start_idx, _end_idx, _found = location_within(docstring, (known_tokens[-1],))
-        if _start_idx > -1:
-            ret_docstring = docstring[_end_idx:].lstrip()
-            docstring = docstring[:_start_idx]
-
-            scanned[_found] = parse_return(*ret_docstring.partition("\n"))
-
-            # Next, separate into (namespace, name, [typ, doc, default]), updating `scanned` accordingly
-            _parse_params_from_google(docstring, namespace, scanned)
-    else:
-        scanned[known_tokens[-1]] = parse_return(*docstring.partition("\n"))
-
-    return scanned
 
 
 def _scan_phase_rest(docstring, known_tokens):
@@ -331,62 +301,16 @@ def _parse_phase(intermediate_repr, scanned, emit_default_doc, style=Style.rest)
     :type emit_default_doc: ```bool``
     """
     return_tokens = getattr(RETURN_TOKENS, style.name)
-    if style is Style.rest:
-        return _parse_phase_rest(
-            intermediate_repr, scanned, emit_default_doc, return_tokens
-        )
-    else:
-        return _parse_phase_numpydoc_and_google(
-            intermediate_repr, scanned, emit_default_doc, return_tokens, style=style
-        )
+    return (
+        _parse_phase_rest
+        if style is Style.rest
+        else partial(_parse_phase_numpydoc_and_google, style=style)
+    )(intermediate_repr, scanned, emit_default_doc, return_tokens)
 
 
-def _parse_params_from_google(docstring, namespace, scanned):
-    """
-    Internal function used by `_scan_phase_google` to extract the params into the doctrans ir
-
-    :param docstring: The docstring in numpydoc format
-    :type docstring: ```str```
-
-    :param namespace: The namespace, i.e., the key to update on the `scanned` param.
-    :type namespace: ```Literal["Parameters\n----------"]```
-
-    :param scanned: A list of dicts in docstring IR format, but with an outermost key of google known tokens
-    :type scanned: ```Dict[str, List[dict]]```
-    """
-    stack, cur, col_on_line = [], {}, False
-    for idx, ch in enumerate(docstring):
-        stack.append(ch)
-        if ch == "\n":
-            stack_str = "".join(stack).strip()
-            if stack_str:
-                if col_on_line is True:
-                    col_on_line = False
-                    # cur["rest"] += stack_str
-                    cur["doc"] = stack_str
-                else:
-                    assert (
-                        cur
-                    ), "Unhandled empty `cur`, maybe try `cur = {'doc': stack_str}`"
-                    cur["doc"] = stack_str
-            stack.clear()
-        elif ch == ":":
-            if "name" in cur:
-                scanned[namespace].append(cur.copy())
-                cur.clear()
-            stack_str = "".join(stack[:-1]).strip()
-            if stack_str:
-                cur = {"name": stack_str, "doc": ""}
-                name, _, typ = stack_str.partition('(')
-                if typ:
-                    cur.update({"name": name.rstrip(), "typ": typ[:-1]})
-                col_on_line = True
-                stack.clear()
-    if cur:
-        scanned[namespace].append(cur)
-
-
-def _parse_phase_numpydoc_and_google(intermediate_repr, scanned, emit_default_doc, return_tokens, style):
+def _parse_phase_numpydoc_and_google(
+    intermediate_repr, scanned, emit_default_doc, return_tokens, style
+):
     """
     :param intermediate_repr: a dictionary of form
               {
