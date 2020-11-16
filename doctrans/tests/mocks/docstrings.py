@@ -88,37 +88,47 @@ Returns:
    Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 """
 
-# https://github.com/tensorflow/tensorflow/blob/7ad2723/tensorflow/python/keras/losses.py#L803-L840
-docstring_google_tf_squared_hinge_str = """
-Computes the squared hinge loss between `y_true` and `y_pred`.
-`loss = square(maximum(1 - y_true * y_pred, 0))`
-`y_true` values are expected to be -1 or 1. If binary (0 or 1) labels are
-provided we will convert them to -1 or 1.
-Standalone usage:
->>> y_true = [[0., 1.], [0., 0.]]
->>> y_pred = [[0.6, 0.4], [0.4, 0.6]]
->>> # Using 'auto'/'sum_over_batch_size' reduction type.
->>> h = tf.keras.losses.SquaredHinge()
->>> h(y_true, y_pred).numpy()
-1.86
->>> # Calling with 'sample_weight'.
->>> h(y_true, y_pred, sample_weight=[1, 0]).numpy()
-0.73
->>> # Using 'sum' reduction type.
->>> h = tf.keras.losses.SquaredHinge(
-...     reduction=tf.keras.losses.Reduction.SUM)
->>> h(y_true, y_pred).numpy()
-3.72
->>> # Using 'none' reduction type.
->>> h = tf.keras.losses.SquaredHinge(
-...     reduction=tf.keras.losses.Reduction.NONE)
->>> h(y_true, y_pred).numpy()
-array([1.46, 2.26], dtype=float32)
-Usage with the `compile()` API:
-```python
-model.compile(optimizer='sgd', loss=tf.keras.losses.SquaredHinge())
-```
+# https://github.com/tensorflow/tensorflow/blob/7ad2723/tensorflow/python/keras/losses.py#L845-L858
+docstring_google_tf_squared_hinge_str = """Initializes `SquaredHinge` instance.
+Args:
+  reduction: (Optional) Type of `tf.keras.losses.Reduction` to apply to
+    loss. Default value is `AUTO`. `AUTO` indicates that the reduction
+    option will be determined by the usage context. For almost all cases
+    this defaults to `SUM_OVER_BATCH_SIZE`. When used with
+    `tf.distribute.Strategy`, outside of built-in training loops such as
+    `tf.keras` `compile` and `fit`, using `AUTO` or `SUM_OVER_BATCH_SIZE`
+    will raise an error. Please see this custom training [tutorial](
+      https://www.tensorflow.org/tutorials/distribute/custom_training)
+    for more details.
+  name: Optional name for the op. Defaults to 'squared_hinge'.
 """
+
+docstring_google_tf_squared_hinge_ir = {
+    "name": None,
+    "type": "static",
+    "doc": "Initializes `SquaredHinge` instance.",
+    "params": [
+        {
+            "doc": "(Optional) Type of `tf.keras.losses.Reduction` to apply to loss."
+            "Default value is `AUTO`. `AUTO` indicates that the reduction option "
+            "will be determined by the usage context. For almost all cases"
+            "this defaults to `SUM_OVER_BATCH_SIZE`. When used with"
+            "`tf.distribute.Strategy`, outside of built-in training loops such as"
+            "`tf.keras` `compile` and `fit`, using `AUTO` or `SUM_OVER_BATCH_SIZE`"
+            "will raise an error. Please see this custom training [tutorial]("
+            "https://www.tensorflow.org/tutorials/distribute/custom_training)"
+            "for more details.",
+            "name": "reduction",
+        },
+        {
+            "doc": "Optional name for the op.",
+            "default": "'squared_hinge'",
+            "name": "name",
+            "typ": "str",
+        },
+    ],
+    "returns": None,
+}
 
 docstring_numpydoc_str = """
 Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library

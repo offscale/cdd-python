@@ -16,7 +16,7 @@ from typing import Tuple, List, Dict
 from docstring_parser import Style
 
 from doctrans.emitter_utils import interpolate_defaults
-from doctrans.pure_utils import location_within, BUILTIN_TYPES
+from doctrans.pure_utils import location_within
 
 TOKENS = namedtuple("Tokens", ("rest", "google", "numpydoc"))(
     (":param", ":cvar", ":ivar", ":var", ":type", ":return", ":rtype"),
@@ -146,8 +146,7 @@ def _scan_phase_numpydoc_and_google(docstring, known_tokens, style):
         :rtype: ```dict``
         """
         doc, typ = doc.lstrip(), typ.rstrip("\n \t\r:")
-        if any(filter(typ.startswith, BUILTIN_TYPES)):
-            typ, doc = doc, typ
+        # if any(filter(doc.startswith, BUILTIN_TYPES)): typ, doc = doc, typ
         return {
             "name": "return_type",
             "typ": typ,
@@ -162,10 +161,10 @@ def _scan_phase_numpydoc_and_google(docstring, known_tokens, style):
 
             scanned[_found] = parse_return(*ret_docstring.partition("\n"))
 
-            # Next, separate into (namespace, name, [typ, doc, default]), updating `scanned` accordingly
-            _parse_params_from_numpydoc_and_google(
-                docstring, namespace, scanned, style=style
-            )
+        # Next, separate into (namespace, name, [typ, doc, default]), updating `scanned` accordingly
+        _parse_params_from_numpydoc_and_google(
+            docstring, namespace, scanned, style=style
+        )
     else:
         scanned[known_tokens[-1]] = parse_return(*docstring.partition("\n"))
 
@@ -237,6 +236,10 @@ def _parse_params_from_numpydoc_and_google(docstring, namespace, scanned, style)
                 col_on_line = True
                 stack.clear()
     if cur:
+        stack_str = "".join(stack).lstrip()
+        if stack_str:
+            cur["doc"] = stack_str
+        stack.clear()
         scanned[namespace].append(cur)
 
 
