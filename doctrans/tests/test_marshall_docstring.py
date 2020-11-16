@@ -12,6 +12,7 @@ import doctrans.emitter_utils
 from doctrans import parse
 from doctrans.docstring_parsers import parse_docstring
 from doctrans.emitter_utils import to_docstring
+from doctrans.pure_utils import pp
 from doctrans.tests.mocks.docstrings import (
     docstring_str,
     intermediate_repr_no_default_doc,
@@ -20,6 +21,7 @@ from doctrans.tests.mocks.docstrings import (
     docstring_numpydoc_only_returns_str,
     docstring_numpydoc_only_doc_str,
     docstring_google_str,
+    # docstring_google_tf_squared_hinge_str,
 )
 from doctrans.tests.mocks.docstrings import (
     intermediate_repr,
@@ -167,6 +169,15 @@ class TestMarshallDocstring(TestCase):
             parse_docstring(docstring_google_str), intermediate_repr_no_default_doc
         )
 
+    def test_from_docstring_google_tf_squared_hinge_str(self) -> None:
+        """
+        Tests whether `parse_docstring` produces the right IR
+              from `docstring_google_tf_squared_hinge_str`
+        """
+        #self.assertDictEqual(
+        #    parse_docstring(docstring_google_tf_squared_hinge_str), {}
+        #)
+
     def test_to_docstring_fails(self) -> None:
         """
         Tests docstring failure conditions
@@ -174,7 +185,7 @@ class TestMarshallDocstring(TestCase):
         self.assertRaises(
             NotImplementedError,
             lambda: to_docstring(
-                intermediate_repr_no_default_doc, docstring_format="numpy"
+                deepcopy(intermediate_repr_no_default_doc), docstring_format="numpy"
             ),
         )
 
