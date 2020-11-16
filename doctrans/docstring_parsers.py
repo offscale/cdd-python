@@ -5,6 +5,8 @@ Translates from the [ReST docstring format (Sphinx)](
   https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html#the-sphinx-docstring-format)
 
 Translates from the [numpydoc docstring format](https://numpydoc.readthedocs.io/en/latest/format.html)
+
+Translates from [Google's docstring format](https://google.github.io/styleguide/pyguide.html)
 """
 from collections import namedtuple
 from functools import partial
@@ -14,7 +16,7 @@ from typing import Tuple, List, Dict
 from docstring_parser import Style
 
 from doctrans.emitter_utils import interpolate_defaults
-from doctrans.pure_utils import location_within
+from doctrans.pure_utils import location_within, BUILTIN_TYPES
 
 TOKENS = namedtuple("Tokens", ("rest", "google", "numpydoc"))(
     (":param", ":cvar", ":ivar", ":var", ":type", ":return", ":rtype"),
@@ -143,10 +145,13 @@ def _scan_phase_numpydoc_and_google(docstring, known_tokens, style):
         :return: dict of shape {'name': ..., 'typ': ..., 'doc': ... }
         :rtype: ```dict``
         """
+        doc, typ = doc.lstrip(), typ.rstrip("\n \t\r:")
+        if any(filter(typ.startswith, BUILTIN_TYPES)):
+            typ, doc = doc, typ
         return {
             "name": "return_type",
-            "typ": typ.rstrip("\n \t\r:"),
-            "doc": doc.lstrip(),
+            "typ": typ,
+            "doc": doc,
         }
 
     if namespace == known_tokens[0]:
@@ -183,16 +188,15 @@ def _parse_params_from_numpydoc_and_google(docstring, namespace, scanned, style)
     :param style: the style of docstring
     :type style: ```Style```
     """
-    stack, cur, col_on_line, fallback_name = (
-        [],
-        {},
-        False,
-        "typ" if style is Style.numpydoc else "doc",
-    )
+    stack, cur, col_on_line = [], {}, False
 
     if style is Style.numpydoc:
+        fallback_name = "typ"
+
         from doctrans.pure_utils import identity as _parse_param
+
     else:
+        fallback_name = "doc"
 
         def _parse_param(param):
             """
@@ -222,7 +226,7 @@ def _parse_params_from_numpydoc_and_google(docstring, namespace, scanned, style)
                         cur
                     ), "Unhandled empty `cur`, maybe try `cur = {'doc': stack_str}`"
                     cur["doc"] = stack_str
-            stack.clear()
+                stack.clear()
         elif ch == ":":
             if "name" in cur:
                 scanned[namespace].append(cur.copy())
@@ -301,7 +305,7 @@ def _parse_phase(intermediate_repr, scanned, emit_default_doc, style=Style.rest)
     :type emit_default_doc: ```bool``
     """
     return_tokens = getattr(RETURN_TOKENS, style.name)
-    return (
+    (
         _parse_phase_rest
         if style is Style.rest
         else partial(_parse_phase_numpydoc_and_google, style=style)
