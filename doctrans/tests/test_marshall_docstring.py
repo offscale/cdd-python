@@ -22,6 +22,8 @@ from doctrans.tests.mocks.docstrings import (
     docstring_google_str,
     docstring_google_tf_squared_hinge_str,
     docstring_google_tf_squared_hinge_ir,
+    docstring_google_tf_adam_ir,
+    docstring_google_tf_adam_str,
 )
 from doctrans.tests.mocks.docstrings import (
     intermediate_repr,
@@ -169,7 +171,7 @@ class TestMarshallDocstring(TestCase):
             parse_docstring(docstring_google_str), intermediate_repr_no_default_doc
         )
 
-    def test_from_docstring_google_tf_squared_hinge_str(self) -> None:
+    def test_from_docstring_google_tf_squared_hinge(self) -> None:
         """
         Tests whether `parse_docstring` produces the right IR
               from `docstring_google_tf_squared_hinge_str`
@@ -177,6 +179,16 @@ class TestMarshallDocstring(TestCase):
         self.assertDictEqual(
             parse_docstring(docstring_google_tf_squared_hinge_str),
             docstring_google_tf_squared_hinge_ir,
+        )
+
+    def test_from_docstring_google_tf_adam(self) -> None:
+        """
+        Tests whether `parse_docstring` produces the right IR
+              from `docstring_google_tf_squared_hinge_str`
+        """
+        self.assertDictEqual(
+            parse_docstring(docstring_google_tf_adam_str),
+            docstring_google_tf_adam_ir,
         )
 
     def test_to_docstring_fails(self) -> None:
