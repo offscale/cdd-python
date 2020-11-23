@@ -2,9 +2,6 @@
 Tests for the Intermediate Representation produced by the parsers
 """
 from ast import FunctionDef
-from importlib.abc import Loader
-from importlib.util import module_from_spec, spec_from_loader
-from inspect import getsource
 from unittest import TestCase
 
 from doctrans import parse, emit
@@ -22,7 +19,7 @@ from doctrans.tests.mocks.methods import (
     method_complex_args_variety_ast,
     method_complex_args_variety_str,
 )
-from doctrans.tests.utils_for_tests import unittest_main
+from doctrans.tests.utils_for_tests import unittest_main, inspectable_compile
 
 
 class TestParsers(TestCase):
@@ -170,6 +167,8 @@ class TestParsers(TestCase):
             },
         )
 
+    maxDiff = None
+
     def test_from_method_in_memory(self) -> None:
         """
         Tests that `parse.function` produces properly from a function in memory of current interpreter with:
@@ -181,36 +180,20 @@ class TestParsers(TestCase):
         - splat
         """
 
-        class MemoryInspectLoader(Loader):
-            """ Set the filename for the inspect module, but don't actually, actually give the full source """
-
-            def create_module(self, spec=None):
-                """ Stub method"""
-                super(MemoryInspectLoader, self).create_module(spec=spec)
-
-            def get_code(self):
-                """ Stub method; soon to add actual source code to """
-                raise NotImplementedError()
-
-        _locals = module_from_spec(
-            spec_from_loader("helper", loader=None, origin="str")  # MemoryInspectLoader
-        )
-        exec(
+        method_complex_args_variety_with_imports_str = (
             "from sys import stdout\n"
             "from {} import Literal\n"
             "{}".format(
                 "typing" if PY_GTE_3_8 else "typing_extensions",
                 method_complex_args_variety_str,
-            ),
-            _locals.__dict__,
+            )
         )
-        call_cliff = getattr(_locals, "call_cliff")
-        setattr(call_cliff, "__loader__", MemoryInspectLoader)
+        call_cliff = getattr(
+            inspectable_compile(method_complex_args_variety_with_imports_str),
+            "call_cliff",
+        )
 
-        print("getsource(call_cliff):", getsource(call_cliff), ";")
-        return
-
-        ir = parse.function(getattr(_locals, "call_cliff"))
+        ir = parse.function(call_cliff)
 
         # This is a hack because JetBrains wraps stdout
         self.assertIn(
@@ -219,8 +202,9 @@ class TestParsers(TestCase):
         )
         ir["params"][-2]["default"] = "stdout"
 
-        # TODO: Fix this hack by making the loader do its job and parsing the source code in `parse._inspect`
-        # ir["returns"]["default"] = "K"
+        # This extra typ is removed, for now. TODO: Update AST-level parser to set types when defaults are given.
+        for i in -2, 3:
+            del ir["params"][i]["typ"]
 
         self.assertDictEqual(
             ir,

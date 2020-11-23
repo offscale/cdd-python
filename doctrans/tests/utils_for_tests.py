@@ -4,6 +4,11 @@ Shared utility functions used by many tests
 import ast
 from copy import deepcopy
 from functools import partial
+from importlib.abc import Loader
+from importlib.util import spec_from_loader, module_from_spec
+from os import path
+from sys import modules
+from tempfile import NamedTemporaryFile
 from unittest import main
 from unittest.mock import MagicMock, patch
 
@@ -124,4 +129,62 @@ def unittest_main():
         main()
 
 
-__all__ = ["run_ast_test", "run_cli_test", "unittest_main"]
+# These next two are mostly https://stackoverflow.com/a/64960448
+
+
+class ShowSourceLoader(Loader):
+    """
+    Loader that will enable `inspect.getsource` and friends to work from an in-memory construct
+    """
+
+    def __init__(self, modname, source):
+        """
+        :param modname: Name of module
+        :type modname: ```str```
+
+        :param source: Source string
+        :type source: ```str```
+        """
+        self.modname = modname
+        self.source = source
+
+    def get_source(self, modname):
+        """
+        Return the source for the module
+
+        :param modname: Name of module
+        :type modname: ```str```
+
+        :return: Source string
+        :rtype: ```str```
+        """
+        assert modname == self.modname, ImportError(modname)
+        return self.source
+
+
+def inspectable_compile(s):
+    """
+    Compile and executable the input string, returning what was constructed
+
+    :param s: Input source
+    :type s: ```str```
+
+    :return: The compiled and executed input source module, such that `inspect.getsource` works
+    :rtype: ```Any```
+    """
+    filename = NamedTemporaryFile(suffix=".py").name
+    modname = path.splitext(path.basename(filename))[0]
+    assert modname not in modules
+    # our loader is a dummy one which just spits out our source
+    loader = ShowSourceLoader(modname, s)
+    spec = spec_from_loader(modname, loader, origin=filename)
+    module = module_from_spec(spec)
+    # the code must be compiled so the function's code object has a filename
+    code = compile(s, mode="exec", filename=filename)
+    exec(code, module.__dict__)
+    # inspect.getmodule(...) requires it to be in sys.modules
+    modules[modname] = module
+    return module
+
+
+__all__ = ["run_ast_test", "run_cli_test", "unittest_main", "inspectable_compile"]
