@@ -28,6 +28,7 @@ from doctrans.ast_utils import (
     RewriteAtQuery,
     emit_arg,
     param2ast,
+    set_value,
 )
 from doctrans.pure_utils import PY_GTE_3_9, PY3_8, PY_GTE_3_8
 from doctrans.source_transformer import ast_parse
@@ -523,7 +524,7 @@ class TestAstUtils(TestCase):
 
         gold = Assign(
             targets=(Name("zion", Store()),),
-            value=Constant(value=None, constant_value=None, string=None),
+            value=set_value(value=None),
             expr=None,
             lineno=None,
         )
