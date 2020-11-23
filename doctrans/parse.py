@@ -4,6 +4,7 @@ Transform from string or AST representations of input, to intermediate_repr dict
             'module': ..., 'title': ..., 'description': ...,
             'parameters': ..., 'schema': ...,'returns': ...}.
 """
+import ast
 from ast import (
     AnnAssign,
     FunctionDef,
@@ -16,7 +17,7 @@ from ast import (
 )
 from collections import OrderedDict, deque
 from functools import partial
-from inspect import signature, getdoc, _empty, isfunction
+from inspect import signature, getdoc, _empty, isfunction, getsource
 from itertools import filterfalse, count
 from operator import itemgetter
 from types import FunctionType
@@ -40,7 +41,7 @@ from doctrans.ast_utils import (
 from doctrans.defaults_utils import extract_default
 from doctrans.docstring_parsers import parse_docstring
 from doctrans.emitter_utils import parse_out_param, _parse_return
-from doctrans.pure_utils import rpartial, assert_equal, lstrip_namespace, pp
+from doctrans.pure_utils import rpartial, assert_equal, lstrip_namespace
 from doctrans.source_transformer import to_code
 
 logger = get_logger("doctrans.parse")
@@ -140,9 +141,7 @@ def _inspect(obj, name):
             :rtype: ```dict```
             """
             param["name"] = param["name"].lstrip("*")
-            pp(sig.parameters)
-            if param["name"] not in sig.parameters:
-                return param
+            # if param["name"] not in sig.parameters: return param
             sig_param = sig.parameters[param["name"]]
             if sig_param.annotation is not _empty:
                 param["typ"] = lstrip_typings("{!s}".format(sig_param.annotation))
@@ -189,7 +188,14 @@ def _inspect(obj, name):
 
         # print("getmembers(obj):")
         # pp(getmembers(obj))
-        # TODO: Fix `getsource(obj)` and parse AST to find last `return` and set it as `ir["returns"]["default"]`
+        returns = tuple(
+            filter(
+                rpartial(isinstance, ast.Return),
+                ast.walk(ast.parse(getsource(obj)).body[0]),
+            )
+        )
+        if returns:
+            ir["returns"]["default"] = get_value(get_value(returns[-1]))
     return ir
 
 
@@ -575,45 +581,44 @@ def docstring_parser(doc_string):
         )
     )
 
-    def process_param(param):
-        """
-        Postprocess the param
+    # def process_param(param):
+    #     """
+    #     Postprocess the param
+    #
+    #     :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    #     :type param: ```dict```
+    #
+    #     :return: Potentially changed param
+    #     :rtype: ```dict```
+    #     """
+    #     if param.get("doc"):
+    #         # # param["doc"] = param["doc"].strip()
+    #         for term in "Usage:", "Reference:":
+    #             idx = param["doc"].rfind(term)
+    #             if idx != -1:
+    #                 param["doc"] = param["doc"][:idx]
+    #     return param
 
-        :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-        :type param: ```dict```
-
-        :return: Potentially changed param
-        :rtype: ```dict```
-        """
-        if param.get("doc"):
-            # param["doc"] = param["doc"].strip()
-            for term in "Usage:", "Reference:":
-                idx = param["doc"].rfind(term)
-                if idx != -1:
-                    param["doc"] = param["doc"][:idx]
-        return param
-
-    if "meta" in intermediate_repr and "params" in intermediate_repr:
-        meta = {e["name"]: e for e in intermediate_repr.pop("meta")}
-        intermediate_repr["params"] = [
-            process_param(
-                dict(
-                    **param,
-                    **{k: v for k, v in meta[param["name"]].items() if k not in param},
-                )
-            )
-            for param in intermediate_repr["params"]
-            if " " not in param["name"]
-        ]
-    else:
-        intermediate_repr["params"] = list(
-            map(
-                process_param,
-                filterfalse(
-                    lambda param: " " in param["name"], intermediate_repr["params"]
-                ),
-            )
+    assert "meta" in intermediate_repr and "params" in intermediate_repr
+    meta = {e["name"]: e for e in intermediate_repr.pop("meta")}
+    intermediate_repr["params"] = [
+        # process_param
+        dict(
+            **param,
+            **{k: v for k, v in meta[param["name"]].items() if k not in param},
         )
+        for param in intermediate_repr["params"]
+        if " " not in param["name"]
+    ]
+    # else:
+    # intermediate_repr["params"] = list(
+    #     map(
+    #         process_param,
+    #         filterfalse(
+    #             lambda param: " " in param["name"], intermediate_repr["params"]
+    #         ),
+    #     )
+    # )
     return intermediate_repr
 
 
