@@ -2,7 +2,6 @@
 Tests for source_transformer
 """
 from ast import ClassDef
-from sys import version_info
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -29,21 +28,17 @@ class TestSourceTransformer(TestCase):
             expr=None,
         )
 
-        with patch(
-            "doctrans.source_transformer.python_version_tuple", lambda: ("3", "9", "0")
-        ):
+        with patch("doctrans.source_transformer.version_info", (3, 9, 0)):
             import doctrans.source_transformer
 
-            self.assertRaises(
-                AttributeError, lambda: doctrans.source_transformer.to_code(class_def)
-            ) if PY_GTE_3_9 and version_info[:2] != (3, 10) else self.assertEqual(
+            self.assertEqual(
                 doctrans.source_transformer.to_code(class_def).rstrip("\n"),
                 "class Classy:",
+            ) if PY_GTE_3_9 else self.assertRaises(
+                AttributeError, lambda: doctrans.source_transformer.to_code(class_def)
             )
 
-        with patch(
-            "doctrans.source_transformer.python_version_tuple", lambda: ("3", "8", "0")
-        ):
+        with patch("doctrans.source_transformer.version_info", (3, 8, 0)):
             import doctrans.source_transformer
 
             self.assertEqual(

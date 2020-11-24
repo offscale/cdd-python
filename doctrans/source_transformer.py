@@ -4,7 +4,7 @@ Source transformer module. Uses astor on Python < 3.9
 
 from ast import parse, get_docstring, AsyncFunctionDef, Module, ClassDef, FunctionDef
 from importlib import import_module
-from platform import python_version_tuple
+from sys import version_info
 
 from doctrans.ast_utils import annotate_ancestry
 from doctrans.pure_utils import reindent, tab
@@ -23,7 +23,7 @@ def to_code(node):
 
     return (
         getattr(import_module("astor"), "to_source")
-        if python_version_tuple() < ("3", "9")
+        if version_info[:2] < (3, 9)
         else getattr(import_module("ast"), "unparse")
     )(node)
 

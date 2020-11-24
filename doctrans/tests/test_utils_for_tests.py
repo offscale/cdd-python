@@ -84,7 +84,7 @@ class TestUtilsForTests(TestCase):
         )
 
         try:
-            with patch("platform.python_version_tuple", lambda: ("3", "7")):
+            with patch("sys.version_info", (3, 7)):
                 doctrans.tests.utils_for_tests.PY_GTE_3_8 = (
                     doctrans.tests.utils_for_tests.PY3_8
                 ) = False
@@ -94,7 +94,7 @@ class TestUtilsForTests(TestCase):
                 )
                 self.assertEqual(TestUtilsForTests.increment * 2, TestUtilsForTests.i)
 
-            with patch("platform.python_version_tuple", lambda: ("3", "8")):
+            with patch("sys.version_info", (3, 8)):
                 doctrans.tests.utils_for_tests.PY_GTE_3_8 = (
                     doctrans.tests.utils_for_tests.PY3_8
                 ) = True
@@ -104,7 +104,7 @@ class TestUtilsForTests(TestCase):
                 )
                 self.assertEqual(TestUtilsForTests.increment * 4, TestUtilsForTests.i)
 
-            with patch("platform.python_version_tuple", lambda: ("3", "9")):
+            with patch("sys.version_info", (3, 9)):
                 doctrans.tests.utils_for_tests.PY_GTE_3_8 = (
                     doctrans.tests.utils_for_tests.PY3_8
                 ) = True
