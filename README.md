@@ -1,6 +1,6 @@
 doctrans
 ========
-![Python version range](https://img.shields.io/badge/python-3.6%20|%203.7%20|%203.8%20|%203.9-blue.svg)
+![Python version range](https://img.shields.io/badge/python-3.6%20|%203.7%20|%203.8%20|%203.9%20|%203.10a2-blue.svg)
 ![Python implementation](https://img.shields.io/badge/implementation-cpython-blue.svg)
 [![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Linting, testing, and coverage](https://github.com/SamuelMarks/doctrans/workflows/Linting,%20testing,%20and%20coverage/badge.svg)](https://github.com/SamuelMarks/doctrans/actions)
@@ -10,6 +10,8 @@ doctrans
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 Translate between docstrings, classes, methods, and argparse.
+
+Public SDK works with filenames, source code, and even in memory constructs (e.g., as imported into your REPL).
 
 ## Install dependencies
 
@@ -21,7 +23,7 @@ Translate between docstrings, classes, methods, and argparse.
 
 ## Purpose
 
-This was created to aid in the `ml_params` project. It exposes an `@abstractclass` which is implemented [officially] by more than 8 projects.
+This was created to aid in the `ml_params` project. It exposes anl `@abstractclass` which is implemented [officially] by more than 8 projects.
 
 Its `def train(self, <these>)` has a potentially large number of arguments.
 Additionally there is a `def train_c(self, config)`, which accepts an instance of a `Config` class, or a dictionary.

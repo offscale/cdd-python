@@ -5,8 +5,8 @@ import typing
 from itertools import chain, zip_longest
 from keyword import iskeyword
 from operator import eq
-from platform import python_version_tuple
 from pprint import PrettyPrinter
+from sys import version_info
 
 pp = PrettyPrinter(indent=4).pprint
 tab = " " * 4
@@ -32,8 +32,7 @@ def identity(s):
     return s
 
 
-_python_version_tuple = python_version_tuple()
-_python_major_minor = int(_python_version_tuple[0]), int(_python_version_tuple[1])
+_python_major_minor = version_info[:2]
 PY3_8 = _python_major_minor == (3, 8)
 PY_GTE_3_8 = _python_major_minor >= (3, 8)
 PY_GTE_3_9 = _python_major_minor >= (3, 9)
