@@ -1,6 +1,6 @@
 meta
 astor
-https://github.com/SamuelMarks/black/releases/download/3.10/black-20.8b2.dev50+gd6a17ba-py3-none-any.whl
+black
 pyyaml
 docstring_parser
 typing-extensions

@@ -23,7 +23,7 @@ Public SDK works with filenames, source code, and even in memory constructs (e.g
 
 ## Purpose
 
-This was created to aid in the `ml_params` project. It exposes anl `@abstractclass` which is implemented [officially] by more than 8 projects.
+This was created to aid in the `ml_params` project. It exposes an `@abstractclass` which is implemented [officially] by more than 8 projects.
 
 Its `def train(self, <these>)` has a potentially large number of arguments.
 Additionally there is a `def train_c(self, config)`, which accepts an instance of a `Config` class, or a dictionary.
