@@ -431,15 +431,15 @@ Some comment
 """
 
 __all__ = [
+    "docstring_google_str",
+    "docstring_numpydoc_only_doc_str",
+    "docstring_numpydoc_only_params_str",
+    "docstring_numpydoc_only_returns_str",
+    "docstring_numpydoc_str",
     "docstring_str",
     "docstring_str_extra_colons",
     "docstring_str_no_default_doc",
-    "docstring_numpydoc_str",
-    "docstring_numpydoc_only_params_str",
-    "docstring_numpydoc_only_returns_str",
-    "docstring_numpydoc_only_doc_str",
-    "docstring_google_str",
     "intermediate_repr",
-    "intermediate_repr_no_default_doc_or_prop",
     "intermediate_repr_no_default_doc",
+    "intermediate_repr_no_default_doc_or_prop",
 ]

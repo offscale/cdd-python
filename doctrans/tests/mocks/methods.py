@@ -1195,17 +1195,17 @@ method_complex_args_variety_ast = (
 )
 
 __all__ = [
-    "class_with_method_str",
-    "class_with_method_types_str",
-    "class_with_optional_arg_method_str",
-    "class_with_method_and_body_types_str",
     "class_with_method_and_body_types_ast",
+    "class_with_method_and_body_types_str",
     "class_with_method_ast",
+    "class_with_method_str",
     "class_with_method_types_ast",
+    "class_with_method_types_str",
     "class_with_optional_arg_method_ast",
+    "class_with_optional_arg_method_str",
     "function_adder_ast",
-    "function_default_complex_default_arg_str",
     "function_default_complex_default_arg_ast",
-    "method_complex_args_variety_str",
+    "function_default_complex_default_arg_str",
     "method_complex_args_variety_ast",
+    "method_complex_args_variety_str",
 ]
