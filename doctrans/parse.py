@@ -308,7 +308,7 @@ def function(function_def, function_type=None, function_name=None):
                             lambda idx_arg: (next(idx), idx_arg[0], idx_arg[1]),
                             enumerate(
                                 filterfalse(
-                                    lambda arg: arg.arg[0] == "*",
+                                    lambda _arg: _arg.arg[0] == "*",
                                     (
                                         _args
                                         if found_type == "static"
@@ -623,9 +623,9 @@ def docstring_parser(doc_string):
 
 
 __all__ = [
-    "class_",
-    "function",
     "argparse_ast",
+    "class_",
     "docstring",
     "docstring_parser",
+    "function",
 ]

@@ -1116,11 +1116,11 @@ argparse_func_action_append_ast = (
 
 
 __all__ = [
-    "argparse_func_str",
-    "argparse_func_with_body_str",
-    "argparse_func_action_append_str",
-    "argparse_func_ast",
-    "argparse_func_with_body_ast",
     "argparse_add_argument_ast",
     "argparse_func_action_append_ast",
+    "argparse_func_action_append_str",
+    "argparse_func_ast",
+    "argparse_func_str",
+    "argparse_func_with_body_ast",
+    "argparse_func_with_body_str",
 ]

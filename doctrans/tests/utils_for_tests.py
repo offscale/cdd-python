@@ -187,4 +187,4 @@ def inspectable_compile(s):
     return module
 
 
-__all__ = ["run_ast_test", "run_cli_test", "unittest_main", "inspectable_compile"]
+__all__ = ["inspectable_compile", "run_ast_test", "run_cli_test", "unittest_main"]

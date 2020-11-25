@@ -412,9 +412,9 @@ def to_docstring(
 
 
 __all__ = [
-    "parse_out_param",
-    "interpolate_defaults",
-    "get_internal_body",
-    "to_docstring",
     "_parse_return",
+    "get_internal_body",
+    "interpolate_defaults",
+    "parse_out_param",
+    "to_docstring",
 ]

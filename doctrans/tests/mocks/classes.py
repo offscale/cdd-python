@@ -452,4 +452,4 @@ class_nargs_ast = (
     else ast.parse(class_nargs_str).body[0]
 )
 
-__all__ = ["class_str", "class_ast", "class_nargs_str", "class_nargs_ast"]
+__all__ = ["class_ast", "class_str", "class_nargs_ast", "class_nargs_str"]
