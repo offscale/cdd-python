@@ -2,6 +2,7 @@
 Pure utils for pure functions. For the same input will always produce the same input_str.
 """
 import typing
+from functools import partial
 from itertools import chain, zip_longest
 from keyword import iskeyword
 from operator import eq
@@ -267,6 +268,30 @@ def lstrip_namespace(s, namespaces):
     return s
 
 
+def diff(input_obj, op):
+    """
+    Given an input with `__len__` defined and an op which takes the input and produces one output
+      with `__len__` defined, compute the difference and return (diff_len, output)
+
+    :param input_obj: The input
+    :type input_obj: ```Any```
+
+    :param op: The operation to run
+    :type op: ```Callable[[Any], Any]```
+
+    :return: length of difference, response of operated input
+    :rtype: ```Tuple[int, Any]```
+    """
+    input_len = len(input_obj)  # Separate line and binding, as `op` could mutate the `input`
+    result = op(input_obj)
+    return input_len - len(result), result
+
+
+strip_diff = partial(diff, op=str.strip)
+lstrip_diff = partial(diff, op=str.lstrip)
+rstrip_diff = partial(diff, op=str.rstrip)
+
+
 def blockwise(t, size=2, fillvalue=None):
     """
     Blockwise, like pairwise but with a `size` parameter
@@ -333,6 +358,7 @@ __all__ = [
     "PY_GTE_3_9",
     "assert_equal",
     "blockwise",
+    "diff",
     "identity",
     "location_within",
     "lstrip_namespace",

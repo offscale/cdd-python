@@ -10,13 +10,14 @@ Translates from [Google's docstring format](https://google.github.io/styleguide/
 """
 from collections import namedtuple
 from functools import partial
-from operator import contains
+from itertools import takewhile
+from operator import contains, itemgetter
 from typing import Tuple, List, Dict
 
 from docstring_parser import Style
 
 from doctrans.emitter_utils import interpolate_defaults
-from doctrans.pure_utils import location_within
+from doctrans.pure_utils import location_within, lstrip_diff
 
 TOKENS = namedtuple("Tokens", ("rest", "google", "numpydoc"))(
     (":param", ":cvar", ":ivar", ":var", ":type", ":return", ":rtype"),
@@ -124,34 +125,42 @@ def _scan_phase_numpydoc_and_google(docstring, known_tokens, style):
     if _start_idx > -1:
         namespace = _found
         scanned["doc"] = docstring[:_start_idx].strip()
-        docstring = docstring[_end_idx:].strip()
+        docstring = docstring[_end_idx + 1 :]  # .strip()
     else:
         scanned["doc"] = docstring.strip()
         return scanned
 
-    def parse_return(typ, _, doc):
-        """
-        Internal function to parse `str.partition` output into a return param
+    # Indent label the whole thing
+    stack = []
+    IndentValue = namedtuple("IndentValue", ("indent", "value"))
+    while docstring:
+        leading_spaces = len(tuple(takewhile(str.isspace, docstring)))
+        _start_idx, _end_idx, _found = location_within(docstring, "\n")
+        if _start_idx == -1:
+            break
+        sub_docstring = docstring[: _end_idx - 1]
+        if stack and leading_spaces == stack[-1].indent:
+            # It's part of the same thing just with a line break for readability/linting
+            stack[-1] = IndentValue(stack[-1].indent, stack[-1].value + sub_docstring)
+        else:
+            stack.append(IndentValue(leading_spaces, sub_docstring))
+        docstring = docstring[_end_idx:]
+    if len(stack) > 1 and stack[0].indent == 0 and stack[1].indent == 4:
+        stack[0] = IndentValue(stack[1].indent, stack[0].value + stack.pop(1).value)
 
-        :param typ: the type
-        :type typ: ```str```
+    leading_spaces, sub_docstring = lstrip_diff(docstring)
+    if sub_docstring:
+        stack.append(IndentValue(leading_spaces, sub_docstring))
 
-        :param _: Ignore this. It should be a newline character.
-        :type _: ```str```
-
-        :param doc: the doc
-        :type doc: ```str```
-
-        :return: dict of shape {'name': ..., 'typ': ..., 'doc': ... }
-        :rtype: ```dict``
-        """
-        doc, typ = doc.lstrip(), typ.rstrip("\n \t\r:")
-        # if any(filter(doc.startswith, BUILTIN_TYPES)): typ, doc = doc, typ
-        return {
-            "name": "return_type",
-            "typ": typ,
-            "doc": doc,
-        }
+    stacker = []
+    for e in stack:
+        if e.indent != stack[0].indent:
+            stacker[-1] = IndentValue(stack[0].indent, stacker[-1].value + e.value)
+        else:
+            stacker.append(e)
+    stack.clear()
+    scanned[namespace] = list(map(itemgetter(1), stacker))
+    stacker.clear()
 
     if namespace == known_tokens[0]:
         _start_idx, _end_idx, _found = location_within(docstring, (known_tokens[-1],))
@@ -169,6 +178,31 @@ def _scan_phase_numpydoc_and_google(docstring, known_tokens, style):
         scanned[known_tokens[-1]] = parse_return(*docstring.partition("\n"))
 
     return scanned
+
+
+def parse_return(typ, _, doc):
+    """
+    Internal function to parse `str.partition` output into a return param
+
+    :param typ: the type
+    :type typ: ```str```
+
+    :param _: Ignore this. It should be a newline character.
+    :type _: ```str```
+
+    :param doc: the doc
+    :type doc: ```str```
+
+    :return: dict of shape {'name': ..., 'typ': ..., 'doc': ... }
+    :rtype: ```dict``
+    """
+    doc, typ = doc.lstrip(), typ.rstrip("\n \t\r:")
+    # if any(filter(doc.startswith, BUILTIN_TYPES)): typ, doc = doc, typ
+    return {
+        "name": "return_type",
+        "typ": typ,
+        "doc": doc,
+    }
 
 
 def _parse_params_from_numpydoc_and_google(docstring, namespace, scanned, style):
@@ -214,7 +248,7 @@ def _parse_params_from_numpydoc_and_google(docstring, namespace, scanned, style)
     for idx, ch in enumerate(docstring):
         stack.append(ch)
         if ch == "\n":
-            stack_str = "".join(stack).strip()
+            changed_len, stack_str = lstrip_diff("".join(stack[:-1]))
             if stack_str:
                 if col_on_line is True:
                     col_on_line = False
@@ -230,13 +264,13 @@ def _parse_params_from_numpydoc_and_google(docstring, namespace, scanned, style)
             if "name" in cur:
                 scanned[namespace].append(cur.copy())
                 cur.clear()
-            stack_str = "".join(stack[:-1]).strip()
+            changed_len, stack_str = lstrip_diff("".join(stack[:-1]))
             if stack_str:
                 cur = _parse_param({"name": stack_str, "doc": ""})
                 col_on_line = True
                 stack.clear()
     if cur:
-        stack_str = "".join(stack).lstrip()
+        changed_len, stack_str = lstrip_diff("".join(stack))
         if stack_str:
             cur["doc"] = stack_str
         stack.clear()
