@@ -11,7 +11,7 @@ Translates from [Google's docstring format](https://google.github.io/styleguide/
 from collections import namedtuple
 from functools import partial
 from itertools import takewhile
-from operator import contains, itemgetter
+from operator import contains, attrgetter
 from typing import Tuple, List, Dict
 
 from docstring_parser import Style
@@ -19,15 +19,21 @@ from docstring_parser import Style
 from doctrans.emitter_utils import interpolate_defaults
 from doctrans.pure_utils import location_within, lstrip_diff
 
-TOKENS = namedtuple("Tokens", ("rest", "google", "numpydoc"))(
+Tokens = namedtuple("Tokens", ("rest", "google", "numpydoc"))
+
+TOKENS = Tokens(
     (":param", ":cvar", ":ivar", ":var", ":type", ":return", ":rtype"),
     ("Args:", "Kwargs:", "Raises:", "Returns:"),
     ("Parameters\n----------", "Returns\n-------"),
 )
 
-RETURN_TOKENS = namedtuple("Tokens", ("rest", "google", "numpydoc"))(
-    TOKENS.rest[-2:], (TOKENS.google[-1],), (TOKENS.numpydoc[-1],)
+ARG_TOKENS = Tokens(
+    TOKENS.rest[:-2],
+    (TOKENS.google[0],),
+    (TOKENS.numpydoc[0],),
 )
+
+RETURN_TOKENS = Tokens(TOKENS.rest[-2:], (TOKENS.google[-1],), (TOKENS.numpydoc[-1],))
 
 
 def parse_docstring(docstring, emit_default_doc=False):
@@ -89,23 +95,26 @@ def _scan_phase(docstring, style=Style.rest):
     :return: List with each element a tuple of (whether value is a token, value)
     :rtype: ```Union[Dict[str, str], List[Tuple[bool, str]]]```
     """
-    known_tokens = getattr(TOKENS, style.name)
+    arg_tokens, return_tokens = map(attrgetter(style.name), (ARG_TOKENS, RETURN_TOKENS))
     return (
         _scan_phase_rest
         if style is Style.rest
         else partial(_scan_phase_numpydoc_and_google, style=style)
-    )(docstring, known_tokens=known_tokens)
+    )(docstring, arg_tokens=arg_tokens, return_tokens=return_tokens)
 
 
-def _scan_phase_numpydoc_and_google(docstring, known_tokens, style):
+def _scan_phase_numpydoc_and_google(docstring, arg_tokens, return_tokens, style):
     """
     numpydoc scanner phase. Lexical analysis; to some degree…
 
     :param docstring: the docstring
     :type docstring: ```str```
 
-    :param known_tokens: Valid tokens like `"Parameters\n----------"`
-    :type known_tokens: ```Tuple[str]```
+    :param arg_tokens: Valid tokens like `"Parameters\n----------"`
+    :type arg_tokens: ```Tuple[str]```
+
+    :param return_tokens: Valid tokens like `"Returns\n-------"`
+    :type return_tokens: ```Tuple[str]```
 
     :param style: the style of docstring
     :type style: ```Style```
@@ -113,14 +122,16 @@ def _scan_phase_numpydoc_and_google(docstring, known_tokens, style):
     :return: List with each element a tuple of (whether value is a token, value)
     :rtype: ```Dict[str, str]```
     """
-    scanned: Dict[str, List[dict]] = {token: [] for token in ("doc",) + known_tokens}
-    # ^ Dict[Union[Literal["doc"], known_tokens], List[dict]]
+    scanned: Dict[str, List[dict]] = {
+        token: [] for token in ("doc",) + arg_tokens + return_tokens
+    }
+    # ^ Dict[Union[Literal["doc"], arg_tokens + return_tokens], List[dict]]
 
     # First doc, if present
-    _start_idx, _end_idx, _found = location_within(docstring, (known_tokens[0],))
+    _start_idx, _end_idx, _found = location_within(docstring, arg_tokens)
     if _start_idx == -1:
         # Return type no args?
-        _start_idx, _end_idx, _found = location_within(docstring, (known_tokens[-1],))
+        _start_idx, _end_idx, _found = location_within(docstring, return_tokens)
 
     if _start_idx > -1:
         namespace = _found
@@ -130,53 +141,23 @@ def _scan_phase_numpydoc_and_google(docstring, known_tokens, style):
         scanned["doc"] = docstring.strip()
         return scanned
 
-    # Indent label the whole thing
-    stack = []
-    IndentValue = namedtuple("IndentValue", ("indent", "value"))
-    while docstring:
-        leading_spaces = len(tuple(takewhile(str.isspace, docstring)))
-        _start_idx, _end_idx, _found = location_within(docstring, "\n")
-        if _start_idx == -1:
-            break
-        sub_docstring = docstring[: _end_idx - 1]
-        if stack and leading_spaces == stack[-1].indent:
-            # It's part of the same thing just with a line break for readability/linting
-            stack[-1] = IndentValue(stack[-1].indent, stack[-1].value + sub_docstring)
-        else:
-            stack.append(IndentValue(leading_spaces, sub_docstring))
-        docstring = docstring[_end_idx:]
-    if len(stack) > 1 and stack[0].indent == 0 and stack[1].indent == 4:
-        stack[0] = IndentValue(stack[1].indent, stack[0].value + stack.pop(1).value)
-
-    leading_spaces, sub_docstring = lstrip_diff(docstring)
-    if sub_docstring:
-        stack.append(IndentValue(leading_spaces, sub_docstring))
-
+    docstring_lines = docstring.splitlines()
     stacker = []
-    for e in stack:
-        if e.indent != stack[0].indent:
-            stacker[-1] = IndentValue(stack[0].indent, stacker[-1].value + e.value)
+    first_indent = len(tuple(takewhile(str.isspace, docstring_lines[0])))
+    for line in docstring_lines:
+        indent = len(tuple(takewhile(str.isspace, line)))
+        if indent == first_indent:
+            stacker.append([line])
         else:
-            stacker.append(e)
-    stack.clear()
-    scanned[namespace] = list(map(itemgetter(1), stacker))
-    stacker.clear()
+            stacker[-1].append(line)
 
-    if namespace == known_tokens[0]:
-        _start_idx, _end_idx, _found = location_within(docstring, (known_tokens[-1],))
-        if _start_idx > -1:
-            ret_docstring = docstring[_end_idx:].lstrip()
-            docstring = docstring[:_start_idx]
-
-            scanned[_found] = parse_return(*ret_docstring.partition("\n"))
-
-        # Next, separate into (namespace, name, [typ, doc, default]), updating `scanned` accordingly
-        _parse_params_from_numpydoc_and_google(
-            docstring, namespace, scanned, style=style
-        )
-    else:
-        scanned[known_tokens[-1]] = parse_return(*docstring.partition("\n"))
-
+    rev_return_token = return_tokens[0].splitlines()[::-1]
+    for i in range(len(stacker) - 1, -1, -1):
+        if i - 1 > 0 and stacker[i] + stacker[i - 1] == rev_return_token:
+            scanned[return_tokens[0]] = stacker[i + 1 :]
+            stacker = stacker[: -i - 1]
+            break
+    scanned[namespace] = stacker
     return scanned
 
 
@@ -277,21 +258,24 @@ def _parse_params_from_numpydoc_and_google(docstring, namespace, scanned, style)
         scanned[namespace].append(cur)
 
 
-def _scan_phase_rest(docstring, known_tokens):
+def _scan_phase_rest(docstring, arg_tokens, return_tokens):
     """
     Scanner phase. Lexical analysis; to some degree…
 
     :param docstring: the docstring
     :type docstring: ```str```
 
-    :param known_tokens: Valid tokens like `:param`
-    :type known_tokens: ```Tuple[str]```
+    :param arg_tokens: Valid tokens like `":param"`
+    :type arg_tokens: ```Tuple[str]```
+
+    :param return_tokens: Valid tokens like `":rtype:"`
+    :type return_tokens: ```Tuple[str]```
 
     :return: List with each element a tuple of (whether value is a token, value)
     :rtype: ```List[Tuple[bool, str]]```
     """
 
-    rev_known_tokens_t = tuple(map(tuple, map(reversed, known_tokens)))
+    rev_known_tokens_t = tuple(map(tuple, map(reversed, arg_tokens + return_tokens)))
     scanned: List[Tuple[bool, str]] = []
     stack: List[str] = []
 
@@ -312,7 +296,7 @@ def _scan_phase_rest(docstring, known_tokens):
         scanned.append(
             (
                 bool(scanned and scanned[-1][0])
-                or any(map(final.startswith, known_tokens)),
+                or any(map(final.startswith, arg_tokens + return_tokens)),
                 final,
             )
         )
@@ -341,16 +325,18 @@ def _parse_phase(intermediate_repr, scanned, emit_default_doc, style=Style.rest)
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
     """
-    return_tokens = getattr(RETURN_TOKENS, style.name)
-    (
-        _parse_phase_rest
-        if style is Style.rest
-        else partial(_parse_phase_numpydoc_and_google, style=style)
-    )(intermediate_repr, scanned, emit_default_doc, return_tokens)
+    arg_tokens, return_tokens = map(attrgetter(style.name), (ARG_TOKENS, RETURN_TOKENS))
+    (_parse_phase_rest if style is Style.rest else _parse_phase_numpydoc_and_google)(
+        intermediate_repr,
+        scanned,
+        emit_default_doc=emit_default_doc,
+        arg_tokens=arg_tokens,
+        return_tokens=return_tokens,
+    )
 
 
 def _parse_phase_numpydoc_and_google(
-    intermediate_repr, scanned, emit_default_doc, return_tokens, style
+    intermediate_repr, scanned, arg_tokens, return_tokens, emit_default_doc
 ):
     """
     :param intermediate_repr: a dictionary of form
@@ -366,13 +352,23 @@ def _parse_phase_numpydoc_and_google(
     :param scanned: List with each element a tuple of (whether value is a token, value)
     :type scanned: ```Dict[str, str]```
 
-    :param style: the style of docstring
-    :type style: ```Style```
+    :param arg_tokens: Valid tokens like `"Parameters\n----------"`
+    :type arg_tokens: ```Tuple[str]```
+
+    :param return_tokens: Valid tokens like `"Returns\n-------"`
+    :type return_tokens: ```Tuple[str]```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
     """
-    known_tokens = getattr(TOKENS, style.name)
+
+    def _parse(scan):
+        name, _, typ = scan[0].partition(":")
+        cur = {"name": name.rstrip()}
+        if typ:
+            cur.update({"typ": typ, "doc": "\n".join(map(str.lstrip, scan[1:]))})
+        return cur
+
     _interpolate_defaults = partial(
         interpolate_defaults, emit_default_doc=emit_default_doc
     )
@@ -380,16 +376,24 @@ def _parse_phase_numpydoc_and_google(
         {
             "doc": scanned["doc"],
             "params": list(
-                map(_interpolate_defaults, scanned.get(known_tokens[0], []))
+                map(_interpolate_defaults, map(_parse, scanned[arg_tokens[0]]))
             ),
-            "returns": _interpolate_defaults(scanned[return_tokens[0]])
-            if scanned.get(return_tokens[0])
+            "returns": _interpolate_defaults(
+                {
+                    "name": "return_type",
+                    "typ": scanned[return_tokens[0]][0][0],
+                    "doc": scanned[return_tokens[0]][0][1].lstrip(),
+                }
+            )
+            if intermediate_repr["returns"]
             else None,
         }
     )
 
 
-def _parse_phase_rest(intermediate_repr, scanned, emit_default_doc, return_tokens):
+def _parse_phase_rest(
+    intermediate_repr, scanned, emit_default_doc, arg_tokens, return_tokens
+):
     """
     :param intermediate_repr: a dictionary of form
               {
@@ -406,6 +410,12 @@ def _parse_phase_rest(intermediate_repr, scanned, emit_default_doc, return_token
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
+
+    :param arg_tokens: Valid tokens like `":param"`
+    :type arg_tokens: ```Tuple[str]```
+
+    :param return_tokens: Valid tokens like `":rtype:"`
+    :type return_tokens: ```Tuple[str]```
     """
     param = {}
     for is_token, line in scanned:
