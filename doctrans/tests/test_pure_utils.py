@@ -1,4 +1,5 @@
 """ Tests for pure utils """
+from functools import partial
 from itertools import zip_longest
 from unittest import TestCase
 
@@ -16,6 +17,7 @@ from doctrans.pure_utils import (
     lstrip_namespace,
     location_within,
     blockwise,
+    diff,
 )
 from doctrans.tests.utils_for_tests import unittest_main
 
@@ -127,8 +129,16 @@ class TestPureUtils(TestCase):
         self.assertDictEqual(d, u)
 
     def test_lstrip_namespace(self) -> None:
-        """ Tests `lstrip_namespace` gives correct results """
+        """ Tests that `lstrip_namespace` gives correct results """
         self.assertEqual(lstrip_namespace("AAaBB", ("A", "a")), "BB")
+
+    def test_diff(self) -> None:
+        """ Tests that `diff` gives correct results """
+        lstrip_l = partial(diff, op=str.lstrip)
+        self.assertTupleEqual(lstrip_l("A"), (0, "A"))
+        self.assertTupleEqual(lstrip_l(""), (0, ""))
+        self.assertTupleEqual(lstrip_l(" A"), (1, "A"))
+        self.assertTupleEqual(diff("AB", op=rpartial(str.lstrip, "A")), (1, "B"))
 
 
 unittest_main()
