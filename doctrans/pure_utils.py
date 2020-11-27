@@ -2,8 +2,9 @@
 Pure utils for pure functions. For the same input will always produce the same input_str.
 """
 import typing
+from collections import deque
 from functools import partial
-from itertools import chain, zip_longest
+from itertools import chain, zip_longest, count
 from keyword import iskeyword
 from operator import eq
 from pprint import PrettyPrinter
@@ -282,7 +283,9 @@ def diff(input_obj, op):
     :return: length of difference, response of operated input
     :rtype: ```Tuple[int, Any]```
     """
-    input_len = len(input_obj)  # Separate line and binding, as `op` could mutate the `input`
+    input_len = len(
+        input_obj
+    )  # Separate line and binding, as `op` could mutate the `input`
     result = op(input_obj)
     return input_len - len(result), result
 
@@ -348,8 +351,25 @@ def location_within(container, iterable):
 
 
 BUILTIN_TYPES = frozenset(chain.from_iterable(map(lambda s: (s, 'typing.{}'.format(s), '_extensions.{}'.format(s)),
-                          filter(lambda s: s[0].isupper() and not s.isupper(), dir(typing))))
+                                                  filter(lambda s: s[0].isupper() and not s.isupper(), dir(typing))))
                           ) | frozenset(("int", "float", "str", "dict", "list", "tuple"))
+
+
+# From https://stackoverflow.com/a/15112059
+def count_iter_items(iterable):
+    """
+    Consume an iterable not reading it into memory; return the number of items.
+
+    :param iterable: An iterable
+    :type iterable: ```Iterable```
+
+    :return: Number of items in iterable
+    :rtype: ```int```
+    """
+    counter = count()
+    deque(zip(iterable, counter), maxlen=0)
+    return next(counter)
+
 
 __all__ = [
     "BUILTIN_TYPES",
@@ -358,6 +378,7 @@ __all__ = [
     "PY_GTE_3_9",
     "assert_equal",
     "blockwise",
+    "count_iter_items",
     "diff",
     "identity",
     "location_within",
