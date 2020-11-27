@@ -17,7 +17,7 @@ from typing import Tuple, List, Dict
 from docstring_parser import Style
 
 from doctrans.emitter_utils import interpolate_defaults
-from doctrans.pure_utils import location_within, lstrip_diff
+from doctrans.pure_utils import location_within, count_iter_items
 
 Tokens = namedtuple("Tokens", ("rest", "google", "numpydoc"))
 
@@ -122,10 +122,10 @@ def _scan_phase_numpydoc_and_google(docstring, arg_tokens, return_tokens, style)
     :return: List with each element a tuple of (whether value is a token, value)
     :rtype: ```Dict[str, str]```
     """
-    scanned: Dict[str, List[dict]] = {
+    scanned: Dict[str, List[List[str]]] = {
         token: [] for token in ("doc",) + arg_tokens + return_tokens
     }
-    # ^ Dict[Union[Literal["doc"], arg_tokens + return_tokens], List[dict]]
+    # ^ Dict[Union[Literal["doc"], arg_tokens, return_tokens], List[dict]]
 
     # First doc, if present
     _start_idx, _end_idx, _found = location_within(docstring, arg_tokens)
@@ -141,121 +141,37 @@ def _scan_phase_numpydoc_and_google(docstring, arg_tokens, return_tokens, style)
         scanned["doc"] = docstring.strip()
         return scanned
 
-    docstring_lines = docstring.splitlines()
-    stacker = []
-    first_indent = len(tuple(takewhile(str.isspace, docstring_lines[0])))
+    # Scan all lines so that that each element in `stacker` refers to one 'unit'
+    stacker, docstring_lines = [], docstring.splitlines()
+    first_indent = count_iter_items(takewhile(str.isspace, docstring_lines[0]))
     for line in docstring_lines:
-        indent = len(tuple(takewhile(str.isspace, line)))
+        indent = count_iter_items(takewhile(str.isspace, line))
         if indent == first_indent:
             stacker.append([line])
         else:
             stacker[-1].append(line)
 
+    # Split out return, if present
     rev_return_token = return_tokens[0].splitlines()[::-1]
     for i in range(len(stacker) - 1, -1, -1):
+        # numpydoc
         if i - 1 > 0 and stacker[i] + stacker[i - 1] == rev_return_token:
             scanned[return_tokens[0]] = stacker[i + 1 :]
-            stacker = stacker[: -i - 1]
+            stacker = stacker[: i - 1]
             break
+        # Google
+        else:
+            for idx, token in enumerate(stacker[i]):
+                if token == return_tokens[0]:
+                    scanned[return_tokens[0]] = (
+                        stacker[i][idx + 1 :] + stacker[i + 1 :]
+                    )[0]
+                    stacker[i] = stacker[i][: idx - 1]
+                    stacker = stacker[: i + 1]
+                    break
     scanned[namespace] = stacker
+
     return scanned
-
-
-def parse_return(typ, _, doc):
-    """
-    Internal function to parse `str.partition` output into a return param
-
-    :param typ: the type
-    :type typ: ```str```
-
-    :param _: Ignore this. It should be a newline character.
-    :type _: ```str```
-
-    :param doc: the doc
-    :type doc: ```str```
-
-    :return: dict of shape {'name': ..., 'typ': ..., 'doc': ... }
-    :rtype: ```dict``
-    """
-    doc, typ = doc.lstrip(), typ.rstrip("\n \t\r:")
-    # if any(filter(doc.startswith, BUILTIN_TYPES)): typ, doc = doc, typ
-    return {
-        "name": "return_type",
-        "typ": typ,
-        "doc": doc,
-    }
-
-
-def _parse_params_from_numpydoc_and_google(docstring, namespace, scanned, style):
-    """
-    Internal function used by `_scan_phase_numpydoc_and_google` to extract the params into the doctrans ir
-
-    :param docstring: The docstring in numpydoc format
-    :type docstring: ```str```
-
-    :param namespace: The namespace, i.e., the key to update on the `scanned` param.
-    :type namespace: ```Literal["Parameters\n----------"]```
-
-    :param scanned: A list of dicts in docstring IR format, but with an outermost key of numpydoc known tokens
-    :type scanned: ```Dict[str, List[dict]]```
-
-    :param style: the style of docstring
-    :type style: ```Style```
-    """
-    stack, cur, col_on_line = [], {}, False
-
-    if style is Style.numpydoc:
-        fallback_name = "typ"
-
-        from doctrans.pure_utils import identity as _parse_param
-
-    else:
-        fallback_name = "doc"
-
-        def _parse_param(param):
-            """
-            Parse param
-
-            :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ... }
-            :type param: ```dict```
-
-            :return: Parsed param, i.e., a maybe changed version of the input `param`
-            """
-            name, _, typ = param["name"].partition("(")
-            if typ:
-                param.update({"name": name.rstrip(), "typ": typ[:-1]})
-            return param
-
-    for idx, ch in enumerate(docstring):
-        stack.append(ch)
-        if ch == "\n":
-            changed_len, stack_str = lstrip_diff("".join(stack[:-1]))
-            if stack_str:
-                if col_on_line is True:
-                    col_on_line = False
-                    # cur["rest"] += stack_str
-                    cur[fallback_name] = stack_str
-                else:
-                    assert (
-                        cur
-                    ), "Unhandled empty `cur`, maybe try `cur = {'doc': stack_str}`"
-                    cur["doc"] = stack_str
-                stack.clear()
-        elif ch == ":":
-            if "name" in cur:
-                scanned[namespace].append(cur.copy())
-                cur.clear()
-            changed_len, stack_str = lstrip_diff("".join(stack[:-1]))
-            if stack_str:
-                cur = _parse_param({"name": stack_str, "doc": ""})
-                col_on_line = True
-                stack.clear()
-    if cur:
-        changed_len, stack_str = lstrip_diff("".join(stack))
-        if stack_str:
-            cur["doc"] = stack_str
-        stack.clear()
-        scanned[namespace].append(cur)
 
 
 def _scan_phase_rest(docstring, arg_tokens, return_tokens):
@@ -326,7 +242,11 @@ def _parse_phase(intermediate_repr, scanned, emit_default_doc, style=Style.rest)
     :type emit_default_doc: ```bool``
     """
     arg_tokens, return_tokens = map(attrgetter(style.name), (ARG_TOKENS, RETURN_TOKENS))
-    (_parse_phase_rest if style is Style.rest else _parse_phase_numpydoc_and_google)(
+    (
+        _parse_phase_rest
+        if style is Style.rest
+        else partial(_parse_phase_numpydoc_and_google, style=style)
+    )(
         intermediate_repr,
         scanned,
         emit_default_doc=emit_default_doc,
@@ -336,7 +256,7 @@ def _parse_phase(intermediate_repr, scanned, emit_default_doc, style=Style.rest)
 
 
 def _parse_phase_numpydoc_and_google(
-    intermediate_repr, scanned, arg_tokens, return_tokens, emit_default_doc
+    intermediate_repr, scanned, style, arg_tokens, return_tokens, emit_default_doc
 ):
     """
     :param intermediate_repr: a dictionary of form
@@ -352,6 +272,9 @@ def _parse_phase_numpydoc_and_google(
     :param scanned: List with each element a tuple of (whether value is a token, value)
     :type scanned: ```Dict[str, str]```
 
+    :param style: the style of docstring
+    :type style: ```Style```
+
     :param arg_tokens: Valid tokens like `"Parameters\n----------"`
     :type arg_tokens: ```Tuple[str]```
 
@@ -362,12 +285,54 @@ def _parse_phase_numpydoc_and_google(
     :type emit_default_doc: ```bool``
     """
 
-    def _parse(scan):
-        name, _, typ = scan[0].partition(":")
-        cur = {"name": name.rstrip()}
-        if typ:
-            cur.update({"typ": typ, "doc": "\n".join(map(str.lstrip, scan[1:]))})
-        return cur
+    if style is Style.numpydoc:
+
+        def _parse(scan):
+            """
+            Parse the scanned input (numpydoc)
+
+            :param scan: Scanned input
+            :type scan: ```List[str]```
+
+            :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+            :rtype: ```dict```
+            """
+            name, _, typ = scan[0].partition(":")
+            if not name:
+                return None
+            cur = {"name": name.rstrip()}
+            if typ:
+                cur.update(
+                    {"typ": typ.lstrip(), "doc": "\n".join(map(str.lstrip, scan[1:]))}
+                )
+            # elif name.endswith("kwargs"): cur["typ"] = "dict"
+            return cur
+
+    else:
+
+        def _parse(scan):
+            """
+            Parse the scanned input (Google)
+
+            :param scan: Scanned input
+            :type scan: ```List[str]```
+
+            :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+            :rtype: ```dict```
+            """
+            offset = next(idx for idx, ch in enumerate(scan[0]) if ch == ":")
+            s = scan[0][:offset].lstrip()
+            name, _, typ = s.partition(" ")
+            # if not name: return None
+            cur = {"name": name}
+            if typ:
+                assert typ.startswith("(") and typ.endswith(
+                    ")"
+                ), "Expected to be paren wrapped {!r}".format(typ)
+                cur["typ"] = typ[1:-1]
+            # elif name.endswith("kwargs"): cur["typ"] = "dict"
+            cur["doc"] = " ".join([scan[0][offset + 1 :].lstrip()] + scan[1:])
+            return cur
 
     _interpolate_defaults = partial(
         interpolate_defaults, emit_default_doc=emit_default_doc
@@ -376,16 +341,25 @@ def _parse_phase_numpydoc_and_google(
         {
             "doc": scanned["doc"],
             "params": list(
-                map(_interpolate_defaults, map(_parse, scanned[arg_tokens[0]]))
+                map(
+                    _interpolate_defaults,
+                    filter(None, map(_parse, scanned[arg_tokens[0]])),
+                )
             ),
             "returns": _interpolate_defaults(
                 {
+                    "name": "return_type",
+                    "typ": scanned[return_tokens[0]][0][:-1].lstrip(),
+                    "doc": scanned[return_tokens[0]][1].lstrip(),
+                }
+                if style is Style.google
+                else {
                     "name": "return_type",
                     "typ": scanned[return_tokens[0]][0][0],
                     "doc": scanned[return_tokens[0]][0][1].lstrip(),
                 }
             )
-            if intermediate_repr["returns"]
+            if scanned[return_tokens[0]]
             else None,
         }
     )
