@@ -20,8 +20,6 @@ from doctrans.tests.mocks.docstrings import (
     docstring_numpydoc_only_returns_str,
     docstring_numpydoc_only_doc_str,
     docstring_google_str,
-    docstring_google_tf_squared_hinge_str,
-    docstring_google_tf_squared_hinge_ir,
 )
 from doctrans.tests.mocks.docstrings import (
     intermediate_repr,
