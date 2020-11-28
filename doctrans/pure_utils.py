@@ -315,7 +315,7 @@ def blockwise(t, size=2, fillvalue=None):
     return zip_longest(*[iter(t)] * size, fillvalue=fillvalue)
 
 
-def location_within(container, iterable):
+def location_within(container, iterable, cmp=eq):
     """
     Finds element within iterable within container
 
@@ -325,6 +325,9 @@ def location_within(container, iterable):
 
     :param iterable: The iterable, can be constructed
     :type iterable: ```Any```
+
+    :param cmp: Comparator to check input against
+    :type cmp: ```Callable[[str, str], bool]```
 
     :return: (Start index iff found else -1, End index iff found else -1, subset iff found else None)
     :rtype: ```Tuple[int, int, Optional[Any]]```
@@ -337,13 +340,12 @@ def location_within(container, iterable):
         elem_len = len(elem)
         if elem_len > container_len:
             continue
-        elif elem == container:
+        elif cmp(elem, container):
             return 0, elem_len, elem
         else:
             for i in range(container_len):
                 end = i + elem_len
-                el = container[i:end]
-                if el == elem:
+                if cmp(container[i:end], elem):
                     return i, end, elem
                 elif i + elem_len + 1 > container_len:
                     break
