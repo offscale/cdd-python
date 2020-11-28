@@ -9,7 +9,9 @@ from operator import eq, contains
 from doctrans.pure_utils import location_within, count_iter_items
 
 
-def extract_default(line, rstrip_default=True, emit_default_doc=True):
+def extract_default(
+    line, rstrip_default=True, default_search_announce=None, emit_default_doc=True
+):
     """
     Extract the a tuple of (doc, default) from a doc line
 
@@ -19,18 +21,28 @@ def extract_default(line, rstrip_default=True, emit_default_doc=True):
     :param rstrip_default: Whether to rstrip whitespace, newlines, and '.' from the default
     :type rstrip_default: ```bool```
 
+    :param default_search_announce: Default text(s) to look for. If None, uses default specified in default_utils.
+    :type default_search_announce: ```Optional[Union[str, Iterable[str]]]```
+
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
 
     :return: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
     :rtype: Tuple[str, Optional[str]]
     """
-    search_str = "defaults to "
     if line is None:
         return line, line
 
     _start_idx, _end_idx, _found = location_within(
-        line, (search_str,), cmp=lambda a, b: eq(*map(str.casefold, (a, b)))
+        line,
+        ("defaults to ", "Default value is ")
+        if default_search_announce is None
+        else (
+            (default_search_announce,)
+            if isinstance(default_search_announce, str)
+            else default_search_announce
+        ),
+        cmp=lambda a, b: eq(*map(str.casefold, (a, b))),
     )
     if _start_idx == -1:
         return line, None
@@ -45,7 +57,7 @@ def extract_default(line, rstrip_default=True, emit_default_doc=True):
         default += ch
     # default = "".join(takewhile(rpartial(ne, "."), line[_end_idx:]))
     rest_offset = _end_idx + len(default)
-    default = default.strip("`")
+    default = default.strip(" \t`")
     if emit_default_doc:
         return line, default
     else:

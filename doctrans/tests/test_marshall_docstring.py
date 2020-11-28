@@ -176,7 +176,9 @@ class TestMarshallDocstring(TestCase):
         """
         self.assertDictEqual(
             parse_docstring(
-                docstring_google_tf_squared_hinge_str, emit_default_doc=True
+                docstring_google_tf_squared_hinge_str,
+                emit_default_doc=True,
+                default_search_announce=("Default value is", "defaults to"),
             ),
             docstring_google_tf_squared_hinge_ir,
         )

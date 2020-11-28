@@ -109,21 +109,24 @@ docstring_google_tf_squared_hinge_ir = {
     "name": None,
     "params": [
         {
-            "default": "SUM_OVER_BATCH_SIZE",
+            "default": "AUTO",
             "doc": "(Optional) Type of `tf.keras.losses.Reduction` "
-            "to apply to     loss. Default value is `AUTO`. "
-            "`AUTO` indicates that the reduction     option "
-            "will be determined by the usage context. For "
-            "almost all cases     this defaults to "
-            "`SUM_OVER_BATCH_SIZE`. When used with     "
-            "`tf.distribute.Strategy`, outside of built-in "
-            "training loops such as     `tf.keras` `compile` "
-            "and `fit`, using `AUTO` or "
-            "`SUM_OVER_BATCH_SIZE`     will raise an error. "
-            "Please see this custom training "
-            "[tutorial](       "
-            "https://www.tensorflow.org/tutorials/distribute/custom_training)     "
-            "for more details.",
+            "to apply to\n"
+            "    loss. Default value is `AUTO`. `AUTO` "
+            "indicates that the reduction\n"
+            "    option will be determined by the usage "
+            "context. For almost all cases\n"
+            "    this defaults to `SUM_OVER_BATCH_SIZE`. When "
+            "used with\n"
+            "    `tf.distribute.Strategy`, outside of "
+            "built-in training loops such as\n"
+            "    `tf.keras` `compile` and `fit`, using `AUTO` "
+            "or `SUM_OVER_BATCH_SIZE`\n"
+            "    will raise an error. Please see this custom "
+            "training [tutorial](\n"
+            "      "
+            "https://www.tensorflow.org/tutorials/distribute/custom_training)\n"
+            "    for more details.",
             "name": "reduction",
         },
         {

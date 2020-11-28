@@ -36,11 +36,14 @@ ARG_TOKENS = Tokens(
 RETURN_TOKENS = Tokens(TOKENS.rest[-2:], (TOKENS.google[-1],), (TOKENS.numpydoc[-1],))
 
 
-def parse_docstring(docstring, emit_default_doc=False):
+def parse_docstring(docstring, default_search_announce=None, emit_default_doc=False):
     """Parse the docstring into its components.
 
     :param docstring: the docstring
     :type docstring: ```Optional[str]```
+
+    :param default_search_announce: Default text(s) to look for. If None, uses default specified in default_utils.
+    :type default_search_announce: ```Optional[Union[str, Iterable[str]]]```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
@@ -77,7 +80,13 @@ def parse_docstring(docstring, emit_default_doc=False):
         return ir
 
     scanned = _scan_phase(docstring, style=style)
-    _parse_phase(ir, scanned, emit_default_doc, style=style)
+    _parse_phase(
+        ir,
+        scanned,
+        emit_default_doc=emit_default_doc,
+        default_search_announce=default_search_announce,
+        style=style,
+    )
 
     return ir
 
@@ -153,14 +162,16 @@ def _scan_phase_numpydoc_and_google(docstring, arg_tokens, return_tokens, style)
 
     # Split out return, if present
     rev_return_token = return_tokens[0].splitlines()[::-1]
-    for i in range(len(stacker) - 1, -1, -1):
-        # numpydoc
-        if i - 1 > 0 and stacker[i] + stacker[i - 1] == rev_return_token:
-            scanned[return_tokens[0]] = stacker[i + 1 :]
-            stacker = stacker[: i - 1]
-            break
-        # Google
-        else:
+
+    rng = range(len(stacker) - 1, -1, -1)
+    if style is Style.numpydoc:
+        for i in rng:
+            if i - 1 > 0 and stacker[i] + stacker[i - 1] == rev_return_token:
+                scanned[return_tokens[0]] = stacker[i + 1 :]
+                stacker = stacker[: i - 1]
+                break
+    else:
+        for i in rng:
             for idx, token in enumerate(stacker[i]):
                 if token == return_tokens[0]:
                     scanned[return_tokens[0]] = (
@@ -220,7 +231,13 @@ def _scan_phase_rest(docstring, arg_tokens, return_tokens):
     return scanned
 
 
-def _parse_phase(intermediate_repr, scanned, emit_default_doc, style=Style.rest):
+def _parse_phase(
+    intermediate_repr,
+    scanned,
+    default_search_announce,
+    emit_default_doc,
+    style=Style.rest,
+):
     """
     :param intermediate_repr: a dictionary of form
               {
@@ -235,11 +252,14 @@ def _parse_phase(intermediate_repr, scanned, emit_default_doc, style=Style.rest)
     :param scanned: List with each element a tuple of (whether value is a token, value)
     :type scanned: ```Union[Dict[str, str], List[Tuple[bool, str]]]```
 
-    :param style: the style of docstring
-    :type style: ```Style```
+    :param default_search_announce: Default text(s) to look for. If None, uses default specified in default_utils.
+    :type default_search_announce: ```Optional[Union[str, Iterable[str]]]```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
+
+    :param style: the style of docstring
+    :type style: ```Style```
     """
     arg_tokens, return_tokens = map(attrgetter(style.name), (ARG_TOKENS, RETURN_TOKENS))
     (
@@ -252,11 +272,18 @@ def _parse_phase(intermediate_repr, scanned, emit_default_doc, style=Style.rest)
         emit_default_doc=emit_default_doc,
         arg_tokens=arg_tokens,
         return_tokens=return_tokens,
+        default_search_announce=default_search_announce,
     )
 
 
 def _parse_phase_numpydoc_and_google(
-    intermediate_repr, scanned, style, arg_tokens, return_tokens, emit_default_doc
+    intermediate_repr,
+    scanned,
+    default_search_announce,
+    style,
+    arg_tokens,
+    return_tokens,
+    emit_default_doc,
 ):
     """
     :param intermediate_repr: a dictionary of form
@@ -271,6 +298,9 @@ def _parse_phase_numpydoc_and_google(
 
     :param scanned: List with each element a tuple of (whether value is a token, value)
     :type scanned: ```Dict[str, str]```
+
+    :param default_search_announce: Default text(s) to look for. If None, uses default specified in default_utils.
+    :type default_search_announce: ```Optional[Union[str, Iterable[str]]]```
 
     :param style: the style of docstring
     :type style: ```Style```
@@ -331,11 +361,13 @@ def _parse_phase_numpydoc_and_google(
                 ), "Expected to be paren wrapped {!r}".format(typ)
                 cur["typ"] = typ[1:-1]
             # elif name.endswith("kwargs"): cur["typ"] = "dict"
-            cur["doc"] = " ".join([scan[0][offset + 1 :].lstrip()] + scan[1:])
+            cur["doc"] = "\n".join([scan[0][offset + 1 :].lstrip()] + scan[1:])
             return cur
 
     _interpolate_defaults = partial(
-        interpolate_defaults, emit_default_doc=emit_default_doc
+        interpolate_defaults,
+        emit_default_doc=emit_default_doc,
+        default_search_announce=default_search_announce,
     )
     intermediate_repr.update(
         {
@@ -366,7 +398,12 @@ def _parse_phase_numpydoc_and_google(
 
 
 def _parse_phase_rest(
-    intermediate_repr, scanned, emit_default_doc, arg_tokens, return_tokens
+    intermediate_repr,
+    scanned,
+    default_search_announce,
+    emit_default_doc,
+    arg_tokens,
+    return_tokens,
 ):
     """
     :param intermediate_repr: a dictionary of form
@@ -381,6 +418,9 @@ def _parse_phase_rest(
 
     :param scanned: List with each element a tuple of (whether value is a token, value)
     :type scanned: ```List[Tuple[bool, str]]```
+
+    :param default_search_announce: Default text(s) to look for. If None, uses default specified in default_utils.
+    :type default_search_announce: ```Optional[Union[str, Iterable[str]]]```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
@@ -406,6 +446,7 @@ def _parse_phase_rest(
                             name="return_type",
                         ),
                         emit_default_doc=emit_default_doc,
+                        default_search_announce=default_search_announce,
                     )
                 )
             else:
