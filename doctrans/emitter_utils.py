@@ -175,12 +175,15 @@ def parse_out_param(expr, emit_default_doc=True):
     )
 
 
-def interpolate_defaults(param, emit_default_doc=True):
+def interpolate_defaults(param, default_search_announce=None, emit_default_doc=True):
     """
     Correctly set the 'default' and 'doc' parameters
 
     :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'required': ... }
     :type param: ```dict```
+
+    :param default_search_announce: Default text(s) to look for. If None, uses default specified in default_utils.
+    :type default_search_announce: ```Optional[Union[str, Iterable[str]]]```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
@@ -189,7 +192,11 @@ def interpolate_defaults(param, emit_default_doc=True):
     :rtype: ```dict```
     """
     if "doc" in param:
-        doc, default = extract_default(param["doc"], emit_default_doc=emit_default_doc)
+        doc, default = extract_default(
+            param["doc"],
+            default_search_announce=default_search_announce,
+            emit_default_doc=emit_default_doc,
+        )
         param["doc"] = doc
         if default is not None:
             param["default"] = default
