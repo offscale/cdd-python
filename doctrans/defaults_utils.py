@@ -3,14 +3,21 @@ Functions to handle default parameterisation
 """
 from copy import deepcopy
 from functools import partial
+from itertools import takewhile
+from operator import eq, contains
+
+from doctrans.pure_utils import location_within, count_iter_items
 
 
-def extract_default(line, emit_default_doc=True):
+def extract_default(line, rstrip_default=True, emit_default_doc=True):
     """
     Extract the a tuple of (doc, default) from a doc line
 
     :param line: Example - "dataset. Defaults to mnist"
     :type line: ```str``
+
+    :param rstrip_default: Whether to rstrip whitespace, newlines, and '.' from the default
+    :type rstrip_default: ```bool```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
@@ -21,13 +28,38 @@ def extract_default(line, emit_default_doc=True):
     search_str = "defaults to "
     if line is None:
         return line, line
-    doc, _, default = (
-        lambda parts: parts if parts[1] else line.partition(search_str.capitalize())
-    )(line.partition(search_str))
-    return (
-        line if emit_default_doc else doc.rstrip(";\n, "),
-        default if len(default) else None,
+
+    _start_idx, _end_idx, _found = location_within(
+        line, (search_str,), cmp=lambda a, b: eq(*map(str.casefold, (a, b)))
     )
+    if _start_idx == -1:
+        return line, None
+
+    default = ""
+    par = {"{": 0, "[": 0, "(": 0, "}": 0, "]": 0, ")": 0}
+    for ch in line[_end_idx:]:
+        if ch == "." and not sum(par.values()):
+            break
+        elif ch in par:
+            par[ch] += 1
+        default += ch
+    # default = "".join(takewhile(rpartial(ne, "."), line[_end_idx:]))
+    rest_offset = _end_idx + len(default)
+    default = default.strip("`")
+    if emit_default_doc:
+        return line, default
+    else:
+        if rstrip_default:
+            offset = count_iter_items(
+                takewhile(
+                    partial(contains, frozenset((" ", "\t", "\n", ".", "\n"))),
+                    line[rest_offset:],
+                )
+            )
+            rest_offset += offset
+
+        fst = line[: _start_idx - 1]
+        return fst + line[rest_offset:], default
 
 
 def remove_defaults_from_intermediate_repr(intermediate_repr, emit_defaults=True):

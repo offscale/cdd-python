@@ -88,6 +88,7 @@ Returns:
    Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 """
 
+
 # https://github.com/tensorflow/tensorflow/blob/7ad2723/tensorflow/python/keras/losses.py#L845-L858
 docstring_google_tf_squared_hinge_str = """Initializes `SquaredHinge` instance.
 Args:
@@ -104,30 +105,35 @@ Args:
 """
 
 docstring_google_tf_squared_hinge_ir = {
-    "name": None,
-    "type": "static",
     "doc": "Initializes `SquaredHinge` instance.",
+    "name": None,
     "params": [
         {
-            "doc": "(Optional) Type of `tf.keras.losses.Reduction` to apply to loss."
-            "Default value is `AUTO`. `AUTO` indicates that the reduction option "
-            "will be determined by the usage context. For almost all cases"
-            "this defaults to `SUM_OVER_BATCH_SIZE`. When used with"
-            "`tf.distribute.Strategy`, outside of built-in training loops such as"
-            "`tf.keras` `compile` and `fit`, using `AUTO` or `SUM_OVER_BATCH_SIZE`"
-            "will raise an error. Please see this custom training [tutorial]("
-            "https://www.tensorflow.org/tutorials/distribute/custom_training)"
+            "default": "SUM_OVER_BATCH_SIZE",
+            "doc": "(Optional) Type of `tf.keras.losses.Reduction` "
+            "to apply to     loss. Default value is `AUTO`. "
+            "`AUTO` indicates that the reduction     option "
+            "will be determined by the usage context. For "
+            "almost all cases     this defaults to "
+            "`SUM_OVER_BATCH_SIZE`. When used with     "
+            "`tf.distribute.Strategy`, outside of built-in "
+            "training loops such as     `tf.keras` `compile` "
+            "and `fit`, using `AUTO` or "
+            "`SUM_OVER_BATCH_SIZE`     will raise an error. "
+            "Please see this custom training "
+            "[tutorial](       "
+            "https://www.tensorflow.org/tutorials/distribute/custom_training)     "
             "for more details.",
             "name": "reduction",
         },
         {
-            "doc": "Optional name for the op.",
             "default": "'squared_hinge'",
+            "doc": "Optional name for the op. Defaults to " "'squared_hinge'.",
             "name": "name",
-            "typ": "str",
         },
     ],
     "returns": None,
+    "type": "static",
 }
 
 # https://github.com/tensorflow/tensorflow/blob/7ad2723/tensorflow/python/keras/optimizer_v2/adam.py#L35-L103
