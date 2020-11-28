@@ -38,5 +38,32 @@ class TestDefaultUtils(TestCase):
             ("This.", "(np.empty(0), np.empty(0))"),
         )
 
+    def test_extract_default_with_int(self) -> None:
+        """ Tests that `extract_default` works for an integer default """
+        sample = "learning rate. Defaults to 0001."
+        self.assertTupleEqual(
+            extract_default(sample, emit_default_doc=False),
+            ("learning rate.", 1),
+        )
+
+    def test_extract_default_with_float(self) -> None:
+        """ Tests that `extract_default` works when there is a `.` in the default referring to a decimal place """
+        sample = "learning rate. Defaults to 0.001."
+        self.assertTupleEqual(
+            extract_default(sample, emit_default_doc=False),
+            ("learning rate.", 0.001),
+        )
+
+    def test_extract_default_with_bool(self) -> None:
+        """ Tests that `extract_default` works for an integer default """
+        sample = (
+            "Boolean. Whether to apply AMSGrad variant of this algorithm from"
+            'the paper "On the Convergence of Adam and beyond". Defaults to `True`.'
+        )
+        self.assertTupleEqual(
+            extract_default(sample, emit_default_doc=True),
+            (sample, True),
+        )
+
 
 unittest_main()

@@ -36,7 +36,9 @@ ARG_TOKENS = Tokens(
 RETURN_TOKENS = Tokens(TOKENS.rest[-2:], (TOKENS.google[-1],), (TOKENS.numpydoc[-1],))
 
 
-def parse_docstring(docstring, default_search_announce=None, emit_default_doc=False):
+def parse_docstring(
+    docstring, infer_type=False, default_search_announce=None, emit_default_doc=False
+):
     """Parse the docstring into its components.
 
     :param docstring: the docstring
@@ -44,6 +46,9 @@ def parse_docstring(docstring, default_search_announce=None, emit_default_doc=Fa
 
     :param default_search_announce: Default text(s) to look for. If None, uses default specified in default_utils.
     :type default_search_announce: ```Optional[Union[str, Iterable[str]]]```
+
+    :param infer_type: Whether to try inferring the typ (from the default)
+    :type infer_type: ```bool```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
@@ -85,6 +90,7 @@ def parse_docstring(docstring, default_search_announce=None, emit_default_doc=Fa
         scanned,
         emit_default_doc=emit_default_doc,
         default_search_announce=default_search_announce,
+        infer_type=infer_type,
         style=style,
     )
 
@@ -235,6 +241,7 @@ def _parse_phase(
     intermediate_repr,
     scanned,
     default_search_announce,
+    infer_type,
     emit_default_doc,
     style=Style.rest,
 ):
@@ -255,6 +262,9 @@ def _parse_phase(
     :param default_search_announce: Default text(s) to look for. If None, uses default specified in default_utils.
     :type default_search_announce: ```Optional[Union[str, Iterable[str]]]```
 
+    :param infer_type: Whether to try inferring the typ (from the default)
+    :type infer_type: ```bool```
+
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
 
@@ -273,13 +283,37 @@ def _parse_phase(
         arg_tokens=arg_tokens,
         return_tokens=return_tokens,
         default_search_announce=default_search_announce,
+        infer_type=infer_type,
     )
+
+
+def _set_name_and_type(param, infer_type):
+    """
+    Sanitise the name and set the type (iff default and no existing type) for the param
+
+    :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    :type param: ```dict``
+
+    :param infer_type: Whether to try inferring the typ (from the default)
+    :type infer_type: ```bool```
+
+    :return: Potentially changed param
+    :rtype: ```dict```
+    """
+    if param["name"].endswith("kwargs"):
+        param["name"] = param["name"].lstrip("*")
+        if not param.get("typ"):
+            param["typ"] = "dict"
+    elif infer_type and "default" in param:
+        param["typ"] = type(param["default"]).__name__
+    return param
 
 
 def _parse_phase_numpydoc_and_google(
     intermediate_repr,
     scanned,
     default_search_announce,
+    infer_type,
     style,
     arg_tokens,
     return_tokens,
@@ -302,6 +336,9 @@ def _parse_phase_numpydoc_and_google(
     :param default_search_announce: Default text(s) to look for. If None, uses default specified in default_utils.
     :type default_search_announce: ```Optional[Union[str, Iterable[str]]]```
 
+    :param infer_type: Whether to try inferring the typ (from the default)
+    :type infer_type: ```bool```
+
     :param style: the style of docstring
     :type style: ```Style```
 
@@ -314,7 +351,6 @@ def _parse_phase_numpydoc_and_google(
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
     """
-
     if style is Style.numpydoc:
 
         def _parse(scan):
@@ -369,14 +405,28 @@ def _parse_phase_numpydoc_and_google(
         emit_default_doc=emit_default_doc,
         default_search_announce=default_search_announce,
     )
+
+    scanned_params = scanned[arg_tokens[0]]
+    afterward_idx = next(
+        (idx for idx, elem in enumerate(scanned_params) if elem[0].endswith(":")), None
+    )
+    if afterward_idx:
+        scanned_params, scanned_afterward = (
+            scanned_params[:afterward_idx],
+            scanned_params[afterward_idx:],
+        )
+        intermediate_repr["_rest"] = scanned_afterward
+
     intermediate_repr.update(
         {
             "doc": scanned["doc"],
             "params": list(
                 map(
-                    _interpolate_defaults,
-                    filter(None, map(_parse, scanned[arg_tokens[0]])),
-                )
+                    partial(_set_name_and_type, infer_type=infer_type),
+                    map(
+                        _interpolate_defaults, filter(None, map(_parse, scanned_params))
+                    ),
+                ),
             ),
             "returns": _interpolate_defaults(
                 {
@@ -401,6 +451,7 @@ def _parse_phase_rest(
     intermediate_repr,
     scanned,
     default_search_announce,
+    infer_type,
     emit_default_doc,
     arg_tokens,
     return_tokens,
@@ -421,6 +472,9 @@ def _parse_phase_rest(
 
     :param default_search_announce: Default text(s) to look for. If None, uses default specified in default_utils.
     :type default_search_announce: ```Optional[Union[str, Iterable[str]]]```
+
+    :param infer_type: Whether to try inferring the typ (from the default)
+    :type infer_type: ```bool```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``

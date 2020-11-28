@@ -352,9 +352,17 @@ def location_within(container, iterable, cmp=eq):
     return -1, -1, None
 
 
-BUILTIN_TYPES = frozenset(chain.from_iterable(map(lambda s: (s, 'typing.{}'.format(s), '_extensions.{}'.format(s)),
-                                                  filter(lambda s: s[0].isupper() and not s.isupper(), dir(typing))))
-                          ) | frozenset(("int", "float", "str", "dict", "list", "tuple"))
+BUILTIN_TYPES = (
+    frozenset(
+        chain.from_iterable(
+            map(
+                lambda s: (s, "typing.{}".format(s), "_extensions.{}".format(s)),
+                filter(lambda s: s[0].isupper() and not s.isupper(), dir(typing)),
+            )
+        )
+    )
+    | frozenset(("int", "float", "str", "dict", "list", "tuple"))
+)
 
 
 # From https://stackoverflow.com/a/15112059
