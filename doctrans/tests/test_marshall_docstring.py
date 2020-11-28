@@ -3,7 +3,7 @@ Tests for docstring parsing
 """
 
 from copy import deepcopy
-from unittest import TestCase, skip
+from unittest import TestCase
 
 from docstring_parser import rest
 
@@ -22,6 +22,8 @@ from doctrans.tests.mocks.docstrings import (
     docstring_google_str,
     docstring_google_tf_squared_hinge_str,
     docstring_google_tf_squared_hinge_ir,
+    docstring_google_tf_adam_str,
+    docstring_google_tf_adam_ir,
 )
 from doctrans.tests.mocks.docstrings import (
     intermediate_repr,
@@ -183,16 +185,17 @@ class TestMarshallDocstring(TestCase):
             docstring_google_tf_squared_hinge_ir,
         )
 
-    @skip("TODO")
     def test_from_docstring_google_tf_adam(self) -> None:
         """
         Tests whether `parse_docstring` produces the right IR
               from `docstring_google_tf_squared_hinge_str`
         """
-        # self.assertDictEqual(
-        #    parse_docstring(docstring_google_tf_adam_str),
-        #    docstring_google_tf_adam_ir,
-        # )
+        self.assertDictEqual(
+            parse_docstring(
+                docstring_google_tf_adam_str, emit_default_doc=True, infer_type=True
+            ),
+            docstring_google_tf_adam_ir,
+        )
 
     def test_to_docstring_fails(self) -> None:
         """

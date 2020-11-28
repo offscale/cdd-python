@@ -1,6 +1,7 @@
 """
 Functions to handle default parameterisation
 """
+from contextlib import suppress
 from copy import deepcopy
 from functools import partial
 from itertools import takewhile
@@ -35,7 +36,7 @@ def extract_default(
 
     _start_idx, _end_idx, _found = location_within(
         line,
-        ("defaults to ", "Default value is ")
+        ("defaults to ", "defaults to\n", "Default value is ")
         if default_search_announce is None
         else (
             (default_search_announce,)
@@ -49,15 +50,32 @@ def extract_default(
 
     default = ""
     par = {"{": 0, "[": 0, "(": 0, "}": 0, "]": 0, ")": 0}
-    for ch in line[_end_idx:]:
-        if ch == "." and not sum(par.values()):
+    sub_l = line[_end_idx:]
+    sub_l_len = len(sub_l)
+    for idx, ch in enumerate(sub_l):
+        if (
+            ch == "."
+            and (idx == (sub_l_len - 1) or not (sub_l[idx + 1]).isdigit())
+            and not sum(par.values())
+        ):
             break
         elif ch in par:
             par[ch] += 1
         default += ch
     # default = "".join(takewhile(rpartial(ne, "."), line[_end_idx:]))
     rest_offset = _end_idx + len(default)
+
     default = default.strip(" \t`")
+    if default.isdecimal():
+        default = int(default)
+    elif default == "True":
+        default = True
+    elif default == "False":
+        default = False
+    else:
+        with suppress(ValueError):
+            default = float(default)
+
     if emit_default_doc:
         return line, default
     else:
