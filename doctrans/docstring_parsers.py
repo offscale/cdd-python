@@ -407,6 +407,8 @@ def _parse_phase_numpydoc_and_google(
     )
 
     scanned_params = scanned[arg_tokens[0]]
+
+    # Handle stuff after the Args, e.g., usage notes; doctests; references.
     afterward_idx = next(
         (idx for idx, elem in enumerate(scanned_params) if elem[0].endswith(":")), None
     )
@@ -415,7 +417,7 @@ def _parse_phase_numpydoc_and_google(
             scanned_params[:afterward_idx],
             scanned_params[afterward_idx:],
         )
-        intermediate_repr["_rest"] = scanned_afterward
+        scanned["doc"] += "\n\n\n{}".format("\n".join(map("\n".join, scanned_afterward)))
 
     intermediate_repr.update(
         {

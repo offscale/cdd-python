@@ -1,6 +1,7 @@
 """
 Functions to handle default parameterisation
 """
+from ast import literal_eval
 from contextlib import suppress
 from copy import deepcopy
 from functools import partial
@@ -68,10 +69,8 @@ def extract_default(
     default = default.strip(" \t`")
     if default.isdecimal():
         default = int(default)
-    elif default == "True":
-        default = True
-    elif default == "False":
-        default = False
+    elif default in frozenset(("True", "False")):
+        default = literal_eval(default)
     else:
         with suppress(ValueError):
             default = float(default)
