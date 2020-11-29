@@ -1114,7 +1114,6 @@ argparse_func_action_append_ast = (
     else ast.parse(argparse_func_action_append_str).body[0]
 )
 
-
 __all__ = [
     "argparse_add_argument_ast",
     "argparse_func_action_append_ast",

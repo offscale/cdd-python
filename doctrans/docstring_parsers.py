@@ -418,7 +418,17 @@ def _parse_phase_numpydoc_and_google(
             scanned_params[afterward_idx:],
         )
         scanned["doc"] += "\n\n\n{}".format(
-            "\n".join(map("\n".join, scanned_afterward))
+            "\n".join(
+                map(
+                    "\n".join,
+                    map(
+                        lambda l: map(
+                            lambda s: s if s.endswith(":") else "    {}".format(s), l
+                        ),
+                        scanned_afterward,
+                    ),
+                )
+            )
         )
 
     intermediate_repr.update(
@@ -440,6 +450,8 @@ def _parse_phase_numpydoc_and_google(
                         "doc": scanned[return_tokens[0]][1].lstrip(),
                     }
                     if len(scanned[return_tokens[0]]) == 2
+                    else {}
+                    if scanned[return_tokens[0]][0].isspace()
                     else {"doc": scanned[return_tokens[0]][0]}
                 )
                 if style is Style.google
@@ -512,6 +524,7 @@ def _parse_phase_rest(
                     )
                 )
             else:
+
                 fst_space = line.find(" ")
                 nxt_colon = line.find(":", fst_space)
                 name = line[fst_space + 1 : nxt_colon]
