@@ -23,7 +23,11 @@ from doctrans.tests.mocks.argparse import (
     argparse_func_with_body_ast,
     argparse_func_action_append_ast,
 )
-from doctrans.tests.mocks.classes import class_ast, class_nargs_ast
+from doctrans.tests.mocks.classes import (
+    class_ast,
+    class_nargs_ast,
+    class_squared_hinge_config_ast,
+)
 from doctrans.tests.mocks.docstrings import docstring_str, intermediate_repr
 from doctrans.tests.mocks.methods import (
     class_with_method_types_ast,
@@ -361,8 +365,9 @@ class TestEmitters(TestCase):
         Tests that `emit.function` produces correctly with:
         - __call__
         """
-        self.assertEqual(
-            to_code(
+        run_ast_test(
+            self,
+            gen_ast=to_code(
                 emit.class_(
                     parse.function(
                         ast.parse(function_google_tf_squared_hinge_str).body[0],
@@ -372,36 +377,8 @@ class TestEmitters(TestCase):
                     emit_call=True,
                 )
             ),
-            '''class SquaredHingeConfig(object):
-    """
-    Computes the squared hinge loss between `y_true` and `y_pred`.
-
-`loss = mean(square(maximum(1 - y_true * y_pred, 0)), axis=-1)`
-
-Standalone usage:
-
->>> y_true = np.random.choice([-1, 1], size=(2, 3))
->>> y_pred = np.random.random(size=(2, 3))
->>> loss = tf.keras.losses.squared_hinge(y_true, y_pred)
->>> assert loss.shape == (2,)
->>> assert np.array_equal(
-...     loss.numpy(),
-...     np.mean(np.square(np.maximum(1. - y_true * y_pred, 0.)), axis=-1))
-
-    :cvar y_true: The ground truth values. `y_true` values are expected to be -1 or 1.
-    If binary (0 or 1) labels are provided we will convert them to -1 or 1.
-    shape = `[batch_size, d0, .. dN]`.
-    :cvar y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
-    :cvar return_type: None"""
-    y_true = None
-    y_pred = None
-    return_type = 'K.mean(math_ops.square(math_ops.maximum(1.0 - y_true * y_pred, 0.0)), axis=-1)'
-
-    def __call__(self):
-        self.y_pred = ops.convert_to_tensor_v2(self.y_pred)
-        self.y_true = math_ops.cast(self.y_true, self.y_pred.dtype)
-        self.y_true = _maybe_convert_labels(self.y_true)
-        return K.mean(math_ops.square(math_ops.maximum(1.0 - self.y_true * self.y_pred, 0.0)), axis=-1)''',
+            gold=class_squared_hinge_config_ast,
+            run_cmp_ast=PY_GTE_3_9,
         )
 
     def test_from_argparse_with_extra_body_to_argparse_with_extra_body(self) -> None:
