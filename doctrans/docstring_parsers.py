@@ -417,7 +417,9 @@ def _parse_phase_numpydoc_and_google(
             scanned_params[:afterward_idx],
             scanned_params[afterward_idx:],
         )
-        scanned["doc"] += "\n\n\n{}".format("\n".join(map("\n".join, scanned_afterward)))
+        scanned["doc"] += "\n\n\n{}".format(
+            "\n".join(map("\n".join, scanned_afterward))
+        )
 
     intermediate_repr.update(
         {
@@ -430,12 +432,17 @@ def _parse_phase_numpydoc_and_google(
                     ),
                 ),
             ),
-            "returns": _interpolate_defaults(
-                {
-                    "name": "return_type",
-                    "typ": scanned[return_tokens[0]][0][:-1].lstrip(),
-                    "doc": scanned[return_tokens[0]][1].lstrip(),
-                }
+            "returns": pp(scanned[return_tokens[0]])
+            or _interpolate_defaults(
+                dict(
+                    name="return_type",
+                    **{
+                        "typ": scanned[return_tokens[0]][0][:-1].lstrip(),
+                        "doc": scanned[return_tokens[0]][1].lstrip(),
+                    }
+                    if len(scanned[return_tokens[0]]) == 2
+                    else {"doc": scanned[return_tokens[0]][0]}
+                )
                 if style is Style.google
                 else {
                     "name": "return_type",
