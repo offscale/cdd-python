@@ -273,7 +273,11 @@ def class_(
             :return: `Name` iff `Name` is not a parameter else `Attribute`
             :rtype: ```Union[Name, Attribute]```
             """
-            return Attribute(Name("self", Load()), node.id, Load()) if node.id in param_names else node
+            return (
+                Attribute(Name("self", Load()), node.id, Load())
+                if node.id in param_names
+                else node
+            )
 
     internal_body = (
         list(
