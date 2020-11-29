@@ -88,7 +88,6 @@ Returns:
    Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 """
 
-
 # https://github.com/tensorflow/tensorflow/blob/7ad2723/tensorflow/python/keras/losses.py#L845-L858
 docstring_google_tf_squared_hinge_str = """Initializes `SquaredHinge` instance.
 Args:
@@ -214,46 +213,48 @@ docstring_google_tf_adam_ir = {
     "gradients, and is well suited for problems that are large in terms "
     "of\n"
     'data/parameters*".\n'
-    "\n\n"
+    "\n"
+    "\n"
     "Usage:\n"
-    ">>> opt = tf.keras.optimizers.Adam(learning_rate=0.1)\n"
-    ">>> var1 = tf.Variable(10.0)\n"
-    ">>> loss = lambda: (var1 ** 2)/2.0       # d(loss)/d(var1) == "
+    "    >>> opt = tf.keras.optimizers.Adam(learning_rate=0.1)\n"
+    "    >>> var1 = tf.Variable(10.0)\n"
+    "    >>> loss = lambda: (var1 ** 2)/2.0       # d(loss)/d(var1) == "
     "var1\n"
-    ">>> step_count = opt.minimize(loss, [var1]).numpy()\n"
-    ">>> # The first step is `-learning_rate*sign(grad)`\n"
-    ">>> var1.numpy()\n"
-    "9.9\n"
+    "    >>> step_count = opt.minimize(loss, [var1]).numpy()\n"
+    "    >>> # The first step is `-learning_rate*sign(grad)`\n"
+    "    >>> var1.numpy()\n"
+    "    9.9\n"
     "Reference:\n"
-    "- [Kingma et al., 2014](http://arxiv.org/abs/1412.6980)\n"
-    "- [Reddi et al., 2018](\n"
-    "    https://openreview.net/pdf?id=ryQu7f-RZ) for `amsgrad`.\n"
+    "    - [Kingma et al., 2014](http://arxiv.org/abs/1412.6980)\n"
+    "    - [Reddi et al., 2018](\n"
+    "        https://openreview.net/pdf?id=ryQu7f-RZ) for `amsgrad`.\n"
     "Notes:\n"
-    "The default value of 1e-7 for epsilon might not be a good default "
-    "in\n"
-    "general. For example, when training an Inception network on "
+    "    The default value of 1e-7 for epsilon might not be a good "
+    "default in\n"
+    "    general. For example, when training an Inception network on "
     "ImageNet a\n"
-    "current good choice is 1.0 or 0.1. Note that since Adam uses the\n"
-    "formulation just before Section 2.1 of the Kingma and Ba paper "
+    "    current good choice is 1.0 or 0.1. Note that since Adam uses "
+    "the\n"
+    "    formulation just before Section 2.1 of the Kingma and Ba paper "
     "rather than\n"
-    'the formulation in Algorithm 1, the "epsilon" referred to here is '
-    '"epsilon\n'
-    'hat" in the paper.\n'
-    "The sparse implementation of this algorithm (used when the "
+    '    the formulation in Algorithm 1, the "epsilon" referred to here '
+    'is "epsilon\n'
+    '    hat" in the paper.\n'
+    "    The sparse implementation of this algorithm (used when the "
     "gradient is an\n"
-    "IndexedSlices object, typically because of `tf.gather` or an "
+    "    IndexedSlices object, typically because of `tf.gather` or an "
     "embedding\n"
-    "lookup in the forward pass) does apply momentum to variable slices "
-    "even if\n"
-    "they were not used in the forward pass (meaning they have a "
+    "    lookup in the forward pass) does apply momentum to variable "
+    "slices even if\n"
+    "    they were not used in the forward pass (meaning they have a "
     "gradient equal\n"
-    "to zero). Momentum decay (beta1) is also applied to the entire "
+    "    to zero). Momentum decay (beta1) is also applied to the entire "
     "momentum\n"
-    "accumulator. This means that the sparse behavior is equivalent to "
-    "the dense\n"
-    "behavior (in contrast to some momentum implementations which "
+    "    accumulator. This means that the sparse behavior is equivalent "
+    "to the dense\n"
+    "    behavior (in contrast to some momentum implementations which "
     "ignore momentum\n"
-    "unless a variable slice was actually used).",
+    "    unless a variable slice was actually used).",
     "name": None,
     "params": [
         {

@@ -98,6 +98,9 @@ def class_(class_def, class_name=None):
     return intermediate_repr
 
 
+lstrip_typings = partial(lstrip_namespace, namespaces=("typings.", "_extensions."))
+
+
 def _inspect(obj, name):
     """
     Uses the `inspect` module to figure out the IR from the input
@@ -126,53 +129,11 @@ def _inspect(obj, name):
     if not is_function and "type" in ir:
         del ir["type"]
 
-    lstrip_typings = partial(lstrip_namespace, namespaces=("typings.", "_extensions."))
-
-    if ir.get("params"):
-
-        def process_param(param):
-            """
-            Postprocess the param
-
-            :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-            :type param: ```dict``
-
-            :return: Potentially changed param
-            :rtype: ```dict```
-            """
-            param["name"] = param["name"].lstrip("*")
-            # if param["name"] not in sig.parameters: return param
-            sig_param = sig.parameters[param["name"]]
-            if sig_param.annotation is not _empty:
-                param["typ"] = lstrip_typings("{!s}".format(sig_param.annotation))
-            if sig_param.default is not _empty:
-                param["default"] = sig_param.default
-                if param.get("typ", _empty) is _empty:
-                    param["typ"] = type(param["default"]).__name__
-            if param["name"].endswith("kwargs"):
-                param["typ"] = "dict"
-            return param
-
-        ir["params"] = list(map(process_param, ir["params"]))
-    else:
-        ir["params"] = [
-            dict(
-                name=k,
-                **(
-                    {}
-                    if v.default is _empty
-                    else {
-                        "default": v.default,
-                        "typ": lstrip_typings(
-                            type(v.default).__name__
-                            if v.annotation is _empty
-                            else "{!s}".format(v.annotation)
-                        ),
-                    }
-                ),
-            )
-            for k, v in sig.parameters.items()
-        ]
+    ir["params"] = list(
+        map(partial(_inspect_process_ir_param, sig=sig), ir["params"])
+        if ir.get("params")
+        else map(_inspect_process_sig, sig.parameters.items())
+    )
 
     if isfunction(obj):
         ir["type"] = {"self": "self", "cls": "cls"}.get(
@@ -182,12 +143,7 @@ def _inspect(obj, name):
     if ir.get("returns") and "returns" not in ir["returns"]:
         if sig.return_annotation is not _empty:
             ir["returns"]["typ"] = lstrip_typings("{!s}".format(sig.return_annotation))
-        # print("obj.__code__", obj.__code__, ";")
-        # print("dis(obj.__code__)", dis(obj.__code__), ";")
-        # print("show_code(obj.__code__)", show_code(obj.__code__), ";")
 
-        # print("getmembers(obj):")
-        # pp(getmembers(obj))
         returns = tuple(
             filter(
                 rpartial(isinstance, ast.Return),
@@ -195,16 +151,87 @@ def _inspect(obj, name):
             )
         )
         if returns:
-            ir["returns"]["default"] = get_value(get_value(returns[-1]))
+            return_val = get_value(returns[-1])
+            ir["returns"]["default"] = get_value(return_val)
+            # if "typ" not in ir["returns"]:
+            #     if isinstance(ir["returns"]["default"], (str, int, float, complex)):
+            #         ir["returns"]["typ"] = type(ir["returns"]["default"]).__name__
+            #     else:
+            #         ir["returns"].update(
+            #             {
+            #                 "default": "```{}```".format(to_code(return_val)),
+            #                 "typ": "Any",
+            #             }
+            #         )
     return ir
 
 
-def function(function_def, function_type=None, function_name=None):
+def _inspect_process_ir_param(param, sig):
+    """
+    Postprocess the param
+
+    :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    :type param: ```dict``
+
+    :param sig: The Signature
+    :type sig: ```inspect.Signature```
+
+    :return: Potentially changed param
+    :rtype: ```dict```
+    """
+    param["name"] = param["name"].lstrip("*")
+    # if param["name"] not in sig.parameters: return param
+    sig_param = sig.parameters[param["name"]]
+    if sig_param.annotation is not _empty:
+        param["typ"] = lstrip_typings("{!s}".format(sig_param.annotation))
+    if sig_param.default is not _empty:
+        param["default"] = sig_param.default
+        if param.get("typ", _empty) is _empty:
+            param["typ"] = type(param["default"]).__name__
+    if param["name"].endswith("kwargs"):
+        param["typ"] = "dict"
+    return param
+
+
+def _inspect_process_sig(k, v):
+    """
+    Postprocess the param
+
+    :param k: A key from `inspect._parameters` mapping
+    :type k: ```Any``
+
+    :param v: A value from `inspect._parameters` mapping
+    :type v: ```Any``
+
+    :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    :rtype: ```dict```
+    """
+    # return dict(
+    #     name=k,
+    #     **(
+    #         {}
+    #         if v.default is _empty
+    #         else {
+    #             "default": v.default,
+    #             "typ": lstrip_typings(
+    #                 type(v.default).__name__
+    #                 if v.annotation is _empty
+    #                 else "{!s}".format(v.annotation)
+    #             ),
+    #         }
+    #     ),
+    # )
+
+
+def function(function_def, infer_type=False, function_type=None, function_name=None):
     """
     Converts a method to our IR
 
     :param function_def: AST node for function definition
     :type function_def: ```Union[FunctionDef, FunctionType]```
+
+    :param infer_type: Whether to try inferring the typ (from the default)
+    :type infer_type: ```bool```
 
     :param function_type: Type of function, static is static or global method, others just become first arg
     :type function_type: ```Literal['self', 'cls', 'static']```
@@ -243,7 +270,8 @@ def function(function_def, function_type=None, function_name=None):
         # TODO: Returns when no docstring is provided
     else:
         intermediate_repr = docstring(
-            intermediate_repr_docstring.replace(":cvar", ":param")
+            intermediate_repr_docstring.replace(":cvar", ":param"),
+            infer_type=infer_type,
         )
 
     found_type = get_function_type(function_def)
@@ -256,7 +284,7 @@ def function(function_def, function_type=None, function_name=None):
 
     if len(function_def.body) > 2:
         intermediate_repr["_internal"] = {
-            "body": function_def.body[1:-1],
+            "body": function_def.body[0 if found_type == "static" else 1 :],
             "from_name": function_def.name,
             "from_type": found_type,
         }
@@ -424,7 +452,7 @@ def argparse_ast(function_def, function_type=None, function_name=None):
             "body": list(
                 filterfalse(
                     is_argparse_description,
-                    filterfalse(is_argparse_add_argument, function_def.body[1:-1]),
+                    filterfalse(is_argparse_add_argument, function_def.body),
                 )
             ),
             "from_name": function_def.name,
@@ -434,12 +462,15 @@ def argparse_ast(function_def, function_type=None, function_name=None):
     return intermediate_repr
 
 
-def docstring(doc_string, return_tuple=False):
+def docstring(doc_string, infer_type=False, return_tuple=False):
     """
     Converts a docstring to an AST
 
     :param doc_string: docstring portion
     :type doc_string: ```Union[str, Dict]```
+
+    :param infer_type: Whether to try inferring the typ (from the default)
+    :type infer_type: ```bool```
 
     :param return_tuple: Whether to return a tuple, or just the intermediate_repr
     :type return_tuple: ```bool```
@@ -450,20 +481,18 @@ def docstring(doc_string, return_tuple=False):
     assert isinstance(doc_string, str), "Expected 'str' got {!r}".format(
         type(doc_string).__name__
     )
-    parsed = doc_string if isinstance(doc_string, dict) else parse_docstring(doc_string)
-
-    returns = (
-        "returns" in parsed
-        and parsed["returns"] is not None
-        and "name" in parsed["returns"]
+    parsed = (
+        doc_string
+        if isinstance(doc_string, dict)
+        else parse_docstring(doc_string, infer_type=infer_type)
     )
-    if returns:
-        parsed["returns"]["doc"] = parsed["returns"].get(
-            "doc", parsed["returns"]["name"]
-        )
 
     if return_tuple:
-        return parsed, returns
+        return parsed, (
+            "returns" in parsed
+            and parsed["returns"] is not None
+            and "name" in parsed["returns"]
+        )
 
     return parsed
 

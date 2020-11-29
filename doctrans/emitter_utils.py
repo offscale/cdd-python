@@ -376,10 +376,13 @@ def to_docstring(
             filter(
                 None,
                 (
-                    "{tab}:param {param[name]}: {param[doc]}".format(
-                        tab=tab * indent_level,
-                        param=set_default_doc(param, emit_default_doc=emit_default_doc),
-                    ),
+                    (
+                        lambda param: "{tab}:param {name}: {doc}".format(
+                            tab=tab * indent_level,
+                            name=param["name"],
+                            doc=param.get("doc"),
+                        )
+                    )(set_default_doc(param, emit_default_doc=emit_default_doc)),
                     None
                     if param["typ"] is None or not emit_types
                     else "\n{tab}:type {param[name]}: ```{param[typ]}```".format(

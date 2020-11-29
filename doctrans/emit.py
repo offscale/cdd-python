@@ -18,10 +18,12 @@ from ast import (
     arg,
 )
 from functools import partial
+from itertools import chain
+from operator import itemgetter
 
 from black import format_str, Mode
 
-from doctrans.ast_utils import param2argparse_param, param2ast, set_value
+from doctrans.ast_utils import param2argparse_param, param2ast, set_value, get_value
 from doctrans.defaults_utils import set_default_doc
 from doctrans.emitter_utils import get_internal_body, to_docstring
 from doctrans.pure_utils import tab, simple_types, PY3_8, rpartial
@@ -65,6 +67,11 @@ def argparse_function(
     """
     function_name = function_name or intermediate_repr["name"]
     function_type = function_type or intermediate_repr["type"]
+    internal_body = get_internal_body(
+        target_name=function_name,
+        target_type=function_type,
+        intermediate_repr=intermediate_repr,
+    )
     return FunctionDef(
         args=arguments(
             args=list(
@@ -99,81 +106,106 @@ def argparse_function(
             arg=None,
         ),
         body=list(
-            filter(
-                None,
+            chain.from_iterable(
                 (
-                    Expr(
-                        set_value(
-                            kind=None,
-                            value="\n    Set CLI arguments\n\n    "
-                            ":param argument_parser: argument parser\n    "
-                            ":type argument_parser: ```ArgumentParser```\n\n    "
-                            "{return_params}".format(
-                                return_params=":return: argument_parser, {returns[doc]}\n    "
-                                ":rtype: ```Tuple[ArgumentParser, {returns[typ]}]```\n    ".format(
-                                    returns=set_default_doc(
-                                        intermediate_repr["returns"],
-                                        emit_default_doc=emit_default_doc_in_return,
+                    iter(
+                        (
+                            Expr(
+                                set_value(
+                                    kind=None,
+                                    value="\n    Set CLI arguments\n\n    "
+                                    ":param argument_parser: argument parser\n    "
+                                    ":type argument_parser: ```ArgumentParser```\n\n    "
+                                    "{return_params}".format(
+                                        return_params=":return: argument_parser, {returns[doc]}\n    "
+                                        ":rtype: ```Tuple[ArgumentParser, {returns[typ]}]```\n    ".format(
+                                            returns=set_default_doc(
+                                                intermediate_repr["returns"],
+                                                emit_default_doc=emit_default_doc_in_return,
+                                            )
+                                        )
+                                        if intermediate_repr.get("returns")
+                                        else (
+                                            ":return: argument_parser\n    "
+                                            ":rtype: ```ArgumentParser```\n    "
+                                        )
+                                    ),
+                                )
+                            ),
+                            Assign(
+                                targets=[
+                                    Attribute(
+                                        Name("argument_parser", Load()),
+                                        "description",
+                                        Store(),
                                     )
-                                )
-                                if intermediate_repr.get("returns")
-                                else (
-                                    ":return: argument_parser\n    "
-                                    ":rtype: ```ArgumentParser```\n    "
-                                )
+                                ],
+                                type_comment=None,
+                                value=set_value(
+                                    kind=None,
+                                    value=intermediate_repr["doc"],
+                                ),
+                                lineno=None,
+                                expr=None,
                             ),
                         )
                     ),
-                    Assign(
-                        targets=[
-                            Attribute(
-                                Name("argument_parser", Load()),
-                                "description",
-                                Store(),
-                            )
-                        ],
-                        type_comment=None,
-                        value=set_value(
-                            kind=None,
-                            value=intermediate_repr["doc"],
+                    filter(
+                        None,
+                        (
+                            *(
+                                list(
+                                    map(
+                                        partial(
+                                            param2argparse_param,
+                                            emit_default_doc=emit_default_doc,
+                                        ),
+                                        intermediate_repr["params"],
+                                    )
+                                )
+                                if "params" in intermediate_repr
+                                else tuple()
+                            ),
+                            *(
+                                internal_body[
+                                    2
+                                    if len(internal_body) > 1
+                                    and isinstance(internal_body[1], Assign)
+                                    and internal_body[1].targets[0].id
+                                    == "argument_parser"
+                                    else 1 :
+                                ]
+                                if internal_body
+                                and isinstance(internal_body[0], Expr)
+                                and isinstance(get_value(internal_body[0].value), str)
+                                else internal_body
+                            ),
+                            None
+                            if internal_body and isinstance(internal_body[-1], Return)
+                            else (
+                                Return(
+                                    value=Tuple(
+                                        ctx=Load(),
+                                        elts=[
+                                            Name("argument_parser", Load()),
+                                            ast.parse(
+                                                intermediate_repr["returns"]["default"]
+                                            )
+                                            .body[0]
+                                            .value,
+                                        ],
+                                        expr=None,
+                                    ),
+                                    expr=None,
+                                )
+                                if intermediate_repr.get("returns")
+                                else Return(
+                                    value=Name("argument_parser", Load()), expr=None
+                                )
+                            ),
                         ),
-                        lineno=None,
-                        expr=None,
                     ),
-                    *(
-                        list(
-                            map(
-                                partial(
-                                    param2argparse_param,
-                                    emit_default_doc=emit_default_doc,
-                                ),
-                                intermediate_repr["params"],
-                            )
-                        )
-                        if "params" in intermediate_repr
-                        else tuple()
-                    ),
-                    *get_internal_body(
-                        target_name=function_name,
-                        target_type=function_type,
-                        intermediate_repr=intermediate_repr,
-                    ),
-                    Return(
-                        value=Tuple(
-                            ctx=Load(),
-                            elts=[
-                                Name("argument_parser", Load()),
-                                ast.parse(intermediate_repr["returns"]["default"])
-                                .body[0]
-                                .value,
-                            ],
-                            expr=None,
-                        ),
-                        expr=None,
-                    )
-                    if intermediate_repr.get("returns")
-                    else Return(value=Name("argument_parser", Load()), expr=None),
-                ),
+                )
             )
         ),
         decorator_list=[],
@@ -187,7 +219,12 @@ def argparse_function(
     )
 
 
-def class_(intermediate_repr, class_name="ConfigClass", class_bases=("object",)):
+def class_(
+    intermediate_repr,
+    emit_call=False,
+    class_name="ConfigClass",
+    class_bases=("object",),
+):
     """
     Construct a class
 
@@ -201,6 +238,9 @@ def class_(intermediate_repr, class_name="ConfigClass", class_bases=("object",))
           }
     :type intermediate_repr: ```dict```
 
+    :param emit_call: Whether to emit a `__call__` method from the `_internal` IR subdict
+    :type emit_call: ```bool```
+
     :param class_name: name of class
     :type class_name: ```str```
 
@@ -212,10 +252,39 @@ def class_(intermediate_repr, class_name="ConfigClass", class_bases=("object",))
     """
     returns = [intermediate_repr["returns"]] if intermediate_repr.get("returns") else []
 
+    param_names = frozenset(map(itemgetter("name"), intermediate_repr["params"]))
     if returns:
         intermediate_repr["params"] = intermediate_repr["params"] + returns
         del intermediate_repr["returns"]
 
+    class RewriteName(ast.NodeTransformer):
+        """
+        A :class:`NodeVisitor` subclass that walks the abstract syntax tree and
+        allows modification of nodes. Here it modifies parameter names to be `self.param_name`
+        """
+
+        def visit_Name(self, node):
+            """
+            Rename parameter name with a `self.` attribute prefix
+
+            :param node: The AST node
+            :type node: ```Name```
+
+            :return: `Name` iff `Name` is not a parameter else `Attribute`
+            :rtype: ```Union[Name, Attribute]```
+            """
+            return Attribute(Name("self", Load()), node.id, Load()) if node.id in param_names else node
+
+    internal_body = (
+        list(
+            map(
+                ast.fix_missing_locations,
+                map(RewriteName().visit, intermediate_repr["_internal"]["body"]),
+            )
+        )
+        if "_internal" in intermediate_repr
+        else None
+    )
     return ClassDef(
         bases=list(map(rpartial(Name, Load()), class_bases)),
         body=[
@@ -235,7 +304,45 @@ def class_(intermediate_repr, class_name="ConfigClass", class_bases=("object",))
                 )
             )
         ]
-        + list(map(param2ast, intermediate_repr["params"])),
+        + list(map(param2ast, intermediate_repr["params"]))
+        + (
+            [
+                FunctionDef(
+                    args=arguments(
+                        args=[
+                            arg(
+                                annotation=None,
+                                arg="self",
+                                type_comment=None,
+                                expr=None,
+                                identifier_arg=None,
+                            )
+                        ],
+                        defaults=[],
+                        kw_defaults=[],
+                        kwarg=None,
+                        kwonlyargs=[],
+                        posonlyargs=[],
+                        vararg=None,
+                        arg=None,
+                    ),
+                    body=internal_body[1:]
+                    if isinstance(internal_body[0], Expr)
+                    and isinstance(get_value(internal_body[0].value), str)
+                    else internal_body,
+                    decorator_list=[],
+                    name="__call__",
+                    returns=None,
+                    type_comment=None,
+                    arguments_args=None,
+                    identifier_name=None,
+                    stmt=None,
+                    lineno=None,
+                )
+            ]
+            if emit_call and internal_body
+            else []
+        ),
         decorator_list=[],
         keywords=[],
         name=class_name,
@@ -433,6 +540,20 @@ def function(
         kwonlyargs, kw_defaults, defaults = [], [], defaults_from_params
         args += args_from_params
 
+    internal_body = get_internal_body(
+        target_name=function_name,
+        target_type=function_type,
+        intermediate_repr=intermediate_repr,
+    )
+    return_val = (
+        Return(
+            value=ast.parse(intermediate_repr["returns"]["default"]).body[0].value,
+            expr=None,
+        )
+        if (intermediate_repr.get("returns") or {}).get("default")
+        else None
+    )
+
     return FunctionDef(
         args=arguments(
             args=args,
@@ -477,20 +598,13 @@ def function(
                         )
                     ),
                     *(
-                        get_internal_body(
-                            target_name=function_name,
-                            target_type=function_type,
-                            intermediate_repr=intermediate_repr,
-                        )
+                        internal_body[:-1]
+                        if internal_body
+                        and isinstance(internal_body[-1], Return)
+                        and return_val
+                        else internal_body
                     ),
-                    Return(
-                        value=ast.parse(intermediate_repr["returns"]["default"])
-                        .body[0]
-                        .value,
-                        expr=None,
-                    )
-                    if (intermediate_repr.get("returns") or {}).get("default")
-                    else None,
+                    return_val,
                 ),
             )
         ),

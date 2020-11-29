@@ -52,7 +52,7 @@ def run_ast_test(test_case_instance, gen_ast, gold, run_cmp_ast=True):
             gold.body.pop(0)
 
     test_case_instance.assertEqual(
-        *map(doctrans.source_transformer.to_code, (gen_ast, gold))
+        *map(doctrans.source_transformer.to_code, (gold, gen_ast))
     )
 
     if run_cmp_ast:
