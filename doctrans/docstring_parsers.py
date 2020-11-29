@@ -432,8 +432,7 @@ def _parse_phase_numpydoc_and_google(
                     ),
                 ),
             ),
-            "returns": pp(scanned[return_tokens[0]])
-            or _interpolate_defaults(
+            "returns": _interpolate_defaults(
                 dict(
                     name="return_type",
                     **{
