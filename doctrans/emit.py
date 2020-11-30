@@ -259,7 +259,7 @@ def class_(
 
     class RewriteName(ast.NodeTransformer):
         """
-        A :class:`NodeVisitor` subclass that walks the abstract syntax tree and
+        A :class:`NodeTransformer` subclass that walks the abstract syntax tree and
         allows modification of nodes. Here it modifies parameter names to be `self.param_name`
         """
 
@@ -276,7 +276,7 @@ def class_(
             return (
                 Attribute(Name("self", Load()), node.id, Load())
                 if node.id in param_names
-                else node
+                else ast.NodeTransformer.generic_visit(self, node)
             )
 
     internal_body = (
