@@ -469,21 +469,21 @@ class_squared_hinge_config_ast = ClassDef(
     body=[
         Expr(
             set_value(
-                '\n    Computes the squared hinge loss between `y_true` and `y_pred`.\n    \n'
-                '    `loss = mean(square(maximum(1 - y_true * y_pred, 0)), axis=-1)`\n    \n'
-                '    Standalone usage:\n    \n'
-                '    >>> y_true = np.random.choice([-1, 1], size=(2, 3))\n'
-                '    >>> y_pred = np.random.random(size=(2, 3))\n'
-                '    >>> loss = tf.keras.losses.squared_hinge(y_true, y_pred)\n'
-                '    >>> assert loss.shape == (2,)\n'
-                '    >>> assert np.array_equal(\n'
-                '    ...     loss.numpy(),\n'
-                '    ...     np.mean(np.square(np.maximum(1. - y_true * y_pred, 0.)), axis=-1))\n\n'
-                '    :cvar y_true: The ground truth values. `y_true` values are expected to be -1 or 1.\n'
-                '    If binary (0 or 1) labels are provided we will convert them to -1 or 1.\n'
-                '    shape = `[batch_size, d0, .. dN]`.\n'
-                '    :cvar y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.\n'
-                '    :cvar return_type: None'
+                "\n    Computes the squared hinge loss between `y_true` and `y_pred`.\n    \n"
+                "    `loss = mean(square(maximum(1 - y_true * y_pred, 0)), axis=-1)`\n    \n"
+                "    Standalone usage:\n    \n"
+                "    >>> y_true = np.random.choice([-1, 1], size=(2, 3))\n"
+                "    >>> y_pred = np.random.random(size=(2, 3))\n"
+                "    >>> loss = tf.keras.losses.squared_hinge(y_true, y_pred)\n"
+                "    >>> assert loss.shape == (2,)\n"
+                "    >>> assert np.array_equal(\n"
+                "    ...     loss.numpy(),\n"
+                "    ...     np.mean(np.square(np.maximum(1. - y_true * y_pred, 0.)), axis=-1))\n\n"
+                "    :cvar y_true: The ground truth values. `y_true` values are expected to be -1 or 1.\n"
+                "    If binary (0 or 1) labels are provided we will convert them to -1 or 1.\n"
+                "    shape = `[batch_size, d0, .. dN]`.\n"
+                "    :cvar y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.\n"
+                "    :cvar return_type: None"
             )
         ),
         Assign(
@@ -501,7 +501,7 @@ class_squared_hinge_config_ast = ClassDef(
         Assign(
             targets=[Name("return_type", Store())],
             value=set_value(
-                "K.mean(math_ops.square(math_ops.maximum(1.0 - y_true * y_pred, 0.0)), axis=-1)"
+                "```K.mean(math_ops.square(math_ops.maximum(1.0 - y_true * y_pred, 0.0)), axis=-1)```"
             ),
             expr=None,
             lineno=None,

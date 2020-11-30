@@ -403,8 +403,9 @@ def to_docstring(
     sep = (tab * indent_level) if emit_separating_tab else ""
     return "\n{description}\n{sep}\n{params}\n{returns}".format(
         sep=sep,
-        tab=tab,
-        description="\n".join(map(partial(add, tab), intermediate_repr["doc"].split("\n"))),
+        description="\n".join(
+            map(partial(add, tab), intermediate_repr["doc"].split("\n"))
+        ),
         params="\n{sep}\n".format(sep=sep).join(
             map(param2docstring_param, intermediate_repr["params"])
         ),

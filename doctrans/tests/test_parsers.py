@@ -126,7 +126,7 @@ class TestParsers(TestCase):
                     {"default": 5, "doc": "second param", "name": "b", "typ": "int"},
                 ],
                 "returns": {
-                    "default": "operator.add(a, b)",
+                    "default": "```operator.add(a, b)```",
                     "doc": "Aggregated summation of `a` and `b`.",
                     "name": "return_type",
                     "typ": "int",
