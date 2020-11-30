@@ -524,7 +524,6 @@ def _parse_phase_rest(
                     )
                 )
             else:
-
                 fst_space = line.find(" ")
                 nxt_colon = line.find(":", fst_space)
                 name = line[fst_space + 1 : nxt_colon]
@@ -536,12 +535,20 @@ def _parse_phase_rest(
 
                 val = line[nxt_colon + 1 :].strip()
                 param.update(dict((_set_param_values(line, val),), name=name))
-                param = interpolate_defaults(param, emit_default_doc=emit_default_doc)
+                param = _set_name_and_type(
+                    interpolate_defaults(param, emit_default_doc=emit_default_doc),
+                    infer_type=infer_type,
+                )
         elif not intermediate_repr["doc"]:
             intermediate_repr["doc"] = line.strip()
     if param:
         # if param['name'] == 'return_type': intermediate_repr['returns'] = param
-        intermediate_repr["params"].append(param)
+        intermediate_repr["params"].append(
+            _set_name_and_type(
+                interpolate_defaults(param, emit_default_doc=emit_default_doc),
+                infer_type=infer_type,
+            )
+        )
 
 
 def _set_param_values(input_str, val, sw=":type"):

@@ -50,7 +50,7 @@ def extract_default(
         return line, None
 
     default = ""
-    par = {"{": 0, "[": 0, "(": 0, "}": 0, "]": 0, ")": 0}
+    par = {"{": 0, "[": 0, "(": 0, ")": 0, "]": 0, "}": 0}
     sub_l = line[_end_idx:]
     sub_l_len = len(sub_l)
     for idx, ch in enumerate(sub_l):
