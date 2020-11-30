@@ -390,7 +390,13 @@ def _interpolate_return(function_def, intermediate_repr):
             lambda default: "({})".format(default)
             if isinstance(return_ast.value, Tuple)
             and (not default.startswith("(") or not default.endswith(")"))
-            else default
+            else (
+                lambda default_: default_
+                if isinstance(
+                    default_, (str, int, float, complex, ast.Num, ast.Str, ast.Constant)
+                )
+                else "```{}```".format(default)
+            )(get_value(get_value(return_ast)))
         )(to_code(return_ast.value).rstrip("\n"))
     if hasattr(function_def, "returns") and function_def.returns is not None:
         intermediate_repr["returns"]["typ"] = to_code(function_def.returns).rstrip("\n")

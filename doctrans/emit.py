@@ -551,7 +551,9 @@ def function(
     )
     return_val = (
         Return(
-            value=ast.parse(intermediate_repr["returns"]["default"]).body[0].value,
+            value=ast.parse(intermediate_repr["returns"]["default"].strip("`"))
+            .body[0]
+            .value,
             expr=None,
         )
         if (intermediate_repr.get("returns") or {}).get("default")
