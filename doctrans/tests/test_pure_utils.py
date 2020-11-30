@@ -116,7 +116,7 @@ class TestPureUtils(TestCase):
         self.assertEqual(quote("'bar'"), "'bar'")
         self.assertEqual(quote("haz"), '"haz"')
 
-    def test_update_d(self):
+    def test_update_d(self) -> None:
         """ Tests inline update dict """
         d = {}
         u = {"a": 5}

@@ -16,7 +16,10 @@ from ast import (
     Store,
     Assign,
 )
+from os import path
 from unittest import TestCase
+
+from meta.asttools import cmp_ast
 
 from doctrans.ast_utils import (
     find_ast_type,
@@ -29,6 +32,7 @@ from doctrans.ast_utils import (
     emit_arg,
     param2ast,
     set_value,
+    get_imports,
 )
 from doctrans.pure_utils import PY_GTE_3_9, PY3_8, PY_GTE_3_8
 from doctrans.source_transformer import ast_parse
@@ -263,6 +267,29 @@ class TestAstUtils(TestCase):
                 identifier_arg=None,
             ),
             run_cmp_ast=PY_GTE_3_9,
+        )
+
+    def test_get_imports(self) -> None:
+        """ Tests that `get_imports` successfully gets the imports """
+        with open(path.join(path.dirname(__file__), "mocks", "eval.py")) as f:
+            imports = get_imports(ast.parse(f.read()))
+        self.assertIsInstance(imports, list)
+        self.assertEqual(len(imports), 1)
+        self.assertTrue(
+            cmp_ast(
+                imports[0],
+                ast.Import(
+                    names=[
+                        ast.alias(
+                            asname=None,
+                            name="doctrans.tests.mocks",
+                            identifier=None,
+                            identifier_name=None,
+                        )
+                    ],
+                    alias=None,
+                ),
+            )
         )
 
     def test_replace_in_ast_with_val(self) -> None:

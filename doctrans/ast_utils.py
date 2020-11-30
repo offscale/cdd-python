@@ -373,6 +373,20 @@ def get_value(node):
         return node
 
 
+def get_imports(node):
+    """
+    Get the imports from a node
+
+    :param node: AST node with .body, probably an `ast.Module`
+    :type node: ```AST```
+
+    :return: List of imports. Doesn't handle those within a try/except, condition, or not in root scope
+    :rtype: ```List[Union[]]```
+    """
+    assert hasattr(node, "body") and isinstance(node.body, (list, tuple))
+    return list(filter(rpartial(isinstance, (ast.Import, ast.ImportFrom)), node.body))
+
+
 def set_value(value, kind=None):
     """
     Creates a Constant or a Str depending on Python version in use
@@ -785,6 +799,7 @@ __all__ = [
     "find_ast_type",
     "find_in_ast",
     "get_function_type",
+    "get_imports",
     "get_value",
     "is_argparse_add_argument",
     "is_argparse_description",
