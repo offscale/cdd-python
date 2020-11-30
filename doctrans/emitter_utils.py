@@ -4,6 +4,7 @@ Functions which produce intermediate_repr from various different inputs
 import ast
 from ast import Constant, Name, Return
 from functools import partial
+from operator import add
 from typing import Any
 
 from doctrans.ast_utils import get_value
@@ -400,10 +401,10 @@ def to_docstring(
         emit_types=emit_types,
     )
     sep = (tab * indent_level) if emit_separating_tab else ""
-    return "\n{tab}{description}\n{sep}\n{params}\n{returns}".format(
+    return "\n{description}\n{sep}\n{params}\n{returns}".format(
         sep=sep,
         tab=tab,
-        description=intermediate_repr["doc"],
+        description="\n".join(map(partial(add, tab), intermediate_repr["doc"].split("\n"))),
         params="\n{sep}\n".format(sep=sep).join(
             map(param2docstring_param, intermediate_repr["params"])
         ),

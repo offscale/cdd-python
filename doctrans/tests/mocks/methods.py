@@ -1194,6 +1194,7 @@ method_complex_args_variety_ast = (
     else ast.parse(method_complex_args_variety_str).body[0]
 )
 
+# https://github.com/tensorflow/tensorflow/blob/7ad2723/tensorflow/python/keras/losses.py#L1327-L1355
 function_google_tf_squared_hinge_str = '''def squared_hinge(y_true, y_pred):
   """Computes the squared hinge loss between `y_true` and `y_pred`.
 

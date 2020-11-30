@@ -17,7 +17,6 @@ from doctrans.ast_utils import (
     annotate_ancestry,
 )
 from doctrans.pure_utils import rpartial, reindent, tab, deindent, PY3_8, PY_GTE_3_9
-from doctrans.source_transformer import to_code
 from doctrans.tests.mocks.argparse import (
     argparse_func_ast,
     argparse_func_with_body_ast,
@@ -367,15 +366,13 @@ class TestEmitters(TestCase):
         """
         run_ast_test(
             self,
-            gen_ast=to_code(
-                emit.class_(
-                    parse.function(
-                        ast.parse(function_google_tf_squared_hinge_str).body[0],
-                        infer_type=True,
-                    ),
-                    class_name="SquaredHingeConfig",
-                    emit_call=True,
-                )
+            gen_ast=emit.class_(
+                parse.function(
+                    ast.parse(function_google_tf_squared_hinge_str).body[0],
+                    infer_type=True,
+                ),
+                class_name="SquaredHingeConfig",
+                emit_call=True,
             ),
             gold=class_squared_hinge_config_ast,
             run_cmp_ast=PY_GTE_3_9,
