@@ -18,6 +18,8 @@ from doctrans.tests.mocks.methods import (
     function_default_complex_default_arg_ast,
     method_complex_args_variety_ast,
     method_complex_args_variety_str,
+    function_adder_str,
+    function_adder_ir,
 )
 from doctrans.tests.utils_for_tests import unittest_main, inspectable_compile
 
@@ -79,7 +81,9 @@ class TestParsers(TestCase):
         Tests whether `class_` produces `intermediate_repr_no_default_doc`
               from `class_ast`
         """
-        self.assertDictEqual(parse.class_(class_ast), intermediate_repr_no_default_doc)
+        ir = parse.class_(class_ast)
+        del ir["_internal"]  # Not needed for this test
+        self.assertDictEqual(ir, intermediate_repr_no_default_doc)
 
     def test_from_function(self) -> None:
         """
@@ -119,21 +123,7 @@ class TestParsers(TestCase):
         """
         self.assertDictEqual(
             parse.function(function_adder_ast),
-            {
-                "name": "add_6_5",
-                "params": [
-                    {"default": 6, "doc": "first param", "name": "a", "typ": "int"},
-                    {"default": 5, "doc": "second param", "name": "b", "typ": "int"},
-                ],
-                "returns": {
-                    "default": "```operator.add(a, b)```",
-                    "doc": "Aggregated summation of `a` and `b`.",
-                    "name": "return_type",
-                    "typ": "int",
-                },
-                "doc": "",
-                "type": "static",
-            },
+            function_adder_ir,
         )
 
     def test_from_function_in_memory(self) -> None:
@@ -153,8 +143,10 @@ class TestParsers(TestCase):
 
         self.assertIsNone(foo(5, 6))
 
+        ir = parse.function(foo)
+        del ir["_internal"]  # Not needed for this test
         self.assertDictEqual(
-            parse.function(foo),
+            ir,
             {
                 "doc": "the foo function",
                 "name": "TestParsers.test_from_function_in_memory.<locals>.foo",
@@ -194,6 +186,7 @@ class TestParsers(TestCase):
         )
 
         ir = parse.function(call_cliff)
+        del ir["_internal"]  # Not needed for this test
 
         # This is a hack because JetBrains wraps stdout
         self.assertIn(
@@ -211,6 +204,34 @@ class TestParsers(TestCase):
             method_complex_args_variety_ir,
         )
 
+    def test_from_method_in_memory_return_complex(self) -> None:
+        """
+        Tests that `parse.function` produces properly from a function in memory of current interpreter with:
+        - complex return type
+        - kwonly args
+        """
+
+        method_complex_args_variety_with_imports_str = (
+            "from sys import stdout\n"
+            "from {} import Literal\n"
+            "{}".format(
+                "typing" if PY_GTE_3_8 else "typing_extensions",
+                function_adder_str,
+            )
+        )
+        add_6_5 = getattr(
+            inspectable_compile(method_complex_args_variety_with_imports_str),
+            "add_6_5",
+        )
+
+        ir = parse.function(add_6_5)
+        del ir["_internal"]  # Not needed for this test
+
+        self.assertDictEqual(
+            ir,
+            function_adder_ir,
+        )
+
     def test_from_method_complex_args_variety(self) -> None:
         """
         Tests that `parse.function` produces correctly with:
@@ -226,7 +247,7 @@ class TestParsers(TestCase):
             method_complex_args_variety_ir,
         )
 
-    def test_from_class_actual(self) -> None:
+    def test_from_class_in_memory(self) -> None:
         """
         Tests that parse.class produces properly from a `class` in memory of current interpreter
         """
@@ -234,11 +255,13 @@ class TestParsers(TestCase):
         class A(object):
             """A is one boring class"""
 
+        ir = parse.class_(A)
+        del ir["_internal"]  # Not needed for this test
         self.assertDictEqual(
-            parse.class_(A),
+            ir,
             {
                 "doc": "A is one boring class",
-                "name": "TestParsers.test_from_class_actual.<locals>.A",
+                "name": "TestParsers.test_from_class_in_memory.<locals>.A",
                 "params": [],
                 "returns": None,
             },

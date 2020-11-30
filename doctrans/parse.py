@@ -69,7 +69,18 @@ def class_(class_def, class_name=None):
     """
     is_supported_ast_node = isinstance(class_def, (Module, ClassDef))
     if not is_supported_ast_node and isinstance(object, type):
-        return _inspect(class_def, class_name)
+        ir = _inspect(class_def, class_name)
+        ir["_internal"] = {
+            "body": list(
+                filterfalse(
+                    rpartial(isinstance, AnnAssign),
+                    ast.parse(getsource(class_def).lstrip()).body[0].body,
+                )
+            ),
+            "from_name": class_name,
+            "from_type": "cls",
+        }
+        return ir
     assert (
         is_supported_ast_node
     ), "Expected 'Union[Module, ClassDef]' got `{!r}`".format(type(class_def).__name__)
@@ -94,6 +105,11 @@ def class_(class_def, class_name=None):
     intermediate_repr["params"] = [
         dict(name=k, **v) for k, v in intermediate_repr["params"].items()
     ]
+    intermediate_repr["_internal"] = {
+        "body": list(filterfalse(rpartial(isinstance, AnnAssign), class_def.body)),
+        "from_name": class_def.name,
+        "from_type": "cls",
+    }
 
     return intermediate_repr
 
@@ -140,29 +156,29 @@ def _inspect(obj, name):
             next(iter(sig.parameters.values())).name, "static"
         )
 
+    parsed_body = ast.parse(getsource(obj).lstrip()).body[0]
+
     if ir.get("returns") and "returns" not in ir["returns"]:
         if sig.return_annotation is not _empty:
             ir["returns"]["typ"] = lstrip_typings("{!s}".format(sig.return_annotation))
 
-        returns = tuple(
+        return_q = deque(
             filter(
                 rpartial(isinstance, ast.Return),
-                ast.walk(ast.parse(getsource(obj)).body[0]),
-            )
+                ast.walk(parsed_body),
+            ),
+            maxlen=1,
         )
-        if returns:
-            return_val = get_value(returns[-1])
+        if return_q:
+            return_val = get_value(return_q.pop())
             ir["returns"]["default"] = get_value(return_val)
-            # if "typ" not in ir["returns"]:
-            #     if isinstance(ir["returns"]["default"], (str, int, float, complex)):
-            #         ir["returns"]["typ"] = type(ir["returns"]["default"]).__name__
-            #     else:
-            #         ir["returns"].update(
-            #             {
-            #                 "default": "```{}```".format(to_code(return_val)),
-            #                 "typ": "Any",
-            #             }
-            #         )
+            if not isinstance(
+                ir["returns"]["default"],
+                (str, int, float, complex, ast.Num, ast.Str, ast.Constant),
+            ):
+                ir["returns"]["default"] = "```{}```".format(
+                    to_code(ir["returns"]["default"]).rstrip("\n")
+                )
     return ir
 
 
@@ -250,7 +266,16 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
     :rtype: ```dict```
     """
     if isinstance(function_def, FunctionType):
-        return _inspect(function_def, function_name)
+        ir = _inspect(function_def, function_name)
+        parsed_source = ast.parse(getsource(function_def).lstrip()).body[0]
+        ir["_internal"] = {
+            "body": list(
+                filterfalse(rpartial(isinstance, AnnAssign), parsed_source.body)
+            ),
+            "from_name": parsed_source.name,
+            "from_type": "cls",
+        }
+        return ir
 
     assert isinstance(
         function_def, FunctionDef
