@@ -1031,6 +1031,22 @@ function_adder_ast = (
     else ast.parse(function_adder_str).body[0]
 )
 
+function_adder_ir = {
+    "name": "add_6_5",
+    "params": [
+        {"default": 6, "doc": "first param", "name": "a", "typ": "int"},
+        {"default": 5, "doc": "second param", "name": "b", "typ": "int"},
+    ],
+    "returns": {
+        "default": "```operator.add(a, b)```",
+        "doc": "Aggregated summation of `a` and `b`.",
+        "name": "return_type",
+        "typ": "int",
+    },
+    "doc": "",
+    "type": "static",
+}
+
 function_default_complex_default_arg_str = (
     "def call_peril(dataset_name: str='mnist', writer=stdout):\n\tpass"
 )
@@ -1236,6 +1252,8 @@ __all__ = [
     "class_with_optional_arg_method_ast",
     "class_with_optional_arg_method_str",
     "function_adder_ast",
+    "function_adder_ir",
+    "function_adder_str",
     "function_default_complex_default_arg_ast",
     "function_default_complex_default_arg_str",
     "function_google_tf_squared_hinge_str",
