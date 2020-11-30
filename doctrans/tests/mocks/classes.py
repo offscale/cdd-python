@@ -523,7 +523,7 @@ class_squared_hinge_config_ast = ClassDef(
                         Attribute(
                             Name("self", Load()),
                             "y_pred",
-                            Store(),
+                            Load(),
                         )
                     ],
                     value=Call(
@@ -541,7 +541,7 @@ class_squared_hinge_config_ast = ClassDef(
                     lineno=None,
                 ),
                 Assign(
-                    targets=[Attribute(Name("self", Load()), "y_true", Store())],
+                    targets=[Attribute(Name("self", Load()), "y_true", Load())],
                     value=Call(
                         args=[
                             Attribute(
@@ -576,7 +576,7 @@ class_squared_hinge_config_ast = ClassDef(
                         Attribute(
                             Name("self", Load()),
                             "y_true",
-                            Store(),
+                            Load(),
                         )
                     ],
                     value=Call(

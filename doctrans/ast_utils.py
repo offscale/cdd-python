@@ -56,7 +56,7 @@ def param2ast(param):
     """
     if param["typ"] is None:
         return Assign(
-            targets=(Name(param["name"], Store()),),
+            targets=[Name(param["name"], Store())],
             value=set_value(
                 kind=None, value=param.get("default") or simple_types[param["typ"]]
             ),
