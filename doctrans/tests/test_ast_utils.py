@@ -523,7 +523,7 @@ class TestAstUtils(TestCase):
         """ Check that `param2ast` behaves correctly with a non annotated (typeless) input """
 
         gold = Assign(
-            targets=(Name("zion", Store()),),
+            targets=[Name("zion", Store())],
             value=set_value(value=None),
             expr=None,
             lineno=None,
