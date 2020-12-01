@@ -28,6 +28,7 @@ from docstring_parser import (
     DocstringMeta,
     Docstring,
 )
+
 from doctrans import get_logger
 from doctrans.ast_utils import (
     find_ast_type,
@@ -40,7 +41,7 @@ from doctrans.ast_utils import (
 from doctrans.defaults_utils import extract_default
 from doctrans.docstring_parsers import parse_docstring
 from doctrans.emitter_utils import parse_out_param, _parse_return
-from doctrans.pure_utils import rpartial, assert_equal, lstrip_namespace
+from doctrans.pure_utils import rpartial, assert_equal, lstrip_namespace, update_d
 from doctrans.source_transformer import to_code
 
 logger = get_logger("doctrans.parse")
@@ -69,16 +70,27 @@ def class_(class_def, class_name=None):
     is_supported_ast_node = isinstance(class_def, (Module, ClassDef))
     if not is_supported_ast_node and isinstance(object, type):
         ir = _inspect(class_def, class_name)
+        parsed_body = ast.parse(getsource(class_def).lstrip()).body[0]
         ir["_internal"] = {
             "body": list(
                 filterfalse(
                     rpartial(isinstance, AnnAssign),
-                    ast.parse(getsource(class_def).lstrip()).body[0].body,
+                    parsed_body.body,
                 )
             ),
             "from_name": class_name,
             "from_type": "cls",
         }
+        body_ir = class_(class_def=parsed_body, class_name=class_name)
+        ir["params"] = list(
+            map(
+                lambda idx_param: assert_equal(
+                    idx_param[1]["name"], body_ir["params"][idx_param[0]]["name"]
+                )
+                and update_d(idx_param[1], body_ir["params"][idx_param[0]]),
+                enumerate(ir["params"]),
+            )
+        )
         return ir
     assert (
         is_supported_ast_node
@@ -94,12 +106,19 @@ def class_(class_def, class_name=None):
             name="return_type", **intermediate_repr["params"].pop("return_type")
         )
 
-    for e in filter(rpartial(isinstance, AnnAssign), class_def.body):
-        typ = to_code(e.annotation).rstrip("\n")
-        if e.target.id == "return_type":
-            intermediate_repr["returns"]["typ"] = typ
-        else:
-            intermediate_repr["params"][e.target.id]["typ"] = typ
+    for e in class_def.body:
+        if isinstance(e, AnnAssign):
+            typ = to_code(e.annotation).rstrip("\n")
+            if e.target.id == "return_type":
+                intermediate_repr["returns"]["typ"] = typ
+            else:
+                intermediate_repr["params"][e.target.id]["typ"] = typ
+        elif isinstance(e, Assign):
+            val = get_value(e)
+            if val is not None:
+                val = get_value(val)
+                for target in e.targets:
+                    intermediate_repr["params"][target.id]["default"] = val
 
     intermediate_repr["params"] = [
         dict(name=k, **v) for k, v in intermediate_repr["params"].items()

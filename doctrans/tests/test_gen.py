@@ -2,13 +2,29 @@
 
 import os
 import sys
+from ast import (
+    ImportFrom,
+    alias,
+    ClassDef,
+    Load,
+    Name,
+    Expr,
+    Assign,
+    Store,
+    FunctionDef,
+    arguments,
+    arg,
+    Attribute,
+)
 from copy import deepcopy
 from shutil import rmtree
 from tempfile import mkdtemp
 from unittest import TestCase
 
+from doctrans.ast_utils import set_value
 from doctrans.gen import gen
 from doctrans.pure_utils import tab
+from doctrans.source_transformer import to_code
 from doctrans.tests.utils_for_tests import unittest_main
 
 
@@ -34,22 +50,86 @@ def populate_files(tempdir, input_str=None):
         "{tab}:cvar b: A b\n"
         '{tab}"""\n'
         "{tab}a = 5\n"
-        "{tab}b = 5\n\n\n"
+        "{tab}b = 16\n\n\n"
         "input_map = {{'Foo': Foo}}\n".format(tab=tab)
     )
-    expected_output = (
-        "PREPENDED\n"
-        "class FooConfig(object):\n"
-        '    """\n'
-        "    The amazing Foo\n\n"
-        "    :cvar a: An a\n"
-        '    :cvar b: A b"""\n'
-        "    a = None\n"
-        "    b = None\n\n"
-        "    def __call__(self):\n"
-        "        self.a = 5\n"
-        "        self.b = 5\n"
+    # expected_output_class_str = (
+    #     "class FooConfig(object):\n"
+    #     '    """\n'
+    #     "    The amazing Foo\n\n"
+    #     "    :cvar a: An a. Defaults to 5\n"
+    #     '    :cvar b: A b. Defaults to 16"""\n'
+    #     "    a = 5\n"
+    #     "    b = 16\n\n"
+    #     "    def __call__(self):\n"
+    #     "        self.a = 5\n"
+    #     "        self.b = 16\n"
+    # )
+    expected_class_ast = ClassDef(
+        name="FooConfig",
+        bases=[Name("object", Load())],
+        keywords=[],
+        body=[
+            Expr(
+                set_value(
+                    "\n    The amazing Foo\n\n"
+                    "    :cvar a: An a. Defaults to 5\n"
+                    "    :cvar b: A b. Defaults to 16"
+                )
+            ),
+            Assign(
+                targets=[Name("a", Store())],
+                value=set_value(value=5),
+                expr=None,
+                lineno=None,
+            ),
+            Assign(
+                targets=[Name("b", Store())],
+                value=set_value(value=16),
+                expr=None,
+                lineno=None,
+            ),
+            FunctionDef(
+                name="__call__",
+                args=arguments(
+                    posonlyargs=[],
+                    args=[
+                        arg(arg="self", expr=None, identifier_arg=None, annotation=None)
+                    ],
+                    kwonlyargs=[],
+                    kw_defaults=[],
+                    defaults=[],
+                    arg=None,
+                    vararg=None,
+                    kwarg=None,
+                ),
+                body=[
+                    Assign(
+                        targets=[Attribute(Name("self", Load()), "a", Store())],
+                        value=set_value(value=5),
+                        expr=None,
+                        lineno=None,
+                    ),
+                    Assign(
+                        targets=[Attribute(Name("self", Load()), "b", Store())],
+                        value=set_value(value=16),
+                        expr=None,
+                        lineno=None,
+                    ),
+                ],
+                decorator_list=[],
+                arguments_args=None,
+                identifier_name=None,
+                stmt=None,
+                lineno=None,
+            ),
+        ],
+        decorator_list=[],
+        expr=None,
+        identifier_name=None,
     )
+    expected_output = "PREPENDED\n{}".format(to_code(expected_class_ast))
+
     with open(input_filename, "wt") as f:
         f.write(input_str)
     return input_filename, input_str, expected_output
@@ -71,7 +151,23 @@ class TestGen(TestCase):
             temp_module_dir
         )
         with open(os.path.join(temp_module_dir, "__init__.py"), "w") as f:
-            f.write("from .input import *\n")
+            f.write(
+                to_code(
+                    ImportFrom(
+                        module="input",
+                        names=[
+                            alias(
+                                name="*",
+                                asname=None,
+                                identifier=None,
+                                identifier_name=None,
+                            )
+                        ],
+                        level=1,
+                        identifier=None,
+                    )
+                )
+            )
 
         sys.path.append(cls.tempdir)
 
@@ -115,7 +211,24 @@ class TestGen(TestCase):
         with open(output_filename, "rt") as f:
             self.assertEqual(
                 f.read(),
-                self.expected_output.replace("PREPENDED", "from .input import *"),
+                self.expected_output.replace(
+                    "PREPENDED\n",
+                    to_code(
+                        ImportFrom(
+                            module="input",
+                            names=[
+                                alias(
+                                    name="*",
+                                    asname=None,
+                                    identifier=None,
+                                    identifier_name=None,
+                                )
+                            ],
+                            level=1,
+                            identifier=None,
+                        )
+                    ),
+                ),
             )
 
 
