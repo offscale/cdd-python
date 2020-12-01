@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch
 
-from doctrans.tests.utils_for_tests import unittest_main, run_cli_test
+from doctrans.tests.utils_for_tests import unittest_main, run_cli_test, mock_function
 
 
 class TestCliSyncProperties(TestCase):
@@ -85,16 +85,7 @@ class TestCliSyncProperties(TestCase):
             open(input_filename, "wt").close()
             open(output_filename, "wt").close()
 
-            def _sync_properties(*args, **kwargs):
-                """
-                Mock `_sync_properties` function to check if it is called
-
-                :return: True
-                :rtype: ```Literal[True]```
-                """
-                return True
-
-            with patch("doctrans.__main__.sync_properties", _sync_properties):
+            with patch("doctrans.__main__.sync_properties", mock_function):
                 self.assertTrue(
                     run_cli_test(
                         self,

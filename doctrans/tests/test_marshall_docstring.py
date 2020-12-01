@@ -5,10 +5,9 @@ Tests for docstring parsing
 from copy import deepcopy
 from unittest import TestCase
 
-from docstring_parser import rest
-
 import doctrans.emit
 import doctrans.emitter_utils
+from docstring_parser import rest
 from doctrans import parse
 from doctrans.docstring_parsers import parse_docstring
 from doctrans.emitter_utils import to_docstring

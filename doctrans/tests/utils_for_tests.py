@@ -12,10 +12,9 @@ from tempfile import NamedTemporaryFile
 from unittest import main
 from unittest.mock import MagicMock, patch
 
-from meta.asttools import cmp_ast
-
 import doctrans.source_transformer
 from doctrans.pure_utils import PY3_8
+from meta.asttools import cmp_ast
 
 
 def run_ast_test(test_case_instance, gen_ast, gold, run_cmp_ast=True):
@@ -69,6 +68,7 @@ def run_cli_test(
     output_checker=lambda output: (lambda q: output[output.find(q) + len(q) :])(
         "error: "
     ),
+    exception=SystemExit,
     return_args=False,
 ):
     """
@@ -89,6 +89,9 @@ def run_cli_test(
     :param output_checker: Function to check the input_str with
     :type output_checker: ```Callable[[str], bool]```
 
+    :param exception: The exception that is expected to be raised
+    :type exception: ```Union[BaseException, Exception]```
+
     :param return_args: Primarily use is for tests. Returns the args rather than executing anything.
     :type return_args: ```bool```
 
@@ -105,11 +108,15 @@ def run_cli_test(
         if exit_code is None:
             args = main_f()
         else:
-            with test_case_instance.assertRaises(SystemExit) as e:
+            with test_case_instance.assertRaises(exception) as e:
                 args = main_f()
     if exit_code is not None:
-        test_case_instance.assertEqual(e.exception.code, SystemExit(exit_code).code)
-    if argparse_mock.call_args is None:
+        test_case_instance.assertEqual(
+            *(e.exception.code, exception(exit_code).code)
+            if exception is SystemExit
+            else (str(e.exception), output)
+        )
+    elif argparse_mock.call_args is None:
         test_case_instance.assertIsNone(output)
     else:
         test_case_instance.assertEqual(
@@ -187,4 +194,20 @@ def inspectable_compile(s):
     return module
 
 
-__all__ = ["inspectable_compile", "run_ast_test", "run_cli_test", "unittest_main"]
+def mock_function(*args, **kwargs):
+    """
+    Mock function to check if it is called
+
+    :return: True
+    :rtype: ```Literal[True]```
+    """
+    return True
+
+
+__all__ = [
+    "inspectable_compile",
+    "run_ast_test",
+    "run_cli_test",
+    "unittest_main",
+    "mock_function",
+]

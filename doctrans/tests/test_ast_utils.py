@@ -15,11 +15,11 @@ from ast import (
     Load,
     Store,
     Assign,
+    ImportFrom,
+    Import,
 )
 from os import path
 from unittest import TestCase
-
-from meta.asttools import cmp_ast
 
 from doctrans.ast_utils import (
     find_ast_type,
@@ -32,7 +32,7 @@ from doctrans.ast_utils import (
     emit_arg,
     param2ast,
     set_value,
-    get_imports,
+    get_at_root,
 )
 from doctrans.pure_utils import PY_GTE_3_9, PY3_8, PY_GTE_3_8
 from doctrans.source_transformer import ast_parse
@@ -43,6 +43,7 @@ from doctrans.tests.mocks.methods import (
     class_with_method_and_body_types_str,
 )
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
+from meta.asttools import cmp_ast
 
 
 class TestAstUtils(TestCase):
@@ -269,10 +270,10 @@ class TestAstUtils(TestCase):
             run_cmp_ast=PY_GTE_3_9,
         )
 
-    def test_get_imports(self) -> None:
-        """ Tests that `get_imports` successfully gets the imports """
+    def test_get_at_root(self) -> None:
+        """ Tests that `get_at_root` successfully gets the imports """
         with open(path.join(path.dirname(__file__), "mocks", "eval.py")) as f:
-            imports = get_imports(ast.parse(f.read()))
+            imports = get_at_root(ast.parse(f.read()), (Import, ImportFrom))
         self.assertIsInstance(imports, list)
         self.assertEqual(len(imports), 1)
         self.assertTrue(

@@ -26,6 +26,10 @@ from ast import (
     arg,
     Index,
     Num,
+    AST,
+    iter_child_nodes,
+    alias,
+    NodeTransformer,
 )
 from copy import deepcopy
 from functools import partial
@@ -125,7 +129,7 @@ def param2ast(param):
 
 def find_ast_type(node, node_name=None, of_type=ClassDef):
     """
-    Converts an AST to an `ast.ClassDef`
+    Finds first AST node of the given type and possibly name
 
     :param node: Any AST node
     :type node: ```AST```
@@ -155,7 +159,7 @@ def find_ast_type(node, node_name=None, of_type=ClassDef):
             return matching_nodes[0]
         else:
             raise TypeError("No {!r} in AST".format(type(of_type).__name__))
-    elif isinstance(node, ast.AST):
+    elif isinstance(node, AST):
         assert node_name is None or not hasattr(node, "name") or node.name == node_name
         return node
     else:
@@ -373,18 +377,21 @@ def get_value(node):
         return node
 
 
-def get_imports(node):
+def get_at_root(node, types):
     """
     Get the imports from a node
 
     :param node: AST node with .body, probably an `ast.Module`
     :type node: ```AST```
 
+    :param types: The types to search for (uses in an `isinstance` check)
+    :type types: ```Tuple[str,...]````
+
     :return: List of imports. Doesn't handle those within a try/except, condition, or not in root scope
     :rtype: ```List[Union[]]```
     """
     assert hasattr(node, "body") and isinstance(node.body, (list, tuple))
-    return list(filter(rpartial(isinstance, (ast.Import, ast.ImportFrom)), node.body))
+    return list(filter(rpartial(isinstance, types), node.body))
 
 
 def set_value(value, kind=None):
@@ -529,10 +536,10 @@ def annotate_ancestry(node):
     """
     node._location = [node.name] if hasattr(node, "name") else []
     parent_location = []
-    for _node in ast.walk(node):
+    for _node in walk(node):
         name = [_node.name] if hasattr(_node, "name") else []
-        for child_node in ast.iter_child_nodes(_node):
-            if hasattr(child_node, "name") and not isinstance(child_node, ast.alias):
+        for child_node in iter_child_nodes(_node):
+            if hasattr(child_node, "name") and not isinstance(child_node, alias):
                 child_node._location = name + [child_node.name]
                 parent_location = child_node._location
             elif isinstance(child_node, (Constant, Str)):
@@ -586,7 +593,7 @@ def annotate_ancestry(node):
                 )
 
 
-class RewriteAtQuery(ast.NodeTransformer):
+class RewriteAtQuery(NodeTransformer):
     """
     Replace the node at query with given node
 
@@ -601,7 +608,7 @@ class RewriteAtQuery(ast.NodeTransformer):
         :type search: ```List[str]```
 
         :param replacement_node: Node to replace this search
-        :type replacement_node: ```ast.AST```
+        :type replacement_node: ```AST```
         """
         self.search = search
         self.replacement_node = replacement_node
@@ -625,7 +632,7 @@ class RewriteAtQuery(ast.NodeTransformer):
             self.replaced = True
             return self.replacement_node
         else:
-            return ast.NodeTransformer.generic_visit(self, node)
+            return NodeTransformer.generic_visit(self, node)
 
     def visit_FunctionDef(self, node):
         """
@@ -668,7 +675,7 @@ class RewriteAtQuery(ast.NodeTransformer):
                         ),
                         None,
                     )
-                    self.replacement_node = ast.arg(
+                    self.replacement_node = arg(
                         arg=self.replacement_node.targets[0].id,
                         annotation=self.replacement_node.value,
                         expr=None,
@@ -682,7 +689,7 @@ class RewriteAtQuery(ast.NodeTransformer):
 
                 self.replacement_node = emit_arg(self.replacement_node)
             assert isinstance(
-                self.replacement_node, ast.arg
+                self.replacement_node, arg
             ), "Expected ast.arg got {!r}".format(type(self.replacement_node).__name__)
 
             for arg_attr in "args", "kwonlyargs":
@@ -739,7 +746,7 @@ def emit_arg(node):
     :return: Something which parses to the form of `a=5`
     :rtype: ```arg```
     """
-    if isinstance(node, ast.arg):
+    if isinstance(node, arg):
         return node
     elif isinstance(node, AnnAssign) and isinstance(node.target, Name):
         return arg(
@@ -799,7 +806,7 @@ __all__ = [
     "find_ast_type",
     "find_in_ast",
     "get_function_type",
-    "get_imports",
+    "get_at_root",
     "get_value",
     "is_argparse_add_argument",
     "is_argparse_description",

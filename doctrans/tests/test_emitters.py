@@ -8,8 +8,6 @@ from copy import deepcopy
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-from meta.asttools import cmp_ast
-
 from doctrans import emit, parse
 from doctrans.ast_utils import (
     get_function_type,
@@ -36,6 +34,7 @@ from doctrans.tests.mocks.methods import (
     function_google_tf_squared_hinge_str,
 )
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
+from meta.asttools import cmp_ast
 
 
 class TestEmitters(TestCase):
