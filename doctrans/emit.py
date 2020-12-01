@@ -22,7 +22,6 @@ from itertools import chain
 from operator import itemgetter
 
 from black import format_str, Mode
-
 from doctrans.ast_utils import param2argparse_param, param2ast, set_value, get_value
 from doctrans.defaults_utils import set_default_doc
 from doctrans.emitter_utils import get_internal_body, to_docstring

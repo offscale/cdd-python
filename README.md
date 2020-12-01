@@ -208,16 +208,18 @@ def set_cli_args(argument_parser):
 
     $ python -m doctrans --help
 
-    usage: python -m doctrans [-h] [--version] {sync_properties,sync} ...
+    usage: python -m doctrans [-h] [--version] {sync_properties,sync,gen} ...
     
     Translate between docstrings, classes, methods, and argparse.
     
     positional arguments:
-      {sync_properties,sync}
+      {sync_properties,sync,gen}
         sync_properties     Synchronise one or more properties between input and
-                            output Python files
-        sync                Force classes, methods, and/or argparse to be
+                            input_str Python files
+        sync                Force argparse, classes, and/or methods to be
                             equivalent
+        gen                 Generate classes, functions, and/or argparse functions
+                            from the input mapping
     
     optional arguments:
       -h, --help            show this help message and exit
@@ -227,27 +229,26 @@ def set_cli_args(argument_parser):
 
     $ python -m doctrans sync --help
 
-    usage: python -m doctrans sync [-h] [--class CLASSES]
-                                   [--class-name CLASS_NAMES]
-                                   [--function FUNCTIONS]
-                                   [--function-name FUNCTION_NAMES]
-                                   [--argparse-function ARGPARSE_FUNCTIONS]
+    usage: python -m doctrans sync [-h] [--argparse-function ARGPARSE_FUNCTIONS]
                                    [--argparse-function-name ARGPARSE_FUNCTION_NAMES]
-                                   --truth {argparse_function,class,function}
+                                   [--class CLASSES] [--class-name CLASS_NAMES]
+                                   [--function FUNCTIONS]
+                                   [--function-name FUNCTION_NAMES] --truth
+                                   {argparse_function,class,function}
     
     optional arguments:
       -h, --help            show this help message and exit
+      --argparse-function ARGPARSE_FUNCTIONS
+                            File where argparse function is `def`ined.
+      --argparse-function-name ARGPARSE_FUNCTION_NAMES
+                            Name of argparse function.
       --class CLASSES       File where class `class` is declared.
       --class-name CLASS_NAMES
                             Name of `class`
       --function FUNCTIONS  File where function is `def`ined.
       --function-name FUNCTION_NAMES
                             Name of Function. If method, use Python resolution
-                            syntax, i.e., ClassName.method_name
-      --argparse-function ARGPARSE_FUNCTIONS
-                            File where argparse function is `def`ined.
-      --argparse-function-name ARGPARSE_FUNCTION_NAMES
-                            Name of argparse function.
+                            syntax, i.e., ClassName.function_name
       --truth {argparse_function,class,function}
                             Single source of truth. Others will be generated from
                             this. Will run with first found choice.
@@ -281,6 +282,32 @@ def set_cli_args(argument_parser):
       --output-param-wrap OUTPUT_PARAM_WRAP
                             Wrap all input_str params with this. E.g.,
                             `Optional[Union[{output_param}, str]]`
+
+### `gen`
+
+    $ python -m doctrans gen --help
+
+    usage: python -m doctrans gen [-h] --name-tpl NAME_TPL --input-mapping
+                                  INPUT_MAPPING [--prepend PREPEND]
+                                  [--imports-from-file IMPORTS_FROM_FILE] --type
+                                  {argparse,class,function} --output-filename
+                                  OUTPUT_FILENAME
+    
+    optional arguments:
+      -h, --help            show this help message and exit
+      --name-tpl NAME_TPL   Template for the name, e.g., `{name}Config`.
+      --input-mapping INPUT_MAPPING
+                            Import location of dictionary/mapping/2-tuple
+                            collection.
+      --prepend PREPEND     Prepend file with this. Use '\n' for newlines.
+      --imports-from-file IMPORTS_FROM_FILE
+                            Extract imports from file and append to `output_file`.
+                            If module or other symbol path given, resolve file
+                            then use it.
+      --type {argparse,class,function}
+                            What type to generate.
+      --output-filename OUTPUT_FILENAME, -o OUTPUT_FILENAME
+                            Output file to write to.
 
 ## Future work
 

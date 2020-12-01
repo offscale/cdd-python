@@ -8,6 +8,7 @@ from os import path
 
 from doctrans import __version__
 from doctrans.conformance import ground_truth
+from doctrans.gen import gen
 from doctrans.pure_utils import pluralise
 from doctrans.sync_properties import sync_properties
 
@@ -140,6 +141,41 @@ def _build_parser():
         required=True,
     )
 
+    #######
+    # Gen #
+    #######
+    gen_parser = subparsers.add_parser(
+        "gen",
+        help="Generate classes, functions, and/or argparse functions from the input mapping",
+    )
+
+    gen_parser.add_argument(
+        "--name-tpl", help="Template for the name, e.g., `{name}Config`.", required=True
+    )
+    gen_parser.add_argument(
+        "--input-mapping",
+        help="Import location of dictionary/mapping/2-tuple collection.",
+        required=True,
+    )
+    gen_parser.add_argument(
+        "--prepend", help="Prepend file with this. Use '\\n' for newlines."
+    )
+    gen_parser.add_argument(
+        "--imports-from-file",
+        help="Extract imports from file and append to `output_file`. "
+        "If module or other symbol path given, resolve file then use it.",
+    )
+    gen_parser.add_argument(
+        "--type",
+        help="What type to generate.",
+        choices=("argparse", "class", "function"),
+        required=True,
+        dest="type_",
+    )
+    gen_parser.add_argument(
+        "--output-filename", "-o", help="Output file to write to.", required=True
+    )
+
     return parser
 
 
@@ -159,12 +195,12 @@ def main(cli_argv=None, return_args=False):
     _parser = _build_parser()
     args = _parser.parse_args(args=cli_argv)
     command = args.command
+    args_dict = {k: v for k, v in vars(args).items() if k != "command"}
     if command == "sync":
         args = Namespace(
             **{
                 k: v if k == "truth" or isinstance(v, list) or v is None else [v]
-                for k, v in vars(args).items()
-                if k != "command"
+                for k, v in args_dict.items()
             }
         )
 
@@ -203,7 +239,13 @@ def main(cli_argv=None, return_args=False):
                     args.output_filename
                 )
             )
-        sync_properties(**{k: v for k, v in vars(args).items() if k != "command"})
+        sync_properties(**args_dict)
+    elif command == "gen":
+        if path.isfile(args.output_filename):
+            raise IOError(
+                "File exists and this is a destructive operation. Delete/move file then rerun."
+            )
+        gen(**args_dict)
 
 
 if __name__ == "__main__":

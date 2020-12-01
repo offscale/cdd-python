@@ -28,7 +28,6 @@ from docstring_parser import (
     DocstringMeta,
     Docstring,
 )
-
 from doctrans import get_logger
 from doctrans.ast_utils import (
     find_ast_type,
@@ -196,7 +195,8 @@ def _inspect_process_ir_param(param, sig):
     :rtype: ```dict```
     """
     param["name"] = param["name"].lstrip("*")
-    # if param["name"] not in sig.parameters: return param
+    if param["name"] not in sig.parameters:
+        return param
     sig_param = sig.parameters[param["name"]]
     if sig_param.annotation is not _empty:
         param["typ"] = lstrip_typings("{!s}".format(sig_param.annotation))

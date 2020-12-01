@@ -15,7 +15,6 @@ from operator import contains, attrgetter
 from typing import Tuple, List, Dict
 
 from docstring_parser import Style
-
 from doctrans.emitter_utils import interpolate_defaults
 from doctrans.pure_utils import location_within, count_iter_items
 
