@@ -4,9 +4,11 @@ Pure utils for pure functions. For the same input will always produce the same i
 import typing
 from collections import deque
 from functools import partial
+from importlib import import_module
+from inspect import getmodule
 from itertools import chain, zip_longest, count
 from keyword import iskeyword
-from operator import eq
+from operator import eq, attrgetter
 from pprint import PrettyPrinter
 from sys import version_info
 
@@ -381,6 +383,44 @@ def count_iter_items(iterable):
     return next(counter)
 
 
+def get_module(name, package=None, extra_symbols=None):
+    """
+    Import a module.
+
+    The 'package' argument is required when performing a relative import. It
+    specifies the package to use as the anchor point from which to resolve the
+    relative import to an absolute import.
+
+    Wraps `importlib.import_module` to return the module if it's available in interpreter on ModuleNotFoundError error
+
+    :param name: Module name
+    :type name: ```str```
+
+    :param package: Package name
+    :type package: ```Optional[str]```
+
+    :param extra_symbols: Dictionary of extra symbols to use if `importlib.import_module` fails
+    :type extra_symbols: ```Optional[dict]```
+
+    :return: Module
+    :rtype: ```Module```
+    """
+    try:
+        return import_module(name, package)
+    except ModuleNotFoundError:
+        if name in globals():
+            return globals()[name]
+        else:
+            pkg, _, rest_path = name.partition(".")
+            if pkg in extra_symbols:
+                return getmodule(
+                    (attrgetter(rest_path) if rest_path else identity)(
+                        extra_symbols[pkg]
+                    )
+                )
+            raise
+
+
 __all__ = [
     "BUILTIN_TYPES",
     "PY3_8",
@@ -390,6 +430,7 @@ __all__ = [
     "blockwise",
     "count_iter_items",
     "diff",
+    "get_module",
     "identity",
     "location_within",
     "lstrip_namespace",

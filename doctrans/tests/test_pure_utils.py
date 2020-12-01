@@ -1,4 +1,5 @@
 """ Tests for pure utils """
+import unittest
 from functools import partial
 from itertools import zip_longest
 from unittest import TestCase
@@ -18,6 +19,7 @@ from doctrans.pure_utils import (
     location_within,
     blockwise,
     diff,
+    get_module,
 )
 from doctrans.tests.utils_for_tests import unittest_main
 
@@ -139,6 +141,22 @@ class TestPureUtils(TestCase):
         self.assertTupleEqual(lstrip_l(""), (0, ""))
         self.assertTupleEqual(lstrip_l(" A"), (1, "A"))
         self.assertTupleEqual(diff("AB", op=rpartial(str.lstrip, "A")), (1, "B"))
+
+    def test_get_module(self) -> None:
+        """ Tests that `get_module` works as advertised """
+        self.assertIs(get_module("unittest"), unittest)
+        self.assertEqual(
+            get_module(
+                "test_get_module",
+                extra_symbols={"test_get_module": self.test_get_module},
+            ).__file__,
+            __file__,
+        )
+        self.assertRaises(
+            ModuleNotFoundError,
+            lambda: get_module("FFDSF", extra_symbols={"F": "A"}),
+        )
+        self.assertIs(get_module("get_module"), get_module)
 
 
 unittest_main()
