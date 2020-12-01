@@ -3,13 +3,13 @@ Functionality to generate classes, functions, and/or argparse functions from the
 """
 
 import ast
-from ast import Import, ImportFrom
-from importlib import import_module
-from inspect import getfile
+from ast import Import, ImportFrom, Module, FunctionDef
+from inspect import getfile, isfunction
 from os import path
 
 from doctrans import parse, emit
 from doctrans.ast_utils import get_at_root
+from doctrans.pure_utils import get_module
 from doctrans.source_transformer import to_code
 
 
@@ -44,13 +44,28 @@ def gen(
     :type imports_from_file: ```Optional[str]```
     """
 
+    extra_symbols = {}
     if imports_from_file is None:
         imports = ""
     else:
+        if prepend:
+            prepend_imports = get_at_root(
+                ast.parse(prepend.strip()), (Import, ImportFrom)
+            )
+            eval(
+                compile(
+                    Module(body=prepend_imports, stmt=None, type_ignores=[]),
+                    filename="<string>",
+                    mode="exec",
+                ),
+                extra_symbols,
+            )
+            # This leaks to the global scope
+            globals().update(extra_symbols)
         with open(
             imports_from_file
             if path.isfile(imports_from_file)
-            else getfile(import_module(imports_from_file)),
+            else getfile(get_module(imports_from_file, extra_symbols=extra_symbols)),
             "rt",
         ) as f:
             imports = "".join(
@@ -58,7 +73,9 @@ def gen(
             )
 
     module_path, _, symbol_name = input_mapping.rpartition(".")
-    input_mapping = getattr(import_module(module_path), symbol_name)
+    input_mapping = getattr(
+        get_module(module_path, extra_symbols=extra_symbols), symbol_name
+    )
     input_mapping_it = (
         input_mapping.items() if hasattr(input_mapping, "items") else input_mapping
     )
@@ -68,7 +85,12 @@ def gen(
         "\n\n".join(
             to_code(
                 getattr(emit, type_.replace("class", "class_"))(
-                    parse.class_(
+                    getattr(
+                        parse,
+                        "function"
+                        if isinstance(obj, FunctionDef) or isfunction(obj)
+                        else "class_",
+                    )(
                         obj
                     ),  # TODO: Figure out if it's a class, function, or argparse function
                     emit_call=True,

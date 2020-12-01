@@ -67,6 +67,7 @@ def class_(class_def, class_name=None):
           }
     :rtype: ```dict```
     """
+    assert not isinstance(class_def, FunctionDef)
     is_supported_ast_node = isinstance(class_def, (Module, ClassDef))
     if not is_supported_ast_node and isinstance(object, type):
         ir = _inspect(class_def, class_name)

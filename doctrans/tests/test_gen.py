@@ -15,6 +15,7 @@ from ast import (
     arguments,
     arg,
     Attribute,
+    Import,
 )
 from copy import deepcopy
 from shutil import rmtree
@@ -135,6 +136,38 @@ def populate_files(tempdir, input_str=None):
     return input_filename, input_str, expected_output
 
 
+_import_star_from_input = to_code(
+    ImportFrom(
+        module="input",
+        names=[
+            alias(
+                name="*",
+                asname=None,
+                identifier=None,
+                identifier_name=None,
+            )
+        ],
+        level=1,
+        identifier=None,
+    )
+)
+
+_import_gen_test_module = "{}\n".format(
+    to_code(
+        Import(
+            names=[
+                alias(
+                    name="gen_test_module",
+                    asname=None,
+                    identifier=None,
+                    identifier_name=None,
+                )
+            ]
+        )
+    )
+)
+
+
 class TestGen(TestCase):
     """ Test class for gen.py """
 
@@ -151,23 +184,7 @@ class TestGen(TestCase):
             temp_module_dir
         )
         with open(os.path.join(temp_module_dir, "__init__.py"), "w") as f:
-            f.write(
-                to_code(
-                    ImportFrom(
-                        module="input",
-                        names=[
-                            alias(
-                                name="*",
-                                asname=None,
-                                identifier=None,
-                                identifier_name=None,
-                            )
-                        ],
-                        level=1,
-                        identifier=None,
-                    )
-                )
-            )
+            f.write(_import_star_from_input)
 
         sys.path.append(cls.tempdir)
 
@@ -213,22 +230,33 @@ class TestGen(TestCase):
                 f.read(),
                 self.expected_output.replace(
                     "PREPENDED\n",
-                    to_code(
-                        ImportFrom(
-                            module="input",
-                            names=[
-                                alias(
-                                    name="*",
-                                    asname=None,
-                                    identifier=None,
-                                    identifier_name=None,
-                                )
-                            ],
-                            level=1,
-                            identifier=None,
-                        )
-                    ),
+                    _import_star_from_input,
                 ),
+            )
+
+    def test_gen_with_imports_from_file_and_prepended_import(self) -> None:
+        """ Tests `gen` with `imports_from_file` and `prepend` """
+
+        output_filename = os.path.join(
+            self.tempdir,
+            "test_gen_with_imports_from_file_and_prepended_import_output.py",
+        )
+        self.assertIsNone(
+            gen(
+                name_tpl="{name}Config",
+                input_mapping="gen_test_module.input_map",
+                imports_from_file="gen_test_module",
+                type_="class",
+                prepend=_import_gen_test_module,
+                output_filename=output_filename,
+            )
+        )
+        with open(output_filename, "rt") as f:
+            self.assertEqual(
+                self.expected_output.replace(
+                    "PREPENDED\n", _import_gen_test_module + _import_star_from_input
+                ),
+                f.read(),
             )
 
 
