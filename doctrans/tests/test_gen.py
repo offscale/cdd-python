@@ -1,4 +1,4 @@
-""" Tests for sync_properties """
+""" Tests for gen """
 
 import os
 import sys
