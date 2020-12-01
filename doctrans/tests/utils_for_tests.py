@@ -116,6 +116,8 @@ def run_cli_test(
             if exception is SystemExit
             else (str(e.exception), output)
         )
+    if exception is not SystemExit:
+        pass
     elif argparse_mock.call_args is None:
         test_case_instance.assertIsNone(output)
     else:
