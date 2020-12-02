@@ -79,11 +79,13 @@ def gen(
     input_mapping_it = (
         input_mapping.items() if hasattr(input_mapping, "items") else input_mapping
     )
+
     content = "{}{}{}".format(
         "" if prepend is None else prepend,
         imports,  # TODO: Optimize imports programatically (rather than just with IDE)
         "\n\n".join(
-            to_code(
+            print("Generating: {!r}".format(name))
+            or to_code(
                 getattr(emit, type_.replace("class", "class_"))(
                     getattr(
                         parse,

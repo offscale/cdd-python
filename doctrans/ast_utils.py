@@ -93,10 +93,12 @@ def param2ast(param):
         annotation = ast.parse(param["typ"]).body[0].value
 
         if "default" in param:
-            default_value = param["default"]
             parsed_default = (
-                set_value(value=default_value)
-                if isinstance(param["default"], (float, int, str))
+                set_value(value=param["default"])
+                if (
+                    param["default"] is None
+                    or isinstance(param["default"], (float, int, str))
+                )
                 and not isinstance(param["default"], str)
                 and not (
                     isinstance(param["default"], str)

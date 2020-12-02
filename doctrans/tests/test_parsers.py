@@ -20,6 +20,7 @@ from doctrans.tests.mocks.methods import (
     method_complex_args_variety_str,
     function_adder_str,
     function_adder_ir,
+    docstring_google_tf_adadelta_function_str,
 )
 from doctrans.tests.utils_for_tests import unittest_main, inspectable_compile
 
@@ -263,6 +264,121 @@ class TestParsers(TestCase):
                 "doc": "A is one boring class",
                 "name": "TestParsers.test_from_class_in_memory.<locals>.A",
                 "params": [],
+                "returns": None,
+            },
+        )
+
+    def test_from_adadelta_class_in_memory(self) -> None:
+        """
+        Tests that parse.class produces properly from a `class` in memory of current interpreter
+        """
+        Adadelta = getattr(
+            inspectable_compile(
+                "{!s}".format(docstring_google_tf_adadelta_function_str)
+            ),
+            "Adadelta",
+        )
+        ir = parse.class_(Adadelta)
+        del ir["_internal"]
+        # self.assertDictEqual(ir, docstring_google_tf_adadelta_ir)
+        self.assertDictEqual(
+            ir,
+            {
+                "doc": "Optimizer that implements the Adadelta algorithm.\n"
+                "\n"
+                "Adadelta optimization is a stochastic gradient descent method that "
+                "is based on\n"
+                "adaptive learning rate per dimension to address two drawbacks:\n"
+                "\n"
+                "- The continual decay of learning rates throughout training\n"
+                "- The need for a manually selected global learning rate\n"
+                "\n"
+                "Adadelta is a more robust extension of Adagrad that adapts "
+                "learning rates\n"
+                "based on a moving window of gradient updates, instead of "
+                "accumulating all\n"
+                "past gradients. This way, Adadelta continues learning even when "
+                "many updates\n"
+                "have been done. Compared to Adagrad, in the original version of "
+                "Adadelta you\n"
+                "don't have to set an initial learning rate. In this version, "
+                "initial\n"
+                "learning rate can be set, as in most other Keras optimizers.\n"
+                "\n"
+                'According to section 4.3 ("Effective Learning rates"), near the '
+                "end of\n"
+                "training step sizes converge to 1 which is effectively a high "
+                "learning\n"
+                "rate which would cause divergence. This occurs only near the end "
+                "of the\n"
+                "training as gradients and step sizes are small, and the epsilon "
+                "constant\n"
+                "in the numerator and denominator dominate past gradients and "
+                "parameter\n"
+                "updates which converge the learning rate to 1.\n"
+                "\n"
+                'According to section 4.4("Speech Data"),where a large neural '
+                "network with\n"
+                "4 hidden layers was trained on a corpus of US English data, "
+                "ADADELTA was\n"
+                "used with 100 network replicas.The epsilon used is 1e-6 with "
+                "rho=0.95\n"
+                "which converged faster than ADAGRAD, by the following "
+                "construction:\n"
+                "def __init__(self, lr=1.0, rho=0.95, epsilon=1e-6, decay=0., "
+                "**kwargs):\n"
+                "\n"
+                "\n"
+                "Reference:\n"
+                "    - [Zeiler, 2012](http://arxiv.org/abs/1212.5701)",
+                "name": "Adadelta",
+                "params": [
+                    {
+                        "default": 0.001,
+                        "doc": "A `Tensor`, floating point value, or a schedule "
+                        "that is a\n"
+                        "  "
+                        "`tf.keras.optimizers.schedules.LearningRateSchedule`. "
+                        "The learning rate.\n"
+                        "  To match the exact form in the original paper "
+                        "use 1.0.",
+                        "name": "learning_rate",
+                        "typ": "float",
+                    },
+                    {
+                        "default": 0.95,
+                        "doc": "A `Tensor` or a floating point value. The decay "
+                        "rate.",
+                        "name": "rho",
+                        "typ": "float",
+                    },
+                    {
+                        "default": 1e-07,
+                        "doc": "A `Tensor` or a floating point value.  A "
+                        "constant epsilon used\n"
+                        "         to better conditioning the grad update.",
+                        "name": "epsilon",
+                        "typ": "float",
+                    },
+                    {
+                        "default": '"Adadelta"',
+                        "doc": "Optional name prefix for the operations created "
+                        "when applying\n"
+                        "  gradients. ",
+                        "name": "name",
+                        "typ": "str",
+                    },
+                    {
+                        "doc": "Keyword arguments. Allowed to be one of\n"
+                        '  `"clipnorm"` or `"clipvalue"`.\n'
+                        '  `"clipnorm"` (float) clips gradients by norm; '
+                        '`"clipvalue"` (float) clips\n'
+                        "  gradients by value.",
+                        "name": "kwargs",
+                        "typ": "dict",
+                    },
+                    {"default": True, "name": "_HAS_AGGREGATE_GRAD"},
+                ],
                 "returns": None,
             },
         )

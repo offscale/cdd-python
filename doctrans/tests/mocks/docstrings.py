@@ -335,6 +335,146 @@ docstring_google_tf_adam_ir = {
     "type": "static",
 }
 
+# https://github.com/tensorflow/tensorflow/blob/7ad2723/tensorflow/python/keras/optimizer_v2/adadelta.py#L33-L77
+docstring_google_tf_adadelta_str = """Optimizer that implements the Adadelta algorithm.
+
+Adadelta optimization is a stochastic gradient descent method that is based on
+adaptive learning rate per dimension to address two drawbacks:
+
+- The continual decay of learning rates throughout training
+- The need for a manually selected global learning rate
+
+Adadelta is a more robust extension of Adagrad that adapts learning rates
+based on a moving window of gradient updates, instead of accumulating all
+past gradients. This way, Adadelta continues learning even when many updates
+have been done. Compared to Adagrad, in the original version of Adadelta you
+don't have to set an initial learning rate. In this version, initial
+learning rate can be set, as in most other Keras optimizers.
+
+According to section 4.3 ("Effective Learning rates"), near the end of
+training step sizes converge to 1 which is effectively a high learning
+rate which would cause divergence. This occurs only near the end of the
+training as gradients and step sizes are small, and the epsilon constant
+in the numerator and denominator dominate past gradients and parameter
+updates which converge the learning rate to 1.
+
+According to section 4.4("Speech Data"),where a large neural network with
+4 hidden layers was trained on a corpus of US English data, ADADELTA was
+used with 100 network replicas.The epsilon used is 1e-6 with rho=0.95
+which converged faster than ADAGRAD, by the following construction:
+def __init__(self, lr=1.0, rho=0.95, epsilon=1e-6, decay=0., **kwargs):
+
+Args:
+learning_rate: A `Tensor`, floating point value, or a schedule that is a
+  `tf.keras.optimizers.schedules.LearningRateSchedule`. The learning rate.
+  To match the exact form in the original paper use 1.0.
+rho: A `Tensor` or a floating point value. The decay rate.
+epsilon: A `Tensor` or a floating point value.  A constant epsilon used
+         to better conditioning the grad update.
+name: Optional name prefix for the operations created when applying
+  gradients.  Defaults to `"Adadelta"`.
+**kwargs: Keyword arguments. Allowed to be one of
+  `"clipnorm"` or `"clipvalue"`.
+  `"clipnorm"` (float) clips gradients by norm; `"clipvalue"` (float) clips
+  gradients by value.
+
+Reference:
+- [Zeiler, 2012](http://arxiv.org/abs/1212.5701)
+"""
+
+docstring_google_tf_adadelta_ir = {
+    "doc": "Optimizer that implements the Adadelta algorithm.\n"
+    "\n"
+    "Adadelta optimization is a stochastic gradient descent method that "
+    "is based on\n"
+    "adaptive learning rate per dimension to address two drawbacks:\n"
+    "\n"
+    "- The continual decay of learning rates throughout training\n"
+    "- The need for a manually selected global learning rate\n"
+    "\n"
+    "Adadelta is a more robust extension of Adagrad that adapts "
+    "learning rates\n"
+    "based on a moving window of gradient updates, instead of "
+    "accumulating all\n"
+    "past gradients. This way, Adadelta continues learning even when "
+    "many updates\n"
+    "have been done. Compared to Adagrad, in the original version of "
+    "Adadelta you\n"
+    "don't have to set an initial learning rate. In this version, "
+    "initial\n"
+    "learning rate can be set, as in most other Keras optimizers.\n"
+    "\n"
+    'According to section 4.3 ("Effective Learning rates"), near the '
+    "end of\n"
+    "training step sizes converge to 1 which is effectively a high "
+    "learning\n"
+    "rate which would cause divergence. This occurs only near the end "
+    "of the\n"
+    "training as gradients and step sizes are small, and the epsilon "
+    "constant\n"
+    "in the numerator and denominator dominate past gradients and "
+    "parameter\n"
+    "updates which converge the learning rate to 1.\n"
+    "\n"
+    'According to section 4.4("Speech Data"),where a large neural '
+    "network with\n"
+    "4 hidden layers was trained on a corpus of US English data, "
+    "ADADELTA was\n"
+    "used with 100 network replicas.The epsilon used is 1e-6 with "
+    "rho=0.95\n"
+    "which converged faster than ADAGRAD, by the following "
+    "construction:\n"
+    "def __init__(self, lr=1.0, rho=0.95, epsilon=1e-6, decay=0., "
+    "**kwargs):\n"
+    "\n"
+    "\n"
+    "Reference:\n"
+    "    - [Zeiler, 2012](http://arxiv.org/abs/1212.5701)",
+    "name": None,
+    "params": [
+        {
+            "doc": "A `Tensor`, floating point value, or a schedule "
+            "that is a\n"
+            "  "
+            "`tf.keras.optimizers.schedules.LearningRateSchedule`. "
+            "The learning rate.\n"
+            "  To match the exact form in the original paper "
+            "use 1.0.",
+            "name": "learning_rate",
+        },
+        {
+            "doc": "A `Tensor` or a floating point value. The decay " "rate.",
+            "name": "rho",
+        },
+        {
+            "doc": "A `Tensor` or a floating point value.  A "
+            "constant epsilon used\n"
+            "         to better conditioning the grad update.",
+            "name": "epsilon",
+        },
+        {
+            "default": '"Adadelta"',
+            "doc": "Optional name prefix for the operations created "
+            "when applying\n"
+            '  gradients.  Defaults to `"Adadelta"`.',
+            "name": "name",
+            "typ": "str",
+        },
+        {
+            "doc": "Keyword arguments. Allowed to be one of\n"
+            '  `"clipnorm"` or `"clipvalue"`.\n'
+            '  `"clipnorm"` (float) clips gradients by norm; '
+            '`"clipvalue"` (float) clips\n'
+            "  gradients by value.",
+            "name": "kwargs",
+            "typ": "dict",
+        },
+    ],
+    "returns": None,
+    "type": "static",
+}
+
+
 docstring_numpydoc_str = """
 Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
 
