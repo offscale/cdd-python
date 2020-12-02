@@ -12,9 +12,10 @@ from tempfile import NamedTemporaryFile
 from unittest import main
 from unittest.mock import MagicMock, patch
 
+from meta.asttools import cmp_ast
+
 import doctrans.source_transformer
 from doctrans.pure_utils import PY3_8
-from meta.asttools import cmp_ast
 
 
 def run_ast_test(test_case_instance, gen_ast, gold, run_cmp_ast=True):
@@ -192,6 +193,7 @@ def inspectable_compile(s):
     code = compile(s, mode="exec", filename=filename)
     exec(code, module.__dict__)
     # inspect.getmodule(...) requires it to be in sys.modules
+    setattr(module, "__file__", s)
     modules[modname] = module
     return module
 

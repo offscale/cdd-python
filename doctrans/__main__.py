@@ -4,6 +4,7 @@
 `__main__` implementation, can be run directly or with `python -m doctrans`
 """
 from argparse import ArgumentParser, Namespace
+from codecs import decode
 from os import path
 
 from doctrans import __version__
@@ -158,7 +159,9 @@ def _build_parser():
         required=True,
     )
     gen_parser.add_argument(
-        "--prepend", help="Prepend file with this. Use '\\n' for newlines."
+        "--prepend",
+        help="Prepend file with this. Use '\\n' for newlines.",
+        type=lambda arg: decode(str(arg), "unicode_escape"),
     )
     gen_parser.add_argument(
         "--imports-from-file",

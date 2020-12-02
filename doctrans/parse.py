@@ -41,7 +41,12 @@ from doctrans.ast_utils import (
 from doctrans.defaults_utils import extract_default
 from doctrans.docstring_parsers import parse_docstring
 from doctrans.emitter_utils import parse_out_param, _parse_return
-from doctrans.pure_utils import rpartial, assert_equal, lstrip_namespace, update_d
+from doctrans.pure_utils import (
+    rpartial,
+    assert_equal,
+    lstrip_namespace,
+    update_d,
+)
 from doctrans.source_transformer import to_code
 
 logger = get_logger("doctrans.parse")
@@ -83,15 +88,35 @@ def class_(class_def, class_name=None):
             "from_type": "cls",
         }
         body_ir = class_(class_def=parsed_body, class_name=class_name)
-        ir["params"] = list(
-            map(
-                lambda idx_param: assert_equal(
-                    idx_param[1]["name"], body_ir["params"][idx_param[0]]["name"]
+
+        if ir["params"] and body_ir["params"]:
+            len_params = len(ir["params"])
+            if len(body_ir["params"]) > len_params:
+                deque(
+                    map(
+                        lambda idx_param: idx_param[0] + 1 > len_params
+                        and print(idx_param)
+                        or assert_equal(
+                            ir["params"][idx_param[0]]["name"], idx_param[1]["name"]
+                        ),
+                        enumerate(body_ir["params"][:len_params]),
+                    ),
+                    maxlen=0,
                 )
-                and update_d(idx_param[1], body_ir["params"][idx_param[0]]),
-                enumerate(ir["params"]),
+                ir["params"] += body_ir["params"][len_params:]
+            else:
+                assert_equal(len(body_ir["params"]), len_params)
+
+            ir["params"] = list(
+                map(
+                    lambda idx_param: assert_equal(
+                        idx_param[1]["name"], body_ir["params"][idx_param[0]]["name"]
+                    )
+                    and update_d(idx_param[1], body_ir["params"][idx_param[0]]),
+                    enumerate(ir["params"]),
+                )
             )
-        )
+        # elif body_ir["params"]: ir["params"] = body_ir["params"]
         return ir
     assert (
         is_supported_ast_node
@@ -119,16 +144,25 @@ def class_(class_def, class_name=None):
             if val is not None:
                 val = get_value(val)
                 for target in e.targets:
-                    intermediate_repr["params"][target.id]["default"] = val
+                    if target.id in intermediate_repr["params"]:
+                        intermediate_repr["params"][target.id]["default"] = val
+                    else:
+                        intermediate_repr["params"][target.id] = {"default": val}
 
-    intermediate_repr["params"] = [
-        dict(name=k, **v) for k, v in intermediate_repr["params"].items()
-    ]
-    intermediate_repr["_internal"] = {
-        "body": list(filterfalse(rpartial(isinstance, AnnAssign), class_def.body)),
-        "from_name": class_def.name,
-        "from_type": "cls",
-    }
+    intermediate_repr.update(
+        {
+            "params": [
+                dict(name=k, **v) for k, v in intermediate_repr["params"].items()
+            ],
+            "_internal": {
+                "body": list(
+                    filterfalse(rpartial(isinstance, AnnAssign), class_def.body)
+                ),
+                "from_name": class_def.name,
+                "from_type": "cls",
+            },
+        }
+    )
 
     return intermediate_repr
 
@@ -229,7 +263,7 @@ def _inspect_process_ir_param(param, sig):
     return param
 
 
-def _inspect_process_sig(k, v):
+def _inspect_process_sig(k_v):
     """
     Postprocess the param
 
@@ -243,16 +277,16 @@ def _inspect_process_sig(k, v):
     :rtype: ```dict```
     """
     # return dict(
-    #     name=k,
+    #     name=k_v[0],
     #     **(
     #         {}
-    #         if v.default is _empty
+    #         if k_v[1].default is _empty
     #         else {
-    #             "default": v.default,
+    #             "default": k_v[1].default,
     #             "typ": lstrip_typings(
-    #                 type(v.default).__name__
-    #                 if v.annotation is _empty
-    #                 else "{!s}".format(v.annotation)
+    #                 type(k_v[1].default).__name__
+    #                 if k_v[1].annotation is _empty
+    #                 else "{!s}".format(k_v[1].annotation)
     #             ),
     #         }
     #     ),
