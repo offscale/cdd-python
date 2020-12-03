@@ -18,9 +18,11 @@ from ast import (
     Import,
 )
 from copy import deepcopy
+from io import StringIO
 from shutil import rmtree
 from tempfile import mkdtemp
 from unittest import TestCase
+from unittest.mock import patch
 
 from doctrans.ast_utils import set_value
 from doctrans.gen import gen
@@ -198,15 +200,18 @@ class TestGen(TestCase):
         """ Tests `gen` """
 
         output_filename = os.path.join(self.tempdir, "test_gen_output.py")
-        self.assertIsNone(
-            gen(
-                name_tpl="{name}Config",
-                input_mapping="gen_test_module.input_map",
-                type_="class",
-                output_filename=output_filename,
-                prepend="PREPENDED\n",
+        with patch("sys.stdout", new_callable=StringIO), patch(
+            "sys.stderr", new_callable=StringIO
+        ):
+            self.assertIsNone(
+                gen(
+                    name_tpl="{name}Config",
+                    input_mapping="gen_test_module.input_map",
+                    type_="class",
+                    output_filename=output_filename,
+                    prepend="PREPENDED\n",
+                )
             )
-        )
         with open(output_filename, "rt") as f:
             self.assertEqual(f.read(), self.expected_output)
 
@@ -216,15 +221,18 @@ class TestGen(TestCase):
         output_filename = os.path.join(
             self.tempdir, "test_gen_with_imports_from_file_output.py"
         )
-        self.assertIsNone(
-            gen(
-                name_tpl="{name}Config",
-                input_mapping="gen_test_module.input_map",
-                imports_from_file="gen_test_module",
-                type_="class",
-                output_filename=output_filename,
+        with patch("sys.stdout", new_callable=StringIO), patch(
+            "sys.stderr", new_callable=StringIO
+        ):
+            self.assertIsNone(
+                gen(
+                    name_tpl="{name}Config",
+                    input_mapping="gen_test_module.input_map",
+                    imports_from_file="gen_test_module",
+                    type_="class",
+                    output_filename=output_filename,
+                )
             )
-        )
         with open(output_filename, "rt") as f:
             self.assertEqual(
                 f.read(),
@@ -241,16 +249,19 @@ class TestGen(TestCase):
             self.tempdir,
             "test_gen_with_imports_from_file_and_prepended_import_output.py",
         )
-        self.assertIsNone(
-            gen(
-                name_tpl="{name}Config",
-                input_mapping="gen_test_module.input_map",
-                imports_from_file="gen_test_module",
-                type_="class",
-                prepend=_import_gen_test_module,
-                output_filename=output_filename,
+        with patch("sys.stdout", new_callable=StringIO), patch(
+            "sys.stderr", new_callable=StringIO
+        ):
+            self.assertIsNone(
+                gen(
+                    name_tpl="{name}Config",
+                    input_mapping="gen_test_module.input_map",
+                    imports_from_file="gen_test_module",
+                    type_="class",
+                    prepend=_import_gen_test_module,
+                    output_filename=output_filename,
+                )
             )
-        )
         with open(output_filename, "rt") as f:
             self.assertEqual(
                 self.expected_output.replace(

@@ -31,8 +31,11 @@ def to_funcs(*paths):
     )
 
 
-if __name__ == "__main__":
-    with open(path.join(package_name, "__init__.py")) as f:
+def main():
+    """ Main function for setup.py; this actually does the installation """
+    with open(
+        path.join(path.abspath(path.dirname(__file__)), package_name, "__init__.py")
+    ) as f:
         __author__, __version__ = map(
             lambda buf: next(map(lambda e: e.value.s, parse(buf).body)),
             filter(
@@ -76,3 +79,12 @@ if __name__ == "__main__":
             (_data_install_dir(), list(map(_data_join, listdir(_data_join()))))
         ],
     )
+
+
+def setup_py_main():
+    """ Calls main if `__name__ == '__main__'` """
+    if __name__ == "__main__":
+        main()
+
+
+setup_py_main()
