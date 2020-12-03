@@ -172,18 +172,21 @@ class ShowSourceLoader(Loader):
         return self.source
 
 
-def inspectable_compile(s):
+def inspectable_compile(s, modname=None):
     """
     Compile and executable the input string, returning what was constructed
 
     :param s: Input source
     :type s: ```str```
 
+    :param modname: Module name, generates a random one if None
+    :type modname: ```Optional[str]```
+
     :return: The compiled and executed input source module, such that `inspect.getsource` works
     :rtype: ```Any```
     """
     filename = NamedTemporaryFile(suffix=".py").name
-    modname = path.splitext(path.basename(filename))[0]
+    modname = modname or path.splitext(path.basename(filename))[0]
     assert modname not in modules
     # our loader is a dummy one which just spits out our source
     loader = ShowSourceLoader(modname, s)
