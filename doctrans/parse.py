@@ -111,7 +111,6 @@ def class_(class_def, class_name=None, merge_inner_function=None):
                 deque(
                     map(
                         lambda idx_param: idx_param[0] + 1 > len_params
-                        and print(idx_param)
                         or assert_equal(
                             ir["params"][idx_param[0]]["name"], idx_param[1]["name"]
                         ),

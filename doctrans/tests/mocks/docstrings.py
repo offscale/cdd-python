@@ -474,6 +474,88 @@ docstring_google_tf_adadelta_ir = {
     "type": "static",
 }
 
+docstring_google_tf_lambda_callback_str = """Callback for creating simple, custom callbacks on-the-fly.
+
+This callback is constructed with anonymous functions that will be called
+at the appropriate time. Note that the callbacks expects positional
+arguments, as:
+
+- `on_epoch_begin` and `on_epoch_end` expect two positional arguments:
+`epoch`, `logs`
+- `on_batch_begin` and `on_batch_end` expect two positional arguments:
+`batch`, `logs`
+- `on_train_begin` and `on_train_end` expect one positional argument:
+`logs`
+
+Args:
+  on_epoch_begin: called at the beginning of every epoch.
+  on_epoch_end: called at the end of every epoch.
+  on_batch_begin: called at the beginning of every batch.
+  on_batch_end: called at the end of every batch.
+  on_train_begin: called at the beginning of model training.
+  on_train_end: called at the end of model training.
+
+Example:
+
+```python
+# Print the batch number at the beginning of every batch.
+batch_print_callback = LambdaCallback(
+  on_batch_begin=lambda batch,logs: print(batch))
+
+# Stream the epoch loss to a file in JSON format. The file content
+# is not well-formed JSON but rather has a JSON object per line.
+import json
+json_log = open('loss_log.json', mode='wt', buffering=1)
+json_logging_callback = LambdaCallback(
+  on_epoch_end=lambda epoch, logs: json_log.write(
+      json.dumps({'epoch': epoch, 'loss': logs['loss']}) + '\n'),
+  on_train_end=lambda logs: json_log.close()
+)
+
+# Terminate some processes after having finished model training.
+processes = ...
+cleanup_callback = LambdaCallback(
+  on_train_end=lambda logs: [
+      p.terminate() for p in processes if p.is_alive()])
+
+model.fit(...,
+        callbacks=[batch_print_callback,
+                   json_logging_callback,
+                   cleanup_callback])
+```
+"""
+
+docstring_google_tf_lambda_callback_ir = {
+    "doc": "Callback for creating simple, custom callbacks on-the-fly.\n"
+    "\n"
+    "This callback is constructed with anonymous functions that will be "
+    "called\n"
+    "at the appropriate time. Note that the callbacks expects "
+    "positional\n"
+    "arguments, as:\n"
+    "\n"
+    "- `on_epoch_begin` and `on_epoch_end` expect two positional "
+    "arguments:\n"
+    "`epoch`, `logs`\n"
+    "- `on_batch_begin` and `on_batch_end` expect two positional "
+    "arguments:\n"
+    "`batch`, `logs`\n"
+    "- `on_train_begin` and `on_train_end` expect one positional "
+    "argument:\n"
+    "`logs`",
+    "name": None,
+    "params": [
+        {"doc": "called at the beginning of every epoch.", "name": "on_epoch_begin"},
+        {"doc": "called at the end of every epoch.", "name": "on_epoch_end"},
+        {"doc": "called at the beginning of every batch.", "name": "on_batch_begin"},
+        {"doc": "called at the end of every batch.", "name": "on_batch_end"},
+        {"doc": "called at the beginning of model training.", "name": "on_train_begin"},
+        {"doc": "called at the end of model training.", "name": "on_train_end"},
+    ],
+    "returns": None,
+    "type": "static",
+}
+
 
 docstring_numpydoc_str = """
 Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
@@ -642,6 +724,14 @@ Some comment
 
 __all__ = [
     "docstring_google_str",
+    "docstring_google_tf_adadelta_ir",
+    "docstring_google_tf_adadelta_str",
+    "docstring_google_tf_adam_ir",
+    "docstring_google_tf_adam_str",
+    "docstring_google_tf_lambda_callback_ir",
+    "docstring_google_tf_lambda_callback_str",
+    "docstring_google_tf_squared_hinge_ir",
+    "docstring_google_tf_squared_hinge_str",
     "docstring_numpydoc_only_doc_str",
     "docstring_numpydoc_only_params_str",
     "docstring_numpydoc_only_returns_str",
@@ -649,7 +739,10 @@ __all__ = [
     "docstring_str",
     "docstring_str_extra_colons",
     "docstring_str_no_default_doc",
+    "docstring_str_only_return_type",
     "intermediate_repr",
+    "intermediate_repr_extra_colons",
     "intermediate_repr_no_default_doc",
     "intermediate_repr_no_default_doc_or_prop",
+    "intermediate_repr_only_return_type",
 ]
