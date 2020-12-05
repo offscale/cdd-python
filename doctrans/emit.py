@@ -19,7 +19,7 @@ from ast import (
 )
 from functools import partial
 from itertools import chain
-from operator import itemgetter
+from operator import itemgetter, contains
 
 from black import format_str, Mode
 
@@ -252,7 +252,12 @@ def class_(
     """
     returns = [intermediate_repr["returns"]] if intermediate_repr.get("returns") else []
 
-    param_names = frozenset(map(itemgetter("name"), intermediate_repr["params"]))
+    param_names = frozenset(
+        map(
+            itemgetter("name"),
+            filter(rpartial(contains, "name"), intermediate_repr["params"]),
+        )
+    )
     if returns:
         intermediate_repr["params"] = intermediate_repr["params"] + returns
         del intermediate_repr["returns"]
@@ -286,8 +291,8 @@ def class_(
                 map(RewriteName().visit, intermediate_repr["_internal"]["body"]),
             )
         )
-        if "_internal" in intermediate_repr
-        else None
+        if param_names and "_internal" in intermediate_repr
+        else intermediate_repr.get("_internal", {}).get("body", [])
     )
 
     return ClassDef(
@@ -332,7 +337,8 @@ def class_(
                         arg=None,
                     ),
                     body=internal_body[1:]
-                    if isinstance(internal_body[0], Expr)
+                    if internal_body
+                    and isinstance(internal_body[0], Expr)
                     and isinstance(get_value(internal_body[0].value), str)
                     else internal_body,
                     decorator_list=[],

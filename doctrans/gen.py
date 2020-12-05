@@ -93,7 +93,10 @@ def gen(
                         if isinstance(obj, FunctionDef) or isfunction(obj)
                         else "class_",
                     )(
-                        obj
+                        obj,
+                        **{}
+                        if isinstance(obj, FunctionDef) or isfunction(obj)
+                        else {"merge_inner_function": "__init__"}
                     ),  # TODO: Figure out if it's a class, function, or argparse function
                     emit_call=True,
                     **{

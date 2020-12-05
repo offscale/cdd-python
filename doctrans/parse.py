@@ -52,7 +52,7 @@ from doctrans.source_transformer import to_code
 logger = get_logger("doctrans.parse")
 
 
-def class_(class_def, class_name=None):
+def class_(class_def, class_name=None, merge_inner_function=None):
     """
     Converts an AST to our IR
 
@@ -61,6 +61,9 @@ def class_(class_def, class_name=None):
 
     :param class_name: Name of `class`. If None, gives first found.
     :type class_name: ```Optional[str]```
+
+    :param merge_inner_function: Name of inner function to merge. If None, merge nothing.
+    :type merge_inner_function: ```Optional[str]```
 
     :return: a dictionary of form
           {
@@ -77,6 +80,15 @@ def class_(class_def, class_name=None):
     if not is_supported_ast_node and isinstance(object, type):
         ir = _inspect(class_def, class_name)
         parsed_body = ast.parse(getsource(class_def).lstrip()).body[0]
+
+        # if merge_inner_function is not None:
+        #     # Should probably write a general IR merge function
+        #     function_def = next(filter(lambda node: isinstance(node, FunctionDef)
+        #                                             and node.name == merge_inner_function,
+        #                                     ast.walk(parsed_body)))
+        #     function_type = "static" if not function_def.args.args else function_def.args.args[0].arg
+        #     inner_ir = function(function_def, function_name=merge_inner_function, function_type=function_type)
+
         ir["_internal"] = {
             "body": list(
                 filterfalse(
@@ -87,7 +99,11 @@ def class_(class_def, class_name=None):
             "from_name": class_name,
             "from_type": "cls",
         }
-        body_ir = class_(class_def=parsed_body, class_name=class_name)
+        body_ir = class_(
+            class_def=parsed_body,
+            class_name=class_name,
+            merge_inner_function=merge_inner_function,
+        )
 
         if ir["params"] and body_ir["params"]:
             len_params = len(ir["params"])
@@ -177,6 +193,9 @@ def _inspect(obj, name):
     :param obj: Something in memory, like a class, function, variable
     :type obj: ```Any```
 
+    :param name: Name of the object being inspected
+    :type name: ```str```
+
     :return: a dictionary of form
           {
                   'name': ...,
@@ -199,9 +218,12 @@ def _inspect(obj, name):
         del ir["type"]
 
     ir["params"] = list(
-        map(partial(_inspect_process_ir_param, sig=sig), ir["params"])
-        if ir.get("params")
-        else map(_inspect_process_sig, sig.parameters.items())
+        filter(
+            None,
+            map(partial(_inspect_process_ir_param, sig=sig), ir["params"])
+            if ir.get("params")
+            else map(_inspect_process_sig, sig.parameters.items()),
+        )
     )
 
     if isfunction(obj):
@@ -352,6 +374,12 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
             intermediate_repr_docstring.replace(":cvar", ":param"),
             infer_type=infer_type,
         )
+    # if (
+    #     function_type != "static"
+    #     and intermediate_repr["params"]
+    #     and intermediate_repr["params"][0]["name"] == function_type
+    # ):
+    #     del intermediate_repr["params"][0]
 
     found_type = get_function_type(function_def)
     intermediate_repr.update(
@@ -370,69 +398,77 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
 
     params_to_append = []
     if hasattr(function_def.args, "kwarg") and function_def.args.kwarg:
-        params_to_append.append(intermediate_repr["params"].pop())
-        params_to_append[-1].update(
-            {
-                "name": function_def.args.kwarg.arg,
-                "typ": "dict",
-            }
+        params_to_append.append(
+            update_d(
+                {
+                    "name": function_def.args.kwarg.arg,
+                    "typ": "dict",
+                },
+                intermediate_repr["params"].pop()
+                if intermediate_repr["params"]
+                else {},
+            )
         )
 
     idx = count()
-    deque(
-        map(
-            lambda args_defaults: deque(
-                map(
-                    lambda idxparam_idx_arg: assert_equal(
-                        intermediate_repr["params"][idxparam_idx_arg[0]]["name"],
-                        idxparam_idx_arg[2].arg,
-                    )
-                    and intermediate_repr["params"][idxparam_idx_arg[0]].update(
-                        dict(
-                            name=idxparam_idx_arg[2].arg,
-                            **(
-                                {}
-                                if getattr(idxparam_idx_arg[2], "annotation", None)
-                                is None
-                                else dict(
-                                    typ=to_code(idxparam_idx_arg[2].annotation).rstrip(
-                                        "\n"
+
+    if intermediate_repr["params"]:
+        deque(
+            map(
+                lambda args_defaults: deque(
+                    map(
+                        lambda idxparam_idx_arg: assert_equal(
+                            intermediate_repr["params"][idxparam_idx_arg[0]]["name"],
+                            idxparam_idx_arg[2].arg,
+                        )
+                        and intermediate_repr["params"][idxparam_idx_arg[0]].update(
+                            dict(
+                                name=idxparam_idx_arg[2].arg,
+                                **(
+                                    {}
+                                    if getattr(idxparam_idx_arg[2], "annotation", None)
+                                    is None
+                                    else dict(
+                                        typ=to_code(
+                                            idxparam_idx_arg[2].annotation
+                                        ).rstrip("\n")
                                     )
-                                )
-                            ),
-                            **(
-                                lambda _defaults: dict(
-                                    default=get_value(_defaults[idxparam_idx_arg[1]])
-                                )
-                                if idxparam_idx_arg[1] < len(_defaults)
-                                and _defaults[idxparam_idx_arg[1]] is not None
-                                else {}
-                            )(getattr(function_def.args, args_defaults[1])),
-                        )
+                                ),
+                                **(
+                                    lambda _defaults: dict(
+                                        default=get_value(
+                                            _defaults[idxparam_idx_arg[1]]
+                                        )
+                                    )
+                                    if idxparam_idx_arg[1] < len(_defaults)
+                                    and _defaults[idxparam_idx_arg[1]] is not None
+                                    else {}
+                                )(getattr(function_def.args, args_defaults[1])),
+                            )
+                        ),
+                        (
+                            lambda _args: map(
+                                lambda idx_arg: (next(idx), idx_arg[0], idx_arg[1]),
+                                enumerate(
+                                    filterfalse(
+                                        lambda _arg: _arg.arg[0] == "*",
+                                        (
+                                            _args
+                                            if found_type == "static"
+                                            or args_defaults[0] == "kwonlyargs"
+                                            else _args[1:]
+                                        ),
+                                    )
+                                ),
+                            )
+                        )(getattr(function_def.args, args_defaults[0])),
                     ),
-                    (
-                        lambda _args: map(
-                            lambda idx_arg: (next(idx), idx_arg[0], idx_arg[1]),
-                            enumerate(
-                                filterfalse(
-                                    lambda _arg: _arg.arg[0] == "*",
-                                    (
-                                        _args
-                                        if found_type == "static"
-                                        or args_defaults[0] == "kwonlyargs"
-                                        else _args[1:]
-                                    ),
-                                )
-                            ),
-                        )
-                    )(getattr(function_def.args, args_defaults[0])),
+                    maxlen=0,
                 ),
-                maxlen=0,
+                (("args", "defaults"), ("kwonlyargs", "kw_defaults")),
             ),
-            (("args", "defaults"), ("kwonlyargs", "kw_defaults")),
-        ),
-        maxlen=0,
-    )
+            maxlen=0,
+        )
 
     intermediate_repr["params"] += params_to_append
 
