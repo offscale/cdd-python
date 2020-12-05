@@ -93,20 +93,23 @@ def param2ast(param):
         annotation = ast.parse(param["typ"]).body[0].value
 
         if "default" in param:
-            parsed_default = (
-                set_value(value=param["default"])
-                if (
-                    param["default"] is None
-                    or isinstance(param["default"], (float, int, str))
+            try:
+                parsed_default = (
+                    set_value(value=param["default"])
+                    if (
+                        param["default"] is None
+                        or isinstance(param["default"], (float, int, str))
+                    )
+                    and not isinstance(param["default"], str)
+                    and not (
+                        isinstance(param["default"], str)
+                        and param["default"][0] + param["default"][-1]
+                        in frozenset(("()", "[]", "{}"))
+                    )
+                    else ast.parse(param["default"])
                 )
-                and not isinstance(param["default"], str)
-                and not (
-                    isinstance(param["default"], str)
-                    and param["default"][0] + param["default"][-1]
-                    in frozenset(("()", "[]", "{}"))
-                )
-                else ast.parse(param["default"])
-            )
+            except SyntaxError:
+                parsed_default = set_value(value="```{}```".format(param["default"]))
 
             value = (
                 parsed_default.body[0].value

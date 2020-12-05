@@ -21,6 +21,8 @@ from ast import (
 from os import path
 from unittest import TestCase
 
+from meta.asttools import cmp_ast
+
 from doctrans.ast_utils import (
     find_ast_type,
     get_function_type,
@@ -43,7 +45,6 @@ from doctrans.tests.mocks.methods import (
     class_with_method_and_body_types_str,
 )
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
-from meta.asttools import cmp_ast
 
 
 class TestAstUtils(TestCase):
@@ -557,6 +558,31 @@ class TestAstUtils(TestCase):
             lineno=None,
         )
         run_ast_test(self, param2ast({"typ": None, "name": "zion"}), gold=gold)
+
+    def test_param2ast_with_bad_default(self) -> None:
+        """ Check that `param2ast` behaves correctly with a bad default """
+
+        gold = AnnAssign(
+            annotation=Name("NoneType", Load()),
+            simple=1,
+            target=Name("stateful_metrics", Store()),
+            value=set_value(value="```the `Model`'s metrics```"),
+            expr=None,
+            expr_annotation=None,
+            expr_target=None,
+        )
+
+        run_ast_test(
+            self,
+            param2ast(
+                {
+                    "typ": "NoneType",
+                    "name": "stateful_metrics",
+                    "default": "the `Model`'s metrics",
+                }
+            ),
+            gold=gold,
+        )
 
 
 unittest_main()
