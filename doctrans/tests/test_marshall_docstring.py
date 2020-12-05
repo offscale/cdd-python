@@ -13,27 +13,29 @@ from doctrans import parse
 from doctrans.docstring_parsers import parse_docstring
 from doctrans.emitter_utils import to_docstring
 from doctrans.tests.mocks.docstrings import (
-    docstring_str,
-    intermediate_repr_no_default_doc,
-    docstring_numpydoc_str,
+    docstring_google_str,
+    docstring_google_tf_adadelta_ir,
+    docstring_google_tf_adadelta_str,
+    docstring_google_tf_adam_ir,
+    docstring_google_tf_adam_str,
+    docstring_google_tf_lambda_callback_ir,
+    docstring_google_tf_lambda_callback_str,
+    docstring_google_tf_squared_hinge_ir,
+    docstring_google_tf_squared_hinge_str,
+    docstring_numpydoc_only_doc_str,
     docstring_numpydoc_only_params_str,
     docstring_numpydoc_only_returns_str,
-    docstring_numpydoc_only_doc_str,
-    docstring_google_str,
-    docstring_google_tf_squared_hinge_str,
-    docstring_google_tf_squared_hinge_ir,
-    docstring_google_tf_adam_str,
-    docstring_google_tf_adam_ir,
-    docstring_google_tf_adadelta_str,
-    docstring_google_tf_adadelta_ir,
+    docstring_numpydoc_str,
+    docstring_str,
+    intermediate_repr_no_default_doc,
 )
 from doctrans.tests.mocks.docstrings import (
-    intermediate_repr,
-    docstring_str_no_default_doc,
-    intermediate_repr_no_default_doc_or_prop,
     docstring_str_extra_colons,
-    intermediate_repr_extra_colons,
+    docstring_str_no_default_doc,
     docstring_str_only_return_type,
+    intermediate_repr,
+    intermediate_repr_extra_colons,
+    intermediate_repr_no_default_doc_or_prop,
     intermediate_repr_only_return_type,
 )
 from doctrans.tests.utils_for_tests import unittest_main
@@ -209,6 +211,20 @@ class TestMarshallDocstring(TestCase):
                 docstring_google_tf_adadelta_str, emit_default_doc=True, infer_type=True
             ),
             docstring_google_tf_adadelta_ir,
+        )
+
+    def test_from_docstring_google_tf_lambda_callback_str(self) -> None:
+        """
+        Tests whether `parse_docstring` produces the right IR
+              from `docstring_google_tf_lambda_callback_str`
+        """
+        self.assertDictEqual(
+            parse_docstring(
+                docstring_google_tf_lambda_callback_str,
+                emit_default_doc=True,
+                infer_type=True,
+            ),
+            docstring_google_tf_lambda_callback_ir,
         )
 
     def test_to_docstring_fails(self) -> None:

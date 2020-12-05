@@ -9,12 +9,14 @@ Translates from the [numpydoc docstring format](https://numpydoc.readthedocs.io/
 Translates from [Google's docstring format](https://google.github.io/styleguide/pyguide.html)
 """
 from collections import namedtuple
+from copy import deepcopy
 from functools import partial
 from itertools import takewhile
 from operator import contains, attrgetter
 from typing import Tuple, List, Dict
 
 from docstring_parser import Style
+
 from doctrans.emitter_utils import interpolate_defaults
 from doctrans.pure_utils import location_within, count_iter_items
 
@@ -160,10 +162,17 @@ def _scan_phase_numpydoc_and_google(docstring, arg_tokens, return_tokens, style)
     first_indent = count_iter_items(takewhile(str.isspace, docstring_lines[0]))
     for line in docstring_lines:
         indent = count_iter_items(takewhile(str.isspace, line))
+
         if indent == first_indent:
             stacker.append([line])
         else:
-            stacker[-1].append(line)
+            if indent < first_indent:
+                scanned[namespace] = scanned.get(namespace, []) + deepcopy(stacker)
+                namespace = "scanned_afterward"
+                stacker.clear()
+                stacker.append([line])
+            else:
+                stacker[-1].append(line)
 
     # Split out return, if present
     rev_return_token = return_tokens[0].splitlines()[::-1]
@@ -185,6 +194,7 @@ def _scan_phase_numpydoc_and_google(docstring, arg_tokens, return_tokens, style)
                     stacker[i] = stacker[i][: idx - 1]
                     stacker = stacker[: i + 1]
                     break
+
     scanned[namespace] = stacker
 
     return scanned
@@ -375,26 +385,32 @@ def _parse_phase_numpydoc_and_google(
 
     else:
 
-        def _parse(scan):
+        def _parse(scan, partitioned=None):
             """
             Parse the scanned input (Google)
 
             :param scan: Scanned input
             :type scan: ```List[str]```
 
+            :param partitioned: Prep-partitioned `scan`, if given doesn't partition on `scan`, just uses this
+            :type partitioned: ```Optional[Tuple[str, str, str]]```
+
             :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
             :rtype: ```dict```
             """
             offset = next(idx for idx, ch in enumerate(scan[0]) if ch == ":")
             s = scan[0][:offset].lstrip()
-            name, _, typ = s.partition(" ")
+            name, _, typ = partitioned or s.partition(" ")
             # if not name: return None
             cur = {"name": name}
             if typ:
                 assert typ.startswith("(") and typ.endswith(
                     ")"
-                ), "Expected to be paren wrapped {!r}".format(typ)
+                ), "Expected third partition" " to be paren wrapped {!r}".format(s)
                 cur["typ"] = typ[1:-1]
+                # elif partitioned is None:
+                #    return _parse(scan, " ".join((name, typ)).partition("="))
+                # else:
             # elif name.endswith("kwargs"): cur["typ"] = "dict"
             cur["doc"] = "\n".join([scan[0][offset + 1 :].lstrip()] + scan[1:])
             return cur
@@ -429,6 +445,7 @@ def _parse_phase_numpydoc_and_google(
                 )
             )
         )
+    # if "scanned_afterward" in scanned: # Hmm, nothing interesting gets added...
 
     intermediate_repr.update(
         {
