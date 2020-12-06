@@ -551,26 +551,19 @@ class TestAstUtils(TestCase):
     def test_param2ast_with_assign(self) -> None:
         """ Check that `param2ast` behaves correctly with a non annotated (typeless) input """
 
-        gold = Assign(
-            targets=[Name("zion", Store())],
-            value=set_value(value=None),
-            expr=None,
-            lineno=None,
+        run_ast_test(
+            self,
+            param2ast({"typ": None, "name": "zion"}),
+            gold=Assign(
+                targets=[Name("zion", Store())],
+                value=set_value(value=None),
+                expr=None,
+                lineno=None,
+            ),
         )
-        run_ast_test(self, param2ast({"typ": None, "name": "zion"}), gold=gold)
 
     def test_param2ast_with_bad_default(self) -> None:
         """ Check that `param2ast` behaves correctly with a bad default """
-
-        gold = AnnAssign(
-            annotation=Name("NoneType", Load()),
-            simple=1,
-            target=Name("stateful_metrics", Store()),
-            value=set_value(value="```the `Model`'s metrics```"),
-            expr=None,
-            expr_annotation=None,
-            expr_target=None,
-        )
 
         run_ast_test(
             self,
@@ -581,7 +574,15 @@ class TestAstUtils(TestCase):
                     "default": "the `Model`'s metrics",
                 }
             ),
-            gold=gold,
+            gold=AnnAssign(
+                annotation=Name("NoneType", Load()),
+                simple=1,
+                target=Name("stateful_metrics", Store()),
+                value=set_value(value="```the `Model`'s metrics```"),
+                expr=None,
+                expr_annotation=None,
+                expr_target=None,
+            ),
         )
 
 

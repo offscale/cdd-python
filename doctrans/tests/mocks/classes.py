@@ -483,7 +483,8 @@ class_squared_hinge_config_ast = ClassDef(
                 "    If binary (0 or 1) labels are provided we will convert them to -1 or 1.\n"
                 "    shape = `[batch_size, d0, .. dN]`.\n"
                 "    :cvar y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.\n"
-                "    :cvar return_type: None"
+                "    :cvar return_type: Squared hinge loss values. shape = `[batch_size, d0, .. dN-1]`."
+                " Defaults to ```K.mean(math_ops.square(math_ops.maximum(1.0 - y_true * y_pred, 0.0)), axis=-1)```"
             )
         ),
         Assign(
