@@ -12,13 +12,13 @@ from collections import namedtuple
 from copy import deepcopy
 from functools import partial
 from itertools import takewhile
-from operator import contains, attrgetter
+from operator import contains, attrgetter, eq, le
 from typing import Tuple, List, Dict
 
 from docstring_parser import Style
 
 from doctrans.emitter_utils import interpolate_defaults
-from doctrans.pure_utils import location_within, count_iter_items
+from doctrans.pure_utils import location_within, count_iter_items, rpartial
 
 Tokens = namedtuple("Tokens", ("rest", "google", "numpydoc"))
 
@@ -121,7 +121,7 @@ def _scan_phase(docstring, style=Style.rest):
 
 def _scan_phase_numpydoc_and_google(docstring, arg_tokens, return_tokens, style):
     """
-    numpydoc scanner phase. Lexical analysis; to some degree…
+    numpydoc and google scanner phase. Lexical analysis; to some degree…
 
     :param docstring: the docstring
     :type docstring: ```str```
@@ -160,7 +160,7 @@ def _scan_phase_numpydoc_and_google(docstring, arg_tokens, return_tokens, style)
     # Scan all lines so that that each element in `stacker` refers to one 'unit'
     stacker, docstring_lines = [], docstring.splitlines()
     first_indent = count_iter_items(takewhile(str.isspace, docstring_lines[0]))
-    for line in docstring_lines:
+    for line_no, line in enumerate(docstring_lines):
         indent = count_iter_items(takewhile(str.isspace, line))
 
         if indent == first_indent:
@@ -168,15 +168,97 @@ def _scan_phase_numpydoc_and_google(docstring, arg_tokens, return_tokens, style)
         else:
             if indent < first_indent:
                 scanned[namespace] = scanned.get(namespace, []) + deepcopy(stacker)
-                namespace = "scanned_afterward"
                 stacker.clear()
-                stacker.append([line])
+                if len(docstring_lines) > line_no + 3 and any(
+                    filter(rpartial(eq, docstring_lines[line_no + 1]), return_tokens)
+                    # return_token = return_tokens[0].splitlines()
+                    # filter(rpartial(eq, docstring_lines[line_no + 1]), return_tokens)
+                ):
+                    return_indent = count_iter_items(
+                        takewhile(str.isspace, docstring_lines[line_no + 3])
+                    )
+                    next_smallest_indent = count_iter_items(
+                        takewhile(
+                            partial(le, return_indent),
+                            map(
+                                lambda l: count_iter_items(takewhile(str.isspace, l)),
+                                docstring_lines[line_no + 3 :],
+                            ),
+                        )
+                    )
+                    scanned[return_tokens[0]] = docstring_lines[
+                        line_no + 2 : line_no + 3 + next_smallest_indent
+                    ]
+                    scanned_afterward = docstring_lines[
+                        line_no + 3 + next_smallest_indent :
+                    ]
+                else:
+                    scanned_afterward = docstring_lines[line_no + 1 :]
+                    if (
+                        len(scanned_afterward) > 1
+                        and scanned_afterward[0] == return_tokens[0]
+                    ):
+                        return_indent = count_iter_items(
+                            takewhile(str.isspace, scanned_afterward[1])
+                        )
+                        next_smallest_indent = count_iter_items(
+                            takewhile(
+                                partial(le, return_indent),
+                                map(
+                                    lambda l: count_iter_items(
+                                        takewhile(str.isspace, l)
+                                    ),
+                                    scanned_afterward[2:],
+                                ),
+                            )
+                        )
+                        scanned[return_tokens[0]] = scanned_afterward[
+                            1 : next_smallest_indent + 2
+                        ]
+                        scanned_afterward = (
+                            None
+                            if next_smallest_indent == 0
+                            else scanned_afterward[next_smallest_indent + 2 :]
+                        )
+
+                if scanned_afterward:
+                    scanned["scanned_afterward"] = scanned_afterward
+                break
             else:
                 stacker[-1].append(line)
 
-    # Split out return, if present
-    rev_return_token = return_tokens[0].splitlines()[::-1]
+    # Split out return, if present and not already set
+    if not scanned.get(return_tokens[0], False):
+        stacker = _return_parse_phase_numpydoc_and_google(
+            return_tokens, scanned, stacker, style
+        )
 
+    if stacker:
+        scanned[namespace] = stacker
+
+    return scanned
+
+
+def _return_parse_phase_numpydoc_and_google(return_tokens, scanned, stacker, style):
+    """
+    numpydoc and google scanner phase for return. Lexical analysis; to some degree…
+
+    :param return_tokens: Valid tokens like `"Returns\n-------"`
+    :type return_tokens: ```Tuple[str]```
+
+    :param scanned: List with each element a tuple of (whether value is a token, value)
+    :type scanned: ```Union[Dict[str, str], List[Tuple[bool, str]]]```
+
+    :param stacker: Stack of strings part that forms int scanned
+    :type stacker: ```List[List[str]]```
+
+    :param style: the style of docstring
+    :type style: ```Style```
+
+    :return: Whatever is left of `stacker`. This function may also set the return key of the `scanned`
+    :rtype: ```List[List[str]]```
+    """
+    rev_return_token = return_tokens[0].splitlines()[::-1]
     rng = range(len(stacker) - 1, -1, -1)
     if style is Style.numpydoc:
         for i in rng:
@@ -184,20 +266,18 @@ def _scan_phase_numpydoc_and_google(docstring, arg_tokens, return_tokens, style)
                 scanned[return_tokens[0]] = stacker[i + 1 :]
                 stacker = stacker[: i - 1]
                 break
-    else:
-        for i in rng:
-            for idx, token in enumerate(stacker[i]):
-                if token == return_tokens[0]:
-                    scanned[return_tokens[0]] = (
-                        stacker[i][idx + 1 :] + stacker[i + 1 :]
-                    )[0]
-                    stacker[i] = stacker[i][: idx - 1]
-                    stacker = stacker[: i + 1]
-                    break
-
-    scanned[namespace] = stacker
-
-    return scanned
+    # # All the google docstring examples are now handled earlier in the scan phase
+    # else:
+    #     for i in rng:
+    #         for idx, token in enumerate(stacker[i]):
+    #             if token == return_tokens[0]:
+    #                 scanned[return_tokens[0]] = (
+    #                     stacker[i][idx + 1 :] + stacker[i + 1 :]
+    #                 )[0]
+    #                 stacker[i] = stacker[i][: idx - 1]
+    #                 stacker = stacker[: i + 1]
+    #                 break
+    return stacker
 
 
 def _scan_phase_rest(docstring, arg_tokens, return_tokens):
@@ -445,7 +525,8 @@ def _parse_phase_numpydoc_and_google(
                 )
             )
         )
-    # if "scanned_afterward" in scanned: # Hmm, nothing interesting gets added...
+    if "scanned_afterward" in scanned:
+        scanned["doc"] += "\n\n\n{}".format("\n".join(scanned["scanned_afterward"]))
 
     intermediate_repr.update(
         {
@@ -468,7 +549,7 @@ def _parse_phase_numpydoc_and_google(
                     if len(scanned[return_tokens[0]]) == 2
                     else {}
                     if scanned[return_tokens[0]][0].isspace()
-                    else {"doc": scanned[return_tokens[0]][0]}
+                    else {"doc": scanned[return_tokens[0]][0].lstrip()}
                 )
                 if style is Style.google
                 else {
