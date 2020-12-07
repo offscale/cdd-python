@@ -178,6 +178,11 @@ def _build_parser():
     gen_parser.add_argument(
         "--output-filename", "-o", help="Output file to write to.", required=True
     )
+    gen_parser.add_argument(
+        "--emit-call",
+        action="store_true",
+        help="Whether to place all the previous body into a new `__call__` internal function",
+    )
 
     return parser
 
@@ -246,7 +251,9 @@ def main(cli_argv=None, return_args=False):
     elif command == "gen":
         if path.isfile(args.output_filename):
             raise IOError(
-                "File exists and this is a destructive operation. Delete/move file then rerun."
+                "File exists and this is a destructive operation. Delete/move {!r} then rerun.".format(
+                    args.output_filename
+                )
             )
         gen(**args_dict)
 

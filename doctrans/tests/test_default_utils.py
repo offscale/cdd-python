@@ -1,7 +1,7 @@
 """ Tests for default utils """
 from unittest import TestCase
 
-from doctrans.defaults_utils import extract_default
+from doctrans.defaults_utils import extract_default, set_default_doc
 from doctrans.tests.utils_for_tests import unittest_main
 
 
@@ -64,6 +64,11 @@ class TestDefaultUtils(TestCase):
             extract_default(sample, emit_default_doc=True),
             (sample, True),
         )
+
+    def test_set_default_doc_none(self) -> None:
+        """ Tests that `set_default_doc` does nop whence no doc in param """
+        param = {"name": "foo"}
+        self.assertDictEqual(set_default_doc(param), param)
 
 
 unittest_main()
