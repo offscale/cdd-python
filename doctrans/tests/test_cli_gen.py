@@ -44,7 +44,9 @@ class TestCliGen(TestCase):
                 ],
                 exception=OSError,
                 exit_code=2,
-                output="File exists and this is a destructive operation. Delete/move file then rerun.",
+                output="File exists and this is a destructive operation. Delete/move {!r} then rerun.".format(
+                    filename
+                ),
             )
 
     def test_gen(self) -> None:

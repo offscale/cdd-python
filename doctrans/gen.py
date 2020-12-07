@@ -20,6 +20,7 @@ def gen(
     output_filename,
     prepend=None,
     imports_from_file=None,
+    emit_call=False,
 ):
     """
     Generate classes, functions, and/or argparse functions from the input mapping
@@ -42,6 +43,9 @@ def gen(
     :param imports_from_file: Extract imports from file and append to `output_file`.
         If module or other symbol path given, resolve file then use it.
     :type imports_from_file: ```Optional[str]```
+
+    :param emit_call: Whether to emit a `__call__` method from the `_internal` IR subdict
+    :type emit_call: ```bool```
     """
 
     extra_symbols = {}
@@ -80,11 +84,13 @@ def gen(
         input_mapping.items() if hasattr(input_mapping, "items") else input_mapping
     )
 
-    content = "{}{}{}".format(
+    global__all__ = []
+    content = "{}{}{}{}".format(
         "" if prepend is None else prepend,
         imports,  # TODO: Optimize imports programatically (rather than just with IDE)
         "\n\n".join(
             print("Generating: {!r}".format(name))
+            or global__all__.append(name_tpl.format(name=name))
             or to_code(
                 getattr(emit, type_.replace("class", "class_"))(
                     getattr(
@@ -98,7 +104,7 @@ def gen(
                         if isinstance(obj, FunctionDef) or isfunction(obj)
                         else {"merge_inner_function": "__init__"}
                     ),  # TODO: Figure out if it's a class, function, or argparse function
-                    emit_call=True,
+                    emit_call=emit_call,
                     **{
                         "class_name"
                         if type_ == "class"
@@ -108,6 +114,7 @@ def gen(
             )
             for name, obj in input_mapping_it
         ),
+        "__all__={global__all__!r}".format(global__all__=global__all__),
     )
 
     with open(output_filename, "a") as f:

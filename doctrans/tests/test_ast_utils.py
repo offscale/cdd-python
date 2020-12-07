@@ -21,8 +21,6 @@ from ast import (
 from os import path
 from unittest import TestCase
 
-from meta.asttools import cmp_ast
-
 from doctrans.ast_utils import (
     find_ast_type,
     get_function_type,
@@ -45,6 +43,7 @@ from doctrans.tests.mocks.methods import (
     class_with_method_and_body_types_str,
 )
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
+from meta.asttools import cmp_ast
 
 
 class TestAstUtils(TestCase):
@@ -182,7 +181,6 @@ class TestAstUtils(TestCase):
                 expr_target=None,
                 expr_annotation=None,
             ),
-            run_cmp_ast=PY_GTE_3_8,
         )
 
     def test_find_in_ast_self(self) -> None:
@@ -322,7 +320,6 @@ class TestAstUtils(TestCase):
                     'dataset_name: str = "mnist"', "dataset_name: int = 15"
                 )
             ),
-            run_cmp_ast=PY_GTE_3_8,
         )
 
     def test_replace_in_ast_with_val_on_non_function(self) -> None:
@@ -353,7 +350,6 @@ class TestAstUtils(TestCase):
                     'dataset_name: str = "mnist"', "dataset_name: int = 15"
                 )
             ),
-            run_cmp_ast=PY_GTE_3_8,
         )
 
     def test_get_function_type(self) -> None:

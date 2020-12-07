@@ -1,21 +1,25 @@
 """ Tests for gen """
 
+import ast
 import os
 import sys
 from ast import (
-    ImportFrom,
-    alias,
-    ClassDef,
-    Load,
-    Name,
-    Expr,
     Assign,
-    Store,
-    FunctionDef,
-    arguments,
-    arg,
     Attribute,
+    ClassDef,
+    Constant,
+    Expr,
+    FunctionDef,
     Import,
+    ImportFrom,
+    Load,
+    Module,
+    Name,
+    Store,
+    alias,
+    arg,
+    arguments,
+    List,
 )
 from copy import deepcopy
 from io import StringIO
@@ -28,7 +32,7 @@ from doctrans.ast_utils import set_value
 from doctrans.gen import gen
 from doctrans.pure_utils import tab
 from doctrans.source_transformer import to_code
-from doctrans.tests.utils_for_tests import unittest_main
+from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
 
 
 def populate_files(tempdir, input_str=None):
@@ -42,7 +46,7 @@ def populate_files(tempdir, input_str=None):
     :type input_str: ```Optional[str]```
 
     :return: input filename, input str, expected_output
-    :rtype: ```Tuple[str, str, str]```
+    :rtype: ```Tuple[str, str, str, Module]```
     """
     input_filename = os.path.join(tempdir, "input.py")
 
@@ -54,7 +58,8 @@ def populate_files(tempdir, input_str=None):
         '{tab}"""\n'
         "{tab}a = 5\n"
         "{tab}b = 16\n\n\n"
-        "input_map = {{'Foo': Foo}}\n".format(tab=tab)
+        "input_map = {{'Foo': Foo}}\n\n"
+        "__all__ = ['Foo']\n".format(tab=tab)
     )
     # expected_output_class_str = (
     #     "class FooConfig(object):\n"
@@ -68,8 +73,9 @@ def populate_files(tempdir, input_str=None):
     #     "        self.a = 5\n"
     #     "        self.b = 16\n"
     # )
+    class_name = "FooConfig"
     expected_class_ast = ClassDef(
-        name="FooConfig",
+        name=class_name,
         bases=[Name("object", Load())],
         keywords=[],
         body=[
@@ -131,11 +137,28 @@ def populate_files(tempdir, input_str=None):
         expr=None,
         identifier_name=None,
     )
-    expected_output = "PREPENDED\n{}".format(to_code(expected_class_ast))
+    expected_output = "PREPENDED\n{}".format(
+        to_code(
+            Module(
+                body=[
+                    expected_class_ast,
+                    Assign(
+                        targets=[Name(ctx=Store(), id="__all__")],
+                        type_comment=None,
+                        value=List(
+                            ctx=Load(), elts=[Constant(kind=None, value=class_name)]
+                        ),
+                    ),
+                ],
+                type_ignores=[],
+                stmt=None,
+            )
+        )
+    )
 
     with open(input_filename, "wt") as f:
         f.write(input_str)
-    return input_filename, input_str, expected_output
+    return input_filename, input_str, expected_output, ast.parse(expected_output)
 
 
 _import_star_from_input = to_code(
@@ -143,11 +166,17 @@ _import_star_from_input = to_code(
         module="input",
         names=[
             alias(
-                name="*",
+                name="input_map",
                 asname=None,
                 identifier=None,
                 identifier_name=None,
-            )
+            ),
+            alias(
+                name="Foo",
+                asname=None,
+                identifier=None,
+                identifier_name=None,
+            ),
         ],
         level=1,
         identifier=None,
@@ -182,9 +211,12 @@ class TestGen(TestCase):
         cls.tempdir = mkdtemp()
         temp_module_dir = os.path.join(cls.tempdir, "gen_test_module")
         os.mkdir(temp_module_dir)
-        (cls.input_filename, cls.input_str, cls.expected_output) = populate_files(
-            temp_module_dir
-        )
+        (
+            cls.input_filename,
+            cls.input_str,
+            cls.expected_output,
+            cls.expected_output_ast,
+        ) = populate_files(temp_module_dir)
         with open(os.path.join(temp_module_dir, "__init__.py"), "w") as f:
             f.write(_import_star_from_input)
 
@@ -210,10 +242,12 @@ class TestGen(TestCase):
                     type_="class",
                     output_filename=output_filename,
                     prepend="PREPENDED\n",
+                    emit_call=True,
                 )
             )
         with open(output_filename, "rt") as f:
-            self.assertEqual(f.read(), self.expected_output)
+            gen_ast = ast.parse(f.read())
+        run_ast_test(self, gen_ast=gen_ast, gold=self.expected_output_ast)
 
     def test_gen_with_imports_from_file(self) -> None:
         """ Tests `gen` with `imports_from_file` """
@@ -231,16 +265,21 @@ class TestGen(TestCase):
                     imports_from_file="gen_test_module",
                     type_="class",
                     output_filename=output_filename,
+                    emit_call=True,
                 )
             )
         with open(output_filename, "rt") as f:
-            self.assertEqual(
-                f.read(),
+            gen_ast = ast.parse(f.read())
+        run_ast_test(
+            self,
+            gen_ast=gen_ast,
+            gold=ast.parse(
                 self.expected_output.replace(
                     "PREPENDED\n",
                     _import_star_from_input,
-                ),
-            )
+                )
+            ),
+        )
 
     def test_gen_with_imports_from_file_and_prepended_import(self) -> None:
         """ Tests `gen` with `imports_from_file` and `prepend` """
@@ -260,15 +299,22 @@ class TestGen(TestCase):
                     type_="class",
                     prepend=_import_gen_test_module,
                     output_filename=output_filename,
+                    emit_call=True,
                 )
             )
+
         with open(output_filename, "rt") as f:
-            self.assertEqual(
+            gen_ast = f.read()
+
+        run_ast_test(
+            self,
+            gen_ast=ast.parse(gen_ast),
+            gold=ast.parse(
                 self.expected_output.replace(
                     "PREPENDED\n", _import_gen_test_module + _import_star_from_input
-                ),
-                f.read(),
-            )
+                )
+            ),
+        )
 
 
 unittest_main()
