@@ -393,7 +393,7 @@ def _set_name_and_type(param, infer_type):
         param["name"] = param["name"].lstrip("*")
         if not param.get("typ"):
             param["typ"] = "dict"
-    elif infer_type and "default" in param:
+    elif infer_type and "default" in param and param.get("typ") is None:
         param["typ"] = type(param["default"]).__name__
     return param
 

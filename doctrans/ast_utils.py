@@ -831,5 +831,6 @@ __all__ = [
     "param2argparse_param",
     "param2ast",
     "set_arg",
+    "set_slice",
     "set_value",
 ]

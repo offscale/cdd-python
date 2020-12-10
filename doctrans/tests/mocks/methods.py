@@ -31,11 +31,7 @@ return_ast = Return(
         ctx=Load(),
         elts=[
             Call(
-                args=[
-                    set_value(
-                        0,
-                    )
-                ],
+                args=[set_value(0)],
                 func=Attribute(
                     Name("np", Load()),
                     "empty",
@@ -46,11 +42,7 @@ return_ast = Return(
                 expr_func=None,
             ),
             Call(
-                args=[
-                    set_value(
-                        0,
-                    )
-                ],
+                args=[set_value(0)],
                 func=Attribute(
                     Name("np", Load()),
                     "empty",
