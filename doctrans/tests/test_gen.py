@@ -7,7 +7,6 @@ from ast import (
     Assign,
     Attribute,
     ClassDef,
-    Constant,
     Expr,
     FunctionDef,
     Import,
@@ -17,9 +16,9 @@ from ast import (
     Name,
     Store,
     alias,
-    arg,
     arguments,
     List,
+    Dict,
 )
 from copy import deepcopy
 from io import StringIO
@@ -28,39 +27,92 @@ from tempfile import mkdtemp
 from unittest import TestCase
 from unittest.mock import patch
 
-from doctrans.ast_utils import set_value
+from doctrans.ast_utils import set_value, set_arg, maybe_type_comment
 from doctrans.gen import gen
-from doctrans.pure_utils import tab
+from doctrans.pure_utils import rpartial
 from doctrans.source_transformer import to_code
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
 
 
-def populate_files(tempdir, input_str=None):
+def populate_files(tempdir, input_module_str=None):
     """
     Populate files in the tempdir
 
     :param tempdir: Temporary directory
     :type tempdir: ```str```
 
-    :param input_str: Input string to write to the input_filename
-    :type input_str: ```Optional[str]```
+    :param input_module_str: Input string to write to the input_filename. If None, uses preset mock module.
+    :type input_module_str: ```Optional[str]```
 
     :return: input filename, input str, expected_output
     :rtype: ```Tuple[str, str, str, Module]```
     """
     input_filename = os.path.join(tempdir, "input.py")
-
-    input_str = input_str or (
-        "class Foo(object):\n"
-        '{tab}"""\n{tab}The amazing Foo\n\n'
-        "{tab}:cvar a: An a\n"
-        "{tab}:cvar b: A b\n"
-        '{tab}"""\n'
-        "{tab}a = 5\n"
-        "{tab}b = 16\n\n\n"
-        "input_map = {{'Foo': Foo}}\n\n"
-        "__all__ = ['Foo']\n".format(tab=tab)
+    input_class_name = "Foo"
+    input_class_ast = ClassDef(
+        bases=[Name("object", Load())],
+        body=[
+            Expr(
+                set_value(
+                    "\n    The amazing {input_class_name}\n\n"
+                    "    :cvar a: An a\n"
+                    "    :cvar b: A b\n"
+                    "    ".format(input_class_name=input_class_name)
+                )
+            ),
+            Assign(
+                targets=[Name("a", Store())],
+                value=set_value(5),
+                expr=None,
+                lineno=None,
+                **maybe_type_comment
+            ),
+            Assign(
+                targets=[Name("b", Store())],
+                value=set_value(16),
+                expr=None,
+                lineno=None,
+                **maybe_type_comment
+            ),
+        ],
+        decorator_list=[],
+        keywords=[],
+        name=input_class_name,
+        expr=None,
+        identifier_name=None,
     )
+
+    input_module_ast = Module(
+        body=[
+            input_class_ast,
+            Assign(
+                targets=[Name("input_map", Store())],
+                value=Dict(
+                    keys=[set_value(input_class_name)],
+                    values=[Name(input_class_name, Load())],
+                    expr=None,
+                ),
+                expr=None,
+                lineno=None,
+                **maybe_type_comment
+            ),
+            Assign(
+                targets=[Name("__all__", Store())],
+                value=List(
+                    ctx=Load(),
+                    elts=[set_value(input_class_name), set_value("input_map")],
+                    expr=None,
+                ),
+                expr=None,
+                lineno=None,
+                **maybe_type_comment
+            ),
+        ],
+        type_ignores=[],
+        stmt=None,
+    )
+
+    input_module_str = input_module_str or to_code(input_module_ast)
     # expected_output_class_str = (
     #     "class FooConfig(object):\n"
     #     '    """\n'
@@ -73,7 +125,7 @@ def populate_files(tempdir, input_str=None):
     #     "        self.a = 5\n"
     #     "        self.b = 16\n"
     # )
-    class_name = "FooConfig"
+    class_name = "{input_class_name}Config".format(input_class_name=input_class_name)
     expected_class_ast = ClassDef(
         name=class_name,
         bases=[Name("object", Load())],
@@ -81,30 +133,32 @@ def populate_files(tempdir, input_str=None):
         body=[
             Expr(
                 set_value(
-                    "\n    The amazing Foo\n\n"
+                    "\n    The amazing {input_class_name}\n\n"
                     "    :cvar a: An a. Defaults to 5\n"
-                    "    :cvar b: A b. Defaults to 16"
+                    "    :cvar b: A b. Defaults to 16".format(
+                        input_class_name=input_class_name
+                    )
                 )
             ),
             Assign(
                 targets=[Name("a", Store())],
-                value=set_value(value=5),
+                value=set_value(5),
                 expr=None,
                 lineno=None,
+                **maybe_type_comment
             ),
             Assign(
                 targets=[Name("b", Store())],
-                value=set_value(value=16),
+                value=set_value(16),
                 expr=None,
                 lineno=None,
+                **maybe_type_comment
             ),
             FunctionDef(
                 name="__call__",
                 args=arguments(
                     posonlyargs=[],
-                    args=[
-                        arg(arg="self", expr=None, identifier_arg=None, annotation=None)
-                    ],
+                    args=[set_arg("self")],
                     kwonlyargs=[],
                     kw_defaults=[],
                     defaults=[],
@@ -115,15 +169,17 @@ def populate_files(tempdir, input_str=None):
                 body=[
                     Assign(
                         targets=[Attribute(Name("self", Load()), "a", Store())],
-                        value=set_value(value=5),
+                        value=set_value(5),
                         expr=None,
                         lineno=None,
+                        **maybe_type_comment
                     ),
                     Assign(
                         targets=[Attribute(Name("self", Load()), "b", Store())],
-                        value=set_value(value=16),
+                        value=set_value(16),
                         expr=None,
                         lineno=None,
+                        **maybe_type_comment
                     ),
                 ],
                 decorator_list=[],
@@ -131,71 +187,55 @@ def populate_files(tempdir, input_str=None):
                 identifier_name=None,
                 stmt=None,
                 lineno=None,
+                returns=None,
+                **maybe_type_comment
             ),
         ],
         decorator_list=[],
         expr=None,
         identifier_name=None,
     )
-    expected_output = "PREPENDED\n{}".format(
-        to_code(
-            Module(
-                body=[
-                    expected_class_ast,
-                    Assign(
-                        targets=[Name(ctx=Store(), id="__all__")],
-                        type_comment=None,
-                        value=List(
-                            ctx=Load(), elts=[Constant(kind=None, value=class_name)]
-                        ),
-                    ),
-                ],
-                type_ignores=[],
-                stmt=None,
-            )
-        )
-    )
 
     with open(input_filename, "wt") as f:
-        f.write(input_str)
-    return input_filename, input_str, expected_output, ast.parse(expected_output)
+        f.write(input_module_str)
+
+    return input_filename, input_module_ast, input_class_ast, expected_class_ast
 
 
-_import_star_from_input = to_code(
-    ImportFrom(
-        module="input",
-        names=[
-            alias(
-                name="input_map",
-                asname=None,
-                identifier=None,
-                identifier_name=None,
-            ),
-            alias(
-                name="Foo",
-                asname=None,
-                identifier=None,
-                identifier_name=None,
-            ),
-        ],
-        level=1,
-        identifier=None,
-    )
+_import_star_from_input_ast = ImportFrom(
+    module="input",
+    names=[
+        alias(
+            name="input_map",
+            asname=None,
+            identifier=None,
+            identifier_name=None,
+        ),
+        alias(
+            name="Foo",
+            asname=None,
+            identifier=None,
+            identifier_name=None,
+        ),
+    ],
+    level=1,
+    identifier=None,
 )
+_import_star_from_input_str = to_code(_import_star_from_input_ast)
 
-_import_gen_test_module = "{}\n".format(
-    to_code(
-        Import(
-            names=[
-                alias(
-                    name="gen_test_module",
-                    asname=None,
-                    identifier=None,
-                    identifier_name=None,
-                )
-            ]
+_import_gen_test_module_ast = Import(
+    names=[
+        alias(
+            name="gen_test_module",
+            asname=None,
+            identifier=None,
+            identifier_name=None,
         )
-    )
+    ],
+    alias=None,
+)
+_import_gen_test_module_str = "{}\n".format(
+    to_code(_import_gen_test_module_ast).rstrip("\n")
 )
 
 
@@ -213,12 +253,12 @@ class TestGen(TestCase):
         os.mkdir(temp_module_dir)
         (
             cls.input_filename,
-            cls.input_str,
-            cls.expected_output,
-            cls.expected_output_ast,
+            cls.input_module_ast,
+            cls.input_class_ast,
+            cls.expected_class_ast,
         ) = populate_files(temp_module_dir)
         with open(os.path.join(temp_module_dir, "__init__.py"), "w") as f:
-            f.write(_import_star_from_input)
+            f.write(_import_star_from_input_str)
 
         sys.path.append(cls.tempdir)
 
@@ -226,6 +266,7 @@ class TestGen(TestCase):
     def tearDownClass(cls) -> None:
         """ Drop the new module from the path and delete the temporary directory """
         sys.path = cls.sys_path
+        # input("removing: {!r}".format(cls.tempdir))
         rmtree(cls.tempdir)
 
     def test_gen(self) -> None:
@@ -246,8 +287,12 @@ class TestGen(TestCase):
                 )
             )
         with open(output_filename, "rt") as f:
-            gen_ast = ast.parse(f.read())
-        run_ast_test(self, gen_ast=gen_ast, gold=self.expected_output_ast)
+            gen_module_ast = ast.parse(f.read())
+        run_ast_test(
+            self,
+            gen_ast=next(filter(rpartial(isinstance, ClassDef), gen_module_ast.body)),
+            gold=self.expected_class_ast,
+        )
 
     def test_gen_with_imports_from_file(self) -> None:
         """ Tests `gen` with `imports_from_file` """
@@ -273,11 +318,24 @@ class TestGen(TestCase):
         run_ast_test(
             self,
             gen_ast=gen_ast,
-            gold=ast.parse(
-                self.expected_output.replace(
-                    "PREPENDED\n",
-                    _import_star_from_input,
-                )
+            gold=Module(
+                body=[
+                    _import_star_from_input_ast,
+                    self.expected_class_ast,
+                    Assign(
+                        targets=[Name("__all__", Store())],
+                        value=List(
+                            ctx=Load(),
+                            elts=[set_value("FooConfig")],
+                            expr=None,
+                        ),
+                        expr=None,
+                        lineno=None,
+                        **maybe_type_comment
+                    ),
+                ],
+                type_ignores=[],
+                stmt=None,
             ),
         )
 
@@ -297,23 +355,39 @@ class TestGen(TestCase):
                     input_mapping="gen_test_module.input_map",
                     imports_from_file="gen_test_module",
                     type_="class",
-                    prepend=_import_gen_test_module,
+                    prepend=_import_gen_test_module_str,
                     output_filename=output_filename,
                     emit_call=True,
                 )
             )
 
         with open(output_filename, "rt") as f:
-            gen_ast = f.read()
-
+            gen_ast = ast.parse(f.read())
+        gold = Module(
+            body=[
+                _import_gen_test_module_ast,
+                _import_star_from_input_ast,
+                self.expected_class_ast,
+                # self.input_module_ast.body[1],
+                Assign(
+                    targets=[Name("__all__", Store())],
+                    value=List(
+                        ctx=Load(),
+                        elts=[set_value("FooConfig")],
+                        expr=None,
+                    ),
+                    expr=None,
+                    lineno=None,
+                    **maybe_type_comment
+                ),
+            ],
+            type_ignores=[],
+            stmt=None,
+        )
         run_ast_test(
             self,
-            gen_ast=ast.parse(gen_ast),
-            gold=ast.parse(
-                self.expected_output.replace(
-                    "PREPENDED\n", _import_gen_test_module + _import_star_from_input
-                )
-            ),
+            gen_ast=gen_ast,
+            gold=gold,
         )
 
 

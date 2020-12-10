@@ -3,12 +3,12 @@ Functionality to generate classes, functions, and/or argparse functions from the
 """
 
 import ast
-from ast import Import, ImportFrom, Module, FunctionDef
+from ast import Import, ImportFrom, Module, FunctionDef, Assign, Name, List, Load, Store
 from inspect import getfile, isfunction
 from os import path
 
 from doctrans import parse, emit
-from doctrans.ast_utils import get_at_root
+from doctrans.ast_utils import get_at_root, set_value, maybe_type_comment
 from doctrans.pure_utils import get_module
 from doctrans.source_transformer import to_code
 
@@ -85,10 +85,10 @@ def gen(
     )
 
     global__all__ = []
-    content = "{}{}{}{}".format(
-        "" if prepend is None else prepend,
-        imports,  # TODO: Optimize imports programatically (rather than just with IDE)
-        "\n\n".join(
+    content = "{prepend}{imports}\n{functions_and_classes}\n{__all}".format(
+        prepend="" if prepend is None else prepend,
+        imports=imports,  # TODO: Optimize imports programatically (rather than just with IDE)
+        functions_and_classes="\n\n".join(
             print("Generating: {!r}".format(name))
             or global__all__.append(name_tpl.format(name=name))
             or to_code(
@@ -114,7 +114,19 @@ def gen(
             )
             for name, obj in input_mapping_it
         ),
-        "__all__={global__all__!r}".format(global__all__=global__all__),
+        __all=to_code(
+            Assign(
+                targets=[Name("__all__", Store())],
+                value=List(
+                    ctx=Load(),
+                    elts=list(map(set_value, global__all__)),
+                    expr=None,
+                ),
+                expr=None,
+                lineno=None,
+                **maybe_type_comment
+            )
+        ),
     )
 
     with open(output_filename, "a") as f:

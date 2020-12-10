@@ -1,8 +1,9 @@
 """ Tests for emitter_utils """
-from ast import Expr, Call, Constant, Attribute, Load, Name, keyword, Subscript
+from ast import Attribute, Call, Expr, Load, Name, Subscript, keyword
 from copy import deepcopy
 from unittest import TestCase
 
+from doctrans.ast_utils import set_value
 from doctrans.emitter_utils import parse_out_param, interpolate_defaults
 from doctrans.pure_utils import rpartial
 from doctrans.tests.mocks.argparse import argparse_func_ast, argparse_add_argument_ast
@@ -37,14 +38,7 @@ class TestEmitterUtils(TestCase):
             lambda: parse_out_param(
                 Expr(
                     Call(
-                        args=[
-                            Constant(
-                                kind=None,
-                                value="--num",
-                                constant_value=None,
-                                string=None,
-                            )
-                        ],
+                        args=[set_value("--num")],
                         func=Attribute(
                             Name("argument_parser", Load()),
                             "add_argument",
@@ -62,12 +56,7 @@ class TestEmitterUtils(TestCase):
                             ),
                             keyword(
                                 arg="required",
-                                value=Constant(
-                                    kind=None,
-                                    value=True,
-                                    constant_value=None,
-                                    string=None,
-                                ),
+                                value=set_value(True),
                                 identifier=None,
                             ),
                         ],

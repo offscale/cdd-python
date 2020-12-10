@@ -2,12 +2,12 @@
 Functions which produce intermediate_repr from various different inputs
 """
 import ast
-from ast import Constant, Name, Return
+from ast import Name, Return
 from functools import partial
 from operator import add
 from typing import Any
 
-from doctrans.ast_utils import get_value
+from doctrans.ast_utils import get_value, set_value
 from doctrans.defaults_utils import extract_default, set_default_doc
 from doctrans.pure_utils import simple_types, identity, tab, quote
 from doctrans.source_transformer import to_code
@@ -84,10 +84,12 @@ def parse_out_param(expr, emit_default_doc=True):
     :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :rtype: ```dict```
     """
-    required = next(
-        (keyword for keyword in expr.value.keywords if keyword.arg == "required"),
-        Constant(value=False, constant_value=None, string=None),
-    ).value
+    required = get_value(
+        next(
+            (keyword for keyword in expr.value.keywords if keyword.arg == "required"),
+            set_value(False),
+        )
+    )
 
     typ = next(
         (

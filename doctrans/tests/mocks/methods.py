@@ -1,17 +1,14 @@
 """
 Mocks for methods
 """
-import ast
 from ast import (
     Return,
     Tuple,
     Load,
     Call,
-    Constant,
     Expr,
     Index,
     arguments,
-    arg,
     FunctionDef,
     ClassDef,
     Attribute,
@@ -21,11 +18,12 @@ from ast import (
     Mult,
     If,
     Pass,
+    fix_missing_locations,
 )
 from functools import partial
 from operator import add
 
-from doctrans.pure_utils import PY3_8
+from doctrans.ast_utils import set_value, set_slice, set_arg, maybe_type_comment
 from doctrans.tests.mocks.docstrings import docstring_google_tf_adadelta_str
 
 return_ast = Return(
@@ -34,11 +32,8 @@ return_ast = Return(
         elts=[
             Call(
                 args=[
-                    Constant(
-                        kind=None,
-                        value=0,
-                        constant_value=None,
-                        string=None,
+                    set_value(
+                        0,
                     )
                 ],
                 func=Attribute(
@@ -52,11 +47,8 @@ return_ast = Return(
             ),
             Call(
                 args=[
-                    Constant(
-                        kind=None,
-                        value=0,
-                        constant_value=None,
-                        string=None,
+                    set_value(
+                        0,
                     )
                 ],
                 func=Attribute(
@@ -196,92 +188,70 @@ class C(object):
         return np.empty(0), np.empty(0)
 '''
 
-class_with_method_and_body_types_ast = (
+class_with_method_and_body_types_ast = fix_missing_locations(
     ClassDef(
         name="C",
         bases=[Name("object", Load())],
         keywords=[],
         body=[
-            Expr(
-                Constant(value=" C class (mocked!) ", constant_value=None, string=None)
-            ),
+            Expr(set_value(" C class (mocked!) ")),
             FunctionDef(
                 name="function_name",
                 args=arguments(
                     posonlyargs=[],
                     vararg=None,
                     args=[
-                        arg(
-                            arg="self", annotation=None, expr=None, identifier_arg=None
-                        ),
-                        arg(
-                            arg="dataset_name",
-                            annotation=Name("str", Load()),
-                            expr=None,
-                            identifier_arg=None,
-                        ),
-                        arg(
+                        set_arg("self"),
+                        set_arg(arg="dataset_name", annotation=Name("str", Load())),
+                        set_arg(
                             arg="tfds_dir",
                             annotation=Subscript(
-                                Name("Optional", Load()), Name("str", Load()), Load()
+                                Name("Optional", Load()),
+                                set_slice(Name("str", Load())),
+                                Load(),
                             ),
-                            expr=None,
-                            identifier_arg=None,
                         ),
-                        arg(
+                        set_arg(
                             arg="K",
                             annotation=Subscript(
                                 Name("Literal", Load()),
-                                Tuple(
-                                    elts=[
-                                        Constant(
-                                            value="np", constant_value=None, string=None
-                                        ),
-                                        Constant(
-                                            value="tf", constant_value=None, string=None
-                                        ),
-                                    ],
-                                    ctx=Load(),
-                                    expr=None,
+                                set_slice(
+                                    Tuple(
+                                        elts=[
+                                            set_value("np"),
+                                            set_value("tf"),
+                                        ],
+                                        ctx=Load(),
+                                        expr=None,
+                                    )
                                 ),
                                 Load(),
                             ),
-                            expr=None,
-                            identifier_arg=None,
                         ),
-                        arg(
+                        set_arg(
                             arg="as_numpy",
                             annotation=Subscript(
-                                Name("Optional", Load()), Name("bool", Load()), Load()
+                                Name("Optional", Load()),
+                                set_slice(Name("bool", Load())),
+                                Load(),
                             ),
-                            expr=None,
-                            identifier_arg=None,
                         ),
                     ],
                     kwonlyargs=[],
                     kw_defaults=[],
-                    kwarg=arg(
-                        arg="data_loader_kwargs",
-                        annotation=None,
-                        expr=None,
-                        identifier_arg=None,
-                    ),
+                    kwarg=set_arg("data_loader_kwargs"),
                     defaults=[
-                        Constant(value="mnist", constant_value=None, string=None),
-                        Constant(
-                            value="~/tensorflow_datasets",
-                            constant_value=None,
-                            string=None,
-                        ),
-                        Constant(value="np", constant_value=None, string=None),
-                        Constant(value=None, constant_value=None, string=None),
+                        set_value("mnist"),
+                        set_value("~/tensorflow_datasets"),
+                        set_value("np"),
+                        set_value(None),
                     ],
                     arg=None,
                 ),
                 body=[
                     Expr(
-                        Constant(
-                            value="\n        Acquire from the official tensorflow_datasets model zoo,"
+                        set_value(
+                            "\n        Acquire from the official tensorflow_datasets model zoo,"
                             " or the ophthalmology focussed ml-prepare library\n\n        "
                             ":param dataset_name: name of dataset.\n\n        "
                             ":param tfds_dir: directory to look for models in.\n\n        "
@@ -289,8 +259,6 @@ class_with_method_and_body_types_ast = (
                             ":param as_numpy: Convert to numpy ndarrays\n\n        "
                             ":param data_loader_kwargs: pass this as arguments to data_loader function\n\n        "
                             ":return: Train and tests dataset splits.\n        ",
-                            constant_value=None,
-                            string=None,
                         )
                     ),
                     Expr(
@@ -298,9 +266,9 @@ class_with_method_and_body_types_ast = (
                             func=Name("print", Load()),
                             args=[
                                 BinOp(
-                                    Constant(value=5, constant_value=None, string=None),
+                                    set_value(5),
                                     Mult(),
-                                    Constant(value=5, constant_value=None, string=None),
+                                    set_value(5),
                                 )
                             ],
                             keywords=[],
@@ -309,14 +277,16 @@ class_with_method_and_body_types_ast = (
                         )
                     ),
                     If(
-                        test=Constant(value=True, constant_value=None, string=None),
+                        test=set_value(
+                            True,
+                        ),
                         body=[
                             Expr(
                                 Call(
                                     func=Name("print", Load()),
                                     args=[
-                                        Constant(
-                                            value=True, constant_value=None, string=None
+                                        set_value(
+                                            True,
                                         )
                                     ],
                                     keywords=[],
@@ -325,8 +295,8 @@ class_with_method_and_body_types_ast = (
                                 )
                             ),
                             Return(
-                                value=Constant(
-                                    value=5, constant_value=None, string=None
+                                value=set_value(
+                                    5,
                                 ),
                                 expr=None,
                             ),
@@ -341,8 +311,8 @@ class_with_method_and_body_types_ast = (
                                 Call(
                                     func=Attribute(Name("np", Load()), "empty", Load()),
                                     args=[
-                                        Constant(
-                                            value=0, constant_value=None, string=None
+                                        set_value(
+                                            0,
                                         )
                                     ],
                                     keywords=[],
@@ -352,8 +322,8 @@ class_with_method_and_body_types_ast = (
                                 Call(
                                     func=Attribute(Name("np", Load()), "empty", Load()),
                                     args=[
-                                        Constant(
-                                            value=0, constant_value=None, string=None
+                                        set_value(
+                                            0,
                                         )
                                     ],
                                     keywords=[],
@@ -370,142 +340,103 @@ class_with_method_and_body_types_ast = (
                 decorator_list=[],
                 returns=Subscript(
                     Name("Union", Load()),
-                    Tuple(
-                        [
-                            Subscript(
-                                Name("Tuple", Load()),
-                                Tuple(
-                                    [
-                                        Attribute(
-                                            Attribute(
-                                                Name("tf", Load()), "data", Load()
-                                            ),
-                                            "Dataset",
+                    set_slice(
+                        Tuple(
+                            [
+                                Subscript(
+                                    Name("Tuple", Load()),
+                                    set_slice(
+                                        Tuple(
+                                            [
+                                                Attribute(
+                                                    Attribute(
+                                                        Name("tf", Load()),
+                                                        "data",
+                                                        Load(),
+                                                    ),
+                                                    "Dataset",
+                                                    Load(),
+                                                ),
+                                                Attribute(
+                                                    Attribute(
+                                                        Name("tf", Load()),
+                                                        "data",
+                                                        Load(),
+                                                    ),
+                                                    "Dataset",
+                                                    Load(),
+                                                ),
+                                            ],
                                             Load(),
-                                        ),
-                                        Attribute(
-                                            Attribute(
-                                                Name("tf", Load()), "data", Load()
-                                            ),
-                                            "Dataset",
+                                            expr=None,
+                                        )
+                                    ),
+                                    Load(),
+                                ),
+                                Subscript(
+                                    Name("Tuple", Load()),
+                                    set_slice(
+                                        Tuple(
+                                            [
+                                                Attribute(
+                                                    Name("np", Load()),
+                                                    "ndarray",
+                                                    Load(),
+                                                ),
+                                                Attribute(
+                                                    Name("np", Load()),
+                                                    "ndarray",
+                                                    Load(),
+                                                ),
+                                            ],
                                             Load(),
-                                        ),
-                                    ],
+                                            expr=None,
+                                        )
+                                    ),
                                     Load(),
-                                    expr=None,
                                 ),
-                                Load(),
-                            ),
-                            Subscript(
-                                Name("Tuple", Load()),
-                                Tuple(
-                                    [
-                                        Attribute(
-                                            Name("np", Load()), "ndarray", Load()
-                                        ),
-                                        Attribute(
-                                            Name("np", Load()), "ndarray", Load()
-                                        ),
-                                    ],
-                                    Load(),
-                                    expr=None,
-                                ),
-                                Load(),
-                            ),
-                        ],
-                        Load(),
+                            ],
+                            Load(),
+                        )
                     ),
                     Load(),
                 ),
                 arguments_args=None,
                 identifier_name=None,
                 stmt=None,
+                lineno=None,
+                **maybe_type_comment
             ),
         ],
         decorator_list=[],
         expr=None,
         identifier_name=None,
     )
-    if PY3_8
-    else ast.parse(class_with_method_and_body_types_str).body[0]
 )
 
-class_with_method_ast = (
+
+class_with_method_ast = fix_missing_locations(
     ClassDef(
         bases=[Name("object", Load())],
         body=[
             Expr(
-                Constant(
-                    kind=None,
-                    value=" C class (mocked!) ",
-                    constant_value=None,
-                    string=None,
+                set_value(
+                    " C class (mocked!) ",
                 )
             ),
             FunctionDef(
                 args=arguments(
-                    args=[
-                        arg(
-                            annotation=None,
-                            arg="self",
-                            type_comment=None,
-                            expr=None,
-                            identifier_arg=None,
-                        ),
-                        arg(
-                            annotation=None,
-                            arg="dataset_name",
-                            type_comment=None,
-                            expr=None,
-                            identifier_arg=None,
-                        ),
-                        arg(
-                            annotation=None,
-                            arg="tfds_dir",
-                            type_comment=None,
-                            expr=None,
-                            identifier_arg=None,
-                        ),
-                        arg(
-                            annotation=None,
-                            arg="K",
-                            type_comment=None,
-                            expr=None,
-                            identifier_arg=None,
-                        ),
-                        arg(
-                            annotation=None,
-                            arg="as_numpy",
-                            type_comment=None,
-                            expr=None,
-                            identifier_arg=None,
-                        ),
-                    ],
-                    defaults=[
-                        Constant(
-                            kind=None, value="mnist", constant_value=None, string=None
-                        ),
-                        Constant(
-                            kind=None,
-                            value="~/tensorflow_datasets",
-                            constant_value=None,
-                            string=None,
-                        ),
-                        Constant(
-                            kind=None, value="np", constant_value=None, string=None
-                        ),
-                        Constant(
-                            kind=None, value=None, constant_value=None, string=None
-                        ),
-                    ],
-                    kw_defaults=[],
-                    kwarg=arg(
-                        annotation=None,
-                        arg="data_loader_kwargs",
-                        type_comment=None,
-                        expr=None,
-                        identifier_arg=None,
+                    args=list(
+                        map(
+                            set_arg,
+                            ("self", "dataset_name", "tfds_dir", "K", "as_numpy"),
+                        )
                     ),
+                    defaults=list(
+                        map(set_value, ("mnist", "~/tensorflow_datasets", "np", None))
+                    ),
+                    kw_defaults=[],
+                    kwarg=set_arg("data_loader_kwargs"),
                     kwonlyargs=[],
                     posonlyargs=[],
                     vararg=None,
@@ -513,9 +444,8 @@ class_with_method_ast = (
                 ),
                 body=[
                     Expr(
-                        Constant(
-                            kind=None,
-                            value="\n        Acquire from the official tensorflow_datasets model zoo,"
+                        set_value(
+                            "\n        Acquire from the official tensorflow_datasets model zoo,"
                             " or the ophthalmology focussed ml-prepare library\n\n        "
                             ":param dataset_name: name of dataset.\n        "
                             ":type dataset_name: ```str```\n\n        "
@@ -530,8 +460,6 @@ class_with_method_ast = (
                             ":return: Train and tests dataset splits.\n        "
                             ":rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]"
                             "```\n        ",
-                            constant_value=None,
-                            string=None,
                         )
                     ),
                     return_ast,
@@ -539,10 +467,10 @@ class_with_method_ast = (
                 decorator_list=[],
                 name="function_name",
                 returns=None,
-                type_comment=None,
                 arguments_args=None,
                 identifier_name=None,
                 stmt=None,
+                **maybe_type_comment
             ),
         ],
         decorator_list=[],
@@ -551,43 +479,29 @@ class_with_method_ast = (
         expr=None,
         identifier_name=None,
     )
-    if PY3_8
-    else ast.parse(class_with_method_str).body[0]
 )
 
-class_with_method_types_ast = (
+class_with_method_types_ast = fix_missing_locations(
     ClassDef(
         bases=[Name("object", Load())],
         body=[
             Expr(
-                Constant(
-                    kind=None,
-                    value=" C class (mocked!) ",
-                    constant_value=None,
-                    string=None,
+                set_value(
+                    " C class (mocked!) ",
                 )
             ),
             FunctionDef(
                 args=arguments(
                     args=[
-                        arg(
-                            annotation=None,
-                            arg="self",
-                            type_comment=None,
-                            expr=None,
-                            identifier_arg=None,
-                        ),
-                        arg(
+                        set_arg("self"),
+                        set_arg(
                             annotation=Name(
                                 "str",
                                 Load(),
                             ),
                             arg="dataset_name",
-                            type_comment=None,
-                            expr=None,
-                            identifier_arg=None,
                         ),
-                        arg(
+                        set_arg(
                             annotation=Subscript(
                                 Name(
                                     "Optional",
@@ -602,11 +516,8 @@ class_with_method_types_ast = (
                                 Load(),
                             ),
                             arg="tfds_dir",
-                            type_comment=None,
-                            expr=None,
-                            identifier_arg=None,
                         ),
-                        arg(
+                        set_arg(
                             annotation=Subscript(
                                 Name(
                                     "Literal",
@@ -616,17 +527,11 @@ class_with_method_types_ast = (
                                     value=Tuple(
                                         ctx=Load(),
                                         elts=[
-                                            Constant(
-                                                kind=None,
-                                                value="np",
-                                                constant_value=None,
-                                                string=None,
+                                            set_value(
+                                                "np",
                                             ),
-                                            Constant(
-                                                kind=None,
-                                                value="tf",
-                                                constant_value=None,
-                                                string=None,
+                                            set_value(
+                                                "tf",
                                             ),
                                         ],
                                         expr=None,
@@ -635,11 +540,8 @@ class_with_method_types_ast = (
                                 Load(),
                             ),
                             arg="K",
-                            type_comment=None,
-                            expr=None,
-                            identifier_arg=None,
                         ),
-                        arg(
+                        set_arg(
                             annotation=Subscript(
                                 Name(
                                     "Optional",
@@ -649,36 +551,16 @@ class_with_method_types_ast = (
                                 Load(),
                             ),
                             arg="as_numpy",
-                            type_comment=None,
-                            expr=None,
-                            identifier_arg=None,
                         ),
                     ],
                     defaults=[
-                        Constant(
-                            kind=None, value="mnist", constant_value=None, string=None
-                        ),
-                        Constant(
-                            kind=None,
-                            value="~/tensorflow_datasets",
-                            constant_value=None,
-                            string=None,
-                        ),
-                        Constant(
-                            kind=None, value="np", constant_value=None, string=None
-                        ),
-                        Constant(
-                            kind=None, value=None, constant_value=None, string=None
-                        ),
+                        set_value("mnist"),
+                        set_value("~/tensorflow_datasets"),
+                        set_value("np"),
+                        set_value(None),
                     ],
                     kw_defaults=[],
-                    kwarg=arg(
-                        annotation=None,
-                        arg="data_loader_kwargs",
-                        type_comment=None,
-                        expr=None,
-                        identifier_arg=None,
-                    ),
+                    kwarg=set_arg("data_loader_kwargs"),
                     kwonlyargs=[],
                     posonlyargs=[],
                     vararg=None,
@@ -686,9 +568,8 @@ class_with_method_types_ast = (
                 ),
                 body=[
                     Expr(
-                        Constant(
-                            kind=None,
-                            value="\n        Acquire from the official tensorflow_datasets"
+                        set_value(
+                            "\n        Acquire from the official tensorflow_datasets"
                             " model zoo, or the ophthalmology focussed ml-prepare library\n"
                             "    \n        "
                             ":param dataset_name: name of dataset.\n    \n        "
@@ -697,8 +578,6 @@ class_with_method_types_ast = (
                             ":param as_numpy: Convert to numpy ndarrays\n    \n        "
                             ":param data_loader_kwargs: pass this as arguments to data_loader function\n    \n        "
                             ":return: Train and tests dataset splits.\n        ",
-                            constant_value=None,
-                            string=None,
                         )
                     ),
                     return_ast,
@@ -769,10 +648,10 @@ class_with_method_types_ast = (
                     ),
                     Load(),
                 ),
-                type_comment=None,
                 arguments_args=None,
                 identifier_name=None,
                 stmt=None,
+                **maybe_type_comment
             ),
         ],
         decorator_list=[],
@@ -781,192 +660,158 @@ class_with_method_types_ast = (
         expr=None,
         identifier_name=None,
     )
-    if PY3_8
-    else ast.parse(class_with_method_types_str).body[0]
 )
 
-class_with_optional_arg_method_ast = (
-    ClassDef(
-        bases=[Name("object", Load())],
-        body=[
-            Expr(
-                Constant(
-                    kind=None,
-                    value=" C class (mocked!) ",
-                    constant_value=None,
-                    string=None,
-                )
-            ),
-            FunctionDef(
-                args=arguments(
-                    args=[
-                        arg(
-                            annotation=None,
-                            arg="self",
-                            type_comment=None,
-                            expr=None,
-                            identifier_arg=None,
+class_with_optional_arg_method_ast = ClassDef(
+    bases=[Name("object", Load())],
+    body=[
+        Expr(
+            set_value(
+                " C class (mocked!) ",
+            )
+        ),
+        FunctionDef(
+            args=arguments(
+                args=[
+                    set_arg("self"),
+                    set_arg(
+                        annotation=Name(
+                            "str",
+                            Load(),
                         ),
-                        arg(
-                            annotation=Name(
-                                "str",
+                        arg="dataset_name",
+                    ),
+                    set_arg(
+                        annotation=Subscript(
+                            Name(
+                                "Optional",
                                 Load(),
                             ),
-                            arg="dataset_name",
-                            type_comment=None,
-                            expr=None,
-                            identifier_arg=None,
-                        ),
-                        arg(
-                            annotation=Subscript(
-                                Name(
-                                    "Optional",
-                                    Load(),
-                                ),
-                                Index(
-                                    value=Subscript(
-                                        Name(
-                                            "Literal",
-                                            Load(),
-                                        ),
-                                        Index(
-                                            value=Tuple(
-                                                ctx=Load(),
-                                                elts=[
-                                                    Constant(
-                                                        kind=None,
-                                                        value="np",
-                                                        constant_value=None,
-                                                        string=None,
-                                                    ),
-                                                    Constant(
-                                                        kind=None,
-                                                        value="tf",
-                                                        constant_value=None,
-                                                        string=None,
-                                                    ),
-                                                ],
-                                                expr=None,
-                                            )
-                                        ),
+                            Index(
+                                value=Subscript(
+                                    Name(
+                                        "Literal",
                                         Load(),
+                                    ),
+                                    Index(
+                                        value=Tuple(
+                                            ctx=Load(),
+                                            elts=[
+                                                set_value(
+                                                    "np",
+                                                ),
+                                                set_value(
+                                                    "tf",
+                                                ),
+                                            ],
+                                            expr=None,
+                                        )
+                                    ),
+                                    Load(),
+                                )
+                            ),
+                            Load(),
+                        ),
+                        arg="K",
+                    ),
+                ],
+                defaults=[set_value(None)],
+                kw_defaults=[],
+                kwarg=None,
+                kwonlyargs=[],
+                posonlyargs=[],
+                vararg=None,
+                arg=None,
+            ),
+            body=[
+                Expr(
+                    set_value(
+                        "\n        Acquire from the official tensorflow_datasets model zoo,"
+                        " or the ophthalmology focussed ml-prepare library\n\n        "
+                        ":param dataset_name: name of dataset.\n\n        "
+                        ":param K: backend engine, e.g., `np` or `tf`.\n\n        "
+                        ":return: Train and tests dataset splits.\n        ",
+                    )
+                ),
+                return_ast,
+            ],
+            decorator_list=[],
+            name="function_name",
+            returns=Subscript(
+                Name("Union", Load()),
+                Index(
+                    value=Tuple(
+                        ctx=Load(),
+                        elts=[
+                            Subscript(
+                                Name("Tuple", Load()),
+                                Index(
+                                    value=Tuple(
+                                        ctx=Load(),
+                                        elts=[
+                                            Attribute(
+                                                Attribute(
+                                                    Name("tf", Load()),
+                                                    "data",
+                                                    Load(),
+                                                ),
+                                                "Dataset",
+                                                Load(),
+                                            ),
+                                            Attribute(
+                                                Attribute(
+                                                    Name("tf", Load()),
+                                                    "data",
+                                                    Load(),
+                                                ),
+                                                "Dataset",
+                                                Load(),
+                                            ),
+                                        ],
+                                        expr=None,
                                     )
                                 ),
                                 Load(),
                             ),
-                            arg="K",
-                            type_comment=None,
-                            expr=None,
-                            identifier_arg=None,
-                        ),
-                    ],
-                    defaults=[
-                        Constant(
-                            kind=None, value=None, constant_value=None, string=None
-                        )
-                    ],
-                    kw_defaults=[],
-                    kwarg=None,
-                    kwonlyargs=[],
-                    posonlyargs=[],
-                    vararg=None,
-                    arg=None,
-                ),
-                body=[
-                    Expr(
-                        Constant(
-                            kind=None,
-                            value="\n        Acquire from the official tensorflow_datasets model zoo,"
-                            " or the ophthalmology focussed ml-prepare library\n\n        "
-                            ":param dataset_name: name of dataset.\n\n        "
-                            ":param K: backend engine, e.g., `np` or `tf`.\n\n        "
-                            ":return: Train and tests dataset splits.\n        ",
-                            constant_value=None,
-                            string=None,
-                        )
-                    ),
-                    return_ast,
-                ],
-                decorator_list=[],
-                name="function_name",
-                returns=Subscript(
-                    Name("Union", Load()),
-                    Index(
-                        value=Tuple(
-                            ctx=Load(),
-                            elts=[
-                                Subscript(
-                                    Name("Tuple", Load()),
-                                    Index(
-                                        value=Tuple(
-                                            ctx=Load(),
-                                            elts=[
-                                                Attribute(
-                                                    Attribute(
-                                                        Name("tf", Load()),
-                                                        "data",
-                                                        Load(),
-                                                    ),
-                                                    "Dataset",
-                                                    Load(),
-                                                ),
-                                                Attribute(
-                                                    Attribute(
-                                                        Name("tf", Load()),
-                                                        "data",
-                                                        Load(),
-                                                    ),
-                                                    "Dataset",
-                                                    Load(),
-                                                ),
-                                            ],
-                                            expr=None,
-                                        )
-                                    ),
-                                    Load(),
+                            Subscript(
+                                Name("Tuple", Load()),
+                                Index(
+                                    value=Tuple(
+                                        ctx=Load(),
+                                        elts=[
+                                            Attribute(
+                                                Name("np", Load()),
+                                                "ndarray",
+                                                Load(),
+                                            ),
+                                            Attribute(
+                                                Name("np", Load()),
+                                                "ndarray",
+                                                Load(),
+                                            ),
+                                        ],
+                                        expr=None,
+                                    )
                                 ),
-                                Subscript(
-                                    Name("Tuple", Load()),
-                                    Index(
-                                        value=Tuple(
-                                            ctx=Load(),
-                                            elts=[
-                                                Attribute(
-                                                    Name("np", Load()),
-                                                    "ndarray",
-                                                    Load(),
-                                                ),
-                                                Attribute(
-                                                    Name("np", Load()),
-                                                    "ndarray",
-                                                    Load(),
-                                                ),
-                                            ],
-                                            expr=None,
-                                        )
-                                    ),
-                                    Load(),
-                                ),
-                            ],
-                            expr=None,
-                        )
-                    ),
-                    Load(),
+                                Load(),
+                            ),
+                        ],
+                        expr=None,
+                    )
                 ),
-                type_comment=None,
-                arguments_args=None,
-                identifier_name=None,
-                stmt=None,
+                Load(),
             ),
-        ],
-        decorator_list=[],
-        keywords=[],
-        name="C",
-        expr=None,
-        identifier_name=None,
-    )
-    if PY3_8
-    else ast.parse(class_with_optional_arg_method_str).body[0]
+            arguments_args=None,
+            identifier_name=None,
+            stmt=None,
+            **maybe_type_comment
+        ),
+    ],
+    decorator_list=[],
+    keywords=[],
+    name="C",
+    expr=None,
+    identifier_name=None,
 )
 
 function_adder_str = '''
@@ -984,54 +829,48 @@ def add_6_5(*, a=6, b=5):
     return operator.add(a, b)
 '''
 
-function_adder_ast = (
-    FunctionDef(
-        name="add_6_5",
-        args=arguments(
-            posonlyargs=[],
-            args=[],
-            kwonlyargs=[
-                arg(annotation=None, arg="a", expr=None, identifier_arg=None),
-                arg(annotation=None, arg="b", expr=None, identifier_arg=None),
-            ],
-            kw_defaults=[
-                Constant(value=6, constant_value=None, string=None),
-                Constant(value=5, constant_value=None, string=None),
-            ],
-            defaults=[],
-            arg=None,
-        ),
-        body=[
-            Expr(
-                Constant(
-                    value="\n    :param a: first param\n    "
-                    ":type a: ```int```\n\n    "
-                    ":param b: second param\n    "
-                    ":type b: ```int```\n\n    "
-                    ":return: Aggregated summation of `a` and `b`.\n    "
-                    ":rtype: ```int```\n    ",
-                    constant_value=None,
-                    string=None,
-                )
-            ),
-            Return(
-                value=Call(
-                    func=Attribute(Name("operator", Load()), "add", Load()),
-                    args=[Name("a", Load()), Name("b", Load())],
-                    keywords=[],
-                    expr=None,
-                    expr_func=None,
-                ),
-                expr=None,
-            ),
+function_adder_ast = FunctionDef(
+    name="add_6_5",
+    args=arguments(
+        posonlyargs=[],
+        args=[],
+        kwonlyargs=[
+            set_arg("a"),
+            set_arg("b"),
         ],
-        decorator_list=[],
-        arguments_args=None,
-        identifier_name=None,
-        stmt=None,
-    )
-    if PY3_8
-    else ast.parse(function_adder_str).body[0]
+        kw_defaults=[
+            set_value(6),
+            set_value(5),
+        ],
+        defaults=[],
+        arg=None,
+    ),
+    body=[
+        Expr(
+            set_value(
+                "\n    :param a: first param\n    "
+                ":type a: ```int```\n\n    "
+                ":param b: second param\n    "
+                ":type b: ```int```\n\n    "
+                ":return: Aggregated summation of `a` and `b`.\n    "
+                ":rtype: ```int```\n    ",
+            )
+        ),
+        Return(
+            value=Call(
+                func=Attribute(Name("operator", Load()), "add", Load()),
+                args=[Name("a", Load()), Name("b", Load())],
+                keywords=[],
+                expr=None,
+                expr_func=None,
+            ),
+            expr=None,
+        ),
+    ],
+    decorator_list=[],
+    arguments_args=None,
+    identifier_name=None,
+    stmt=None,
 )
 
 function_adder_ir = {
@@ -1054,49 +893,38 @@ function_default_complex_default_arg_str = (
     "def call_peril(dataset_name: str='mnist', writer=stdout):\n\tpass"
 )
 
-function_default_complex_default_arg_ast = (
-    FunctionDef(
-        name="call_peril",
-        args=arguments(
-            args=[
-                arg(
-                    annotation=Name(
-                        "str",
-                        Load(),
-                    ),
-                    arg="dataset_name",
-                    type_comment=None,
-                    expr=None,
-                    identifier_arg=None,
+function_default_complex_default_arg_ast = FunctionDef(
+    name="call_peril",
+    args=arguments(
+        args=[
+            set_arg(
+                annotation=Name(
+                    "str",
+                    Load(),
                 ),
-                arg(
-                    annotation=None,
-                    arg="writer",
-                    type_comment=None,
-                    expr=None,
-                    identifier_arg=None,
-                ),
-            ],
-            defaults=[
-                Constant(kind=None, value="mnist", constant_value=None, string=None),
-                Name("stdout", Load()),
-            ],
-            kw_defaults=[],
-            kwarg=None,
-            kwonlyargs=[],
-            posonlyargs=[],
-            vararg=None,
-            arg=None,
-        ),
-        body=[Pass()],
-        decorator_list=[],
-        lineno=None,
-        arguments_args=None,
-        identifier_name=None,
-        stmt=None,
-    )
-    if PY3_8
-    else ast.parse(function_default_complex_default_arg_str).body[0]
+                arg="dataset_name",
+            ),
+            set_arg("writer"),
+        ],
+        defaults=[
+            set_value(
+                "mnist",
+            ),
+            Name("stdout", Load()),
+        ],
+        kw_defaults=[],
+        kwarg=None,
+        kwonlyargs=[],
+        posonlyargs=[],
+        vararg=None,
+        arg=None,
+    ),
+    body=[Pass()],
+    decorator_list=[],
+    lineno=None,
+    arguments_args=None,
+    identifier_name=None,
+    stmt=None,
 )
 
 method_complex_args_variety_str = '''
@@ -1130,87 +958,85 @@ def call_cliff(
     return K
 '''
 
-method_complex_args_variety_ast = (
-    FunctionDef(
-        name="call_cliff",
-        args=arguments(
-            posonlyargs=[],
-            args=[
-                arg(arg="self", expr=None, identifier_arg=None, annotation=None),
-                arg(
-                    arg="dataset_name", expr=None, identifier_arg=None, annotation=None
-                ),
-            ],
-            kwonlyargs=[
-                arg(arg="as_numpy", expr=None, identifier_arg=None, annotation=None),
-                arg(
-                    arg="K",
-                    annotation=Subscript(
-                        Name("Literal", Load()),
-                        Tuple(
-                            elts=[
-                                Constant(value="np", constant_value=None, string=None),
-                                Constant(value="tf", constant_value=None, string=None),
-                            ],
-                            ctx=Load(),
-                            expr=None,
-                        ),
-                        Load(),
-                    ),
-                    expr=None,
-                    identifier_arg=None,
-                ),
-                arg(arg="tfds_dir", expr=None, identifier_arg=None, annotation=None),
-                arg(arg="writer", expr=None, identifier_arg=None, annotation=None),
-            ],
-            kw_defaults=[
-                None,
-                None,
-                Constant(
-                    value="~/tensorflow_datasets", constant_value=None, string=None
-                ),
-                Name("stdout", Load()),
-            ],
-            kwarg=arg(arg="kwargs", expr=None, identifier_arg=None, annotation=None),
-            defaults=[],
-            arg=None,
-        ),
-        body=[
-            Expr(
-                Constant(
-                    value="\n    Call cliff\n\n    "
-                    ":param dataset_name: name of dataset.\n\n    "
-                    ":param as_numpy: Convert to numpy ndarrays\n\n    "
-                    ":param K: backend engine, e.g., `np` or `tf`.\n\n    "
-                    ":param tfds_dir: directory to look for models in.\n\n    "
-                    ":param writer: IO object to write out to\n\n    "
-                    ":param **kwargs: additional keyword arguments\n\n    "
-                    ":return: backend engine\n    ",
-                    constant_value=None,
-                    string=None,
-                )
-            ),
-            Return(value=Name("K", Load()), expr=None),
+method_complex_args_variety_ast = FunctionDef(
+    name="call_cliff",
+    args=arguments(
+        posonlyargs=[],
+        args=[
+            set_arg("self"),
+            set_arg("dataset_name"),
         ],
-        decorator_list=[],
-        returns=Subscript(
-            Name("Literal", Load()),
-            Tuple(
-                elts=[
-                    Constant(value="np", constant_value=None, string=None),
-                    Constant(value="tf", constant_value=None, string=None),
-                ],
-                ctx=Load(),
-                expr=None,
+        kwonlyargs=[
+            set_arg("as_numpy"),
+            set_arg(
+                arg="K",
+                annotation=Subscript(
+                    Name("Literal", Load()),
+                    Tuple(
+                        elts=[
+                            set_value(
+                                "np",
+                            ),
+                            set_value(
+                                "tf",
+                            ),
+                        ],
+                        ctx=Load(),
+                        expr=None,
+                    ),
+                    Load(),
+                ),
             ),
-            Load(),
+            set_arg("tfds_dir"),
+            set_arg("writer"),
+        ],
+        kw_defaults=[
+            None,
+            None,
+            set_value(
+                "~/tensorflow_datasets",
+            ),
+            Name("stdout", Load()),
+        ],
+        kwarg=set_arg("kwargs"),
+        defaults=[],
+        arg=None,
+    ),
+    body=[
+        Expr(
+            set_value(
+                "\n    Call cliff\n\n    "
+                ":param dataset_name: name of dataset.\n\n    "
+                ":param as_numpy: Convert to numpy ndarrays\n\n    "
+                ":param K: backend engine, e.g., `np` or `tf`.\n\n    "
+                ":param tfds_dir: directory to look for models in.\n\n    "
+                ":param writer: IO object to write out to\n\n    "
+                ":param **kwargs: additional keyword arguments\n\n    "
+                ":return: backend engine\n    ",
+            )
         ),
-        arguments_args=None,
-        identifier_name=None,
-        stmt=None,
-    )
-    if PY3_8
-    else ast.parse(method_complex_args_variety_str).body[0]
+        Return(value=Name("K", Load()), expr=None),
+    ],
+    decorator_list=[],
+    returns=Subscript(
+        Name("Literal", Load()),
+        Tuple(
+            elts=[
+                set_value(
+                    "np",
+                ),
+                set_value(
+                    "tf",
+                ),
+            ],
+            ctx=Load(),
+            expr=None,
+        ),
+        Load(),
+    ),
+    arguments_args=None,
+    identifier_name=None,
+    stmt=None,
 )
 
 # https://github.com/tensorflow/tensorflow/blob/7ad2723/tensorflow/python/keras/losses.py#L1327-L1355

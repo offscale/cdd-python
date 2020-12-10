@@ -16,7 +16,7 @@ from doctrans.ast_utils import (
     find_in_ast,
     annotate_ancestry,
 )
-from doctrans.pure_utils import rpartial, reindent, tab, deindent, PY3_8, PY_GTE_3_9
+from doctrans.pure_utils import PY3_8, deindent, reindent, rpartial, tab
 from doctrans.tests.mocks.argparse import (
     argparse_func_ast,
     argparse_func_with_body_ast,
@@ -95,7 +95,7 @@ class TestEmitters(TestCase):
         """
         run_ast_test(
             self,
-            emit.argparse_function(
+            gen_ast=emit.argparse_function(
                 parse.class_(class_nargs_ast),
                 emit_default_doc=False,
                 emit_default_doc_in_return=False,
@@ -356,7 +356,6 @@ class TestEmitters(TestCase):
             self,
             gen_ast=gen_ast,
             gold=function_def,
-            run_cmp_ast=PY_GTE_3_9,
         )
 
     def test_from_function_google_tf_squared_hinge_str_to_class(self) -> None:
@@ -364,18 +363,18 @@ class TestEmitters(TestCase):
         Tests that `emit.function` produces correctly with:
         - __call__
         """
+        gen_ast = emit.class_(
+            parse.function(
+                ast.parse(function_google_tf_squared_hinge_str).body[0],
+                infer_type=True,
+            ),
+            class_name="SquaredHingeConfig",
+            emit_call=True,
+        )
         run_ast_test(
             self,
-            gen_ast=emit.class_(
-                parse.function(
-                    ast.parse(function_google_tf_squared_hinge_str).body[0],
-                    infer_type=True,
-                ),
-                class_name="SquaredHingeConfig",
-                emit_call=True,
-            ),
+            gen_ast=gen_ast,
             gold=class_squared_hinge_config_ast,
-            run_cmp_ast=PY_GTE_3_9,
         )
 
     def test_from_argparse_with_extra_body_to_argparse_with_extra_body(self) -> None:

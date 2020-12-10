@@ -1,13 +1,10 @@
 """
 Mocks for the argparse function
 """
-import ast
 from ast import (
     FunctionDef,
     arguments,
-    arg,
     Expr,
-    Constant,
     Assign,
     Store,
     Attribute,
@@ -20,10 +17,16 @@ from ast import (
     BinOp,
     Mult,
     If,
+    fix_missing_locations,
 )
 
-from doctrans.ast_utils import FALLBACK_TYP, FALLBACK_ARGPARSE_TYP, set_value
-from doctrans.pure_utils import PY3_8
+from doctrans.ast_utils import (
+    FALLBACK_TYP,
+    FALLBACK_ARGPARSE_TYP,
+    set_value,
+    set_arg,
+    maybe_type_comment,
+)
 
 argparse_func_str = '''
 def set_cli_args(argument_parser):
@@ -158,18 +161,10 @@ def set_cli_action_append(argument_parser):
     " or the ophthalmology focussed ml-prepare library",
 )
 
-argparse_func_ast = (
+argparse_func_ast = fix_missing_locations(
     FunctionDef(
         args=arguments(
-            args=[
-                arg(
-                    annotation=None,
-                    arg="argument_parser",
-                    type_comment=None,
-                    expr=None,
-                    identifier_arg=None,
-                )
-            ],
+            args=[set_arg("argument_parser")],
             defaults=[],
             kw_defaults=[],
             kwarg=None,
@@ -180,17 +175,14 @@ argparse_func_ast = (
         ),
         body=[
             Expr(
-                Constant(
-                    kind=None,
-                    value="\n    Set CLI arguments\n\n    "
+                set_value(
+                    "\n    Set CLI arguments\n\n    "
                     ":param argument_parser: argument parser\n    "
                     ":type argument_parser: ```ArgumentParser```\n\n    "
                     ":return: argument_parser, Train and tests dataset splits.\n    "
                     ":rtype: ```Tuple[ArgumentParser,"
                     " Union[Tuple[tf.data.Dataset, tf.data.Dataset],"
-                    " Tuple[np.ndarray, np.ndarray]]]```\n    ",
-                    constant_value=None,
-                    string=None,
+                    " Tuple[np.ndarray, np.ndarray]]]```\n    "
                 )
             ),
             Assign(
@@ -201,26 +193,16 @@ argparse_func_ast = (
                         Store(),
                     )
                 ],
-                type_comment=None,
-                value=Constant(
-                    kind=None,
-                    value="Acquire from the official tensorflow_datasets model zoo,"
-                    " or the ophthalmology focussed ml-prepare library",
-                    constant_value=None,
-                    string=None,
+                value=set_value(
+                    "Acquire from the official tensorflow_datasets model zoo,"
+                    " or the ophthalmology focussed ml-prepare library"
                 ),
                 expr=None,
+                **maybe_type_comment
             ),
             Expr(
                 Call(
-                    args=[
-                        Constant(
-                            kind=None,
-                            value="--dataset_name",
-                            constant_value=None,
-                            string=None,
-                        )
-                    ],
+                    args=[set_value("--dataset_name")],
                     func=Attribute(
                         Name("argument_parser", Load()),
                         "add_argument",
@@ -230,29 +212,17 @@ argparse_func_ast = (
                         keyword(arg="type", value=Name("str", Load()), identifier=None),
                         keyword(
                             arg="help",
-                            value=Constant(
-                                kind=None,
-                                value="name of dataset.",
-                                constant_value=None,
-                                string=None,
-                            ),
+                            value=set_value("name of dataset."),
                             identifier=None,
                         ),
                         keyword(
                             arg="required",
-                            value=Constant(
-                                kind=None, value=True, constant_value=None, string=None
-                            ),
+                            value=set_value(True),
                             identifier=None,
                         ),
                         keyword(
                             arg="default",
-                            value=Constant(
-                                kind=None,
-                                value="mnist",
-                                constant_value=None,
-                                string=None,
-                            ),
+                            value=set_value("mnist"),
                             identifier=None,
                         ),
                     ],
@@ -262,14 +232,7 @@ argparse_func_ast = (
             ),
             Expr(
                 Call(
-                    args=[
-                        Constant(
-                            kind=None,
-                            value="--tfds_dir",
-                            constant_value=None,
-                            string=None,
-                        )
-                    ],
+                    args=[set_value("--tfds_dir")],
                     func=Attribute(
                         Name("argument_parser", Load()),
                         "add_argument",
@@ -279,22 +242,12 @@ argparse_func_ast = (
                         keyword(arg="type", value=Name("str", Load()), identifier=None),
                         keyword(
                             arg="help",
-                            value=Constant(
-                                kind=None,
-                                value="directory to look for models in.",
-                                constant_value=None,
-                                string=None,
-                            ),
+                            value=set_value("directory to look for models in."),
                             identifier=None,
                         ),
                         keyword(
                             arg="default",
-                            value=Constant(
-                                kind=None,
-                                value="~/tensorflow_datasets",
-                                constant_value=None,
-                                string=None,
-                            ),
+                            value=set_value("~/tensorflow_datasets"),
                             identifier=None,
                         ),
                     ],
@@ -304,11 +257,7 @@ argparse_func_ast = (
             ),
             Expr(
                 Call(
-                    args=[
-                        Constant(
-                            kind=None, value="--K", constant_value=None, string=None
-                        )
-                    ],
+                    args=[set_value("--K")],
                     func=Attribute(
                         Name("argument_parser", Load()),
                         "add_argument",
@@ -325,18 +274,8 @@ argparse_func_ast = (
                             value=Tuple(
                                 ctx=Load(),
                                 elts=[
-                                    Constant(
-                                        kind=None,
-                                        value="np",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        kind=None,
-                                        value="tf",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
+                                    set_value("np"),
+                                    set_value("tf"),
                                 ],
                                 expr=None,
                             ),
@@ -344,26 +283,17 @@ argparse_func_ast = (
                         ),
                         keyword(
                             arg="help",
-                            value=Constant(
-                                kind=None,
-                                value="backend engine, e.g., `np` or `tf`.",
-                                constant_value=None,
-                                string=None,
-                            ),
+                            value=set_value("backend engine, e.g., `np` or `tf`."),
                             identifier=None,
                         ),
                         keyword(
                             arg="required",
-                            value=Constant(
-                                kind=None, value=True, constant_value=None, string=None
-                            ),
+                            value=set_value(True),
                             identifier=None,
                         ),
                         keyword(
                             arg="default",
-                            value=Constant(
-                                kind=None, value="np", constant_value=None, string=None
-                            ),
+                            value=set_value("np"),
                             identifier=None,
                         ),
                     ],
@@ -373,14 +303,7 @@ argparse_func_ast = (
             ),
             Expr(
                 Call(
-                    args=[
-                        Constant(
-                            kind=None,
-                            value="--as_numpy",
-                            constant_value=None,
-                            string=None,
-                        )
-                    ],
+                    args=[set_value("--as_numpy")],
                     func=Attribute(
                         Name("argument_parser", Load()),
                         "add_argument",
@@ -392,12 +315,7 @@ argparse_func_ast = (
                         ),
                         keyword(
                             arg="help",
-                            value=Constant(
-                                kind=None,
-                                value="Convert to numpy ndarrays",
-                                constant_value=None,
-                                string=None,
-                            ),
+                            value=set_value("Convert to numpy ndarrays"),
                             identifier=None,
                         ),
                     ],
@@ -407,14 +325,7 @@ argparse_func_ast = (
             ),
             Expr(
                 Call(
-                    args=[
-                        Constant(
-                            kind=None,
-                            value="--data_loader_kwargs",
-                            constant_value=None,
-                            string=None,
-                        )
-                    ],
+                    args=[set_value("--data_loader_kwargs")],
                     func=Attribute(
                         Name("argument_parser", Load()),
                         "add_argument",
@@ -426,11 +337,8 @@ argparse_func_ast = (
                         ),
                         keyword(
                             arg="help",
-                            value=Constant(
-                                kind=None,
-                                value="pass this as arguments to data_loader function",
-                                constant_value=None,
-                                string=None,
+                            value=set_value(
+                                "pass this as arguments to data_loader function"
                             ),
                             identifier=None,
                         ),
@@ -448,14 +356,7 @@ argparse_func_ast = (
                             ctx=Load(),
                             elts=[
                                 Call(
-                                    args=[
-                                        Constant(
-                                            kind=None,
-                                            value=0,
-                                            constant_value=None,
-                                            string=None,
-                                        )
-                                    ],
+                                    args=[set_value(0)],
                                     func=Attribute(
                                         Name("np", Load()),
                                         "empty",
@@ -466,14 +367,7 @@ argparse_func_ast = (
                                     expr_func=None,
                                 ),
                                 Call(
-                                    args=[
-                                        Constant(
-                                            kind=None,
-                                            value=0,
-                                            constant_value=None,
-                                            string=None,
-                                        )
-                                    ],
+                                    args=[set_value(0)],
                                     func=Attribute(
                                         Name("np", Load()),
                                         "empty",
@@ -495,27 +389,17 @@ argparse_func_ast = (
         decorator_list=[],
         name="set_cli_args",
         returns=None,
-        type_comment=None,
         arguments_args=None,
         stmt=None,
         identifier_name=None,
+        **maybe_type_comment
     )
-    if PY3_8
-    else ast.parse(argparse_func_str).body[0]
 )
 
-argparse_func_with_body_ast = (
+argparse_func_with_body_ast = fix_missing_locations(
     FunctionDef(
         args=arguments(
-            args=[
-                arg(
-                    annotation=None,
-                    arg="argument_parser",
-                    type_comment=None,
-                    expr=None,
-                    identifier_arg=None,
-                )
-            ],
+            args=[set_arg("argument_parser")],
             defaults=[],
             kw_defaults=[],
             kwarg=None,
@@ -526,16 +410,13 @@ argparse_func_with_body_ast = (
         ),
         body=[
             Expr(
-                Constant(
-                    kind=None,
-                    value="\n    Set CLI arguments\n\n    "
+                set_value(
+                    "\n    Set CLI arguments\n\n    "
                     ":param argument_parser: argument parser\n    "
                     ":type argument_parser: ```ArgumentParser```\n\n    "
                     ":return: argument_parser, Train and tests dataset splits.\n    "
                     ":rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset],"
-                    " Tuple[np.ndarray, np.ndarray]]]```\n    ",
-                    constant_value=None,
-                    string=None,
+                    " Tuple[np.ndarray, np.ndarray]]]```\n    "
                 )
             ),
             Assign(
@@ -546,26 +427,16 @@ argparse_func_with_body_ast = (
                         Store(),
                     )
                 ],
-                type_comment=None,
-                value=Constant(
-                    kind=None,
-                    value="Acquire from the official tensorflow_datasets model zoo,"
-                    " or the ophthalmology focussed ml-prepare library",
-                    constant_value=None,
-                    string=None,
+                value=set_value(
+                    "Acquire from the official tensorflow_datasets model zoo,"
+                    " or the ophthalmology focussed ml-prepare library"
                 ),
                 expr=None,
+                **maybe_type_comment
             ),
             Expr(
                 Call(
-                    args=[
-                        Constant(
-                            kind=None,
-                            value="--dataset_name",
-                            constant_value=None,
-                            string=None,
-                        )
-                    ],
+                    args=[set_value("--dataset_name")],
                     func=Attribute(
                         Name("argument_parser", Load()),
                         "add_argument",
@@ -582,29 +453,17 @@ argparse_func_with_body_ast = (
                         ),
                         keyword(
                             arg="help",
-                            value=Constant(
-                                kind=None,
-                                value="name of dataset.",
-                                constant_value=None,
-                                string=None,
-                            ),
+                            value=set_value("name of dataset."),
                             identifier=None,
                         ),
                         keyword(
                             arg="required",
-                            value=Constant(
-                                kind=None, value=True, constant_value=None, string=None
-                            ),
+                            value=set_value(True),
                             identifier=None,
                         ),
                         keyword(
                             arg="default",
-                            value=Constant(
-                                kind=None,
-                                value="mnist",
-                                constant_value=None,
-                                string=None,
-                            ),
+                            value=set_value("mnist"),
                             identifier=None,
                         ),
                     ],
@@ -615,11 +474,8 @@ argparse_func_with_body_ast = (
             Expr(
                 Call(
                     args=[
-                        Constant(
-                            kind=None,
-                            value="--tfds_dir",
-                            constant_value=None,
-                            string=None,
+                        set_value(
+                            "--tfds_dir",
                         )
                     ],
                     func=Attribute(
@@ -638,22 +494,12 @@ argparse_func_with_body_ast = (
                         ),
                         keyword(
                             arg="help",
-                            value=Constant(
-                                kind=None,
-                                value="directory to look for models in.",
-                                constant_value=None,
-                                string=None,
-                            ),
+                            value=set_value("directory to look for models in."),
                             identifier=None,
                         ),
                         keyword(
                             arg="default",
-                            value=Constant(
-                                kind=None,
-                                value="~/tensorflow_datasets",
-                                constant_value=None,
-                                string=None,
-                            ),
+                            value=set_value("~/tensorflow_datasets"),
                             identifier=None,
                         ),
                     ],
@@ -664,8 +510,8 @@ argparse_func_with_body_ast = (
             Expr(
                 Call(
                     args=[
-                        Constant(
-                            kind=None, value="--K", constant_value=None, string=None
+                        set_value(
+                            "--K",
                         )
                     ],
                     func=Attribute(
@@ -684,18 +530,8 @@ argparse_func_with_body_ast = (
                             value=Tuple(
                                 ctx=Load(),
                                 elts=[
-                                    Constant(
-                                        kind=None,
-                                        value="np",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        kind=None,
-                                        value="tf",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
+                                    set_value("np"),
+                                    set_value("tf"),
                                 ],
                                 expr=None,
                             ),
@@ -703,26 +539,19 @@ argparse_func_with_body_ast = (
                         ),
                         keyword(
                             arg="help",
-                            value=Constant(
-                                kind=None,
-                                value="backend engine, e.g., `np` or `tf`.",
-                                constant_value=None,
-                                string=None,
+                            value=set_value(
+                                "backend engine, e.g., `np` or `tf`.",
                             ),
                             identifier=None,
                         ),
                         keyword(
                             arg="required",
-                            value=Constant(
-                                kind=None, value=True, constant_value=None, string=None
-                            ),
+                            value=set_value(True),
                             identifier=None,
                         ),
                         keyword(
                             arg="default",
-                            value=Constant(
-                                kind=None, value="np", constant_value=None, string=None
-                            ),
+                            value=set_value("np"),
                             identifier=None,
                         ),
                     ],
@@ -732,14 +561,7 @@ argparse_func_with_body_ast = (
             ),
             Expr(
                 Call(
-                    args=[
-                        Constant(
-                            kind=None,
-                            value="--as_numpy",
-                            constant_value=None,
-                            string=None,
-                        )
-                    ],
+                    args=[set_value("--as_numpy")],
                     func=Attribute(
                         Name("argument_parser", Load()),
                         "add_argument",
@@ -751,11 +573,8 @@ argparse_func_with_body_ast = (
                         ),
                         keyword(
                             arg="help",
-                            value=Constant(
-                                kind=None,
-                                value="Convert to numpy ndarrays",
-                                constant_value=None,
-                                string=None,
+                            value=set_value(
+                                "Convert to numpy ndarrays",
                             ),
                             identifier=None,
                         ),
@@ -766,14 +585,7 @@ argparse_func_with_body_ast = (
             ),
             Expr(
                 Call(
-                    args=[
-                        Constant(
-                            kind=None,
-                            value="--data_loader_kwargs",
-                            constant_value=None,
-                            string=None,
-                        )
-                    ],
+                    args=[set_value("--data_loader_kwargs")],
                     func=Attribute(
                         Name("argument_parser", Load()),
                         "add_argument",
@@ -785,11 +597,8 @@ argparse_func_with_body_ast = (
                         ),
                         keyword(
                             arg="help",
-                            value=Constant(
-                                kind=None,
-                                value="pass this as arguments to data_loader function",
-                                constant_value=None,
-                                string=None,
+                            value=set_value(
+                                "pass this as arguments to data_loader function",
                             ),
                             identifier=None,
                         ),
@@ -802,12 +611,12 @@ argparse_func_with_body_ast = (
                 Call(
                     args=[
                         BinOp(
-                            Constant(
-                                kind=None, value=5, constant_value=None, string=None
+                            set_value(
+                                5,
                             ),
                             Mult(),
-                            Constant(
-                                kind=None, value=5, constant_value=None, string=None
+                            set_value(
+                                5,
                             ),
                         )
                     ],
@@ -821,14 +630,7 @@ argparse_func_with_body_ast = (
                 body=[
                     Expr(
                         Call(
-                            args=[
-                                Constant(
-                                    kind=None,
-                                    value=True,
-                                    constant_value=None,
-                                    string=None,
-                                )
-                            ],
+                            args=[set_value(True)],
                             func=Name("print", Load()),
                             keywords=[],
                             expr=None,
@@ -836,14 +638,12 @@ argparse_func_with_body_ast = (
                         )
                     ),
                     Return(
-                        value=Constant(
-                            kind=None, value=5, constant_value=None, string=None
-                        ),
+                        value=set_value(5),
                         expr=None,
                     ),
                 ],
                 orelse=[],
-                test=Constant(kind=None, value=True, constant_value=None, string=None),
+                test=set_value(True),
                 expr_test=None,
                 stmt=None,
             ),
@@ -856,14 +656,7 @@ argparse_func_with_body_ast = (
                             ctx=Load(),
                             elts=[
                                 Call(
-                                    args=[
-                                        Constant(
-                                            kind=None,
-                                            value=0,
-                                            constant_value=None,
-                                            string=None,
-                                        )
-                                    ],
+                                    args=[set_value(0)],
                                     func=Attribute(
                                         Name("np", Load()),
                                         "empty",
@@ -875,11 +668,8 @@ argparse_func_with_body_ast = (
                                 ),
                                 Call(
                                     args=[
-                                        Constant(
-                                            kind=None,
-                                            value=0,
-                                            constant_value=None,
-                                            string=None,
+                                        set_value(
+                                            0,
                                         )
                                     ],
                                     func=Attribute(
@@ -903,18 +693,16 @@ argparse_func_with_body_ast = (
         decorator_list=[],
         name="set_cli_args",
         returns=None,
-        type_comment=None,
         arguments_args=None,
         identifier_name=None,
         stmt=None,
+        **maybe_type_comment
     )
-    if PY3_8
-    else ast.parse(argparse_func_with_body_str).body[0]
 )
 
 argparse_add_argument_ast = Expr(
     Call(
-        args=[Constant(kind=None, value="--num", constant_value=None, string=None)],
+        args=[set_value("--num")],
         func=Attribute(
             Name("argument_parser", Load()),
             "add_argument",
@@ -924,7 +712,7 @@ argparse_add_argument_ast = Expr(
             keyword(arg="type", value=Name("int", Load()), identifier=None),
             keyword(
                 arg="required",
-                value=Constant(kind=None, value=True, constant_value=None, string=None),
+                value=set_value(True),
                 identifier=None,
             ),
         ],
@@ -933,14 +721,12 @@ argparse_add_argument_ast = Expr(
     )
 )
 
-argparse_func_action_append_ast = (
+argparse_func_action_append_ast = fix_missing_locations(
     FunctionDef(
         name="set_cli_action_append",
         args=arguments(
             posonlyargs=[],
-            args=[
-                arg("argument_parser", expr=None, annotation=None, type_comment=None)
-            ],
+            args=[set_arg("argument_parser")],
             kwonlyargs=[],
             kw_defaults=[],
             defaults=[],
@@ -950,131 +736,51 @@ argparse_func_action_append_ast = (
         ),
         body=[
             Expr(
-                Constant(
+                set_value(
                     "\n    Set CLI arguments\n\n    "
                     ":param argument_parser: argument parser\n    "
                     ":type argument_parser: ```ArgumentParser```\n\n    "
                     ":return: argument_parser\n    "
-                    ":rtype: ```ArgumentParser```\n    ",
-                    string=None,
+                    ":rtype: ```ArgumentParser```\n    "
                 )
             ),
             Assign(
                 targets=[
                     Attribute(Name("argument_parser", Load()), "description", Store())
                 ],
-                value=Constant(
+                value=set_value(
                     "Acquire from the official tensorflow_datasets model zoo,"
-                    " or the ophthalmology focussed ml-prepare library",
-                    string=None,
-                    kind=None,
+                    " or the ophthalmology focussed ml-prepare library"
                 ),
                 expr=None,
-                type_comment=None,
+                **maybe_type_comment
             ),
             Expr(
                 Call(
                     func=Attribute(
                         Name("argument_parser", Load()), "add_argument", Load()
                     ),
-                    args=[
-                        Constant(
-                            value="--callbacks",
-                            constant_value=None,
-                            string=None,
-                            kind=None,
-                        )
-                    ],
+                    args=[set_value("--callbacks")],
                     keywords=[
                         keyword(arg="type", value=Name("str", Load()), identifier=None),
                         keyword(
                             arg="choices",
                             value=Tuple(
                                 elts=[
-                                    Constant(
-                                        kind=None,
-                                        value="BaseLogger",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        kind=None,
-                                        value="CSVLogger",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        kind=None,
-                                        value="Callback",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        kind=None,
-                                        value="CallbackList",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        kind=None,
-                                        value="EarlyStopping",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        kind=None,
-                                        value="History",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        kind=None,
-                                        value="LambdaCallback",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        kind=None,
-                                        value="LearningRateScheduler",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        kind=None,
-                                        value="ModelCheckpoint",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        kind=None,
-                                        value="ProgbarLogger",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        kind=None,
-                                        value="ReduceLROnPlateau",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        kind=None,
-                                        value="RemoteMonitor",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        kind=None,
-                                        value="TensorBoard",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
-                                    Constant(
-                                        kind=None,
-                                        value="TerminateOnNaN",
-                                        constant_value=None,
-                                        string=None,
-                                    ),
+                                    set_value("BaseLogger"),
+                                    set_value("CSVLogger"),
+                                    set_value("Callback"),
+                                    set_value("CallbackList"),
+                                    set_value("EarlyStopping"),
+                                    set_value("History"),
+                                    set_value("LambdaCallback"),
+                                    set_value("LearningRateScheduler"),
+                                    set_value("ModelCheckpoint"),
+                                    set_value("ProgbarLogger"),
+                                    set_value("ReduceLROnPlateau"),
+                                    set_value("RemoteMonitor"),
+                                    set_value("TensorBoard"),
+                                    set_value("TerminateOnNaN"),
                                 ],
                                 ctx=Load(),
                                 expr=None,
@@ -1083,16 +789,13 @@ argparse_func_action_append_ast = (
                         ),
                         keyword(
                             arg="action",
-                            value=set_value(kind=None, value="append"),
+                            value=set_value("append"),
                             identifier=None,
                         ),
                         keyword(
                             arg="help",
-                            value=Constant(
-                                kind=None,
-                                value="Collection of callables that are run inside the training loop",
-                                constant_value=None,
-                                string=None,
+                            value=set_value(
+                                "Collection of callables that are run inside the training loop"
                             ),
                             identifier=None,
                         ),
@@ -1105,13 +808,11 @@ argparse_func_action_append_ast = (
         ],
         decorator_list=[],
         returns=None,
-        type_comment=None,
         arguments_args=None,
         identifier_name=None,
         stmt=None,
+        **maybe_type_comment
     )
-    if PY3_8
-    else ast.parse(argparse_func_action_append_str).body[0]
 )
 
 __all__ = [
