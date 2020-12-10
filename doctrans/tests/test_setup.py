@@ -27,7 +27,7 @@ class TestSetupPy(TestCase):
         """
         Function which imports setup.py as a module
 
-        :returns: setup.py as a module
+        :return: setup.py as a module
         :rtype: ```Union[module, ModuleSpec]```
         """
         modname = "setup_py"

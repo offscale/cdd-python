@@ -19,13 +19,9 @@ from collections import OrderedDict, deque
 from functools import partial
 from inspect import signature, getdoc, _empty, isfunction, getsource
 from itertools import filterfalse, count
-from operator import itemgetter
 from types import FunctionType
-from typing import Any
 
 from docstring_parser import (
-    DocstringParam,
-    DocstringMeta,
     Docstring,
 )
 
@@ -38,13 +34,19 @@ from doctrans.ast_utils import (
     get_function_type,
     argparse_param2param,
 )
-from doctrans.defaults_utils import extract_default
-from doctrans.docstring_parsers import parse_docstring
+from doctrans.docstring_parsers import parse_docstring, _set_name_and_type
 from doctrans.emitter_utils import parse_out_param, _parse_return
+from doctrans.parser_utils import (
+    _inspect_process_ir_param,
+    _inspect_process_sig,
+    _interpolate_return,
+    _evaluate_to_docstring_value,
+    lstrip_typings,
+    ir_merge,
+)
 from doctrans.pure_utils import (
     rpartial,
     assert_equal,
-    lstrip_namespace,
     update_d,
 )
 from doctrans.source_transformer import to_code
@@ -52,7 +54,7 @@ from doctrans.source_transformer import to_code
 logger = get_logger("doctrans.parse")
 
 
-def class_(class_def, class_name=None, merge_inner_function=None):
+def class_(class_def, class_name=None, merge_inner_function=None, infer_type=False):
     """
     Converts an AST to our IR
 
@@ -64,6 +66,9 @@ def class_(class_def, class_name=None, merge_inner_function=None):
 
     :param merge_inner_function: Name of inner function to merge. If None, merge nothing.
     :type merge_inner_function: ```Optional[str]```
+
+    :param infer_type: Whether to try inferring the typ (from the default)
+    :type infer_type: ```bool```
 
     :return: a dictionary of form
           {
@@ -81,13 +86,30 @@ def class_(class_def, class_name=None, merge_inner_function=None):
         ir = _inspect(class_def, class_name)
         parsed_body = ast.parse(getsource(class_def).lstrip()).body[0]
 
-        # if merge_inner_function is not None:
-        #     # Should probably write a general IR merge function
-        #     function_def = next(filter(lambda node: isinstance(node, FunctionDef)
-        #                                             and node.name == merge_inner_function,
-        #                                     ast.walk(parsed_body)))
-        #     function_type = "static" if not function_def.args.args else function_def.args.args[0].arg
-        #     inner_ir = function(function_def, function_name=merge_inner_function, function_type=function_type)
+        if merge_inner_function is not None:
+            # Should probably write a general IR merge function
+            function_def = next(
+                filter(
+                    lambda node: isinstance(node, FunctionDef)
+                    and node.name == merge_inner_function,
+                    ast.walk(parsed_body),
+                ),
+                None,
+            )
+            if function_def is not None:
+                function_type = (
+                    "static"
+                    if not function_def.args.args
+                    else function_def.args.args[0].arg
+                )
+                inner_ir = function(
+                    function_def,
+                    function_name=merge_inner_function,
+                    function_type=function_type,
+                    infer_type=infer_type,
+                )
+                ir_merge(other=inner_ir, target=ir)
+                return ir
 
         ir["_internal"] = {
             "body": list(
@@ -167,7 +189,8 @@ def class_(class_def, class_name=None, merge_inner_function=None):
     intermediate_repr.update(
         {
             "params": [
-                dict(name=k, **v) for k, v in intermediate_repr["params"].items()
+                _set_name_and_type(dict(name=k, **v), infer_type=infer_type)
+                for k, v in intermediate_repr["params"].items()
             ],
             "_internal": {
                 "body": list(
@@ -179,10 +202,30 @@ def class_(class_def, class_name=None, merge_inner_function=None):
         }
     )
 
+    if merge_inner_function is not None:
+        # Should probably write a general IR merge function
+        function_def = next(
+            filter(
+                lambda func: func.name == merge_inner_function,
+                filter(rpartial(isinstance, FunctionDef), ast.walk(class_def)),
+            ),
+            None,
+        )
+        if function_def is not None:
+            function_type = (
+                "static"
+                if not function_def.args.args
+                else function_def.args.args[0].arg
+            )
+            inner_ir = function(
+                function_def,
+                function_name=merge_inner_function,
+                function_type=function_type,
+                infer_type=infer_type,
+            )
+            ir_merge(other=inner_ir, target=intermediate_repr)
+
     return intermediate_repr
-
-
-lstrip_typings = partial(lstrip_namespace, namespaces=("typings.", "_extensions."))
 
 
 def _inspect(obj, name):
@@ -256,64 +299,6 @@ def _inspect(obj, name):
     return ir
 
 
-def _inspect_process_ir_param(param, sig):
-    """
-    Postprocess the param
-
-    :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-    :type param: ```dict``
-
-    :param sig: The Signature
-    :type sig: ```inspect.Signature```
-
-    :return: Potentially changed param
-    :rtype: ```dict```
-    """
-    param["name"] = param["name"].lstrip("*")
-    if param["name"] not in sig.parameters:
-        return param
-    sig_param = sig.parameters[param["name"]]
-    if sig_param.annotation is not _empty:
-        param["typ"] = lstrip_typings("{!s}".format(sig_param.annotation))
-    if sig_param.default is not _empty:
-        param["default"] = sig_param.default
-        if param.get("typ", _empty) is _empty:
-            param["typ"] = type(param["default"]).__name__
-    if param["name"].endswith("kwargs"):
-        param["typ"] = "dict"
-    return param
-
-
-def _inspect_process_sig(k_v):
-    """
-    Postprocess the param
-
-    :param k: A key from `inspect._parameters` mapping
-    :type k: ```Any``
-
-    :param v: A value from `inspect._parameters` mapping
-    :type v: ```Any``
-
-    :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-    :rtype: ```dict```
-    """
-    # return dict(
-    #     name=k_v[0],
-    #     **(
-    #         {}
-    #         if k_v[1].default is _empty
-    #         else {
-    #             "default": k_v[1].default,
-    #             "typ": lstrip_typings(
-    #                 type(k_v[1].default).__name__
-    #                 if k_v[1].annotation is _empty
-    #                 else "{!s}".format(k_v[1].annotation)
-    #             ),
-    #         }
-    #     ),
-    # )
-
-
 def function(function_def, infer_type=False, function_type=None, function_name=None):
     """
     Converts a method to our IR
@@ -359,15 +344,25 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
         function_name is None or function_def.name == function_name
     ), "Expected {!r} got {!r}".format(function_name, function_def.name)
 
+    found_type = get_function_type(function_def)
+
     intermediate_repr_docstring = (
         get_docstring(function_def) if isinstance(function_def, FunctionDef) else None
     )
     if intermediate_repr_docstring is None:
-        intermediate_repr = {"description": "", "params": [], "returns": None}
-        for arg in function_def.args.args:
-            intermediate_repr["params"].append(argparse_param2param(arg))
-
-        # TODO: Returns when no docstring is provided
+        intermediate_repr = {
+            "description": "",
+            "params": list(
+                map(
+                    argparse_param2param,
+                    function_def.args.args
+                    if found_type == "static"
+                    else (function_def.args.args[1:]),
+                )
+            ),
+            "returns": None,
+        }
+        # TODO: `intermediate_repr["returns"]` when no docstring is provided
     else:
         intermediate_repr = docstring(
             intermediate_repr_docstring.replace(":cvar", ":param"),
@@ -380,7 +375,6 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
     # ):
     #     del intermediate_repr["params"][0]
 
-    found_type = get_function_type(function_def)
     intermediate_repr.update(
         {
             "name": function_name or function_def.name,
@@ -397,20 +391,25 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
 
     params_to_append = []
     if hasattr(function_def.args, "kwarg") and function_def.args.kwarg:
+        merge_with = (
+            intermediate_repr["params"].pop()
+            if intermediate_repr["params"]
+            and intermediate_repr["params"][-1]["name"] == function_def.args.kwarg.arg
+            else {}
+        )
         params_to_append.append(
             update_d(
                 {
                     "name": function_def.args.kwarg.arg,
-                    "typ": "dict",
+                    "typ": merge_with.get("typ", "dict"),
                 },
-                intermediate_repr["params"].pop()
-                if intermediate_repr["params"]
-                else {},
+                merge_with,
             )
         )
 
     idx = count()
 
+    # Set defaults
     if intermediate_repr["params"]:
         deque(
             map(
@@ -469,51 +468,18 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
             maxlen=0,
         )
 
+    intermediate_repr["params"] = list(
+        map(
+            partial(_set_name_and_type, infer_type=infer_type),
+            intermediate_repr["params"],
+        )
+    )
     intermediate_repr["params"] += params_to_append
 
     # Convention - the final top-level `return` is the default
     _interpolate_return(function_def, intermediate_repr)
 
     return intermediate_repr
-
-
-def _interpolate_return(function_def, intermediate_repr):
-    """
-    Interpolate the return value into the IR.
-
-    :param function_def: function definition
-    :type function_def: ```FunctionDef```
-
-    :param intermediate_repr: a dictionary of form
-              {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-              }
-    :type intermediate_repr: ```dict```
-    """
-    return_ast = next(
-        filter(rpartial(isinstance, Return), function_def.body[::-1]), None
-    )
-    if return_ast is not None and return_ast.value is not None:
-        # if intermediate_repr["returns"] is None: intermediate_repr["returns"] = {"name": "return_type"}
-
-        intermediate_repr["returns"]["default"] = (
-            lambda default: "({})".format(default)
-            if isinstance(return_ast.value, Tuple)
-            and (not default.startswith("(") or not default.endswith(")"))
-            else (
-                lambda default_: default_
-                if isinstance(
-                    default_, (str, int, float, complex, ast.Num, ast.Str, ast.Constant)
-                )
-                else "```{}```".format(default)
-            )(get_value(get_value(return_ast)))
-        )(to_code(return_ast.value).rstrip("\n"))
-    if hasattr(function_def, "returns") and function_def.returns is not None:
-        intermediate_repr["returns"]["typ"] = to_code(function_def.returns).rstrip("\n")
 
 
 def argparse_ast(function_def, function_type=None, function_name=None):
@@ -615,85 +581,6 @@ def docstring(doc_string, infer_type=False, return_tuple=False):
         )
 
     return parsed
-
-
-def _parse_dict(d):
-    """
-    Restructure dictionary to match expectations
-
-    :param d: input dictionary
-    :type d: ```dict```
-
-    :return: restructured dict
-    :rtype: ```dict```
-    """
-    assert isinstance(d, dict), "Expected 'dict' got `{!r}`".format(type(d).__name__)
-    if "args" in d and len(d["args"]) in frozenset((1, 2)):
-        d["name"] = d.pop("args")[0]
-        if d["name"] == "return":
-            d["name"] = "return_type"
-    if "type_name" in d:
-        d["typ"] = d.pop("type_name")
-    if "description" in d:
-        d["doc"] = d.pop("description")
-
-    return {k: v for k, v in d.items() if v is not None}
-
-
-def _evaluate_to_docstring_value(name_value):
-    """
-    Turn the second element of the tuple into the final representation (e.g., a bool, str, int)
-
-    :param name_value: name value tuple
-    :type name_value: ```Tuple[str, Any]```
-
-    :return: Same shape as input
-    :rtype: ```Tuple[str, Tuple[Union[str, int, bool, float]]]```
-    """
-    assert (
-        isinstance(name_value, tuple) and len(name_value) == 2
-    ), "Expected input of type `Tuple[str, Any]' got value of `{!r}`".format(name_value)
-    name: str = name_value[0]
-    value: Any = name_value[1]
-    if isinstance(value, (list, tuple)):
-        value = list(
-            map(
-                itemgetter(1),
-                map(lambda v: _evaluate_to_docstring_value((name, v)), value),
-            )
-        )
-    elif isinstance(value, DocstringParam):
-        assert len(value.args) == 2 and value.args[1] == value.arg_name
-        value = {
-            attr: getattr(value, attr)
-            for attr in (
-                "type_name",
-                "arg_name",
-                "is_optional",
-                "default",
-                "description",
-            )
-            if getattr(value, attr) is not None
-        }
-        if "arg_name" in value:
-            value["name"] = value.pop("arg_name")
-        if "description" in value:
-            value["doc"] = extract_default(
-                value.pop("description"), emit_default_doc=False
-            )[0]
-    elif isinstance(value, DocstringMeta):
-        value = _parse_dict(
-            {
-                attr: getattr(value, attr)
-                for attr in dir(value)
-                if not attr.startswith("_") and getattr(value, attr)
-            }
-        )
-    elif name == "short_description":
-        name = "doc"
-    # elif not isinstance(value, (str, int, float, bool, type(None))):
-    #     raise NotImplementedError(type(value).__name__)
-    return name, value
 
 
 def docstring_parser(doc_string):

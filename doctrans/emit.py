@@ -122,7 +122,7 @@ def argparse_function(
                                             ":return: argument_parser\n    "
                                             ":rtype: ```ArgumentParser```\n    "
                                         )
-                                    ),
+                                    )
                                 )
                             ),
                             Assign(

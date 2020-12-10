@@ -474,6 +474,7 @@ docstring_google_tf_adadelta_ir = {
     "type": "static",
 }
 
+# https://github.com/tensorflow/tensorflow/blob/7ad2723/tensorflow/python/keras/callbacks.py#L2649-L2699
 docstring_google_tf_lambda_callback_str = """Callback for creating simple, custom callbacks on-the-fly.
 
 This callback is constructed with anonymous functions that will be called

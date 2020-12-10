@@ -1,14 +1,20 @@
 """
 Tests for the Intermediate Representation produced by the parsers
 """
+import ast
 from ast import FunctionDef
 from unittest import TestCase
 
 from doctrans import parse, emit
-from doctrans.ast_utils import get_value
-from doctrans.pure_utils import tab, PY_GTE_3_8
+from doctrans.ast_utils import get_value, RewriteAtQuery
+from doctrans.pure_utils import PY_GTE_3_8, tab
 from doctrans.tests.mocks.argparse import argparse_func_ast
-from doctrans.tests.mocks.classes import class_ast
+from doctrans.tests.mocks.classes import (
+    class_ast,
+    class_google_tf_tensorboard_ast,
+    class_google_tf_tensorboard_str,
+    class_google_tf_tensorboard_ir,
+)
 from doctrans.tests.mocks.docstrings import (
     intermediate_repr_no_default_doc,
 )
@@ -22,7 +28,11 @@ from doctrans.tests.mocks.methods import (
     function_adder_ir,
     docstring_google_tf_adadelta_function_str,
 )
-from doctrans.tests.utils_for_tests import unittest_main, inspectable_compile
+from doctrans.tests.utils_for_tests import (
+    unittest_main,
+    inspectable_compile,
+    run_ast_test,
+)
 
 
 class TestParsers(TestCase):
@@ -377,6 +387,66 @@ class TestParsers(TestCase):
                         "typ": "dict",
                     },
                     {"default": True, "name": "_HAS_AGGREGATE_GRAD"},
+                ],
+                "returns": None,
+            },
+        )
+
+    def test_from_class_and_function(self) -> None:
+        """Tests that the parser can combine the outer class docstring + structure
+        with the inner function parameter defaults"""
+
+        # Sanity check
+        run_ast_test(
+            self,
+            class_google_tf_tensorboard_ast,
+            gold=ast.parse(class_google_tf_tensorboard_str).body[0],
+        )
+
+        parsed_ir = parse.class_(
+            class_google_tf_tensorboard_ast,
+            merge_inner_function="__init__",
+            infer_type=True,
+        )
+
+        del parsed_ir["_internal"]  # Not needed for this test
+
+        self.assertDictEqual(parsed_ir, class_google_tf_tensorboard_ir)
+
+    def test_from_class_and_function_in_memory(self) -> None:
+        """Tests that the parser can combine the outer class docstring + structure
+        with the inner function parameter defaults"""
+
+        parsed_ir = parse.class_(
+            RewriteAtQuery,
+            merge_inner_function="__init__",
+            infer_type=True,
+        )
+
+        # del parsed_ir["_internal"]  # Not needed for this test
+
+        self.assertDictEqual(
+            parsed_ir,
+            {
+                "doc": "Replace the node at query with given node",
+                "name": "RewriteAtQuery",
+                "params": [
+                    {
+                        "doc": "Search query, e.g., ['node_name', "
+                        "'function_name', 'arg_name']",
+                        "name": "search",
+                        "typ": "List[str]",
+                    },
+                    {
+                        "doc": "Node to replace this search",
+                        "name": "replacement_node",
+                        "typ": "AST",
+                    },
+                    {
+                        "doc": "whether a node has been replaced (only replaces "
+                        "first occurrence)",
+                        "name": "replaced",
+                    },
                 ],
                 "returns": None,
             },
