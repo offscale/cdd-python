@@ -15,7 +15,6 @@ from ast import (
     Store,
     Tuple,
     Return,
-    arg,
 )
 from functools import partial
 from itertools import chain
@@ -23,7 +22,14 @@ from operator import itemgetter, contains
 
 from black import format_str, Mode
 
-from doctrans.ast_utils import param2argparse_param, param2ast, set_value, get_value
+from doctrans.ast_utils import (
+    param2argparse_param,
+    param2ast,
+    set_value,
+    get_value,
+    set_arg,
+    maybe_type_comment,
+)
 from doctrans.defaults_utils import set_default_doc
 from doctrans.emitter_utils import get_internal_body, to_docstring
 from doctrans.pure_utils import tab, simple_types, PY3_8, rpartial
@@ -80,20 +86,8 @@ def argparse_function(
                     (
                         # None
                         # if function_type in frozenset((None, "static"))
-                        # else arg(
-                        #     annotation=None,
-                        #     arg=function_type,
-                        #     type_comment=None,
-                        #     expr=None,
-                        #     identifier_arg=None,
-                        # ),
-                        arg(
-                            annotation=None,
-                            arg="argument_parser",
-                            type_comment=None,
-                            expr=None,
-                            identifier_arg=None,
-                        ),
+                        # else set_arg(function_type),
+                        set_arg("argument_parser"),
                     ),
                 )
             ),
@@ -112,8 +106,7 @@ def argparse_function(
                         (
                             Expr(
                                 set_value(
-                                    kind=None,
-                                    value="\n    Set CLI arguments\n\n    "
+                                    "\n    Set CLI arguments\n\n    "
                                     ":param argument_parser: argument parser\n    "
                                     ":type argument_parser: ```ArgumentParser```\n\n    "
                                     "{return_params}".format(
@@ -140,13 +133,10 @@ def argparse_function(
                                         Store(),
                                     )
                                 ],
-                                type_comment=None,
-                                value=set_value(
-                                    kind=None,
-                                    value=intermediate_repr["doc"],
-                                ),
+                                value=set_value(intermediate_repr["doc"]),
                                 lineno=None,
                                 expr=None,
+                                **maybe_type_comment
                             ),
                         )
                     ),
@@ -211,11 +201,11 @@ def argparse_function(
         decorator_list=[],
         name=function_name,
         returns=None,
-        type_comment=None,
         lineno=None,
         arguments_args=None,
         identifier_name=None,
         stmt=None,
+        **maybe_type_comment
     )
 
 
@@ -300,8 +290,7 @@ def class_(
         body=[
             Expr(
                 set_value(
-                    kind=None,
-                    value=to_docstring(
+                    to_docstring(
                         intermediate_repr, indent_level=0, emit_separating_tab=False
                     )
                     .replace("\n:param ", "{tab}:cvar ".format(tab=tab))
@@ -310,7 +299,7 @@ def class_(
                         "\n{tab}:cvar ".format(tab=tab),
                         1,
                     )
-                    .rstrip(),
+                    .rstrip()
                 )
             )
         ]
@@ -319,15 +308,7 @@ def class_(
             [
                 FunctionDef(
                     args=arguments(
-                        args=[
-                            arg(
-                                annotation=None,
-                                arg="self",
-                                type_comment=None,
-                                expr=None,
-                                identifier_arg=None,
-                            )
-                        ],
+                        args=[set_arg("self")],
                         defaults=[],
                         kw_defaults=[],
                         kwarg=None,
@@ -344,11 +325,11 @@ def class_(
                     decorator_list=[],
                     name="__call__",
                     returns=None,
-                    type_comment=None,
                     arguments_args=None,
                     identifier_name=None,
                     stmt=None,
                     lineno=None,
+                    **maybe_type_comment
                 )
             ]
             if emit_call and internal_body
@@ -509,21 +490,11 @@ def function(
     function_type = function_type or intermediate_repr["type"]
 
     args = (
-        []
-        if function_type in frozenset((None, "static"))
-        else [
-            arg(
-                annotation=None,
-                arg=function_type,
-                type_comment=None,
-                expr=None,
-                identifier_arg=None,
-            )
-        ]
+        [] if function_type in frozenset((None, "static")) else [set_arg(function_type)]
     )
     args_from_params = list(
         map(
-            lambda param: arg(
+            lambda param: set_arg(
                 annotation=(
                     Name(param["typ"], Load())
                     if param["typ"] in simple_types
@@ -532,16 +503,13 @@ def function(
                 if inline_types and "typ" in param
                 else None,
                 arg=param["name"],
-                type_comment=None,
-                expr=None,
-                identifier_arg=None,
             ),
             params_no_kwargs,
         ),
     )
     defaults_from_params = list(
         map(
-            lambda param: set_value(kind=None, value=param.get("default")),
+            lambda param: set_value(param.get("default")),
             params_no_kwargs,
         )
     )
@@ -574,13 +542,7 @@ def function(
             kw_defaults=kw_defaults,
             kwarg=next(
                 map(
-                    lambda param: arg(
-                        annotation=None,
-                        arg=param["name"],
-                        type_comment=None,
-                        expr=None,
-                        identifier_arg=None,
-                    ),
+                    lambda param: set_arg(param["name"]),
                     filter(
                         lambda param: param["name"].endswith("kwargs"),
                         intermediate_repr["params"],
@@ -599,15 +561,14 @@ def function(
                 (
                     Expr(
                         set_value(
-                            kind=None,
-                            value=to_docstring(
+                            to_docstring(
                                 intermediate_repr,
                                 emit_default_doc=emit_default_doc,
                                 docstring_format=docstring_format,
                                 emit_types=not inline_types,
                                 indent_level=indent_level,
                                 emit_separating_tab=emit_separating_tab,
-                            ),
+                            )
                         )
                     ),
                     *(
@@ -628,11 +589,11 @@ def function(
             if inline_types and (intermediate_repr.get("returns") or {}).get("typ")
             else None
         ),
-        type_comment=None,
         lineno=None,
         arguments_args=None,
         identifier_name=None,
         stmt=None,
+        **maybe_type_comment
     )
 
 

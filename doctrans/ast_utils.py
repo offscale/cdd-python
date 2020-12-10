@@ -23,7 +23,6 @@ from ast import (
     Str,
     NameConstant,
     Assign,
-    arg,
     Index,
     Num,
     AST,
@@ -32,10 +31,9 @@ from ast import (
     NodeTransformer,
 )
 from copy import deepcopy
-from functools import partial
 
 from doctrans.defaults_utils import extract_default
-from doctrans.pure_utils import simple_types, rpartial, PY_GTE_3_8
+from doctrans.pure_utils import simple_types, rpartial, PY_GTE_3_8, PY_GTE_3_9
 
 # Was `"globals().__getitem__"`; this type is used for `Any` and any other unhandled
 FALLBACK_TYP = "str"
@@ -61,20 +59,17 @@ def param2ast(param):
     if param["typ"] is None:
         return Assign(
             targets=[Name(param["name"], Store())],
-            value=set_value(
-                kind=None, value=param.get("default") or simple_types[param["typ"]]
-            ),
+            value=set_value(param.get("default") or simple_types[param["typ"]]),
             lineno=None,
             expr=None,
+            **maybe_type_comment
         )
     elif param["typ"] in simple_types:
         return AnnAssign(
             annotation=Name(param["typ"], Load()),
             simple=1,
             target=Name(param["name"], Store()),
-            value=set_value(
-                kind=None, value=param.get("default") or simple_types[param["typ"]]
-            ),
+            value=set_value(param.get("default") or simple_types[param["typ"]]),
             expr=None,
             expr_target=None,
             expr_annotation=None,
@@ -95,7 +90,7 @@ def param2ast(param):
         if "default" in param:
             try:
                 parsed_default = (
-                    set_value(value=param["default"])
+                    set_value(param["default"])
                     if (
                         param["default"] is None
                         or isinstance(param["default"], (float, int, str))
@@ -109,7 +104,7 @@ def param2ast(param):
                     else ast.parse(param["default"])
                 )
             except SyntaxError:
-                parsed_default = set_value(value="```{}```".format(param["default"]))
+                parsed_default = set_value("```{}```".format(param["default"]))
 
             value = (
                 parsed_default.body[0].value
@@ -218,7 +213,7 @@ def param2argparse_param(param, emit_default_doc=True):
 
     return Expr(
         Call(
-            args=[set_value(kind=None, value="--{param[name]}".format(param=param))],
+            args=[set_value("--{param[name]}".format(param=param))],
             func=Attribute(
                 Name("argument_parser", Load()),
                 "add_argument",
@@ -241,7 +236,7 @@ def param2argparse_param(param, emit_default_doc=True):
                             arg="choices",
                             value=Tuple(
                                 ctx=Load(),
-                                elts=list(map(partial(set_value, kind=None), choices)),
+                                elts=list(map(set_value, choices)),
                                 expr=None,
                             ),
                             identifier=None,
@@ -250,28 +245,17 @@ def param2argparse_param(param, emit_default_doc=True):
                         if action is None
                         else keyword(
                             arg="action",
-                            value=set_value(kind=None, value=action),
+                            value=set_value(action),
                             identifier=None,
                         ),
                         keyword(
                             arg="help",
-                            value=set_value(kind=None, value=doc),
+                            value=set_value(doc),
                             identifier=None,
                         ),
                         keyword(
                             arg="required",
-                            value=(
-                                Constant(
-                                    kind=None,
-                                    value=True,
-                                    constant_value=None,
-                                    string=None,
-                                )
-                                if PY_GTE_3_8
-                                else NameConstant(
-                                    value=True, constant_value=None, string=None
-                                )
-                            ),
+                            value=set_value(True),
                             identifier=None,
                         )
                         if required
@@ -280,7 +264,7 @@ def param2argparse_param(param, emit_default_doc=True):
                         if default is None
                         else keyword(
                             arg="default",
-                            value=set_value(kind=None, value=default),
+                            value=set_value(default),
                             identifier=None,
                         ),
                     ),
@@ -297,7 +281,7 @@ def argparse_param2param(argparse_param):
     Converts a param to an Expr `argparse.add_argument` call
 
     :param argparse_param: argparse.add_argument` call—with arguments—as an AST node
-    :type argparse_param: ```AST.arg```
+    :type argparse_param: ```ast.arg```
 
     :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :rtype: ```dict```
@@ -425,9 +409,50 @@ def set_value(value, kind=None):
         else (
             Str(s=value, constant_value=None, string=None)
             if isinstance(value, str)
+            else Num(n=value, constant_value=None, string=None)
+            if not isinstance(value, bool) and isinstance(value, (int, float, complex))
             else NameConstant(value=value, constant_value=None, string=None)
         )
     )
+
+
+def set_slice(node):
+    """
+    In Python 3.9 there's a new ast parser (PEG) that no longer wraps things in Index.
+    This function handles this issue.
+
+    :param node: An AST node
+    :type node: ```ast.AST```
+
+    :return: Original node, possibly wrapped in an ```Index```
+    :rtype: ```Union[ast.AST, Index]```
+    """
+    return node if PY_GTE_3_9 else Index(node)
+
+
+def set_arg(arg, annotation=None):
+    """
+    In Python 3.8 `expr` and `type_comment` need to be set on arg.
+    This function handles constructs an `ast.arg` handling that issue.
+
+    :param arg: The argument name
+    :type arg: ```Optional[str]```
+
+    :param annotation: The argument's annotation
+    :type annotation: ```Optional[ast.AST]```
+
+    :return: The constructed ```ast.arg```
+    :rtype: ```ast.arg```
+    """
+    return ast.arg(
+        arg=arg,
+        annotation=annotation,
+        **dict(expr=None, **maybe_type_comment) if PY_GTE_3_8 else {}
+    )
+
+
+maybe_lineno = {"line_no": None} if PY_GTE_3_8 else {}
+maybe_type_comment = {"type_comment": None} if PY_GTE_3_8 else {}
 
 
 def is_argparse_add_argument(node):
@@ -680,11 +705,9 @@ class RewriteAtQuery(NodeTransformer):
                         ),
                         None,
                     )
-                    self.replacement_node = arg(
+                    self.replacement_node = set_arg(
                         arg=self.replacement_node.targets[0].id,
                         annotation=self.replacement_node.value,
-                        expr=None,
-                        identifier_arg=None,
                     )
 
                 if idx is not None and len(node.args.defaults) > idx:
@@ -694,7 +717,7 @@ class RewriteAtQuery(NodeTransformer):
 
                 self.replacement_node = emit_arg(self.replacement_node)
             assert isinstance(
-                self.replacement_node, arg
+                self.replacement_node, ast.arg
             ), "Expected ast.arg got {!r}".format(type(self.replacement_node).__name__)
 
             for arg_attr in "args", "kwonlyargs":
@@ -723,7 +746,7 @@ def emit_ann_assign(node):
     """
     if isinstance(node, AnnAssign):
         return node
-    elif isinstance(node, arg):
+    elif isinstance(node, ast.arg):
         return AnnAssign(
             annotation=node.annotation,
             simple=1,
@@ -749,30 +772,21 @@ def emit_arg(node):
     :type node: ```AST```
 
     :return: Something which parses to the form of `a=5`
-    :rtype: ```arg```
+    :rtype: ```ast.arg```
     """
-    if isinstance(node, arg):
+    if isinstance(node, ast.arg):
         return node
     elif isinstance(node, AnnAssign) and isinstance(node.target, Name):
-        return arg(
+        return set_arg(
             annotation=node.annotation,
             arg=node.target.id,
-            type_comment=None,
-            expr=None,
-            identifier_arg=None,
         )
     elif (
         isinstance(node, Assign)
         and len(node.targets) == 1
         and isinstance(node.targets[0], Name)
     ):
-        return arg(
-            annotation=None,
-            arg=node.targets[0].id,
-            type_comment=None,
-            expr=None,
-            identifier_arg=None,
-        )
+        return set_arg(node.targets[0].id)
     else:
         raise NotImplementedError(type(node).__name__)
 
@@ -790,11 +804,9 @@ def it2literal(it):
     return Subscript(
         Name("Literal", Load()),
         Index(
-            value=Tuple(
-                ctx=Load(), elts=list(map(partial(Constant, kind=None), it)), expr=None
-            )
+            value=Tuple(ctx=Load(), elts=list(map(set_value, it)), expr=None)
             if len(it) > 1
-            else set_value(kind=None, value=it[0])
+            else set_value(it[0])
         ),
         Load(),
     )
@@ -818,5 +830,6 @@ __all__ = [
     "it2literal",
     "param2argparse_param",
     "param2ast",
+    "set_arg",
     "set_value",
 ]

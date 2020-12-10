@@ -21,6 +21,8 @@ from ast import (
 from os import path
 from unittest import TestCase
 
+from meta.asttools import cmp_ast
+
 from doctrans.ast_utils import (
     find_ast_type,
     get_function_type,
@@ -33,8 +35,10 @@ from doctrans.ast_utils import (
     param2ast,
     set_value,
     get_at_root,
+    set_arg,
+    maybe_type_comment,
 )
-from doctrans.pure_utils import PY_GTE_3_9, PY3_8, PY_GTE_3_8
+from doctrans.pure_utils import PY3_8, PY_GTE_3_8
 from doctrans.source_transformer import ast_parse
 from doctrans.tests.mocks.classes import class_ast, class_str
 from doctrans.tests.mocks.methods import (
@@ -43,7 +47,6 @@ from doctrans.tests.mocks.methods import (
     class_with_method_and_body_types_str,
 )
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
-from meta.asttools import cmp_ast
 
 
 class TestAstUtils(TestCase):
@@ -60,12 +63,7 @@ class TestAstUtils(TestCase):
                     ),
                     simple=1,
                     target=Name("dataset_name", Store()),
-                    value=Constant(
-                        kind=None,
-                        value="~/tensorflow_datasets",
-                        constant_value=None,
-                        string=None,
-                    ),
+                    value=set_value("~/tensorflow_datasets"),
                     expr=None,
                     expr_target=None,
                     expr_annotation=None,
@@ -74,12 +72,11 @@ class TestAstUtils(TestCase):
                     annotation=None,
                     simple=1,
                     targets=[Name("epochs", Store())],
-                    value=Constant(
-                        kind=None, value="333", constant_value=None, string=None
-                    ),
+                    value=set_value("333"),
                     expr=None,
                     expr_target=None,
                     expr_annotation=None,
+                    **maybe_type_comment
                 ),
             ],
             stmt=None,
@@ -112,17 +109,11 @@ class TestAstUtils(TestCase):
                 ),
                 simple=1,
                 target=Name("dataset_name", Store()),
-                value=Constant(
-                    kind=None,
-                    value="~/tensorflow_datasets",
-                    constant_value=None,
-                    string=None,
-                ),
+                value=set_value("~/tensorflow_datasets"),
                 expr=None,
                 expr_target=None,
                 expr_annotation=None,
             ),
-            run_cmp_ast=PY_GTE_3_9,
         )
 
     def test_emit_ann_assign_fails(self) -> None:
@@ -140,21 +131,16 @@ class TestAstUtils(TestCase):
         )
         assign = Assign(
             targets=[Name("yup", Store())],
-            value=Constant(kind=None, value="nup", constant_value=None, string=None),
+            value=set_value("nup"),
             expr=None,
+            **maybe_type_comment
         )
         gen_ast = emit_arg(assign)
         self.assertIsInstance(gen_ast, arg)
         run_ast_test(
             self,
             gen_ast=gen_ast,
-            gold=arg(
-                annotation=None,
-                arg="yup",
-                type_comment=None,
-                expr=None,
-                identifier_arg=None,
-            ),
+            gold=set_arg("yup"),
         )
 
     def test_emit_arg_fails(self) -> None:
@@ -164,6 +150,7 @@ class TestAstUtils(TestCase):
 
     def test_find_in_ast(self) -> None:
         """ Tests that `find_in_ast` successfully finds nodes in AST """
+
         run_ast_test(
             self,
             find_in_ast("ConfigClass.dataset_name".split("."), class_ast),
@@ -174,9 +161,7 @@ class TestAstUtils(TestCase):
                 ),
                 simple=1,
                 target=Name("dataset_name", Store()),
-                value=Constant(
-                    kind=None, value="mnist", constant_value=None, string=None
-                ),
+                value=set_value("mnist"),
                 expr=None,
                 expr_target=None,
                 expr_annotation=None,
@@ -230,15 +215,12 @@ class TestAstUtils(TestCase):
                 "C.function_name.dataset_name".split("."),
                 class_with_optional_arg_method_ast,
             ),
-            arg(
+            set_arg(
                 annotation=Name(
                     "str",
                     Load(),
                 ),
                 arg="dataset_name",
-                type_comment=None,
-                expr=None,
-                identifier_arg=None,
             ),
         )
 
@@ -256,17 +238,13 @@ class TestAstUtils(TestCase):
         run_ast_test(
             self,
             gen_ast,
-            arg(
+            set_arg(
                 annotation=Name(
                     "str",
                     Load(),
                 ),
                 arg="dataset_name",
-                type_comment=None,
-                expr=None,
-                identifier_arg=None,
             ),
-            run_cmp_ast=PY_GTE_3_9,
         )
 
     def test_get_at_root(self) -> None:
@@ -303,7 +281,7 @@ class TestAstUtils(TestCase):
                 annotation=Name("int", Load()),
                 simple=1,
                 target=Name("dataset_name", Store()),
-                value=Constant(kind=None, value=15, constant_value=None, string=None),
+                value=set_value(15),
                 expr=None,
                 expr_annotation=None,
                 expr_target=None,
@@ -333,7 +311,7 @@ class TestAstUtils(TestCase):
                 annotation=Name("int", Load()),
                 simple=1,
                 target=Name("dataset_name", Store()),
-                value=Constant(kind=None, value=15, constant_value=None, string=None),
+                value=set_value(15),
                 expr=None,
                 expr_target=None,
                 expr_annotation=None,
@@ -358,15 +336,7 @@ class TestAstUtils(TestCase):
             get_function_type(
                 FunctionDef(
                     args=arguments(
-                        args=[
-                            arg(
-                                annotation=None,
-                                arg="something else",
-                                type_comment=None,
-                                expr=None,
-                                identifier_arg=None,
-                            )
-                        ],
+                        args=[set_arg("something else")],
                         arg=None,
                     ),
                     arguments_args=None,
@@ -391,15 +361,7 @@ class TestAstUtils(TestCase):
             get_function_type(
                 FunctionDef(
                     args=arguments(
-                        args=[
-                            arg(
-                                annotation=None,
-                                arg="self",
-                                type_comment=None,
-                                expr=None,
-                                identifier_arg=None,
-                            )
-                        ],
+                        args=[set_arg("self")],
                         arg=None,
                     ),
                     arguments_args=None,
@@ -413,15 +375,7 @@ class TestAstUtils(TestCase):
             get_function_type(
                 FunctionDef(
                     args=arguments(
-                        args=[
-                            arg(
-                                annotation=None,
-                                arg="cls",
-                                type_comment=None,
-                                expr=None,
-                                identifier_arg=None,
-                            )
-                        ],
+                        args=[set_arg("cls")],
                         arg=None,
                     ),
                     arguments_args=None,
@@ -453,24 +407,23 @@ class TestAstUtils(TestCase):
             doctrans.ast_utils.PY3_8 = True
 
             self.assertIsInstance(
-                doctrans.ast_utils.set_value(None, None),
+                doctrans.ast_utils.set_value(None),
                 Constant if PY_GTE_3_8 else NameConstant,
             )
 
             doctrans.ast_utils.PY3_8 = False
 
-            self.assertIsInstance(
-                doctrans.ast_utils.set_value(None, None), NameConstant
-            )
+            self.assertIsInstance(doctrans.ast_utils.set_value(None), NameConstant)
+            self.assertIsInstance(doctrans.ast_utils.set_value(True), NameConstant)
 
             doctrans.ast_utils.PY3_8 = True
             self.assertIsInstance(
-                doctrans.ast_utils.set_value("foo", None),
+                doctrans.ast_utils.set_value("foo"),
                 Constant if PY_GTE_3_8 else Str,
             )
 
             doctrans.ast_utils.PY3_8 = False
-            self.assertIsInstance(doctrans.ast_utils.set_value("foo", None), Str)
+            self.assertIsInstance(doctrans.ast_utils.set_value("foo"), Str)
         finally:
             doctrans.ast_utils = _doctrans_ast_utils_PY3_8_orig
 
@@ -552,9 +505,10 @@ class TestAstUtils(TestCase):
             param2ast({"typ": None, "name": "zion"}),
             gold=Assign(
                 targets=[Name("zion", Store())],
-                value=set_value(value=None),
+                value=set_value(None),
                 expr=None,
                 lineno=None,
+                **maybe_type_comment
             ),
         )
 
@@ -574,7 +528,7 @@ class TestAstUtils(TestCase):
                 annotation=Name("NoneType", Load()),
                 simple=1,
                 target=Name("stateful_metrics", Store()),
-                value=set_value(value="```the `Model`'s metrics```"),
+                value=set_value("```the `Model`'s metrics```"),
                 expr=None,
                 expr_annotation=None,
                 expr_target=None,

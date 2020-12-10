@@ -140,7 +140,6 @@ class TestParsers(TestCase):
             :param b: the b value
 
             """
-            pass
 
         self.assertIsNone(foo(5, 6))
 
