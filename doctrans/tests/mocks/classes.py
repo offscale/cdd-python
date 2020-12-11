@@ -137,14 +137,15 @@ class_ast = ClassDef(
                 ),
                 Index(
                     value=Tuple(
-                        elts=[
-                            set_value(
-                                "np",
-                            ),
-                            set_value(
-                                "tf",
-                            ),
-                        ],
+                        elts=list(
+                            map(
+                                set_value,
+                                (
+                                    "np",
+                                    "tf",
+                                ),
+                            )
+                        ),
                         ctx=Load(),
                         expr=None,
                     )
@@ -207,17 +208,9 @@ class_ast = ClassDef(
                                                 ),
                                                 "Dataset",
                                                 Load(),
-                                            ),
-                                            Attribute(
-                                                Attribute(
-                                                    Name("tf", Load()),
-                                                    "data",
-                                                    Load(),
-                                                ),
-                                                "Dataset",
-                                                Load(),
-                                            ),
-                                        ],
+                                            )
+                                        ]
+                                        * 2,
                                         expr=None,
                                     )
                                 ),
@@ -233,13 +226,9 @@ class_ast = ClassDef(
                                                 Name("np", Load()),
                                                 "ndarray",
                                                 Load(),
-                                            ),
-                                            Attribute(
-                                                Name("np", Load()),
-                                                "ndarray",
-                                                Load(),
-                                            ),
-                                        ],
+                                            )
+                                        ]
+                                        * 2,
                                         expr=None,
                                     )
                                 ),
@@ -266,23 +255,9 @@ class_ast = ClassDef(
                         keywords=[],
                         expr=None,
                         expr_func=None,
-                    ),
-                    Call(
-                        args=[
-                            set_value(
-                                0,
-                            )
-                        ],
-                        func=Attribute(
-                            Name("np", Load()),
-                            "empty",
-                            Load(),
-                        ),
-                        keywords=[],
-                        expr=None,
-                        expr_func=None,
-                    ),
-                ],
+                    )
+                ]
+                * 2,
                 expr=None,
             ),
             expr=None,
@@ -319,50 +294,27 @@ class_nargs_ast = ClassDef(
                                 Index(
                                     value=Tuple(
                                         ctx=Load(),
-                                        elts=[
-                                            set_value(
-                                                "BaseLogger",
-                                            ),
-                                            set_value(
-                                                "CSVLogger",
-                                            ),
-                                            set_value(
-                                                "Callback",
-                                            ),
-                                            set_value(
-                                                "CallbackList",
-                                            ),
-                                            set_value(
-                                                "EarlyStopping",
-                                            ),
-                                            set_value(
-                                                "History",
-                                            ),
-                                            set_value(
-                                                "LambdaCallback",
-                                            ),
-                                            set_value(
-                                                "LearningRateScheduler",
-                                            ),
-                                            set_value(
-                                                "ModelCheckpoint",
-                                            ),
-                                            set_value(
-                                                "ProgbarLogger",
-                                            ),
-                                            set_value(
-                                                "ReduceLROnPlateau",
-                                            ),
-                                            set_value(
-                                                "RemoteMonitor",
-                                            ),
-                                            set_value(
-                                                "TensorBoard",
-                                            ),
-                                            set_value(
-                                                "TerminateOnNaN",
-                                            ),
-                                        ],
+                                        elts=list(
+                                            map(
+                                                set_value,
+                                                (
+                                                    "BaseLogger",
+                                                    "CSVLogger",
+                                                    "Callback",
+                                                    "CallbackList",
+                                                    "EarlyStopping",
+                                                    "History",
+                                                    "LambdaCallback",
+                                                    "LearningRateScheduler",
+                                                    "ModelCheckpoint",
+                                                    "ProgbarLogger",
+                                                    "ReduceLROnPlateau",
+                                                    "RemoteMonitor",
+                                                    "TensorBoard",
+                                                    "TerminateOnNaN",
+                                                ),
+                                            )
+                                        ),
                                         expr=None,
                                     )
                                 ),
@@ -1109,4 +1061,13 @@ class_google_tf_tensorboard_ir = {
 }
 
 
-__all__ = ["class_ast", "class_str", "class_nargs_ast", "class_nargs_str"]
+__all__ = [
+    "class_ast",
+    "class_google_tf_tensorboard_ast",
+    "class_google_tf_tensorboard_ir",
+    "class_google_tf_tensorboard_str",
+    "class_squared_hinge_config_ast",
+    "class_str",
+    "class_nargs_ast",
+    "class_nargs_str",
+]

@@ -16,9 +16,11 @@ from ast import (
     ClassDef,
 )
 from collections import OrderedDict, deque
+from copy import deepcopy
 from functools import partial
-from inspect import signature, getdoc, _empty, isfunction, getsource
+from inspect import signature, getdoc, isfunction, getsource
 from itertools import filterfalse, count
+from pprint import PrettyPrinter
 from types import FunctionType
 
 from docstring_parser import (
@@ -41,13 +43,13 @@ from doctrans.parser_utils import (
     _inspect_process_sig,
     _interpolate_return,
     _evaluate_to_docstring_value,
-    lstrip_typings,
     ir_merge,
 )
 from doctrans.pure_utils import (
     rpartial,
     assert_equal,
     update_d,
+    pp, simple_types,
 )
 from doctrans.source_transformer import to_code
 
@@ -82,34 +84,20 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
     """
     assert not isinstance(class_def, FunctionDef)
     is_supported_ast_node = isinstance(class_def, (Module, ClassDef))
-    if not is_supported_ast_node and isinstance(object, type):
+    if not is_supported_ast_node and isinstance(class_def, type):
         ir = _inspect(class_def, class_name)
         parsed_body = ast.parse(getsource(class_def).lstrip()).body[0]
 
+        pp({"parse::class::params:": ir["params"]})
+
         if merge_inner_function is not None:
-            # Should probably write a general IR merge function
-            function_def = next(
-                filter(
-                    lambda node: isinstance(node, FunctionDef)
-                    and node.name == merge_inner_function,
-                    ast.walk(parsed_body),
-                ),
-                None,
+            _merge_inner_function(
+                parsed_body,
+                infer_type=infer_type,
+                intermediate_repr=ir,
+                merge_inner_function=merge_inner_function,
             )
-            if function_def is not None:
-                function_type = (
-                    "static"
-                    if not function_def.args.args
-                    else function_def.args.args[0].arg
-                )
-                inner_ir = function(
-                    function_def,
-                    function_name=merge_inner_function,
-                    function_type=function_type,
-                    infer_type=infer_type,
-                )
-                ir_merge(other=inner_ir, target=ir)
-                return ir
+            return ir
 
         ir["_internal"] = {
             "body": list(
@@ -126,35 +114,9 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
             class_name=class_name,
             merge_inner_function=merge_inner_function,
         )
-
-        if ir["params"] and body_ir["params"]:
-            len_params = len(ir["params"])
-            if len(body_ir["params"]) > len_params:
-                deque(
-                    map(
-                        lambda idx_param: idx_param[0] + 1 > len_params
-                        or assert_equal(
-                            ir["params"][idx_param[0]]["name"], idx_param[1]["name"]
-                        ),
-                        enumerate(body_ir["params"][:len_params]),
-                    ),
-                    maxlen=0,
-                )
-                ir["params"] += body_ir["params"][len_params:]
-            else:
-                assert_equal(len(body_ir["params"]), len_params)
-
-            ir["params"] = list(
-                map(
-                    lambda idx_param: assert_equal(
-                        idx_param[1]["name"], body_ir["params"][idx_param[0]]["name"]
-                    )
-                    and update_d(idx_param[1], body_ir["params"][idx_param[0]]),
-                    enumerate(ir["params"]),
-                )
-            )
-        # elif body_ir["params"]: ir["params"] = body_ir["params"]
+        ir_merge(ir, body_ir)
         return ir
+
     assert (
         is_supported_ast_node
     ), "Expected 'Union[Module, ClassDef]' got `{!r}`".format(type(class_def).__name__)
@@ -172,10 +134,15 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
     for e in class_def.body:
         if isinstance(e, AnnAssign):
             typ = to_code(e.annotation).rstrip("\n")
+            val = (lambda v: {} if v is None else {"default": v if type(v).__name__ in simple_types
+                              else to_code(v).rstrip("\n")})(get_value(get_value(e)))
+            # if 'str' in typ and val: val["default"] = val["default"].strip("'")  # Unquote?
+            typ_default = dict(typ=typ, **val)
+
             if e.target.id == "return_type":
-                intermediate_repr["returns"]["typ"] = typ
+                intermediate_repr["returns"].update(typ_default)
             else:
-                intermediate_repr["params"][e.target.id]["typ"] = typ
+                intermediate_repr["params"][e.target.id].update(typ_default)
         elif isinstance(e, Assign):
             val = get_value(e)
             if val is not None:
@@ -203,27 +170,71 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
     )
 
     if merge_inner_function is not None:
-        # Should probably write a general IR merge function
-        function_def = next(
-            filter(
-                lambda func: func.name == merge_inner_function,
-                filter(rpartial(isinstance, FunctionDef), ast.walk(class_def)),
-            ),
-            None,
+        assert isinstance(class_def, ClassDef)
+        _merge_inner_function(
+            class_def,
+            infer_type=infer_type,
+            intermediate_repr=intermediate_repr,
+            merge_inner_function=merge_inner_function,
         )
-        if function_def is not None:
-            function_type = (
-                "static"
-                if not function_def.args.args
-                else function_def.args.args[0].arg
-            )
-            inner_ir = function(
-                function_def,
-                function_name=merge_inner_function,
-                function_type=function_type,
-                infer_type=infer_type,
-            )
-            ir_merge(other=inner_ir, target=intermediate_repr)
+
+    return intermediate_repr
+
+
+def _merge_inner_function(
+    class_def, infer_type, intermediate_repr, merge_inner_function
+):
+    """
+    Merge the inner function if found within the class, with the class IR
+
+    :param class_def: Class AST
+    :type class_def: ```ClassDef```
+
+    :param infer_type: Whether to try inferring the typ (from the default)
+    :type infer_type: ```bool```
+
+    :param intermediate_repr: a dictionary of form
+              {
+                  'name': ...,
+                  'type': ...,
+                  'doc': ...,
+                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+              }
+    :type intermediate_repr: ```dict```
+
+    :param merge_inner_function: Name of inner function to merge. If None, merge nothing.
+    :type merge_inner_function: ```Optional[str]```
+
+    :return: a dictionary of form
+          {
+                  'name': ...,
+                  'type': ...,
+                  'doc': ...,
+                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
+                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+          }
+    :rtype: ```dict```
+    """
+    function_def = next(
+        filter(
+            lambda func: func.name == merge_inner_function,
+            filter(rpartial(isinstance, FunctionDef), ast.walk(class_def)),
+        ),
+        None,
+    )
+
+    if function_def is not None:
+        function_type = (
+            "static" if not function_def.args.args else function_def.args.args[0].arg
+        )
+        inner_ir = function(
+            function_def,
+            function_name=merge_inner_function,
+            function_type=function_type,
+            infer_type=infer_type,
+        )
+        ir_merge(other=inner_ir, target=intermediate_repr)
 
     return intermediate_repr
 
@@ -252,50 +263,66 @@ def _inspect(obj, name):
     doc = getdoc(obj) or ""
     ir = docstring(doc) if doc else {}
     sig = signature(obj)
-    ir["name"] = (
-        name or obj.__qualname__ if hasattr(obj, "__qualname__") else obj.__name__
-    )
     is_function = isfunction(obj)
     if not is_function and "type" in ir:
         del ir["type"]
 
-    ir["params"] = list(
-        filter(
-            None,
-            map(partial(_inspect_process_ir_param, sig=sig), ir["params"])
-            if ir.get("params")
-            else map(_inspect_process_sig, sig.parameters.items()),
-        )
-    )
+    print("_inspect::docstring:", doc, ";\n_inspect::sig:", sig, ";")
 
-    if isfunction(obj):
-        ir["type"] = {"self": "self", "cls": "cls"}.get(
-            next(iter(sig.parameters.values())).name, "static"
-        )
+    ir.update(
+        {
+            "name": name or obj.__qualname__
+            if hasattr(obj, "__qualname__")
+            else obj.__name__,
+            "params": list(
+                filter(
+                    None,
+                    map(partial(_inspect_process_ir_param, sig=sig), ir["params"])
+                    if ir.get("params")
+                    else map(_inspect_process_sig, sig.parameters.items()),
+                )
+            ),
+        }
+    )
 
     parsed_body = ast.parse(getsource(obj).lstrip()).body[0]
 
-    if ir.get("returns") and "returns" not in ir["returns"]:
-        if sig.return_annotation is not _empty:
-            ir["returns"]["typ"] = lstrip_typings("{!s}".format(sig.return_annotation))
-
-        return_q = deque(
-            filter(
-                rpartial(isinstance, ast.Return),
-                ast.walk(parsed_body),
-            ),
-            maxlen=1,
+    if is_function:
+        ir["type"] = {"self": "self", "cls": "cls"}.get(
+            next(iter(sig.parameters.values())).name, "static"
         )
-        if return_q:
-            return_val = get_value(return_q.pop())
-            ir["returns"]["default"] = get_value(return_val)
-            if not isinstance(
-                ir["returns"]["default"],
-                (str, int, float, complex, ast.Num, ast.Str, ast.Constant),
-            ):
-                ir["returns"]["default"] = "```{}```".format(
-                    to_code(ir["returns"]["default"]).rstrip("\n")
-                )
+        parser = function
+    else:
+        parser = class_
+
+    was = deepcopy(ir)
+    other = parser(parsed_body)
+    ir_merge(ir, other)
+    PrettyPrinter(indent=4, sort_dicts=False).pprint(
+        {"IR was": was, "other": other, "IR now": ir}
+    )
+
+    # if ir.get("returns") and "returns" not in ir["returns"]:
+    #     if sig.return_annotation is not _empty:
+    #         ir["returns"]["typ"] = lstrip_typings("{!s}".format(sig.return_annotation))
+    #
+    #     return_q = deque(
+    #         filter(
+    #             rpartial(isinstance, ast.Return),
+    #             ast.walk(parsed_body),
+    #         ),
+    #         maxlen=1,
+    #     )
+    #     if return_q:
+    #         return_val = get_value(return_q.pop())
+    #         ir["returns"]["default"] = get_value(return_val)
+    #         if not isinstance(
+    #             ir["returns"]["default"],
+    #             (str, int, float, complex, ast.Num, ast.Str, ast.Constant),
+    #         ):
+    #             ir["returns"]["default"] = "```{}```".format(
+    #                 to_code(ir["returns"]["default"]).rstrip("\n")
+    #             )
     return ir
 
 
@@ -382,7 +409,7 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
         }
     )
 
-    if len(function_def.body) > 2:
+    if function_def.body:
         intermediate_repr["_internal"] = {
             "body": function_def.body[0 if found_type == "static" else 1 :],
             "from_name": function_def.name,

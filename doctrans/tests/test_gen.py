@@ -5,10 +5,7 @@ import os
 import sys
 from ast import (
     Assign,
-    Attribute,
     ClassDef,
-    Expr,
-    FunctionDef,
     Import,
     ImportFrom,
     Load,
@@ -16,7 +13,6 @@ from ast import (
     Name,
     Store,
     alias,
-    arguments,
     List,
     Dict,
 )
@@ -27,11 +23,17 @@ from tempfile import mkdtemp
 from unittest import TestCase
 from unittest.mock import patch
 
-from doctrans.ast_utils import set_value, set_arg, maybe_type_comment
+from doctrans import emit, parse
+from doctrans.ast_utils import set_value, maybe_type_comment
 from doctrans.gen import gen
 from doctrans.pure_utils import rpartial
 from doctrans.source_transformer import to_code
-from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
+from doctrans.tests.mocks.methods import function_adder_ast
+from doctrans.tests.utils_for_tests import run_ast_test
+
+method_adder_ast = deepcopy(function_adder_ast)
+method_adder_ast.decorator_list = [Name("staticmethod", Load())]
+del function_adder_ast
 
 
 def populate_files(tempdir, input_module_str=None):
@@ -49,37 +51,10 @@ def populate_files(tempdir, input_module_str=None):
     """
     input_filename = os.path.join(tempdir, "input.py")
     input_class_name = "Foo"
-    input_class_ast = ClassDef(
-        bases=[Name("object", Load())],
-        body=[
-            Expr(
-                set_value(
-                    "\n    The amazing {input_class_name}\n\n"
-                    "    :cvar a: An a\n"
-                    "    :cvar b: A b\n"
-                    "    ".format(input_class_name=input_class_name)
-                )
-            ),
-            Assign(
-                targets=[Name("a", Store())],
-                value=set_value(5),
-                expr=None,
-                lineno=None,
-                **maybe_type_comment
-            ),
-            Assign(
-                targets=[Name("b", Store())],
-                value=set_value(16),
-                expr=None,
-                lineno=None,
-                **maybe_type_comment
-            ),
-        ],
-        decorator_list=[],
-        keywords=[],
-        name=input_class_name,
-        expr=None,
-        identifier_name=None,
+    input_class_ast = emit.class_(
+        parse.function(deepcopy(method_adder_ast)),
+        emit_call=False,
+        class_name=input_class_name,
     )
 
     input_module_ast = Module(
@@ -125,79 +100,20 @@ def populate_files(tempdir, input_module_str=None):
     #     "        self.a = 5\n"
     #     "        self.b = 16\n"
     # )
-    class_name = "{input_class_name}Config".format(input_class_name=input_class_name)
-    expected_class_ast = ClassDef(
-        name=class_name,
-        bases=[Name("object", Load())],
-        keywords=[],
-        body=[
-            Expr(
-                set_value(
-                    "\n    The amazing {input_class_name}\n\n"
-                    "    :cvar a: An a. Defaults to 5\n"
-                    "    :cvar b: A b. Defaults to 16".format(
-                        input_class_name=input_class_name
-                    )
-                )
-            ),
-            Assign(
-                targets=[Name("a", Store())],
-                value=set_value(5),
-                expr=None,
-                lineno=None,
-                **maybe_type_comment
-            ),
-            Assign(
-                targets=[Name("b", Store())],
-                value=set_value(16),
-                expr=None,
-                lineno=None,
-                **maybe_type_comment
-            ),
-            FunctionDef(
-                name="__call__",
-                args=arguments(
-                    posonlyargs=[],
-                    args=[set_arg("self")],
-                    kwonlyargs=[],
-                    kw_defaults=[],
-                    defaults=[],
-                    arg=None,
-                    vararg=None,
-                    kwarg=None,
-                ),
-                body=[
-                    Assign(
-                        targets=[Attribute(Name("self", Load()), "a", Store())],
-                        value=set_value(5),
-                        expr=None,
-                        lineno=None,
-                        **maybe_type_comment
-                    ),
-                    Assign(
-                        targets=[Attribute(Name("self", Load()), "b", Store())],
-                        value=set_value(16),
-                        expr=None,
-                        lineno=None,
-                        **maybe_type_comment
-                    ),
-                ],
-                decorator_list=[],
-                arguments_args=None,
-                identifier_name=None,
-                stmt=None,
-                lineno=None,
-                returns=None,
-                **maybe_type_comment
-            ),
-        ],
-        decorator_list=[],
-        expr=None,
-        identifier_name=None,
+    expected_class_ast = emit.class_(
+        parse.function(deepcopy(method_adder_ast)),
+        emit_call=True,
+        class_name="{input_class_name}Config".format(input_class_name=input_class_name),
     )
 
     with open(input_filename, "wt") as f:
         f.write(input_module_str)
+
+    # print("======================\ninput_module_str\n", input_module_str,
+    #       "\n======================", sep='')
+    #
+    # print("======================\nexpected_class_ast\n", emit.to_code(expected_class_ast),
+    #       "\n======================", sep='')
 
     return input_filename, input_module_ast, input_class_ast, expected_class_ast
 
@@ -273,21 +189,24 @@ class TestGen(TestCase):
         """ Tests `gen` """
 
         output_filename = os.path.join(self.tempdir, "test_gen_output.py")
-        with patch("sys.stdout", new_callable=StringIO), patch(
-            "sys.stderr", new_callable=StringIO
-        ):
-            self.assertIsNone(
-                gen(
-                    name_tpl="{name}Config",
-                    input_mapping="gen_test_module.input_map",
-                    type_="class",
-                    output_filename=output_filename,
-                    prepend="PREPENDED\n",
-                    emit_call=True,
-                )
+        # with patch("sys.stdout", new_callable=StringIO), patch(
+        #    "sys.stderr", new_callable=StringIO
+        # ):
+        self.assertIsNone(
+            gen(
+                name_tpl="{name}Config",
+                input_mapping="gen_test_module.input_map",
+                type_="class",
+                output_filename=output_filename,
+                prepend="PREPENDED\n",
+                emit_call=True,
+                emit_default_doc=False,
             )
+        )
         with open(output_filename, "rt") as f:
-            gen_module_ast = ast.parse(f.read())
+            s = f.read()
+            # print(s)
+        gen_module_ast = ast.parse(s)
         run_ast_test(
             self,
             gen_ast=next(filter(rpartial(isinstance, ClassDef), gen_module_ast.body)),
@@ -311,6 +230,7 @@ class TestGen(TestCase):
                     type_="class",
                     output_filename=output_filename,
                     emit_call=True,
+                    emit_default_doc=True,
                 )
             )
         with open(output_filename, "rt") as f:
@@ -358,6 +278,7 @@ class TestGen(TestCase):
                     prepend=_import_gen_test_module_str,
                     output_filename=output_filename,
                     emit_call=True,
+                    emit_default_doc=True,
                 )
             )
 
@@ -391,4 +312,55 @@ class TestGen(TestCase):
         )
 
 
-unittest_main()
+# unittest_main()
+# mock_class = ClassDef(
+#             name="ClassyB",
+#             bases=tuple(),
+#             decorator_list=[],
+#             body=[FunctionDef(
+#     name="add_6_5",
+#     args=arguments(
+#         posonlyargs=[],
+#         args=list(map(set_arg, ("a", "b"))),
+#         kwonlyargs=[],
+#         kw_defaults=[],
+#         vararg=None,
+#         kwarg=None,
+#         defaults=list(map(set_value, (6, 5))),
+#         arg=None,
+#     ),
+#     body=[
+#         Expr(
+#             set_value(
+#                 "\n    :param a: first param\n    "
+#                 ":type a: ```int```\n\n    "
+#                 ":param b: second param\n    "
+#                 ":type b: ```int```\n\n    "
+#                 ":return: Aggregated summation of `a` and `b`.\n    "
+#                 ":rtype: ```int```\n    ",
+#             )
+#         ),
+#         Return(
+#             value=Call(
+#                 func=Attribute(Name("operator", Load()), "add", Load()),
+#                 args=[Name("a", Load()), Name("b", Load())],
+#                 keywords=[],
+#                 expr=None,
+#                 expr_func=None,
+#             ),
+#             expr=None,
+#         ),
+#     ],
+#     decorator_list=[],
+#     arguments_args=None,
+#     identifier_name=None,
+#     stmt=None,
+# )],
+#             keywords=tuple(),
+#             identifier_name=None,
+#             expr=None,
+#         )
+
+# print("===============================================\n",
+#      to_code(mock_class),
+#      "===============================================",)

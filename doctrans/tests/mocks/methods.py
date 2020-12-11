@@ -40,19 +40,9 @@ return_ast = Return(
                 keywords=[],
                 expr=None,
                 expr_func=None,
-            ),
-            Call(
-                args=[set_value(0)],
-                func=Attribute(
-                    Name("np", Load()),
-                    "empty",
-                    Load(),
-                ),
-                keywords=[],
-                expr=None,
-                expr_func=None,
-            ),
-        ],
+            )
+        ]
+        * 2,
         expr=None,
     ),
     expr=None,
@@ -209,10 +199,7 @@ class_with_method_and_body_types_ast = fix_missing_locations(
                                 Name("Literal", Load()),
                                 set_slice(
                                     Tuple(
-                                        elts=[
-                                            set_value("np"),
-                                            set_value("tf"),
-                                        ],
+                                        elts=list(map(set_value, ("np", "tf"))),
                                         ctx=Load(),
                                         expr=None,
                                     )
@@ -232,12 +219,9 @@ class_with_method_and_body_types_ast = fix_missing_locations(
                     kwonlyargs=[],
                     kw_defaults=[],
                     kwarg=set_arg("data_loader_kwargs"),
-                    defaults=[
-                        set_value("mnist"),
-                        set_value("~/tensorflow_datasets"),
-                        set_value("np"),
-                        set_value(None),
-                    ],
+                    defaults=list(
+                        map(set_value, ("mnist", "~/tensorflow_datasets", "np", None))
+                    ),
                     arg=None,
                 ),
                 body=[
@@ -269,27 +253,19 @@ class_with_method_and_body_types_ast = fix_missing_locations(
                         )
                     ),
                     If(
-                        test=set_value(
-                            True,
-                        ),
+                        test=set_value(True),
                         body=[
                             Expr(
                                 Call(
                                     func=Name("print", Load()),
-                                    args=[
-                                        set_value(
-                                            True,
-                                        )
-                                    ],
+                                    args=[set_value(True)],
                                     keywords=[],
                                     expr=None,
                                     expr_func=None,
                                 )
                             ),
                             Return(
-                                value=set_value(
-                                    5,
-                                ),
+                                value=set_value(5),
                                 expr=None,
                             ),
                         ],
@@ -302,27 +278,13 @@ class_with_method_and_body_types_ast = fix_missing_locations(
                             elts=[
                                 Call(
                                     func=Attribute(Name("np", Load()), "empty", Load()),
-                                    args=[
-                                        set_value(
-                                            0,
-                                        )
-                                    ],
+                                    args=[set_value(0)],
                                     keywords=[],
                                     expr=None,
                                     expr_func=None,
-                                ),
-                                Call(
-                                    func=Attribute(Name("np", Load()), "empty", Load()),
-                                    args=[
-                                        set_value(
-                                            0,
-                                        )
-                                    ],
-                                    keywords=[],
-                                    expr=None,
-                                    expr_func=None,
-                                ),
-                            ],
+                                )
+                            ]
+                            * 2,
                             ctx=Load(),
                             expr=None,
                         ),
@@ -348,17 +310,9 @@ class_with_method_and_body_types_ast = fix_missing_locations(
                                                     ),
                                                     "Dataset",
                                                     Load(),
-                                                ),
-                                                Attribute(
-                                                    Attribute(
-                                                        Name("tf", Load()),
-                                                        "data",
-                                                        Load(),
-                                                    ),
-                                                    "Dataset",
-                                                    Load(),
-                                                ),
-                                            ],
+                                                )
+                                            ]
+                                            * 2,
                                             Load(),
                                             expr=None,
                                         )
@@ -374,13 +328,9 @@ class_with_method_and_body_types_ast = fix_missing_locations(
                                                     Name("np", Load()),
                                                     "ndarray",
                                                     Load(),
-                                                ),
-                                                Attribute(
-                                                    Name("np", Load()),
-                                                    "ndarray",
-                                                    Load(),
-                                                ),
-                                            ],
+                                                )
+                                            ]
+                                            * 2,
                                             Load(),
                                             expr=None,
                                         )
@@ -545,12 +495,9 @@ class_with_method_types_ast = fix_missing_locations(
                             arg="as_numpy",
                         ),
                     ],
-                    defaults=[
-                        set_value("mnist"),
-                        set_value("~/tensorflow_datasets"),
-                        set_value("np"),
-                        set_value(None),
-                    ],
+                    defaults=list(
+                        map(set_value, ("mnist", "~/tensorflow_datasets", "np", None))
+                    ),
                     kw_defaults=[],
                     kwarg=set_arg("data_loader_kwargs"),
                     kwonlyargs=[],
@@ -596,17 +543,9 @@ class_with_method_types_ast = fix_missing_locations(
                                                     ),
                                                     "Dataset",
                                                     Load(),
-                                                ),
-                                                Attribute(
-                                                    Attribute(
-                                                        Name("tf", Load()),
-                                                        "data",
-                                                        Load(),
-                                                    ),
-                                                    "Dataset",
-                                                    Load(),
-                                                ),
-                                            ],
+                                                )
+                                            ]
+                                            * 2,
                                             expr=None,
                                         )
                                     ),
@@ -622,13 +561,9 @@ class_with_method_types_ast = fix_missing_locations(
                                                     Name("np", Load()),
                                                     "ndarray",
                                                     Load(),
-                                                ),
-                                                Attribute(
-                                                    Name("np", Load()),
-                                                    "ndarray",
-                                                    Load(),
-                                                ),
-                                            ],
+                                                )
+                                            ]
+                                            * 2,
                                             expr=None,
                                         )
                                     ),
@@ -688,14 +623,15 @@ class_with_optional_arg_method_ast = ClassDef(
                                     Index(
                                         value=Tuple(
                                             ctx=Load(),
-                                            elts=[
-                                                set_value(
-                                                    "np",
-                                                ),
-                                                set_value(
-                                                    "tf",
-                                                ),
-                                            ],
+                                            elts=list(
+                                                map(
+                                                    set_value,
+                                                    (
+                                                        "np",
+                                                        "tf",
+                                                    ),
+                                                )
+                                            ),
                                             expr=None,
                                         )
                                     ),
@@ -749,17 +685,9 @@ class_with_optional_arg_method_ast = ClassDef(
                                                 ),
                                                 "Dataset",
                                                 Load(),
-                                            ),
-                                            Attribute(
-                                                Attribute(
-                                                    Name("tf", Load()),
-                                                    "data",
-                                                    Load(),
-                                                ),
-                                                "Dataset",
-                                                Load(),
-                                            ),
-                                        ],
+                                            )
+                                        ]
+                                        * 2,
                                         expr=None,
                                     )
                                 ),
@@ -775,13 +703,9 @@ class_with_optional_arg_method_ast = ClassDef(
                                                 Name("np", Load()),
                                                 "ndarray",
                                                 Load(),
-                                            ),
-                                            Attribute(
-                                                Name("np", Load()),
-                                                "ndarray",
-                                                Load(),
-                                            ),
-                                        ],
+                                            )
+                                        ]
+                                        * 2,
                                         expr=None,
                                     )
                                 ),
@@ -824,16 +748,12 @@ def add_6_5(*, a=6, b=5):
 function_adder_ast = FunctionDef(
     name="add_6_5",
     args=arguments(
+        vararg=None,
+        kwarg=None,
         posonlyargs=[],
         args=[],
-        kwonlyargs=[
-            set_arg("a"),
-            set_arg("b"),
-        ],
-        kw_defaults=[
-            set_value(6),
-            set_value(5),
-        ],
+        kwonlyargs=list(map(set_arg, ("a", "b"))),
+        kw_defaults=list(map(set_value, (6, 5))),
         defaults=[],
         arg=None,
     ),
@@ -954,10 +874,7 @@ method_complex_args_variety_ast = FunctionDef(
     name="call_cliff",
     args=arguments(
         posonlyargs=[],
-        args=[
-            set_arg("self"),
-            set_arg("dataset_name"),
-        ],
+        args=list(map(set_arg, ("self", "dataset_name"))),
         kwonlyargs=[
             set_arg("as_numpy"),
             set_arg(
@@ -965,14 +882,15 @@ method_complex_args_variety_ast = FunctionDef(
                 annotation=Subscript(
                     Name("Literal", Load()),
                     Tuple(
-                        elts=[
-                            set_value(
-                                "np",
-                            ),
-                            set_value(
-                                "tf",
-                            ),
-                        ],
+                        elts=list(
+                            map(
+                                set_value,
+                                (
+                                    "np",
+                                    "tf",
+                                ),
+                            )
+                        ),
                         ctx=Load(),
                         expr=None,
                     ),
@@ -1013,14 +931,15 @@ method_complex_args_variety_ast = FunctionDef(
     returns=Subscript(
         Name("Literal", Load()),
         Tuple(
-            elts=[
-                set_value(
-                    "np",
-                ),
-                set_value(
-                    "tf",
-                ),
-            ],
+            elts=list(
+                map(
+                    set_value,
+                    (
+                        "np",
+                        "tf",
+                    ),
+                )
+            ),
             ctx=Load(),
             expr=None,
         ),
@@ -1155,6 +1074,104 @@ class Adadelta(object):
 """,
 )
 
+docstring_google_tf_adadelta_function_ir = {
+    "doc": "Optimizer that implements the Adadelta algorithm.\n"
+    "\n"
+    "Adadelta optimization is a stochastic gradient descent method that "
+    "is based on\n"
+    "adaptive learning rate per dimension to address two drawbacks:\n"
+    "\n"
+    "- The continual decay of learning rates throughout training\n"
+    "- The need for a manually selected global learning rate\n"
+    "\n"
+    "Adadelta is a more robust extension of Adagrad that adapts "
+    "learning rates\n"
+    "based on a moving window of gradient updates, instead of "
+    "accumulating all\n"
+    "past gradients. This way, Adadelta continues learning even when "
+    "many updates\n"
+    "have been done. Compared to Adagrad, in the original version of "
+    "Adadelta you\n"
+    "don't have to set an initial learning rate. In this version, "
+    "initial\n"
+    "learning rate can be set, as in most other Keras optimizers.\n"
+    "\n"
+    'According to section 4.3 ("Effective Learning rates"), near the '
+    "end of\n"
+    "training step sizes converge to 1 which is effectively a high "
+    "learning\n"
+    "rate which would cause divergence. This occurs only near the end "
+    "of the\n"
+    "training as gradients and step sizes are small, and the epsilon "
+    "constant\n"
+    "in the numerator and denominator dominate past gradients and "
+    "parameter\n"
+    "updates which converge the learning rate to 1.\n"
+    "\n"
+    'According to section 4.4("Speech Data"),where a large neural '
+    "network with\n"
+    "4 hidden layers was trained on a corpus of US English data, "
+    "ADADELTA was\n"
+    "used with 100 network replicas.The epsilon used is 1e-6 with "
+    "rho=0.95\n"
+    "which converged faster than ADAGRAD, by the following "
+    "construction:\n"
+    "def __init__(self, lr=1.0, rho=0.95, epsilon=1e-6, decay=0., "
+    "**kwargs):\n"
+    "\n"
+    "\n"
+    "Reference:\n"
+    "    - [Zeiler, 2012](http://arxiv.org/abs/1212.5701)",
+    "name": "Adadelta",
+    "params": [
+        {
+            "default": 0.001,
+            "doc": "A `Tensor`, floating point value, or a schedule "
+            "that is a\n"
+            "  "
+            "`tf.keras.optimizers.schedules.LearningRateSchedule`. "
+            "The learning rate.\n"
+            "  To match the exact form in the original paper "
+            "use 1.0.",
+            "name": "learning_rate",
+            "typ": "float",
+        },
+        {
+            "default": 0.95,
+            "doc": "A `Tensor` or a floating point value. The decay " "rate.",
+            "name": "rho",
+            "typ": "float",
+        },
+        {
+            "default": 1e-07,
+            "doc": "A `Tensor` or a floating point value.  A "
+            "constant epsilon used\n"
+            "         to better conditioning the grad update.",
+            "name": "epsilon",
+            "typ": "float",
+        },
+        {
+            "default": "Adadelta",
+            "doc": "Optional name prefix for the operations created "
+            "when applying\n"
+            "  gradients. ",
+            "name": "name",
+            "typ": "str",
+        },
+        {
+            "doc": "Keyword arguments. Allowed to be one of\n"
+            '  `"clipnorm"` or `"clipvalue"`.\n'
+            '  `"clipnorm"` (float) clips gradients by norm; '
+            '`"clipvalue"` (float) clips\n'
+            "  gradients by value.",
+            "name": "kwargs",
+            "typ": "dict",
+        },
+        {"default": True, "name": "_HAS_AGGREGATE_GRAD"},
+    ],
+    "returns": None,
+}
+
 __all__ = [
     "class_with_method_and_body_types_ast",
     "class_with_method_and_body_types_str",
@@ -1164,6 +1181,7 @@ __all__ = [
     "class_with_method_types_str",
     "class_with_optional_arg_method_ast",
     "class_with_optional_arg_method_str",
+    "docstring_google_tf_adadelta_function_str",
     "function_adder_ast",
     "function_adder_ir",
     "function_adder_str",

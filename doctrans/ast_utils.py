@@ -563,7 +563,11 @@ def annotate_ancestry(node):
 
     :param node: AST node. Will be annotated in-place.
     :type node: ```AST```
+
+    :return: Annotated AST node; also `node` arg will be annotated in-place.
+    :rtype: ```AST```
     """
+    print("annotating", getattr(node, "name", None))
     node._location = [node.name] if hasattr(node, "name") else []
     parent_location = []
     for _node in walk(node):
@@ -621,6 +625,7 @@ def annotate_ancestry(node):
                         ),
                     )
                 )
+    return node
 
 
 class RewriteAtQuery(NodeTransformer):
@@ -828,6 +833,7 @@ __all__ = [
     "is_argparse_add_argument",
     "is_argparse_description",
     "it2literal",
+    "maybe_type_comment",
     "param2argparse_param",
     "param2ast",
     "set_arg",

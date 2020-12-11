@@ -29,10 +29,11 @@ from doctrans.ast_utils import (
     get_value,
     set_arg,
     maybe_type_comment,
+    annotate_ancestry,
 )
 from doctrans.defaults_utils import set_default_doc
 from doctrans.emitter_utils import get_internal_body, to_docstring
-from doctrans.pure_utils import tab, simple_types, PY3_8, rpartial
+from doctrans.pure_utils import tab, simple_types, PY3_8, rpartial, pp
 from doctrans.source_transformer import to_code
 
 
@@ -214,6 +215,7 @@ def class_(
     emit_call=False,
     class_name="ConfigClass",
     class_bases=("object",),
+    emit_default_doc=False,
 ):
     """
     Construct a class
@@ -237,10 +239,15 @@ def class_(
     :param class_bases: bases of class (the generated class will inherit these)
     :type class_bases: ```Iterable[str]```
 
+    :param emit_default_doc: Whether help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool``
+
     :return: Class AST of the docstring
     :rtype: ```ClassDef```
     """
     returns = [intermediate_repr["returns"]] if intermediate_repr.get("returns") else []
+
+    pp({"emit.class_::ir": intermediate_repr})
 
     param_names = frozenset(
         map(
@@ -268,22 +275,23 @@ def class_(
             :return: `Name` iff `Name` is not a parameter else `Attribute`
             :rtype: ```Union[Name, Attribute]```
             """
+            print("loc:", getattr(node, "_location", None), ";")
             return (
                 Attribute(Name("self", Load()), node.id, Load())
                 if node.id in param_names
                 else ast.NodeTransformer.generic_visit(self, node)
             )
 
-    internal_body = (
-        list(
+    internal_body = list(
+        map(annotate_ancestry, intermediate_repr.get("_internal", {}).get("body", []))
+    )
+    if internal_body and param_names:
+        internal_body = list(
             map(
                 ast.fix_missing_locations,
-                map(RewriteName().visit, intermediate_repr["_internal"]["body"]),
+                map(RewriteName().visit, internal_body),
             )
         )
-        if param_names and "_internal" in intermediate_repr
-        else intermediate_repr.get("_internal", {}).get("body", [])
-    )
 
     return ClassDef(
         bases=list(map(rpartial(Name, Load()), class_bases)),
@@ -291,7 +299,10 @@ def class_(
             Expr(
                 set_value(
                     to_docstring(
-                        intermediate_repr, indent_level=0, emit_separating_tab=False
+                        intermediate_repr,
+                        indent_level=0,
+                        emit_separating_tab=False,
+                        emit_default_doc=emit_default_doc,
                     )
                     .replace("\n:param ", "{tab}:cvar ".format(tab=tab))
                     .replace(
@@ -367,7 +378,7 @@ def docstring(intermediate_repr, docstring_format="rest", emit_default_doc=True)
     :rtype: ```str``
     """
     if docstring_format != "rest":
-        raise NotImplementedError()
+        raise NotImplementedError(docstring_format)
 
     return "\n{doc}\n\n{params}\n{returns}\n".format(
         doc=intermediate_repr["doc"],
