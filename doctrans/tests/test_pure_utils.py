@@ -45,7 +45,7 @@ class TestPureUtils(TestCase):
     def test_simple_types(self) -> None:
         """ Tests that simple types only includes int,str,float,bool with right default values """
         self.assertDictEqual(
-            simple_types, {None: None, "int": 0, float: 0.0, "str": "", "bool": False}
+            simple_types, {None: None, "int": 0, "float": 0.0, "complex": 0j, "str": "", "bool": False}
         )
 
     def test_rpartial(self) -> None:

@@ -73,6 +73,8 @@ def ir_merge(target, other):
         target["returns"] = other["returns"]
     elif other["returns"]:
         target["returns"] = _join_non_none(target["returns"], other["returns"])
+    if target["params"] and target["params"][-1]["name"] == "return_type":
+        target["returns"] = _join_non_none(target["returns"], target["params"].pop())
 
     return target
 
@@ -133,11 +135,8 @@ def _inspect_process_sig(k_v):
     """
     Postprocess the param
 
-    :param k: A key from `inspect._parameters` mapping
-    :type k: ```Any``
-
-    :param v: A value from `inspect._parameters` mapping
-    :type v: ```Any``
+    :param k_v: Key and value from `inspect._parameters` mapping
+    :type k_v: ```Tuple[str, inspect.Parameter]``
 
     :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :rtype: ```dict```

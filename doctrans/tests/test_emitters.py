@@ -47,7 +47,9 @@ class TestEmitters(TestCase):
         """
         run_ast_test(
             self,
-            gen_ast=emit.class_(parse.argparse_ast(argparse_func_ast)),
+            gen_ast=emit.class_(
+                parse.argparse_ast(argparse_func_ast), emit_default_doc=True
+            ),
             gold=class_ast,
         )
 
@@ -69,9 +71,7 @@ class TestEmitters(TestCase):
         """
         run_ast_test(
             self,
-            emit.class_(
-                parse.docstring(docstring_str),
-            ),
+            emit.class_(parse.docstring(docstring_str), emit_default_doc=True),
             gold=class_ast,
         )
 
@@ -370,6 +370,7 @@ class TestEmitters(TestCase):
             ),
             class_name="SquaredHingeConfig",
             emit_call=True,
+            emit_default_doc=True,
         )
         run_ast_test(
             self,

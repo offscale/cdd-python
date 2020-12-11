@@ -329,6 +329,8 @@ def to_docstring(
     :return: docstring
     :rtype: ```str```
     """
+    print("TO DOCSTRING")
+    print("emit_default_doc:", emit_default_doc, ";")
     assert isinstance(intermediate_repr, dict), "Expected 'dict' got `{!r}`".format(
         type(intermediate_repr).__name__
     )
@@ -365,7 +367,9 @@ def to_docstring(
         )
         assert docstring_format == "rest", docstring_format
         if "doc" in param:
-            doc, default = extract_default(param["doc"], emit_default_doc=False)
+            doc, default = extract_default(
+                param["doc"], emit_default_doc=emit_default_doc
+            )
             if default is not None:
                 param["default"] = default
 
@@ -380,10 +384,10 @@ def to_docstring(
                 None,
                 (
                     (
-                        lambda param: "{tab}:param {name}: {doc}".format(
+                        lambda _param: "{tab}:param {name}: {doc}".format(
                             tab=tab * indent_level,
-                            name=param["name"],
-                            doc=param.get("doc"),
+                            name=_param["name"],
+                            doc=_param.get("doc"),
                         )
                     )(set_default_doc(param, emit_default_doc=emit_default_doc)),
                     None
@@ -409,12 +413,17 @@ def to_docstring(
             map(partial(add, tab), intermediate_repr["doc"].split("\n"))
         ),
         params="\n{sep}\n".format(sep=sep).join(
-            map(param2docstring_param, intermediate_repr["params"])
+            map(
+                partial(param2docstring_param, emit_default_doc=emit_default_doc),
+                intermediate_repr["params"],
+            )
         ),
         returns=(
             "{sep}\n{returns}\n{tab}".format(
                 sep=sep,
-                returns=param2docstring_param(intermediate_repr["returns"])
+                returns=param2docstring_param(
+                    intermediate_repr["returns"], emit_default_doc=emit_default_doc
+                )
                 .replace(":param return_type:", ":return:")
                 .replace(":type return_type:", ":rtype:"),
                 tab=tab,

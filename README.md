@@ -26,7 +26,7 @@ Public SDK works with filenames, source code, and even in memory constructs (e.g
 This was created to aid in the `ml_params` project. It exposes an `@abstractclass` which is implemented [officially] by more than 8 projects.
 
 Its `def train(self, <these>)` has a potentially large number of arguments.
-Additionally there is a `def train_c(self, config)`, which accepts an instance of a `Config` class, or a dictionary.
+Additionally, there is a `def train_c(self, config)`, which accepts an instance of a `Config` class, or a dictionary.
 Finally: `ml_params` defines a CLI interface.
 
 With current tooling there is no way to know:
@@ -200,11 +200,11 @@ def set_cli_args(argument_parser):
 
 ## Minor other use-cases this facilitates
 
-  - Switch between having types in the docstring and having the types inline ([PEP484](https://python.org/dev/peps/pep-0484)–style)
+  - Switch between having types in the docstring and having the types inline ([PEP484](https://python.org/dev/peps/pep-0484)–style))
   - Switch between docstring formats (WiP, SDK can go from {numpy, ReST, google} to ReST; but not to others)
   - Desktop GUI with wxWidgets, from the argparse layer through [Gooey](https://github.com/chriskiehl/Gooey) [one liner]
 
-## CLI interface for this project
+## CLI for this project
 
     $ python -m doctrans --help
 

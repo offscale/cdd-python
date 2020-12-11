@@ -14,7 +14,7 @@ from sys import version_info
 
 pp = PrettyPrinter(indent=4).pprint
 tab = " " * 4
-simple_types = {"int": 0, float: 0.0, "str": "", "bool": False, None: None}
+simple_types = {"int": 0, "float": 0.0, "complex": 0j, "str": "", "bool": False, None: None}
 
 
 # From https://github.com/Suor/funcy/blob/0ee7ae8/funcy/funcs.py#L34-L36

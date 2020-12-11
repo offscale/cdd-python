@@ -273,10 +273,7 @@ argparse_func_ast = fix_missing_locations(
                             arg="choices",
                             value=Tuple(
                                 ctx=Load(),
-                                elts=[
-                                    set_value("np"),
-                                    set_value("tf"),
-                                ],
+                                elts=list(map(set_value, ("np", "tf"))),
                                 expr=None,
                             ),
                             identifier=None,
@@ -365,19 +362,9 @@ argparse_func_ast = fix_missing_locations(
                                     keywords=[],
                                     expr=None,
                                     expr_func=None,
-                                ),
-                                Call(
-                                    args=[set_value(0)],
-                                    func=Attribute(
-                                        Name("np", Load()),
-                                        "empty",
-                                        Load(),
-                                    ),
-                                    keywords=[],
-                                    expr=None,
-                                    expr_func=None,
-                                ),
-                            ],
+                                )
+                            ]
+                            * 2,
                             expr=None,
                         ),
                     ],
@@ -529,10 +516,7 @@ argparse_func_with_body_ast = fix_missing_locations(
                             arg="choices",
                             value=Tuple(
                                 ctx=Load(),
-                                elts=[
-                                    set_value("np"),
-                                    set_value("tf"),
-                                ],
+                                elts=list(map(set_value, ("np", "tf"))),
                                 expr=None,
                             ),
                             identifier=None,
@@ -611,13 +595,9 @@ argparse_func_with_body_ast = fix_missing_locations(
                 Call(
                     args=[
                         BinOp(
-                            set_value(
-                                5,
-                            ),
+                            set_value(5),
                             Mult(),
-                            set_value(
-                                5,
-                            ),
+                            set_value(5),
                         )
                     ],
                     func=Name("print", Load()),
@@ -665,23 +645,9 @@ argparse_func_with_body_ast = fix_missing_locations(
                                     keywords=[],
                                     expr=None,
                                     expr_func=None,
-                                ),
-                                Call(
-                                    args=[
-                                        set_value(
-                                            0,
-                                        )
-                                    ],
-                                    func=Attribute(
-                                        Name("np", Load()),
-                                        "empty",
-                                        Load(),
-                                    ),
-                                    keywords=[],
-                                    expr=None,
-                                    expr_func=None,
-                                ),
-                            ],
+                                )
+                            ]
+                            * 2,
                             expr=None,
                         ),
                     ],
@@ -766,22 +732,27 @@ argparse_func_action_append_ast = fix_missing_locations(
                         keyword(
                             arg="choices",
                             value=Tuple(
-                                elts=[
-                                    set_value("BaseLogger"),
-                                    set_value("CSVLogger"),
-                                    set_value("Callback"),
-                                    set_value("CallbackList"),
-                                    set_value("EarlyStopping"),
-                                    set_value("History"),
-                                    set_value("LambdaCallback"),
-                                    set_value("LearningRateScheduler"),
-                                    set_value("ModelCheckpoint"),
-                                    set_value("ProgbarLogger"),
-                                    set_value("ReduceLROnPlateau"),
-                                    set_value("RemoteMonitor"),
-                                    set_value("TensorBoard"),
-                                    set_value("TerminateOnNaN"),
-                                ],
+                                elts=list(
+                                    map(
+                                        set_value,
+                                        (
+                                            "BaseLogger",
+                                            "CSVLogger",
+                                            "Callback",
+                                            "CallbackList",
+                                            "EarlyStopping",
+                                            "History",
+                                            "LambdaCallback",
+                                            "LearningRateScheduler",
+                                            "ModelCheckpoint",
+                                            "ProgbarLogger",
+                                            "ReduceLROnPlateau",
+                                            "RemoteMonitor",
+                                            "TensorBoard",
+                                            "TerminateOnNaN",
+                                        ),
+                                    )
+                                ),
                                 ctx=Load(),
                                 expr=None,
                             ),
