@@ -102,7 +102,6 @@ def _build_parser():
         type=str,
         dest="argparse_function_names",
     )
-
     sync_parser.add_argument(
         "--class",
         help="File where class `class` is declared.",
@@ -117,7 +116,6 @@ def _build_parser():
         type=str,
         dest="class_names",
     )
-
     sync_parser.add_argument(
         "--function",
         help="File where function is `def`ined.",
@@ -133,7 +131,6 @@ def _build_parser():
         type=str,
         dest="function_names",
     )
-
     sync_parser.add_argument(
         "--truth",
         help="Single source of truth. Others will be generated from this. Will run with first found choice.",
@@ -182,6 +179,13 @@ def _build_parser():
         "--emit-call",
         action="store_true",
         help="Whether to place all the previous body into a new `__call__` internal function",
+    )
+    gen_parser.add_argument(
+        "--decorator",
+        help="List of decorators.",
+        action="append",
+        type=str,
+        dest="decorator_list",
     )
 
     return parser

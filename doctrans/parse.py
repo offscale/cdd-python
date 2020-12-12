@@ -26,7 +26,6 @@ from types import FunctionType
 from docstring_parser import (
     Docstring,
 )
-
 from doctrans import get_logger
 from doctrans.ast_utils import (
     find_ast_type,
@@ -522,10 +521,9 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
     intermediate_repr["params"] = list(
         map(
             partial(_set_name_and_type, infer_type=infer_type),
-            intermediate_repr["params"],
+            intermediate_repr["params"] + params_to_append,
         )
     )
-    intermediate_repr["params"] += params_to_append
 
     # Convention - the final top-level `return` is the default
     _interpolate_return(function_def, intermediate_repr)

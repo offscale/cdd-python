@@ -22,6 +22,7 @@ def gen(
     imports_from_file=None,
     emit_call=False,
     emit_default_doc=True,
+    decorator_list=None,
 ):
     """
     Generate classes, functions, and/or argparse functions from the input mapping
@@ -49,9 +50,11 @@ def gen(
     :type emit_call: ```bool```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
-    :type emit_default_doc: ```bool``
-    """
+    :type emit_default_doc: ```bool```
 
+    :param decorator_list: List of decorators
+    :type decorator_list: ```Optional[Union[List[Str], List[]]]```
+    """
     extra_symbols = {}
     if imports_from_file is None:
         imports = ""
@@ -114,11 +117,14 @@ def gen(
                     ),  # TODO: Figure out if it's a function or argparse function
                     emit_call=emit_call,
                     emit_default_doc=emit_default_doc,
-                    **{
-                        "class_name"
+                    **(
+                        lambda _name: {
+                            "class_name": _name,
+                            "decorator_list": decorator_list,
+                        }
                         if type_ == "class"
-                        else "function_name": name_tpl.format(name=name)
-                    }
+                        else {"function_name": _name}
+                    )(name_tpl.format(name=name))
                 )
             )
             for name, obj in input_mapping_it

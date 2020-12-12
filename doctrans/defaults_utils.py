@@ -22,12 +22,16 @@ def needs_quoting(typ):
     :return: Whether the type needs quoting
     :rtype: ```bool```
     """
-    if typ is None:
+    if typ is None or typ.startswith("*"):
         return False
     elif typ == "str":
         return True
     elif typ == "Optional[str]":
         return True
+
+    parsed_typ_ast = ast.parse(typ).body[0].value
+    if isinstance(parsed_typ_ast, ast.Name):
+        return parsed_typ_ast.id == "str"
 
     return any(
         filter(
@@ -36,7 +40,7 @@ def needs_quoting(typ):
             and type(node.value).__name__ == "str"
             or isinstance(node, ast.Name)
             and node.id == "str",
-            ast.walk(ast.parse(typ).body[0].value),
+            ast.walk(parsed_typ_ast),
         )
     )
 

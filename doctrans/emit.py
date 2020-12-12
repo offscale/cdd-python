@@ -21,7 +21,6 @@ from itertools import chain
 from operator import itemgetter, contains
 
 from black import format_str, Mode
-
 from doctrans.ast_utils import (
     param2argparse_param,
     param2ast,
@@ -211,6 +210,7 @@ def class_(
     emit_call=False,
     class_name="ConfigClass",
     class_bases=("object",),
+    decorator_list=None,
     emit_default_doc=False,
 ):
     """
@@ -234,6 +234,9 @@ def class_(
 
     :param class_bases: bases of class (the generated class will inherit these)
     :type class_bases: ```Iterable[str]```
+
+    :param decorator_list: List of decorators
+    :type decorator_list: ```Optional[Union[List[Str], List[]]]```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool``
@@ -304,7 +307,9 @@ def class_(
                 )
             )
         ),
-        decorator_list=[],
+        decorator_list=list(map(rpartial(Name, Load()), decorator_list))
+        if decorator_list
+        else [],
         keywords=[],
         name=class_name,
         expr=None,
