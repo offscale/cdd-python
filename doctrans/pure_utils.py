@@ -199,19 +199,28 @@ def strip_split(param, sep):
     return map(str.strip, param.split(sep))
 
 
-def unquote(s):
+def unquote(input_str):
+    """
+    Unquote a string. Removes one set of leading quotes (' or ")
+
+    :param input_str: Input string
+    :type input_str: ```Optional[str]```
+
+    :return: Unquoted string
+    :rtype: ```Optional[str]```
+    """
     if (
-        isinstance(s, str)
-        and len(s) > 1
+        isinstance(input_str, str)
+        and len(input_str) > 1
         and (
-            s.startswith('"')
-            and s.endswith('"')
-            or s.startswith("'")
-            and s.endswith("'")
+            input_str.startswith('"')
+            and input_str.endswith('"')
+            or input_str.startswith("'")
+            and input_str.endswith("'")
         )
     ):
-        return s[1:-1]
-    return s
+        return input_str[1:-1]
+    return input_str
 
 
 def quote(s, mark='"'):
