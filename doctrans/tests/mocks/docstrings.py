@@ -14,19 +14,19 @@ intermediate_repr = {
     "library",
     "params": [
         {
-            "default": '"mnist"',
+            "default": "mnist",
             "doc": 'name of dataset. Defaults to "mnist"',
             "name": "dataset_name",
             "typ": "str",
         },
         {
-            "default": '"~/tensorflow_datasets"',
+            "default": "~/tensorflow_datasets",
             "doc": 'directory to look for models in. Defaults to "~/tensorflow_datasets"',
             "name": "tfds_dir",
             "typ": "Optional[str]",
         },
         {
-            "default": '"np"',
+            "default": "np",
             "doc": 'backend engine, e.g., `np` or `tf`. Defaults to "np"',
             "name": "K",
             "typ": "Literal['np', 'tf']",
@@ -39,7 +39,7 @@ intermediate_repr = {
         {
             "doc": "pass this as arguments to data_loader function",
             "name": "data_loader_kwargs",
-            "typ": "dict",
+            "typ": "Optional[dict]",
         },
     ],
     "returns": {
@@ -67,7 +67,7 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 :type as_numpy: ```Optional[bool]```
 
 :param data_loader_kwargs: pass this as arguments to data_loader function
-:type data_loader_kwargs: ```**data_loader_kwargs```
+:type data_loader_kwargs: ```Optional[dict]```
 
 :return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
@@ -81,7 +81,7 @@ Args:
   tfds_dir (Optional[str]): directory to look for models in. Defaults to "~/tensorflow_datasets"
   K (Literal['np', 'tf']): backend engine, e.g., `np` or `tf`. Defaults to "np"
   as_numpy (Optional[bool]): Convert to numpy ndarrays
-  data_loader_kwargs (dict): pass this as arguments to data_loader function
+  data_loader_kwargs (Optional[dict]): pass this as arguments to data_loader function
 
 Returns:
   Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
@@ -129,7 +129,7 @@ docstring_google_tf_squared_hinge_ir = {
             "name": "reduction",
         },
         {
-            "default": "'squared_hinge'",
+            "default": "squared_hinge",
             "doc": "Optional name for the op. Defaults to " "'squared_hinge'.",
             "name": "name",
         },
@@ -314,7 +314,7 @@ docstring_google_tf_adam_ir = {
             "typ": "bool",
         },
         {
-            "default": '"Adam"',
+            "default": "Adam",
             "doc": "Optional name for the operations created when "
             "applying gradients.\n"
             '  Defaults to `"Adam"`.',
@@ -328,7 +328,7 @@ docstring_google_tf_adam_ir = {
             '`"clipvalue"` (float) clips\n'
             "  gradients by value.",
             "name": "kwargs",
-            "typ": "dict",
+            "typ": "Optional[dict]",
         },
     ],
     "returns": None,
@@ -453,7 +453,7 @@ docstring_google_tf_adadelta_ir = {
             "name": "epsilon",
         },
         {
-            "default": '"Adadelta"',
+            "default": "Adadelta",
             "doc": "Optional name prefix for the operations created "
             "when applying\n"
             '  gradients.  Defaults to `"Adadelta"`.',
@@ -467,7 +467,7 @@ docstring_google_tf_adadelta_ir = {
             '`"clipvalue"` (float) clips\n'
             "  gradients by value.",
             "name": "kwargs",
-            "typ": "dict",
+            "typ": "Optional[dict]",
         },
     ],
     "returns": None,
@@ -604,7 +604,7 @@ K : Literal['np', 'tf']
     backend engine, e.g., `np` or `tf`. Defaults to "np"
 as_numpy : Optional[bool]
     Convert to numpy ndarrays
-data_loader_kwargs : dict
+data_loader_kwargs : Optional[dict]
     pass this as arguments to data_loader function
 
 Returns
@@ -625,7 +625,7 @@ K : Literal['np', 'tf']
     backend engine, e.g., `np` or `tf`. Defaults to "np"
 as_numpy : Optional[bool]
     Convert to numpy ndarrays
-data_loader_kwargs : dict
+data_loader_kwargs : Optional[dict]
     pass this as arguments to data_loader function
 """
 
@@ -653,19 +653,19 @@ intermediate_repr_no_default_doc = {
     "library",
     "params": [
         {
-            "default": '"mnist"',
+            "default": "mnist",
             "doc": "name of dataset.",
             "name": "dataset_name",
             "typ": "str",
         },
         {
-            "default": '"~/tensorflow_datasets"',
+            "default": "~/tensorflow_datasets",
             "doc": "directory to look for models in.",
             "name": "tfds_dir",
             "typ": "Optional[str]",
         },
         {
-            "default": '"np"',
+            "default": "np",
             "doc": "backend engine, e.g., `np` or `tf`.",
             "name": "K",
             "typ": "Literal['np', 'tf']",
@@ -678,7 +678,7 @@ intermediate_repr_no_default_doc = {
         {
             "doc": "pass this as arguments to data_loader function",
             "name": "data_loader_kwargs",
-            "typ": "dict",
+            "typ": "Optional[dict]",
         },
     ],
     "returns": {
@@ -734,7 +734,7 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 :type as_numpy: ```Optional[bool]```
 
 :param data_loader_kwargs: pass this as arguments to data_loader function
-:type data_loader_kwargs: ```**data_loader_kwargs```
+:type data_loader_kwargs: ```Optional[dict]```
 
 :return: Train and tests dataset splits.
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```

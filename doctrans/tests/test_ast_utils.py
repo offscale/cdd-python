@@ -17,6 +17,7 @@ from ast import (
     Assign,
     ImportFrom,
     Import,
+    Dict,
 )
 from os import path
 from unittest import TestCase
@@ -509,6 +510,23 @@ class TestAstUtils(TestCase):
                 expr=None,
                 lineno=None,
                 **maybe_type_comment
+            ),
+        )
+
+    def test_param2ast_with_assign_dict(self) -> None:
+        """ Check that `param2ast` behaves correctly with dict type """
+
+        run_ast_test(
+            self,
+            param2ast({"typ": "dict", "name": "menthol"}),
+            gold=AnnAssign(
+                annotation=Name("dict", Load()),
+                simple=1,
+                target=Name("menthol", Store()),
+                value=Dict(keys=[], values=[], expr=None),
+                expr=None,
+                expr_target=None,
+                expr_annotation=None,
             ),
         )
 

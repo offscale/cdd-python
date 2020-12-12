@@ -19,7 +19,7 @@ from doctrans.conformance import (
     _conform_filename,
 )
 from doctrans.tests.mocks.argparse import argparse_func_ast
-from doctrans.tests.mocks.classes import class_ast
+from doctrans.tests.mocks.classes import class_ast_no_default_doc
 from doctrans.tests.mocks.docstrings import intermediate_repr
 from doctrans.tests.mocks.methods import (
     class_with_method_types_ast,
@@ -81,7 +81,7 @@ class TestConformance(TestCase):
             argparse_functions.append(tempdir_join("argparse_empty.py"))
 
             class_ = tempdir_join("classes.py")
-            emit.file(class_ast, class_, mode="wt")
+            emit.file(class_ast_no_default_doc, class_, mode="wt")
 
             function = tempdir_join("methods.py")
             emit.file(class_with_method_ast, function, mode="wt")
@@ -160,7 +160,7 @@ class TestConformance(TestCase):
     def ground_truth_tester(
         tempdir,
         _argparse_func_ast=argparse_func_ast,
-        _class_ast=class_ast,
+        _class_ast=class_ast_no_default_doc,
         _class_with_method_ast=class_with_method_types_ast,
     ):
         """
@@ -229,7 +229,7 @@ class TestConformance(TestCase):
                     filename=argparse_function_filename,
                     search=["set_cli_args"],
                     emit_func=emit.argparse_function,
-                    replacement_node_ir=intermediate_repr,
+                    replacement_node_ir=deepcopy(intermediate_repr),
                     type_wanted=FunctionDef,
                 ),
                 (argparse_function_filename, True),
@@ -253,7 +253,7 @@ class TestConformance(TestCase):
                     filename=argparse_function_filename,
                     search=["impossibru"],
                     emit_func=emit.argparse_function,
-                    replacement_node_ir=intermediate_repr,
+                    replacement_node_ir=deepcopy(intermediate_repr),
                     type_wanted=FunctionDef,
                 ),
                 (argparse_function_filename, True),
@@ -271,7 +271,7 @@ class TestConformance(TestCase):
                     filename=argparse_function_filename,
                     search=["set_cli_args"],
                     emit_func=emit.argparse_function,
-                    replacement_node_ir=intermediate_repr,
+                    replacement_node_ir=deepcopy(intermediate_repr),
                     type_wanted=FunctionDef,
                 ),
                 (argparse_function_filename, False),

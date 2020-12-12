@@ -9,7 +9,7 @@ from os import path
 
 from doctrans import parse, emit
 from doctrans.ast_utils import get_at_root, set_value, maybe_type_comment
-from doctrans.pure_utils import get_module, pp
+from doctrans.pure_utils import get_module
 from doctrans.source_transformer import to_code
 
 
@@ -87,7 +87,6 @@ def gen(
     input_mapping_it = (
         input_mapping.items() if hasattr(input_mapping, "items") else input_mapping
     )
-    print("input_mapping_it:", input_mapping_it, ";")
 
     global__all__ = []
     content = "{prepend}{imports}\n{functions_and_classes}\n{__all}".format(
@@ -98,20 +97,20 @@ def gen(
             or global__all__.append(name_tpl.format(name=name))
             or to_code(
                 getattr(emit, type_.replace("class", "class_"))(
-                    (lambda _ir: pp({"gen::parsed::ir:": _ir}) or _ir)(
-                        (
-                            lambda is_func: getattr(
-                                parse,
-                                "function" if is_func else "class_",
-                            )(
-                                obj,
-                                **{}
-                                if is_func
-                                else {
-                                    "merge_inner_function": "__init__",
-                                }
-                            )
-                        )(isinstance(obj, FunctionDef) or isfunction(obj))
+                    (
+                        lambda is_func: getattr(
+                            parse,
+                            "function" if is_func else "class_",
+                        )(
+                            obj,
+                            **{}
+                            if is_func
+                            else {
+                                "merge_inner_function": "__init__",
+                            }
+                        )
+                    )(
+                        isinstance(obj, FunctionDef) or isfunction(obj)
                     ),  # TODO: Figure out if it's a function or argparse function
                     emit_call=emit_call,
                     emit_default_doc=emit_default_doc,

@@ -119,7 +119,9 @@ class TestEmitters(TestCase):
         """
         self.assertRaises(
             NotImplementedError,
-            lambda: emit.docstring(intermediate_repr, docstring_format="numpy"),
+            lambda: emit.docstring(
+                deepcopy(intermediate_repr), docstring_format="numpy"
+            ),
         )
 
     def test_to_google_docstring_fails(self) -> None:
@@ -128,7 +130,9 @@ class TestEmitters(TestCase):
         """
         self.assertRaises(
             NotImplementedError,
-            lambda: emit.docstring(intermediate_repr, docstring_format="google"),
+            lambda: emit.docstring(
+                deepcopy(intermediate_repr), docstring_format="google"
+            ),
         )
 
     def test_to_file(self) -> None:
@@ -218,8 +222,9 @@ class TestEmitters(TestCase):
             tab=tab, docstring=reindent(ast.get_docstring(function_def))
         )
 
+        ir = parse.function(function_def)
         gen_ast = emit.function(
-            parse.function(function_def),
+            ir,
             function_name=function_def.name,
             function_type=get_function_type(function_def),
             emit_default_doc=False,

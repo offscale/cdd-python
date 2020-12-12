@@ -10,7 +10,6 @@ from ast import (
     Store,
     Subscript,
     Tuple,
-    Dict,
     Attribute,
     Index,
     Call,
@@ -24,9 +23,13 @@ from ast import (
     USub,
     UnaryOp,
     Return,
+    get_docstring,
 )
+from copy import deepcopy
 
 from doctrans.ast_utils import set_value, set_arg, maybe_type_comment
+from doctrans.docstring_parsers import parse_docstring
+from doctrans.emit import docstring
 
 class_str = '''
 class ConfigClass(object):
@@ -44,7 +47,7 @@ class ConfigClass(object):
     tfds_dir: Optional[str] = "~/tensorflow_datasets"
     K: Literal["np", "tf"] = "np"
     as_numpy: Optional[bool] = None
-    data_loader_kwargs: dict = {}
+    data_loader_kwargs: Optional[dict] = None
     return_type: Union[
         Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]
     ] = (
@@ -176,13 +179,15 @@ class_ast = ClassDef(
             expr_annotation=None,
         ),
         AnnAssign(
-            annotation=Name("dict", Load()),
+            annotation=Subscript(
+                Name("Optional", Load()), Name("dict", Load()), Load()
+            ),
             simple=1,
             target=Name(
                 "data_loader_kwargs",
                 Store(),
             ),
-            value=Dict(keys=[], values=[], expr=None),
+            value=set_value(None),
             expr=None,
             expr_target=None,
             expr_annotation=None,
@@ -271,6 +276,21 @@ class_ast = ClassDef(
     expr=None,
     identifier_name=None,
 )
+
+class_ast_no_default_doc = deepcopy(class_ast)
+_doc_val = list(
+    filter(
+        None,
+        docstring(
+            parse_docstring(get_docstring(class_ast_no_default_doc))
+        ).splitlines(),
+    )
+)
+_doc_val[0] = "\n{}\n".format(_doc_val[0])
+class_ast_no_default_doc.body[0].value = set_value(
+    "\n".join(_doc_val[:-2] + _doc_val[-1:]).replace(":param", ":cvar")
+)
+del _doc_val
 
 class_nargs_ast = ClassDef(
     bases=[Name("object", Load())],

@@ -6,6 +6,8 @@ from ast import FunctionDef, ClassDef, Module
 from collections import OrderedDict
 from os import path
 
+from meta.asttools import cmp_ast
+
 from doctrans import emit
 from doctrans import parse
 from doctrans.ast_utils import (
@@ -15,7 +17,6 @@ from doctrans.ast_utils import (
 )
 from doctrans.pure_utils import pluralise, strip_split
 from doctrans.source_transformer import ast_parse
-from meta.asttools import cmp_ast
 
 
 def _default_options(node, search, type_wanted):
@@ -147,9 +148,12 @@ def _conform_filename(
     :return: filename, whether the file was modified
     :rtype: ```Tuple[str, bool]```
     """
+    # if emit_func.__name__ == "class_": pp({"replacement_node_ir": replacement_node_ir, "emit_func": emit_func})
     if not path.isfile(filename):
         emit.file(
-            emit_func(replacement_node_ir),
+            emit_func(
+                replacement_node_ir, emit_default_doc=emit_func.__name__ == "class_"
+            ),
             filename=filename,
             mode="wt",
             skip_black=False,

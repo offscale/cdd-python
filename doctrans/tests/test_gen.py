@@ -109,12 +109,6 @@ def populate_files(tempdir, input_module_str=None):
     with open(input_filename, "wt") as f:
         f.write(input_module_str)
 
-    # print("======================\ninput_module_str\n", input_module_str,
-    #       "\n======================", sep='')
-    #
-    # print("======================\nexpected_class_ast\n", emit.to_code(expected_class_ast),
-    #       "\n======================", sep='')
-
     return input_filename, input_module_ast, input_class_ast, expected_class_ast
 
 
@@ -189,24 +183,23 @@ class TestGen(TestCase):
         """ Tests `gen` """
 
         output_filename = os.path.join(self.tempdir, "test_gen_output.py")
-        # with patch("sys.stdout", new_callable=StringIO), patch(
-        #    "sys.stderr", new_callable=StringIO
-        # ):
-        self.assertIsNone(
-            gen(
-                name_tpl="{name}Config",
-                input_mapping="gen_test_module.input_map",
-                type_="class",
-                output_filename=output_filename,
-                prepend="PREPENDED\n",
-                emit_call=True,
-                emit_default_doc=False,
+        with patch("sys.stdout", new_callable=StringIO), patch(
+            "sys.stderr", new_callable=StringIO
+        ):
+            self.assertIsNone(
+                gen(
+                    name_tpl="{name}Config",
+                    input_mapping="gen_test_module.input_map",
+                    type_="class",
+                    output_filename=output_filename,
+                    prepend="PREPENDED\n",
+                    emit_call=True,
+                    emit_default_doc=False,
+                )
             )
-        )
         with open(output_filename, "rt") as f:
-            s = f.read()
-            # print(s)
-        gen_module_ast = ast.parse(s)
+            gen_module_str = f.read()
+        gen_module_ast = ast.parse(gen_module_str)
         run_ast_test(
             self,
             gen_ast=next(filter(rpartial(isinstance, ClassDef), gen_module_ast.body)),
@@ -230,7 +223,7 @@ class TestGen(TestCase):
                     type_="class",
                     output_filename=output_filename,
                     emit_call=True,
-                    emit_default_doc=True,
+                    emit_default_doc=False,
                 )
             )
         with open(output_filename, "rt") as f:
@@ -278,7 +271,7 @@ class TestGen(TestCase):
                     prepend=_import_gen_test_module_str,
                     output_filename=output_filename,
                     emit_call=True,
-                    emit_default_doc=True,
+                    emit_default_doc=False,
                 )
             )
 

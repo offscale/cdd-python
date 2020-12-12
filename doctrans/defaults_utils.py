@@ -1,6 +1,7 @@
 """
 Functions to handle default parameterisation
 """
+import ast
 from ast import literal_eval
 from contextlib import suppress
 from copy import deepcopy
@@ -8,7 +9,36 @@ from functools import partial
 from itertools import takewhile
 from operator import eq, contains
 
-from doctrans.pure_utils import location_within, count_iter_items
+from doctrans.pure_utils import count_iter_items, location_within, quote
+
+
+def needs_quoting(typ):
+    """
+    Figures out whether values with this type need quoting
+
+    :param typ: The type
+    :type typ: ```Optional[str]```
+
+    :return: Whether the type needs quoting
+    :rtype: ```bool```
+    """
+    if typ is None:
+        return False
+    elif typ == "str":
+        return True
+    elif typ == "Optional[str]":
+        return True
+
+    return any(
+        filter(
+            lambda node: isinstance(node, ast.Str)
+            or isinstance(node, ast.Constant)
+            and type(node.value).__name__ == "str"
+            or isinstance(node, ast.Name)
+            and node.id == "str",
+            ast.walk(ast.parse(typ).body[0].value),
+        )
+    )
 
 
 def extract_default(
@@ -81,7 +111,7 @@ def extract_default(
         if rstrip_default:
             offset = count_iter_items(
                 takewhile(
-                    partial(contains, frozenset((" ", "\t", "\n", ".", "\n"))),
+                    partial(contains, frozenset((" ", "\t", "\n", "\n", "."))),
                     line[rest_offset:],
                 )
             )
@@ -160,7 +190,7 @@ def set_default_doc(param, emit_default_doc=True):
     :rtype: ```dict``
     """
     # if param is None: param = {"doc": "", "typ": "Any"}
-    if "doc" not in param:
+    if param is None or "doc" not in param:
         return param
     has_defaults = "Defaults" in param["doc"] or "defaults" in param["doc"]
 
@@ -171,7 +201,9 @@ def set_default_doc(param, emit_default_doc=True):
                 if param["doc"][-1] in frozenset((".", ","))
                 else "{doc}.".format(doc=param["doc"])
             ),
-            default=param["default"],
+            default=quote(param["default"])
+            if needs_quoting(param.get("typ"))
+            else param["default"],
         )
     elif has_defaults:
         param["doc"] = extract_default(param["doc"], emit_default_doc=emit_default_doc)[
