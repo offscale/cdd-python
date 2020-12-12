@@ -25,7 +25,7 @@ method_complex_args_variety_ir = {
         {
             "doc": "additional keyword arguments",
             "name": "kwargs",
-            "typ": "dict",
+            "typ": "Optional[dict]",
         },
     ],
     "returns": {

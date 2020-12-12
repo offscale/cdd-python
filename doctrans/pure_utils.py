@@ -14,7 +14,14 @@ from sys import version_info
 
 pp = PrettyPrinter(indent=4).pprint
 tab = " " * 4
-simple_types = {"int": 0, "float": 0.0, "complex": 0j, "str": "", "bool": False, None: None}
+simple_types = {
+    "int": 0,
+    "float": 0.0,
+    "complex": 0j,
+    "str": "",
+    "bool": False,
+    None: None,
+}
 
 
 # From https://github.com/Suor/funcy/blob/0ee7ae8/funcy/funcs.py#L34-L36
@@ -190,6 +197,21 @@ def strip_split(param, sep):
     :rtype: ```Iterator[str, ...]```
     """
     return map(str.strip, param.split(sep))
+
+
+def unquote(s):
+    if (
+        isinstance(s, str)
+        and len(s) > 1
+        and (
+            s.startswith('"')
+            and s.endswith('"')
+            or s.startswith("'")
+            and s.endswith("'")
+        )
+    ):
+        return s[1:-1]
+    return s
 
 
 def quote(s, mark='"'):

@@ -32,8 +32,8 @@ from ast import (
 )
 from copy import deepcopy
 
-from doctrans.defaults_utils import extract_default
-from doctrans.pure_utils import simple_types, rpartial, PY_GTE_3_8, PY_GTE_3_9
+from doctrans.defaults_utils import extract_default, needs_quoting
+from doctrans.pure_utils import simple_types, rpartial, PY_GTE_3_8, PY_GTE_3_9, quote
 
 # Was `"globals().__getitem__"`; this type is used for `Any` and any other unhandled
 FALLBACK_TYP = "str"
@@ -64,6 +64,22 @@ def param2ast(param):
             expr=None,
             **maybe_type_comment
         )
+    elif needs_quoting(param["typ"]):
+        return AnnAssign(
+            annotation=Name(param["typ"], Load())
+            if param["typ"] in simple_types
+            else get_value(ast.parse(param["typ"]).body[0]),
+            simple=1,
+            target=Name(param["name"], Store()),
+            value=set_value(
+                quote(param["default"])
+                if param.get("default")
+                else simple_types.get(param["typ"])
+            ),
+            expr=None,
+            expr_target=None,
+            expr_annotation=None,
+        )
     elif param["typ"] in simple_types:
         return AnnAssign(
             annotation=Name(param["typ"], Load()),
@@ -76,7 +92,7 @@ def param2ast(param):
         )
     elif param["typ"] == "dict" or param["typ"].startswith("*"):
         return AnnAssign(
-            annotation=Name("dict", Load()),
+            annotation=set_slice(Name("dict", Load())),
             simple=1,
             target=Name(param["name"], Store()),
             value=Dict(keys=[], values=param.get("default", []), expr=None),
@@ -183,7 +199,7 @@ def param2argparse_param(param, emit_default_doc=True):
     param.setdefault("typ", "Any")
     if param["typ"] in simple_types:
         typ = param["typ"]
-    elif param["typ"] == "dict":
+    elif param["typ"] == "dict" or param["name"].endswith("kwargs"):
         typ = "loads"
         required = not param["name"].endswith("kwargs")
     elif param["typ"]:
@@ -567,7 +583,7 @@ def annotate_ancestry(node):
     :return: Annotated AST node; also `node` arg will be annotated in-place.
     :rtype: ```AST```
     """
-    print("annotating", getattr(node, "name", None))
+    # print("annotating", getattr(node, "name", None))
     node._location = [node.name] if hasattr(node, "name") else []
     parent_location = []
     for _node in walk(node):

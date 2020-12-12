@@ -29,11 +29,15 @@ from doctrans.ast_utils import (
     get_value,
     set_arg,
     maybe_type_comment,
-    annotate_ancestry,
 )
 from doctrans.defaults_utils import set_default_doc
-from doctrans.emitter_utils import get_internal_body, to_docstring
-from doctrans.pure_utils import tab, simple_types, PY3_8, rpartial, pp
+from doctrans.emitter_utils import (
+    get_internal_body,
+    to_docstring,
+    _make_call_meth,
+    RewriteName,
+)
+from doctrans.pure_utils import PY3_8, rpartial, simple_types, tab
 from doctrans.source_transformer import to_code
 
 
@@ -81,17 +85,9 @@ def argparse_function(
     )
     return FunctionDef(
         args=arguments(
-            args=list(
-                filter(
-                    None,
-                    (
-                        # None
-                        # if function_type in frozenset((None, "static"))
-                        # else set_arg(function_type),
-                        set_arg("argument_parser"),
-                    ),
-                )
-            ),
+            args=[set_arg("argument_parser")],
+            # None if function_type in frozenset((None, "static"))
+            # else set_arg(function_type),
             defaults=[],
             kw_defaults=[],
             kwarg=None,
@@ -247,8 +243,6 @@ def class_(
     """
     returns = [intermediate_repr["returns"]] if intermediate_repr.get("returns") else []
 
-    pp({"emit.class_::ir": intermediate_repr})
-
     param_names = frozenset(
         map(
             itemgetter("name"),
@@ -259,92 +253,56 @@ def class_(
         intermediate_repr["params"] = intermediate_repr["params"] + returns
         del intermediate_repr["returns"]
 
-    class RewriteName(ast.NodeTransformer):
-        """
-        A :class:`NodeTransformer` subclass that walks the abstract syntax tree and
-        allows modification of nodes. Here it modifies parameter names to be `self.param_name`
-        """
-
-        def visit_Name(self, node):
-            """
-            Rename parameter name with a `self.` attribute prefix
-
-            :param node: The AST node
-            :type node: ```Name```
-
-            :return: `Name` iff `Name` is not a parameter else `Attribute`
-            :rtype: ```Union[Name, Attribute]```
-            """
-            print("loc:", getattr(node, "_location", None), ";")
-            return (
-                Attribute(Name("self", Load()), node.id, Load())
-                if node.id in param_names
-                else ast.NodeTransformer.generic_visit(self, node)
-            )
-
-    internal_body = list(
-        map(annotate_ancestry, intermediate_repr.get("_internal", {}).get("body", []))
-    )
+    internal_body = intermediate_repr.get("_internal", {}).get("body", [])
+    # TODO: Add correct classmethod/staticmethod to decorate function using `annotate_ancestry` and first-field checks
+    # Such that the `self.` or `cls.` rewrite only applies to non-staticmethods
+    # assert internal_body, "Expected `internal_body` to have contents"
     if internal_body and param_names:
         internal_body = list(
             map(
                 ast.fix_missing_locations,
-                map(RewriteName().visit, internal_body),
+                map(RewriteName(param_names).visit, internal_body),
             )
         )
 
     return ClassDef(
         bases=list(map(rpartial(Name, Load()), class_bases)),
-        body=[
-            Expr(
-                set_value(
-                    to_docstring(
-                        intermediate_repr,
-                        indent_level=0,
-                        emit_separating_tab=False,
-                        emit_default_doc=emit_default_doc,
-                    )
-                    .replace("\n:param ", "{tab}:cvar ".format(tab=tab))
-                    .replace(
-                        "{tab}:cvar ".format(tab=tab),
-                        "\n{tab}:cvar ".format(tab=tab),
-                        1,
-                    )
-                    .rstrip()
+        body=list(
+            chain.from_iterable(
+                (
+                    (
+                        Expr(
+                            set_value(
+                                to_docstring(
+                                    intermediate_repr,
+                                    indent_level=0,
+                                    emit_separating_tab=False,
+                                    emit_default_doc=emit_default_doc,
+                                )
+                                .replace("\n:param ", "{tab}:cvar ".format(tab=tab))
+                                .replace(
+                                    "{tab}:cvar ".format(tab=tab),
+                                    "\n{tab}:cvar ".format(tab=tab),
+                                    1,
+                                )
+                                .rstrip()
+                            )
+                        ),
+                    ),
+                    map(param2ast, intermediate_repr["params"]),
+                    iter(
+                        (
+                            _make_call_meth(
+                                internal_body,
+                                returns[0].get("default") if returns else None,
+                                param_names,
+                            ),
+                        )
+                        if emit_call and internal_body
+                        else tuple()
+                    ),
                 )
             )
-        ]
-        + list(map(param2ast, intermediate_repr["params"]))
-        + (
-            [
-                FunctionDef(
-                    args=arguments(
-                        args=[set_arg("self")],
-                        defaults=[],
-                        kw_defaults=[],
-                        kwarg=None,
-                        kwonlyargs=[],
-                        posonlyargs=[],
-                        vararg=None,
-                        arg=None,
-                    ),
-                    body=internal_body[1:]
-                    if internal_body
-                    and isinstance(internal_body[0], Expr)
-                    and isinstance(get_value(internal_body[0].value), str)
-                    else internal_body,
-                    decorator_list=[],
-                    name="__call__",
-                    returns=None,
-                    arguments_args=None,
-                    identifier_name=None,
-                    stmt=None,
-                    lineno=None,
-                    **maybe_type_comment
-                )
-            ]
-            if emit_call and internal_body
-            else []
         ),
         decorator_list=[],
         keywords=[],
@@ -383,21 +341,39 @@ def docstring(intermediate_repr, docstring_format="rest", emit_default_doc=True)
     return "\n{doc}\n\n{params}\n{returns}\n".format(
         doc=intermediate_repr["doc"],
         params="\n".join(
-            ":param {param[name]}: {param[doc]}\n"
-            ":type {param[name]}: ```{typ}```\n".format(
-                param=set_default_doc(param, emit_default_doc=emit_default_doc),
-                typ=(
-                    "**{name}".format(name=param["name"])
-                    if "kwargs" in param["name"]
-                    else param["typ"]
-                ),
+            ":param {param[name]}: {param[doc]}\n{type_param}".format(
+                param=param,
+                type_param=":type {param[name]}: ```{typ}```\n".format(
+                    param=set_default_doc(param, emit_default_doc=emit_default_doc),
+                    typ=param["typ"],
+                )
+                if param.get("typ")
+                else "",
             )
             for param in intermediate_repr["params"]
         ),
-        returns=":return: {param[doc]}\n"
-        ":rtype: ```{param[typ]}```".format(
-            param=set_default_doc(
-                intermediate_repr["returns"], emit_default_doc=emit_default_doc
+        returns="\n".join(
+            (
+                lambda param: filter(
+                    None,
+                    (
+                        ":return: {param[doc]}".format(param=param)
+                        if param is not None and "doc" in param
+                        else None,
+                        ":rtype: ```{param[typ]}```".format(
+                            param=set_default_doc(
+                                intermediate_repr["returns"],
+                                emit_default_doc=emit_default_doc,
+                            )
+                        )
+                        if (param or {}).get("typ") is not None
+                        else None,
+                    ),
+                )
+            )(
+                set_default_doc(
+                    intermediate_repr["returns"], emit_default_doc=emit_default_doc
+                )
             )
         ),
     )

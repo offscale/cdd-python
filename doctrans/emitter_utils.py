@@ -2,14 +2,14 @@
 Functions which produce intermediate_repr from various different inputs
 """
 import ast
-from ast import Name, Return
+from ast import Expr, FunctionDef, Name, Return, arguments, Attribute, Load
 from functools import partial
 from operator import add
 from typing import Any
 
-from doctrans.ast_utils import get_value, set_value
+from doctrans.ast_utils import get_value, set_value, maybe_type_comment, set_arg
 from doctrans.defaults_utils import extract_default, set_default_doc
-from doctrans.pure_utils import simple_types, identity, tab, quote
+from doctrans.pure_utils import identity, simple_types, tab, unquote
 from doctrans.source_transformer import to_code
 
 
@@ -25,7 +25,7 @@ def _handle_value(node):
     """
     # if isinstance(node, Attribute): return Any
     if isinstance(node, Name):
-        return "dict" if node.id == "loads" else node.id
+        return "Optional[dict]" if node.id == "loads" else node.id
     raise NotImplementedError(type(node).__name__)
 
 
@@ -170,8 +170,8 @@ def parse_out_param(expr, emit_default_doc=True):
     if not required and not name.endswith("kwargs"):
         typ = "Optional[{typ}]".format(typ=typ)
 
-    if "str" in typ or "Literal" in typ and (typ.count("'") > 1 or typ.count('"') > 1):
-        default = quote(default)
+    # if "str" in typ or "Literal" in typ and (typ.count("'") > 1 or typ.count('"') > 1):
+    #    default = quote(default)
 
     return dict(
         name=name, doc=doc, typ=typ, **({} if default is None else {"default": default})
@@ -202,7 +202,7 @@ def interpolate_defaults(param, default_search_announce=None, emit_default_doc=T
         )
         param["doc"] = doc
         if default is not None:
-            param["default"] = default
+            param["default"] = unquote(default)
     return param
 
 
@@ -329,8 +329,6 @@ def to_docstring(
     :return: docstring
     :rtype: ```str```
     """
-    print("TO DOCSTRING")
-    print("emit_default_doc:", emit_default_doc, ";")
     assert isinstance(intermediate_repr, dict), "Expected 'dict' got `{!r}`".format(
         type(intermediate_repr).__name__
     )
@@ -431,6 +429,107 @@ def to_docstring(
             if intermediate_repr.get("returns")
             else ""
         ),
+    )
+
+
+class RewriteName(ast.NodeTransformer):
+    """
+    A :class:`NodeTransformer` subclass that walks the abstract syntax tree and
+    allows modification of nodes. Here it modifies parameter names to be `self.param_name`
+    """
+
+    def __init__(self, node_ids):
+        """
+        Set parameter
+
+        :param node_ids: Container of AST `id`s to match for rename
+        :type node_ids: ```Optional[Iterator[str]]```
+        """
+        self.node_ids = node_ids
+
+    def visit_Name(self, node):
+        """
+        Rename parameter name with a `self.` attribute prefix
+
+        :param node: The AST node
+        :type node: ```Name```
+
+        :return: `Name` iff `Name` is not a parameter else `Attribute`
+        :rtype: ```Union[Name, Attribute]```
+        """
+        # print("loc:", getattr(node, "_location", None), ";")
+        return (
+            Attribute(Name("self", Load()), node.id, Load())
+            if not self.node_ids or node.id in self.node_ids
+            else ast.NodeTransformer.generic_visit(self, node)
+        )
+
+
+def _make_call_meth(body, return_type, param_names):
+    """
+    Construct a `__call__` method from the provided `body`
+
+    :param body: The body, probably from a FunctionDef.body
+    :type body: ```List[AST]```
+
+    :param return_type: The return type of the parent symbol (probably class). Used to fill in `__call__` return.
+    :type return_type: ```Optional[str]```
+
+    :param param_names: Container of AST `id`s to match for rename
+    :type param_names: ```Optional[Iterator[str]]```
+
+    :return: Internal function for `__call__`
+    :rtype: ```FunctionDef```
+    """
+    body_len = len(body)
+    return_ = (
+        ast.fix_missing_locations(
+            RewriteName(param_names).visit(
+                Return(get_value(ast.parse(return_type[3:-3]).body[0]), expr=None)
+            )
+        )
+        if return_type is not None
+        and return_type.startswith("```")
+        and return_type.endswith("```")
+        else None
+    )
+    if body_len:
+        if isinstance(body[0], Expr):
+            doc_str = get_value(body[0].value)
+            if isinstance(doc_str, str):
+                if body_len > 1:
+                    body = body[1:]
+                elif body_len == 1:
+                    body = [
+                        set_value(doc_str.replace(":cvar", ":param"))
+                        if return_ is None
+                        else return_
+                    ]
+    #         elif not isinstance(body[0], Return) and return_ is not None:
+    #             body.append(return_)
+    # elif return_ is not None:
+    #     body = [return_]
+
+    return FunctionDef(
+        args=arguments(
+            args=[set_arg("self")],
+            defaults=[],
+            kw_defaults=[],
+            kwarg=None,
+            kwonlyargs=[],
+            posonlyargs=[],
+            vararg=None,
+            arg=None,
+        ),
+        body=body,
+        decorator_list=[],
+        name="__call__",
+        returns=None,
+        arguments_args=None,
+        identifier_name=None,
+        stmt=None,
+        lineno=None,
+        **maybe_type_comment
     )
 
 

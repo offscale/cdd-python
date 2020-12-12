@@ -14,13 +14,13 @@ from ast import (
     get_docstring,
     Module,
     ClassDef,
+    Dict,
 )
 from collections import OrderedDict, deque
-from copy import deepcopy
 from functools import partial
 from inspect import signature, getdoc, isfunction, getsource
 from itertools import filterfalse, count
-from pprint import PrettyPrinter
+from operator import setitem
 from types import FunctionType
 
 from docstring_parser import (
@@ -37,7 +37,7 @@ from doctrans.ast_utils import (
     argparse_param2param,
 )
 from doctrans.docstring_parsers import parse_docstring, _set_name_and_type
-from doctrans.emitter_utils import parse_out_param, _parse_return
+from doctrans.emitter_utils import parse_out_param, _parse_return, interpolate_defaults
 from doctrans.parser_utils import (
     _inspect_process_ir_param,
     _inspect_process_sig,
@@ -49,7 +49,7 @@ from doctrans.pure_utils import (
     rpartial,
     assert_equal,
     update_d,
-    pp, simple_types,
+    simple_types,
 )
 from doctrans.source_transformer import to_code
 
@@ -88,8 +88,6 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
         ir = _inspect(class_def, class_name)
         parsed_body = ast.parse(getsource(class_def).lstrip()).body[0]
 
-        pp({"parse::class::params:": ir["params"]})
-
         if merge_inner_function is not None:
             _merge_inner_function(
                 parsed_body,
@@ -115,6 +113,7 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
             merge_inner_function=merge_inner_function,
         )
         ir_merge(ir, body_ir)
+
         return ir
 
     assert (
@@ -134,24 +133,51 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
     for e in class_def.body:
         if isinstance(e, AnnAssign):
             typ = to_code(e.annotation).rstrip("\n")
-            val = (lambda v: {} if v is None else {"default": v if type(v).__name__ in simple_types
-                              else to_code(v).rstrip("\n")})(get_value(get_value(e)))
+            val = (
+                lambda v: {}
+                if v is None
+                else {
+                    "default": v
+                    if type(v).__name__ in simple_types
+                    else (
+                        lambda value: {
+                            "{}": {} if isinstance(v, Dict) else set(),
+                            "[]": [],
+                            "()": (),
+                        }.get(value, value)
+                    )(to_code(v).rstrip("\n"))
+                }
+            )(get_value(get_value(e)))
             # if 'str' in typ and val: val["default"] = val["default"].strip("'")  # Unquote?
             typ_default = dict(typ=typ, **val)
 
             if e.target.id == "return_type":
                 intermediate_repr["returns"].update(typ_default)
             else:
+                # if e.target.id.endswith("kwargs") and typ_default["typ"] == "dict":
+                #     typ_default["typ"] = "Optional[dict]"
                 intermediate_repr["params"][e.target.id].update(typ_default)
         elif isinstance(e, Assign):
             val = get_value(e)
             if val is not None:
                 val = get_value(val)
-                for target in e.targets:
-                    if target.id in intermediate_repr["params"]:
-                        intermediate_repr["params"][target.id]["default"] = val
-                    else:
-                        intermediate_repr["params"][target.id] = {"default": val}
+                deque(
+                    map(
+                        lambda target: setitem(
+                            *(
+                                (intermediate_repr["params"][target.id], "default", val)
+                                if target.id in intermediate_repr["params"]
+                                else (
+                                    intermediate_repr["params"],
+                                    target.id,
+                                    {"default": val},
+                                )
+                            )
+                        ),
+                        e.targets,
+                    ),
+                    maxlen=0,
+                )
 
     intermediate_repr.update(
         {
@@ -161,7 +187,9 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
             ],
             "_internal": {
                 "body": list(
-                    filterfalse(rpartial(isinstance, AnnAssign), class_def.body)
+                    filterfalse(
+                        rpartial(isinstance, (AnnAssign, Assign)), class_def.body
+                    )
                 ),
                 "from_name": class_def.name,
                 "from_type": "cls",
@@ -177,6 +205,8 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
             intermediate_repr=intermediate_repr,
             merge_inner_function=merge_inner_function,
         )
+
+    # intermediate_repr['_internal']["body"]= list(filterfalse(rpartial(isinstance,(AnnAssign,Assign)),class_def.body))
 
     return intermediate_repr
 
@@ -267,8 +297,6 @@ def _inspect(obj, name):
     if not is_function and "type" in ir:
         del ir["type"]
 
-    print("_inspect::docstring:", doc, ";\n_inspect::sig:", sig, ";")
-
     ir.update(
         {
             "name": name or obj.__qualname__
@@ -295,12 +323,8 @@ def _inspect(obj, name):
     else:
         parser = class_
 
-    was = deepcopy(ir)
     other = parser(parsed_body)
     ir_merge(ir, other)
-    PrettyPrinter(indent=4, sort_dicts=False).pprint(
-        {"IR was": was, "other": other, "IR now": ir}
-    )
 
     # if ir.get("returns") and "returns" not in ir["returns"]:
     #     if sig.return_annotation is not _empty:
@@ -544,15 +568,13 @@ def argparse_ast(function_def, function_type=None, function_name=None):
         "params": [],
     }
     ir = parse_docstring(doc_string, emit_default_doc=True)
-
     for node in function_def.body[1:]:
         if is_argparse_add_argument(node):
             intermediate_repr["params"].append(
                 parse_out_param(node, emit_default_doc=False)
             )
-        elif isinstance(node, Assign):
-            if is_argparse_description(node):
-                intermediate_repr["doc"] = get_value(node.value)
+        elif isinstance(node, Assign) and is_argparse_description(node):
+            intermediate_repr["doc"] = get_value(node.value)
         elif isinstance(node, Return) and isinstance(node.value, Tuple):
             intermediate_repr["returns"] = _parse_return(
                 node,
@@ -572,7 +594,7 @@ def argparse_ast(function_def, function_type=None, function_name=None):
             "from_type": "static",
         }
 
-    return intermediate_repr
+    return interpolate_defaults(intermediate_repr)
 
 
 def docstring(doc_string, infer_type=False, return_tuple=False):

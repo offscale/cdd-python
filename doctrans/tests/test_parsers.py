@@ -7,7 +7,7 @@ from unittest import TestCase
 
 from doctrans import parse, emit
 from doctrans.ast_utils import get_value, RewriteAtQuery
-from doctrans.pure_utils import PY_GTE_3_8, tab, pp
+from doctrans.pure_utils import PY_GTE_3_8, tab
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import (
     class_ast,
@@ -188,10 +188,10 @@ class TestParsers(TestCase):
 
         method_complex_args_variety_with_imports_str = (
             "from sys import stdout\n"
-            "from {} import Literal\n"
-            "{}".format(
-                "typing" if PY_GTE_3_8 else "typing_extensions",
-                method_complex_args_variety_str,
+            "from {package} import Literal\n"
+            "{body}".format(
+                package="typing" if PY_GTE_3_8 else "typing_extensions",
+                body=method_complex_args_variety_str,
             )
         )
         call_cliff = getattr(
@@ -296,7 +296,6 @@ class TestParsers(TestCase):
         ir = parse.class_(Adadelta)
         del ir["_internal"]
         # self.assertDictEqual(ir, docstring_google_tf_adadelta_ir)
-        pp(ir)
         self.assertDictEqual(
             ir,
             docstring_google_tf_adadelta_function_ir,
@@ -333,7 +332,7 @@ class TestParsers(TestCase):
             infer_type=True,
         )
 
-        # del parsed_ir["_internal"]  # Not needed for this test
+        del parsed_ir["_internal"]  # Not needed for this test
 
         self.assertDictEqual(
             parsed_ir,

@@ -76,7 +76,7 @@ class C(object):
         :type as_numpy: ```Optional[bool]```
 
         :param data_loader_kwargs: pass this as arguments to data_loader function
-        :type data_loader_kwargs: ```**data_loader_kwargs```
+        :type data_loader_kwargs: ```Optional[data_loader_kwargs]```
 
         :return: Train and tests dataset splits.
         :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
@@ -398,7 +398,7 @@ class_with_method_ast = fix_missing_locations(
                             ":param as_numpy: Convert to numpy ndarrays\n        "
                             ":type as_numpy: ```Optional[bool]```\n\n        "
                             ":param data_loader_kwargs: pass this as arguments to data_loader function\n        "
-                            ":type data_loader_kwargs: ```**data_loader_kwargs```\n\n        "
+                            ":type data_loader_kwargs: ```Optional[dict]```\n\n        "
                             ":return: Train and tests dataset splits.\n        "
                             ":rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]"
                             "```\n        ",
@@ -1165,7 +1165,7 @@ docstring_google_tf_adadelta_function_ir = {
             '`"clipvalue"` (float) clips\n'
             "  gradients by value.",
             "name": "kwargs",
-            "typ": "dict",
+            "typ": "Optional[dict]",
         },
         {"default": True, "name": "_HAS_AGGREGATE_GRAD"},
     ],

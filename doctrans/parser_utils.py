@@ -76,6 +76,13 @@ def ir_merge(target, other):
     if target["params"] and target["params"][-1]["name"] == "return_type":
         target["returns"] = _join_non_none(target["returns"], target["params"].pop())
 
+    other_internal = other.get("_internal", {})
+    if other_internal.get("body"):
+        if "_internal" in target:
+            target["_internal"].update(other_internal)
+        else:
+            target["_internal"] = other_internal
+
     return target
 
 
@@ -127,7 +134,7 @@ def _inspect_process_ir_param(param, sig):
         if param.get("typ", _empty) is _empty:
             param["typ"] = type(param["default"]).__name__
     if param["name"].endswith("kwargs"):
-        param["typ"] = "dict"
+        param["typ"] = "Optional[dict]"
     return param
 
 

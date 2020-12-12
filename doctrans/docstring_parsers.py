@@ -17,8 +17,9 @@ from typing import Tuple, List, Dict
 
 from docstring_parser import Style
 
+from doctrans.defaults_utils import needs_quoting
 from doctrans.emitter_utils import interpolate_defaults
-from doctrans.pure_utils import location_within, count_iter_items, rpartial
+from doctrans.pure_utils import location_within, count_iter_items, rpartial, unquote
 
 Tokens = namedtuple("Tokens", ("rest", "google", "numpydoc"))
 
@@ -391,10 +392,13 @@ def _set_name_and_type(param, infer_type):
     """
     if param["name"].endswith("kwargs"):
         param["name"] = param["name"].lstrip("*")
-        if not param.get("typ"):
-            param["typ"] = "dict"
-    elif infer_type and "default" in param and param.get("typ") is None:
-        param["typ"] = type(param["default"]).__name__
+        if param.get("typ", "dict") == "dict":
+            param["typ"] = "Optional[dict]"
+    elif "default" in param:
+        if infer_type and param.get("typ") is None:
+            param["typ"] = type(param["default"]).__name__
+        if needs_quoting(param.get("typ")) or isinstance(param["default"], str):
+            param["default"] = unquote(param["default"])
     return param
 
 
