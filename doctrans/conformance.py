@@ -148,7 +148,6 @@ def _conform_filename(
     :return: filename, whether the file was modified
     :rtype: ```Tuple[str, bool]```
     """
-    # if emit_func.__name__ == "class_": pp({"replacement_node_ir": replacement_node_ir, "emit_func": emit_func})
     if not path.isfile(filename):
         emit.file(
             emit_func(

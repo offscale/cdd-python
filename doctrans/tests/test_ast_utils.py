@@ -38,6 +38,7 @@ from doctrans.ast_utils import (
     get_at_root,
     set_arg,
     maybe_type_comment,
+    set_slice,
 )
 from doctrans.pure_utils import PY3_8, PY_GTE_3_8
 from doctrans.source_transformer import ast_parse
@@ -520,7 +521,7 @@ class TestAstUtils(TestCase):
             self,
             param2ast({"typ": "dict", "name": "menthol"}),
             gold=AnnAssign(
-                annotation=Name("dict", Load()),
+                annotation=set_slice(Name("dict", Load())),
                 simple=1,
                 target=Name("menthol", Store()),
                 value=Dict(keys=[], values=[], expr=None),
