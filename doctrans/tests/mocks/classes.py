@@ -1074,7 +1074,7 @@ class_google_tf_tensorboard_ir = {
             "name": "embeddings_metadata",
             "typ": "NoneType",
         },
-        {"name": "kwargs", "typ": "dict"},
+        {"name": "kwargs", "typ": "Optional[dict]"},
     ],
     "returns": None,
     "type": "static",

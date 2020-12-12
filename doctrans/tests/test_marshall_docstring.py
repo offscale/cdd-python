@@ -2,14 +2,16 @@
 Tests for docstring parsing
 """
 
+from ast import BinOp, Mult
 from copy import deepcopy
 from unittest import TestCase
 
-from docstring_parser import rest
-
 import doctrans.emit
 import doctrans.emitter_utils
+from docstring_parser import rest
 from doctrans import parse
+from doctrans.ast_utils import set_value
+from doctrans.docstring_parsers import _set_name_and_type
 from doctrans.docstring_parsers import parse_docstring
 from doctrans.emitter_utils import to_docstring
 from doctrans.tests.mocks.docstrings import (
@@ -126,7 +128,24 @@ class TestMarshallDocstring(TestCase):
         gold.update({"doc": "", "returns": None})
         self.assertDictEqual(ir, gold)
 
-    maxDiff = None
+    def test__set_name_and_type(self) -> None:
+        """
+        Tests that `_set_name_and_type` parsed AST code into a code str
+        """
+        self.assertDictEqual(
+            _set_name_and_type(
+                {
+                    "name": "adder",
+                    "default": BinOp(
+                        set_value(5),
+                        Mult(),
+                        set_value(5),
+                    ),
+                },
+                infer_type=True,
+            ),
+            {"default": "```(5 * 5)```", "name": "adder", "typ": "BinOp"},
+        )
 
     def test_from_docstring_numpydoc_only_returns(self) -> None:
         """

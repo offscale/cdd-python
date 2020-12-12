@@ -8,6 +8,7 @@ Translates from the [numpydoc docstring format](https://numpydoc.readthedocs.io/
 
 Translates from [Google's docstring format](https://google.github.io/styleguide/pyguide.html)
 """
+from ast import AST
 from collections import namedtuple
 from copy import deepcopy
 from functools import partial
@@ -16,8 +17,8 @@ from operator import contains, attrgetter, eq, le
 from typing import Tuple, List, Dict
 
 from docstring_parser import Style
-
 from doctrans.defaults_utils import needs_quoting
+from doctrans.emit import to_code
 from doctrans.emitter_utils import interpolate_defaults
 from doctrans.pure_utils import location_within, count_iter_items, rpartial, unquote
 
@@ -390,7 +391,7 @@ def _set_name_and_type(param, infer_type):
     :return: Potentially changed param
     :rtype: ```dict```
     """
-    if param["name"].endswith("kwargs"):
+    if param["name"].endswith("kwargs") or param["name"].startswith("**"):
         param["name"] = param["name"].lstrip("*")
         if param.get("typ", "dict") == "dict":
             param["typ"] = "Optional[dict]"
@@ -399,6 +400,8 @@ def _set_name_and_type(param, infer_type):
             param["typ"] = type(param["default"]).__name__
         if needs_quoting(param.get("typ")) or isinstance(param["default"], str):
             param["default"] = unquote(param["default"])
+        elif isinstance(param["default"], AST):
+            param["default"] = "```{}```".format(to_code(param["default"]).rstrip("\n"))
     return param
 
 
