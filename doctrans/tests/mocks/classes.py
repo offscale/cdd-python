@@ -27,7 +27,7 @@ from ast import (
 )
 from copy import deepcopy
 
-from doctrans.ast_utils import set_value, set_arg, maybe_type_comment
+from doctrans.ast_utils import set_value, set_arg, maybe_type_comment, set_slice
 from doctrans.docstring_parsers import parse_docstring
 from doctrans.emit import docstring
 
@@ -180,7 +180,7 @@ class_ast = ClassDef(
         ),
         AnnAssign(
             annotation=Subscript(
-                Name("Optional", Load()), Name("dict", Load()), Load()
+                Name("Optional", Load()), set_slice(Name("dict", Load())), Load()
             ),
             simple=1,
             target=Name(
