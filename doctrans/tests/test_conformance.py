@@ -14,16 +14,16 @@ from unittest.mock import patch
 
 from doctrans import emit
 from doctrans.conformance import (
+    _conform_filename,
     _get_name_from_namespace,
     ground_truth,
-    _conform_filename,
 )
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import class_ast_no_default_doc
 from doctrans.tests.mocks.docstrings import intermediate_repr
 from doctrans.tests.mocks.methods import (
-    class_with_method_types_ast,
     class_with_method_ast,
+    class_with_method_types_ast,
 )
 from doctrans.tests.utils_for_tests import unittest_main
 

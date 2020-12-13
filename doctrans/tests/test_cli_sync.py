@@ -8,7 +8,7 @@ from doctrans import __version__
 from doctrans.tests.mocks.argparse import argparse_func_str
 from doctrans.tests.mocks.classes import class_str
 from doctrans.tests.mocks.methods import class_with_method_types_str
-from doctrans.tests.utils_for_tests import unittest_main, run_cli_test
+from doctrans.tests.utils_for_tests import run_cli_test, unittest_main
 
 
 class TestCliSync(TestCase):

@@ -4,9 +4,9 @@ from copy import deepcopy
 from unittest import TestCase
 
 from doctrans.ast_utils import set_value
-from doctrans.emitter_utils import parse_out_param, interpolate_defaults
+from doctrans.emitter_utils import interpolate_defaults, parse_out_param
 from doctrans.pure_utils import rpartial
-from doctrans.tests.mocks.argparse import argparse_func_ast, argparse_add_argument_ast
+from doctrans.tests.mocks.argparse import argparse_add_argument_ast, argparse_func_ast
 from doctrans.tests.mocks.docstrings import intermediate_repr
 from doctrans.tests.utils_for_tests import unittest_main
 

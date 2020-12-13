@@ -5,7 +5,7 @@ import ast
 from copy import deepcopy
 from functools import partial
 from importlib.abc import Loader
-from importlib.util import spec_from_loader, module_from_spec
+from importlib.util import module_from_spec, spec_from_loader
 from os import path
 from sys import modules
 from tempfile import NamedTemporaryFile

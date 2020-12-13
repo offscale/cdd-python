@@ -3,38 +3,39 @@ Transform from string or AST representations of input, to AST, file, or str inpu
 """
 import ast
 from ast import (
-    ClassDef,
-    Name,
-    Load,
-    Expr,
-    Module,
-    FunctionDef,
-    arguments,
     Assign,
     Attribute,
+    ClassDef,
+    Expr,
+    FunctionDef,
+    Load,
+    Module,
+    Name,
+    Return,
     Store,
     Tuple,
-    Return,
+    arguments,
 )
 from functools import partial
 from itertools import chain
-from operator import itemgetter, contains
+from operator import contains, itemgetter
 
-from black import format_str, Mode
+from black import Mode, format_str
+
 from doctrans.ast_utils import (
+    get_value,
+    maybe_type_comment,
     param2argparse_param,
     param2ast,
-    set_value,
-    get_value,
     set_arg,
-    maybe_type_comment,
+    set_value,
 )
 from doctrans.defaults_utils import set_default_doc
 from doctrans.emitter_utils import (
+    RewriteName,
+    _make_call_meth,
     get_internal_body,
     to_docstring,
-    _make_call_meth,
-    RewriteName,
 )
 from doctrans.pure_utils import PY3_8, rpartial, simple_types, tab
 from doctrans.source_transformer import to_code

@@ -4,8 +4,8 @@ Tests for AST equality
 
 from unittest import TestCase
 
-from doctrans.tests.mocks.argparse import argparse_func_str, argparse_func_ast
-from doctrans.tests.mocks.classes import class_str, class_ast
+from doctrans.tests.mocks.argparse import argparse_func_ast, argparse_func_str
+from doctrans.tests.mocks.classes import class_ast, class_str
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
 
 

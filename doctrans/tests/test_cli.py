@@ -2,14 +2,14 @@
 import os
 from argparse import ArgumentParser
 from importlib.machinery import SourceFileLoader
-from importlib.util import spec_from_loader, module_from_spec
+from importlib.util import module_from_spec, spec_from_loader
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from doctrans import __version__
 from doctrans.__main__ import _build_parser
 from doctrans.pure_utils import PY3_8
-from doctrans.tests.utils_for_tests import unittest_main, run_cli_test
+from doctrans.tests.utils_for_tests import run_cli_test, unittest_main
 
 
 class TestCli(TestCase):

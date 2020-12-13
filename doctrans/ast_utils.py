@@ -3,37 +3,37 @@ ast_utils, bunch of helpers for converting input into ast.* input_str
 """
 import ast
 from ast import (
+    AST,
     AnnAssign,
-    Name,
-    Load,
-    Store,
+    Assign,
+    Attribute,
+    Call,
+    ClassDef,
     Constant,
     Dict,
+    Expr,
+    FunctionDef,
+    Index,
+    Load,
     Module,
-    ClassDef,
+    Name,
+    NameConstant,
+    NodeTransformer,
+    Num,
+    Store,
+    Str,
     Subscript,
     Tuple,
-    Expr,
-    Call,
-    Attribute,
+    alias,
+    iter_child_nodes,
     keyword,
     parse,
     walk,
-    FunctionDef,
-    Str,
-    NameConstant,
-    Assign,
-    Index,
-    Num,
-    AST,
-    iter_child_nodes,
-    alias,
-    NodeTransformer,
 )
 from copy import deepcopy
 
 from doctrans.defaults_utils import extract_default, needs_quoting
-from doctrans.pure_utils import simple_types, rpartial, PY_GTE_3_8, PY_GTE_3_9, quote
+from doctrans.pure_utils import PY_GTE_3_8, PY_GTE_3_9, quote, rpartial, simple_types
 
 # Was `"globals().__getitem__"`; this type is used for `Any` and any other unhandled
 FALLBACK_TYP = "str"
@@ -56,13 +56,18 @@ def param2ast(param):
     :return: AST node for assignment
     :rtype: ```Union[AnnAssign, Assign]```
     """
+    if param["typ"] is None and "default" in param:
+        param["typ"] = type(param["default"]).__name__
+
     if param["typ"] is None:
-        return Assign(
-            targets=[Name(param["name"], Store())],
+        return AnnAssign(
+            annotation=Name("object", Load()),
+            simple=1,
+            target=Name(param["name"], Store()),
             value=set_value(param.get("default") or simple_types[param["typ"]]),
-            lineno=None,
             expr=None,
-            **maybe_type_comment
+            expr_target=None,
+            expr_annotation=None,
         )
     elif needs_quoting(param["typ"]):
         return AnnAssign(

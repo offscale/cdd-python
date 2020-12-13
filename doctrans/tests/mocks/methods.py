@@ -2,28 +2,28 @@
 Mocks for methods
 """
 from ast import (
-    Return,
-    Tuple,
-    Load,
-    Call,
-    Expr,
-    Index,
-    arguments,
-    FunctionDef,
-    ClassDef,
     Attribute,
-    Name,
-    Subscript,
     BinOp,
-    Mult,
+    Call,
+    ClassDef,
+    Expr,
+    FunctionDef,
     If,
+    Index,
+    Load,
+    Mult,
+    Name,
     Pass,
+    Return,
+    Subscript,
+    Tuple,
+    arguments,
     fix_missing_locations,
 )
 from functools import partial
 from operator import add
 
-from doctrans.ast_utils import set_value, set_slice, set_arg, maybe_type_comment
+from doctrans.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
 from doctrans.tests.mocks.docstrings import docstring_google_tf_adadelta_str
 
 return_ast = Return(

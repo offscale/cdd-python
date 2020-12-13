@@ -9,7 +9,7 @@ from itertools import chain
 from operator import itemgetter
 from typing import Any
 
-from docstring_parser import DocstringParam, DocstringMeta
+from docstring_parser import DocstringMeta, DocstringParam
 
 from doctrans.ast_utils import get_value
 from doctrans.defaults_utils import extract_default

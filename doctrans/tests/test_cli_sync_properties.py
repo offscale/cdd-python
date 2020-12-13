@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch
 
-from doctrans.tests.utils_for_tests import unittest_main, run_cli_test, mock_function
+from doctrans.tests.utils_for_tests import mock_function, run_cli_test, unittest_main
 
 
 class TestCliSyncProperties(TestCase):

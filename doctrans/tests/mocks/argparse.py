@@ -2,30 +2,30 @@
 Mocks for the argparse function
 """
 from ast import (
-    FunctionDef,
-    arguments,
-    Expr,
     Assign,
-    Store,
     Attribute,
-    Name,
-    Load,
-    Call,
-    keyword,
-    Return,
-    Tuple,
     BinOp,
-    Mult,
+    Call,
+    Expr,
+    FunctionDef,
     If,
+    Load,
+    Mult,
+    Name,
+    Return,
+    Store,
+    Tuple,
+    arguments,
     fix_missing_locations,
+    keyword,
 )
 
 from doctrans.ast_utils import (
-    FALLBACK_TYP,
     FALLBACK_ARGPARSE_TYP,
-    set_value,
-    set_arg,
+    FALLBACK_TYP,
     maybe_type_comment,
+    set_arg,
+    set_value,
 )
 
 argparse_func_str = '''

@@ -5,34 +5,32 @@ import ast
 from ast import FunctionDef
 from unittest import TestCase
 
-from doctrans import parse, emit
-from doctrans.ast_utils import get_value, RewriteAtQuery
+from doctrans import emit, parse
+from doctrans.ast_utils import RewriteAtQuery, get_value
 from doctrans.pure_utils import PY_GTE_3_8, tab
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import (
     class_ast,
     class_google_tf_tensorboard_ast,
-    class_google_tf_tensorboard_str,
     class_google_tf_tensorboard_ir,
+    class_google_tf_tensorboard_str,
 )
-from doctrans.tests.mocks.docstrings import (
-    intermediate_repr_no_default_doc,
-)
+from doctrans.tests.mocks.docstrings import intermediate_repr_no_default_doc
 from doctrans.tests.mocks.ir import method_complex_args_variety_ir
 from doctrans.tests.mocks.methods import (
+    docstring_google_tf_adadelta_function_ir,
+    docstring_google_tf_adadelta_function_str,
     function_adder_ast,
+    function_adder_ir,
+    function_adder_str,
     function_default_complex_default_arg_ast,
     method_complex_args_variety_ast,
     method_complex_args_variety_str,
-    function_adder_str,
-    function_adder_ir,
-    docstring_google_tf_adadelta_function_str,
-    docstring_google_tf_adadelta_function_ir,
 )
 from doctrans.tests.utils_for_tests import (
-    unittest_main,
     inspectable_compile,
     run_ast_test,
+    unittest_main,
 )
 
 

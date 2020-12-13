@@ -2,7 +2,7 @@
 Source transformer module. Uses astor on Python < 3.9
 """
 
-from ast import parse, get_docstring, AsyncFunctionDef, Module, ClassDef, FunctionDef
+from ast import AsyncFunctionDef, ClassDef, FunctionDef, Module, get_docstring, parse
 from importlib import import_module
 from sys import version_info
 

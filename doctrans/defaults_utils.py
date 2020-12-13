@@ -7,7 +7,7 @@ from contextlib import suppress
 from copy import deepcopy
 from functools import partial
 from itertools import takewhile
-from operator import eq, contains
+from operator import contains, eq
 
 from doctrans.pure_utils import count_iter_items, location_within, quote
 

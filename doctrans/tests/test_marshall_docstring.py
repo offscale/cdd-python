@@ -6,13 +6,13 @@ from ast import BinOp, Mult
 from copy import deepcopy
 from unittest import TestCase
 
+from docstring_parser import rest
+
 import doctrans.emit
 import doctrans.emitter_utils
-from docstring_parser import rest
 from doctrans import parse
 from doctrans.ast_utils import set_value
-from doctrans.docstring_parsers import _set_name_and_type
-from doctrans.docstring_parsers import parse_docstring
+from doctrans.docstring_parsers import _set_name_and_type, parse_docstring
 from doctrans.emitter_utils import to_docstring
 from doctrans.tests.mocks.docstrings import (
     docstring_google_str,
@@ -29,14 +29,12 @@ from doctrans.tests.mocks.docstrings import (
     docstring_numpydoc_only_returns_str,
     docstring_numpydoc_str,
     docstring_str,
-    intermediate_repr_no_default_doc,
-)
-from doctrans.tests.mocks.docstrings import (
     docstring_str_extra_colons,
     docstring_str_no_default_doc,
     docstring_str_only_return_type,
     intermediate_repr,
     intermediate_repr_extra_colons,
+    intermediate_repr_no_default_doc,
     intermediate_repr_no_default_doc_or_prop,
     intermediate_repr_only_return_type,
 )

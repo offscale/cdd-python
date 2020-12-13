@@ -2,12 +2,12 @@
 Functions which produce intermediate_repr from various different inputs
 """
 import ast
-from ast import Expr, FunctionDef, Name, Return, arguments, Attribute, Load
+from ast import Attribute, Expr, FunctionDef, Load, Name, Return, arguments
 from functools import partial
 from operator import add
 from typing import Any
 
-from doctrans.ast_utils import get_value, set_value, maybe_type_comment, set_arg
+from doctrans.ast_utils import get_value, maybe_type_comment, set_arg, set_value
 from doctrans.defaults_utils import extract_default, set_default_doc
 from doctrans.pure_utils import identity, simple_types, tab, unquote
 from doctrans.source_transformer import to_code

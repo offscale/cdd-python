@@ -13,14 +13,21 @@ from collections import namedtuple
 from copy import deepcopy
 from functools import partial
 from itertools import takewhile
-from operator import contains, attrgetter, eq, le
-from typing import Tuple, List, Dict
+from operator import attrgetter, contains, eq, le
+from typing import Dict, List, Tuple
 
 from docstring_parser import Style
+
 from doctrans.defaults_utils import needs_quoting
 from doctrans.emit import to_code
 from doctrans.emitter_utils import interpolate_defaults
-from doctrans.pure_utils import location_within, count_iter_items, rpartial, unquote
+from doctrans.pure_utils import (
+    PY_GTE_3_9,
+    count_iter_items,
+    location_within,
+    rpartial,
+    unquote,
+)
 
 Tokens = namedtuple("Tokens", ("rest", "google", "numpydoc"))
 
@@ -401,7 +408,10 @@ def _set_name_and_type(param, infer_type):
         if needs_quoting(param.get("typ")) or isinstance(param["default"], str):
             param["default"] = unquote(param["default"])
         elif isinstance(param["default"], AST):
-            param["default"] = "```{}```".format(to_code(param["default"]).rstrip("\n"))
+            parens = ("(", ")") if PY_GTE_3_9 else ("", "")
+            param["default"] = "```{left}{}{right}```".format(
+                to_code(param["default"]).rstrip("\n"), left=parens[0], right=parens[1]
+            )
     return param
 
 
