@@ -5,21 +5,21 @@ from itertools import zip_longest
 from unittest import TestCase
 
 from doctrans.pure_utils import (
-    rpartial,
-    pp,
-    tab,
-    simple_types,
-    identity,
-    pluralise,
-    strip_split,
-    sanitise,
-    quote,
-    update_d,
-    lstrip_namespace,
-    location_within,
     blockwise,
     diff,
     get_module,
+    identity,
+    location_within,
+    lstrip_namespace,
+    pluralise,
+    pp,
+    quote,
+    rpartial,
+    sanitise,
+    simple_types,
+    strip_split,
+    tab,
+    update_d,
 )
 from doctrans.tests.utils_for_tests import unittest_main
 

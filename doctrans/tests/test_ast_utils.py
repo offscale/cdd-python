@@ -1,23 +1,23 @@
 """ Tests for ast_utils """
 import ast
 from ast import (
-    FunctionDef,
-    Module,
+    AnnAssign,
+    Assign,
     ClassDef,
-    Name,
-    arguments,
-    arg,
     Constant,
+    Dict,
+    FunctionDef,
+    Import,
+    ImportFrom,
+    Load,
+    Module,
+    Name,
     NameConstant,
+    Store,
     Str,
     Tuple,
-    AnnAssign,
-    Load,
-    Store,
-    Assign,
-    ImportFrom,
-    Import,
-    Dict,
+    arg,
+    arguments,
 )
 from os import path
 from unittest import TestCase
@@ -25,28 +25,28 @@ from unittest import TestCase
 from meta.asttools import cmp_ast
 
 from doctrans.ast_utils import (
+    RewriteAtQuery,
+    annotate_ancestry,
+    emit_ann_assign,
+    emit_arg,
     find_ast_type,
+    find_in_ast,
+    get_at_root,
     get_function_type,
     get_value,
-    find_in_ast,
-    emit_ann_assign,
-    annotate_ancestry,
-    RewriteAtQuery,
-    emit_arg,
-    param2ast,
-    set_value,
-    get_at_root,
-    set_arg,
     maybe_type_comment,
+    param2ast,
+    set_arg,
     set_slice,
+    set_value,
 )
 from doctrans.pure_utils import PY3_8, PY_GTE_3_8
 from doctrans.source_transformer import ast_parse
 from doctrans.tests.mocks.classes import class_ast, class_str
 from doctrans.tests.mocks.methods import (
-    class_with_optional_arg_method_ast,
     class_with_method_and_body_types_ast,
     class_with_method_and_body_types_str,
+    class_with_optional_arg_method_ast,
 )
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
 
@@ -505,12 +505,14 @@ class TestAstUtils(TestCase):
         run_ast_test(
             self,
             param2ast({"typ": None, "name": "zion"}),
-            gold=Assign(
-                targets=[Name("zion", Store())],
+            gold=AnnAssign(
+                annotation=Name("object", Load()),
+                simple=1,
+                target=Name("zion", Store()),
                 value=set_value(None),
                 expr=None,
-                lineno=None,
-                **maybe_type_comment
+                expr_target=None,
+                expr_annotation=None,
             ),
         )
 

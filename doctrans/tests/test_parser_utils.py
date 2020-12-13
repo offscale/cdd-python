@@ -2,7 +2,7 @@
 from copy import deepcopy
 from unittest import TestCase
 
-from doctrans.parser_utils import ir_merge, _join_non_none
+from doctrans.parser_utils import _join_non_none, ir_merge
 from doctrans.tests.utils_for_tests import unittest_main
 
 

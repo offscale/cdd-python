@@ -3,12 +3,14 @@ Functionality to generate classes, functions, and/or argparse functions from the
 """
 
 import ast
-from ast import Import, ImportFrom, Module, FunctionDef, Assign, Name, List, Load, Store
+from ast import Assign, FunctionDef, Import, ImportFrom, List, Load, Module, Name, Store
 from inspect import getfile, isfunction
+from itertools import chain
+from operator import itemgetter
 from os import path
 
-from doctrans import parse, emit
-from doctrans.ast_utils import get_at_root, set_value, maybe_type_comment
+from doctrans import emit, parse
+from doctrans.ast_utils import get_at_root, maybe_type_comment, set_value
 from doctrans.pure_utils import get_module
 from doctrans.source_transformer import to_code
 
@@ -144,5 +146,34 @@ def gen(
         ),
     )
 
+    parsed_ast = ast.parse(content)
+    # TODO: Shebang line first, then docstring, then imports
+    doc_str = ast.get_docstring(parsed_ast)
+    whole = tuple(
+        map(
+            lambda node: (node, None)
+            if isinstance(node, (Import, ImportFrom))
+            else (None, node),
+            parsed_ast.body,
+        )
+    )
+    parsed_ast.body = list(
+        filter(
+            None,
+            chain.from_iterable(
+                (
+                    parsed_ast.body[:1] if doc_str else iter(()),
+                    sorted(
+                        map(itemgetter(0), whole),
+                        key=lambda import_from: getattr(import_from, "module", None)
+                        == "__future__",
+                        reverse=True,
+                    ),
+                    map(itemgetter(1), whole[1:] if doc_str else whole),
+                ),
+            ),
+        )
+    )
+
     with open(output_filename, "a") as f:
-        f.write(content)
+        f.write(to_code(parsed_ast))

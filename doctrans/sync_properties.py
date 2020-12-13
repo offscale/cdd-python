@@ -6,13 +6,13 @@ import ast
 
 from doctrans import emit
 from doctrans.ast_utils import (
-    find_in_ast,
-    annotate_ancestry,
     RewriteAtQuery,
+    annotate_ancestry,
+    find_in_ast,
     it2literal,
 )
 from doctrans.pure_utils import strip_split
-from doctrans.source_transformer import to_code, ast_parse
+from doctrans.source_transformer import ast_parse, to_code
 
 
 def sync_properties(

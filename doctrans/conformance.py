@@ -2,19 +2,14 @@
 Given the truth, show others the path
 """
 
-from ast import FunctionDef, ClassDef, Module
+from ast import ClassDef, FunctionDef, Module
 from collections import OrderedDict
 from os import path
 
 from meta.asttools import cmp_ast
 
-from doctrans import emit
-from doctrans import parse
-from doctrans.ast_utils import (
-    find_in_ast,
-    RewriteAtQuery,
-    get_function_type,
-)
+from doctrans import emit, parse
+from doctrans.ast_utils import RewriteAtQuery, find_in_ast, get_function_type
 from doctrans.pure_utils import pluralise, strip_split
 from doctrans.source_transformer import ast_parse
 

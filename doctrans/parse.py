@@ -7,49 +7,43 @@ Transform from string or AST representations of input, to intermediate_repr dict
 import ast
 from ast import (
     AnnAssign,
-    FunctionDef,
-    Return,
     Assign,
-    Tuple,
-    get_docstring,
-    Module,
     ClassDef,
     Dict,
+    FunctionDef,
+    Module,
+    Return,
+    Tuple,
+    get_docstring,
 )
 from collections import OrderedDict, deque
 from functools import partial
-from inspect import signature, getdoc, isfunction, getsource
-from itertools import filterfalse, count
+from inspect import getdoc, getsource, isfunction, signature
+from itertools import count, filterfalse
 from operator import setitem
 from types import FunctionType
 
-from docstring_parser import (
-    Docstring,
-)
+from docstring_parser import Docstring
+
 from doctrans import get_logger
 from doctrans.ast_utils import (
+    argparse_param2param,
     find_ast_type,
+    get_function_type,
     get_value,
     is_argparse_add_argument,
     is_argparse_description,
-    get_function_type,
-    argparse_param2param,
 )
-from doctrans.docstring_parsers import parse_docstring, _set_name_and_type
-from doctrans.emitter_utils import parse_out_param, _parse_return, interpolate_defaults
+from doctrans.docstring_parsers import _set_name_and_type, parse_docstring
+from doctrans.emitter_utils import _parse_return, interpolate_defaults, parse_out_param
 from doctrans.parser_utils import (
+    _evaluate_to_docstring_value,
     _inspect_process_ir_param,
     _inspect_process_sig,
     _interpolate_return,
-    _evaluate_to_docstring_value,
     ir_merge,
 )
-from doctrans.pure_utils import (
-    rpartial,
-    assert_equal,
-    update_d,
-    simple_types,
-)
+from doctrans.pure_utils import assert_equal, rpartial, simple_types, update_d
 from doctrans.source_transformer import to_code
 
 logger = get_logger("doctrans.parse")

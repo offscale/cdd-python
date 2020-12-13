@@ -11,16 +11,12 @@ from unittest import TestCase
 from meta.asttools import cmp_ast
 
 from doctrans import emit, parse
-from doctrans.ast_utils import (
-    get_function_type,
-    find_in_ast,
-    annotate_ancestry,
-)
+from doctrans.ast_utils import annotate_ancestry, find_in_ast, get_function_type
 from doctrans.pure_utils import PY3_8, deindent, reindent, rpartial, tab
 from doctrans.tests.mocks.argparse import (
+    argparse_func_action_append_ast,
     argparse_func_ast,
     argparse_func_with_body_ast,
-    argparse_func_action_append_ast,
 )
 from doctrans.tests.mocks.classes import (
     class_ast,
@@ -29,9 +25,9 @@ from doctrans.tests.mocks.classes import (
 )
 from doctrans.tests.mocks.docstrings import docstring_str, intermediate_repr
 from doctrans.tests.mocks.methods import (
-    class_with_method_types_ast,
-    class_with_method_ast,
     class_with_method_and_body_types_ast,
+    class_with_method_ast,
+    class_with_method_types_ast,
     class_with_method_types_str,
     function_google_tf_squared_hinge_str,
 )

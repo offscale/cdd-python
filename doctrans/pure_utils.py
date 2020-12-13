@@ -6,9 +6,9 @@ from collections import deque
 from functools import partial
 from importlib import import_module
 from inspect import getmodule
-from itertools import chain, zip_longest, count
+from itertools import chain, count, zip_longest
 from keyword import iskeyword
-from operator import eq, attrgetter
+from operator import attrgetter, eq
 from pprint import PrettyPrinter
 from sys import version_info
 

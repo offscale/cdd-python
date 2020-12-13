@@ -2,32 +2,32 @@
 Mocks for the `class`
 """
 from ast import (
-    ClassDef,
-    Name,
-    Load,
-    Expr,
     AnnAssign,
+    Assign,
+    Attribute,
+    BinOp,
+    Call,
+    ClassDef,
+    Expr,
+    FunctionDef,
+    Index,
+    Load,
+    Mult,
+    Name,
+    Return,
     Store,
+    Sub,
     Subscript,
     Tuple,
-    Attribute,
-    Index,
-    Call,
-    Assign,
-    FunctionDef,
-    arguments,
-    BinOp,
-    Sub,
-    Mult,
-    keyword,
-    USub,
     UnaryOp,
-    Return,
+    USub,
+    arguments,
     get_docstring,
+    keyword,
 )
 from copy import deepcopy
 
-from doctrans.ast_utils import set_value, set_arg, maybe_type_comment, set_slice
+from doctrans.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
 from doctrans.docstring_parsers import parse_docstring
 from doctrans.emit import docstring
 
@@ -384,28 +384,34 @@ class_squared_hinge_config_ast = ClassDef(
                 " Defaults to ```K.mean(math_ops.square(math_ops.maximum(1.0 - y_true * y_pred, 0.0)), axis=-1)```"
             )
         ),
-        Assign(
-            targets=[Name("y_true", Store())],
+        AnnAssign(
+            annotation=Name("object", Load()),
+            simple=1,
+            target=Name("y_true", Store()),
             value=set_value(None),
             expr=None,
-            lineno=None,
-            **maybe_type_comment,
+            expr_target=None,
+            expr_annotation=None,
         ),
-        Assign(
-            targets=[Name("y_pred", Store())],
+        AnnAssign(
+            annotation=Name("object", Load()),
+            simple=1,
+            target=Name("y_pred", Store()),
             value=set_value(None),
             expr=None,
-            lineno=None,
-            **maybe_type_comment,
+            expr_target=None,
+            expr_annotation=None,
         ),
-        Assign(
-            targets=[Name("return_type", Store())],
+        AnnAssign(
+            annotation=Name("str", Load()),
+            simple=1,
+            target=Name("return_type", Store()),
             value=set_value(
                 "```K.mean(math_ops.square(math_ops.maximum(1.0 - y_true * y_pred, 0.0)), axis=-1)```"
             ),
             expr=None,
-            lineno=None,
-            **maybe_type_comment,
+            expr_target=None,
+            expr_annotation=None,
         ),
         FunctionDef(
             args=arguments(

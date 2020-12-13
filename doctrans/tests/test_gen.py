@@ -6,15 +6,15 @@ import sys
 from ast import (
     Assign,
     ClassDef,
+    Dict,
     Import,
     ImportFrom,
+    List,
     Load,
     Module,
     Name,
     Store,
     alias,
-    List,
-    Dict,
 )
 from copy import deepcopy
 from io import StringIO
@@ -24,7 +24,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from doctrans import emit, parse
-from doctrans.ast_utils import set_value, maybe_type_comment
+from doctrans.ast_utils import maybe_type_comment, set_value
 from doctrans.gen import gen
 from doctrans.pure_utils import rpartial
 from doctrans.source_transformer import to_code

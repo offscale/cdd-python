@@ -6,7 +6,7 @@ from collections import namedtuple
 from io import StringIO
 from typing import Any
 from unittest import TestCase
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from doctrans.pure_utils import PY_GTE_3_8
 from doctrans.tests.utils_for_tests import unittest_main

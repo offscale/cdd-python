@@ -8,9 +8,9 @@ setup.py implementation, interesting because it parsed the first __init__.py and
 from ast import parse
 from distutils.sysconfig import get_python_lib
 from functools import partial
-from os import path, listdir
+from os import listdir, path
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 package_name = "doctrans"
 

@@ -2,14 +2,14 @@
 Tests for setup.py
 """
 from importlib.machinery import SourceFileLoader
-from importlib.util import spec_from_loader, module_from_spec
+from importlib.util import module_from_spec, spec_from_loader
 from operator import methodcaller
 from os import path
 from sys import modules
 from unittest import TestCase
 from unittest.mock import patch
 
-from doctrans.tests.utils_for_tests import unittest_main, mock_function
+from doctrans.tests.utils_for_tests import mock_function, unittest_main
 
 
 class TestSetupPy(TestCase):

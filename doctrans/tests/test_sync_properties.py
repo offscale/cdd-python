@@ -6,11 +6,12 @@ from sys import modules
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
+from pkg_resources import resource_filename
+
 from doctrans.pure_utils import tab
 from doctrans.sync_properties import sync_properties
 from doctrans.tests.mocks.eval import get_modules
-from doctrans.tests.utils_for_tests import unittest_main, run_ast_test
-from pkg_resources import resource_filename
+from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
 
 
 def populate_files(tempdir, input_str=None, output_str=None):
