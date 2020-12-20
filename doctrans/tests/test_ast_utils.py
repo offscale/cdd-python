@@ -3,6 +3,8 @@ import ast
 from ast import (
     AnnAssign,
     Assign,
+    Attribute,
+    Call,
     ClassDef,
     Constant,
     Dict,
@@ -18,6 +20,7 @@ from ast import (
     Tuple,
     arg,
     arguments,
+    keyword,
 )
 from os import path
 from unittest import TestCase
@@ -25,6 +28,7 @@ from unittest import TestCase
 from meta.asttools import cmp_ast
 
 from doctrans.ast_utils import (
+    NoneStr,
     RewriteAtQuery,
     annotate_ancestry,
     emit_ann_assign,
@@ -35,6 +39,7 @@ from doctrans.ast_utils import (
     get_function_type,
     get_value,
     maybe_type_comment,
+    param2argparse_param,
     param2ast,
     set_arg,
     set_slice,
@@ -554,6 +559,75 @@ class TestAstUtils(TestCase):
                 expr_annotation=None,
                 expr_target=None,
             ),
+        )
+
+    def test_param2ast_with_wrapped_default(self) -> None:
+        """ Check that `param2ast` behaves correctly with a wrapped default """
+
+        run_ast_test(
+            self,
+            param2ast({"typ": None, "name": "zion", "default": set_value(NoneStr)}),
+            gold=AnnAssign(
+                annotation=Name("object", Load()),
+                simple=1,
+                target=Name("zion", Store()),
+                value=set_value(None),
+                expr=None,
+                expr_target=None,
+                expr_annotation=None,
+            ),
+        )
+
+    def test_param2argparse_param_none_default(self) -> None:
+        """
+        Tests that param2argparse_param works to reparse the default
+        """
+        run_ast_test(
+            gen_ast=get_value(
+                param2argparse_param({"name": "yup", "default": NoneStr})
+            ),
+            gold=Call(
+                args=[set_value("--yup")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(arg="type", value=Name("str", Load()), identifier=None),
+                    keyword(arg="help", value=set_value(""), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            ),
+            test_case_instance=self,
+        )
+
+    def test_param2argparse_param_default_type(self) -> None:
+        """
+        Tests that param2argparse_param works to change the type based on the default
+        """
+        run_ast_test(
+            gen_ast=get_value(
+                param2argparse_param({"name": "byo", "default": 5, "typ": "str"})
+            ),
+            gold=Call(
+                args=[set_value("--byo")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(arg="type", value=Name("int", Load()), identifier=None),
+                    keyword(arg="help", value=set_value(""), identifier=None),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                    keyword(arg="default", value=set_value(5), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            ),
+            test_case_instance=self,
         )
 
 

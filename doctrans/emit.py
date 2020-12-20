@@ -23,6 +23,7 @@ from operator import contains, itemgetter
 from black import Mode, format_str
 
 from doctrans.ast_utils import (
+    NoneStr,
     get_value,
     maybe_type_comment,
     param2argparse_param,
@@ -83,6 +84,7 @@ def argparse_function(
         target_type=function_type,
         intermediate_repr=intermediate_repr,
     )
+
     return FunctionDef(
         args=arguments(
             args=[set_arg("argument_parser")],
@@ -107,18 +109,27 @@ def argparse_function(
                                     ":param argument_parser: argument parser\n    "
                                     ":type argument_parser: ```ArgumentParser```\n\n    "
                                     "{return_params}".format(
-                                        return_params=":return: argument_parser, {returns[doc]}\n    "
-                                        ":rtype: ```Tuple[ArgumentParser, {returns[typ]}]```\n    ".format(
+                                        return_params=(
+                                            lambda returns: ":return: argument_parser, {returns[doc]}\n    "
+                                            "{rtype}".format(
+                                                returns=returns,
+                                                rtype=":rtype: ```Tuple[ArgumentParser, {returns[typ]}]```\n    ".format(
+                                                    returns=returns
+                                                )
+                                                if intermediate_repr["returns"].get(
+                                                    "typ"
+                                                )
+                                                else ":rtype: ```ArgumentParser```\n    ",
+                                            )
+                                        )(
                                             returns=set_default_doc(
                                                 intermediate_repr["returns"],
                                                 emit_default_doc=emit_default_doc_in_return,
                                             )
                                         )
                                         if intermediate_repr.get("returns")
-                                        else (
-                                            ":return: argument_parser\n    "
-                                            ":rtype: ```ArgumentParser```\n    "
-                                        )
+                                        else ":return: argument_parser\n    "
+                                        ":rtype: ```ArgumentParser```\n    "
                                     )
                                 )
                             ),
@@ -141,7 +152,7 @@ def argparse_function(
                         None,
                         (
                             *(
-                                list(
+                                (
                                     map(
                                         partial(
                                             param2argparse_param,
@@ -151,7 +162,7 @@ def argparse_function(
                                     )
                                 )
                                 if "params" in intermediate_repr
-                                else tuple()
+                                else ()
                             ),
                             *(
                                 internal_body[
@@ -175,7 +186,16 @@ def argparse_function(
                                         ctx=Load(),
                                         elts=[
                                             Name("argument_parser", Load()),
-                                            ast.parse(
+                                            set_value(
+                                                intermediate_repr["returns"]["default"]
+                                            )
+                                            if intermediate_repr["returns"][
+                                                "default"
+                                            ].startswith("```")
+                                            and intermediate_repr["returns"][
+                                                "default"
+                                            ].endswith("```")
+                                            else ast.parse(
                                                 intermediate_repr["returns"]["default"]
                                             )
                                             .body[0]
@@ -502,7 +522,9 @@ def function(
     )
     defaults_from_params = list(
         map(
-            lambda param: set_value(param.get("default")),
+            lambda param: set_value(None)
+            if param.get("default") == NoneStr
+            else set_value(param.get("default")),
             params_no_kwargs,
         )
     )

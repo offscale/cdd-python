@@ -58,7 +58,12 @@ def param2ast(param):
     """
     if param["typ"] is None and "default" in param:
         param["typ"] = type(param["default"]).__name__
-
+    if "default" in param and isinstance(param["default"], (Constant, Str)):
+        param["default"] = get_value(param["default"])
+        if param["default"] == NoneStr:
+            param["default"] = None
+        if param["typ"] in frozenset(("Constant", "Str", "NamedConstant")):
+            param["typ"] = "object"
     if param["typ"] is None:
         return AnnAssign(
             annotation=Name("object", Load()),
@@ -229,8 +234,13 @@ def param2argparse_param(param, emit_default_doc=True):
                 if node.id == "List":
                     action = "append"
 
+    param.setdefault("doc", "")
     doc, _default = extract_default(param["doc"], emit_default_doc=emit_default_doc)
     default = param.get("default", _default)
+    if default == NoneStr:
+        required, default = False, None
+    elif default is not None and typ == "str" and not isinstance(default, str):
+        typ = type(default).__name__
 
     return Expr(
         Call(
@@ -838,9 +848,12 @@ def it2literal(it):
     )
 
 
+NoneStr = "```(None)```" if PY_GTE_3_9 else "```None```"
+
 __all__ = [
     "FALLBACK_ARGPARSE_TYP",
     "FALLBACK_TYP",
+    "NoneStr",
     "RewriteAtQuery",
     "annotate_ancestry",
     "argparse_param2param",
@@ -848,8 +861,8 @@ __all__ = [
     "emit_arg",
     "find_ast_type",
     "find_in_ast",
-    "get_function_type",
     "get_at_root",
+    "get_function_type",
     "get_value",
     "is_argparse_add_argument",
     "is_argparse_description",

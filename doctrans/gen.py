@@ -101,31 +101,36 @@ def gen(
             print("Generating: {!r}".format(name))
             or global__all__.append(name_tpl.format(name=name))
             or to_code(
-                getattr(emit, type_.replace("class", "class_"))(
+                getattr(
+                    emit,
+                    type_.replace("class", "class_").replace(
+                        "argparse", "argparse_function"
+                    ),
+                )(
                     (
                         lambda is_func: getattr(
                             parse,
                             "function" if is_func else "class_",
                         )(
                             obj,
-                            **{}
-                            if is_func
-                            else {
-                                "merge_inner_function": "__init__",
-                            }
+                            **{} if is_func else {"merge_inner_function": "__init__"}
                         )
                     )(
                         isinstance(obj, FunctionDef) or isfunction(obj)
                     ),  # TODO: Figure out if it's a function or argparse function
-                    emit_call=emit_call,
                     emit_default_doc=emit_default_doc,
                     **(
                         lambda _name: {
-                            "class_name": _name,
-                            "decorator_list": decorator_list,
-                        }
-                        if type_ == "class"
-                        else {"function_name": _name}
+                            "class": {
+                                "class_name": _name,
+                                "decorator_list": decorator_list,
+                                "emit_call": emit_call,
+                            },
+                            "function": {
+                                "function_name": _name,
+                            },
+                            "argparse": {"function_name": _name},
+                        }[type_]
                     )(name_tpl.format(name=name))
                 )
             )
@@ -157,6 +162,7 @@ def gen(
             parsed_ast.body,
         )
     )
+
     parsed_ast.body = list(
         filter(
             None,
