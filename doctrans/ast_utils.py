@@ -207,32 +207,7 @@ def param2argparse_param(param, emit_default_doc=True):
     """
     typ, choices, required, action = "str", None, True, None
     param.setdefault("typ", "Any")
-    if param["typ"] in simple_types:
-        typ = param["typ"]
-    elif param["typ"] == "dict" or param["name"].endswith("kwargs"):
-        typ = "loads"
-        required = not param["name"].endswith("kwargs")
-    elif param["typ"]:
-        parsed_type = parse(param["typ"]).body[0]
-        for node in walk(parsed_type):
-            if isinstance(node, Tuple):
-                maybe_choices = tuple(
-                    get_value(elt)
-                    for elt in node.elts
-                    if isinstance(elt, (Constant, Str))
-                )
-                if len(maybe_choices) == len(node.elts):
-                    choices = maybe_choices
-            elif isinstance(node, Name):
-                if node.id == "Optional":
-                    required = False
-                elif node.id in simple_types:
-                    typ = node.id
-                elif node.id not in frozenset(("Union",)):
-                    typ = FALLBACK_TYP
-
-                if node.id == "List":
-                    action = "append"
+    action, choices, required, typ = _resolve_arg(action, choices, param, required, typ)
 
     param.setdefault("doc", "")
     doc, _default = extract_default(param["doc"], emit_default_doc=emit_default_doc)
@@ -305,6 +280,57 @@ def param2argparse_param(param, emit_default_doc=True):
             expr_func=None,
         )
     )
+
+
+def _resolve_arg(action, choices, param, required, typ):
+    """
+    Resolve the arg type, required status, and choices
+
+    :param action: Name of the action
+    :type action: ```Optional[str]```
+
+    :param choices: A container of values that should be allowed.
+    :type choices: ```Optional[List[str]]```
+
+    :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    :type param: ```dict```
+
+    :param required: Whether to require the argument
+    :type required: ```bool```
+
+    :param typ: The type of the argument
+    :type typ: ```Optional[str]```
+
+    :return: action, choices, required, typ
+    :rtype: ```Tuple[Optional[str], Optional[List[str]], bool, Optional[str]]```
+    """
+    if param["typ"] in simple_types:
+        typ = param["typ"]
+    elif param["typ"] == "dict" or param["name"].endswith("kwargs"):
+        typ = "loads"
+        required = not param["name"].endswith("kwargs")
+    elif param["typ"]:
+        parsed_type = parse(param["typ"]).body[0]
+        for node in walk(parsed_type):
+            if isinstance(node, Tuple):
+                maybe_choices = tuple(
+                    get_value(elt)
+                    for elt in node.elts
+                    if isinstance(elt, (Constant, Str))
+                )
+                if len(maybe_choices) == len(node.elts):
+                    choices = maybe_choices
+            elif isinstance(node, Name):
+                if node.id == "Optional":
+                    required = False
+                elif node.id in simple_types:
+                    typ = node.id
+                elif node.id not in frozenset(("Union",)):
+                    typ = FALLBACK_TYP
+
+                if node.id == "List":
+                    action = "append"
+    return action, choices, required, typ
 
 
 def argparse_param2param(argparse_param):
