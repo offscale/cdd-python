@@ -113,9 +113,8 @@ def argparse_function(
                                             lambda returns: ":return: argument_parser, {returns[doc]}\n    "
                                             "{rtype}".format(
                                                 returns=returns,
-                                                rtype=":rtype: ```Tuple[ArgumentParser, {returns[typ]}]```\n    ".format(
-                                                    returns=returns
-                                                )
+                                                rtype=":rtype: ```Tuple[ArgumentParser, {returns[typ]}]```\n{tab}"
+                                                "".format(returns=returns, tab=tab)
                                                 if intermediate_repr["returns"].get(
                                                     "typ"
                                                 )
