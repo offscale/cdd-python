@@ -496,15 +496,20 @@ def _make_call_meth(body, return_type, param_names):
     if body_len:
         if isinstance(body[0], Expr):
             doc_str = get_value(body[0].value)
-            if isinstance(doc_str, str):
-                if body_len > 1:
-                    body = body[1:]
-                elif body_len == 1:
-                    body = [
-                        set_value(doc_str.replace(":cvar", ":param"))
-                        if return_ is None
-                        else return_
-                    ]
+            if isinstance(doc_str, str) and body_len > 0:
+                body = (
+                    body[1:]
+                    if body_len > 1
+                    else (
+                        [
+                            set_value(doc_str.replace(":cvar", ":param"))
+                            if return_ is None
+                            else return_
+                        ]
+                        if body_len == 1
+                        else body
+                    )
+                )
     #         elif not isinstance(body[0], Return) and return_ is not None:
     #             body.append(return_)
     # elif return_ is not None:

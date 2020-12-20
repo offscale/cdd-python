@@ -27,9 +27,16 @@ from ast import (
 )
 from copy import deepcopy
 
-from doctrans.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
+from doctrans.ast_utils import (
+    NoneStr,
+    maybe_type_comment,
+    set_arg,
+    set_slice,
+    set_value,
+)
 from doctrans.docstring_parsers import parse_docstring
 from doctrans.emit import docstring
+from doctrans.pure_utils import PY_GTE_3_8
 
 class_str = '''
 class ConfigClass(object):
@@ -1066,6 +1073,7 @@ class_google_tf_tensorboard_ir = {
             "typ": "int",
         },
         {
+            "default": NoneStr,
             "doc": "a dictionary which maps layer name to a file "
             "name in\n"
             "      which metadata for this embedding layer is "
@@ -1078,7 +1086,7 @@ class_google_tf_tensorboard_ir = {
             "      used for all embedding layers, string can "
             "be passed.",
             "name": "embeddings_metadata",
-            "typ": "NoneType",
+            "typ": "Constant" if PY_GTE_3_8 else "NameConstant",
         },
         {"name": "kwargs", "typ": "Optional[dict]"},
     ],

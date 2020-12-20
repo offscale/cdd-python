@@ -178,7 +178,7 @@ class TestEmitters(TestCase):
         function_def.body[0].value.value = "\n{tab}{docstring}\n{tab}".format(
             tab=tab,
             docstring=reindent(
-                deindent(ast.get_docstring(function_def)),
+                deindent(ast.get_docstring(function_def).translate("\n\t")),
             ),
         )
 

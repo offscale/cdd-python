@@ -9,9 +9,11 @@ from ast import (
     AnnAssign,
     Assign,
     ClassDef,
+    Constant,
     Dict,
     FunctionDef,
     Module,
+    NameConstant,
     Return,
     Tuple,
     get_docstring,
@@ -478,9 +480,18 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
                                 ),
                                 **(
                                     lambda _defaults: dict(
-                                        default=get_value(
-                                            _defaults[idxparam_idx_arg[1]]
-                                        )
+                                        default=(
+                                            lambda v: (
+                                                _defaults[idxparam_idx_arg[1]]
+                                                if isinstance(
+                                                    _defaults[idxparam_idx_arg[1]],
+                                                    (NameConstant, Constant),
+                                                )
+                                                else v
+                                            )
+                                            if v is None
+                                            else v
+                                        )(get_value(_defaults[idxparam_idx_arg[1]]))
                                     )
                                     if idxparam_idx_arg[1] < len(_defaults)
                                     and _defaults[idxparam_idx_arg[1]] is not None
