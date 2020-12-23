@@ -14,6 +14,9 @@ from doctrans.tests.mocks.classes import (
     class_google_tf_tensorboard_ast,
     class_google_tf_tensorboard_ir,
     class_google_tf_tensorboard_str,
+    class_torch_nn_l1loss_ast,
+    class_torch_nn_l1loss_ir,
+    class_torch_nn_l1loss_str,
 )
 from doctrans.tests.mocks.docstrings import intermediate_repr_no_default_doc
 from doctrans.tests.mocks.ir import method_complex_args_variety_ir
@@ -358,6 +361,30 @@ class TestParsers(TestCase):
                 "returns": None,
             },
         )
+
+    def test_from_class_and_function_torch(self) -> None:
+        """Tests that the parser can combine the outer class docstring + structure
+        with the inner function parameter defaults, given a PyTorch loss class"""
+
+        # Sanity check
+        from meta.asttools import print_ast
+
+        print_ast(ast.parse(class_torch_nn_l1loss_str).body[0])
+        run_ast_test(
+            self,
+            class_torch_nn_l1loss_ast,
+            gold=ast.parse(class_torch_nn_l1loss_str).body[0],
+        )
+
+        parsed_ir = parse.class_(
+            class_torch_nn_l1loss_ast,
+            merge_inner_function="__init__",
+            infer_type=True,
+        )
+
+        del parsed_ir["_internal"]  # Not needed for this test
+
+        self.assertDictEqual(parsed_ir, class_torch_nn_l1loss_ir)
 
 
 unittest_main()

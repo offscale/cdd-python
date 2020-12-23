@@ -128,7 +128,7 @@ def parse_out_param(expr, emit_default_doc=True):
             (
                 get_value(key_word.value)
                 for key_word in expr.value.keywords
-                if key_word.arg == "help"
+                if key_word.arg == "help" and key_word.value
             ),
             None,
         )

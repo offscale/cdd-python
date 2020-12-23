@@ -222,6 +222,8 @@ def main(cli_argv=None, return_args=False):
         else:
             truth_file = truth_file[0]
 
+        truth_file = path.realpath(path.expanduser(truth_file))
+
         number_of_files = sum(
             len(val)
             for key, val in vars(args).items()
@@ -239,6 +241,11 @@ def main(cli_argv=None, return_args=False):
 
         return args if return_args else ground_truth(args, truth_file)
     elif command == "sync_properties":
+        for fname in "input_filename", "output_filename":
+            if path.isfile(getattr(args, fname)):
+                setattr(
+                    args, fname, path.realpath(path.expanduser(getattr(args, fname)))
+                )
         if args.input_filename is None or not path.isfile(args.input_filename):
             _parser.error(
                 "--input-file must be an existent file. Got: {!r}".format(

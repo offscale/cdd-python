@@ -143,6 +143,8 @@ def _conform_filename(
     :return: filename, whether the file was modified
     :rtype: ```Tuple[str, bool]```
     """
+    filename = path.realpath(path.expanduser(filename))
+
     if not path.isfile(filename):
         emit.file(
             emit_func(
