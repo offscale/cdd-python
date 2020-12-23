@@ -367,9 +367,6 @@ class TestParsers(TestCase):
         with the inner function parameter defaults, given a PyTorch loss class"""
 
         # Sanity check
-        from meta.asttools import print_ast
-
-        print_ast(ast.parse(class_torch_nn_l1loss_str).body[0])
         run_ast_test(
             self,
             class_torch_nn_l1loss_ast,

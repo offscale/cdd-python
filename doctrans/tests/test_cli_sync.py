@@ -28,7 +28,7 @@ class TestCliSync(TestCase):
         """ Tests CLI interface sets namespace correctly """
         with TemporaryDirectory() as tempdir:
             filename = os.path.join(
-                tempdir,
+                os.path.realpath(tempdir),
                 "delete_this_0{}".format(os.path.basename(__file__)),
             )
             with open(filename, "wt") as f:
@@ -70,15 +70,15 @@ class TestCliSync(TestCase):
 
         with TemporaryDirectory() as tempdir:
             argparse_filename = os.path.join(
-                tempdir,
+                os.path.realpath(tempdir),
                 "argparse.py",
             )
             class_filename = os.path.join(
-                tempdir,
+                os.path.realpath(tempdir),
                 "class_.py",
             )
             method_filename = os.path.join(
-                tempdir,
+                os.path.realpath(tempdir),
                 "method.py",
             )
 
@@ -125,7 +125,7 @@ class TestCliSync(TestCase):
         """ Tests nonexistent file throws the right error """
         with TemporaryDirectory() as tempdir:
             filename = os.path.join(
-                tempdir,
+                os.path.realpath(tempdir),
                 "delete_this_1{}".format(os.path.basename(__file__)),
             )
 
@@ -157,7 +157,7 @@ class TestCliSync(TestCase):
         """ Tests missing argument throws the right error """
         with TemporaryDirectory() as tempdir:
             filename = os.path.join(
-                tempdir,
+                os.path.realpath(tempdir),
                 "delete_this_2{}".format(os.path.basename(__file__)),
             )
             with open(filename, "wt") as f:
