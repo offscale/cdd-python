@@ -3,6 +3,7 @@ Functionality to synchronise properties
 """
 
 import ast
+from os import path
 
 from doctrans import emit
 from doctrans.ast_utils import (
@@ -46,10 +47,10 @@ def sync_properties(
     :param output_param_wrap: Wrap all input_str params with this. E.g., `Optional[Union[{output_param}, str]]`
     :param output_param_wrap: ```Optional[str]```
     """
-    with open(input_filename, "rt") as f:
+    with open(path.realpath(path.expanduser(input_filename)), "rt") as f:
         input_ast = ast_parse(f.read(), filename=input_filename)
 
-    with open(output_filename, "rt") as f:
+    with open(path.realpath(path.expanduser(output_filename)), "rt") as f:
         output_ast = ast_parse(f.read(), filename=output_filename)
 
     assert len(input_params) == len(output_params)

@@ -412,6 +412,13 @@ def _set_name_and_type(param, infer_type):
             param["default"] = "```{left}{}{right}```".format(
                 to_code(param["default"]).rstrip("\n"), left=parens[0], right=parens[1]
             )
+    google_opt = ", optional"
+    if (
+        "typ" in param
+        and isinstance(param["typ"], str)
+        and param["typ"].endswith(google_opt)
+    ):
+        param["typ"] = "Optional[{}]".format(param["typ"][: -len(google_opt)])
     return param
 
 

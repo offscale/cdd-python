@@ -229,7 +229,9 @@ def param2argparse_param(param, emit_default_doc=True):
                 filter(
                     None,
                     (
-                        keyword(
+                        typ
+                        if typ is None
+                        else keyword(
                             arg="type",
                             value=FALLBACK_ARGPARSE_TYP
                             if typ == "globals().__getitem__"
@@ -330,6 +332,9 @@ def _resolve_arg(action, choices, param, required, typ):
 
                 if node.id == "List":
                     action = "append"
+
+    # if isinstance(param.get("default"), (Constant, Str, Num)):
+    #     param["default"] = get_value(param["default"])
     return action, choices, required, typ
 
 

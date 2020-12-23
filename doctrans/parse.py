@@ -18,7 +18,7 @@ from ast import (
     Tuple,
     get_docstring,
 )
-from collections import OrderedDict, deque
+from collections import deque
 from functools import partial
 from inspect import getdoc, getsource, isfunction, signature
 from itertools import count, filterfalse
@@ -45,7 +45,13 @@ from doctrans.parser_utils import (
     _interpolate_return,
     ir_merge,
 )
-from doctrans.pure_utils import assert_equal, rpartial, simple_types, update_d
+from doctrans.pure_utils import (
+    assert_equal,
+    params_to_ordered_dict,
+    rpartial,
+    simple_types,
+    update_d,
+)
 from doctrans.source_transformer import to_code
 
 logger = get_logger("doctrans.parse")
@@ -117,9 +123,7 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
     class_def = find_ast_type(class_def, class_name)
     intermediate_repr = docstring(get_docstring(class_def).replace(":cvar", ":param"))
 
-    intermediate_repr["params"] = OrderedDict(
-        (param.pop("name"), param) for param in intermediate_repr["params"]
-    )
+    intermediate_repr["params"] = params_to_ordered_dict(intermediate_repr["params"])
     if "return_type" in intermediate_repr["params"]:
         intermediate_repr["returns"] = dict(
             name="return_type", **intermediate_repr["params"].pop("return_type")

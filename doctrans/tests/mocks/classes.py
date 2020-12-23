@@ -11,6 +11,7 @@ from ast import (
     Expr,
     FunctionDef,
     Index,
+    List,
     Load,
     Mult,
     Name,
@@ -36,7 +37,7 @@ from doctrans.ast_utils import (
 )
 from doctrans.docstring_parsers import parse_docstring
 from doctrans.emit import docstring
-from doctrans.pure_utils import PY_GTE_3_8
+from doctrans.pure_utils import PY_GTE_3_8, PY_GTE_3_9
 
 class_str = '''
 class ConfigClass(object):
@@ -1094,14 +1095,364 @@ class_google_tf_tensorboard_ir = {
     "type": "static",
 }
 
+class_torch_nn_l1loss_str = '''
+class L1Loss(_Loss):
+    r"""Creates a criterion that measures the mean absolute error (MAE) between each element in
+    the input :math:`x` and target :math:`y`.
+    The unreduced (i.e. with :attr:`reduction` set to ``'none'``) loss can be described as:
+    .. math::
+        \ell(x, y) = L = \{l_1,\dots,l_N\}^\top, \quad
+        l_n = \left| x_n - y_n \right|,
+    where :math:`N` is the batch size. If :attr:`reduction` is not ``'none'``
+    (default ``'mean'``), then:
+    .. math::
+        \ell(x, y) =
+        \begin{cases}
+            \operatorname{mean}(L), & \text{if reduction} = \text{`mean';}\\
+            \operatorname{sum}(L),  & \text{if reduction} = \text{`sum'.}
+        \end{cases}
+    :math:`x` and :math:`y` are tensors of arbitrary shapes with a total
+    of :math:`n` elements each.
+    The sum operation still operates over all the elements, and divides by :math:`n`.
+    The division by :math:`n` can be avoided if one sets ``reduction = 'sum'``.
+    Args:
+        size_average (bool, optional): Deprecated (see :attr:`reduction`). By default,
+            the losses are averaged over each loss element in the batch. Note that for
+            some losses, there are multiple elements per sample. If the field :attr:`size_average`
+            is set to ``False``, the losses are instead summed for each minibatch. Ignored
+            when reduce is ``False``. Default: ``True``
+        reduce (bool, optional): Deprecated (see :attr:`reduction`). By default, the
+            losses are averaged or summed over observations for each minibatch depending
+            on :attr:`size_average`. When :attr:`reduce` is ``False``, returns a loss per
+            batch element instead and ignores :attr:`size_average`. Default: ``True``
+        reduction (string, optional): Specifies the reduction to apply to the output:
+            ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no reduction will be applied,
+            ``'mean'``: the sum of the output will be divided by the number of
+            elements in the output, ``'sum'``: the output will be summed. Note: :attr:`size_average`
+            and :attr:`reduce` are in the process of being deprecated, and in the meantime,
+            specifying either of those two args will override :attr:`reduction`. Default: ``'mean'``
+    Shape:
+        - Input: :math:`(N, *)` where :math:`*` means, any number of additional
+          dimensions
+        - Target: :math:`(N, *)`, same shape as the input
+        - Output: scalar. If :attr:`reduction` is ``'none'``, then
+          :math:`(N, *)`, same shape as the input
+    Examples::
+        >>> loss = nn.L1Loss()
+        >>> input = torch.randn(3, 5, requires_grad=True)
+        >>> target = torch.randn(3, 5)
+        >>> output = loss(input, target)
+        >>> output.backward()
+    """
+    __constants__ = ['reduction']
+
+    def __init__(self, size_average=None, reduce=None, reduction: str = 'mean') -> None:
+        super(L1Loss, self).__init__(size_average, reduce, reduction)
+
+    def forward(self, input: Tensor, target: Tensor) -> Tensor:
+        return F.l1_loss(input, target, reduction=self.reduction)
+'''  # noqa: W605
+
+class_torch_nn_l1loss_ast = ClassDef(
+    bases=[
+        Name(
+            "_Loss",
+            Load(),
+        )
+    ],
+    body=[
+        Expr(
+            set_value(
+                "Creates a criterion that measures the mean absolute error (MAE) between each element in\n"
+                "    the input :math:`x` and target :math:`y`.\n"
+                "    The unreduced (i.e. with :attr:`reduction` set to ``'none'``) loss can be described as:\n"
+                "    .. math::\n"
+                "        \\ell(x, y) = L = \\{l_1,\\dots,l_N\\}^\top, \\quad\n"
+                "        l_n = \\left| x_n - y_n \night|,\n"
+                "    where :math:`N` is the batch size. If :attr:`reduction` is not ``'none'``\n"
+                "    (default ``'mean'``), then:\n"
+                "    .. math::\n"
+                "        \\ell(x, y) =\n"
+                "        \x08egin{cases}\n"
+                "            \\operatorname{mean}(L), & \text{if reduction} = \text{`mean';}\\\n"
+                "            \\operatorname{sum}(L),  & \text{if reduction} = \text{`sum'.}\n"
+                "        \\end{cases}\n    :math:`x` and :math:`y` are tensors of arbitrary shapes with a total\n"
+                "    of :math:`n` elements each.\n"
+                "    The sum operation still operates over all the elements, and divides by :math:`n`.\n"
+                "    The division by :math:`n` can be avoided if one sets ``reduction = 'sum'``.\n"
+                "    Args:\n"
+                "        size_average (bool, optional): Deprecated (see :attr:`reduction`). By default,\n"
+                "            the losses are averaged over each loss element in the batch. Note that for\n"
+                "            some losses, there are multiple elements per sample. If the field :attr:`size_average`\n"
+                "            is set to ``False``, the losses are instead summed for each minibatch. Ignored\n"
+                "            when reduce is ``False``. Default: ``True``\n"
+                "        reduce (bool, optional): Deprecated (see :attr:`reduction`). By default, the\n"
+                "            losses are averaged or summed over observations for each minibatch depending\n"
+                "            on :attr:`size_average`. When :attr:`reduce` is ``False``, returns a loss per\n"
+                "            batch element instead and ignores :attr:`size_average`. Default: ``True``\n"
+                "        reduction (string, optional): Specifies the reduction to apply to the output:\n"
+                "            ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no reduction will be applied,\n"
+                "            ``'mean'``: the sum of the output will be divided by the number of\n"
+                "            elements in the output, ``'sum'``: the output will be summed. Note: :attr:`size_average`"
+                "\n"
+                "            and :attr:`reduce` are in the process of being deprecated, and in the meantime,\n"
+                "            specifying either of those two args will override :attr:`reduction`"
+                ". Default: ``'mean'``\n"
+                "    Shape:\n"
+                "        - Input: :math:`(N, *)` where :math:`*` means, any number of additional\n"
+                "          dimensions\n"
+                "        - Target: :math:`(N, *)`, same shape as the input\n"
+                "        - Output: scalar. If :attr:`reduction` is ``'none'``, then\n"
+                "          :math:`(N, *)`, same shape as the input\n"
+                "    Examples::\n"
+                "        >>> loss = nn.L1Loss()\n"
+                "        >>> input = torch.randn(3, 5, requires_grad=True)\n"
+                "        >>> target = torch.randn(3, 5)\n"
+                "        >>> output = loss(input, target)\n"
+                "        >>> output.backward()\n"
+                "    "
+            )
+        ),
+        Assign(
+            targets=[Name("__constants__", Store())],
+            type_comment=None,
+            value=List([set_value("reduction")], Load()),
+            expr=None,
+            lineno=None,
+        ),
+        FunctionDef(
+            args=arguments(
+                args=[
+                    set_arg(annotation=None, arg="self"),
+                    set_arg(annotation=None, arg="size_average"),
+                    set_arg(annotation=None, arg="reduce"),
+                    set_arg(annotation=Name("str", Load()), arg="reduction"),
+                ],
+                defaults=[set_value(None), set_value(None), set_value("mean")],
+                kw_defaults=[],
+                kwarg=None,
+                kwonlyargs=[],
+                posonlyargs=[],
+                vararg=None,
+                arg=None,
+            ),
+            body=[
+                Expr(
+                    Call(
+                        args=[
+                            Name(
+                                "size_average",
+                                Load(),
+                            ),
+                            Name("reduce", Load()),
+                            Name(
+                                "reduction",
+                                Load(),
+                            ),
+                        ],
+                        func=Attribute(
+                            Call(
+                                args=[
+                                    Name("L1Loss", Load()),
+                                    Name(
+                                        "self",
+                                        Load(),
+                                    ),
+                                ],
+                                func=Name("super", Load()),
+                                keywords=[],
+                                expr=None,
+                                expr_func=None,
+                            ),
+                            "__init__",
+                            Load(),
+                        ),
+                        keywords=[],
+                        expr=None,
+                        expr_func=None,
+                    )
+                )
+            ],
+            decorator_list=[],
+            name="__init__",
+            returns=set_value(None),
+            type_comment=None,
+            arguments_args=None,
+            identifier_name=None,
+            stmt=None,
+            lineno=None,
+        ),
+        FunctionDef(
+            args=arguments(
+                args=[
+                    set_arg(annotation=None, arg="self"),
+                    set_arg(annotation=Name("Tensor", Load()), arg="input"),
+                    set_arg(annotation=Name("Tensor", Load()), arg="target"),
+                ],
+                defaults=[],
+                kw_defaults=[],
+                kwarg=None,
+                kwonlyargs=[],
+                posonlyargs=[],
+                vararg=None,
+                arg=None,
+            ),
+            body=[
+                Return(
+                    value=Call(
+                        args=[Name("input", Load()), Name("target", Load())],
+                        func=Attribute(
+                            Name("F", Load()),
+                            "l1_loss",
+                            Load(),
+                        ),
+                        keywords=[
+                            keyword(
+                                arg="reduction",
+                                value=Attribute(
+                                    Name("self", Load()),
+                                    "reduction",
+                                    Load(),
+                                ),
+                                identifier=None,
+                            )
+                        ],
+                        expr=None,
+                        expr_func=None,
+                    ),
+                    expr=None,
+                )
+            ],
+            decorator_list=[],
+            name="forward",
+            returns=Name(
+                "Tensor",
+                Load(),
+            ),
+            type_comment=None,
+            arguments_args=None,
+            identifier_name=None,
+            stmt=None,
+            lineno=None,
+        ),
+    ],
+    decorator_list=[],
+    keywords=[],
+    name="L1Loss",
+    expr=None,
+    identifier_name=None,
+)
+
+class_torch_nn_l1loss_ir = {
+    "doc": "Creates a criterion that measures the mean absolute error (MAE) "
+    "between each element in\n"
+    "    the input :math:`x` and target :math:`y`.\n"
+    "    The unreduced (i.e. with :attr:`reduction` set to ``'none'``) "
+    "loss can be described as:\n"
+    "    .. math::\n"
+    "        \\ell(x, y) = L = \\{l_1,\\dots,l_N\\}^     op, \\quad\n"
+    "        l_n = \\left| x_n - y_n \n"
+    "ight|,\n"
+    "    where :math:`N` is the batch size. If :attr:`reduction` is not "
+    "``'none'``\n"
+    "    (default ``'mean'``), then:\n"
+    "    .. math::\n"
+    "        \\ell(x, y) =\n"
+    "        \x08egin{cases}\n"
+    "            \\operatorname{mean}(L), &   ext{if reduction} =     "
+    "ext{`mean';}\\\n"
+    "            \\operatorname{sum}(L),  &   ext{if reduction} =     "
+    "ext{`sum'.}\n"
+    "        \\end{cases}\n"
+    "    :math:`x` and :math:`y` are tensors of arbitrary shapes with a "
+    "total\n"
+    "    of :math:`n` elements each.\n"
+    "    The sum operation still operates over all the elements, and "
+    "divides by :math:`n`.\n"
+    "    The division by :math:`n` can be avoided if one sets "
+    "``reduction = 'sum'``.\n"
+    "\n"
+    "\n"
+    "        reduction (string, optional): Specifies the reduction to "
+    "apply to the output:\n"
+    "                ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: "
+    "no reduction will be applied,\n"
+    "                ``'mean'``: the sum of the output will be divided "
+    "by the number of\n"
+    "                elements in the output, ``'sum'``: the output will "
+    "be summed. Note: :attr:`size_average`\n"
+    "                and :attr:`reduce` are in the process of being "
+    "deprecated, and in the meantime,\n"
+    "                specifying either of those two args will override "
+    ":attr:`reduction`. Default: ``'mean'``\n"
+    "\n"
+    "\n"
+    "        - Input: :math:`(N, *)` where :math:`*` means, any number "
+    "of additional\n"
+    "          dimensions\n"
+    "        - Target: :math:`(N, *)`, same shape as the input\n"
+    "        - Output: scalar. If :attr:`reduction` is ``'none'``, "
+    "then\n"
+    "          :math:`(N, *)`, same shape as the input\n"
+    "    Examples::\n"
+    "        >>> loss = nn.L1Loss()\n"
+    "        >>> input = torch.randn(3, 5, requires_grad=True)\n"
+    "        >>> target = torch.randn(3, 5)\n"
+    "        >>> output = loss(input, target)\n"
+    "        >>> output.backward()\n"
+    "    ",
+    "name": None,
+    "params": [
+        {
+            "default": True,
+            "doc": "Deprecated (see :attr:`reduction`). By default,\n"
+            "            the losses are averaged over each "
+            "loss element in the batch. Note that for\n"
+            "            some losses, there are multiple "
+            "elements per sample. If the field "
+            ":attr:`size_average`\n"
+            "            is set to ``False``, the losses are "
+            "instead summed for each minibatch. Ignored\n"
+            "            when reduce is ``False``.",
+            "name": "size_average",
+            "typ": "Optional[bool]",
+        },
+        {
+            "default": True,
+            "doc": "Deprecated (see :attr:`reduction`). By default, "
+            "the\n"
+            "            losses are averaged or summed over "
+            "observations for each minibatch depending\n"
+            "            on :attr:`size_average`. When "
+            ":attr:`reduce` is ``False``, returns a loss per\n"
+            "            batch element instead and ignores "
+            ":attr:`size_average`.",
+            "name": "reduce",
+            "typ": "Optional[bool]",
+        },
+        {
+            "default": "```{parens[0]}['reduction']{parens[1]}```".format(
+                parens=("(", ")") if PY_GTE_3_9 else ("", "")
+            ),
+            "name": "__constants__",
+            "typ": "List",
+        },
+        {"default": "mean", "doc": None, "name": "reduction", "typ": "str"},
+    ],
+    "returns": {"name": "return_type", "typ": "None"},
+    "type": "static",
+}
 
 __all__ = [
     "class_ast",
     "class_google_tf_tensorboard_ast",
     "class_google_tf_tensorboard_ir",
     "class_google_tf_tensorboard_str",
-    "class_squared_hinge_config_ast",
-    "class_str",
     "class_nargs_ast",
     "class_nargs_str",
+    "class_squared_hinge_config_ast",
+    "class_str",
+    "class_torch_nn_l1loss_ast",
+    "class_torch_nn_l1loss_str",
+    "class_torch_nn_l1loss_ir",
 ]

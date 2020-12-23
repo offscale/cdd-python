@@ -71,7 +71,7 @@ def extract_default(
 
     _start_idx, _end_idx, _found = location_within(
         line,
-        ("defaults to ", "defaults to\n", "Default value is ")
+        ("defaults to ", "defaults to\n", "Default value is ", "Default:")
         if default_search_announce is None
         else (
             (default_search_announce,)

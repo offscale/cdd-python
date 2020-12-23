@@ -2,7 +2,7 @@
 Pure utils for pure functions. For the same input will always produce the same input_str.
 """
 import typing
-from collections import deque
+from collections import OrderedDict, deque
 from functools import partial
 from importlib import import_module
 from inspect import getmodule
@@ -452,6 +452,19 @@ def get_module(name, package=None, extra_symbols=None):
             raise
 
 
+def params_to_ordered_dict(params):
+    """
+    Convert the params dict to an OrderedDict
+
+    :param params: list of dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'required': ... }
+    :type params: ```List[dict]```
+
+    :return: OrderedDict representation of the params dict
+    :rtype: ```OrderedDict```
+    """
+    return OrderedDict((param.pop("name"), param) for param in params)
+
+
 __all__ = [
     "BUILTIN_TYPES",
     "PY3_8",
@@ -465,6 +478,7 @@ __all__ = [
     "identity",
     "location_within",
     "lstrip_namespace",
+    "params_to_ordered_dict",
     "pluralise",
     "pp",
     "quote",

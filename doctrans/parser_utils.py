@@ -11,9 +11,9 @@ from typing import Any
 
 from docstring_parser import DocstringMeta, DocstringParam
 
-from doctrans.ast_utils import get_value
+from doctrans.ast_utils import NoneStr, get_value
 from doctrans.defaults_utils import extract_default
-from doctrans.pure_utils import assert_equal, lstrip_namespace, rpartial
+from doctrans.pure_utils import lstrip_namespace, params_to_ordered_dict, rpartial
 from doctrans.source_transformer import to_code
 
 lstrip_typings = partial(lstrip_namespace, namespaces=("typings.", "_extensions."))
@@ -41,33 +41,25 @@ def ir_merge(target, other):
     if not target["params"]:
         target["params"] = other["params"]
     elif other["params"]:
-        target_params_len, other_params_len = len(target["params"]), len(
-            other["params"]
+        target_params, other_params = map(
+            params_to_ordered_dict, map(itemgetter("params"), (target, other))
         )
-        extra_params = []
-        if other_params_len > target_params_len:
-            assert_equal(target_params_len + 1, other_params_len)
-            extra_params.append(other["params"].pop())
-            # It's probably a kwargs. Could validate with an `assert last["name"].endswith("kwargs")` and a type check
-            # But worried that would cause issues of its own, e.g., missing common idioms like `**config`.
-        elif target_params_len > other_params_len:
-            extra_params, target["params"] = (
-                target["params"][other_params_len:],
-                target["params"][:other_params_len],
-            )
-        else:
-            assert_equal(target_params_len, other_params_len)
-        target["params"] = (
-            list(
-                map(
-                    lambda idx_param: _join_non_none(
-                        idx_param[1], other["params"][idx_param[0]]
-                    ),
-                    enumerate(target["params"]),
-                )
-            )
-            + extra_params
-        )
+
+        for name in other_params.keys() & target_params.keys():
+            if not target_params[name].get("doc") and other_params[name].get("doc"):
+                target_params[name]["doc"] = other_params[name]["doc"]
+            if target_params[name].get("typ") is None and other_params[name].get("typ"):
+                target_params[name]["typ"] = other_params[name]["typ"]
+            if (
+                target_params[name].get("default") in (None, NoneStr)
+                and "default" in other_params[name]
+            ):
+                target_params[name]["default"] = other_params[name]["default"]
+
+        for name in other_params.keys() - target_params.keys():
+            target_params[name] = other_params[name]
+
+        target["params"] = [dict(name=k, **v) for k, v in target_params.items()]
 
     if not target["returns"]:
         target["returns"] = other["returns"]
@@ -201,6 +193,8 @@ def _interpolate_return(function_def, intermediate_repr):
             )(get_value(get_value(return_ast)))
         )(to_code(return_ast.value).rstrip("\n"))
     if hasattr(function_def, "returns") and function_def.returns is not None:
+        if intermediate_repr.get("returns") is None:
+            intermediate_repr["returns"] = {"name": "return_type"}
         intermediate_repr["returns"]["typ"] = to_code(function_def.returns).rstrip("\n")
 
 
