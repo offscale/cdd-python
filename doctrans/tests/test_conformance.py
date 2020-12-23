@@ -222,7 +222,9 @@ class TestConformance(TestCase):
         """ Tests that _conform_filename returns the right result """
 
         with TemporaryDirectory() as tempdir:
-            argparse_function_filename = os.path.join(tempdir, "no_file_here.py")
+            argparse_function_filename = os.path.realpath(
+                os.path.join(tempdir, "no_file_here.py")
+            )
 
             self.assertTupleEqual(
                 _conform_filename(
@@ -239,7 +241,9 @@ class TestConformance(TestCase):
         """ Tests that _conform_filename returns the right result """
 
         with TemporaryDirectory() as tempdir:
-            argparse_function_filename = os.path.join(tempdir, "correct_contents.py")
+            argparse_function_filename = os.path.realpath(
+                os.path.join(tempdir, "correct_contents.py")
+            )
 
             emit.file(
                 argparse_func_ast,
@@ -263,7 +267,9 @@ class TestConformance(TestCase):
         """ Tests that _conform_filename returns the right result """
 
         with TemporaryDirectory() as tempdir:
-            argparse_function_filename = os.path.join(tempdir, "do_not_touch_this.py")
+            argparse_function_filename = os.path.realpath(
+                os.path.join(tempdir, "do_not_touch_this.py")
+            )
 
             emit.file(argparse_func_ast, argparse_function_filename, mode="wt")
             self.assertTupleEqual(
