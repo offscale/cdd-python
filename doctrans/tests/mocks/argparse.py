@@ -885,8 +885,14 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
                     keyword(
                         arg="help",
                         value=set_value(
-                            "Deprecated (see :attr:`reduction`). By default,\n            the losses are averaged over each loss element in the batch. Note that for\n            some losses, there are multiple elements per sample. If the field :attr:`size_average`\n            is set to ``False``, the losses are instead summed for each minibatch. Ignored\n            when reduce is ``False``."
+                            "Deprecated (see :attr:`reduction`). By default,\n"
+                            "            the losses are averaged over each loss element in the batch. Note that for\n"
+                            "            some losses, there are multiple elements per sample."
+                            " If the field :attr:`size_average`\n"
+                            "            is set to ``False``, the losses are instead summed for each minibatch."
+                            " Ignored\n            when reduce is ``False``."
                         ),
+                        identifier=None,
                     ),
                     keyword(arg="default", value=set_value(True), identifier=None),
                 ],
@@ -909,8 +915,13 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
                         value=set_value(
                             "Deprecated (see :attr:`reduction`)."
                             " By default, the\n"
-                            "            losses are averaged or summed over observations for each minibatch depending\n            on :attr:`size_average`. When :attr:`reduce` is ``False``, returns a loss per\n            batch element instead and ignores :attr:`size_average`."
+                            "            losses are averaged or summed over observations for each minibatch"
+                            " depending\n"
+                            "            on :attr:`size_average`. When :attr:`reduce` is ``False``,"
+                            " returns a loss per\n"
+                            "            batch element instead and ignores :attr:`size_average`."
                         ),
+                        identifier=None,
                     ),
                     keyword(arg="default", value=set_value(True), identifier=None),
                 ],
