@@ -214,8 +214,24 @@ def param2argparse_param(param, emit_default_doc=True):
     default = param.get("default", _default)
     if default == NoneStr:
         required, default = False, None
-    elif default is not None and typ == "str" and not isinstance(default, str):
-        typ = type(default).__name__
+    elif default is not None:
+        if isinstance(default, str):
+            if (
+                len(default) > 6
+                and default.startswith("```")
+                and default.endswith("```")
+            ):
+                default = ast.parse(default[3:-3]).body[0]
+                if isinstance(default, ast.Expr):
+                    default = default.value
+                    if isinstance(default, ast.List):
+                        assert (
+                            len(default.elts) == 1
+                        ), "NotImplemented: Multiple default elements"
+                        action, default = "append", get_value(default.elts[0])
+                        typ = type(default).__name__
+        elif typ == "str":
+            typ = type(default).__name__
 
     return Expr(
         Call(

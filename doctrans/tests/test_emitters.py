@@ -16,12 +16,14 @@ from doctrans.pure_utils import PY3_8, deindent, reindent, rpartial, tab
 from doctrans.tests.mocks.argparse import (
     argparse_func_action_append_ast,
     argparse_func_ast,
+    argparse_func_torch_nn_l1loss_ast,
     argparse_func_with_body_ast,
 )
 from doctrans.tests.mocks.classes import (
     class_ast,
     class_nargs_ast,
     class_squared_hinge_config_ast,
+    class_torch_nn_l1loss_ir,
 )
 from doctrans.tests.mocks.docstrings import docstring_str, intermediate_repr
 from doctrans.tests.mocks.methods import (
@@ -392,6 +394,20 @@ class TestEmitters(TestCase):
             self,
             func,
             argparse_func_with_body_ast,
+        )
+
+    def test_from_torch_ir_to_argparse(self) -> None:
+        """ Tests if emission of class from torch IR is as expected """
+
+        func = emit.argparse_function(
+            deepcopy(class_torch_nn_l1loss_ir),
+            emit_default_doc=False,
+            emit_default_doc_in_return=False,
+        )
+        run_ast_test(
+            self,
+            func,
+            argparse_func_torch_nn_l1loss_ast,
         )
 
 
