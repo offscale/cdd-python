@@ -110,15 +110,18 @@ def argparse_function(
                                     ":type argument_parser: ```ArgumentParser```\n\n    "
                                     "{return_params}".format(
                                         return_params=(
-                                            lambda returns: ":return: argument_parser, {returns[doc]}\n    "
+                                            lambda returns: ":return: argument_parser{return_doc}\n    "
                                             "{rtype}".format(
-                                                returns=returns,
-                                                rtype=":rtype: ```Tuple[ArgumentParser, {returns[typ]}]```\n{tab}"
-                                                "".format(returns=returns, tab=tab)
+                                                return_doc=", {}".format(returns["doc"])
+                                                if "doc" in returns
+                                                else "",
+                                                rtype=":rtype: ```ArgumentParser```\n    "
                                                 if intermediate_repr["returns"].get(
                                                     "typ"
                                                 )
-                                                else ":rtype: ```ArgumentParser```\n    ",
+                                                in (None, "None", NoneStr)
+                                                else ":rtype: ```Tuple[ArgumentParser, {returns[typ]}]```\n{tab}"
+                                                "".format(returns=returns, tab=tab),
                                             )
                                         )(
                                             returns=set_default_doc(
@@ -204,7 +207,7 @@ def argparse_function(
                                     ),
                                     expr=None,
                                 )
-                                if intermediate_repr.get("returns")
+                                if "default" in (intermediate_repr.get("returns") or {})
                                 else Return(
                                     value=Name("argument_parser", Load()), expr=None
                                 )
