@@ -24,9 +24,9 @@ from doctrans.defaults_utils import needs_quoting
 from doctrans.emit import to_code
 from doctrans.emitter_utils import interpolate_defaults
 from doctrans.pure_utils import (
-    PY_GTE_3_9,
     count_iter_items,
     location_within,
+    paren_wrap_code,
     rpartial,
     unquote,
     update_d,
@@ -419,9 +419,8 @@ def _set_name_and_type(param: Tuple[str, dict], infer_type: bool):
         if needs_quoting(_param.get("typ")) or isinstance(_param["default"], str):
             _param["default"] = unquote(_param["default"])
         elif isinstance(_param["default"], AST):
-            _param["default"] = "```{parens[0]}{default}{parens[1]}```".format(
-                default=to_code(_param["default"]).rstrip("\n"),
-                parens=("(", ")") if PY_GTE_3_9 else ("", ""),
+            _param["default"] = "```{default}```".format(
+                default=paren_wrap_code(to_code(_param["default"]).rstrip("\n"))
             )
     google_opt = ", optional"
     if (_param.get("typ") or "").endswith(google_opt):

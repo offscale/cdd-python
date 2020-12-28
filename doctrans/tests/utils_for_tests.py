@@ -209,8 +209,8 @@ def mock_function(*args, **kwargs):
 
 __all__ = [
     "inspectable_compile",
+    "mock_function",
     "run_ast_test",
     "run_cli_test",
     "unittest_main",
-    "mock_function",
 ]

@@ -761,11 +761,12 @@ class TestAstUtils(TestCase):
                         "byo",
                         {
                             "default": Expr(
-                                value=List(
+                                List(
                                     elts=[],
                                     ctx=Load(),
                                     expr=None,
-                                )
+                                ),
+                                expr_value=None
                             ),
                             "typ": "str",
                         },
@@ -822,7 +823,7 @@ class TestAstUtils(TestCase):
                     keyword(arg="type", value=Name("str", Load()), identifier=None),
                     keyword(arg="required", value=set_value(True), identifier=None),
                     keyword(
-                        arg="default", value=set_value("```5 * 5```"), identifier=None
+                        arg="default", value=set_value("```(5 * 5)```"), identifier=None
                     ),
                 ],
                 expr=None,
@@ -893,7 +894,7 @@ class TestAstUtils(TestCase):
                     (
                         "byo",
                         {
-                            "default": "```4```",
+                            "default": "```(4)```",
                             "typ": "str",
                         },
                     ),

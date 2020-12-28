@@ -5,7 +5,7 @@ from collections import OrderedDict
 from copy import deepcopy
 
 from doctrans.defaults_utils import remove_defaults_from_intermediate_repr
-from doctrans.pure_utils import PY_GTE_3_9, params_to_ordered_dict
+from doctrans.pure_utils import params_to_ordered_dict
 
 method_complex_args_variety_ir = {
     "doc": "Call cliff",
@@ -386,14 +386,7 @@ class_torch_nn_l1loss_ir = {
             ),
             (
                 "__constants__",
-                {
-                    "default": "```{parens[0]}['reduction']{parens[1]}```".format(
-                        parens=("(", ")")
-                        if PY_GTE_3_9
-                        else ("", "")
-                        # TODO: Move this to the parser; it should not be in the mock
-                    )
-                },
+                {"default": "```['reduction']```"},
             ),
             ("reduction", {"default": "mean", "typ": "str"}),
         )
