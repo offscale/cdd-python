@@ -2,6 +2,7 @@
 Pure utils for pure functions. For the same input will always produce the same input_str.
 """
 import typing
+from ast import Str
 from collections import OrderedDict, deque
 from functools import partial
 from importlib import import_module
@@ -12,7 +13,7 @@ from operator import attrgetter, eq
 from pprint import PrettyPrinter
 from sys import version_info
 
-pp = PrettyPrinter(indent=4).pprint
+pp = PrettyPrinter(indent=4, width=119).pprint
 tab = " " * 4
 simple_types = {
     "int": 0,
@@ -236,6 +237,13 @@ def quote(s, mark='"'):
     :return: Quoted string
     :rtype: ```str```
     """
+    s = (
+        s
+        if isinstance(s, (str, type(None)))
+        else s.s
+        if isinstance(s, Str)
+        else s.value
+    )
     if s is None or len(s) == 0 or s[0] == s[-1] and s[0] in frozenset(("'", '"')):
         return s
     return "{mark}{s}{mark}".format(mark=mark, s=s)
@@ -454,15 +462,21 @@ def get_module(name, package=None, extra_symbols=None):
 
 def params_to_ordered_dict(params):
     """
-    Convert the params dict to an OrderedDict
+    Convert the old params list with dicts to an OrderedDict
+
+    TODO: Remove this function when codebase is updated
 
     :param params: list of dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'required': ... }
     :type params: ```List[dict]```
 
-    :return: OrderedDict representation of the params dict
+    :return: OrderedDict representation of the params dict, i.e.,
+       OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
     :rtype: ```OrderedDict```
     """
-    return OrderedDict((param.pop("name"), param) for param in params)
+    return OrderedDict(
+        (param.pop("name"), param)
+        for param in ((params,) if isinstance(params, dict) else params)
+    )
 
 
 __all__ = [

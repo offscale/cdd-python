@@ -23,9 +23,9 @@ from doctrans.tests.mocks.classes import (
     class_ast,
     class_nargs_ast,
     class_squared_hinge_config_ast,
-    class_torch_nn_l1loss_ir,
 )
-from doctrans.tests.mocks.docstrings import docstring_str, intermediate_repr
+from doctrans.tests.mocks.docstrings import docstring_no_default_str, docstring_str
+from doctrans.tests.mocks.ir import class_torch_nn_l1loss_ir, intermediate_repr
 from doctrans.tests.mocks.methods import (
     class_with_method_and_body_types_ast,
     class_with_method_ast,
@@ -107,9 +107,21 @@ class TestEmitters(TestCase):
         Tests whether `docstring` produces `docstring_str` given `class_ast`
         """
         self.assertEqual(
-            emit.docstring(parse.class_(class_ast)),
+            emit.docstring(parse.class_(class_ast), emit_default_doc=True),
             docstring_str,
         )
+
+    def test_to_docstring_emit_default_doc_false(self) -> None:
+        """
+        Tests whether `docstring` produces `docstring_str` given `class_ast`
+        """
+        ir = parse.class_(class_ast)
+        self.assertEqual(
+            emit.docstring(ir, emit_default_doc=False),
+            docstring_no_default_str,
+        )
+
+    maxDiff = None
 
     def test_to_numpy_docstring_fails(self) -> None:
         """
@@ -338,13 +350,14 @@ class TestEmitters(TestCase):
             tab=tab, docstring=reindent(ast.get_docstring(function_def))
         )
 
-        gen_ast = emit.function(
-            parse.function(
-                find_in_ast(
-                    "C.function_name".split("."),
-                    class_with_method_and_body_types_ast,
-                ),
+        ir = parse.function(
+            find_in_ast(
+                "C.function_name".split("."),
+                class_with_method_and_body_types_ast,
             ),
+        )
+        gen_ast = emit.function(
+            ir,
             emit_default_doc=False,
             function_name="function_name",
             function_type="self",

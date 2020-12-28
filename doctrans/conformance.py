@@ -148,7 +148,8 @@ def _conform_filename(
     if not path.isfile(filename):
         emit.file(
             emit_func(
-                replacement_node_ir, emit_default_doc=emit_func.__name__ == "class_"
+                replacement_node_ir,
+                emit_default_doc=False,  # emit_func.__name__ == "class_"
             ),
             filename=filename,
             mode="wt",

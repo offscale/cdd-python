@@ -3,28 +3,31 @@ Tests for the Intermediate Representation produced by the parsers
 """
 import ast
 from ast import FunctionDef
+from collections import OrderedDict
 from unittest import TestCase
 
 from doctrans import emit, parse
 from doctrans.ast_utils import RewriteAtQuery, get_value
-from doctrans.pure_utils import PY_GTE_3_8, tab
+from doctrans.pure_utils import PY_GTE_3_8, params_to_ordered_dict, tab
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import (
     class_ast,
     class_google_tf_tensorboard_ast,
-    class_google_tf_tensorboard_ir,
     class_google_tf_tensorboard_str,
     class_torch_nn_l1loss_ast,
-    class_torch_nn_l1loss_ir,
     class_torch_nn_l1loss_str,
 )
-from doctrans.tests.mocks.docstrings import intermediate_repr_no_default_doc
-from doctrans.tests.mocks.ir import method_complex_args_variety_ir
-from doctrans.tests.mocks.methods import (
+from doctrans.tests.mocks.ir import (
+    class_google_tf_tensorboard_ir,
+    class_torch_nn_l1loss_ir,
     docstring_google_tf_adadelta_function_ir,
+    function_adder_ir,
+    intermediate_repr_no_default_doc,
+    method_complex_args_variety_ir,
+)
+from doctrans.tests.mocks.methods import (
     docstring_google_tf_adadelta_function_str,
     function_adder_ast,
-    function_adder_ir,
     function_adder_str,
     function_default_complex_default_arg_ast,
     method_complex_args_variety_ast,
@@ -42,13 +45,12 @@ class TestParsers(TestCase):
     Tests whether the intermediate representation is consistent when parsed from different inputs.
 
     IR is a dictionary of form:
-              {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-              }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     """
 
     def test_from_argparse_ast(self) -> None:
@@ -104,27 +106,30 @@ class TestParsers(TestCase):
         """
         gen_ir = parse.function(function_default_complex_default_arg_ast)
         gold_ir = {
-            "description": "",
             "name": "call_peril",
-            "params": [
-                {
-                    "default": "mnist",
-                    "name": "dataset_name",
-                    "typ": "str",
-                    "doc": None,
-                },
-                {
-                    "default": get_value(
-                        function_default_complex_default_arg_ast.args.defaults[1]
+            "params": OrderedDict(
+                (
+                    (
+                        "dataset_name",
+                        {"default": "mnist", "typ": "str"},
                     ),
-                    "name": "writer",
-                    "typ": None,
-                    "doc": None,
-                },
-            ],
+                    (
+                        "writer",
+                        {
+                            "default": get_value(
+                                function_default_complex_default_arg_ast.args.defaults[
+                                    1
+                                ]
+                            ),
+                            "typ": "str",
+                        },
+                    ),
+                )
+            ),
             "returns": None,
             "type": "static",
         }
+
         del gen_ir["_internal"]  # Not needed for this test
         self.assertDictEqual(
             gen_ir,
@@ -165,10 +170,12 @@ class TestParsers(TestCase):
             {
                 "doc": "the foo function",
                 "name": "TestParsers.test_from_function_in_memory.<locals>.foo",
-                "params": [
-                    {"default": 5, "doc": "the a value", "name": "a", "typ": "int"},
-                    {"default": 6, "doc": "the b value", "name": "b", "typ": "int"},
-                ],
+                "params": params_to_ordered_dict(
+                    (
+                        {"default": 5, "doc": "the a value", "name": "a", "typ": "int"},
+                        {"default": 6, "doc": "the b value", "name": "b", "typ": "int"},
+                    )
+                ),
                 "returns": None,
                 "type": "static",
             },
@@ -205,14 +212,17 @@ class TestParsers(TestCase):
 
         # This is a hack because JetBrains wraps stdout
         self.assertIn(
-            type(ir["params"][-2]["default"]).__name__,
+            type(ir["params"]["writer"]["default"]).__name__,
             frozenset(("FlushingStringIO", "TextIOWrapper")),
         )
-        ir["params"][-2]["default"] = "stdout"
 
-        # This extra typ is removed, for now. TODO: Update AST-level parser to set types when defaults are given.
-        for i in -2, 3:
-            del ir["params"][i]["typ"]
+        # This extra typ is copied, for now. TODO: Update AST-level parser to set types when defaults are given.
+        ir["params"]["writer"].update(
+            {
+                "default": "stdout",
+                "typ": method_complex_args_variety_ir["params"]["writer"]["typ"],
+            }
+        )
 
         self.assertDictEqual(
             ir,
@@ -279,7 +289,7 @@ class TestParsers(TestCase):
             {
                 "doc": "A is one boring class",
                 "name": "TestParsers.test_from_class_in_memory.<locals>.A",
-                "params": [],
+                "params": OrderedDict(),
                 "returns": None,
             },
         )
@@ -340,24 +350,26 @@ class TestParsers(TestCase):
             {
                 "doc": "Replace the node at query with given node",
                 "name": "RewriteAtQuery",
-                "params": [
-                    {
-                        "doc": "Search query, e.g., ['node_name', "
-                        "'function_name', 'arg_name']",
-                        "name": "search",
-                        "typ": "List[str]",
-                    },
-                    {
-                        "doc": "Node to replace this search",
-                        "name": "replacement_node",
-                        "typ": "AST",
-                    },
-                    {
-                        "doc": "whether a node has been replaced (only replaces "
-                        "first occurrence)",
-                        "name": "replaced",
-                    },
-                ],
+                "params": params_to_ordered_dict(
+                    (
+                        {
+                            "doc": "Search query, e.g., ['node_name', "
+                            "'function_name', 'arg_name']",
+                            "name": "search",
+                            "typ": "List[str]",
+                        },
+                        {
+                            "doc": "Node to replace this search",
+                            "name": "replacement_node",
+                            "typ": "AST",
+                        },
+                        {
+                            "doc": "whether a node has been replaced (only replaces "
+                            "first occurrence)",
+                            "name": "replaced",
+                        },
+                    )
+                ),
                 "returns": None,
             },
         )

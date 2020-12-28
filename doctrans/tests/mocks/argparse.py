@@ -950,7 +950,6 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
                         identifier=None,
                     ),
                     keyword(arg="action", value=set_value("append"), identifier=None),
-                    keyword(arg="help", value=set_value(""), identifier=None),
                     keyword(arg="required", value=set_value(True), identifier=None),
                     keyword(
                         arg="default", value=set_value("reduction"), identifier=None
@@ -977,7 +976,6 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
                         ),
                         identifier=None,
                     ),
-                    keyword(arg="help", value=set_value(None), identifier=None),
                     keyword(arg="required", value=set_value(True), identifier=None),
                     keyword(arg="default", value=set_value("mean"), identifier=None),
                 ],

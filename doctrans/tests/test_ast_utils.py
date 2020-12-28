@@ -1,18 +1,23 @@
 """ Tests for ast_utils """
 import ast
+import pickle
 from ast import (
     AnnAssign,
     Assign,
     Attribute,
+    BinOp,
     Call,
     ClassDef,
     Constant,
     Dict,
+    Expr,
     FunctionDef,
     Import,
     ImportFrom,
+    List,
     Load,
     Module,
+    Mult,
     Name,
     NameConstant,
     Store,
@@ -45,7 +50,7 @@ from doctrans.ast_utils import (
     set_slice,
     set_value,
 )
-from doctrans.pure_utils import PY3_8, PY_GTE_3_8
+from doctrans.pure_utils import PY3_8, PY_GTE_3_8, tab
 from doctrans.source_transformer import ast_parse
 from doctrans.tests.mocks.classes import class_ast, class_str
 from doctrans.tests.mocks.methods import (
@@ -53,7 +58,11 @@ from doctrans.tests.mocks.methods import (
     class_with_method_and_body_types_str,
     class_with_optional_arg_method_ast,
 )
-from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
+from doctrans.tests.utils_for_tests import (
+    inspectable_compile,
+    run_ast_test,
+    unittest_main,
+)
 
 
 class TestAstUtils(TestCase):
@@ -509,7 +518,9 @@ class TestAstUtils(TestCase):
 
         run_ast_test(
             self,
-            param2ast({"typ": None, "name": "zion"}),
+            param2ast(
+                ("zion", {"typ": None}),
+            ),
             gold=AnnAssign(
                 annotation=Name("object", Load()),
                 simple=1,
@@ -526,7 +537,9 @@ class TestAstUtils(TestCase):
 
         run_ast_test(
             self,
-            param2ast({"typ": "dict", "name": "menthol"}),
+            param2ast(
+                ("menthol", {"typ": "dict"}),
+            ),
             gold=AnnAssign(
                 annotation=set_slice(Name("dict", Load())),
                 simple=1,
@@ -544,11 +557,10 @@ class TestAstUtils(TestCase):
         run_ast_test(
             self,
             param2ast(
-                {
-                    "typ": "NoneType",
-                    "name": "stateful_metrics",
-                    "default": "the `Model`'s metrics",
-                }
+                (
+                    "stateful_metrics",
+                    {"typ": "NoneType", "default": "the `Model`'s metrics"},
+                ),
             ),
             gold=AnnAssign(
                 annotation=Name("NoneType", Load()),
@@ -566,7 +578,9 @@ class TestAstUtils(TestCase):
 
         run_ast_test(
             self,
-            param2ast({"typ": None, "name": "zion", "default": set_value(NoneStr)}),
+            param2ast(
+                ("zion", {"typ": None, "default": set_value(NoneStr)}),
+            ),
             gold=AnnAssign(
                 annotation=Name("object", Load()),
                 simple=1,
@@ -583,9 +597,7 @@ class TestAstUtils(TestCase):
         Tests that param2argparse_param works to reparse the default
         """
         run_ast_test(
-            gen_ast=get_value(
-                param2argparse_param({"name": "yup", "default": NoneStr})
-            ),
+            gen_ast=get_value(param2argparse_param(("yup", {"default": NoneStr}))),
             gold=Call(
                 args=[set_value("--yup")],
                 func=Attribute(
@@ -595,7 +607,6 @@ class TestAstUtils(TestCase):
                 ),
                 keywords=[
                     keyword(arg="type", value=Name("str", Load()), identifier=None),
-                    keyword(arg="help", value=set_value(""), identifier=None),
                 ],
                 expr=None,
                 expr_func=None,
@@ -603,13 +614,15 @@ class TestAstUtils(TestCase):
             test_case_instance=self,
         )
 
-    def test_param2argparse_param_default_type(self) -> None:
+    def test_param2argparse_param_default_simple_type(self) -> None:
         """
         Tests that param2argparse_param works to change the type based on the default
         """
         run_ast_test(
             gen_ast=get_value(
-                param2argparse_param({"name": "byo", "default": 5, "typ": "str"})
+                param2argparse_param(
+                    ("byo", {"default": 5, "typ": "str"}),
+                )
             ),
             gold=Call(
                 args=[set_value("--byo")],
@@ -620,7 +633,6 @@ class TestAstUtils(TestCase):
                 ),
                 keywords=[
                     keyword(arg="type", value=Name("int", Load()), identifier=None),
-                    keyword(arg="help", value=set_value(""), identifier=None),
                     keyword(arg="required", value=set_value(True), identifier=None),
                     keyword(arg="default", value=set_value(5), identifier=None),
                 ],
@@ -628,6 +640,356 @@ class TestAstUtils(TestCase):
                 expr_func=None,
             ),
             test_case_instance=self,
+        )
+
+    def test_param2argparse_param_default_list(self) -> None:
+        """
+        Tests that param2argparse_param works to change the type based on the default
+          whence said default is a list
+        """
+        run_ast_test(
+            gen_ast=get_value(
+                param2argparse_param(
+                    ("byo", {"default": [], "typ": "str"}),
+                )
+            ),
+            gold=Call(
+                args=[set_value("--byo")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(arg="type", value=Name("loads", Load()), identifier=None),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                    keyword(arg="default", value=set_value("[]"), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            ),
+            test_case_instance=self,
+        )
+
+    def test_param2argparse_param_default_ast_tuple(self) -> None:
+        """
+        Tests that param2argparse_param works to change the type based on the default
+          whence said default is an ast.Tuple
+        """
+        run_ast_test(
+            gen_ast=get_value(
+                param2argparse_param(
+                    (
+                        "byo",
+                        {
+                            "default": Tuple(
+                                elts=[],
+                                ctx=Load(),
+                                expr=None,
+                            ),
+                            "typ": "str",
+                        },
+                    ),
+                )
+            ),
+            gold=Call(
+                args=[set_value("--byo")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(arg="type", value=Name("loads", Load()), identifier=None),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                    keyword(arg="default", value=set_value("()"), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            ),
+            test_case_instance=self,
+        )
+
+    def test_param2argparse_param_default_ast_list(self) -> None:
+        """
+        Tests that param2argparse_param works to change the type based on the default
+          whence said default is an ast.List
+        """
+        run_ast_test(
+            gen_ast=get_value(
+                param2argparse_param(
+                    (
+                        "byo",
+                        {
+                            "default": List(
+                                elts=[],
+                                ctx=Load(),
+                                expr=None,
+                            ),
+                            "typ": "str",
+                        },
+                    ),
+                )
+            ),
+            gold=Call(
+                args=[set_value("--byo")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(arg="type", value=Name("loads", Load()), identifier=None),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                    keyword(arg="default", value=set_value("[]"), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            ),
+            test_case_instance=self,
+        )
+
+    def test_param2argparse_param_default_ast_expr_with_list(self) -> None:
+        """
+        Tests that param2argparse_param works to change the type based on the default
+          whence said default is an ast.List inside an ast.Expr
+        """
+        run_ast_test(
+            gen_ast=get_value(
+                param2argparse_param(
+                    (
+                        "byo",
+                        {
+                            "default": Expr(
+                                value=List(
+                                    elts=[],
+                                    ctx=Load(),
+                                    expr=None,
+                                )
+                            ),
+                            "typ": "str",
+                        },
+                    ),
+                )
+            ),
+            gold=Call(
+                args=[set_value("--byo")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(arg="type", value=Name("loads", Load()), identifier=None),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                    keyword(arg="default", value=set_value("[]"), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            ),
+            test_case_instance=self,
+        )
+
+    def test_param2argparse_param_default_ast_binop(self) -> None:
+        """
+        Tests that param2argparse_param works to change the type based on the default
+          whence said default is a non specially handled ast.AST
+        """
+        run_ast_test(
+            gen_ast=get_value(
+                param2argparse_param(
+                    (
+                        "byo",
+                        {
+                            "default": BinOp(
+                                set_value(5),
+                                Mult(),
+                                set_value(5),
+                            ),
+                            "typ": "str",
+                        },
+                    ),
+                )
+            ),
+            gold=Call(
+                args=[set_value("--byo")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(arg="type", value=Name("str", Load()), identifier=None),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                    keyword(
+                        arg="default", value=set_value("```5 * 5```"), identifier=None
+                    ),
+                ],
+                expr=None,
+                expr_func=None,
+            ),
+            test_case_instance=self,
+        )
+
+    def test_param2argparse_param_default_function(self) -> None:
+        """
+        Tests that param2argparse_param works to change the type based on the default
+          whence said default is an in-memory function
+        """
+
+        function_str = (
+            "from operator import add\n"
+            "def adder(a, b):\n"
+            "{tab}return add(a, b)".format(tab=tab)
+        )
+        adder = getattr(
+            inspectable_compile(function_str),
+            "adder",
+        )
+        pickled_adder = "{!r}".format(pickle.dumps(adder))  # eww
+
+        run_ast_test(
+            gen_ast=get_value(
+                param2argparse_param(
+                    (
+                        "byo",
+                        {
+                            "default": adder,
+                            "typ": "str",
+                        },
+                    ),
+                )
+            ),
+            gold=Call(
+                args=[set_value("--byo")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(
+                        arg="type", value=Name("pickle.loads", Load()), identifier=None
+                    ),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                    keyword(
+                        arg="default", value=set_value(pickled_adder), identifier=None
+                    ),
+                ],
+                expr=None,
+                expr_func=None,
+            ),
+            test_case_instance=self,
+        )
+
+    def test_param2argparse_param_default_code_quoted(self) -> None:
+        """
+        Tests that param2argparse_param works to change the type based on the default
+          whence said default is a code quoted str
+        """
+        run_ast_test(
+            gen_ast=get_value(
+                param2argparse_param(
+                    (
+                        "byo",
+                        {
+                            "default": "```4```",
+                            "typ": "str",
+                        },
+                    ),
+                )
+            ),
+            gold=Call(
+                args=[set_value("--byo")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(arg="type", value=Name("int", Load()), identifier=None),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                    keyword(arg="default", value=set_value(4), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            ),
+            test_case_instance=self,
+        )
+
+    def test_param2argparse_param_default_torch(self) -> None:
+        """
+        Tests that param2argparse_param works to change the type based on the default
+          whence said default is a proxy for an internal PyTorch type
+        """
+
+        class FakeTorch(object):
+            """ Not a real torch """
+
+            def __str__(self):
+                """But a real str
+
+                :return: An actual str
+                :rtype: ```Literal['<required parameter>']```
+                """
+                return "<required parameter>"
+
+        # type("FakeTorch", tuple(), {"__str__": lambda _: "<required parameter>"})
+
+        run_ast_test(
+            gen_ast=get_value(
+                param2argparse_param(
+                    (
+                        "byo",
+                        {
+                            "default": FakeTorch(),
+                        },
+                    ),
+                )
+            ),
+            gold=Call(
+                args=[set_value("--byo")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(
+                        arg="type",
+                        value=Name(FakeTorch.__name__, Load()),
+                        identifier=None,
+                    ),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            ),
+            test_case_instance=self,
+        )
+
+    def test_param2argparse_param_default_notimplemented(self) -> None:
+        """
+        Tests that param2argparse_param works to change the type based on the default
+          whence said default is a proxy for an unepected type
+        """
+        with self.assertRaises(NotImplementedError) as cm:
+            param2argparse_param(
+                (
+                    "byo",
+                    {
+                        "default": memoryview(b""),
+                    },
+                ),
+            )
+        self.assertEqual(
+            *map(
+                lambda s: s[: s.rfind("<") + 10],
+                (
+                    "Parsing type <class 'memoryview'>, which contains <memory at 0x10bb8c400>",
+                    str(cm.exception),
+                ),
+            )
         )
 
 

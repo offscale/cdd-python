@@ -40,7 +40,7 @@ def _handle_keyword(keyword, typ):
     :type typ: ```str```
 
     :return: string representation of type
-    :rtype: ```str``
+    :rtype: ```str```
     """
     quote_f = identity
 
@@ -72,17 +72,17 @@ def parse_out_param(expr, emit_default_doc=True):
     """
     Turns the class_def repr of '--dataset_name', type=str, help='name of dataset.', required=True, default='mnist'
       into
-          {'name': 'dataset_name', 'typ': 'str', doc='name of dataset.',
-           'required': True, 'default': 'mnist'}
+           Tuple[Literal['dataset_name'], {"typ": Literal["str"], "doc": Literal["name of dataset."],
+                                           "default": Literal["mnist"]}]
 
     :param expr: Expr
     :type expr: ```Expr```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
-    :type emit_default_doc: ```bool``
+    :type emit_default_doc: ```bool```
 
-    :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-    :rtype: ```dict```
+    :return: Name, dict with keys: 'typ', 'doc', 'default'
+    :rtype: ```Tuple[str, dict]```
     """
     required = get_value(
         next(
@@ -173,8 +173,8 @@ def parse_out_param(expr, emit_default_doc=True):
     # if "str" in typ or "Literal" in typ and (typ.count("'") > 1 or typ.count('"') > 1):
     #    default = quote(default)
 
-    return dict(
-        name=name, doc=doc, typ=typ, **({} if default is None else {"default": default})
+    return name, dict(
+        doc=doc, typ=typ, **({} if default is None else {"default": default})
     )
 
 
@@ -182,28 +182,30 @@ def interpolate_defaults(param, default_search_announce=None, emit_default_doc=T
     """
     Correctly set the 'default' and 'doc' parameters
 
-    :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'required': ... }
-    :type param: ```dict```
+    :param param: Name, dict with keys: 'typ', 'doc', 'default'
+    :type param: ```Tuple[str, dict]```
 
     :param default_search_announce: Default text(s) to look for. If None, uses default specified in default_utils.
     :type default_search_announce: ```Optional[Union[str, Iterable[str]]]```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
-    :type emit_default_doc: ```bool``
+    :type emit_default_doc: ```bool```
 
-    :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-    :rtype: ```dict```
+    :return: Name, dict with keys: 'typ', 'doc', 'default'
+    :rtype: ```Tuple[str, dict]```
     """
-    if "doc" in param:
+    name, _param = param
+    del param
+    if "doc" in _param:
         doc, default = extract_default(
-            param["doc"],
+            _param["doc"],
             default_search_announce=default_search_announce,
             emit_default_doc=emit_default_doc,
         )
-        param["doc"] = doc
+        _param["doc"] = doc
         if default is not None:
-            param["default"] = unquote(default)
-    return param
+            _param["default"] = unquote(default)
+    return name, _param
 
 
 def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
@@ -214,46 +216,49 @@ def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
     :type e: Return
 
     :param intermediate_repr: a dictionary of form
-          {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-          }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
     :param function_def: AST node for function definition
     :type function_def: ```FunctionDef```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
-    :type emit_default_doc: ```bool``
+    :type emit_default_doc: ```bool```
 
-    :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-    :rtype: ```dict```
+    :return: Name, dict with keys: 'typ', 'doc', 'default'
+    :rtype: ```Tuple[str, dict]```
     """
     assert isinstance(e, Return)
 
-    return set_default_doc(
-        {
-            "name": "return_type",
-            "doc": extract_default(
-                next(
-                    line.partition(",")[2].lstrip()
-                    for line in get_value(function_def.body[0].value).split("\n")
-                    if line.lstrip().startswith(":return")
-                ),
-                emit_default_doc=emit_default_doc,
-            )[0],
-            "default": to_code(e.value.elts[1]).rstrip("\n"),
-            "typ": to_code(
-                get_value(
-                    ast.parse(intermediate_repr["returns"]["typ"]).body[0].value.slice
-                ).elts[1]
-            ).rstrip()
-            # 'Tuple[ArgumentParser, {typ}]'.format(typ=intermediate_repr['returns']['typ'])
-        },
-        emit_default_doc=emit_default_doc,
+    return (
+        "return_type",
+        set_default_doc(
+            {
+                "doc": extract_default(
+                    next(
+                        line.partition(",")[2].lstrip()
+                        for line in get_value(function_def.body[0].value).split("\n")
+                        if line.lstrip().startswith(":return")
+                    ),
+                    emit_default_doc=emit_default_doc,
+                )[0],
+                "default": to_code(e.value.elts[1]).rstrip("\n"),
+                "typ": to_code(
+                    get_value(
+                        ast.parse(intermediate_repr["returns"]["return_type"]["typ"])
+                        .body[0]
+                        .value.slice
+                    ).elts[1]
+                ).rstrip()
+                # 'Tuple[ArgumentParser, {typ}]'.format(typ=intermediate_repr['returns']['typ'])
+            },
+            emit_default_doc=emit_default_doc,
+        ),
     )
 
 
@@ -268,14 +273,13 @@ def get_internal_body(target_name, target_type, intermediate_repr):
     :type target_type: ```Literal['self', 'cls', 'static']```
 
     :param intermediate_repr: a dictionary of form
-          {
-                  'name': ...,
-                  'type': ...,
-                  '_internal': {'body': [...]},
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-          }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "_internal": {'body': List[ast.AST]},
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
     :return: Internal body or an empty list
@@ -302,17 +306,16 @@ def to_docstring(
     Converts a docstring to an AST
 
     :param intermediate_repr: a dictionary of form
-          {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-          }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
-    :type emit_default_doc: ```bool``
+    :type emit_default_doc: ```bool```
 
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpy', 'google']```
@@ -335,7 +338,7 @@ def to_docstring(
     if docstring_format != "rest":
         raise NotImplementedError(docstring_format)
 
-    def param2docstring_param(
+    def _param2docstring_param(
         param,
         docstring_format="rest",
         emit_default_doc=True,
@@ -345,14 +348,14 @@ def to_docstring(
         """
         Converts param dict from intermediate_repr to the right string representation
 
-        :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-        :type param: ```dict```
+        :param param: Name, dict with keys: 'typ', 'doc', 'default'
+        :type param: ```Tuple[str, dict]```
 
         :param docstring_format: Format of docstring
         :type docstring_format: ```Literal['rest', 'numpy', 'google']```
 
         :param emit_default_doc: Whether help/docstring should include 'With default' text
-        :type emit_default_doc: ```bool``
+        :type emit_default_doc: ```bool```
 
         :param indent_level: indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
         :type indent_level: ```int```
@@ -360,21 +363,24 @@ def to_docstring(
         :param emit_types: whether to show `:type` lines
         :type emit_types: ```bool```
         """
-        assert isinstance(param, dict), "Expected 'dict' got `{!r}`".format(
+        # if not isinstance(param, tuple):
+        assert isinstance(param, tuple), "Expected 'tuple' got `{!r}`".format(
             type(param).__name__
         )
         assert docstring_format == "rest", docstring_format
-        if "doc" in param:
+        name, _param = param
+        del param
+        if "doc" in _param:
             doc, default = extract_default(
-                param["doc"], emit_default_doc=emit_default_doc
+                _param["doc"], emit_default_doc=emit_default_doc
             )
             if default is not None:
-                param["default"] = default
+                _param["default"] = default
 
-        param["typ"] = (
-            "**{param[name]}".format(param=param)
-            if param.get("typ") == "dict" and param["name"].endswith("kwargs")
-            else param.get("typ")
+        _param["typ"] = (
+            "**{name}".format(name=name)
+            if _param.get("typ") == "dict" and name.endswith("kwargs")
+            else _param.get("typ")
         )
 
         return "".join(
@@ -384,21 +390,21 @@ def to_docstring(
                     (
                         lambda _param: "{tab}:param {name}: {doc}".format(
                             tab=tab * indent_level,
-                            name=_param["name"],
+                            name=name,
                             doc=_param.get("doc"),
                         )
-                    )(set_default_doc(param, emit_default_doc=emit_default_doc)),
+                    )(set_default_doc(_param, emit_default_doc=emit_default_doc)),
                     None
-                    if param["typ"] is None or not emit_types
-                    else "\n{tab}:type {param[name]}: ```{param[typ]}```".format(
-                        tab=tab * indent_level, param=param
+                    if _param["typ"] is None or not emit_types
+                    else "\n{tab}:type {name}: ```{_param[typ]}```".format(
+                        tab=tab * indent_level, name=name, _param=_param
                     ),
                 ),
             )
         )
 
     param2docstring_param = partial(
-        param2docstring_param,
+        _param2docstring_param,
         emit_default_doc=emit_default_doc,
         docstring_format=docstring_format,
         indent_level=indent_level,
@@ -413,14 +419,15 @@ def to_docstring(
         params="\n{sep}\n".format(sep=sep).join(
             map(
                 partial(param2docstring_param, emit_default_doc=emit_default_doc),
-                intermediate_repr["params"],
+                intermediate_repr["params"].items(),
             )
         ),
         returns=(
             "{sep}\n{returns}\n{tab}".format(
                 sep=sep,
                 returns=param2docstring_param(
-                    intermediate_repr["returns"], emit_default_doc=emit_default_doc
+                    next(iter(intermediate_repr["returns"].items())),
+                    emit_default_doc=emit_default_doc,
                 )
                 .replace(":param return_type:", ":return:")
                 .replace(":type return_type:", ":rtype:"),
@@ -538,7 +545,22 @@ def _make_call_meth(body, return_type, param_names):
     )
 
 
+def ast_parse_fix(s):
+    """
+    Hack to resolve unbalanced parentheses SyntaxError acquired from PyTorch parsing
+    TODO: remove
+
+    :param s: String to parse
+    :type s: ```str```
+
+    :return: Value
+    """
+    balanced = (s.count("[") + s.count("]")) & 1 == 0
+    return ast.parse(s if balanced else "{}]".format(s)).body[0].value
+
+
 __all__ = [
+    "ast_parse_fix",
     "_parse_return",
     "get_internal_body",
     "interpolate_defaults",

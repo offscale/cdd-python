@@ -3,6 +3,7 @@ Functions to handle default parameterisation
 """
 import ast
 from ast import literal_eval
+from collections import OrderedDict
 from contextlib import suppress
 from copy import deepcopy
 from functools import partial
@@ -10,6 +11,20 @@ from itertools import takewhile
 from operator import contains, eq
 
 from doctrans.pure_utils import count_iter_items, location_within, quote
+
+
+def ast_parse_fix(s):
+    """
+    Hack to resolve unbalanced parentheses SyntaxError acquired from PyTorch parsing
+    TODO: remove
+
+    :param s: String to parse
+    :type s: ```str```
+
+    :return: Value
+    """
+    balanced = (s.count("[") + s.count("]")) & 1 == 0
+    return ast.parse(s if balanced else "{}]".format(s)).body[0].value
 
 
 def needs_quoting(typ):
@@ -29,7 +44,8 @@ def needs_quoting(typ):
     elif typ == "Optional[str]":
         return True
 
-    parsed_typ_ast = ast.parse(typ).body[0].value
+    typ = typ.replace("\n", "").strip()
+    parsed_typ_ast = ast_parse_fix(typ)
     if isinstance(parsed_typ_ast, ast.Name):
         return parsed_typ_ast.id == "str"
 
@@ -52,7 +68,7 @@ def extract_default(
     Extract the a tuple of (doc, default) from a doc line
 
     :param line: Example - "dataset. Defaults to mnist"
-    :type line: ```str``
+    :type line: ```str```
 
     :param rstrip_default: Whether to rstrip whitespace, newlines, and '.' from the default
     :type rstrip_default: ```bool```
@@ -61,7 +77,7 @@ def extract_default(
     :type default_search_announce: ```Optional[Union[str, Iterable[str]]]```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
-    :type emit_default_doc: ```bool``
+    :type emit_default_doc: ```bool```
 
     :return: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
     :rtype: Tuple[str, Optional[str]]
@@ -130,26 +146,24 @@ def remove_defaults_from_intermediate_repr(intermediate_repr, emit_defaults=True
     Remove "Default of" text from IR
 
     :param intermediate_repr: a dictionary of form
-              {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-              }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
     :param emit_defaults: Whether to emit default property
     :type emit_defaults: ```bool```
 
     :return: a dictionary of form
-              {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-              }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :rtype: ```dict```
     """
     ir = deepcopy(intermediate_repr)
@@ -157,48 +171,65 @@ def remove_defaults_from_intermediate_repr(intermediate_repr, emit_defaults=True
     remove_default_from_param = partial(
         _remove_default_from_param, emit_defaults=emit_defaults
     )
-    ir["params"] = list(map(remove_default_from_param, ir["params"]))
-    ir["returns"] = remove_default_from_param(ir["returns"])
+    ir.update(
+        {
+            "params": OrderedDict(map(remove_default_from_param, ir["params"].items())),
+            "returns": OrderedDict(
+                (
+                    remove_default_from_param(
+                        (lambda k: (k, ir["returns"][k]))("return_type")
+                    ),
+                )
+            ),
+        }
+    )
     return ir
 
 
 def _remove_default_from_param(param, emit_defaults=True):
     """
-    :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-    :type param: ```dict```
+    :param param: Name, dict with keys: 'typ', 'doc', 'default'
+    :type param: ```Tuple[str, dict]```
 
     :param emit_defaults: Whether to emit default property
     :type emit_defaults: ```bool```
 
-    :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-    :rtype: ```dict```
+    :return: Name, dict with keys: 'typ', 'doc', 'default'
+    :rtype: ```Tuple[str, dict]```
     """
-    doc, default = extract_default(param["doc"], emit_default_doc=False)
-    param.update({"doc": doc, "default": default})
+    name, _param = param
+    del param
+    doc, default = extract_default(_param["doc"], emit_default_doc=False)
+    _param.update({"doc": doc, "default": default})
     if default is None or not emit_defaults:
-        del param["default"]
-    return param
+        del _param["default"]
+    return name, _param
 
 
 def set_default_doc(param, emit_default_doc=True):
     """
     Emit param with 'doc' set to include 'Defaults'
 
-    :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    :param param: dict with keys: 'typ', 'doc', 'default'
     :type param: ```dict```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
-    :type emit_default_doc: ```bool``
+    :type emit_default_doc: ```bool```
 
     :return: Same shape as input but with Default append to doc.
-    :rtype: ```dict``
+    :rtype: ```dict```
     """
     # if param is None: param = {"doc": "", "typ": "Any"}
     if param is None or "doc" not in param:
         return param
     has_defaults = "Defaults" in param["doc"] or "defaults" in param["doc"]
 
-    if emit_default_doc and not has_defaults and "default" in param:
+    if has_defaults and not emit_default_doc:
+        # Remove the default text
+        param["doc"] = extract_default(param["doc"], emit_default_doc=emit_default_doc)[
+            0
+        ]
+    elif "default" in param and not has_defaults and emit_default_doc:
         param["doc"] = "{doc} Defaults to {default}".format(
             doc=(
                 param["doc"]
@@ -209,10 +240,6 @@ def set_default_doc(param, emit_default_doc=True):
             if needs_quoting(param.get("typ"))
             else param["default"],
         )
-    elif has_defaults:
-        param["doc"] = extract_default(param["doc"], emit_default_doc=emit_default_doc)[
-            0
-        ]
 
     return param
 

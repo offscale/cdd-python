@@ -785,22 +785,6 @@ function_adder_ast = FunctionDef(
     stmt=None,
 )
 
-function_adder_ir = {
-    "name": "add_6_5",
-    "params": [
-        {"default": 6, "doc": "first param", "name": "a", "typ": "int"},
-        {"default": 5, "doc": "second param", "name": "b", "typ": "int"},
-    ],
-    "returns": {
-        "default": "```operator.add(a, b)```",
-        "doc": "Aggregated summation of `a` and `b`.",
-        "name": "return_type",
-        "typ": "int",
-    },
-    "doc": "",
-    "type": "static",
-}
-
 function_default_complex_default_arg_str = (
     "def call_peril(dataset_name: str='mnist', writer=stdout):\n\tpass"
 )
@@ -1074,104 +1058,6 @@ class Adadelta(object):
 """,
 )
 
-docstring_google_tf_adadelta_function_ir = {
-    "doc": "Optimizer that implements the Adadelta algorithm.\n"
-    "\n"
-    "Adadelta optimization is a stochastic gradient descent method that "
-    "is based on\n"
-    "adaptive learning rate per dimension to address two drawbacks:\n"
-    "\n"
-    "- The continual decay of learning rates throughout training\n"
-    "- The need for a manually selected global learning rate\n"
-    "\n"
-    "Adadelta is a more robust extension of Adagrad that adapts "
-    "learning rates\n"
-    "based on a moving window of gradient updates, instead of "
-    "accumulating all\n"
-    "past gradients. This way, Adadelta continues learning even when "
-    "many updates\n"
-    "have been done. Compared to Adagrad, in the original version of "
-    "Adadelta you\n"
-    "don't have to set an initial learning rate. In this version, "
-    "initial\n"
-    "learning rate can be set, as in most other Keras optimizers.\n"
-    "\n"
-    'According to section 4.3 ("Effective Learning rates"), near the '
-    "end of\n"
-    "training step sizes converge to 1 which is effectively a high "
-    "learning\n"
-    "rate which would cause divergence. This occurs only near the end "
-    "of the\n"
-    "training as gradients and step sizes are small, and the epsilon "
-    "constant\n"
-    "in the numerator and denominator dominate past gradients and "
-    "parameter\n"
-    "updates which converge the learning rate to 1.\n"
-    "\n"
-    'According to section 4.4("Speech Data"),where a large neural '
-    "network with\n"
-    "4 hidden layers was trained on a corpus of US English data, "
-    "ADADELTA was\n"
-    "used with 100 network replicas.The epsilon used is 1e-6 with "
-    "rho=0.95\n"
-    "which converged faster than ADAGRAD, by the following "
-    "construction:\n"
-    "def __init__(self, lr=1.0, rho=0.95, epsilon=1e-6, decay=0., "
-    "**kwargs):\n"
-    "\n"
-    "\n"
-    "Reference:\n"
-    "    - [Zeiler, 2012](http://arxiv.org/abs/1212.5701)",
-    "name": "Adadelta",
-    "params": [
-        {
-            "default": 0.001,
-            "doc": "A `Tensor`, floating point value, or a schedule "
-            "that is a\n"
-            "  "
-            "`tf.keras.optimizers.schedules.LearningRateSchedule`. "
-            "The learning rate.\n"
-            "  To match the exact form in the original paper "
-            "use 1.0.",
-            "name": "learning_rate",
-            "typ": "float",
-        },
-        {
-            "default": 0.95,
-            "doc": "A `Tensor` or a floating point value. The decay " "rate.",
-            "name": "rho",
-            "typ": "float",
-        },
-        {
-            "default": 1e-07,
-            "doc": "A `Tensor` or a floating point value.  A "
-            "constant epsilon used\n"
-            "         to better conditioning the grad update.",
-            "name": "epsilon",
-            "typ": "float",
-        },
-        {
-            "default": "Adadelta",
-            "doc": "Optional name prefix for the operations created "
-            "when applying\n"
-            "  gradients. ",
-            "name": "name",
-            "typ": "str",
-        },
-        {
-            "doc": "Keyword arguments. Allowed to be one of\n"
-            '  `"clipnorm"` or `"clipvalue"`.\n'
-            '  `"clipnorm"` (float) clips gradients by norm; '
-            '`"clipvalue"` (float) clips\n'
-            "  gradients by value.",
-            "name": "kwargs",
-            "typ": "Optional[dict]",
-        },
-        {"default": True, "name": "_HAS_AGGREGATE_GRAD"},
-    ],
-    "returns": None,
-}
-
 __all__ = [
     "class_with_method_and_body_types_ast",
     "class_with_method_and_body_types_str",
@@ -1183,7 +1069,6 @@ __all__ = [
     "class_with_optional_arg_method_str",
     "docstring_google_tf_adadelta_function_str",
     "function_adder_ast",
-    "function_adder_ir",
     "function_adder_str",
     "function_default_complex_default_arg_ast",
     "function_default_complex_default_arg_str",

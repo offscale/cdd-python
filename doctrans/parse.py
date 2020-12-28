@@ -1,8 +1,11 @@
 """
-Transform from string or AST representations of input, to intermediate_repr dict of shape {
-            'name': ..., 'platform': ...,
-            'module': ..., 'title': ..., 'description': ...,
-            'parameters': ..., 'schema': ...,'returns': ...}.
+Transform from string or AST representations of input, to intermediate_repr, a dictionary of form:
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
 """
 import ast
 from ast import (
@@ -18,40 +21,30 @@ from ast import (
     Tuple,
     get_docstring,
 )
-from collections import deque
+from collections import OrderedDict, deque
 from functools import partial
 from inspect import getdoc, getsource, isfunction, signature
 from itertools import count, filterfalse
 from operator import setitem
 from types import FunctionType
 
-from docstring_parser import Docstring
-
 from doctrans import get_logger
 from doctrans.ast_utils import (
-    argparse_param2param,
     find_ast_type,
+    func_arg2param,
     get_function_type,
     get_value,
     is_argparse_add_argument,
     is_argparse_description,
 )
 from doctrans.docstring_parsers import _set_name_and_type, parse_docstring
-from doctrans.emitter_utils import _parse_return, interpolate_defaults, parse_out_param
+from doctrans.emitter_utils import _parse_return, parse_out_param
 from doctrans.parser_utils import (
-    _evaluate_to_docstring_value,
     _inspect_process_ir_param,
-    _inspect_process_sig,
     _interpolate_return,
     ir_merge,
 )
-from doctrans.pure_utils import (
-    assert_equal,
-    params_to_ordered_dict,
-    rpartial,
-    simple_types,
-    update_d,
-)
+from doctrans.pure_utils import rpartial, simple_types
 from doctrans.source_transformer import to_code
 
 logger = get_logger("doctrans.parse")
@@ -74,13 +67,12 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
     :type infer_type: ```bool```
 
     :return: a dictionary of form
-          {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-          }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :rtype: ```dict```
     """
     assert not isinstance(class_def, FunctionDef)
@@ -121,12 +113,22 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
         is_supported_ast_node
     ), "Expected 'Union[Module, ClassDef]' got `{!r}`".format(type(class_def).__name__)
     class_def = find_ast_type(class_def, class_name)
-    intermediate_repr = docstring(get_docstring(class_def).replace(":cvar", ":param"))
+    doc_str = get_docstring(class_def)
+    intermediate_repr = (
+        {
+            "name": class_name,
+            "type": "static",
+            "doc": "",
+            "params": OrderedDict(),
+            "returns": None,
+        }
+        if doc_str is None
+        else docstring(get_docstring(class_def).replace(":cvar", ":param"))
+    )
 
-    intermediate_repr["params"] = params_to_ordered_dict(intermediate_repr["params"])
     if "return_type" in intermediate_repr["params"]:
-        intermediate_repr["returns"] = dict(
-            name="return_type", **intermediate_repr["params"].pop("return_type")
+        intermediate_repr["returns"] = OrderedDict(
+            (("return_type", intermediate_repr["params"].pop("return_type")),)
         )
 
     for e in class_def.body:
@@ -150,12 +152,17 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
             # if 'str' in typ and val: val["default"] = val["default"].strip("'")  # Unquote?
             typ_default = dict(typ=typ, **val)
 
-            if e.target.id == "return_type":
-                intermediate_repr["returns"].update(typ_default)
-            else:
-                # if e.target.id.endswith("kwargs") and typ_default["typ"] == "dict":
-                #     typ_default["typ"] = "Optional[dict]"
-                intermediate_repr["params"][e.target.id].update(typ_default)
+            for key in "params", "returns":
+                if e.target.id in intermediate_repr[key]:
+                    intermediate_repr[key][e.target.id].update(typ_default)
+                    typ_default = False
+                    break
+            assert not typ_default
+
+            # if typ_default:
+            #     if e.target.id.endswith("kwargs") and typ_default["typ"] == "dict":
+            #         typ_default["typ"] = "Optional[dict]"
+            #     intermediate_repr["params"][e.target.id] = typ_default
         elif isinstance(e, Assign):
             val = get_value(e)
             if val is not None:
@@ -180,10 +187,12 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
 
     intermediate_repr.update(
         {
-            "params": [
-                _set_name_and_type(dict(name=k, **v), infer_type=infer_type)
-                for k, v in intermediate_repr["params"].items()
-            ],
+            "params": OrderedDict(
+                map(
+                    partial(_set_name_and_type, infer_type=infer_type),
+                    intermediate_repr["params"].items(),
+                )
+            ),
             "_internal": {
                 "body": list(
                     filterfalse(
@@ -223,26 +232,24 @@ def _merge_inner_function(
     :type infer_type: ```bool```
 
     :param intermediate_repr: a dictionary of form
-              {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-              }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
     :param merge_inner_function: Name of inner function to merge. If None, merge nothing.
     :type merge_inner_function: ```Optional[str]```
 
     :return: a dictionary of form
-          {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-          }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :rtype: ```dict```
     """
     function_def = next(
@@ -279,13 +286,12 @@ def _inspect(obj, name):
     :type name: ```str```
 
     :return: a dictionary of form
-          {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-          }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :rtype: ```dict```
     """
 
@@ -301,12 +307,15 @@ def _inspect(obj, name):
             "name": name or obj.__qualname__
             if hasattr(obj, "__qualname__")
             else obj.__name__,
-            "params": list(
+            "params": OrderedDict(
                 filter(
                     None,
-                    map(partial(_inspect_process_ir_param, sig=sig), ir["params"])
-                    if ir.get("params")
-                    else map(_inspect_process_sig, sig.parameters.items()),
+                    map(
+                        partial(_inspect_process_ir_param, sig=sig),
+                        ir["params"].items(),
+                    )
+                    # if ir.get("params")
+                    # else map(_inspect_process_sig, sig.parameters.items()),
                 )
             ),
         }
@@ -324,10 +333,17 @@ def _inspect(obj, name):
 
     other = parser(parsed_body)
     ir_merge(ir, other)
+    if "return_type" in (ir.get("returns") or {}):
+        ir["returns"] = OrderedDict(
+            map(
+                partial(_set_name_and_type, infer_type=False),
+                ir["returns"].items(),
+            )
+        )
 
     # if ir.get("returns") and "returns" not in ir["returns"]:
     #     if sig.return_annotation is not _empty:
-    #         ir["returns"]["typ"] = lstrip_typings("{!s}".format(sig.return_annotation))
+    #         ir["returns"]["return_type"]["typ"] = lstrip_typings("{!s}".format(sig.return_annotation))
     #
     #     return_q = deque(
     #         filter(
@@ -338,13 +354,13 @@ def _inspect(obj, name):
     #     )
     #     if return_q:
     #         return_val = get_value(return_q.pop())
-    #         ir["returns"]["default"] = get_value(return_val)
+    #         ir["returns"]["return_type"]["default"] = get_value(return_val)
     #         if not isinstance(
-    #             ir["returns"]["default"],
+    #             ir["returns"]["return_type"]["default"],
     #             (str, int, float, complex, ast.Num, ast.Str, ast.Constant),
     #         ):
-    #             ir["returns"]["default"] = "```{}```".format(
-    #                 to_code(ir["returns"]["default"]).rstrip("\n")
+    #             ir["returns"]["return_type"]["default"] = "```{}```".format(
+    #                 to_code(ir["returns"]["return_type"]["default"]).rstrip("\n")
     #             )
     return ir
 
@@ -366,16 +382,16 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
     :type function_name: ```str```
 
     :return: a dictionary of form
-          {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-          }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :rtype: ```dict```
     """
     if isinstance(function_def, FunctionType):
+        # Dynamic function, i.e., this isn't source code; and is in your memory
         ir = _inspect(function_def, function_name)
         parsed_source = ast.parse(getsource(function_def).lstrip()).body[0]
         ir["_internal"] = {
@@ -396,34 +412,28 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
 
     found_type = get_function_type(function_def)
 
+    # Read docstring
     intermediate_repr_docstring = (
         get_docstring(function_def) if isinstance(function_def, FunctionDef) else None
     )
     if intermediate_repr_docstring is None:
         intermediate_repr = {
-            "description": "",
-            "params": list(
+            "name": function_name or function_def.name,
+            "params": OrderedDict(
                 map(
-                    argparse_param2param,
+                    func_arg2param,
                     function_def.args.args
                     if found_type == "static"
-                    else (function_def.args.args[1:]),
+                    else function_def.args.args[1:],
                 )
             ),
             "returns": None,
         }
-        # TODO: `intermediate_repr["returns"]` when no docstring is provided
     else:
         intermediate_repr = docstring(
             intermediate_repr_docstring.replace(":cvar", ":param"),
             infer_type=infer_type,
         )
-    # if (
-    #     function_type != "static"
-    #     and intermediate_repr["params"]
-    #     and intermediate_repr["params"][0]["name"] == function_type
-    # ):
-    #     del intermediate_repr["params"][0]
 
     intermediate_repr.update(
         {
@@ -434,28 +444,29 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
 
     if function_def.body:
         intermediate_repr["_internal"] = {
-            "body": function_def.body[0 if found_type == "static" else 1 :],
+            "body": function_def.body
+            if intermediate_repr_docstring is None
+            else function_def.body[1:],
             "from_name": function_def.name,
             "from_type": found_type,
         }
 
-    params_to_append = []
-    if hasattr(function_def.args, "kwarg") and function_def.args.kwarg:
-        merge_with = (
-            intermediate_repr["params"].pop()
-            if intermediate_repr["params"]
-            and intermediate_repr["params"][-1]["name"] == function_def.args.kwarg.arg
-            else {}
-        )
-        params_to_append.append(
-            update_d(
-                {
-                    "name": function_def.args.kwarg.arg,
-                    "typ": merge_with.get("typ", "dict"),
-                },
-                merge_with,
-            )
-        )
+    params_to_append = OrderedDict()
+    if (
+        hasattr(function_def.args, "kwarg")
+        and function_def.args.kwarg
+        and function_def.args.kwarg.arg in intermediate_repr["params"]
+    ):
+        _param = intermediate_repr["params"].pop(function_def.args.kwarg.arg)
+        assert "typ" in _param
+        # if "typ" not in _param:
+        #     _param["typ"] = (
+        #         "Optional[dict]"
+        #         if function_def.args.kwarg.annotation is None
+        #         else to_code(function_def.args.kwarg.annotation).rstrip("\n")
+        #     )
+        params_to_append[function_def.args.kwarg.arg] = _param
+        del _param
 
     idx = count()
 
@@ -465,14 +476,11 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
             map(
                 lambda args_defaults: deque(
                     map(
-                        lambda idxparam_idx_arg: assert_equal(
-                            intermediate_repr["params"][idxparam_idx_arg[0]]["name"],
-                            idxparam_idx_arg[2].arg,
-                        )
-                        and intermediate_repr["params"][idxparam_idx_arg[0]].update(
+                        lambda idxparam_idx_arg: intermediate_repr["params"][
+                            idxparam_idx_arg[2].arg
+                        ].update(
                             dict(
-                                name=idxparam_idx_arg[2].arg,
-                                **(
+                                (
                                     {}
                                     if getattr(idxparam_idx_arg[2], "annotation", None)
                                     is None
@@ -527,16 +535,23 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
             maxlen=0,
         )
 
-    intermediate_repr["params"] = list(
+    intermediate_repr["params"].update(params_to_append)
+    intermediate_repr["params"] = OrderedDict(
         map(
             partial(_set_name_and_type, infer_type=infer_type),
-            intermediate_repr["params"] + params_to_append,
+            intermediate_repr["params"].items(),
         )
     )
 
     # Convention - the final top-level `return` is the default
-    _interpolate_return(function_def, intermediate_repr)
-
+    intermediate_repr = _interpolate_return(function_def, intermediate_repr)
+    if "return_type" in (intermediate_repr.get("returns") or {}):
+        intermediate_repr["returns"] = OrderedDict(
+            map(
+                partial(_set_name_and_type, infer_type=infer_type),
+                intermediate_repr["returns"].items(),
+            )
+        )
     return intermediate_repr
 
 
@@ -545,7 +560,7 @@ def argparse_ast(function_def, function_type=None, function_name=None):
     Converts an argparse AST to our IR
 
     :param function_def: AST of argparse function_def
-    :type function_def: ```FunctionDef``
+    :type function_def: ```FunctionDef```
 
     :param function_type: Type of function, static is static or global method, others just become first arg
     :type function_type: ```Literal['self', 'cls', 'static']```
@@ -554,13 +569,12 @@ def argparse_ast(function_def, function_type=None, function_name=None):
     :type function_name: ```str```
 
     :return: a dictionary of form
-          {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-          }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :rtype: ```dict```
     """
     assert isinstance(
@@ -572,22 +586,29 @@ def argparse_ast(function_def, function_type=None, function_name=None):
         "name": function_name,
         "type": function_type or get_function_type(function_def),
         "doc": "",
-        "params": [],
+        "params": OrderedDict(),
     }
     ir = parse_docstring(doc_string, emit_default_doc=True)
     for node in function_def.body[1:]:
         if is_argparse_add_argument(node):
-            intermediate_repr["params"].append(
-                parse_out_param(node, emit_default_doc=False)
-            )
+            name, _param = parse_out_param(node, emit_default_doc=False)
+            (
+                intermediate_repr["params"][name].update
+                if name in intermediate_repr["params"]
+                else partial(setitem, intermediate_repr["params"], name)
+            )(_param)
         elif isinstance(node, Assign) and is_argparse_description(node):
             intermediate_repr["doc"] = get_value(node.value)
         elif isinstance(node, Return) and isinstance(node.value, Tuple):
-            intermediate_repr["returns"] = _parse_return(
-                node,
-                intermediate_repr=ir,
-                function_def=function_def,
-                emit_default_doc=False,
+            intermediate_repr["returns"] = OrderedDict(
+                (
+                    _parse_return(
+                        node,
+                        intermediate_repr=ir,
+                        function_def=function_def,
+                        emit_default_doc=False,
+                    ),
+                )
             )
     if len(function_def.body) > len(intermediate_repr["params"]) + 3:
         intermediate_repr["_internal"] = {
@@ -601,7 +622,13 @@ def argparse_ast(function_def, function_type=None, function_name=None):
             "from_type": "static",
         }
 
-    return interpolate_defaults(intermediate_repr)
+    # if "return_type" in intermediate_repr.get("returns", {}):
+    #     pp({'intermediate_repr["returns"]["return_type"]': intermediate_repr["returns"]["return_type"]})
+    #     intermediate_repr["returns"]["return_type"].update = dict(
+    #         interpolate_defaults(intermediate_repr["returns"]["return_type"])
+    #     )
+
+    return intermediate_repr
 
 
 def docstring(doc_string, infer_type=False, return_tuple=False):
@@ -633,91 +660,15 @@ def docstring(doc_string, infer_type=False, return_tuple=False):
         return parsed, (
             "returns" in parsed
             and parsed["returns"] is not None
-            and "name" in parsed["returns"]
+            and "return_type" in (parsed.get("returns") or {})
         )
 
     return parsed
-
-
-def docstring_parser(doc_string):
-    """
-    Converts Docstring from the docstring_parser library to our internal representation
-
-    :param doc_string: Docstring from the docstring_parser library
-    :type doc_string: ```docstring_parser.common.Docstring```
-
-    :return: a dictionary of form
-          {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-          }
-    :rtype: ```dict```
-    """
-    assert isinstance(doc_string, Docstring), "Expected 'Docstring' got `{!r}`".format(
-        type(doc_string).__name__
-    )
-
-    intermediate_repr = dict(
-        map(
-            _evaluate_to_docstring_value,
-            filter(
-                lambda k_v: not isinstance(k_v[1], (type(None), bool)),
-                map(
-                    lambda attr: (attr, getattr(doc_string, attr)),
-                    filter(lambda attr: not attr.startswith("_"), dir(doc_string)),
-                ),
-            ),
-        )
-    )
-
-    # def process_param(param):
-    #     """
-    #     Postprocess the param
-    #
-    #     :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-    #     :type param: ```dict```
-    #
-    #     :return: Potentially changed param
-    #     :rtype: ```dict```
-    #     """
-    #     if param.get("doc"):
-    #         # # param["doc"] = param["doc"].strip()
-    #         for term in "Usage:", "Reference:":
-    #             idx = param["doc"].rfind(term)
-    #             if idx != -1:
-    #                 param["doc"] = param["doc"][:idx]
-    #     return param
-
-    assert "meta" in intermediate_repr and "params" in intermediate_repr
-    meta = {e["name"]: e for e in intermediate_repr.pop("meta")}
-    intermediate_repr["params"] = [
-        # process_param
-        dict(
-            **param,
-            **{k: v for k, v in meta[param["name"]].items() if k not in param},
-        )
-        for param in intermediate_repr["params"]
-        if " " not in param["name"]
-    ]
-    # else:
-    # intermediate_repr["params"] = list(
-    #     map(
-    #         process_param,
-    #         filterfalse(
-    #             lambda param: " " in param["name"], intermediate_repr["params"]
-    #         ),
-    #     )
-    # )
-    return intermediate_repr
 
 
 __all__ = [
     "argparse_ast",
     "class_",
     "docstring",
-    "docstring_parser",
     "function",
 ]
