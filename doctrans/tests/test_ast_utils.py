@@ -766,7 +766,7 @@ class TestAstUtils(TestCase):
                                     ctx=Load(),
                                     expr=None,
                                 ),
-                                expr_value=None
+                                expr_value=None,
                             ),
                             "typ": "str",
                         },

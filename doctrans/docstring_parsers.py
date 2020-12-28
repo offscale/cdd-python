@@ -12,12 +12,11 @@ import ast
 from ast import AST
 from collections import OrderedDict, namedtuple
 from copy import deepcopy
+from enum import Enum
 from functools import partial
 from itertools import takewhile
 from operator import attrgetter, contains, eq, le
 from typing import Dict, List, Tuple
-
-from docstring_parser import Style
 
 from doctrans.ast_utils import NoneStr, get_value
 from doctrans.defaults_utils import needs_quoting
@@ -47,6 +46,17 @@ ARG_TOKENS = Tokens(
 )
 
 RETURN_TOKENS = Tokens(TOKENS.rest[-2:], (TOKENS.google[-1],), (TOKENS.numpydoc[-1],))
+
+
+class Style(Enum):
+    """
+    Simple enum taken from the docstring_parser codebase
+    """
+
+    rest = 1
+    google = 2
+    numpydoc = 3
+    auto = 255
 
 
 def parse_docstring(
