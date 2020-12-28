@@ -5,6 +5,7 @@ from itertools import zip_longest
 from unittest import TestCase
 
 from doctrans.pure_utils import (
+    assert_equal,
     blockwise,
     diff,
     get_module,
@@ -165,6 +166,14 @@ class TestPureUtils(TestCase):
             lambda: get_module("FFDSF", extra_symbols={"F": "A"}),
         )
         self.assertIs(get_module("get_module"), get_module)
+
+    def test_assert_eq(self) -> None:
+        """ Basic tests to confirm same functionality as unittest.AssertEqual """
+        with self.assertRaises(AssertionError) as cm:
+            assert_equal(5, 6)
+        self.assertEqual(cm.exception.args[0].strip(), "5 != 6")
+
+        self.assertTrue(assert_equal(5, 5))
 
 
 unittest_main()

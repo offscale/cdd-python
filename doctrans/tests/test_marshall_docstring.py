@@ -3,10 +3,9 @@ Tests for docstring parsing
 """
 
 from ast import BinOp, Mult
+from collections import OrderedDict
 from copy import deepcopy
 from unittest import TestCase
-
-from docstring_parser import rest
 
 import doctrans.emit
 import doctrans.emitter_utils
@@ -15,23 +14,25 @@ from doctrans.ast_utils import set_value
 from doctrans.docstring_parsers import _set_name_and_type, parse_docstring
 from doctrans.emitter_utils import to_docstring
 from doctrans.tests.mocks.docstrings import (
+    docstring_extra_colons_str,
     docstring_google_str,
-    docstring_google_tf_adadelta_ir,
     docstring_google_tf_adadelta_str,
-    docstring_google_tf_adam_ir,
     docstring_google_tf_adam_str,
-    docstring_google_tf_lambda_callback_ir,
     docstring_google_tf_lambda_callback_str,
-    docstring_google_tf_squared_hinge_ir,
     docstring_google_tf_squared_hinge_str,
+    docstring_no_default_doc_str,
     docstring_numpydoc_only_doc_str,
     docstring_numpydoc_only_params_str,
     docstring_numpydoc_only_returns_str,
     docstring_numpydoc_str,
+    docstring_only_return_type_str,
     docstring_str,
-    docstring_str_extra_colons,
-    docstring_str_no_default_doc,
-    docstring_str_only_return_type,
+)
+from doctrans.tests.mocks.ir import (
+    docstring_google_tf_adadelta_ir,
+    docstring_google_tf_adam_ir,
+    docstring_google_tf_lambda_callback_ir,
+    docstring_google_tf_squared_hinge_ir,
     intermediate_repr,
     intermediate_repr_extra_colons,
     intermediate_repr_no_default_doc,
@@ -60,7 +61,7 @@ class TestMarshallDocstring(TestCase):
               from `docstring_str_no_default_doc`"""
 
         self.assertDictEqual(
-            parse_docstring(docstring_str_no_default_doc, emit_default_doc=False),
+            parse_docstring(docstring_no_default_doc_str, emit_default_doc=False),
             intermediate_repr_no_default_doc_or_prop,
         )
 
@@ -70,7 +71,7 @@ class TestMarshallDocstring(TestCase):
               from `docstring_str_no_default_doc`"""
 
         self.assertDictEqual(
-            parse_docstring(docstring_str_extra_colons, emit_default_doc=False),
+            parse_docstring(docstring_extra_colons_str, emit_default_doc=False),
             intermediate_repr_extra_colons,
         )
 
@@ -80,7 +81,7 @@ class TestMarshallDocstring(TestCase):
               from `docstring_str_no_default_doc`"""
 
         self.assertDictEqual(
-            parse_docstring(docstring_str_only_return_type, emit_default_doc=False),
+            parse_docstring(docstring_only_return_type_str, emit_default_doc=False),
             intermediate_repr_only_return_type,
         )
 
@@ -128,21 +129,24 @@ class TestMarshallDocstring(TestCase):
 
     def test__set_name_and_type(self) -> None:
         """
-        Tests that `_set_name_and_type` parsed AST code into a code str
+        Tests that `_set_name_and_type` parsed AST code into a code str.
+        Not working since I explicitly deleted the typ from ``` quoted defaults. Changed mock to match.
         """
-        self.assertDictEqual(
+        self.assertTupleEqual(
             _set_name_and_type(
-                {
-                    "name": "adder",
-                    "default": BinOp(
-                        set_value(5),
-                        Mult(),
-                        set_value(5),
-                    ),
-                },
+                (
+                    "adder",
+                    {
+                        "default": BinOp(
+                            set_value(5),
+                            Mult(),
+                            set_value(5),
+                        ),
+                    },
+                ),
                 infer_type=True,
             ),
-            {"default": "```(5 * 5)```", "name": "adder", "typ": "BinOp"},
+            ("adder", {"default": "```(5 * 5)```"}),
         )
 
     def test_from_docstring_numpydoc_only_returns(self) -> None:
@@ -158,7 +162,7 @@ class TestMarshallDocstring(TestCase):
             {
                 "doc": "",
                 "name": None,
-                "params": [],
+                "params": OrderedDict(),
                 "returns": intermediate_repr_no_default_doc["returns"],
                 "type": "static",
             },
@@ -177,32 +181,35 @@ class TestMarshallDocstring(TestCase):
             {
                 "doc": intermediate_repr_no_default_doc["doc"],
                 "name": None,
-                "params": [],
+                "params": OrderedDict(),
                 "returns": None,
                 "type": "static",
             },
         )
+
+    maxDiff = None
 
     def test_from_docstring_google_str(self) -> None:
         """
         Tests whether `parse_docstring` produces `intermediate_repr_no_default_doc`
               from `docstring_google_str`
         """
-        self.assertDictEqual(
-            parse_docstring(docstring_google_str), intermediate_repr_no_default_doc
-        )
+        ir = parse_docstring(docstring_google_str)
+        self.assertDictEqual(ir, intermediate_repr_no_default_doc)
 
     def test_from_docstring_google_tf_squared_hinge(self) -> None:
         """
         Tests whether `parse_docstring` produces the right IR
               from `docstring_google_tf_squared_hinge_str`
         """
+        ir = parse_docstring(
+            docstring_google_tf_squared_hinge_str,
+            emit_default_doc=True,
+            infer_type=True,
+            default_search_announce=("Default value is", "defaults to"),
+        )
         self.assertDictEqual(
-            parse_docstring(
-                docstring_google_tf_squared_hinge_str,
-                emit_default_doc=True,
-                default_search_announce=("Default value is", "defaults to"),
-            ),
+            ir,
             docstring_google_tf_squared_hinge_ir,
         )
 
@@ -253,41 +260,6 @@ class TestMarshallDocstring(TestCase):
             lambda: to_docstring(
                 deepcopy(intermediate_repr_no_default_doc), docstring_format="numpy"
             ),
-        )
-
-    def test_from_docstring_parser(self) -> None:
-        """
-        Tests if it can convert from the 3rd-party libraries format to this one
-        """
-        self.assertDictEqual(
-            parse.docstring_parser(
-                rest.parse(
-                    "[Summary]\n\n"
-                    ":param [ParamName]: [ParamDescription], defaults to [DefaultParamVal]\n"
-                    ":type [ParamName]: [ParamType](, optional)\n\n"
-                    ":raises [ErrorType]: [ErrorDescription]\n\n"
-                    ":return: [ReturnDescription]\n"
-                    ":rtype: [ReturnType]\n"
-                )
-            ),
-            {
-                "params": [
-                    {
-                        "default": "[DefaultParamVal]",
-                        "doc": "[ParamDescription],",
-                        "name": "[ParamName]",
-                    }
-                ],
-                "raises": [
-                    {
-                        "doc": "[ErrorDescription]",
-                        "name": "raises",
-                        "typ": "[ErrorType]",
-                    }
-                ],
-                "returns": {"doc": "[ReturnDescription]", "name": "return_type"},
-                "doc": "[Summary]",
-            },
         )
 
 

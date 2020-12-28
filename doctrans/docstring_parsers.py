@@ -8,8 +8,9 @@ Translates from the [numpydoc docstring format](https://numpydoc.readthedocs.io/
 
 Translates from [Google's docstring format](https://google.github.io/styleguide/pyguide.html)
 """
+import ast
 from ast import AST
-from collections import namedtuple
+from collections import OrderedDict, namedtuple
 from copy import deepcopy
 from functools import partial
 from itertools import takewhile
@@ -18,6 +19,7 @@ from typing import Dict, List, Tuple
 
 from docstring_parser import Style
 
+from doctrans.ast_utils import NoneStr, get_value
 from doctrans.defaults_utils import needs_quoting
 from doctrans.emit import to_code
 from doctrans.emitter_utils import interpolate_defaults
@@ -27,6 +29,7 @@ from doctrans.pure_utils import (
     location_within,
     rpartial,
     unquote,
+    update_d,
 )
 
 Tokens = namedtuple("Tokens", ("rest", "google", "numpydoc"))
@@ -61,16 +64,15 @@ def parse_docstring(
     :type infer_type: ```bool```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
-    :type emit_default_doc: ```bool``
+    :type emit_default_doc: ```bool```
 
     :return: a dictionary of form
-              {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-              }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :rtype: ```dict```
     """
 
@@ -88,7 +90,7 @@ def parse_docstring(
         "name": None,
         "type": "static",
         "doc": "",
-        "params": [],
+        "params": OrderedDict(),
         "returns": None,
     }
     if not docstring:
@@ -345,13 +347,12 @@ def _parse_phase(
 ):
     """
     :param intermediate_repr: a dictionary of form
-              {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-              }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
     :param scanned: List with each element a tuple of (whether value is a token, value)
@@ -364,7 +365,7 @@ def _parse_phase(
     :type infer_type: ```bool```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
-    :type emit_default_doc: ```bool``
+    :type emit_default_doc: ```bool```
 
     :param style: the style of docstring
     :type style: ```Style```
@@ -385,41 +386,70 @@ def _parse_phase(
     )
 
 
-def _set_name_and_type(param, infer_type):
+def _set_name_and_type(param: Tuple[str, dict], infer_type: bool):
     """
     Sanitise the name and set the type (iff default and no existing type) for the param
 
-    :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-    :type param: ```dict``
+    :param param: Name, dict with keys: 'typ', 'doc', 'default'
+    :type param: ```Tuple[str, dict]```
 
     :param infer_type: Whether to try inferring the typ (from the default)
     :type infer_type: ```bool```
 
-    :return: Potentially changed param
-    :rtype: ```dict```
+    :return: Name, dict with keys: 'typ', 'doc', 'default'
+    :rtype: ```Tuple[str, dict]```
     """
-    if param["name"].endswith("kwargs") or param["name"].startswith("**"):
-        param["name"] = param["name"].lstrip("*")
-        if param.get("typ", "dict") == "dict":
-            param["typ"] = "Optional[dict]"
-    elif "default" in param:
-        if infer_type and param.get("typ") is None:
-            param["typ"] = type(param["default"]).__name__
-        if needs_quoting(param.get("typ")) or isinstance(param["default"], str):
-            param["default"] = unquote(param["default"])
-        elif isinstance(param["default"], AST):
-            parens = ("(", ")") if PY_GTE_3_9 else ("", "")
-            param["default"] = "```{left}{}{right}```".format(
-                to_code(param["default"]).rstrip("\n"), left=parens[0], right=parens[1]
+    name, _param = param
+    del param
+    if name.endswith("kwargs") or name.startswith("**"):
+        name = name.lstrip("*")
+        if _param.get("typ", "dict") == "dict":
+            _param["typ"] = "Optional[dict]"
+    elif "default" in _param:
+        if isinstance(
+            _param["default"], (ast.Str, ast.Num, ast.Constant, ast.NameConstant)
+        ):
+            _param["default"] = get_value(_param["default"])
+        if (
+            infer_type
+            and _param.get("typ") is None
+            and _param["default"] not in (None, NoneStr)
+        ):
+            _param["typ"] = type(_param["default"]).__name__
+        if needs_quoting(_param.get("typ")) or isinstance(_param["default"], str):
+            _param["default"] = unquote(_param["default"])
+        elif isinstance(_param["default"], AST):
+            _param["default"] = "```{parens[0]}{default}{parens[1]}```".format(
+                default=to_code(_param["default"]).rstrip("\n"),
+                parens=("(", ")") if PY_GTE_3_9 else ("", ""),
             )
     google_opt = ", optional"
+    if (_param.get("typ") or "").endswith(google_opt):
+        _param["typ"] = "Optional[{}]".format(_param["typ"][: -len(google_opt)])
+    if "doc" in _param and not _param["doc"]:
+        del _param["doc"]
+
+    if _param.get("default") is not None:
+        if _param.get("typ") is None:
+            _param["typ"] = type(_param["default"]).__name__
+        if (
+            isinstance(_param["default"], str)
+            and _param["default"].startswith("```")
+            and _param["default"].endswith("```")
+            and "[" not in _param["typ"]  # Skip if you've actually formed a proper type
+        ):
+            del _param["typ"]  # Could make it `object` I suppose…
     if (
-        "typ" in param
-        and isinstance(param["typ"], str)
-        and param["typ"].endswith(google_opt)
+        "doc" in _param
+        and (
+            _param["doc"].startswith("(Optional)")
+            or _param["doc"].startswith("Optional")
+        )
+        and "typ" in _param
+        and not _param["typ"].startswith("Optional[")
     ):
-        param["typ"] = "Optional[{}]".format(param["typ"][: -len(google_opt)])
-    return param
+        _param["typ"] = "Optional[{}]".format(_param["typ"])
+    return name, _param
 
 
 def _parse_phase_numpydoc_and_google(
@@ -434,13 +464,12 @@ def _parse_phase_numpydoc_and_google(
 ):
     """
     :param intermediate_repr: a dictionary of form
-              {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-              }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
     :param scanned: List with each element a tuple of (whether value is a token, value)
@@ -462,7 +491,7 @@ def _parse_phase_numpydoc_and_google(
     :type return_tokens: ```Tuple[str]```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
-    :type emit_default_doc: ```bool``
+    :type emit_default_doc: ```bool```
     """
     if style is Style.numpydoc:
 
@@ -473,7 +502,7 @@ def _parse_phase_numpydoc_and_google(
             :param scan: Scanned input
             :type scan: ```List[str]```
 
-            :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+            :return: dict with keys: 'name', 'typ', 'doc'
             :rtype: ```dict```
             """
             name, _, typ = scan[0].partition(":")
@@ -504,7 +533,9 @@ def _parse_phase_numpydoc_and_google(
             """
             offset = next(idx for idx, ch in enumerate(scan[0]) if ch == ":")
             s = scan[0][:offset].lstrip()
-            name, _, typ = partitioned or s.partition(" ")
+            name, delim, typ = partitioned or s.partition("(")
+            name = name.rstrip()
+            typ = delim + typ
             # if not name: return None
             cur = {"name": name}
             if typ:
@@ -555,32 +586,46 @@ def _parse_phase_numpydoc_and_google(
     intermediate_repr.update(
         {
             "doc": scanned["doc"],
-            "params": list(
+            "params": OrderedDict(
                 map(
                     partial(_set_name_and_type, infer_type=infer_type),
                     map(
-                        _interpolate_defaults, filter(None, map(_parse, scanned_params))
+                        _interpolate_defaults,
+                        map(
+                            lambda d: (d.pop("name"), d),
+                            filter(None, map(_parse, scanned_params)),
+                        ),
                     ),
                 ),
             ),
-            "returns": _interpolate_defaults(
-                dict(
-                    name="return_type",
-                    **{
-                        "typ": scanned[return_tokens[0]][0][:-1].lstrip(),
-                        "doc": scanned[return_tokens[0]][1].lstrip(),
-                    }
-                    if len(scanned[return_tokens[0]]) == 2
-                    else {}
-                    if scanned[return_tokens[0]][0].isspace()
-                    else {"doc": scanned[return_tokens[0]][0].lstrip()}
-                )
-                if style is Style.google
-                else {
-                    "name": "return_type",
-                    "typ": scanned[return_tokens[0]][0][0],
-                    "doc": scanned[return_tokens[0]][0][1].lstrip(),
-                }
+            "returns": OrderedDict(
+                (
+                    _set_name_and_type(
+                        _interpolate_defaults(
+                            (
+                                "return_type",
+                                (
+                                    {
+                                        "typ": scanned[return_tokens[0]][0][
+                                            :-1
+                                        ].lstrip(),
+                                        "doc": scanned[return_tokens[0]][1].lstrip(),
+                                    }
+                                    if len(scanned[return_tokens[0]]) == 2
+                                    else {}
+                                    if scanned[return_tokens[0]][0].isspace()
+                                    else {"doc": scanned[return_tokens[0]][0].lstrip()}
+                                )
+                                if style is Style.google
+                                else {
+                                    "typ": scanned[return_tokens[0]][0][0],
+                                    "doc": scanned[return_tokens[0]][0][1].lstrip(),
+                                },
+                            ),
+                        ),
+                        infer_type=infer_type,
+                    ),
+                ),
             )
             if scanned[return_tokens[0]]
             else None,
@@ -599,13 +644,12 @@ def _parse_phase_rest(
 ):
     """
     :param intermediate_repr: a dictionary of form
-              {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-              }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
     :param scanned: List with each element a tuple of (whether value is a token, value)
@@ -618,7 +662,7 @@ def _parse_phase_rest(
     :type infer_type: ```bool```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
-    :type emit_default_doc: ```bool``
+    :type emit_default_doc: ```bool```
 
     :param arg_tokens: Valid tokens like `":param"`
     :type arg_tokens: ```Tuple[str]```
@@ -626,46 +670,55 @@ def _parse_phase_rest(
     :param return_tokens: Valid tokens like `":rtype:"`
     :type return_tokens: ```Tuple[str]```
     """
-    param = {}
+    param = [
+        None,
+        {},
+    ]  # First elem is name and second elem is dict with keys: 'typ', 'doc', 'default'
     for is_token, line in scanned:
         if is_token is True:
             if any(map(line.startswith, return_tokens)):
                 nxt_colon = line.find(":", 1)
                 val = line[nxt_colon + 1 :].strip()
                 if intermediate_repr["returns"] is None:
-                    intermediate_repr["returns"] = {}
-                intermediate_repr["returns"].update(
+                    intermediate_repr["returns"] = OrderedDict((("return_type", {}),))
+                intermediate_repr["returns"]["return_type"].update(
                     interpolate_defaults(
-                        dict(
-                            (_set_param_values(line, val, return_tokens[-1]),),
-                            name="return_type",
+                        (
+                            "return_type",
+                            dict((_set_param_values(line, val, return_tokens[-1]),)),
                         ),
                         emit_default_doc=emit_default_doc,
                         default_search_announce=default_search_announce,
-                    )
+                    )[1]
                 )
             else:
                 fst_space = line.find(" ")
                 nxt_colon = line.find(":", fst_space)
                 name = line[fst_space + 1 : nxt_colon]
 
-                if "name" in param and not param["name"] == name:
-                    if not param["name"][0] == "*":
-                        intermediate_repr["params"].append(param)
-                    param = {}
+                if param[0] is not None and not param[0] == name:
+                    if not param[0][0] == "*":
+                        intermediate_repr["params"][param[0]] = param[1]
+                    param = [None, {}]
 
                 val = line[nxt_colon + 1 :].strip()
-                param.update(dict((_set_param_values(line, val),), name=name))
+
                 param = _set_name_and_type(
-                    interpolate_defaults(param, emit_default_doc=emit_default_doc),
+                    interpolate_defaults(
+                        (
+                            name,
+                            update_d(param[1], dict((_set_param_values(line, val),))),
+                        ),
+                        emit_default_doc=emit_default_doc,
+                    ),
                     infer_type=infer_type,
                 )
         elif not intermediate_repr["doc"]:
             intermediate_repr["doc"] = line.strip()
     if param:
         # if param['name'] == 'return_type': intermediate_repr['returns'] = param
-        intermediate_repr["params"].append(
-            _set_name_and_type(
+        intermediate_repr["params"].__setitem__(
+            *_set_name_and_type(
                 interpolate_defaults(param, emit_default_doc=emit_default_doc),
                 infer_type=infer_type,
             )

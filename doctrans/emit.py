@@ -16,9 +16,9 @@ from ast import (
     Tuple,
     arguments,
 )
+from collections import OrderedDict
 from functools import partial
 from itertools import chain
-from operator import contains, itemgetter
 
 from black import Mode, format_str
 
@@ -53,17 +53,16 @@ def argparse_function(
     Convert to an argparse FunctionDef
 
     :param intermediate_repr: a dictionary of form
-          {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-          }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
-    :type emit_default_doc: ```bool``
+    :type emit_default_doc: ```bool```
 
     :param emit_default_doc_in_return: Whether help/docstring in return should include 'With default' text
     :type emit_default_doc_in_return: ```bool```
@@ -75,7 +74,7 @@ def argparse_function(
     :type function_type: ```Literal['self', 'cls', 'static']```
 
     :return:  AST node for function definition which constructs argparse
-    :rtype: ```FunctionDef``
+    :rtype: ```FunctionDef```
     """
     function_name = function_name or intermediate_repr["name"]
     function_type = function_type or intermediate_repr["type"]
@@ -116,20 +115,23 @@ def argparse_function(
                                                 if "doc" in returns
                                                 else "",
                                                 rtype=":rtype: ```ArgumentParser```\n    "
-                                                if intermediate_repr["returns"].get(
-                                                    "typ"
-                                                )
+                                                if intermediate_repr["returns"][
+                                                    "return_type"
+                                                ].get("typ")
                                                 in (None, "None", NoneStr)
                                                 else ":rtype: ```Tuple[ArgumentParser, {returns[typ]}]```\n{tab}"
                                                 "".format(returns=returns, tab=tab),
                                             )
                                         )(
                                             returns=set_default_doc(
-                                                intermediate_repr["returns"],
+                                                intermediate_repr["returns"][
+                                                    "return_type"
+                                                ],
                                                 emit_default_doc=emit_default_doc_in_return,
                                             )
                                         )
-                                        if intermediate_repr.get("returns")
+                                        if "return_type"
+                                        in (intermediate_repr.get("returns") or {})
                                         else ":return: argument_parser\n    "
                                         ":rtype: ```ArgumentParser```\n    "
                                     )
@@ -160,7 +162,7 @@ def argparse_function(
                                             param2argparse_param,
                                             emit_default_doc=emit_default_doc,
                                         ),
-                                        intermediate_repr["params"],
+                                        intermediate_repr["params"].items(),
                                     )
                                 )
                                 if "params" in intermediate_repr
@@ -189,16 +191,20 @@ def argparse_function(
                                         elts=[
                                             Name("argument_parser", Load()),
                                             set_value(
-                                                intermediate_repr["returns"]["default"]
+                                                intermediate_repr["returns"][
+                                                    "return_type"
+                                                ]["default"]
                                             )
                                             if intermediate_repr["returns"][
-                                                "default"
-                                            ].startswith("```")
+                                                "return_type"
+                                            ]["default"].startswith("```")
                                             and intermediate_repr["returns"][
-                                                "default"
-                                            ].endswith("```")
+                                                "return_type"
+                                            ]["default"].endswith("```")
                                             else ast.parse(
-                                                intermediate_repr["returns"]["default"]
+                                                intermediate_repr["returns"][
+                                                    "return_type"
+                                                ]["default"]
                                             )
                                             .body[0]
                                             .value,
@@ -207,7 +213,11 @@ def argparse_function(
                                     ),
                                     expr=None,
                                 )
-                                if "default" in (intermediate_repr.get("returns") or {})
+                                if "default"
+                                in (
+                                    intermediate_repr.get("returns")
+                                    or {"return_type": {}}
+                                )["return_type"]
                                 else Return(
                                     value=Name("argument_parser", Load()), expr=None
                                 )
@@ -240,13 +250,12 @@ def class_(
     Construct a class
 
     :param intermediate_repr: a dictionary of form
-          {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-          }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
     :param emit_call: Whether to emit a `__call__` method from the `_internal` IR subdict
@@ -262,21 +271,20 @@ def class_(
     :type decorator_list: ```Optional[Union[List[Str], List[]]]```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
-    :type emit_default_doc: ```bool``
+    :type emit_default_doc: ```bool```
 
     :return: Class AST of the docstring
     :rtype: ```ClassDef```
     """
-    returns = [intermediate_repr["returns"]] if intermediate_repr.get("returns") else []
-
-    param_names = frozenset(
-        map(
-            itemgetter("name"),
-            filter(rpartial(contains, "name"), intermediate_repr["params"]),
-        )
+    returns = (
+        intermediate_repr["returns"]
+        if "return_type" in intermediate_repr.get("returns", {})
+        else OrderedDict()
     )
+
+    param_names = frozenset(intermediate_repr["params"].keys())
     if returns:
-        intermediate_repr["params"] = intermediate_repr["params"] + returns
+        intermediate_repr["params"].update(returns)
         del intermediate_repr["returns"]
 
     internal_body = intermediate_repr.get("_internal", {}).get("body", [])
@@ -304,6 +312,7 @@ def class_(
                                     indent_level=0,
                                     emit_separating_tab=False,
                                     emit_default_doc=emit_default_doc,
+                                    emit_types=False,
                                 )
                                 .replace("\n:param ", "{tab}:cvar ".format(tab=tab))
                                 .replace(
@@ -315,12 +324,18 @@ def class_(
                             )
                         ),
                     ),
-                    map(param2ast, intermediate_repr["params"]),
+                    map(param2ast, intermediate_repr["params"].items()),
                     iter(
                         (
                             _make_call_meth(
                                 internal_body,
-                                returns[0].get("default") if returns else None,
+                                returns["return_type"]["default"]
+                                if "default"
+                                in (
+                                    (returns or {"return_type": {}}).get("return_type")
+                                    or {}
+                                )
+                                else None,
                                 param_names,
                             ),
                         )
@@ -345,23 +360,22 @@ def docstring(intermediate_repr, docstring_format="rest", emit_default_doc=True)
     Converts an AST to a docstring
 
     :param intermediate_repr: a dictionary of form
-          {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-          }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpy', 'google']```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
-    :type emit_default_doc: ```bool``
+    :type emit_default_doc: ```bool```
 
     :return: docstring
-    :rtype: ```str``
+    :rtype: ```str```
     """
     if docstring_format != "rest":
         raise NotImplementedError(docstring_format)
@@ -369,16 +383,17 @@ def docstring(intermediate_repr, docstring_format="rest", emit_default_doc=True)
     return "\n{doc}\n\n{params}\n{returns}\n".format(
         doc=intermediate_repr["doc"],
         params="\n".join(
-            ":param {param[name]}: {param[doc]}\n{type_param}".format(
-                param=param,
-                type_param=":type {param[name]}: ```{typ}```\n".format(
-                    param=set_default_doc(param, emit_default_doc=emit_default_doc),
+            ":param {name}: {param[doc]}\n{type_param}".format(
+                name=name,
+                param=set_default_doc(param, emit_default_doc=emit_default_doc),
+                type_param=":type {name}: ```{typ}```\n".format(
+                    name=name,
                     typ=param["typ"],
                 )
                 if param.get("typ")
                 else "",
             )
-            for param in intermediate_repr["params"]
+            for name, param in intermediate_repr["params"].items()
         ),
         returns="\n".join(
             (
@@ -386,22 +401,22 @@ def docstring(intermediate_repr, docstring_format="rest", emit_default_doc=True)
                     None,
                     (
                         ":return: {param[doc]}".format(param=param)
-                        if param is not None and "doc" in param
+                        if "doc" in param
                         else None,
-                        ":rtype: ```{param[typ]}```".format(
-                            param=set_default_doc(
-                                intermediate_repr["returns"],
-                                emit_default_doc=emit_default_doc,
-                            )
-                        )
-                        if (param or {}).get("typ") is not None
-                        else None,
+                        None
+                        if param.get("typ") is None
+                        else ":rtype: ```{param[typ]}```".format(param=param),
                     ),
                 )
+                if param
+                else param
             )(
                 set_default_doc(
-                    intermediate_repr["returns"], emit_default_doc=emit_default_doc
+                    intermediate_repr["returns"]["return_type"],
+                    emit_default_doc=emit_default_doc,
                 )
+                if "return_type" in (intermediate_repr.get("returns") or {})
+                else ""
             )
         ),
     )
@@ -458,13 +473,12 @@ def function(
     Construct a function from our IR
 
     :param intermediate_repr: a dictionary of form
-          {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-          }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
     :param function_name: name of function_def
@@ -477,7 +491,7 @@ def function(
     :type docstring_format: ```Literal['rest', 'numpy', 'google']```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
-    :type emit_default_doc: ```bool``
+    :type emit_default_doc: ```bool```
 
     :param indent_level: docstring indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
     :type indent_level: ```int```
@@ -492,12 +506,12 @@ def function(
     :type emit_as_kwonlyargs: ```bool```
 
     :return: AST node for function definition
-    :rtype: ```FunctionDef``
+    :rtype: ```FunctionDef```
     """
     params_no_kwargs = tuple(
         filter(
-            lambda param: not param["name"].endswith("kwargs"),
-            intermediate_repr["params"],
+            lambda param: not param[0].endswith("kwargs"),
+            intermediate_repr["params"].items(),
         )
     )
 
@@ -507,17 +521,19 @@ def function(
     args = (
         [] if function_type in frozenset((None, "static")) else [set_arg(function_type)]
     )
+    from doctrans.emitter_utils import ast_parse_fix
+
     args_from_params = list(
         map(
             lambda param: set_arg(
                 annotation=(
-                    Name(param["typ"], Load())
-                    if param["typ"] in simple_types
-                    else ast.parse(param["typ"]).body[0].value
+                    Name(param[1]["typ"], Load())
+                    if param[1]["typ"] in simple_types
+                    else ast_parse_fix(param[1]["typ"])
                 )
-                if inline_types and "typ" in param
+                if inline_types and "typ" in param[1]
                 else None,
-                arg=param["name"],
+                arg=param[0],
             ),
             params_no_kwargs,
         ),
@@ -525,8 +541,8 @@ def function(
     defaults_from_params = list(
         map(
             lambda param: set_value(None)
-            if param.get("default") == NoneStr
-            else set_value(param.get("default")),
+            if param[1].get("default") in (None, NoneStr)
+            else set_value(param[1].get("default")),
             params_no_kwargs,
         )
     )
@@ -543,12 +559,16 @@ def function(
     )
     return_val = (
         Return(
-            value=ast.parse(intermediate_repr["returns"]["default"].strip("`"))
+            value=ast.parse(
+                intermediate_repr["returns"]["return_type"]["default"].strip("`")
+            )
             .body[0]
             .value,
             expr=None,
         )
-        if (intermediate_repr.get("returns") or {}).get("default")
+        if (intermediate_repr.get("returns") or {"return_type": {}})["return_type"].get(
+            "default"
+        )
         else None
     )
 
@@ -559,10 +579,10 @@ def function(
             kw_defaults=kw_defaults,
             kwarg=next(
                 map(
-                    lambda param: set_arg(param["name"]),
+                    lambda param: set_arg(param[0]),
                     filter(
-                        lambda param: param["name"].endswith("kwargs"),
-                        intermediate_repr["params"],
+                        lambda param: param[0].endswith("kwargs"),
+                        intermediate_repr["params"].items(),
                     ),
                 ),
                 None,
@@ -602,8 +622,11 @@ def function(
         decorator_list=[],
         name=function_name,
         returns=(
-            ast.parse(intermediate_repr["returns"]["typ"]).body[0].value
-            if inline_types and (intermediate_repr.get("returns") or {}).get("typ")
+            ast.parse(intermediate_repr["returns"]["return_type"]["typ"]).body[0].value
+            if inline_types
+            and (intermediate_repr.get("returns") or {"return_type": {}})[
+                "return_type"
+            ].get("typ")
             else None
         ),
         lineno=None,

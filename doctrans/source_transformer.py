@@ -49,10 +49,10 @@ def ast_parse(
     :type mode: ```Literal['exec', 'single', 'eval']```
 
     :param skip_annotate: Don't run `annotate_ancestry`
-    :type skip_annotate: ```bool``
+    :type skip_annotate: ```bool```
 
     :param skip_docstring_remit: Don't parse & emit the docstring as a replacement for current docstring
-    :type skip_docstring_remit: ```bool``
+    :type skip_docstring_remit: ```bool```
 
     :return: AST node
     :rtype: node: ```AST```

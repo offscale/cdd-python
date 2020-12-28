@@ -7,7 +7,7 @@ from doctrans.ast_utils import set_value
 from doctrans.emitter_utils import interpolate_defaults, parse_out_param
 from doctrans.pure_utils import rpartial
 from doctrans.tests.mocks.argparse import argparse_add_argument_ast, argparse_func_ast
-from doctrans.tests.mocks.docstrings import intermediate_repr
+from doctrans.tests.mocks.ir import intermediate_repr
 from doctrans.tests.utils_for_tests import unittest_main
 
 
@@ -19,16 +19,17 @@ class TestEmitterUtils(TestCase):
         self.assertDictEqual(
             parse_out_param(
                 next(filter(rpartial(isinstance, Expr), argparse_func_ast.body[::-1]))
-            ),
-            intermediate_repr["params"][-1],
+            )[1],
+            # Last element:
+            intermediate_repr["params"]["data_loader_kwargs"],
         )
 
     def test_parse_out_param_default(self) -> None:
         """ Test that parse_out_param sets default when required and unset """
 
         self.assertDictEqual(
-            parse_out_param(argparse_add_argument_ast),
-            {"default": 0, "doc": None, "name": "num", "typ": "int"},
+            parse_out_param(argparse_add_argument_ast)[1],
+            {"default": 0, "doc": None, "typ": "int"},
         )
 
     def test_parse_out_param_fails(self) -> None:
@@ -69,10 +70,10 @@ class TestEmitterUtils(TestCase):
 
     def test_interpolate_defaults(self) -> None:
         """ Test that interpolate_defaults corrects sets the default property """
-        param = deepcopy(intermediate_repr["params"][2])
-        param_with_correct_default = deepcopy(param)
-        del param["default"]
-        self.assertDictEqual(interpolate_defaults(param), param_with_correct_default)
+        param = "K", deepcopy(intermediate_repr["params"]["K"])
+        param_with_correct_default = deepcopy(param[1])
+        del param[1]["default"]
+        self.assertDictEqual(interpolate_defaults(param)[1], param_with_correct_default)
 
 
 unittest_main()

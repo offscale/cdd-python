@@ -20,7 +20,7 @@ from doctrans.conformance import (
 )
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import class_ast_no_default_doc
-from doctrans.tests.mocks.docstrings import intermediate_repr
+from doctrans.tests.mocks.ir import intermediate_repr
 from doctrans.tests.mocks.methods import (
     class_with_method_ast,
     class_with_method_types_ast,
@@ -137,7 +137,7 @@ class TestConformance(TestCase):
         """ Time for a new master. """
 
         ir = deepcopy(intermediate_repr)
-        ir["returns"]["typ"] = "Tuple[np.ndarray, np.ndarray]"
+        ir["returns"]["return_type"]["typ"] = "Tuple[np.ndarray, np.ndarray]"
 
         with TemporaryDirectory() as tempdir:
             self.assertTupleEqual(
@@ -149,7 +149,7 @@ class TestConformance(TestCase):
                         ),
                         self.ground_truth_tester(
                             tempdir=tempdir,
-                            _class_ast=emit.class_(ir),
+                            _class_ast=emit.class_(ir, emit_default_doc=False),
                         )[0].items(),
                     )
                 ),

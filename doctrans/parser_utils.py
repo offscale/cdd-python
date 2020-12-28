@@ -3,17 +3,14 @@ Functions which help the functions within the parser module
 """
 import ast
 from ast import Return, Tuple
+from collections import OrderedDict
 from functools import partial
 from inspect import _empty
 from itertools import chain
 from operator import itemgetter
-from typing import Any
-
-from docstring_parser import DocstringMeta, DocstringParam
 
 from doctrans.ast_utils import NoneStr, get_value
-from doctrans.defaults_utils import extract_default
-from doctrans.pure_utils import lstrip_namespace, params_to_ordered_dict, rpartial
+from doctrans.pure_utils import lstrip_namespace, rpartial
 from doctrans.source_transformer import to_code
 
 lstrip_typings = partial(lstrip_namespace, namespaces=("typings.", "_extensions."))
@@ -24,26 +21,31 @@ def ir_merge(target, other):
     Merge two intermediate_repr (IR) together. It doesn't do a `target.update(other)`,
      instead it carefully merges `params` and `returns`
 
-    intermediate_repr is a dict of shape {
-            'name': ..., 'platform': ...,
-            'module': ..., 'title': ..., 'description': ...,
-            'parameters': ..., 'schema': ...,'returns': ...}
-
-    :param target: The IR to update
+    :param target: The IR to use the values of. These values take precedence. IR is a dictionary of form
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type target: ```dict```
 
-    :param other: The IR to use the values of. These values take precedence.
+    :param other: The IR to update. IR is a dictionary of form
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type other: ```dict```
 
-    :return: Updated target. `target` is also updated in-place, and the memory of `other` is used.
+    :return: IR of updated target. `target` is also updated in-place, and the memory of `other` is used.
     :rtype: ```dict```
     """
     if not target["params"]:
         target["params"] = other["params"]
     elif other["params"]:
-        target_params, other_params = map(
-            params_to_ordered_dict, map(itemgetter("params"), (target, other))
-        )
+        target_params, other_params = map(itemgetter("params"), (target, other))
 
         for name in other_params.keys() & target_params.keys():
             if not target_params[name].get("doc") and other_params[name].get("doc"):
@@ -59,18 +61,23 @@ def ir_merge(target, other):
         for name in other_params.keys() - target_params.keys():
             target_params[name] = other_params[name]
 
-        target["params"] = [dict(name=k, **v) for k, v in target_params.items()]
+        target["params"] = target_params
 
-    if not target["returns"]:
+    if "return_type" not in (target.get("returns") or {}):
         target["returns"] = other["returns"]
     elif other["returns"]:
-        target["returns"] = _join_non_none(target["returns"], other["returns"])
-    if target["params"] and target["params"][-1]["name"] == "return_type":
-        target["returns"] = _join_non_none(target["returns"], target["params"].pop())
+        target["returns"]["return_type"] = _join_non_none(
+            target["returns"]["return_type"], other["returns"]["return_type"]
+        )
+    if "return_type" in target.get("params", frozenset()):
+        target["returns"]["return_type"] = _join_non_none(
+            target["returns"]["return_type"], target["params"].pop("return_type")
+        )
 
     other_internal = other.get("_internal", {})
     if other_internal.get("body"):
         if "_internal" in target:
+            # Merging internal bodies would be a bad idea IMHO
             target["_internal"].update(other_internal)
         else:
             target["_internal"] = other_internal
@@ -104,30 +111,32 @@ def _join_non_none(primacy, other):
 
 def _inspect_process_ir_param(param, sig):
     """
-    Postprocess the param
+    Merge signature with param
 
-    :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-    :type param: ```dict``
+    :param param: Name, dict with keys: 'typ', 'doc', 'default'
+    :type param: ```Tuple[str, dict]```
 
     :param sig: The Signature
     :type sig: ```inspect.Signature```
 
-    :return: Potentially changed param
-    :rtype: ```dict```
+    :return: dict with keys: 'typ', 'doc', 'default'
+    :rtype: ```Tuple[str, dict]```
     """
-    param["name"] = param["name"].lstrip("*")
-    if param["name"] not in sig.parameters:
-        return param
-    sig_param = sig.parameters[param["name"]]
+    name, _param = param
+    del param
+    name = name.lstrip("*")
+    if name not in sig.parameters:
+        return name, _param
+    sig_param = sig.parameters[name]
     if sig_param.annotation is not _empty:
-        param["typ"] = lstrip_typings("{!s}".format(sig_param.annotation))
+        _param["typ"] = lstrip_typings("{!s}".format(sig_param.annotation))
     if sig_param.default is not _empty:
-        param["default"] = sig_param.default
-        if param.get("typ", _empty) is _empty:
-            param["typ"] = type(param["default"]).__name__
-    if param["name"].endswith("kwargs"):
-        param["typ"] = "Optional[dict]"
-    return param
+        _param["default"] = sig_param.default
+        if _param.get("typ", _empty) is _empty:
+            _param["typ"] = type(_param["default"]).__name__
+    if name.endswith("kwargs"):
+        _param["typ"] = "Optional[dict]"
+    return name, _param
 
 
 def _inspect_process_sig(k_v):
@@ -135,7 +144,7 @@ def _inspect_process_sig(k_v):
     Postprocess the param
 
     :param k_v: Key and value from `inspect._parameters` mapping
-    :type k_v: ```Tuple[str, inspect.Parameter]``
+    :type k_v: ```Tuple[str, inspect.Parameter]```
 
     :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :rtype: ```dict```
@@ -165,22 +174,35 @@ def _interpolate_return(function_def, intermediate_repr):
     :type function_def: ```FunctionDef```
 
     :param intermediate_repr: a dictionary of form
-              {
-                  'name': ...,
-                  'type': ...,
-                  'doc': ...,
-                  'params': [{'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }, ...],
-                  'returns': {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-              }
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
+
+    :return: a dictionary of form
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :rtype: ```dict```
     """
     return_ast = next(
         filter(rpartial(isinstance, Return), function_def.body[::-1]), None
     )
     if return_ast is not None and return_ast.value is not None:
-        # if intermediate_repr["returns"] is None: intermediate_repr["returns"] = {"name": "return_type"}
+        intermediate_repr.setdefault("returns", OrderedDict((("return_type", {}),)))
 
-        intermediate_repr["returns"]["default"] = (
+        if (
+            "typ" in intermediate_repr["returns"]["return_type"]
+            and "[" not in intermediate_repr["returns"]["return_type"]["typ"]
+        ):
+            del intermediate_repr["returns"]["return_type"]["typ"]
+        intermediate_repr["returns"]["return_type"]["default"] = (
             lambda default: "({})".format(default)
             if isinstance(return_ast.value, Tuple)
             and (not default.startswith("(") or not default.endswith(")"))
@@ -194,84 +216,25 @@ def _interpolate_return(function_def, intermediate_repr):
         )(to_code(return_ast.value).rstrip("\n"))
     if hasattr(function_def, "returns") and function_def.returns is not None:
         if intermediate_repr.get("returns") is None:
-            intermediate_repr["returns"] = {"name": "return_type"}
-        intermediate_repr["returns"]["typ"] = to_code(function_def.returns).rstrip("\n")
+            intermediate_repr["returns"] = OrderedDict((("return_type", {}),))
+        intermediate_repr["returns"]["return_type"]["typ"] = to_code(
+            function_def.returns
+        ).rstrip("\n")
+
+    return intermediate_repr
 
 
-def _parse_dict(d):
-    """
-    Restructure dictionary to match expectations
-
-    :param d: input dictionary
-    :type d: ```dict```
-
-    :return: restructured dict
-    :rtype: ```dict```
-    """
-    assert isinstance(d, dict), "Expected 'dict' got `{!r}`".format(type(d).__name__)
-    if "args" in d and len(d["args"]) in frozenset((1, 2)):
-        d["name"] = d.pop("args")[0]
-        if d["name"] == "return":
-            d["name"] = "return_type"
-    if "type_name" in d:
-        d["typ"] = d.pop("type_name")
-    if "description" in d:
-        d["doc"] = d.pop("description")
-
-    return {k: v for k, v in d.items() if v is not None}
-
-
-def _evaluate_to_docstring_value(name_value):
-    """
-    Turn the second element of the tuple into the final representation (e.g., a bool, str, int)
-
-    :param name_value: name value tuple
-    :type name_value: ```Tuple[str, Any]```
-
-    :return: Same shape as input
-    :rtype: ```Tuple[str, Tuple[Union[str, int, bool, float]]]```
-    """
-    assert (
-        isinstance(name_value, tuple) and len(name_value) == 2
-    ), "Expected input of type `Tuple[str, Any]' got value of `{!r}`".format(name_value)
-    name: str = name_value[0]
-    value: Any = name_value[1]
-    if isinstance(value, (list, tuple)):
-        value = list(
-            map(
-                itemgetter(1),
-                map(lambda v: _evaluate_to_docstring_value((name, v)), value),
-            )
-        )
-    elif isinstance(value, DocstringParam):
-        assert len(value.args) == 2 and value.args[1] == value.arg_name
-        value = {
-            attr: getattr(value, attr)
-            for attr in (
-                "type_name",
-                "arg_name",
-                "is_optional",
-                "default",
-                "description",
-            )
-            if getattr(value, attr) is not None
-        }
-        if "arg_name" in value:
-            value["name"] = value.pop("arg_name")
-        if "description" in value:
-            value["doc"] = extract_default(
-                value.pop("description"), emit_default_doc=False
-            )[0]
-    elif isinstance(value, DocstringMeta):
-        value = _parse_dict(
-            {
-                attr: getattr(value, attr)
-                for attr in dir(value)
-                if not attr.startswith("_") and getattr(value, attr)
-            }
-        )
-    elif name == "short_description":
-        name = "doc"
-    # elif not isinstance(value, (str, int, float, bool, type(None))):
-    #     raise NotImplementedError(type(value).__name__)
-    return name, value
+# def strip_docstring_from_body(source, body):
+#     """
+#     Since we generate the docstring, remove it from the body (to avoid duplicate docstrings)
+#
+#     :param source: The parsed source code
+#     :type source: ```AST```
+#
+#     :param body: The body
+#     :type body: ```List[AST]```
+#
+#     :return: Docstring-free body
+#     :rtype: ```List[AST]```
+#     """
+#     return body if ast.get_docstring(source) is not None else body[1:]

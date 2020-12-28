@@ -2,6 +2,7 @@
 ast_utils, bunch of helpers for converting input into ast.* input_str
 """
 import ast
+import pickle
 from ast import (
     AST,
     AnnAssign,
@@ -27,15 +28,18 @@ from ast import (
     alias,
     iter_child_nodes,
     keyword,
-    parse,
     walk,
 )
 from copy import deepcopy
+from importlib import import_module
+from inspect import isfunction
+from sys import version_info
 
 from doctrans.defaults_utils import extract_default, needs_quoting
 from doctrans.pure_utils import PY_GTE_3_8, PY_GTE_3_9, quote, rpartial, simple_types
 
 # Was `"globals().__getitem__"`; this type is used for `Any` and any other unhandled
+
 FALLBACK_TYP = "str"
 
 # Was `Attribute(Call(args=[], func=Name("globals", Load()), keywords=[], expr=None, expr_func=None,),
@@ -50,94 +54,98 @@ def param2ast(param):
     """
     Converts a param to an AnnAssign
 
-    :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-    :type param: ```dict```
+    :param param: Name, dict with keys: 'typ', 'doc', 'default'
+    :type param: ```Tuple[str, dict]```
 
     :return: AST node for assignment
     :rtype: ```Union[AnnAssign, Assign]```
     """
-    if param["typ"] is None and "default" in param:
-        param["typ"] = type(param["default"]).__name__
-    if "default" in param and isinstance(param["default"], (Constant, Str)):
-        param["default"] = get_value(param["default"])
-        if param["default"] == NoneStr:
-            param["default"] = None
-        if param["typ"] in frozenset(("Constant", "Str", "NamedConstant")):
-            param["typ"] = "object"
-    if param["typ"] is None:
+    name, _param = param
+    del param
+    if _param.get("typ") is None and "default" in _param:
+        _param["typ"] = type(_param["default"]).__name__
+    if "default" in _param and isinstance(_param["default"], (Constant, Str)):
+        _param["default"] = get_value(_param["default"])
+        if _param["default"] == NoneStr:
+            _param["default"] = None
+        if _param["typ"] in frozenset(("Constant", "Str", "NamedConstant")):
+            _param["typ"] = "object"
+    if _param.get("typ") is None:
         return AnnAssign(
             annotation=Name("object", Load()),
             simple=1,
-            target=Name(param["name"], Store()),
-            value=set_value(param.get("default") or simple_types[param["typ"]]),
+            target=Name(name, Store()),
+            value=set_value(_param.get("default") or simple_types[_param["typ"]]),
             expr=None,
             expr_target=None,
             expr_annotation=None,
         )
-    elif needs_quoting(param["typ"]):
+    elif needs_quoting(_param["typ"]):
         return AnnAssign(
-            annotation=Name(param["typ"], Load())
-            if param["typ"] in simple_types
-            else get_value(ast.parse(param["typ"]).body[0]),
+            annotation=Name(_param["typ"], Load())
+            if _param["typ"] in simple_types
+            else get_value(ast.parse(_param["typ"]).body[0]),
             simple=1,
-            target=Name(param["name"], Store()),
+            target=Name(name, Store()),
             value=set_value(
-                quote(param["default"])
-                if param.get("default")
-                else simple_types.get(param["typ"])
+                quote(_param["default"])
+                if _param.get("default")
+                else simple_types.get(_param["typ"])
             ),
             expr=None,
             expr_target=None,
             expr_annotation=None,
         )
-    elif param["typ"] in simple_types:
+    elif _param["typ"] in simple_types:
         return AnnAssign(
-            annotation=Name(param["typ"], Load()),
+            annotation=Name(_param["typ"], Load()),
             simple=1,
-            target=Name(param["name"], Store()),
-            value=set_value(param.get("default") or simple_types[param["typ"]]),
+            target=Name(name, Store()),
+            value=set_value(_param.get("default") or simple_types[_param["typ"]]),
             expr=None,
             expr_target=None,
             expr_annotation=None,
         )
-    elif param["typ"] == "dict" or param["typ"].startswith("*"):
+    elif _param["typ"] == "dict" or _param["typ"].startswith("*"):
         return AnnAssign(
             annotation=set_slice(Name("dict", Load())),
             simple=1,
-            target=Name(param["name"], Store()),
-            value=Dict(keys=[], values=param.get("default", []), expr=None),
+            target=Name(name, Store()),
+            value=Dict(keys=[], values=_param.get("default", []), expr=None),
             expr=None,
             expr_target=None,
             expr_annotation=None,
         )
     else:
-        annotation = ast.parse(param["typ"]).body[0].value
+        from doctrans.emitter_utils import ast_parse_fix
 
-        if "default" in param:
+        annotation = ast_parse_fix(_param["typ"])
+
+        if "default" in _param:
             try:
                 parsed_default = (
-                    set_value(param["default"])
+                    set_value(_param["default"])
                     if (
-                        param["default"] is None
-                        or isinstance(param["default"], (float, int, str))
+                        _param["default"] is None
+                        or isinstance(_param["default"], (float, int, str))
                     )
-                    and not isinstance(param["default"], str)
+                    and not isinstance(_param["default"], str)
                     and not (
-                        isinstance(param["default"], str)
-                        and param["default"][0] + param["default"][-1]
+                        isinstance(_param["default"], str)
+                        and _param["default"][0] + _param["default"][-1]
                         in frozenset(("()", "[]", "{}"))
                     )
-                    else ast.parse(param["default"])
+                    else ast.parse(_param["default"])
                 )
             except SyntaxError:
-                parsed_default = set_value("```{}```".format(param["default"]))
+                parsed_default = set_value("```{}```".format(_param["default"]))
 
             value = (
                 parsed_default.body[0].value
                 if hasattr(parsed_default, "body")
                 else parsed_default
-                if "default" in param
-                else Name(None, Load())
+                if "default" in _param
+                else set_value(None)
             )
         else:
             value = set_value(None)
@@ -145,7 +153,7 @@ def param2ast(param):
         return AnnAssign(
             annotation=annotation,
             simple=1,
-            target=Name(param["name"], Store()),
+            target=Name(name, Store()),
             value=value,
             expr=None,
             expr_target=None,
@@ -196,46 +204,90 @@ def param2argparse_param(param, emit_default_doc=True):
     """
     Converts a param to an Expr `argparse.add_argument` call
 
-    :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-    :type param: ```dict```
+    :param param: Name, dict with keys: 'typ', 'doc', 'default'
+    :type param: ```Tuple[str, Dict[str, Any]]```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
-    :type emit_default_doc: ```bool``
+    :type emit_default_doc: ```bool```
 
     :return: `argparse.add_argument` call—with arguments—as an AST node
     :rtype: ```Expr```
     """
     typ, choices, required, action = "str", None, True, None
-    param.setdefault("typ", "Any")
-    action, choices, required, typ = _resolve_arg(action, choices, param, required, typ)
-
-    param.setdefault("doc", "")
-    doc, _default = extract_default(param["doc"], emit_default_doc=emit_default_doc)
-    default = param.get("default", _default)
+    param[1].setdefault("typ", "Any")
+    action, choices, required, typ, (name, _param) = _resolve_arg(
+        action, choices, param, required, typ
+    )
+    del param
+    _param.setdefault("doc", "")
+    doc, _default = extract_default(_param["doc"], emit_default_doc=emit_default_doc)
+    default = _param.get("default", _default)
     if default == NoneStr:
         required, default = False, None
     elif default is not None:
-        if isinstance(default, str):
-            if (
-                len(default) > 6
-                and default.startswith("```")
-                and default.endswith("```")
-            ):
-                default = ast.parse(default[3:-3]).body[0]
-                if isinstance(default, ast.Expr):
-                    default = default.value
-                    if isinstance(default, ast.List):
-                        assert (
-                            len(default.elts) == 1
-                        ), "NotImplemented: Multiple default elements"
+        if (
+            isinstance(default, str)
+            and len(default) > 6
+            and default.startswith("```")
+            and default.endswith("```")
+        ):
+            default = get_value(ast.parse(default[3:-3]).body[0])
+
+        if isinstance(default, ast.AST):
+            default = get_value(default)
+
+            if type(default).__name__ not in simple_types:
+                if isinstance(default, (ast.Dict, ast.Tuple)):
+                    typ, default = "loads", "{!r}".format(_to_code(default))
+                elif isinstance(default, ast.List):
+                    if len(default.elts) == 1:
                         action, default = "append", get_value(default.elts[0])
                         typ = type(default).__name__
+                    else:
+                        typ, default = "loads", "{!r}".format(_to_code(default))
+                elif default is not None:
+                    default = "```{}```".format(_to_code(default))
+        # elif isinstance(default, str):
+        #     if (
+        #         len(default) > 6
+        #         and default.startswith("```")
+        #         and default.endswith("```")
+        #     ):
+        #         default = ast.parse(default[3:-3]).body[0]
+        #         if isinstance(default, ast.Expr):
+        #             default = default.value
+        #             if isinstance(default, ast.List):
+        #                 # assert (len(default.elts) == 1), "NotImplemented: Multiple default elements"
+        #                 if len(default.elts) == 1:
+        #                     action, default, typ = (
+        #                         "append",
+        #                         get_value(default.elts[0]),
+        #                         type(default).__name__,
+        #                     )
+        #                 else:
+        #                     typ, default = "loads", "{!r}".format(_to_code(default))
+        elif isinstance(default, (tuple, list)):
+            typ, default = "loads", "'{!r}'".format(default)
+        elif isfunction(default):
+            typ, default = "pickle.loads", "{!r}".format(pickle.dumps(default))
         elif typ == "str":
             typ = type(default).__name__
 
+        if "[" not in typ and typ not in frozenset(("pickle.loads", "loads")):
+            typ = type(default).__name__
+
+    # elif default
+    if not isinstance(default, (type(None), str, int, float, complex)):
+        if hasattr(default, "__str__") and str(default) == "<required parameter>":
+            required, default = True, None
+        else:
+            raise NotImplementedError(
+                "Parsing type {}, which contains {!r}".format(type(default), default)
+            )
+
     return Expr(
         Call(
-            args=[set_value("--{param[name]}".format(param=param))],
+            args=[set_value("--{name}".format(name=name))],
             func=Attribute(
                 Name("argument_parser", Load()),
                 "add_argument",
@@ -276,7 +328,9 @@ def param2argparse_param(param, emit_default_doc=True):
                             arg="help",
                             value=set_value(doc),
                             identifier=None,
-                        ),
+                        )
+                        if doc
+                        else None,
                         keyword(
                             arg="required",
                             value=set_value(True),
@@ -310,8 +364,8 @@ def _resolve_arg(action, choices, param, required, typ):
     :param choices: A container of values that should be allowed.
     :type choices: ```Optional[List[str]]```
 
-    :param param: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-    :type param: ```dict```
+    :param param: Name, dict with keys: 'typ', 'doc', 'default'
+    :type param: ```Tuple[str, dict]```
 
     :param required: Whether to require the argument
     :type required: ```bool```
@@ -319,16 +373,25 @@ def _resolve_arg(action, choices, param, required, typ):
     :param typ: The type of the argument
     :type typ: ```Optional[str]```
 
-    :return: action, choices, required, typ
-    :rtype: ```Tuple[Optional[str], Optional[List[str]], bool, Optional[str]]```
+    :return: action, choices, required, typ, (Name, dict with keys: 'typ', 'doc', 'default')
+    :rtype: ```Tuple[Optional[str], Optional[List[str]], bool, Optional[str], Tuple[str, dict]]```
     """
-    if param["typ"] in simple_types:
-        typ = param["typ"]
-    elif param["typ"] == "dict" or param["name"].endswith("kwargs"):
-        typ = "loads"
-        required = not param["name"].endswith("kwargs")
-    elif param["typ"]:
-        parsed_type = parse(param["typ"]).body[0]
+    name, _param = param
+    del param
+    if _param["typ"] in simple_types:
+        typ = _param["typ"]
+    # elif (
+    #     isinstance(_param["typ"], str)
+    #     and _param["typ"].startswith("<class '")
+    #     and _param["typ"].endswith("'>")
+    # ):
+    #     typ = _param["typ"][8:-2]
+    elif _param["typ"] == "dict" or name.endswith("kwargs"):
+        typ, required = "loads", not name.endswith("kwargs")
+    elif _param["typ"]:
+        from doctrans.emitter_utils import ast_parse_fix
+
+        parsed_type = ast_parse_fix(_param["typ"])
         for node in walk(parsed_type):
             if isinstance(node, Tuple):
                 maybe_choices = tuple(
@@ -351,26 +414,25 @@ def _resolve_arg(action, choices, param, required, typ):
 
     # if isinstance(param.get("default"), (Constant, Str, Num)):
     #     param["default"] = get_value(param["default"])
-    return action, choices, required, typ
+    return action, choices, required, typ, (name, _param)
 
 
-def argparse_param2param(argparse_param):
+def func_arg2param(func_arg):
     """
-    Converts a param to an Expr `argparse.add_argument` call
+    Converts a function argument to a param tuple
 
-    :param argparse_param: argparse.add_argument` call—with arguments—as an AST node
-    :type argparse_param: ```ast.arg```
+    :param func_arg: Function argument
+    :type func_arg: ```ast.arg```
 
-    :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-    :rtype: ```dict```
+    :return: Name, dict with keys: 'typ', 'doc', 'default'
+    :rtype: ```Tuple[str, dict]```
     """
-    return dict(
-        name=argparse_param.arg,
-        doc=getattr(argparse_param, "type_comment", None),
+    return func_arg.arg, dict(
+        doc=getattr(func_arg, "type_comment", None),
         **{
             "typ": None
-            if argparse_param.annotation is None
-            else ast.parse(argparse_param.annotation)
+            if func_arg.annotation is None
+            else ast.parse(func_arg.annotation)
         }
     )
 
@@ -895,6 +957,25 @@ def it2literal(it):
     )
 
 
+# `to_code` doesn't work due to partially instantiated module
+def _to_code(node):
+    """
+    Convert the AST input to Python source string
+
+    :param node: AST node
+    :type node: ```AST```
+
+    :return: Python source
+    :rtype: ```str```
+    """
+
+    return (
+        getattr(import_module("astor"), "to_source")
+        if version_info[:2] < (3, 9)
+        else getattr(import_module("ast"), "unparse")
+    )(node)
+
+
 NoneStr = "```(None)```" if PY_GTE_3_9 else "```None```"
 
 __all__ = [
@@ -903,7 +984,7 @@ __all__ = [
     "NoneStr",
     "RewriteAtQuery",
     "annotate_ancestry",
-    "argparse_param2param",
+    "func_arg2param",
     "emit_ann_assign",
     "emit_arg",
     "find_ast_type",
