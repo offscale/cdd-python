@@ -36,7 +36,14 @@ from inspect import isfunction
 from sys import version_info
 
 from doctrans.defaults_utils import extract_default, needs_quoting
-from doctrans.pure_utils import PY_GTE_3_8, PY_GTE_3_9, quote, rpartial, simple_types
+from doctrans.pure_utils import (
+    PY_GTE_3_8,
+    PY_GTE_3_9,
+    paren_wrap_code,
+    quote,
+    rpartial,
+    simple_types,
+)
 
 # Was `"globals().__getitem__"`; this type is used for `Any` and any other unhandled
 
@@ -238,15 +245,17 @@ def param2argparse_param(param, emit_default_doc=True):
 
             if type(default).__name__ not in simple_types:
                 if isinstance(default, (ast.Dict, ast.Tuple)):
-                    typ, default = "loads", "{!r}".format(_to_code(default))
+                    typ, default = "loads", _to_code(default).rstrip("\n")
                 elif isinstance(default, ast.List):
                     if len(default.elts) == 1:
                         action, default = "append", get_value(default.elts[0])
                         typ = type(default).__name__
                     else:
-                        typ, default = "loads", "{!r}".format(_to_code(default))
+                        typ, default = "loads", _to_code(default).rstrip("\n")
                 elif default is not None:
-                    default = "```{}```".format(_to_code(default))
+                    default = "```{default}```".format(
+                        default=paren_wrap_code(_to_code(default).rstrip("\n"))
+                    )
         # elif isinstance(default, str):
         #     if (
         #         len(default) > 6
@@ -984,11 +993,11 @@ __all__ = [
     "NoneStr",
     "RewriteAtQuery",
     "annotate_ancestry",
-    "func_arg2param",
     "emit_ann_assign",
     "emit_arg",
     "find_ast_type",
     "find_in_ast",
+    "func_arg2param",
     "get_at_root",
     "get_function_type",
     "get_value",

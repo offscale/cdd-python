@@ -496,6 +496,7 @@ def _make_call_meth(body, return_type, param_names):
             )
         )
         if return_type is not None
+        and len(return_type) > 6
         and return_type.startswith("```")
         and return_type.endswith("```")
         else None
@@ -560,8 +561,8 @@ def ast_parse_fix(s):
 
 
 __all__ = [
-    "ast_parse_fix",
     "_parse_return",
+    "ast_parse_fix",
     "get_internal_body",
     "interpolate_defaults",
     "parse_out_param",

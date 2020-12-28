@@ -55,7 +55,7 @@ class TestParsers(TestCase):
 
     def test_from_argparse_ast(self) -> None:
         """
-        Tests whether `argparse_ast` produces `intermediate_repr_no_default_doc_or_prop`
+        Tests whether `argparse_ast` produces `intermediate_repr_no_default_doc`
               from `argparse_func_ast`"""
         self.assertDictEqual(
             parse.argparse_ast(argparse_func_ast), intermediate_repr_no_default_doc

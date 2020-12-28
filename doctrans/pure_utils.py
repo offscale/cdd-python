@@ -244,6 +244,7 @@ def quote(s, mark='"'):
         if isinstance(s, Str)
         else s.value
     )
+    # ^ Poor man's `get_value`
     if s is None or len(s) == 0 or s[0] == s[-1] and s[0] in frozenset(("'", '"')):
         return s
     return "{mark}{s}{mark}".format(mark=mark, s=s)
@@ -479,6 +480,23 @@ def params_to_ordered_dict(params):
     )
 
 
+def paren_wrap_code(code):
+    """
+    The new builtin AST unparser adds extra parentheses, so match that behaviour on older versions
+
+    :param code: Source code string
+    :type code: ```str```
+
+    :return: Potentially parenthetically wrapped input
+    :rtype: ```str```
+    """
+    return (
+        "({code})".format(code=code)
+        if PY_GTE_3_9 and code[0] + code[-1] not in frozenset(("()", "[]", "{}"))
+        else code
+    )
+
+
 __all__ = [
     "BUILTIN_TYPES",
     "PY3_8",
@@ -493,6 +511,7 @@ __all__ = [
     "location_within",
     "lstrip_namespace",
     "params_to_ordered_dict",
+    "paren_wrap_code",
     "pluralise",
     "pp",
     "quote",

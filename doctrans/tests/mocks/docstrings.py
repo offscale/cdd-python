@@ -327,18 +327,17 @@ Some comment
 """
 
 __all__ = [
+    "docstring_extra_colons_str",
     "docstring_google_str",
     "docstring_google_tf_adadelta_str",
     "docstring_google_tf_adam_str",
     "docstring_google_tf_lambda_callback_str",
     "docstring_google_tf_squared_hinge_str",
+    "docstring_no_default_doc_str",
     "docstring_numpydoc_only_doc_str",
     "docstring_numpydoc_only_params_str",
     "docstring_numpydoc_only_returns_str",
     "docstring_numpydoc_str",
-    "docstring_str",
-    "docstring_extra_colons_str",
-    "docstring_no_default_doc_str",
     "docstring_only_return_type_str",
-    "intermediate_repr_no_default_doc_or_prop",
+    "docstring_str",
 ]
