@@ -597,19 +597,22 @@ class TestAstUtils(TestCase):
         Tests that param2argparse_param works to reparse the default
         """
         run_ast_test(
-            gen_ast=get_value(param2argparse_param(("yup", {"default": NoneStr}))),
-            gold=Call(
-                args=[set_value("--yup")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
-                ),
-                keywords=[
-                    keyword(arg="type", value=Name("str", Load()), identifier=None),
-                ],
-                expr=None,
-                expr_func=None,
+            gen_ast=param2argparse_param(("yup", {"default": NoneStr})),
+            gold=Expr(
+                Call(
+                    args=[set_value("--yup")],
+                    func=Attribute(
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
+                    ),
+                    keywords=[
+                        keyword(arg="type", value=Name("str", Load()), identifier=None),
+                        keyword(arg="required", value=set_value(True), identifier=None),
+                    ],
+                    expr=None,
+                    expr_func=None,
+                )
             ),
             test_case_instance=self,
         )
@@ -619,25 +622,25 @@ class TestAstUtils(TestCase):
         Tests that param2argparse_param works to change the type based on the default
         """
         run_ast_test(
-            gen_ast=get_value(
-                param2argparse_param(
-                    ("byo", {"default": 5, "typ": "str"}),
-                )
+            gen_ast=param2argparse_param(
+                ("byo", {"default": 5, "typ": "str"}),
             ),
-            gold=Call(
-                args=[set_value("--byo")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
-                ),
-                keywords=[
-                    keyword(arg="type", value=Name("int", Load()), identifier=None),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(arg="default", value=set_value(5), identifier=None),
-                ],
-                expr=None,
-                expr_func=None,
+            gold=Expr(
+                Call(
+                    args=[set_value("--byo")],
+                    func=Attribute(
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
+                    ),
+                    keywords=[
+                        keyword(arg="type", value=Name("int", Load()), identifier=None),
+                        keyword(arg="required", value=set_value(True), identifier=None),
+                        keyword(arg="default", value=set_value(5), identifier=None),
+                    ],
+                    expr=None,
+                    expr_func=None,
+                )
             ),
             test_case_instance=self,
         )
@@ -648,25 +651,26 @@ class TestAstUtils(TestCase):
           whence said default is a list
         """
         run_ast_test(
-            gen_ast=get_value(
-                param2argparse_param(
-                    ("byo", {"default": [], "typ": "str"}),
-                )
+            gen_ast=param2argparse_param(
+                ("byo", {"default": [], "typ": "str"}),
             ),
-            gold=Call(
-                args=[set_value("--byo")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
+            gold=Expr(
+                Call(
+                    args=[set_value("--byo")],
+                    func=Attribute(
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
+                    ),
+                    keywords=[
+                        keyword(
+                            arg="action", value=set_value("append"), identifier=None
+                        ),
+                        keyword(arg="required", value=set_value(True), identifier=None),
+                    ],
+                    expr=None,
+                    expr_func=None,
                 ),
-                keywords=[
-                    keyword(arg="type", value=Name("loads", Load()), identifier=None),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(arg="default", value=set_value("[]"), identifier=None),
-                ],
-                expr=None,
-                expr_func=None,
             ),
             test_case_instance=self,
         )
@@ -677,35 +681,37 @@ class TestAstUtils(TestCase):
           whence said default is an ast.Tuple
         """
         run_ast_test(
-            gen_ast=get_value(
-                param2argparse_param(
-                    (
-                        "byo",
-                        {
-                            "default": Tuple(
-                                elts=[],
-                                ctx=Load(),
-                                expr=None,
-                            ),
-                            "typ": "str",
-                        },
-                    ),
-                )
-            ),
-            gold=Call(
-                args=[set_value("--byo")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
+            gen_ast=param2argparse_param(
+                (
+                    "byo",
+                    {
+                        "default": Tuple(
+                            elts=[],
+                            ctx=Load(),
+                            expr=None,
+                        ),
+                        "typ": "str",
+                    },
                 ),
-                keywords=[
-                    keyword(arg="type", value=Name("loads", Load()), identifier=None),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(arg="default", value=set_value("()"), identifier=None),
-                ],
-                expr=None,
-                expr_func=None,
+            ),
+            gold=Expr(
+                Call(
+                    args=[set_value("--byo")],
+                    func=Attribute(
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
+                    ),
+                    keywords=[
+                        keyword(
+                            arg="type", value=Name("loads", Load()), identifier=None
+                        ),
+                        keyword(arg="required", value=set_value(True), identifier=None),
+                        keyword(arg="default", value=set_value("()"), identifier=None),
+                    ],
+                    expr=None,
+                    expr_func=None,
+                )
             ),
             test_case_instance=self,
         )
@@ -716,35 +722,36 @@ class TestAstUtils(TestCase):
           whence said default is an ast.List
         """
         run_ast_test(
-            gen_ast=get_value(
-                param2argparse_param(
-                    (
-                        "byo",
-                        {
-                            "default": List(
-                                elts=[],
-                                ctx=Load(),
-                                expr=None,
-                            ),
-                            "typ": "str",
-                        },
-                    ),
-                )
-            ),
-            gold=Call(
-                args=[set_value("--byo")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
+            gen_ast=param2argparse_param(
+                (
+                    "byo",
+                    {
+                        "default": List(
+                            elts=[],
+                            ctx=Load(),
+                            expr=None,
+                        ),
+                        "typ": "str",
+                    },
                 ),
-                keywords=[
-                    keyword(arg="type", value=Name("loads", Load()), identifier=None),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(arg="default", value=set_value("[]"), identifier=None),
-                ],
-                expr=None,
-                expr_func=None,
+            ),
+            gold=Expr(
+                Call(
+                    args=[set_value("--byo")],
+                    func=Attribute(
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
+                    ),
+                    keywords=[
+                        keyword(
+                            arg="action", value=set_value("append"), identifier=None
+                        ),
+                        keyword(arg="required", value=set_value(True), identifier=None),
+                    ],
+                    expr=None,
+                    expr_func=None,
+                )
             ),
             test_case_instance=self,
         )
@@ -755,38 +762,39 @@ class TestAstUtils(TestCase):
           whence said default is an ast.List inside an ast.Expr
         """
         run_ast_test(
-            gen_ast=get_value(
-                param2argparse_param(
-                    (
-                        "byo",
-                        {
-                            "default": Expr(
-                                List(
-                                    elts=[],
-                                    ctx=Load(),
-                                    expr=None,
-                                ),
-                                expr_value=None,
+            gen_ast=param2argparse_param(
+                (
+                    "byo",
+                    {
+                        "default": Expr(
+                            List(
+                                elts=[],
+                                ctx=Load(),
+                                expr=None,
                             ),
-                            "typ": "str",
-                        },
-                    ),
-                )
-            ),
-            gold=Call(
-                args=[set_value("--byo")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
+                            expr_value=None,
+                        ),
+                        "typ": "str",
+                    },
                 ),
-                keywords=[
-                    keyword(arg="type", value=Name("loads", Load()), identifier=None),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(arg="default", value=set_value("[]"), identifier=None),
-                ],
-                expr=None,
-                expr_func=None,
+            ),
+            gold=Expr(
+                Call(
+                    args=[set_value("--byo")],
+                    func=Attribute(
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
+                    ),
+                    keywords=[
+                        keyword(
+                            arg="action", value=set_value("append"), identifier=None
+                        ),
+                        keyword(arg="required", value=set_value(True), identifier=None),
+                    ],
+                    expr=None,
+                    expr_func=None,
+                )
             ),
             test_case_instance=self,
         )
@@ -797,37 +805,38 @@ class TestAstUtils(TestCase):
           whence said default is a non specially handled ast.AST
         """
         run_ast_test(
-            gen_ast=get_value(
-                param2argparse_param(
-                    (
-                        "byo",
-                        {
-                            "default": BinOp(
-                                set_value(5),
-                                Mult(),
-                                set_value(5),
-                            ),
-                            "typ": "str",
-                        },
-                    ),
-                )
-            ),
-            gold=Call(
-                args=[set_value("--byo")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
+            gen_ast=param2argparse_param(
+                (
+                    "byo",
+                    {
+                        "default": BinOp(
+                            set_value(5),
+                            Mult(),
+                            set_value(5),
+                        ),
+                        "typ": "str",
+                    },
                 ),
-                keywords=[
-                    keyword(arg="type", value=Name("str", Load()), identifier=None),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(
-                        arg="default", value=set_value("```(5 * 5)```"), identifier=None
+            ),
+            gold=Expr(
+                Call(
+                    args=[set_value("--byo")],
+                    func=Attribute(
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
                     ),
-                ],
-                expr=None,
-                expr_func=None,
+                    keywords=[
+                        keyword(arg="required", value=set_value(True), identifier=None),
+                        keyword(
+                            arg="default",
+                            value=set_value("```(5 * 5)```"),
+                            identifier=None,
+                        ),
+                    ],
+                    expr=None,
+                    expr_func=None,
+                )
             ),
             test_case_instance=self,
         )
@@ -847,38 +856,41 @@ class TestAstUtils(TestCase):
             inspectable_compile(function_str),
             "adder",
         )
-        pickled_adder = "{!r}".format(pickle.dumps(adder))  # eww
+        pickled_adder = pickle.dumps(adder)  # eww
 
         run_ast_test(
-            gen_ast=get_value(
-                param2argparse_param(
-                    (
-                        "byo",
-                        {
-                            "default": adder,
-                            "typ": "str",
-                        },
-                    ),
-                )
-            ),
-            gold=Call(
-                args=[set_value("--byo")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
+            gen_ast=param2argparse_param(
+                (
+                    "byo",
+                    {
+                        "default": adder,
+                        "typ": "str",
+                    },
                 ),
-                keywords=[
-                    keyword(
-                        arg="type", value=Name("pickle.loads", Load()), identifier=None
+            ),
+            gold=Expr(
+                Call(
+                    args=[set_value("--byo")],
+                    func=Attribute(
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
                     ),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(
-                        arg="default", value=set_value(pickled_adder), identifier=None
-                    ),
-                ],
-                expr=None,
-                expr_func=None,
+                    keywords=[
+                        keyword(
+                            arg="type",
+                            value=Name("pickle.loads", Load()),
+                            identifier=None,
+                        ),
+                        keyword(
+                            arg="default",
+                            value=set_value(pickled_adder),
+                            identifier=None,
+                        ),
+                    ],
+                    expr=None,
+                    expr_func=None,
+                )
             ),
             test_case_instance=self,
         )
@@ -889,7 +901,7 @@ class TestAstUtils(TestCase):
           whence said default is a code quoted str
         """
         run_ast_test(
-            gen_ast=get_value(
+            gen_ast=(
                 param2argparse_param(
                     (
                         "byo",
@@ -900,20 +912,22 @@ class TestAstUtils(TestCase):
                     ),
                 )
             ),
-            gold=Call(
-                args=[set_value("--byo")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
-                ),
-                keywords=[
-                    keyword(arg="type", value=Name("int", Load()), identifier=None),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(arg="default", value=set_value(4), identifier=None),
-                ],
-                expr=None,
-                expr_func=None,
+            gold=Expr(
+                Call(
+                    args=[set_value("--byo")],
+                    func=Attribute(
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
+                    ),
+                    keywords=[
+                        keyword(arg="type", value=Name("int", Load()), identifier=None),
+                        keyword(arg="required", value=set_value(True), identifier=None),
+                        keyword(arg="default", value=set_value(4), identifier=None),
+                    ],
+                    expr=None,
+                    expr_func=None,
+                )
             ),
             test_case_instance=self,
         )
@@ -938,33 +952,33 @@ class TestAstUtils(TestCase):
         # type("FakeTorch", tuple(), {"__str__": lambda _: "<required parameter>"})
 
         run_ast_test(
-            gen_ast=get_value(
-                param2argparse_param(
-                    (
-                        "byo",
-                        {
-                            "default": FakeTorch(),
-                        },
-                    ),
-                )
-            ),
-            gold=Call(
-                args=[set_value("--byo")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
+            gen_ast=param2argparse_param(
+                (
+                    "byo",
+                    {
+                        "default": FakeTorch(),
+                    },
                 ),
-                keywords=[
-                    keyword(
-                        arg="type",
-                        value=Name(FakeTorch.__name__, Load()),
-                        identifier=None,
+            ),
+            gold=Expr(
+                Call(
+                    args=[set_value("--byo")],
+                    func=Attribute(
+                        Name("argument_parser", Load()),
+                        "add_argument",
+                        Load(),
                     ),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                ],
-                expr=None,
-                expr_func=None,
+                    keywords=[
+                        keyword(
+                            arg="type",
+                            value=Name(FakeTorch.__name__, Load()),
+                            identifier=None,
+                        ),
+                        keyword(arg="required", value=set_value(True), identifier=None),
+                    ],
+                    expr=None,
+                    expr_func=None,
+                )
             ),
             test_case_instance=self,
         )
@@ -972,8 +986,9 @@ class TestAstUtils(TestCase):
     def test_param2argparse_param_default_notimplemented(self) -> None:
         """
         Tests that param2argparse_param works to change the type based on the default
-          whence said default is a proxy for an unepected type
+          whence said default is a proxy for an unexpected type
         """
+
         with self.assertRaises(NotImplementedError) as cm:
             param2argparse_param(
                 (

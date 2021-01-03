@@ -67,7 +67,7 @@ class C(object):
         :type dataset_name: ```str```
 
         :param tfds_dir: directory to look for models in.
-        :type tfds_dir: ```Optional[str]```
+        :type tfds_dir: ```str```
 
         :param K: backend engine, e.g., `np` or `tf`.
         :type K: ```Literal['np', 'tf']```
@@ -91,7 +91,7 @@ class C(object):
     def function_name(
         self,
         dataset_name: str = "mnist",
-        tfds_dir: Optional[str] = "~/tensorflow_datasets",
+        tfds_dir: str = "~/tensorflow_datasets",
         K: Literal["np", "tf"] = "np",
         as_numpy: Optional[bool] = None,
         **data_loader_kwargs
@@ -356,7 +356,6 @@ class_with_method_and_body_types_ast = fix_missing_locations(
     )
 )
 
-
 class_with_method_ast = fix_missing_locations(
     ClassDef(
         bases=[Name("object", Load())],
@@ -392,7 +391,7 @@ class_with_method_ast = fix_missing_locations(
                             ":param dataset_name: name of dataset.\n        "
                             ":type dataset_name: ```str```\n\n        "
                             ":param tfds_dir: directory to look for models in.\n        "
-                            ":type tfds_dir: ```Optional[str]```\n\n        "
+                            ":type tfds_dir: ```str```\n\n        "
                             ":param K: backend engine, e.g., `np` or `tf`.\n        "
                             ":type K: ```Literal['np', 'tf']```\n\n        "
                             ":param as_numpy: Convert to numpy ndarrays\n        "
@@ -444,17 +443,8 @@ class_with_method_types_ast = fix_missing_locations(
                             arg="dataset_name",
                         ),
                         set_arg(
-                            annotation=Subscript(
-                                Name(
-                                    "Optional",
-                                    Load(),
-                                ),
-                                Index(
-                                    value=Name(
-                                        "str",
-                                        Load(),
-                                    )
-                                ),
+                            annotation=Name(
+                                "str",
                                 Load(),
                             ),
                             arg="tfds_dir",

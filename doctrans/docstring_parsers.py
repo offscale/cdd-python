@@ -432,14 +432,8 @@ def _set_name_and_type(param: Tuple[str, dict], infer_type: bool):
             _param["default"] = "```{default}```".format(
                 default=paren_wrap_code(to_code(_param["default"]).rstrip("\n"))
             )
-    google_opt = ", optional"
-    if (_param.get("typ") or "").endswith(google_opt):
-        _param["typ"] = "Optional[{}]".format(_param["typ"][: -len(google_opt)])
-    if "doc" in _param and not _param["doc"]:
-        del _param["doc"]
 
-    if _param.get("default") is not None:
-        if _param.get("typ") is None:
+        if _param.get("typ") is None and _param["default"]:
             _param["typ"] = type(_param["default"]).__name__
         if (
             isinstance(_param["default"], str)
@@ -448,6 +442,14 @@ def _set_name_and_type(param: Tuple[str, dict], infer_type: bool):
             and "[" not in _param["typ"]  # Skip if you've actually formed a proper type
         ):
             del _param["typ"]  # Could make it `object` I suppose…
+    google_opt = ", optional"
+    if (_param.get("typ") or "").endswith(google_opt):
+        _param["typ"] = "Optional[{}]".format(_param["typ"][: -len(google_opt)])
+    if "doc" in _param and not _param["doc"]:
+        del _param["doc"]
+
+    # if "doc" in _param and isinstance(_param["doc"], list):
+    #     _param["doc"] = "".join(_param["doc"])
     if (
         "doc" in _param
         and (
@@ -621,9 +623,15 @@ def _parse_phase_numpydoc_and_google(
                                         "doc": scanned[return_tokens[0]][1].lstrip(),
                                     }
                                     if len(scanned[return_tokens[0]]) == 2
+                                    and isinstance(scanned[return_tokens[0]][1], str)
                                     else {}
-                                    if scanned[return_tokens[0]][0].isspace()
-                                    else {"doc": scanned[return_tokens[0]][0].lstrip()}
+                                    if isinstance(scanned[return_tokens[0]][0], str)
+                                    and scanned[return_tokens[0]][0].isspace()
+                                    else {
+                                        "doc": scanned[return_tokens[0]][0].lstrip()
+                                        if isinstance(scanned[return_tokens[0]][0], str)
+                                        else scanned[return_tokens[0]][0]
+                                    }
                                 )
                                 if style is Style.google
                                 else {

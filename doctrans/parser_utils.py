@@ -63,7 +63,7 @@ def ir_merge(target, other):
 
         target["params"] = target_params
 
-    if "return_type" not in (target.get("returns") or {}):
+    if "return_type" not in (target.get("returns") or iter(())):
         target["returns"] = other["returns"]
     elif other["returns"]:
         target["returns"]["return_type"] = _join_non_none(

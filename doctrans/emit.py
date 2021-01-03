@@ -131,7 +131,9 @@ def argparse_function(
                                             )
                                         )
                                         if "return_type"
-                                        in (intermediate_repr.get("returns") or {})
+                                        in (
+                                            intermediate_repr.get("returns") or iter(())
+                                        )
                                         else ":return: argument_parser\n    "
                                         ":rtype: ```ArgumentParser```\n    "
                                     )
@@ -216,7 +218,7 @@ def argparse_function(
                                 if "default"
                                 in (
                                     intermediate_repr.get("returns")
-                                    or {"return_type": {}}
+                                    or {"return_type": iter(())}
                                 )["return_type"]
                                 else Return(
                                     value=Name("argument_parser", Load()), expr=None
@@ -332,8 +334,10 @@ def class_(
                                 returns["return_type"]["default"]
                                 if "default"
                                 in (
-                                    (returns or {"return_type": {}}).get("return_type")
-                                    or {}
+                                    (returns or {"return_type": iter(())}).get(
+                                        "return_type"
+                                    )
+                                    or iter(())
                                 )
                                 else None,
                                 param_names,
@@ -415,7 +419,7 @@ def docstring(intermediate_repr, docstring_format="rest", emit_default_doc=True)
                     intermediate_repr["returns"]["return_type"],
                     emit_default_doc=emit_default_doc,
                 )
-                if "return_type" in (intermediate_repr.get("returns") or {})
+                if "return_type" in (intermediate_repr.get("returns") or iter(()))
                 else ""
             )
         ),

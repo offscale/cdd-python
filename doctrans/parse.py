@@ -153,11 +153,10 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
             typ_default = dict(typ=typ, **val)
 
             for key in "params", "returns":
-                if e.target.id in intermediate_repr[key]:
+                if e.target.id in (intermediate_repr[key] or iter(())):
                     intermediate_repr[key][e.target.id].update(typ_default)
                     typ_default = False
                     break
-            assert not typ_default
 
             # if typ_default:
             #     if e.target.id.endswith("kwargs") and typ_default["typ"] == "dict":
@@ -333,7 +332,7 @@ def _inspect(obj, name):
 
     other = parser(parsed_body)
     ir_merge(ir, other)
-    if "return_type" in (ir.get("returns") or {}):
+    if "return_type" in (ir.get("returns") or iter(())):
         ir["returns"] = OrderedDict(
             map(
                 partial(_set_name_and_type, infer_type=False),
@@ -545,7 +544,7 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
 
     # Convention - the final top-level `return` is the default
     intermediate_repr = _interpolate_return(function_def, intermediate_repr)
-    if "return_type" in (intermediate_repr.get("returns") or {}):
+    if "return_type" in (intermediate_repr.get("returns") or iter(())):
         intermediate_repr["returns"] = OrderedDict(
             map(
                 partial(_set_name_and_type, infer_type=infer_type),
@@ -660,7 +659,7 @@ def docstring(doc_string, infer_type=False, return_tuple=False):
         return parsed, (
             "returns" in parsed
             and parsed["returns"] is not None
-            and "return_type" in (parsed.get("returns") or {})
+            and "return_type" in (parsed.get("returns") or iter(()))
         )
 
     return parsed

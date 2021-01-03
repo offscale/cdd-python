@@ -32,7 +32,7 @@ from ast import (
 )
 from copy import deepcopy
 from importlib import import_module
-from inspect import isfunction
+from inspect import isclass, isfunction
 from sys import version_info
 
 from doctrans.defaults_utils import extract_default, needs_quoting
@@ -225,74 +225,27 @@ def param2argparse_param(param, emit_default_doc=True):
     action, choices, required, typ, (name, _param) = _resolve_arg(
         action, choices, param, required, typ
     )
-    del param
+    # is_kwarg = param[0].endswith("kwargs")
+
+    # del param
     _param.setdefault("doc", "")
     doc, _default = extract_default(_param["doc"], emit_default_doc=emit_default_doc)
-    default = _param.get("default", _default)
-    if default == NoneStr:
-        required, default = False, None
-    elif default is not None:
-        if (
-            isinstance(default, str)
-            and len(default) > 6
-            and default.startswith("```")
-            and default.endswith("```")
-        ):
-            default = get_value(ast.parse(default[3:-3]).body[0])
+    _action, default, _required, typ = infer_type_and_default(
+        _param.get("default", _default),
+        typ
+        # _default, _param, action, required, typ#
+    )
+    if _action:
+        action = _action
+    if typ == "pickle.loads":
+        required = False
+    elif _required is False:
+        required = required or _required
+    if param[1].get("typ") and typ == "str":
+        pass
 
-        if isinstance(default, ast.AST):
-            default = get_value(default)
-
-            if type(default).__name__ not in simple_types:
-                if isinstance(default, (ast.Dict, ast.Tuple)):
-                    typ, default = "loads", _to_code(default).rstrip("\n")
-                elif isinstance(default, ast.List):
-                    if len(default.elts) == 1:
-                        action, default = "append", get_value(default.elts[0])
-                        typ = type(default).__name__
-                    else:
-                        typ, default = "loads", _to_code(default).rstrip("\n")
-                elif default is not None:
-                    default = "```{default}```".format(
-                        default=paren_wrap_code(_to_code(default).rstrip("\n"))
-                    )
-        # elif isinstance(default, str):
-        #     if (
-        #         len(default) > 6
-        #         and default.startswith("```")
-        #         and default.endswith("```")
-        #     ):
-        #         default = ast.parse(default[3:-3]).body[0]
-        #         if isinstance(default, ast.Expr):
-        #             default = default.value
-        #             if isinstance(default, ast.List):
-        #                 # assert (len(default.elts) == 1), "NotImplemented: Multiple default elements"
-        #                 if len(default.elts) == 1:
-        #                     action, default, typ = (
-        #                         "append",
-        #                         get_value(default.elts[0]),
-        #                         type(default).__name__,
-        #                     )
-        #                 else:
-        #                     typ, default = "loads", "{!r}".format(_to_code(default))
-        elif isinstance(default, (tuple, list)):
-            typ, default = "loads", "'{!r}'".format(default)
-        elif isfunction(default):
-            typ, default = "pickle.loads", "{!r}".format(pickle.dumps(default))
-        elif typ == "str":
-            typ = type(default).__name__
-
-        if "[" not in typ and typ not in frozenset(("pickle.loads", "loads")):
-            typ = type(default).__name__
-
-    # elif default
-    if not isinstance(default, (type(None), str, int, float, complex)):
-        if hasattr(default, "__str__") and str(default) == "<required parameter>":
-            required, default = True, None
-        else:
-            raise NotImplementedError(
-                "Parsing type {}, which contains {!r}".format(type(default), default)
-            )
+    # if is_kwarg and required:
+    #     required = False
 
     return Expr(
         Call(
@@ -363,6 +316,98 @@ def param2argparse_param(param, emit_default_doc=True):
     )
 
 
+# def _parse_out_default(default, param, action, required, typ):
+#     """
+#     Parse out the default value
+#
+#     :param default: Initial default value
+#     :type default: ```Any```
+#
+#     :param param: Name, dict with keys: 'typ', 'doc', 'default'
+#     :type param: ```Tuple[str, dict]```
+#
+#     :param action: Name of the action
+#     :type action: ```Optional[str]```
+#
+#     :param required: Whether to require the argument
+#     :type required: ```bool```
+#
+#     :param typ: The type of the argument
+#     :type typ: ```Optional[str]```
+#
+#     :return: action, default, required, typ
+#     :rtype: ```Tuple[Optional[str], Optional[List[str]], bool, Optional[str]]```
+#     """
+#     default = param.get("default", default)
+#     if default in (NoneStr, None):
+#         required, default = False, None
+#     elif (
+#             isinstance(default, str)
+#             and len(default) > 6
+#             and default.startswith("```")
+#             and default.endswith("```")
+#         ):
+#             default = get_value(ast.parse(default[3:-3]).body[0])
+#
+#         if isinstance(default, ast.AST):
+#             default = get_value(default)
+#
+#             if type(default).__name__ not in simple_types:
+#                 if isinstance(default, (ast.Dict, ast.Tuple)):
+#                     typ, default = "loads", _to_code(default).rstrip("\n")
+#                 elif isinstance(default, ast.List):
+#                     if len(default.elts) == 1:
+#                         action, default = "append", get_value(default.elts[0])
+#                         typ = type(default).__name__
+#                     else:
+#                         typ, default = "loads", _to_code(default).rstrip("\n")
+#                 elif default is not None:
+#                     default = "```{default}```".format(
+#                         default=paren_wrap_code(_to_code(default).rstrip("\n"))
+#                     )
+#         # elif isinstance(default, str):
+#         #     if (
+#         #         len(default) > 6
+#         #         and default.startswith("```")
+#         #         and default.endswith("```")
+#         #     ):
+#         #         default = ast.parse(default[3:-3]).body[0]
+#         #         if isinstance(default, ast.Expr):
+#         #             default = default.value
+#         #             if isinstance(default, ast.List):
+#         #                 # assert (len(default.elts) == 1), "NotImplemented: Multiple default elements"
+#         #                 if len(default.elts) == 1:
+#         #                     action, default, typ = (
+#         #                         "append",
+#         #                         get_value(default.elts[0]),
+#         #                         type(default).__name__,
+#         #                     )
+#         #                 else:
+#         #                     typ, default = "loads", "{!r}".format(_to_code(default))
+#     elif isinstance(default, (tuple, list)):
+#         typ, default = "loads", "'{!r}'".format(default)
+#     elif isfunction(default):
+#         typ, default = "pickle.loads", "{!r}".format(pickle.dumps(default))
+#     elif typ == "str":
+#         typ = type(default).__name__
+#
+#     if typ and "[" not in typ and typ not in frozenset(("pickle.loads", "loads")):
+#         typ = type(default).__name__
+#     # elif default
+#     if not isinstance(default, (type(None), str, int, float, complex)):
+#         if hasattr(default, "__str__") and str(default) == "<required parameter>":
+#             required, default = True, None
+#         elif isinstance(default, AST):
+#             from doctrans.source_transformer import to_code
+#
+#             typ, default = "loads", to_code(default)
+#         else:
+#             raise NotImplementedError(
+#                 "Parsing type {}, which contains {!r}".format(type(default), default)
+#             )
+#     return action, default, required, typ
+
+
 def _resolve_arg(action, choices, param, required, typ):
     """
     Resolve the arg type, required status, and choices
@@ -420,6 +465,10 @@ def _resolve_arg(action, choices, param, required, typ):
 
                 if node.id == "List":
                     action = "append"
+
+    # if isinstance(_param.get("default"), (list, tuple)):
+    #    if len()
+    #    typ, action = None, "append"
 
     # if isinstance(param.get("default"), (Constant, Str, Num)):
     #     param["default"] = get_value(param["default"])
@@ -502,6 +551,8 @@ def get_value(node):
     :return: Probably a string, but could be any constant value
     :rtype: ```Optional[Union[str, int, float, bool]]```
     """
+    # if isinstance(node, (bool, complex, float, int, type(None))):
+    #    return node
     if isinstance(node, Str):
         return node.s
     elif isinstance(node, Num):
@@ -964,6 +1015,104 @@ def it2literal(it):
         ),
         Load(),
     )
+
+
+def infer_type_and_default(default, typ):
+    """
+    Infer the type string from the default and typ
+
+    :param default: Initial default value
+    :type default: ```Any```
+
+    :param typ: The type of the argument
+    :type typ: ```Optional[str]```
+
+    :return: action (e.g., for `argparse.Action`), default, whether its required, inferred type str
+    :rtype: ```Tuple[str, Any, bool, str]```
+    """
+    action, required = None, True
+    # if default is None:
+    #    if typ is None:
+    #        typ = "Any"
+    if isinstance(default, (bool, complex, float, int)):
+        typ = type(default).__name__
+    elif (
+        isinstance(default, str)
+        and len(default) > 6
+        and default.startswith("```")
+        and default.endswith("```")
+    ):
+        default = get_value(get_value(ast.parse(default[3:-3]).body[0]))
+        if default is None:
+            return action, default, False, typ
+        return infer_type_and_default(default, type(default).__name__)
+    elif isinstance(default, AST):
+        action, default, required, typ = _parse_default_from_ast(
+            action, default, required, typ
+        )
+    elif hasattr(default, "__str__") and str(default) == "<required parameter>":
+        action, default, required, typ = None, None, True, default.__class__.__name__
+    elif isinstance(default, (list, tuple)):
+        if len(default) == 0:
+            action, default, required, typ = "append", None, False, None
+        # elif len(default) == 1:
+        #    action, default, required = "append", get_value(default[0]), False
+        #    typ = type(default).__name__
+        # else:
+        #    typ, default = "loads", dumps(default)
+    elif isinstance(default, type) or isfunction(default) or isclass(default):
+        typ, default, required = "pickle.loads", pickle.dumps(default), False
+    elif not isinstance(default, (bool, complex, float, int, type(None), str)):
+        raise NotImplementedError(
+            "Parsing type {!s}, which contains {!r}".format(type(default), default)
+        )
+
+    return action, default, required, typ
+
+
+def _parse_default_from_ast(action, default, required, typ):
+    """
+    Internal function to acquire (action, default, required, typ) from AST types
+
+    :param action: Name of the action
+    :type action: ```Optional[str]```
+
+    :param default: Initial default value
+    :type default: ```ast.AST```
+
+    :param required: Whether to require the argument
+    :type required: ```bool```
+
+    :param typ: The type of the argument
+    :type typ: ```Optional[str]```
+
+    :return: action, default, required, typ
+    :rtype: ```Tuple[Optional[str], Optional[List[str]], bool, Optional[str]]```
+    """
+    if isinstance(default, (Constant, Expr, Str, Num)):
+        default = get_value(default)
+    # if type(default).__name__ in simple_types:
+    #    typ, default = type(default).__name__, default
+    # else:
+    if isinstance(default, (ast.Dict, ast.Tuple)):
+        typ, default = "loads", _to_code(default).rstrip("\n")
+    elif isinstance(default, (ast.List, ast.Tuple)):
+        if len(default.elts) == 0:
+            action, default, required, typ = "append", None, False, None
+        elif len(default.elts) == 1:
+            action, default = "append", get_value(default.elts[0])
+            typ = type(default).__name__
+    #    else:
+    #        typ, default = "loads", _to_code(default).rstrip("\n")
+    elif default is not None:
+        typ, default = None, "```{default}```".format(
+            default=paren_wrap_code(_to_code(default).rstrip("\n"))
+        )
+    # if required is None:
+    #    required = "Optional" in (
+    #        typ or iter(())
+    #    )  # TODO: Work for `Union[None, AnyStr]` and `Any`
+    return action, default, required, typ
 
 
 # `to_code` doesn't work due to partially instantiated module
