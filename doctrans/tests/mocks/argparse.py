@@ -51,6 +51,7 @@ def set_cli_args(argument_parser):
         "--tfds_dir",
         type=str,
         help="directory to look for models in.",
+        required=True,
         default="~/tensorflow_datasets",
     )
     argument_parser.add_argument(
@@ -243,6 +244,11 @@ argparse_func_ast = fix_missing_locations(
                         keyword(
                             arg="help",
                             value=set_value("directory to look for models in."),
+                            identifier=None,
+                        ),
+                        keyword(
+                            arg="required",
+                            value=set_value(True),
                             identifier=None,
                         ),
                         keyword(
@@ -482,6 +488,11 @@ argparse_func_with_body_ast = fix_missing_locations(
                         keyword(
                             arg="help",
                             value=set_value("directory to look for models in."),
+                            identifier=None,
+                        ),
+                        keyword(
+                            arg="required",
+                            value=set_value(True),
                             identifier=None,
                         ),
                         keyword(

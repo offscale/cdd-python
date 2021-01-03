@@ -2,7 +2,6 @@
 Mocks for docstrings
 """
 
-
 docstring_str = """
 Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
 
@@ -10,7 +9,7 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 :type dataset_name: ```str```
 
 :param tfds_dir: directory to look for models in. Defaults to "~/tensorflow_datasets"
-:type tfds_dir: ```Optional[str]```
+:type tfds_dir: ```str```
 
 :param K: backend engine, e.g., `np` or `tf`. Defaults to "np"
 :type K: ```Literal['np', 'tf']```
@@ -32,7 +31,7 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 :type dataset_name: ```str```
 
 :param tfds_dir: directory to look for models in.
-:type tfds_dir: ```Optional[str]```
+:type tfds_dir: ```str```
 
 :param K: backend engine, e.g., `np` or `tf`.
 :type K: ```Literal['np', 'tf']```
@@ -52,7 +51,7 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 
 Args:
   dataset_name (str): name of dataset. Defaults to "mnist"
-  tfds_dir (Optional[str]): directory to look for models in. Defaults to "~/tensorflow_datasets"
+  tfds_dir (str): directory to look for models in. Defaults to "~/tensorflow_datasets"
   K (Literal['np', 'tf']): backend engine, e.g., `np` or `tf`. Defaults to "np"
   as_numpy (Optional[bool]): Convert to numpy ndarrays
   data_loader_kwargs (Optional[dict]): pass this as arguments to data_loader function
@@ -245,7 +244,7 @@ Parameters
 ----------
 dataset_name : str
     name of dataset. Defaults to "mnist"
-tfds_dir : Optional[str]
+tfds_dir : str
     directory to look for models in. Defaults to "~/tensorflow_datasets"
 K : Literal['np', 'tf']
     backend engine, e.g., `np` or `tf`. Defaults to "np"
@@ -266,7 +265,7 @@ Parameters
 ----------
 dataset_name : str
     name of dataset. Defaults to "mnist"
-tfds_dir : Optional[str]
+tfds_dir : str
     directory to look for models in. Defaults to "~/tensorflow_datasets"
 K : Literal['np', 'tf']
     backend engine, e.g., `np` or `tf`. Defaults to "np"
@@ -295,7 +294,7 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 :type dataset_name: ```str```
 
 :param tfds_dir: directory to look for models in.
-:type tfds_dir: ```Optional[str]```
+:type tfds_dir: ```str```
 
 :param K: backend engine, e.g., `np` or `tf`.
 :type K: ```Literal['np', 'tf']```

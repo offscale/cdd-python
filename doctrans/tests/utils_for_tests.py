@@ -52,6 +52,9 @@ def run_ast_test(test_case_instance, gen_ast, gold):
         *map(doctrans.source_transformer.to_code, (gold, gen_ast))
     )
 
+    # from meta.asttools import print_ast
+    # print_ast(gen_ast)
+    # print_ast(gold)
     test_case_instance.assertTrue(
         cmp_ast(gen_ast, gold), "Generated AST doesn't match reference AST"
     )

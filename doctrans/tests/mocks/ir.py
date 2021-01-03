@@ -554,7 +554,7 @@ intermediate_repr_no_default_doc = {
     "zoo, or the ophthalmology focussed ml-prepare "
     "library",
     "params": OrderedDict(
-        [
+        (
             (
                 "dataset_name",
                 {"default": "mnist", "doc": "name of dataset.", "typ": "str"},
@@ -564,7 +564,7 @@ intermediate_repr_no_default_doc = {
                 {
                     "default": "~/tensorflow_datasets",
                     "doc": "directory to look for models in.",
-                    "typ": "Optional[str]",
+                    "typ": "str",
                 },
             ),
             (
@@ -583,10 +583,10 @@ intermediate_repr_no_default_doc = {
                     "typ": "Optional[dict]",
                 },
             ),
-        ]
+        )
     ),
     "returns": OrderedDict(
-        [
+        (
             (
                 "return_type",
                 {
@@ -597,8 +597,8 @@ intermediate_repr_no_default_doc = {
                     "Tuple[np.ndarray, "
                     "np.ndarray]]",
                 },
-            )
-        ]
+            ),
+        )
     ),
 }
 intermediate_repr_extra_colons = {
@@ -810,7 +810,7 @@ intermediate_repr = {
                     "doc": "directory to look for models in. "
                     "Defaults to "
                     '"~/tensorflow_datasets"',
-                    "typ": "Optional[str]",
+                    "typ": "str",
                 },
             ),
             (

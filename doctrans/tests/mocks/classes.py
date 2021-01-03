@@ -42,7 +42,7 @@ class ConfigClass(object):
     :cvar return_type: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))"""
 
     dataset_name: str = "mnist"
-    tfds_dir: Optional[str] = "~/tensorflow_datasets"
+    tfds_dir: str = "~/tensorflow_datasets"
     K: Literal["np", "tf"] = "np"
     as_numpy: Optional[bool] = None
     data_loader_kwargs: Optional[dict] = None
@@ -111,14 +111,8 @@ class_ast = ClassDef(
             expr_target=None,
         ),
         AnnAssign(
-            annotation=Subscript(
-                Name("Optional", Load()),
-                Index(
-                    value=Name(
-                        "str",
-                        Load(),
-                    )
-                ),
+            annotation=Name(
+                "str",
                 Load(),
             ),
             simple=1,
@@ -277,7 +271,8 @@ class_ast = ClassDef(
 
 class_ast_no_default_doc = deepcopy(class_ast)
 class_ast_no_default_doc.body[0].value = set_value(
-    "\n    Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library\n\n"
+    "\n    Acquire from the official tensorflow_datasets model zoo,"
+    " or the ophthalmology focussed ml-prepare library\n\n"
     "    :cvar dataset_name: name of dataset.\n"
     "    :cvar tfds_dir: directory to look for models in.\n"
     "    :cvar K: backend engine, e.g., `np` or `tf`.\n"
