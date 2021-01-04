@@ -183,3 +183,6 @@ def gen(
 
     with open(output_filename, "a") as f:
         f.write(to_code(parsed_ast))
+
+
+__all__ = ["gen"]

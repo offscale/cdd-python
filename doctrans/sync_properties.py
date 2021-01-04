@@ -157,3 +157,6 @@ def sync_property(
         to_code(replacement_node)
     )
     return gen_ast
+
+
+__all__ = ["sync_property", "sync_properties"]

@@ -28,6 +28,27 @@ from doctrans.ast_utils import (
     set_value,
 )
 
+argparse_add_argument_ast = Expr(
+    Call(
+        args=[set_value("--num")],
+        func=Attribute(
+            Name("argument_parser", Load()),
+            "add_argument",
+            Load(),
+        ),
+        keywords=[
+            keyword(arg="type", value=Name("int", Load()), identifier=None),
+            keyword(
+                arg="required",
+                value=set_value(True),
+                identifier=None,
+            ),
+        ],
+        expr=None,
+        expr_func=None,
+    )
+)
+
 argparse_func_str = '''
 def set_cli_args(argument_parser):
     """
@@ -674,27 +695,6 @@ argparse_func_with_body_ast = fix_missing_locations(
         identifier_name=None,
         stmt=None,
         **maybe_type_comment
-    )
-)
-
-argparse_add_argument_ast = Expr(
-    Call(
-        args=[set_value("--num")],
-        func=Attribute(
-            Name("argument_parser", Load()),
-            "add_argument",
-            Load(),
-        ),
-        keywords=[
-            keyword(arg="type", value=Name("int", Load()), identifier=None),
-            keyword(
-                arg="required",
-                value=set_value(True),
-                identifier=None,
-            ),
-        ],
-        expr=None,
-        expr_func=None,
     )
 )
 

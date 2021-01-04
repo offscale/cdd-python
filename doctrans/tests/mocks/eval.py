@@ -9,3 +9,5 @@ get_modules = tuple(
     for attr in dir(doctrans.tests)
     if not attr.startswith("_") and attr in _attr_within
 )
+
+__all__ = ["get_modules"]

@@ -238,3 +238,5 @@ def _interpolate_return(function_def, intermediate_repr):
 #     :rtype: ```List[AST]```
 #     """
 #     return body if ast.get_docstring(source) is not None else body[1:]
+
+__all__ = ["lstrip_typings", "ir_merge"]

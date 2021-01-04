@@ -7,76 +7,6 @@ from copy import deepcopy
 from doctrans.defaults_utils import remove_defaults_from_intermediate_repr
 from doctrans.pure_utils import params_to_ordered_dict
 
-method_complex_args_variety_ir = {
-    "doc": "Call cliff",
-    "name": "call_cliff",
-    "params": OrderedDict(
-        (
-            ("dataset_name", {"doc": "name of dataset."}),
-            ("as_numpy", {"doc": "Convert to numpy ndarrays"}),
-            (
-                "K",
-                {
-                    "doc": "backend engine, e.g., `np` or " "`tf`.",
-                    "typ": "Literal['np', 'tf']",
-                },
-            ),
-            (
-                "tfds_dir",
-                {
-                    "default": "~/tensorflow_datasets",
-                    "doc": "directory to look for models in.",
-                    "typ": "str",
-                },
-            ),
-            (
-                "writer",
-                {
-                    "default": "stdout",
-                    "typ": "str",
-                    # TODO: {"default": "```stdout```", "doc": ...} and no typ
-                    "doc": "IO object to write out to",
-                },
-            ),
-            (
-                "kwargs",
-                {"doc": "additional keyword arguments", "typ": "Optional[dict]"},
-            ),
-        )
-    ),
-    "returns": OrderedDict(
-        (
-            (
-                "return_type",
-                {"default": "K", "doc": "backend engine", "typ": "Literal['np', 'tf']"},
-            ),
-        )
-    ),
-    "type": "self",
-}
-
-function_adder_ir = {
-    "doc": "",
-    "name": "add_6_5",
-    "params": OrderedDict(
-        [
-            ("a", {"default": 6, "doc": "first param", "typ": "int"}),
-            ("b", {"default": 5, "doc": "second param", "typ": "int"}),
-        ]
-    ),
-    "returns": OrderedDict(
-        [
-            (
-                "return_type",
-                {
-                    "default": "```operator.add(a, b)```",
-                    "doc": "Aggregated summation " "of `a` and `b`.",
-                },
-            )
-        ]
-    ),
-    "type": "static",
-}
 class_google_tf_tensorboard_ir = {
     "doc": "Enable visualizations for TensorBoard.\n"
     "TensorBoard is a visualization tool provided with TensorFlow.\n"
@@ -547,90 +477,94 @@ docstring_google_tf_lambda_callback_ir = {
     "returns": None,
     "type": "static",
 }
-intermediate_repr_no_default_doc = {
-    "name": None,
-    "type": "static",
-    "doc": "Acquire from the official tensorflow_datasets model "
-    "zoo, or the ophthalmology focussed ml-prepare "
-    "library",
+
+docstring_google_tf_adadelta_function_ir = {
+    "doc": "Optimizer that implements the Adadelta algorithm.\n"
+    "\n"
+    "Adadelta optimization is a stochastic gradient descent method that is based on\n"
+    "adaptive learning rate per dimension to address two drawbacks:\n"
+    "\n"
+    "- The continual decay of learning rates throughout training\n"
+    "- The need for a manually selected global learning rate\n"
+    "\n"
+    "Adadelta is a more robust extension of Adagrad that adapts learning rates\n"
+    "based on a moving window of gradient updates, instead of accumulating all\n"
+    "past gradients. This way, Adadelta continues learning even when many updates\n"
+    "have been done. Compared to Adagrad, in the original version of Adadelta you\n"
+    "don't have to set an initial learning rate. In this version, initial\n"
+    "learning rate can be set, as in most other Keras optimizers.\n"
+    "\n"
+    'According to section 4.3 ("Effective Learning rates"), near the end of\n'
+    "training step sizes converge to 1 which is effectively a high learning\n"
+    "rate which would cause divergence. This occurs only near the end of the\n"
+    "training as gradients and step sizes are small, and the epsilon constant\n"
+    "in the numerator and denominator dominate past gradients and parameter\n"
+    "updates which converge the learning rate to 1.\n"
+    "\n"
+    'According to section 4.4("Speech Data"),where a large neural network with\n'
+    "4 hidden layers was trained on a corpus of US English data, ADADELTA was\n"
+    "used with 100 network replicas.The epsilon used is 1e-6 with rho=0.95\n"
+    "which converged faster than ADAGRAD, by the following construction:\n"
+    "def __init__(self, lr=1.0, rho=0.95, epsilon=1e-6, decay=0., **kwargs):\n"
+    "\n"
+    "\n"
+    "Reference:\n"
+    "    - [Zeiler, 2012](http://arxiv.org/abs/1212.5701)",
+    "name": "Adadelta",
     "params": OrderedDict(
         (
             (
-                "dataset_name",
-                {"default": "mnist", "doc": "name of dataset.", "typ": "str"},
-            ),
-            (
-                "tfds_dir",
+                "learning_rate",
                 {
-                    "default": "~/tensorflow_datasets",
-                    "doc": "directory to look for models in.",
-                    "typ": "str",
+                    "default": 0.001,
+                    "doc": "A `Tensor`, floating point value, or a schedule that is a\n"
+                    "  `tf.keras.optimizers.schedules.LearningRateSchedule`. The learning rate.\n"
+                    "  To match the exact form in the original paper use 1.0.",
+                    "typ": "float",
                 },
             ),
             (
-                "K",
+                "rho",
                 {
-                    "default": "np",
-                    "doc": "backend engine, e.g., `np` or " "`tf`.",
-                    "typ": "Literal['np', 'tf']",
+                    "default": 0.95,
+                    "doc": "A `Tensor` or a floating point value. The decay rate.",
+                    "typ": "float",
                 },
             ),
-            ("as_numpy", {"doc": "Convert to numpy ndarrays", "typ": "Optional[bool]"}),
             (
-                "data_loader_kwargs",
+                "epsilon",
                 {
-                    "doc": "pass this as arguments to " "data_loader function",
+                    "default": 1e-07,
+                    "doc": "A `Tensor` or a floating point value.  A constant epsilon used\n"
+                    "         to better conditioning the grad update.",
+                    "typ": "float",
+                },
+            ),
+            (
+                "name",
+                {
+                    "default": "Adadelta",
+                    "doc": "Optional name prefix for the operations created when applying\n"
+                    "  gradients. ",
+                    "typ": "Optional[str]",
+                },
+            ),
+            (
+                "kwargs",
+                {
+                    "doc": "Keyword arguments. Allowed to be one of\n"
+                    '  `"clipnorm"` or `"clipvalue"`.\n'
+                    '  `"clipnorm"` (float) clips gradients by norm; `"clipvalue"` (float) clips\n'
+                    "  gradients by value.",
                     "typ": "Optional[dict]",
                 },
             ),
+            ("_HAS_AGGREGATE_GRAD", {"default": True, "typ": "bool"}),
         )
-    ),
-    "returns": OrderedDict(
-        (
-            (
-                "return_type",
-                {
-                    "default": "(np.empty(0), np.empty(0))",
-                    "doc": "Train and tests dataset splits.",
-                    "typ": "Union[Tuple[tf.data.Dataset, "
-                    "tf.data.Dataset], "
-                    "Tuple[np.ndarray, "
-                    "np.ndarray]]",
-                },
-            ),
-        )
-    ),
-}
-intermediate_repr_extra_colons = {
-    "name": None,
-    "params": params_to_ordered_dict(
-        ({"doc": "Example: foo", "name": "dataset_name", "typ": "str"},)
     ),
     "returns": None,
-    "doc": "Some comment",
-    "type": "static",
 }
-intermediate_repr_only_return_type = {
-    "name": None,
-    "type": "static",
-    "doc": "Some comment",
-    "params": params_to_ordered_dict(
-        (
-            {
-                "doc": "Example: foo",
-                "name": "dataset_name",
-            }
-        )
-    ),
-    "returns": params_to_ordered_dict(
-        {
-            "doc": "Train and tests dataset splits.",
-            "name": "return_type",
-            "typ": "Union[Tuple[tf.data.Dataset, tf.data.Dataset], "
-            "Tuple[np.ndarray, np.ndarray]]",
-        }
-    ),
-}
+
 docstring_google_tf_adam_ir = {
     "doc": "Optimizer that implements the Adam algorithm.\n"
     "Adam optimization is a stochastic gradient descent method that is based on\n"
@@ -787,6 +721,165 @@ docstring_google_tf_squared_hinge_ir = {
     "returns": None,
     "type": "static",
 }
+
+function_adder_ir = {
+    "doc": "",
+    "name": "add_6_5",
+    "params": OrderedDict(
+        [
+            ("a", {"default": 6, "doc": "first param", "typ": "int"}),
+            ("b", {"default": 5, "doc": "second param", "typ": "int"}),
+        ]
+    ),
+    "returns": OrderedDict(
+        [
+            (
+                "return_type",
+                {
+                    "default": "```operator.add(a, b)```",
+                    "doc": "Aggregated summation " "of `a` and `b`.",
+                },
+            )
+        ]
+    ),
+    "type": "static",
+}
+
+method_complex_args_variety_ir = {
+    "doc": "Call cliff",
+    "name": "call_cliff",
+    "params": OrderedDict(
+        (
+            ("dataset_name", {"doc": "name of dataset."}),
+            ("as_numpy", {"doc": "Convert to numpy ndarrays"}),
+            (
+                "K",
+                {
+                    "doc": "backend engine, e.g., `np` or " "`tf`.",
+                    "typ": "Literal['np', 'tf']",
+                },
+            ),
+            (
+                "tfds_dir",
+                {
+                    "default": "~/tensorflow_datasets",
+                    "doc": "directory to look for models in.",
+                    "typ": "str",
+                },
+            ),
+            (
+                "writer",
+                {
+                    "default": "stdout",
+                    "typ": "str",
+                    # TODO: {"default": "```stdout```", "doc": ...} and no typ
+                    "doc": "IO object to write out to",
+                },
+            ),
+            (
+                "kwargs",
+                {"doc": "additional keyword arguments", "typ": "Optional[dict]"},
+            ),
+        )
+    ),
+    "returns": OrderedDict(
+        (
+            (
+                "return_type",
+                {"default": "K", "doc": "backend engine", "typ": "Literal['np', 'tf']"},
+            ),
+        )
+    ),
+    "type": "self",
+}
+
+intermediate_repr_extra_colons = {
+    "name": None,
+    "params": params_to_ordered_dict(
+        ({"doc": "Example: foo", "name": "dataset_name", "typ": "str"},)
+    ),
+    "returns": None,
+    "doc": "Some comment",
+    "type": "static",
+}
+
+intermediate_repr_no_default_doc = {
+    "name": None,
+    "type": "static",
+    "doc": "Acquire from the official tensorflow_datasets model "
+    "zoo, or the ophthalmology focussed ml-prepare "
+    "library",
+    "params": OrderedDict(
+        (
+            (
+                "dataset_name",
+                {"default": "mnist", "doc": "name of dataset.", "typ": "str"},
+            ),
+            (
+                "tfds_dir",
+                {
+                    "default": "~/tensorflow_datasets",
+                    "doc": "directory to look for models in.",
+                    "typ": "str",
+                },
+            ),
+            (
+                "K",
+                {
+                    "default": "np",
+                    "doc": "backend engine, e.g., `np` or " "`tf`.",
+                    "typ": "Literal['np', 'tf']",
+                },
+            ),
+            ("as_numpy", {"doc": "Convert to numpy ndarrays", "typ": "Optional[bool]"}),
+            (
+                "data_loader_kwargs",
+                {
+                    "doc": "pass this as arguments to " "data_loader function",
+                    "typ": "Optional[dict]",
+                },
+            ),
+        )
+    ),
+    "returns": OrderedDict(
+        (
+            (
+                "return_type",
+                {
+                    "default": "(np.empty(0), np.empty(0))",
+                    "doc": "Train and tests dataset splits.",
+                    "typ": "Union[Tuple[tf.data.Dataset, "
+                    "tf.data.Dataset], "
+                    "Tuple[np.ndarray, "
+                    "np.ndarray]]",
+                },
+            ),
+        )
+    ),
+}
+
+intermediate_repr_only_return_type = {
+    "name": None,
+    "type": "static",
+    "doc": "Some comment",
+    "params": params_to_ordered_dict(
+        (
+            {
+                "doc": "Example: foo",
+                "name": "dataset_name",
+            }
+        )
+    ),
+    "returns": params_to_ordered_dict(
+        {
+            "doc": "Train and tests dataset splits.",
+            "name": "return_type",
+            "typ": "Union[Tuple[tf.data.Dataset, tf.data.Dataset], "
+            "Tuple[np.ndarray, np.ndarray]]",
+        }
+    ),
+}
+
 intermediate_repr = {
     "name": None,
     "type": "static",
@@ -853,89 +946,21 @@ intermediate_repr = {
 intermediate_repr_no_default_doc_or_prop = remove_defaults_from_intermediate_repr(
     deepcopy(intermediate_repr), emit_defaults=False
 )
-docstring_google_tf_adadelta_function_ir = {
-    "doc": "Optimizer that implements the Adadelta algorithm.\n"
-    "\n"
-    "Adadelta optimization is a stochastic gradient descent method that is based on\n"
-    "adaptive learning rate per dimension to address two drawbacks:\n"
-    "\n"
-    "- The continual decay of learning rates throughout training\n"
-    "- The need for a manually selected global learning rate\n"
-    "\n"
-    "Adadelta is a more robust extension of Adagrad that adapts learning rates\n"
-    "based on a moving window of gradient updates, instead of accumulating all\n"
-    "past gradients. This way, Adadelta continues learning even when many updates\n"
-    "have been done. Compared to Adagrad, in the original version of Adadelta you\n"
-    "don't have to set an initial learning rate. In this version, initial\n"
-    "learning rate can be set, as in most other Keras optimizers.\n"
-    "\n"
-    'According to section 4.3 ("Effective Learning rates"), near the end of\n'
-    "training step sizes converge to 1 which is effectively a high learning\n"
-    "rate which would cause divergence. This occurs only near the end of the\n"
-    "training as gradients and step sizes are small, and the epsilon constant\n"
-    "in the numerator and denominator dominate past gradients and parameter\n"
-    "updates which converge the learning rate to 1.\n"
-    "\n"
-    'According to section 4.4("Speech Data"),where a large neural network with\n'
-    "4 hidden layers was trained on a corpus of US English data, ADADELTA was\n"
-    "used with 100 network replicas.The epsilon used is 1e-6 with rho=0.95\n"
-    "which converged faster than ADAGRAD, by the following construction:\n"
-    "def __init__(self, lr=1.0, rho=0.95, epsilon=1e-6, decay=0., **kwargs):\n"
-    "\n"
-    "\n"
-    "Reference:\n"
-    "    - [Zeiler, 2012](http://arxiv.org/abs/1212.5701)",
-    "name": "Adadelta",
-    "params": OrderedDict(
-        (
-            (
-                "learning_rate",
-                {
-                    "default": 0.001,
-                    "doc": "A `Tensor`, floating point value, or a schedule that is a\n"
-                    "  `tf.keras.optimizers.schedules.LearningRateSchedule`. The learning rate.\n"
-                    "  To match the exact form in the original paper use 1.0.",
-                    "typ": "float",
-                },
-            ),
-            (
-                "rho",
-                {
-                    "default": 0.95,
-                    "doc": "A `Tensor` or a floating point value. The decay rate.",
-                    "typ": "float",
-                },
-            ),
-            (
-                "epsilon",
-                {
-                    "default": 1e-07,
-                    "doc": "A `Tensor` or a floating point value.  A constant epsilon used\n"
-                    "         to better conditioning the grad update.",
-                    "typ": "float",
-                },
-            ),
-            (
-                "name",
-                {
-                    "default": "Adadelta",
-                    "doc": "Optional name prefix for the operations created when applying\n"
-                    "  gradients. ",
-                    "typ": "Optional[str]",
-                },
-            ),
-            (
-                "kwargs",
-                {
-                    "doc": "Keyword arguments. Allowed to be one of\n"
-                    '  `"clipnorm"` or `"clipvalue"`.\n'
-                    '  `"clipnorm"` (float) clips gradients by norm; `"clipvalue"` (float) clips\n'
-                    "  gradients by value.",
-                    "typ": "Optional[dict]",
-                },
-            ),
-            ("_HAS_AGGREGATE_GRAD", {"default": True, "typ": "bool"}),
-        )
-    ),
-    "returns": None,
-}
+
+__all__ = [
+    "class_google_tf_tensorboard_ir",
+    "class_torch_nn_l1loss_ir",
+    "docstring_google_tf_adadelta_function_ir",
+    "docstring_google_tf_adadelta_ir",
+    "docstring_google_tf_adam_ir",
+    "docstring_google_tf_lambda_callback_ir",
+    "docstring_google_tf_squared_hinge_ir",
+    "function_adder_ir",
+    "intermediate_repr",
+    "intermediate_repr_extra_colons",
+    "intermediate_repr_no_default_doc",
+    "intermediate_repr_no_default_doc_or_prop",
+    "intermediate_repr_only_return_type",
+    "method_complex_args_variety_ir",
+    "params_to_ordered_dict",
+]
