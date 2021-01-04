@@ -2,63 +2,11 @@
 Mocks for docstrings
 """
 
-docstring_str = """
-Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
+docstring_extra_colons_str = """
+Some comment
 
-:param dataset_name: name of dataset. Defaults to "mnist"
+:param dataset_name: Example: foo
 :type dataset_name: ```str```
-
-:param tfds_dir: directory to look for models in. Defaults to "~/tensorflow_datasets"
-:type tfds_dir: ```str```
-
-:param K: backend engine, e.g., `np` or `tf`. Defaults to "np"
-:type K: ```Literal['np', 'tf']```
-
-:param as_numpy: Convert to numpy ndarrays
-:type as_numpy: ```Optional[bool]```
-
-:param data_loader_kwargs: pass this as arguments to data_loader function
-:type data_loader_kwargs: ```Optional[dict]```
-
-:return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
-:rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
-"""
-
-docstring_no_default_str = """
-Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
-
-:param dataset_name: name of dataset.
-:type dataset_name: ```str```
-
-:param tfds_dir: directory to look for models in.
-:type tfds_dir: ```str```
-
-:param K: backend engine, e.g., `np` or `tf`.
-:type K: ```Literal['np', 'tf']```
-
-:param as_numpy: Convert to numpy ndarrays
-:type as_numpy: ```Optional[bool]```
-
-:param data_loader_kwargs: pass this as arguments to data_loader function
-:type data_loader_kwargs: ```Optional[dict]```
-
-:return: Train and tests dataset splits.
-:rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
-"""
-
-docstring_google_str = """
-Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
-
-Args:
-  dataset_name (str): name of dataset. Defaults to "mnist"
-  tfds_dir (str): directory to look for models in. Defaults to "~/tensorflow_datasets"
-  K (Literal['np', 'tf']): backend engine, e.g., `np` or `tf`. Defaults to "np"
-  as_numpy (Optional[bool]): Convert to numpy ndarrays
-  data_loader_kwargs (Optional[dict]): pass this as arguments to data_loader function
-
-Returns:
-  Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
-   Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 """
 
 # https://github.com/tensorflow/tensorflow/blob/7ad2723/tensorflow/python/keras/losses.py#L845-L858
@@ -237,27 +185,67 @@ model.fit(...,
 ```
 """
 
-docstring_numpydoc_str = """
+docstring_google_str = """
 Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
 
-Parameters
-----------
-dataset_name : str
-    name of dataset. Defaults to "mnist"
-tfds_dir : str
-    directory to look for models in. Defaults to "~/tensorflow_datasets"
-K : Literal['np', 'tf']
-    backend engine, e.g., `np` or `tf`. Defaults to "np"
-as_numpy : Optional[bool]
-    Convert to numpy ndarrays
-data_loader_kwargs : Optional[dict]
-    pass this as arguments to data_loader function
+Args:
+  dataset_name (str): name of dataset. Defaults to "mnist"
+  tfds_dir (str): directory to look for models in. Defaults to "~/tensorflow_datasets"
+  K (Literal['np', 'tf']): backend engine, e.g., `np` or `tf`. Defaults to "np"
+  as_numpy (Optional[bool]): Convert to numpy ndarrays
+  data_loader_kwargs (Optional[dict]): pass this as arguments to data_loader function
 
-Returns
--------
-Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]
-    Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
+Returns:
+  Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
+   Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
+"""
 
+docstring_no_default_doc_str = """
+Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
+
+:param dataset_name: name of dataset.
+:type dataset_name: ```str```
+
+:param tfds_dir: directory to look for models in.
+:type tfds_dir: ```str```
+
+:param K: backend engine, e.g., `np` or `tf`.
+:type K: ```Literal['np', 'tf']```
+
+:param as_numpy: Convert to numpy ndarrays
+:type as_numpy: ```Optional[bool]```
+
+:param data_loader_kwargs: pass this as arguments to data_loader function
+:type data_loader_kwargs: ```Optional[dict]```
+
+:return: Train and tests dataset splits.
+:rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
+"""
+
+docstring_no_default_str = """
+Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
+
+:param dataset_name: name of dataset.
+:type dataset_name: ```str```
+
+:param tfds_dir: directory to look for models in.
+:type tfds_dir: ```str```
+
+:param K: backend engine, e.g., `np` or `tf`.
+:type K: ```Literal['np', 'tf']```
+
+:param as_numpy: Convert to numpy ndarrays
+:type as_numpy: ```Optional[bool]```
+
+:param data_loader_kwargs: pass this as arguments to data_loader function
+:type data_loader_kwargs: ```Optional[dict]```
+
+:return: Train and tests dataset splits.
+:rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
+"""
+
+docstring_numpydoc_only_doc_str = """
+Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
 """
 
 docstring_numpydoc_only_params_str = """
@@ -283,37 +271,27 @@ Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]
 
 """
 
-docstring_numpydoc_only_doc_str = """
-Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
-"""
-
-docstring_no_default_doc_str = """
+docstring_numpydoc_str = """
 Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
 
-:param dataset_name: name of dataset.
-:type dataset_name: ```str```
+Parameters
+----------
+dataset_name : str
+    name of dataset. Defaults to "mnist"
+tfds_dir : str
+    directory to look for models in. Defaults to "~/tensorflow_datasets"
+K : Literal['np', 'tf']
+    backend engine, e.g., `np` or `tf`. Defaults to "np"
+as_numpy : Optional[bool]
+    Convert to numpy ndarrays
+data_loader_kwargs : Optional[dict]
+    pass this as arguments to data_loader function
 
-:param tfds_dir: directory to look for models in.
-:type tfds_dir: ```str```
+Returns
+-------
+Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]
+    Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 
-:param K: backend engine, e.g., `np` or `tf`.
-:type K: ```Literal['np', 'tf']```
-
-:param as_numpy: Convert to numpy ndarrays
-:type as_numpy: ```Optional[bool]```
-
-:param data_loader_kwargs: pass this as arguments to data_loader function
-:type data_loader_kwargs: ```Optional[dict]```
-
-:return: Train and tests dataset splits.
-:rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
-"""
-
-docstring_extra_colons_str = """
-Some comment
-
-:param dataset_name: Example: foo
-:type dataset_name: ```str```
 """
 
 docstring_only_return_type_str = """
@@ -322,6 +300,28 @@ Some comment
 :param dataset_name: Example: foo
 
 :return: Train and tests dataset splits.
+:rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
+"""
+
+docstring_str = """
+Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
+
+:param dataset_name: name of dataset. Defaults to "mnist"
+:type dataset_name: ```str```
+
+:param tfds_dir: directory to look for models in. Defaults to "~/tensorflow_datasets"
+:type tfds_dir: ```str```
+
+:param K: backend engine, e.g., `np` or `tf`. Defaults to "np"
+:type K: ```Literal['np', 'tf']```
+
+:param as_numpy: Convert to numpy ndarrays
+:type as_numpy: ```Optional[bool]```
+
+:param data_loader_kwargs: pass this as arguments to data_loader function
+:type data_loader_kwargs: ```Optional[dict]```
+
+:return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """
 
