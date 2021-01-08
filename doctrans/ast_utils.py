@@ -250,6 +250,8 @@ def param2argparse_param(param, emit_default_doc=True):
         required=required
         # _default, _param, action, required, typ#
     )
+    if default is None and _param.get("default") == NoneStr:
+        default, required = NoneStr, False
     if _action:
         action = _action
     if typ == "pickle.loads":
@@ -265,7 +267,6 @@ def param2argparse_param(param, emit_default_doc=True):
 
     # if is_kwarg and required:
     #     required = False
-
     return Expr(
         Call(
             args=[set_value("--{name}".format(name=name))],
@@ -323,7 +324,7 @@ def param2argparse_param(param, emit_default_doc=True):
                         if default is None
                         else keyword(
                             arg="default",
-                            value=set_value(default),
+                            value=set_value(None if default == NoneStr else default),
                             identifier=None,
                         ),
                     ),

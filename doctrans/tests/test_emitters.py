@@ -12,7 +12,7 @@ from meta.asttools import cmp_ast
 
 from doctrans import emit, parse
 from doctrans.ast_utils import annotate_ancestry, find_in_ast, get_function_type
-from doctrans.pure_utils import PY3_8, deindent, reindent, rpartial, tab
+from doctrans.pure_utils import PY3_8, deindent, reindent, rpartial, tab, pp
 from doctrans.tests.mocks.argparse import (
     argparse_func_action_append_ast,
     argparse_func_ast,
@@ -113,13 +113,12 @@ class TestEmitters(TestCase):
         Tests whether `to_argparse` produces `argparse_function_google_tf_tensorboard_ast`
                                     given `class_google_tf_tensorboard_ast`
         """
-        ir = parse.class_(
-            class_google_tf_tensorboard_ast, merge_inner_function="__init__"
-        )
         run_ast_test(
             self,
             emit.argparse_function(
-                ir,
+                parse.class_(
+                    class_google_tf_tensorboard_ast, merge_inner_function="__init__"
+                ),
                 emit_default_doc=False,
                 emit_default_doc_in_return=False,
             ),
