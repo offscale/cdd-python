@@ -18,9 +18,11 @@ from doctrans.tests.mocks.argparse import (
     argparse_func_ast,
     argparse_func_torch_nn_l1loss_ast,
     argparse_func_with_body_ast,
+    argparse_function_google_tf_tensorboard_ast,
 )
 from doctrans.tests.mocks.classes import (
     class_ast,
+    class_google_tf_tensorboard_ast,
     class_nargs_ast,
     class_squared_hinge_config_ast,
 )
@@ -29,6 +31,7 @@ from doctrans.tests.mocks.ir import class_torch_nn_l1loss_ir, intermediate_repr
 from doctrans.tests.mocks.methods import (
     class_with_method_and_body_types_ast,
     class_with_method_ast,
+    class_with_method_str,
     class_with_method_types_ast,
     class_with_method_types_str,
     function_google_tf_squared_hinge_str,
@@ -69,7 +72,10 @@ class TestEmitters(TestCase):
         """
         run_ast_test(
             self,
-            emit.class_(parse.docstring(docstring_str), emit_default_doc=True),
+            emit.class_(
+                parse.docstring(docstring_str, emit_default_doc=True),
+                emit_default_doc=True,
+            ),
             gold=class_ast,
         )
 
@@ -100,6 +106,24 @@ class TestEmitters(TestCase):
                 function_name="set_cli_action_append",
             ),
             gold=argparse_func_action_append_ast,
+        )
+
+    def test_to_argparse_google_tf_tensorboard(self) -> None:
+        """
+        Tests whether `to_argparse` produces `argparse_function_google_tf_tensorboard_ast`
+                                    given `class_google_tf_tensorboard_ast`
+        """
+        ir = parse.class_(
+            class_google_tf_tensorboard_ast, merge_inner_function="__init__"
+        )
+        run_ast_test(
+            self,
+            emit.argparse_function(
+                ir,
+                emit_default_doc=False,
+                emit_default_doc_in_return=False,
+            ),
+            gold=argparse_function_google_tf_tensorboard_ast,
         )
 
     def test_to_docstring(self) -> None:
@@ -224,6 +248,14 @@ class TestEmitters(TestCase):
         """
         Tests that `function` can generate a function_def with types in docstring
         """
+
+        # Sanity check
+        run_ast_test(
+            self,
+            class_with_method_ast,
+            gold=ast.parse(class_with_method_str).body[0],
+        )
+
         function_def = deepcopy(
             next(filter(rpartial(isinstance, FunctionDef), class_with_method_ast.body))
         )

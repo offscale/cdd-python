@@ -10,7 +10,9 @@ from functools import partial
 from itertools import takewhile
 from operator import contains, eq
 
-from doctrans.pure_utils import count_iter_items, location_within, quote
+from doctrans.pure_utils import PY_GTE_3_9, count_iter_items, location_within, quote
+
+NoneStr = "```(None)```" if PY_GTE_3_9 else "```None```"
 
 
 def ast_parse_fix(s):
@@ -141,7 +143,7 @@ def extract_default(
         return fst + line[rest_offset:], default
 
 
-def remove_defaults_from_intermediate_repr(intermediate_repr, emit_defaults=True):
+def remove_defaults_from_intermediate_repr(intermediate_repr, emit_default_prop=True):
     """
     Remove "Default of" text from IR
 
@@ -154,8 +156,8 @@ def remove_defaults_from_intermediate_repr(intermediate_repr, emit_defaults=True
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
-    :param emit_defaults: Whether to emit default property
-    :type emit_defaults: ```bool```
+    :param emit_default_prop: Whether to emit default property
+    :type emit_default_prop: ```bool```
 
     :return: a dictionary of form
         {  "name": Optional[str],
@@ -169,30 +171,28 @@ def remove_defaults_from_intermediate_repr(intermediate_repr, emit_defaults=True
     ir = deepcopy(intermediate_repr)
 
     remove_default_from_param = partial(
-        _remove_default_from_param, emit_defaults=emit_defaults
+        _remove_default_from_param, emit_default_prop=emit_default_prop
     )
     ir.update(
         {
             "params": OrderedDict(map(remove_default_from_param, ir["params"].items())),
             "returns": OrderedDict(
-                (
-                    remove_default_from_param(
-                        (lambda k: (k, ir["returns"][k]))("return_type")
-                    ),
-                )
+                (remove_default_from_param(next(iter(ir["returns"].items()))),)
             ),
         }
     )
     return ir
 
 
-def _remove_default_from_param(param, emit_defaults=True):
+def _remove_default_from_param(param, emit_default_prop=True):
     """
+    Remove default from param iff emit_default_prop is False
+
     :param param: Name, dict with keys: 'typ', 'doc', 'default'
     :type param: ```Tuple[str, dict]```
 
-    :param emit_defaults: Whether to emit default property
-    :type emit_defaults: ```bool```
+    :param emit_default_prop: Whether to emit default property
+    :type emit_default_prop: ```bool```
 
     :return: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
@@ -201,7 +201,7 @@ def _remove_default_from_param(param, emit_defaults=True):
     del param
     doc, default = extract_default(_param["doc"], emit_default_doc=False)
     _param.update({"doc": doc, "default": default})
-    if default is None or not emit_defaults:
+    if default is None or not emit_default_prop:
         del _param["default"]
     return name, _param
 
@@ -210,8 +210,8 @@ def set_default_doc(param, emit_default_doc=True):
     """
     Emit param with 'doc' set to include 'Defaults'
 
-    :param param: dict with keys: 'typ', 'doc', 'default'
-    :type param: ```dict```
+    :param param: Name, dict with keys: 'typ', 'doc', 'default'
+    :type param: ```Tuple[str, dict]```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
@@ -219,29 +219,34 @@ def set_default_doc(param, emit_default_doc=True):
     :return: Same shape as input but with Default append to doc.
     :rtype: ```dict```
     """
+    name, _param = param
+    del param
     # if param is None: param = {"doc": "", "typ": "Any"}
-    if param is None or "doc" not in param:
-        return param
-    has_defaults = "Defaults" in param["doc"] or "defaults" in param["doc"]
+    if _param is None or "doc" not in _param:
+        return name, _param
+    has_defaults = "Defaults" in _param["doc"] or "defaults" in _param["doc"]
 
     if has_defaults and not emit_default_doc:
         # Remove the default text
-        param["doc"] = extract_default(param["doc"], emit_default_doc=emit_default_doc)[
-            0
-        ]
-    elif "default" in param and not has_defaults and emit_default_doc:
-        param["doc"] = "{doc} Defaults to {default}".format(
-            doc=(
-                param["doc"]
-                if param["doc"][-1] in frozenset((".", ","))
-                else "{doc}.".format(doc=param["doc"])
-            ),
-            default=quote(param["default"])
-            if needs_quoting(param.get("typ"))
-            else param["default"],
-        )
+        _param["doc"] = extract_default(
+            _param["doc"], emit_default_doc=emit_default_doc
+        )[0]
+    elif "default" in _param and not has_defaults and emit_default_doc:
+        if _param["default"] == NoneStr:
+            _param["default"] = None
+        if _param["default"] is not None or not name.endswith("kwargs"):
+            _param["doc"] = "{doc} Defaults to {default}".format(
+                doc=(
+                    _param["doc"]
+                    if _param["doc"][-1] in frozenset((".", ","))
+                    else "{doc}.".format(doc=_param["doc"])
+                ),
+                default=quote(_param["default"])
+                if needs_quoting(_param.get("typ"))
+                else _param["default"],
+            )
 
-    return param
+    return name, _param
 
 
 __all__ = [

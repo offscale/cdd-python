@@ -73,7 +73,7 @@ def param2ast(param):
         _param["typ"] = type(_param["default"]).__name__
     if "default" in _param and isinstance(_param["default"], (Constant, Str)):
         _param["default"] = get_value(_param["default"])
-        if _param["default"] == NoneStr:
+        if _param["default"] in frozenset((NoneStr, None, "None")):
             _param["default"] = None
         if _param["typ"] in frozenset(("Constant", "Str", "NamedConstant")):
             _param["typ"] = "object"
@@ -128,34 +128,42 @@ def param2ast(param):
 
         annotation = ast_parse_fix(_param["typ"])
 
+        value = set_value(None)
         if "default" in _param:
-            try:
-                parsed_default = (
-                    set_value(_param["default"])
-                    if (
-                        _param["default"] is None
-                        or isinstance(_param["default"], (float, int, str))
+            if (
+                isinstance(_param["default"], str)
+                and len(_param["default"]) > 6
+                and _param["default"].startswith("```")
+                and _param["default"].endswith("```")
+                and _param["default"][3:-3] in frozenset(("None", "(None)"))
+            ):
+                value = set_value(None)
+            else:
+                try:
+                    parsed_default = (
+                        set_value(_param["default"])
+                        if (
+                            _param["default"] is None
+                            or isinstance(_param["default"], (float, int, str))
+                        )
+                        and not isinstance(_param["default"], str)
+                        and not (
+                            isinstance(_param["default"], str)
+                            and _param["default"][0] + _param["default"][-1]
+                            in frozenset(("()", "[]", "{}"))
+                        )
+                        else ast.parse(_param["default"])
                     )
-                    and not isinstance(_param["default"], str)
-                    and not (
-                        isinstance(_param["default"], str)
-                        and _param["default"][0] + _param["default"][-1]
-                        in frozenset(("()", "[]", "{}"))
-                    )
-                    else ast.parse(_param["default"])
-                )
-            except SyntaxError:
-                parsed_default = set_value("```{}```".format(_param["default"]))
+                except SyntaxError:
+                    parsed_default = set_value("```{}```".format(_param["default"]))
 
-            value = (
-                parsed_default.body[0].value
-                if hasattr(parsed_default, "body")
-                else parsed_default
-                if "default" in _param
-                else set_value(None)
-            )
-        else:
-            value = set_value(None)
+                value = (
+                    parsed_default.body[0].value
+                    if hasattr(parsed_default, "body")
+                    else parsed_default
+                    if "default" in _param
+                    else set_value(None)
+                )
 
         return AnnAssign(
             annotation=annotation,
@@ -220,29 +228,40 @@ def param2argparse_param(param, emit_default_doc=True):
     :return: `argparse.add_argument` call—with arguments—as an AST node
     :rtype: ```Expr```
     """
-    typ, choices, required, action = "str", None, True, None
-    param[1].setdefault("typ", "Any")
+    name, _param = param
+    del param
+    typ, choices, required, action = (
+        "str",
+        None,
+        _param.get("default") is not None,
+        None,
+    )
+    _param.setdefault("typ", "Any")
     action, choices, required, typ, (name, _param) = _resolve_arg(
-        action, choices, param, required, typ
+        action, choices, (name, _param), required, typ
     )
     # is_kwarg = param[0].endswith("kwargs")
 
-    # del param
     _param.setdefault("doc", "")
     doc, _default = extract_default(_param["doc"], emit_default_doc=emit_default_doc)
     _action, default, _required, typ = infer_type_and_default(
         _param.get("default", _default),
-        typ
+        typ,
+        required=required
         # _default, _param, action, required, typ#
     )
     if _action:
         action = _action
     if typ == "pickle.loads":
         required = False
-    elif _required is False:
-        required = required or _required
-    if param[1].get("typ") and typ == "str":
-        pass
+    # elif _required is False and required is True:
+    #    required = _required
+    # if _param.get("default") == NoneStr:
+    #    required = False
+    # if typ in frozenset(("Any", "object")):
+    #     required, typ = False, "str"
+    # if param[1].get("typ") and typ == "str":
+    #    pass
 
     # if is_kwarg and required:
     #     required = False
@@ -298,7 +317,7 @@ def param2argparse_param(param, emit_default_doc=True):
                             value=set_value(True),
                             identifier=None,
                         )
-                        if required
+                        if required is True
                         else None,
                         default
                         if default is None
@@ -431,6 +450,7 @@ def _resolve_arg(action, choices, param, required, typ):
     :rtype: ```Tuple[Optional[str], Optional[List[str]], bool, Optional[str], Tuple[str, dict]]```
     """
     name, _param = param
+    _required = None
     del param
     if _param["typ"] in simple_types:
         typ = _param["typ"]
@@ -457,7 +477,7 @@ def _resolve_arg(action, choices, param, required, typ):
                     choices = maybe_choices
             elif isinstance(node, Name):
                 if node.id == "Optional":
-                    required = False
+                    _required = False
                 elif node.id in simple_types:
                     typ = node.id
                 elif node.id not in frozenset(("Union",)):
@@ -465,6 +485,10 @@ def _resolve_arg(action, choices, param, required, typ):
 
                 if node.id == "List":
                     action = "append"
+    if _required is None and (typ or "").lower() in frozenset(
+        ("str", "complex", "int", "float", "anystr", "list", "tuple", "dict")
+    ):
+        _required = True
 
     # if isinstance(_param.get("default"), (list, tuple)):
     #    if len()
@@ -472,7 +496,13 @@ def _resolve_arg(action, choices, param, required, typ):
 
     # if isinstance(param.get("default"), (Constant, Str, Num)):
     #     param["default"] = get_value(param["default"])
-    return action, choices, required, typ, (name, _param)
+    return (
+        action,
+        choices,
+        required if _required is None else _required,
+        typ,
+        (name, _param),
+    )
 
 
 def func_arg2param(func_arg):
@@ -669,9 +699,9 @@ def is_argparse_add_argument(node):
         isinstance(node, Expr)
         and isinstance(node.value, Call)
         and isinstance(node.value.func, Attribute)
+        and node.value.func.attr == "add_argument"
         and isinstance(node.value.func.value, Name)
         and node.value.func.value.id == "argument_parser"
-        and node.value.func.attr == "add_argument"
     )
 
 
@@ -1017,7 +1047,7 @@ def it2literal(it):
     )
 
 
-def infer_type_and_default(default, typ):
+def infer_type_and_default(default, typ, required):
     """
     Infer the type string from the default and typ
 
@@ -1027,16 +1057,17 @@ def infer_type_and_default(default, typ):
     :param typ: The type of the argument
     :type typ: ```Optional[str]```
 
+    :param required: Whether to require the argument
+    :type required: ```bool```
+
     :return: action (e.g., for `argparse.Action`), default, whether its required, inferred type str
     :rtype: ```Tuple[str, Any, bool, str]```
     """
-    action, required = None, True
+    action = None
     # if default is None:
     #    if typ is None:
     #        typ = "Any"
-    if isinstance(default, (bool, complex, float, int)):
-        typ = type(default).__name__
-    elif (
+    if (
         isinstance(default, str)
         and len(default) > 6
         and default.startswith("```")
@@ -1045,12 +1076,19 @@ def infer_type_and_default(default, typ):
         default = get_value(get_value(ast.parse(default[3:-3]).body[0]))
         if default is None:
             return action, default, False, typ
-        return infer_type_and_default(default, type(default).__name__)
+        return infer_type_and_default(
+            default, type(default).__name__, required=required
+        )
+    # elif default in (None, "None", NoneStr):
+    #    required, typ = False, "Any"
+    elif type(default).__name__ in simple_types:
+        typ = type(default).__name__
     elif isinstance(default, AST):
         action, default, required, typ = _parse_default_from_ast(
             action, default, required, typ
         )
     elif hasattr(default, "__str__") and str(default) == "<required parameter>":
+        # Special type that PyTorch uses & defines
         action, default, required, typ = None, None, True, default.__class__.__name__
     elif isinstance(default, (list, tuple)):
         if len(default) == 0:
@@ -1062,7 +1100,7 @@ def infer_type_and_default(default, typ):
         #    typ, default = "loads", dumps(default)
     elif isinstance(default, type) or isfunction(default) or isclass(default):
         typ, default, required = "pickle.loads", pickle.dumps(default), False
-    elif not isinstance(default, (bool, complex, float, int, type(None), str)):
+    else:
         raise NotImplementedError(
             "Parsing type {!s}, which contains {!r}".format(type(default), default)
         )

@@ -59,9 +59,13 @@ class TestMarshallDocstring(TestCase):
         """
         Tests whether `parse_docstring` produces `docstring_str_no_default_doc`
               from `docstring_str_no_default_doc`"""
-
+        ir = parse_docstring(
+            docstring_no_default_doc_str,
+            emit_default_doc=False,
+            emit_default_prop=False,
+        )
         self.assertDictEqual(
-            parse_docstring(docstring_no_default_doc_str, emit_default_doc=False),
+            ir,
             intermediate_repr_no_default_doc_or_prop,
         )
 
@@ -102,7 +106,9 @@ class TestMarshallDocstring(TestCase):
         """
         Tests whether `docstring` produces `intermediate_repr_no_default_doc`
               from `docstring_str`"""
-        ir, returns = parse.docstring(docstring_str, return_tuple=True)
+        ir, returns = parse.docstring(
+            docstring_str, return_tuple=True, emit_default_doc=False
+        )
         self.assertTrue(returns)
         self.assertDictEqual(ir, intermediate_repr_no_default_doc)
 
@@ -110,7 +116,9 @@ class TestMarshallDocstring(TestCase):
         """
         Tests whether `docstring` produces `intermediate_repr_no_default_doc`
               from `docstring_numpydoc_str`"""
-        ir, returns = parse.docstring(docstring_numpydoc_str, return_tuple=True)
+        ir, returns = parse.docstring(
+            docstring_numpydoc_str, return_tuple=True, emit_default_doc=False
+        )
         self.assertTrue(returns)
         self.assertDictEqual(ir, intermediate_repr_no_default_doc)
 
@@ -119,7 +127,9 @@ class TestMarshallDocstring(TestCase):
         Tests whether `docstring` produces `intermediate_repr_no_default_doc`
               from `docstring_numpydoc_only_params_str`"""
         ir, returns = parse.docstring(
-            docstring_numpydoc_only_params_str, return_tuple=True
+            docstring_numpydoc_only_params_str,
+            return_tuple=True,
+            emit_default_doc=False,
         )
         self.assertFalse(returns)
         gold = deepcopy(intermediate_repr_no_default_doc)
@@ -154,7 +164,9 @@ class TestMarshallDocstring(TestCase):
         Tests whether `docstring` produces `intermediate_repr_no_default_doc`
               from `docstring_numpydoc_only_returns_str`"""
         ir, returns = parse.docstring(
-            docstring_numpydoc_only_returns_str, return_tuple=True
+            docstring_numpydoc_only_returns_str,
+            return_tuple=True,
+            emit_default_doc=False,
         )
         self.assertTrue(returns)
         self.assertDictEqual(

@@ -124,11 +124,15 @@ def argparse_function(
                                             )
                                         )(
                                             returns=set_default_doc(
-                                                intermediate_repr["returns"][
-                                                    "return_type"
-                                                ],
+                                                next(
+                                                    iter(
+                                                        intermediate_repr[
+                                                            "returns"
+                                                        ].items()
+                                                    )
+                                                ),
                                                 emit_default_doc=emit_default_doc_in_return,
-                                            )
+                                            )[1]
                                         )
                                         if "return_type"
                                         in (
@@ -389,7 +393,9 @@ def docstring(intermediate_repr, docstring_format="rest", emit_default_doc=True)
         params="\n".join(
             ":param {name}: {param[doc]}\n{type_param}".format(
                 name=name,
-                param=set_default_doc(param, emit_default_doc=emit_default_doc),
+                param=set_default_doc((name, param), emit_default_doc=emit_default_doc)[
+                    1
+                ],
                 type_param=":type {name}: ```{typ}```\n".format(
                     name=name,
                     typ=param["typ"],
@@ -416,9 +422,9 @@ def docstring(intermediate_repr, docstring_format="rest", emit_default_doc=True)
                 else param
             )(
                 set_default_doc(
-                    intermediate_repr["returns"]["return_type"],
+                    next(iter(intermediate_repr["returns"].items())),
                     emit_default_doc=emit_default_doc,
-                )
+                )[1]
                 if "return_type" in (intermediate_repr.get("returns") or iter(()))
                 else ""
             )
@@ -545,7 +551,7 @@ def function(
     defaults_from_params = list(
         map(
             lambda param: set_value(None)
-            if param[1].get("default") in (None, NoneStr)
+            if param[1].get("default") in (None, "None", NoneStr)
             else set_value(param[1].get("default")),
             params_no_kwargs,
         )

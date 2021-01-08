@@ -13,7 +13,7 @@ from operator import attrgetter, eq
 from pprint import PrettyPrinter
 from sys import version_info
 
-pp = PrettyPrinter(indent=4, width=119).pprint
+pp = PrettyPrinter(indent=4, width=80).pprint
 tab = " " * 4
 simple_types = {
     "int": 0,
@@ -31,17 +31,30 @@ def rpartial(func, *args):
     return lambda *a: func(*(a + args))
 
 
-def identity(s):
+def identity(*args, **kwargs):
     """
     Identity function
 
-    :param s: Any value
-    :type s: ```Any```
+    :param args: Any values
+    :type args: ```Tuple[Any]```
+
+    :param kwargs: Any values
+    :type kwargs: ```Dict[Str, Any]```
 
     :return: the input value
     :rtype: ```Any```
     """
-    return s
+    # if not args:
+    #     if not kwargs:
+    #         return None
+    #     elif len(kwargs) == 1:
+    #         return next(iter(kwargs.values()))
+    #     else:
+    #         return (*kwargs.values(),)
+    if not kwargs:
+        return args[0] if len(args) == 1 else args
+    else:
+        return *args, *kwargs.values()
 
 
 _python_major_minor = version_info[:2]

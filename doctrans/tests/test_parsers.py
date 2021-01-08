@@ -299,9 +299,7 @@ class TestParsers(TestCase):
         Tests that parse.class produces properly from a `class` in memory of current interpreter
         """
         Adadelta = getattr(
-            inspectable_compile(
-                "{!s}".format(docstring_google_tf_adadelta_function_str)
-            ),
+            inspectable_compile(docstring_google_tf_adadelta_function_str),
             "Adadelta",
         )
         ir = parse.class_(Adadelta)

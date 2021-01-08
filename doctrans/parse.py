@@ -30,6 +30,7 @@ from types import FunctionType
 
 from doctrans import get_logger
 from doctrans.ast_utils import (
+    NoneStr,
     find_ast_type,
     func_arg2param,
     get_function_type,
@@ -123,7 +124,9 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
             "returns": None,
         }
         if doc_str is None
-        else docstring(get_docstring(class_def).replace(":cvar", ":param"))
+        else docstring(
+            get_docstring(class_def).replace(":cvar", ":param"), emit_default_doc=False
+        )
     )
 
     if "return_type" in intermediate_repr["params"]:
@@ -135,7 +138,7 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
         if isinstance(e, AnnAssign):
             typ = to_code(e.annotation).rstrip("\n")
             val = (
-                lambda v: {}
+                lambda v: {"default": NoneStr}
                 if v is None
                 else {
                     "default": v
@@ -157,6 +160,10 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
                     intermediate_repr[key][e.target.id].update(typ_default)
                     typ_default = False
                     break
+                else:
+                    assert (
+                        e.target.id == "return_type"
+                    ), "Docstring was missing {!r}".format(e.target.id)
 
             # if typ_default:
             #     if e.target.id.endswith("kwargs") and typ_default["typ"] == "dict":
@@ -295,9 +302,9 @@ def _inspect(obj, name):
     """
 
     doc = getdoc(obj) or ""
-    ir = docstring(doc) if doc else {}
     sig = signature(obj)
     is_function = isfunction(obj)
+    ir = docstring(doc, emit_default_doc=is_function) if doc else {}
     if not is_function and "type" in ir:
         del ir["type"]
 
@@ -458,6 +465,7 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
     ):
         _param = intermediate_repr["params"].pop(function_def.args.kwarg.arg)
         assert "typ" in _param
+        _param["default"] = NoneStr
         # if "typ" not in _param:
         #     _param["typ"] = (
         #         "Optional[dict]"
@@ -588,14 +596,23 @@ def argparse_ast(function_def, function_type=None, function_name=None):
         "params": OrderedDict(),
     }
     ir = parse_docstring(doc_string, emit_default_doc=True)
+
+    # Whether a default is required, if not found in doc, infer the proper default from type
+    require_default = False
+
+    # Parse all relevant nodes from function body
     for node in function_def.body[1:]:
         if is_argparse_add_argument(node):
-            name, _param = parse_out_param(node, emit_default_doc=False)
+            name, _param = parse_out_param(
+                node, emit_default_doc=False, require_default=require_default
+            )
             (
                 intermediate_repr["params"][name].update
                 if name in intermediate_repr["params"]
                 else partial(setitem, intermediate_repr["params"], name)
             )(_param)
+            if not require_default and _param.get("default") is not None:
+                require_default = True
         elif isinstance(node, Assign) and is_argparse_description(node):
             intermediate_repr["doc"] = get_value(node.value)
         elif isinstance(node, Return) and isinstance(node.value, Tuple):
@@ -609,6 +626,7 @@ def argparse_ast(function_def, function_type=None, function_name=None):
                     ),
                 )
             )
+
     if len(function_def.body) > len(intermediate_repr["params"]) + 3:
         intermediate_repr["_internal"] = {
             "body": list(
@@ -630,7 +648,13 @@ def argparse_ast(function_def, function_type=None, function_name=None):
     return intermediate_repr
 
 
-def docstring(doc_string, infer_type=False, return_tuple=False):
+def docstring(
+    doc_string,
+    infer_type=False,
+    return_tuple=False,
+    emit_default_prop=True,
+    emit_default_doc=True,
+):
     """
     Converts a docstring to an AST
 
@@ -643,6 +667,12 @@ def docstring(doc_string, infer_type=False, return_tuple=False):
     :param return_tuple: Whether to return a tuple, or just the intermediate_repr
     :type return_tuple: ```bool```
 
+    :param emit_default_prop: Whether to include the default dictionary property.
+    :type emit_default_prop: ```bool```
+
+    :param emit_default_doc: Whether help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool```
+
     :return: intermediate_repr, whether it returns or not
     :rtype: ```Optional[Union[dict, Tuple[dict, bool]]]```
     """
@@ -652,7 +682,12 @@ def docstring(doc_string, infer_type=False, return_tuple=False):
     parsed = (
         doc_string
         if isinstance(doc_string, dict)
-        else parse_docstring(doc_string, infer_type=infer_type)
+        else parse_docstring(
+            doc_string,
+            infer_type=infer_type,
+            emit_default_prop=emit_default_prop,
+            emit_default_doc=emit_default_doc,
+        )
     )
 
     if return_tuple:
