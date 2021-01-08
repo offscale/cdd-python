@@ -31,30 +31,17 @@ def rpartial(func, *args):
     return lambda *a: func(*(a + args))
 
 
-def identity(*args, **kwargs):
+def identity(*args):
     """
     Identity function
 
     :param args: Any values
     :type args: ```Tuple[Any]```
 
-    :param kwargs: Any values
-    :type kwargs: ```Dict[Str, Any]```
-
     :return: the input value
     :rtype: ```Any```
     """
-    # if not args:
-    #     if not kwargs:
-    #         return None
-    #     elif len(kwargs) == 1:
-    #         return next(iter(kwargs.values()))
-    #     else:
-    #         return (*kwargs.values(),)
-    if not kwargs:
-        return args[0] if len(args) == 1 else args
-    else:
-        return *args, *kwargs.values()
+    return args[0] if len(args) == 1 else args
 
 
 _python_major_minor = version_info[:2]
