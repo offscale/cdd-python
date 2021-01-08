@@ -1106,7 +1106,7 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
                         ),
                         identifier=None,
                     ),
-                    keyword(arg="required", value=set_value(True), identifier=None),
+                    keyword(arg="default", value=set_value(None), identifier=None),
                 ],
                 expr=None,
                 expr_func=None,
