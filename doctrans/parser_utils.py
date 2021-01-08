@@ -53,7 +53,7 @@ def ir_merge(target, other):
             if target_params[name].get("typ") is None and other_params[name].get("typ"):
                 target_params[name]["typ"] = other_params[name]["typ"]
             if (
-                target_params[name].get("default") in (None, NoneStr)
+                target_params[name].get("default") in (None, "None", NoneStr)
                 and "default" in other_params[name]
             ):
                 target_params[name]["default"] = other_params[name]["default"]

@@ -37,7 +37,7 @@ class ConfigClass(object):
     :cvar dataset_name: name of dataset. Defaults to "mnist"
     :cvar tfds_dir: directory to look for models in. Defaults to "~/tensorflow_datasets"
     :cvar K: backend engine, e.g., `np` or `tf`. Defaults to "np"
-    :cvar as_numpy: Convert to numpy ndarrays
+    :cvar as_numpy: Convert to numpy ndarrays. Defaults to None
     :cvar data_loader_kwargs: pass this as arguments to data_loader function
     :cvar return_type: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))"""
 
@@ -93,7 +93,7 @@ class_ast = ClassDef(
                 ':cvar dataset_name: name of dataset. Defaults to "mnist"\n    '
                 ':cvar tfds_dir: directory to look for models in. Defaults to "~/tensorflow_datasets"\n    '
                 ':cvar K: backend engine, e.g., `np` or `tf`. Defaults to "np"\n    '
-                ":cvar as_numpy: Convert to numpy ndarrays\n    "
+                ":cvar as_numpy: Convert to numpy ndarrays. Defaults to None\n    "
                 ":cvar data_loader_kwargs: pass this as arguments to data_loader function\n    "
                 ":cvar return_type: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))",
             )
@@ -276,7 +276,7 @@ class_ast_no_default_doc.body[0].value = set_value(
     "    :cvar dataset_name: name of dataset.\n"
     "    :cvar tfds_dir: directory to look for models in.\n"
     "    :cvar K: backend engine, e.g., `np` or `tf`.\n"
-    "    :cvar as_numpy: Convert to numpy ndarrays\n"
+    "    :cvar as_numpy: Convert to numpy ndarrays.\n"
     "    :cvar data_loader_kwargs: pass this as arguments to data_loader function\n"
     "    :cvar return_type: Train and tests dataset splits."
 )

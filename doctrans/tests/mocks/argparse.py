@@ -84,7 +84,7 @@ def set_cli_args(argument_parser):
         default="np",
     )
     argument_parser.add_argument(
-        "--as_numpy", type=bool, help="Convert to numpy ndarrays"
+        "--as_numpy", type=bool, help="Convert to numpy ndarrays."
     )
     argument_parser.add_argument(
         "--data_loader_kwargs",
@@ -129,7 +129,7 @@ def set_cli_args(argument_parser):
         required=True,
         default='np',
     )
-    argument_parser.add_argument('--as_numpy', type=bool, help='Convert to numpy ndarrays')
+    argument_parser.add_argument('--as_numpy', type=bool, help='Convert to numpy ndarrays.')
     argument_parser.add_argument(
         '--data_loader_kwargs', type=loads, help='pass this as arguments to data_loader function'
     )
@@ -339,7 +339,7 @@ argparse_func_ast = fix_missing_locations(
                         ),
                         keyword(
                             arg="help",
-                            value=set_value("Convert to numpy ndarrays"),
+                            value=set_value("Convert to numpy ndarrays."),
                             identifier=None,
                         ),
                     ],
@@ -590,7 +590,7 @@ argparse_func_with_body_ast = fix_missing_locations(
                         keyword(
                             arg="help",
                             value=set_value(
-                                "Convert to numpy ndarrays",
+                                "Convert to numpy ndarrays.",
                             ),
                             identifier=None,
                         ),
@@ -795,6 +795,333 @@ argparse_func_action_append_ast = fix_missing_locations(
         stmt=None,
         **maybe_type_comment
     )
+)
+
+argparse_function_google_tf_tensorboard_ast = FunctionDef(
+    args=arguments(
+        args=[set_arg("argument_parser")],
+        defaults=[],
+        kw_defaults=[],
+        kwarg=None,
+        kwonlyargs=[],
+        posonlyargs=[],
+        vararg=None,
+        arg=None,
+    ),
+    body=[
+        Expr(
+            set_value(
+                "\n"
+                "    Set CLI arguments\n\n"
+                "    :param argument_parser: argument parser\n"
+                "    :type argument_parser: ```ArgumentParser```\n\n"
+                "    :return: argument_parser\n"
+                "    :rtype: ```ArgumentParser```\n"
+                "    "
+            )
+        ),
+        Assign(
+            targets=[
+                Attribute(
+                    Name("argument_parser", Load()),
+                    "description",
+                    Store(),
+                )
+            ],
+            lineno=None,
+            type_comment=None,
+            value=set_value(
+                "Enable visualizations for TensorBoard.\n"
+                "TensorBoard is a visualization tool provided with TensorFlow.\n"
+                "This callback logs events for TensorBoard, including:\n"
+                "* Metrics summary plots\n"
+                "* Training graph visualization\n"
+                "* Activation histograms\n"
+                "* Sampled profiling\n"
+                "If you have installed TensorFlow with pip, you should be able\n"
+                "to launch TensorBoard from the command line:\n"
+                "```\n"
+                "tensorboard --logdir=path_to_your_logs\n"
+                "```\n"
+                "You can find more information about TensorBoard\n"
+                "[here](https://www.tensorflow.org/get_started/summaries_and_tensorboard).\n"
+                "\n"
+                "\n"
+                "Basic usage:\n"
+                "```python\n"
+                'tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")\n'
+                "model.fit(x_train, y_train, epochs=2, callbacks=[tensorboard_callback])\n"
+                "# Then run the tensorboard command to view the visualizations.\n"
+                "```\n"
+                "Custom batch-level summaries in a subclassed Model:\n"
+                "```python\n"
+                "class MyModel(tf.keras.Model):\n"
+                "  def build(self, _):\n"
+                "    self.dense = tf.keras.layers.Dense(10)\n"
+                "  def call(self, x):\n"
+                "    outputs = self.dense(x)\n"
+                "    tf.summary.histogram('outputs', outputs)\n"
+                "    return outputs\n"
+                "model = MyModel()\n"
+                "model.compile('sgd', 'mse')\n"
+                "# Make sure to set `update_freq=N` to log a batch-level summary every N batches.\n"
+                "# In addition to any `tf.summary` contained in `Model.call`, metrics added in\n"
+                "# `Model.compile` will be logged every N batches.\n"
+                "tb_callback = tf.keras.callbacks.TensorBoard('./logs', update_freq=1)\n"
+                "model.fit(x_train, y_train, callbacks=[tb_callback])\n"
+                "```\n"
+                "Custom batch-level summaries in a Functional API Model:\n"
+                "```python\n"
+                "def my_summary(x):\n"
+                "  tf.summary.histogram('x', x)\n"
+                "  return x\n"
+                "inputs = tf.keras.Input(10)\n"
+                "x = tf.keras.layers.Dense(10)(inputs)\n"
+                "outputs = tf.keras.layers.Lambda(my_summary)(x)\n"
+                "model = tf.keras.Model(inputs, outputs)\n"
+                "model.compile('sgd', 'mse')\n"
+                "# Make sure to set `update_freq=N` to log a batch-level summary every N batches.\n"
+                "# In addition to any `tf.summary` contained in `Model.call`, metrics added in\n"
+                "# `Model.compile` will be logged every N batches.\n"
+                "tb_callback = tf.keras.callbacks.TensorBoard('./logs', update_freq=1)\n"
+                "model.fit(x_train, y_train, callbacks=[tb_callback])\n"
+                "```\n"
+                "Profiling:\n"
+                "```python\n"
+                "# Profile a single batch, e.g. the 5th batch.\n"
+                "tensorboard_callback = tf.keras.callbacks.TensorBoard(\n"
+                "    log_dir='./logs', profile_batch=5)\n"
+                "model.fit(x_train, y_train, epochs=2, callbacks=[tensorboard_callback])\n"
+                "# Profile a range of batches, e.g. from 10 to 20.\n"
+                "tensorboard_callback = tf.keras.callbacks.TensorBoard(\n"
+                "    log_dir='./logs', profile_batch=(10,20))\n"
+                "model.fit(x_train, y_train, epochs=2, callbacks=[tensorboard_callback])\n"
+                "```"
+            ),
+            expr=None,
+        ),
+        Expr(
+            Call(
+                args=[set_value("--log_dir")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(arg="type", value=Name("str", Load()), identifier=None),
+                    keyword(
+                        arg="help",
+                        value=set_value(
+                            "the path of the directory where to save the log files to be\n"
+                            "      parsed by TensorBoard."
+                        ),
+                        identifier=None,
+                    ),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                    keyword(arg="default", value=set_value("logs"), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            )
+        ),
+        Expr(
+            Call(
+                args=[set_value("--histogram_freq")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(arg="type", value=Name("int", Load()), identifier=None),
+                    keyword(
+                        arg="help",
+                        value=set_value(
+                            "frequency (in epochs) at which to compute activation and\n"
+                            "      weight histograms for the layers of the model. If set to 0, histograms\n"
+                            "      won't be computed. Validation data (or split) must be specified for\n"
+                            "      histogram visualizations."
+                        ),
+                        identifier=None,
+                    ),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                    keyword(arg="default", value=set_value(0), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            )
+        ),
+        Expr(
+            Call(
+                args=[set_value("--write_graph")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(arg="type", value=Name("bool", Load()), identifier=None),
+                    keyword(
+                        arg="help",
+                        value=set_value(
+                            "whether to visualize the graph in TensorBoard. The log file\n"
+                            "      can become quite large when write_graph is set to True."
+                        ),
+                        identifier=None,
+                    ),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                    keyword(arg="default", value=set_value(True), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            )
+        ),
+        Expr(
+            Call(
+                args=[set_value("--write_images")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(arg="type", value=Name("bool", Load()), identifier=None),
+                    keyword(
+                        arg="help",
+                        value=set_value(
+                            "whether to write model weights to visualize as image in\n"
+                            "      TensorBoard."
+                        ),
+                        identifier=None,
+                    ),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                    keyword(arg="default", value=set_value(False), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            )
+        ),
+        Expr(
+            Call(
+                args=[set_value("--update_freq")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(arg="type", value=Name("str", Load()), identifier=None),
+                    keyword(
+                        arg="help",
+                        value=set_value(
+                            "`'batch'` or `'epoch'` or integer. When using `'batch'`,\n"
+                            "      writes the losses and metrics to TensorBoard after each batch. The same\n"
+                            "      applies for `'epoch'`. If using an integer, let's say `1000`, the\n"
+                            "      callback will write the metrics and losses to TensorBoard every 1000\n"
+                            "      batches. Note that writing too frequently to TensorBoard can slow down\n"
+                            "      your training."
+                        ),
+                        identifier=None,
+                    ),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                    keyword(arg="default", value=set_value("epoch"), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            )
+        ),
+        Expr(
+            Call(
+                args=[set_value("--profile_batch")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(arg="type", value=Name("int", Load()), identifier=None),
+                    keyword(
+                        arg="help",
+                        value=set_value(
+                            "Profile the batch(es) to sample compute characteristics.\n"
+                            "      profile_batch must be a non-negative integer or a tuple of integers.\n"
+                            "      A pair of positive integers signify a range of batches to profile.\n"
+                            "      By default, it will profile the second batch. Set profile_batch=0\n"
+                            "      to disable profiling."
+                        ),
+                        identifier=None,
+                    ),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                    keyword(arg="default", value=set_value(2), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            )
+        ),
+        Expr(
+            Call(
+                args=[set_value("--embeddings_freq")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(arg="type", value=Name("int", Load()), identifier=None),
+                    keyword(
+                        arg="help",
+                        value=set_value(
+                            "frequency (in epochs) at which embedding layers will be\n"
+                            "      visualized. If set to 0, embeddings won't be visualized."
+                        ),
+                        identifier=None,
+                    ),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                    keyword(arg="default", value=set_value(0), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            )
+        ),
+        Expr(
+            Call(
+                args=[set_value("--embeddings_metadata")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(arg="type", value=Name("str", Load()), identifier=None),
+                    keyword(
+                        arg="help",
+                        value=set_value(
+                            "a dictionary which maps layer name to a file name in\n"
+                            "      which metadata for this embedding layer is saved. See the\n"
+                            "      [details](\n"
+                            "        https://www.tensorflow.org/how_tos/embedding_viz/#metadata_optional)\n"
+                            "      about metadata files format. In case if the same metadata file is\n"
+                            "      used for all embedding layers, string can be passed."
+                        ),
+                        identifier=None,
+                    ),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            )
+        ),
+        Return(value=Name("argument_parser", Load()), expr=None),
+    ],
+    decorator_list=[],
+    name="set_cli_args",
+    returns=None,
+    type_comment=None,
+    arguments_args=None,
+    identifier_name=None,
+    stmt=None,
+    lineno=None,
 )
 
 argparse_func_torch_nn_l1loss_ast = FunctionDef(

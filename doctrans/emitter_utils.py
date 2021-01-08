@@ -7,7 +7,13 @@ from functools import partial
 from operator import add
 from typing import Any
 
-from doctrans.ast_utils import get_value, maybe_type_comment, set_arg, set_value
+from doctrans.ast_utils import (
+    NoneStr,
+    get_value,
+    maybe_type_comment,
+    set_arg,
+    set_value,
+)
 from doctrans.defaults_utils import extract_default, set_default_doc
 from doctrans.pure_utils import identity, simple_types, tab, unquote
 from doctrans.source_transformer import to_code
@@ -68,7 +74,7 @@ def _handle_keyword(keyword, typ):
     )
 
 
-def parse_out_param(expr, emit_default_doc=True):
+def parse_out_param(expr, require_default=False, emit_default_doc=True):
     """
     Turns the class_def repr of '--dataset_name', type=str, help='name of dataset.', required=True, default='mnist'
       into
@@ -78,6 +84,9 @@ def parse_out_param(expr, emit_default_doc=True):
     :param expr: Expr
     :type expr: ```Expr```
 
+    :param require_default: Whether a default is required, if not found in doc, infer the proper default from type
+    :type require_default: ```bool```
+
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
@@ -85,9 +94,15 @@ def parse_out_param(expr, emit_default_doc=True):
     :rtype: ```Tuple[str, dict]```
     """
     required = get_value(
-        next(
-            (keyword for keyword in expr.value.keywords if keyword.arg == "required"),
-            set_value(False),
+        get_value(
+            next(
+                (
+                    keyword
+                    for keyword in expr.value.keywords
+                    if keyword.arg == "required"
+                ),
+                set_value(False),
+            )
         )
     )
 
@@ -135,8 +150,15 @@ def parse_out_param(expr, emit_default_doc=True):
     )
     if default is None:
         doc, default = extract_default(doc, emit_default_doc=emit_default_doc)
-    if default is None and typ in simple_types and required:
-        default = simple_types[typ]
+    if default is None:
+        if required:
+            # if name.endswith("kwargs"):
+            #    default = NoneStr
+            # else:
+            default = simple_types[typ] if typ in simple_types else NoneStr
+
+        elif require_default or typ.startswith("Optional"):
+            default = NoneStr
 
     # nargs = next(
     #     (
@@ -167,7 +189,7 @@ def parse_out_param(expr, emit_default_doc=True):
     if action == "append":
         typ = "List[{typ}]".format(typ=typ)
 
-    if not required and not name.endswith("kwargs"):
+    if not required and "Optional" not in typ:
         typ = "Optional[{typ}]".format(typ=typ)
 
     # if "str" in typ or "Literal" in typ and (typ.count("'") > 1 or typ.count('"') > 1):
@@ -178,7 +200,9 @@ def parse_out_param(expr, emit_default_doc=True):
     )
 
 
-def interpolate_defaults(param, default_search_announce=None, emit_default_doc=True):
+def interpolate_defaults(
+    param, default_search_announce=None, require_default=False, emit_default_doc=True
+):
     """
     Correctly set the 'default' and 'doc' parameters
 
@@ -187,6 +211,9 @@ def interpolate_defaults(param, default_search_announce=None, emit_default_doc=T
 
     :param default_search_announce: Default text(s) to look for. If None, uses default specified in default_utils.
     :type default_search_announce: ```Optional[Union[str, Iterable[str]]]```
+
+    :param require_default: Whether a default is required, if not found in doc, infer the proper default from type
+    :type require_default: ```bool```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
@@ -205,6 +232,18 @@ def interpolate_defaults(param, default_search_announce=None, emit_default_doc=T
         _param["doc"] = doc
         if default is not None:
             _param["default"] = unquote(default)
+    if require_default and _param.get("default") is None:
+        # if (
+        #     "typ" in _param
+        #     and _param["typ"] not in frozenset(("Any", "object"))
+        #     and not _param["typ"].startswith("Optional")
+        # ):
+        #     _param["typ"] = "Optional[{}]".format(_param["typ"])
+        _param["default"] = (
+            simple_types[_param["typ"]]
+            if _param.get("typ", memoryview) in simple_types
+            else NoneStr
+        )
     return name, _param
 
 
@@ -235,9 +274,9 @@ def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
     """
     assert isinstance(e, Return)
 
-    return (
-        "return_type",
-        set_default_doc(
+    return set_default_doc(
+        (
+            "return_type",
             {
                 "doc": extract_default(
                     next(
@@ -257,8 +296,8 @@ def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
                 ).rstrip()
                 # 'Tuple[ArgumentParser, {typ}]'.format(typ=intermediate_repr['returns']['typ'])
             },
-            emit_default_doc=emit_default_doc,
         ),
+        emit_default_doc=emit_default_doc,
     )
 
 
@@ -388,12 +427,16 @@ def to_docstring(
                 None,
                 (
                     (
-                        lambda _param: "{tab}:param {name}: {doc}".format(
+                        lambda name_param: "{tab}:param {name}: {doc}".format(
                             tab=tab * indent_level,
-                            name=name,
-                            doc=_param.get("doc"),
+                            name=name_param[0],
+                            doc=name_param[1].get("doc"),
                         )
-                    )(set_default_doc(_param, emit_default_doc=emit_default_doc)),
+                    )(
+                        set_default_doc(
+                            (name, _param), emit_default_doc=emit_default_doc
+                        )
+                    ),
                     None
                     if _param["typ"] is None or not emit_types
                     else "\n{tab}:type {name}: ```{_param[typ]}```".format(

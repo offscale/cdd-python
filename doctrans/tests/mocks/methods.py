@@ -72,11 +72,11 @@ class C(object):
         :param K: backend engine, e.g., `np` or `tf`.
         :type K: ```Literal['np', 'tf']```
 
-        :param as_numpy: Convert to numpy ndarrays
+        :param as_numpy: Convert to numpy ndarrays.
         :type as_numpy: ```Optional[bool]```
 
         :param data_loader_kwargs: pass this as arguments to data_loader function
-        :type data_loader_kwargs: ```Optional[data_loader_kwargs]```
+        :type data_loader_kwargs: ```Optional[dict]```
 
         :return: Train and tests dataset splits.
         :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
@@ -105,7 +105,7 @@ class C(object):
 
         :param K: backend engine, e.g., `np` or `tf`.
 
-        :param as_numpy: Convert to numpy ndarrays
+        :param as_numpy: Convert to numpy ndarrays.
 
         :param data_loader_kwargs: pass this as arguments to data_loader function
 
@@ -135,7 +135,7 @@ class C(object):
 
         :param K: backend engine, e.g., `np` or `tf`.
 
-        :param as_numpy: Convert to numpy ndarrays
+        :param as_numpy: Convert to numpy ndarrays.
 
         :param data_loader_kwargs: pass this as arguments to data_loader function
 
@@ -232,7 +232,7 @@ class_with_method_and_body_types_ast = fix_missing_locations(
                             ":param dataset_name: name of dataset.\n\n        "
                             ":param tfds_dir: directory to look for models in.\n\n        "
                             ":param K: backend engine, e.g., `np` or `tf`.\n\n        "
-                            ":param as_numpy: Convert to numpy ndarrays\n\n        "
+                            ":param as_numpy: Convert to numpy ndarrays.\n\n        "
                             ":param data_loader_kwargs: pass this as arguments to data_loader function\n\n        "
                             ":return: Train and tests dataset splits.\n        ",
                         )
@@ -394,7 +394,7 @@ class_with_method_ast = fix_missing_locations(
                             ":type tfds_dir: ```str```\n\n        "
                             ":param K: backend engine, e.g., `np` or `tf`.\n        "
                             ":type K: ```Literal['np', 'tf']```\n\n        "
-                            ":param as_numpy: Convert to numpy ndarrays\n        "
+                            ":param as_numpy: Convert to numpy ndarrays.\n        "
                             ":type as_numpy: ```Optional[bool]```\n\n        "
                             ":param data_loader_kwargs: pass this as arguments to data_loader function\n        "
                             ":type data_loader_kwargs: ```Optional[dict]```\n\n        "
@@ -504,7 +504,7 @@ class_with_method_types_ast = fix_missing_locations(
                             ":param dataset_name: name of dataset.\n    \n        "
                             ":param tfds_dir: directory to look for models in.\n    \n        "
                             ":param K: backend engine, e.g., `np` or `tf`.\n    \n        "
-                            ":param as_numpy: Convert to numpy ndarrays\n    \n        "
+                            ":param as_numpy: Convert to numpy ndarrays.\n    \n        "
                             ":param data_loader_kwargs: pass this as arguments to data_loader function\n    \n        "
                             ":return: Train and tests dataset splits.\n        ",
                         )
@@ -829,7 +829,7 @@ def call_cliff(
 
     :param dataset_name: name of dataset.
 
-    :param as_numpy: Convert to numpy ndarrays
+    :param as_numpy: Convert to numpy ndarrays.
 
     :param K: backend engine, e.g., `np` or `tf`.
 
@@ -891,7 +891,7 @@ method_complex_args_variety_ast = FunctionDef(
             set_value(
                 "\n    Call cliff\n\n    "
                 ":param dataset_name: name of dataset.\n\n    "
-                ":param as_numpy: Convert to numpy ndarrays\n\n    "
+                ":param as_numpy: Convert to numpy ndarrays.\n\n    "
                 ":param K: backend engine, e.g., `np` or `tf`.\n\n    "
                 ":param tfds_dir: directory to look for models in.\n\n    "
                 ":param writer: IO object to write out to\n\n    "

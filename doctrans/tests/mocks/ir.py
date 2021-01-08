@@ -4,6 +4,7 @@ IR mocks
 from collections import OrderedDict
 from copy import deepcopy
 
+from doctrans.ast_utils import NoneStr
 from doctrans.defaults_utils import remove_defaults_from_intermediate_repr
 from doctrans.pure_utils import params_to_ordered_dict
 
@@ -189,7 +190,7 @@ class_google_tf_tensorboard_ir = {
             (
                 "embeddings_metadata",
                 {
-                    "default": None,
+                    "default": NoneStr,
                     "doc": "a dictionary which maps layer "
                     "name to a file name in\n"
                     "      which metadata for this "
@@ -389,6 +390,7 @@ docstring_google_tf_adadelta_ir = {
             (
                 "kwargs",
                 {
+                    "default": NoneStr,
                     "doc": "Keyword arguments. Allowed to be one of\n"
                     '  `"clipnorm"` or `"clipvalue"`.\n'
                     '  `"clipnorm"` (float) clips gradients by norm; `"clipvalue"` (float) '
@@ -552,6 +554,7 @@ docstring_google_tf_adadelta_function_ir = {
             (
                 "kwargs",
                 {
+                    "default": NoneStr,
                     "doc": "Keyword arguments. Allowed to be one of\n"
                     '  `"clipnorm"` or `"clipvalue"`.\n'
                     '  `"clipnorm"` (float) clips gradients by norm; `"clipvalue"` (float) clips\n'
@@ -673,6 +676,7 @@ docstring_google_tf_adam_ir = {
             (
                 "kwargs",
                 {
+                    "default": NoneStr,
                     "doc": "Keyword arguments. Allowed to be one of\n"
                     '  `"clipnorm"` or `"clipvalue"`.\n'
                     '  `"clipnorm"` (float) clips gradients by norm; `"clipvalue"` (float) '
@@ -732,15 +736,15 @@ function_adder_ir = {
         ]
     ),
     "returns": OrderedDict(
-        [
+        (
             (
                 "return_type",
                 {
                     "default": "```operator.add(a, b)```",
                     "doc": "Aggregated summation " "of `a` and `b`.",
                 },
-            )
-        ]
+            ),
+        )
     ),
     "type": "static",
 }
@@ -751,7 +755,7 @@ method_complex_args_variety_ir = {
     "params": OrderedDict(
         (
             ("dataset_name", {"doc": "name of dataset."}),
-            ("as_numpy", {"doc": "Convert to numpy ndarrays"}),
+            ("as_numpy", {"doc": "Convert to numpy ndarrays."}),
             (
                 "K",
                 {
@@ -778,7 +782,11 @@ method_complex_args_variety_ir = {
             ),
             (
                 "kwargs",
-                {"doc": "additional keyword arguments", "typ": "Optional[dict]"},
+                {
+                    "doc": "additional keyword arguments",
+                    "typ": "Optional[dict]",
+                    "default": NoneStr,
+                },
             ),
         )
     ),
@@ -795,8 +803,13 @@ method_complex_args_variety_ir = {
 
 intermediate_repr_extra_colons = {
     "name": None,
-    "params": params_to_ordered_dict(
-        ({"doc": "Example: foo", "name": "dataset_name", "typ": "str"},)
+    "params": OrderedDict(
+        (
+            (
+                "dataset_name",
+                {"doc": "Example: foo", "typ": "str"},
+            ),
+        )
     ),
     "returns": None,
     "doc": "Some comment",
@@ -831,10 +844,18 @@ intermediate_repr_no_default_doc = {
                     "typ": "Literal['np', 'tf']",
                 },
             ),
-            ("as_numpy", {"doc": "Convert to numpy ndarrays", "typ": "Optional[bool]"}),
+            (
+                "as_numpy",
+                {
+                    "default": NoneStr,
+                    "doc": "Convert to numpy ndarrays.",
+                    "typ": "Optional[bool]",
+                },
+            ),
             (
                 "data_loader_kwargs",
                 {
+                    "default": NoneStr,
                     "doc": "pass this as arguments to " "data_loader function",
                     "typ": "Optional[dict]",
                 },
@@ -862,21 +883,20 @@ intermediate_repr_only_return_type = {
     "name": None,
     "type": "static",
     "doc": "Some comment",
-    "params": params_to_ordered_dict(
-        (
-            {
-                "doc": "Example: foo",
-                "name": "dataset_name",
-            }
-        )
+    "params": OrderedDict(
+        (("dataset_name", {"doc": "Example: foo"}),),
     ),
-    "returns": params_to_ordered_dict(
-        {
-            "doc": "Train and tests dataset splits.",
-            "name": "return_type",
-            "typ": "Union[Tuple[tf.data.Dataset, tf.data.Dataset], "
-            "Tuple[np.ndarray, np.ndarray]]",
-        }
+    "returns": OrderedDict(
+        (
+            (
+                "return_type",
+                {
+                    "doc": "Train and tests dataset splits.",
+                    "typ": "Union[Tuple[tf.data.Dataset, tf.data.Dataset], "
+                    "Tuple[np.ndarray, np.ndarray]]",
+                },
+            ),
+        ),
     ),
 }
 
@@ -914,10 +934,18 @@ intermediate_repr = {
                     "typ": "Literal['np', 'tf']",
                 },
             ),
-            ("as_numpy", {"doc": "Convert to numpy ndarrays", "typ": "Optional[bool]"}),
+            (
+                "as_numpy",
+                {
+                    "default": NoneStr,
+                    "doc": "Convert to numpy ndarrays.",
+                    "typ": "Optional[bool]",
+                },
+            ),
             (
                 "data_loader_kwargs",
                 {
+                    "default": NoneStr,
                     "doc": "pass this as arguments to " "data_loader function",
                     "typ": "Optional[dict]",
                 },
@@ -944,7 +972,7 @@ intermediate_repr = {
 }
 
 intermediate_repr_no_default_doc_or_prop = remove_defaults_from_intermediate_repr(
-    deepcopy(intermediate_repr), emit_defaults=False
+    deepcopy(intermediate_repr), emit_default_prop=False
 )
 
 __all__ = [

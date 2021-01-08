@@ -12,13 +12,14 @@ from tempfile import NamedTemporaryFile
 from unittest import main
 from unittest.mock import MagicMock, patch
 
+from black import Mode, format_str
 from meta.asttools import cmp_ast
 
 import doctrans.source_transformer
-from doctrans.pure_utils import PY3_8
+from doctrans.pure_utils import PY3_8, identity
 
 
-def run_ast_test(test_case_instance, gen_ast, gold):
+def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     """
     Compares `gen_ast` with `gold` standard
 
@@ -30,9 +31,15 @@ def run_ast_test(test_case_instance, gen_ast, gold):
 
     :param gold: mocked AST
     :type gold: ```Union[ast.Module, ast.ClassDef, ast.FunctionDef]```
+
+    :param skip_black: Whether to skip black
+    :type skip_black: ```bool```
     """
     if isinstance(gen_ast, str):
         gen_ast = ast.parse(gen_ast).body[0]
+
+    assert gen_ast is not None, "gen_ast is None"
+    assert gold is not None, "gold is None"
 
     gen_ast = deepcopy(gen_ast)
     gold = deepcopy(gold)
@@ -49,7 +56,18 @@ def run_ast_test(test_case_instance, gen_ast, gold):
             gold.body.pop(0)
 
     test_case_instance.assertEqual(
-        *map(doctrans.source_transformer.to_code, (gold, gen_ast))
+        *map(
+            partial(
+                identity if skip_black else format_str,
+                mode=Mode(
+                    target_versions=set(),
+                    line_length=60,
+                    is_pyi=False,
+                    string_normalization=False,
+                ),
+            ),
+            map(doctrans.source_transformer.to_code, (gold, gen_ast)),
+        )
     )
 
     # from meta.asttools import print_ast

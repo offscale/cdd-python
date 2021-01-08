@@ -67,8 +67,8 @@ class TestDefaultUtils(TestCase):
 
     def test_set_default_doc_none(self) -> None:
         """ Tests that `set_default_doc` does nop whence no doc in param """
-        param = {"name": "foo"}
-        self.assertDictEqual(set_default_doc(param), param)
+        name_param = "foo", {}
+        self.assertTupleEqual(set_default_doc(name_param), name_param)
 
 
 unittest_main()
