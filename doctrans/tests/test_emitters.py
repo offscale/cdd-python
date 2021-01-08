@@ -12,7 +12,7 @@ from meta.asttools import cmp_ast
 
 from doctrans import emit, parse
 from doctrans.ast_utils import annotate_ancestry, find_in_ast, get_function_type
-from doctrans.pure_utils import PY3_8, deindent, reindent, rpartial, tab, pp
+from doctrans.pure_utils import PY3_8, deindent, reindent, rpartial, tab
 from doctrans.tests.mocks.argparse import (
     argparse_func_action_append_ast,
     argparse_func_ast,

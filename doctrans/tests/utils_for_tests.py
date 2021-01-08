@@ -16,7 +16,7 @@ from black import Mode, format_str
 from meta.asttools import cmp_ast
 
 import doctrans.source_transformer
-from doctrans.pure_utils import PY3_8, identity
+from doctrans.pure_utils import PY3_8
 
 
 def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
