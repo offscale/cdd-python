@@ -58,7 +58,7 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     test_case_instance.assertEqual(
         *map(
             partial(
-                identity if skip_black else format_str,
+                (lambda _, **kwargs: _) if skip_black else format_str,
                 mode=Mode(
                     target_versions=set(),
                     line_length=60,
