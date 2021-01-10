@@ -238,10 +238,10 @@ class TestParsers(TestCase):
 
         method_complex_args_variety_with_imports_str = (
             "from sys import stdout\n"
-            "from {} import Literal\n"
-            "{}".format(
-                "typing" if PY_GTE_3_8 else "typing_extensions",
-                function_adder_str,
+            "from {package} import Literal\n"
+            "{body}".format(
+                package="typing" if PY_GTE_3_8 else "typing_extensions",
+                body=function_adder_str,
             )
         )
         add_6_5 = getattr(

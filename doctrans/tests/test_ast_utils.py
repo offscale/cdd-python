@@ -614,8 +614,7 @@ class TestAstUtils(TestCase):
                         Load(),
                     ),
                     keywords=[
-                        keyword(arg="type", value=Name("str", Load()), identifier=None),
-                        keyword(arg="default", value=set_value(None), identifier=None),
+                        keyword(arg="type", value=Name("str", Load()), identifier=None)
                     ],
                     expr=None,
                     expr_func=None,

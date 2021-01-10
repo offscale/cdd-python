@@ -84,13 +84,12 @@ def set_cli_args(argument_parser):
         default="np",
     )
     argument_parser.add_argument(
-        "--as_numpy", type=bool, help="Convert to numpy ndarrays.", default=None,
+        "--as_numpy", type=bool, help="Convert to numpy ndarrays.",
     )
     argument_parser.add_argument(
         "--data_loader_kwargs",
         type=loads,
         help="pass this as arguments to data_loader function",
-        default=None,
     )
     return argument_parser, (np.empty(0), np.empty(0))
 '''.format(
@@ -343,11 +342,6 @@ argparse_func_ast = fix_missing_locations(
                             value=set_value("Convert to numpy ndarrays."),
                             identifier=None,
                         ),
-                        keyword(
-                            arg="default",
-                            value=set_value(None),
-                            identifier=None,
-                        ),
                     ],
                     expr=None,
                     expr_func=None,
@@ -370,11 +364,6 @@ argparse_func_ast = fix_missing_locations(
                             value=set_value(
                                 "pass this as arguments to data_loader function"
                             ),
-                            identifier=None,
-                        ),
-                        keyword(
-                            arg="default",
-                            value=set_value(None),
                             identifier=None,
                         ),
                     ],
@@ -605,11 +594,6 @@ argparse_func_with_body_ast = fix_missing_locations(
                             ),
                             identifier=None,
                         ),
-                        keyword(
-                            arg="default",
-                            value=set_value(None),
-                            identifier=None,
-                        ),
                     ],
                     expr=None,
                     expr_func=None,
@@ -632,11 +616,6 @@ argparse_func_with_body_ast = fix_missing_locations(
                             value=set_value(
                                 "pass this as arguments to data_loader function",
                             ),
-                            identifier=None,
-                        ),
-                        keyword(
-                            arg="default",
-                            value=set_value(None),
                             identifier=None,
                         ),
                     ],
@@ -800,11 +779,6 @@ argparse_func_action_append_ast = fix_missing_locations(
                             value=set_value(
                                 "Collection of callables that are run inside the training loop"
                             ),
-                            identifier=None,
-                        ),
-                        keyword(
-                            arg="default",
-                            value=set_value(None),
                             identifier=None,
                         ),
                     ],
@@ -1132,7 +1106,6 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
                         ),
                         identifier=None,
                     ),
-                    keyword(arg="default", value=set_value(None), identifier=None),
                 ],
                 expr=None,
                 expr_func=None,

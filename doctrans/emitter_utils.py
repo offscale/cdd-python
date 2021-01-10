@@ -9,6 +9,7 @@ from typing import Any
 
 from doctrans.ast_utils import (
     NoneStr,
+    code_quoted,
     get_value,
     maybe_type_comment,
     set_arg,
@@ -538,10 +539,7 @@ def _make_call_meth(body, return_type, param_names):
                 Return(get_value(ast.parse(return_type[3:-3]).body[0]), expr=None)
             )
         )
-        if return_type is not None
-        and len(return_type) > 6
-        and return_type.startswith("```")
-        and return_type.endswith("```")
+        if return_type is not None and code_quoted(return_type)
         else None
     )
     if body_len:

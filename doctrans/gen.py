@@ -3,7 +3,8 @@ Functionality to generate classes, functions, and/or argparse functions from the
 """
 
 import ast
-from ast import Assign, FunctionDef, Import, ImportFrom, List, Load, Module, Name, Store
+import sys
+from ast import Assign, FunctionDef, Import, ImportFrom, Module, Name, Store, alias
 from inspect import getfile, isfunction
 from itertools import chain
 from operator import itemgetter
@@ -65,9 +66,60 @@ def gen(
             prepend_imports = get_at_root(
                 ast.parse(prepend.strip()), (Import, ImportFrom)
             )
+
+            # def rewrite_typings(node):
+            #     """
+            #     Python < 3.8 must use `typings_extensions` for `Literal`
+            #
+            #     :param node: import node
+            #     :type node: ```Union[Import, ImportFrom]```
+            #
+            #     :return: The import potentially rewritten or None
+            #     :rtype: ```Optional[Union[Import, ImportFrom]]```
+            #     """
+            #     if isinstance(node, ImportFrom) and node.module == "typing":
+            #         len_names = len(node.names)
+            #         if len_names == 1 and node.names[0].name == "Literal":
+            #             rewrite_typings.found_literal = True
+            #             return None
+            #         else:
+            #             node.names = list(
+            #                 filter(
+            #                     None,
+            #                     map(
+            #                         lambda _alias: None
+            #                         if _alias.name == "Literal"
+            #                         else _alias,
+            #                         node.names,
+            #                     ),
+            #                 )
+            #             )
+            #             if len(node.names) != len_names:
+            #                 rewrite_typings.found_literal = True
+            #     return node
+            #
+            # rewrite_typings.found_literal = False
+            # prepend_imports = list(filter(None, map(rewrite_typings, prepend_imports)))
+            # if rewrite_typings.found_literal:
+            #     prepend_imports.append(
+            #         ImportFrom(
+            #             level=0,
+            #             module="typing_extensions"
+            #             if sys.version_info[:2] < (3, 8)
+            #             else "typing",
+            #             names=[alias(asname=None, name="Literal")],
+            #             lineno=None,
+            #             col_offset=None,
+            #         )
+            #     )
+
             eval(
                 compile(
-                    Module(body=prepend_imports, stmt=None, type_ignores=[]),
+                    to_code(
+                        ast.fix_missing_locations(
+                            Module(body=prepend_imports, stmt=None, type_ignores=[])
+                        )
+                    ),
                     filename="<string>",
                     mode="exec",
                 ),
@@ -139,11 +191,18 @@ def gen(
         __all=to_code(
             Assign(
                 targets=[Name("__all__", Store())],
-                value=List(
-                    ctx=Load(),
-                    elts=list(map(set_value, global__all__)),
-                    expr=None,
-                ),
+                value=ast.parse(  # `TypeError: Type List cannot be instantiated; use list() instead`
+                    str(
+                        list(
+                            map(
+                                lambda s: s.rstrip("\n").strip('"'),
+                                map(to_code, map(set_value, global__all__)),
+                            )
+                        )
+                    )
+                )
+                .body[0]
+                .value,
                 expr=None,
                 lineno=None,
                 **maybe_type_comment
