@@ -8,7 +8,7 @@ from unittest import TestCase
 
 from pkg_resources import resource_filename
 
-from doctrans.pure_utils import tab
+from doctrans.pure_utils import PY_GTE_3_8, tab
 from doctrans.sync_properties import sync_properties
 from doctrans.tests.mocks.eval import get_modules
 from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
@@ -33,15 +33,19 @@ def populate_files(tempdir, input_str=None, output_str=None):
     input_filename = os.path.join(tempdir, "class_.py")
     output_filename = os.path.join(tempdir, "method.py")
     input_str = input_str or (
-        "from typing import Literal\n\n"
+        "from {package} import Literal\n\n"
         "class Foo(object):\n"
         "{tab}def g(f: Literal['a']):\n"
-        "{tab}{tab}pass".format(tab=tab)
+        "{tab}{tab}pass".format(
+            package="typing" if PY_GTE_3_8 else "typing_extensions", tab=tab
+        )
     )
     output_str = output_str or (
-        "from typing import Literal\n\n"
+        "from {package} import Literal\n\n"
         "def f(h: Literal['b']):"
-        "{tab}{tab}pass".format(tab=tab)
+        "{tab}{tab}pass".format(
+            package="typing" if PY_GTE_3_8 else "typing_extensions", tab=tab
+        )
     )
     with open(input_filename, "wt") as f:
         f.write(input_str)
@@ -166,10 +170,12 @@ class TestSyncProperties(TestCase):
             (input_filename, input_str, output_filename, output_str,) = populate_files(
                 tempdir,
                 input_str=(
-                    "from typing import Literal\n\n"
+                    "from {package} import Literal\n\n"
                     "class Foo(object):\n"
                     "{tab}def g(f):\n"
-                    "{tab}{tab}pass".format(tab=tab)
+                    "{tab}{tab}pass".format(
+                        package="typing" if PY_GTE_3_8 else "typing_extensions", tab=tab
+                    )
                 ),
             )
 
@@ -198,10 +204,12 @@ class TestSyncProperties(TestCase):
             (input_filename, input_str, output_filename, output_str,) = populate_files(
                 tempdir,
                 output_str=(
-                    "from typing import Literal\n\n"
+                    "from {package} import Literal\n\n"
                     "class Foo(object):\n"
                     "{tab}def f(h):\n"
-                    "{tab}{tab}pass".format(tab=tab)
+                    "{tab}{tab}pass".format(
+                        package="typing" if PY_GTE_3_8 else "typing_extensions", tab=tab
+                    )
                 ),
             )
 

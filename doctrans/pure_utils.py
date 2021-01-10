@@ -407,6 +407,23 @@ BUILTIN_TYPES = (
 )
 
 
+def code_quoted(s):
+    """
+    Internally user-provided `None` and non `literal_eval`uatable input is quoted with ```
+
+    This function checks if the input is quoted such
+
+    :param s: The input
+    :type s: ```Any```
+
+    :return: Whether the input is code quoted
+    :rtype: ```bool```
+    """
+    return (
+        isinstance(s, str) and len(s) > 6 and s.startswith("```") and s.endswith("```")
+    )
+
+
 # From https://stackoverflow.com/a/15112059
 def count_iter_items(iterable):
     """

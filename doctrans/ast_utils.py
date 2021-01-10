@@ -39,6 +39,7 @@ from doctrans.defaults_utils import extract_default, needs_quoting
 from doctrans.pure_utils import (
     PY_GTE_3_8,
     PY_GTE_3_9,
+    code_quoted,
     paren_wrap_code,
     quote,
     rpartial,
@@ -71,12 +72,15 @@ def param2ast(param):
     del param
     if _param.get("typ") is None and "default" in _param:
         _param["typ"] = type(_param["default"]).__name__
-    if "default" in _param and isinstance(_param["default"], (Constant, Str)):
-        _param["default"] = get_value(_param["default"])
-        if _param["default"] in frozenset((NoneStr, None, "None")):
+    if "default" in _param:
+        if isinstance(_param["default"], (Constant, Str)):
+            _param["default"] = get_value(_param["default"])
+            if _param["default"] in frozenset((NoneStr, None, "None")):
+                _param["default"] = None
+            if _param["typ"] in frozenset(("Constant", "Str", "NamedConstant")):
+                _param["typ"] = "object"
+        elif _param["default"] == NoneStr:
             _param["default"] = None
-        if _param["typ"] in frozenset(("Constant", "Str", "NamedConstant")):
-            _param["typ"] = "object"
     if _param.get("typ") is None:
         return AnnAssign(
             annotation=Name("object", Load()),
@@ -108,7 +112,11 @@ def param2ast(param):
             annotation=Name(_param["typ"], Load()),
             simple=1,
             target=Name(name, Store()),
-            value=set_value(_param.get("default") or simple_types[_param["typ"]]),
+            value=set_value(
+                None
+                if _param.get("default") == NoneStr
+                else (_param.get("default") or simple_types[_param["typ"]])
+            ),
             expr=None,
             expr_target=None,
             expr_annotation=None,
@@ -130,15 +138,9 @@ def param2ast(param):
 
         value = set_value(None)
         if "default" in _param:
-            if (
-                isinstance(_param["default"], str)
-                and len(_param["default"]) > 6
-                and _param["default"].startswith("```")
-                and _param["default"].endswith("```")
-                and _param["default"][3:-3] in frozenset(("None", "(None)"))
+            if not code_quoted(_param["default"]) or _param["default"][3:-3] not in frozenset(
+                ("None", "(None)")
             ):
-                value = set_value(None)
-            else:
                 try:
                     parsed_default = (
                         set_value(_param["default"])
@@ -155,7 +157,11 @@ def param2ast(param):
                         else ast.parse(_param["default"])
                     )
                 except SyntaxError:
-                    parsed_default = set_value("```{}```".format(_param["default"]))
+                    parsed_default = set_value(
+                        _param["default"]
+                        if code_quoted(_param["default"])
+                        else "```{}```".format(_param["default"])
+                    )
 
                 value = (
                     parsed_default.body[0].value
@@ -164,6 +170,8 @@ def param2ast(param):
                     if "default" in _param
                     else set_value(None)
                 )
+            # else:
+            #     value = set_value(None)
 
         return AnnAssign(
             annotation=annotation,
@@ -251,7 +259,7 @@ def param2argparse_param(param, emit_default_doc=True):
         # _default, _param, action, required, typ#
     )
     if default is None and _param.get("default") == NoneStr:
-        default, required = NoneStr, False
+        required = False
     if _action:
         action = _action
     if typ == "pickle.loads":
@@ -324,7 +332,7 @@ def param2argparse_param(param, emit_default_doc=True):
                         if default is None
                         else keyword(
                             arg="default",
-                            value=set_value(None if default == NoneStr else default),
+                            value=set_value(default),
                             identifier=None,
                         ),
                     ),
@@ -361,13 +369,8 @@ def param2argparse_param(param, emit_default_doc=True):
 #     default = param.get("default", default)
 #     if default in (NoneStr, None):
 #         required, default = False, None
-#     elif (
-#             isinstance(default, str)
-#             and len(default) > 6
-#             and default.startswith("```")
-#             and default.endswith("```")
-#         ):
-#             default = get_value(ast.parse(default[3:-3]).body[0])
+#     elif code_quoted(default, str):
+#         default = get_value(ast.parse(default[3:-3]).body[0])
 #
 #         if isinstance(default, ast.AST):
 #             default = get_value(default)
@@ -386,11 +389,7 @@ def param2argparse_param(param, emit_default_doc=True):
 #                         default=paren_wrap_code(_to_code(default).rstrip("\n"))
 #                     )
 #         # elif isinstance(default, str):
-#         #     if (
-#         #         len(default) > 6
-#         #         and default.startswith("```")
-#         #         and default.endswith("```")
-#         #     ):
+#         #     if code_quoted(default):
 #         #         default = ast.parse(default[3:-3]).body[0]
 #         #         if isinstance(default, ast.Expr):
 #         #             default = default.value
@@ -1068,12 +1067,7 @@ def infer_type_and_default(default, typ, required):
     # if default is None:
     #    if typ is None:
     #        typ = "Any"
-    if (
-        isinstance(default, str)
-        and len(default) > 6
-        and default.startswith("```")
-        and default.endswith("```")
-    ):
+    if code_quoted(default):
         default = get_value(get_value(ast.parse(default[3:-3]).body[0]))
         if default is None:
             return action, default, False, typ
@@ -1099,6 +1093,8 @@ def infer_type_and_default(default, typ, required):
         #    typ = type(default).__name__
         # else:
         #    typ, default = "loads", dumps(default)
+    elif default in simple_types:
+        typ = default
     elif isinstance(default, type) or isfunction(default) or isclass(default):
         typ, default, required = "pickle.loads", pickle.dumps(default), False
     else:
