@@ -133,56 +133,70 @@ def param2ast(param):
             expr_annotation=None,
         )
     else:
-        from doctrans.emitter_utils import ast_parse_fix
+        return _generic_param2ast((name, _param))
 
-        annotation = ast_parse_fix(_param["typ"])
 
-        value = set_value(None)
-        if "default" in _param:
-            if not code_quoted(_param["default"]) or _param["default"][
-                3:-3
-            ] not in frozenset(("None", "(None)")):
-                try:
-                    parsed_default = (
-                        set_value(_param["default"])
-                        if (
-                            _param["default"] is None
-                            or isinstance(_param["default"], (float, int, str))
-                        )
-                        and not isinstance(_param["default"], str)
-                        and not (
-                            isinstance(_param["default"], str)
-                            and _param["default"][0] + _param["default"][-1]
-                            in frozenset(("()", "[]", "{}"))
-                        )
-                        else ast.parse(_param["default"])
+def _generic_param2ast(param):
+    """
+    Internal function to turn a param into an `AnnAssign`.
+    Expected to be used only inside `param2ast`.
+
+    :param param: Name, dict with keys: 'typ', 'doc', 'default'
+    :type param: ```Tuple[str, dict]```
+
+    :return: AST node for assignment
+    :rtype: ```AnnAssign```
+    """
+    name, _param = param
+    del param
+    from doctrans.emitter_utils import ast_parse_fix
+
+    annotation = ast_parse_fix(_param["typ"])
+    value = set_value(None)
+    if "default" in _param:
+        if not code_quoted(_param["default"]) or _param["default"][
+            3:-3
+        ] not in frozenset(("None", "(None)")):
+            try:
+                parsed_default = (
+                    set_value(_param["default"])
+                    if (
+                        _param["default"] is None
+                        or isinstance(_param["default"], (float, int, str))
                     )
-                except SyntaxError:
-                    parsed_default = set_value(
-                        _param["default"]
-                        if code_quoted(_param["default"])
-                        else "```{}```".format(_param["default"])
+                    and not isinstance(_param["default"], str)
+                    and not (
+                        isinstance(_param["default"], str)
+                        and _param["default"][0] + _param["default"][-1]
+                        in frozenset(("()", "[]", "{}"))
                     )
-
-                value = (
-                    parsed_default.body[0].value
-                    if hasattr(parsed_default, "body")
-                    else parsed_default
-                    if "default" in _param
-                    else set_value(None)
+                    else ast.parse(_param["default"])
                 )
-            # else:
-            #     value = set_value(None)
+            except SyntaxError:
+                parsed_default = set_value(
+                    _param["default"]
+                    if code_quoted(_param["default"])
+                    else "```{}```".format(_param["default"])
+                )
 
-        return AnnAssign(
-            annotation=annotation,
-            simple=1,
-            target=Name(name, Store()),
-            value=value,
-            expr=None,
-            expr_target=None,
-            expr_annotation=None,
-        )
+            value = (
+                parsed_default.body[0].value
+                if hasattr(parsed_default, "body")
+                else parsed_default
+                if "default" in _param
+                else set_value(None)
+            )
+        # else:
+        #     value = set_value(None)
+    return AnnAssign(
+        annotation=annotation,
+        simple=1,
+        target=Name(name, Store()),
+        value=value,
+        expr=None,
+        expr_target=None,
+        expr_annotation=None,
+    )
 
 
 def find_ast_type(node, node_name=None, of_type=ClassDef):
@@ -450,8 +464,7 @@ def _resolve_arg(action, choices, param, required, typ):
     :return: action, choices, required, typ, (Name, dict with keys: 'typ', 'doc', 'default')
     :rtype: ```Tuple[Optional[str], Optional[List[str]], bool, Optional[str], Tuple[str, dict]]```
     """
-    name, _param = param
-    _required = None
+    (name, _param), _required = param, None
     del param
     if isinstance(_param["typ"], str) and _param["typ"].startswith("<class '"):
         _param["typ"] = _param["typ"][len("<class '") : -len("'>")]
@@ -470,24 +483,9 @@ def _resolve_arg(action, choices, param, required, typ):
 
         parsed_type = ast_parse_fix(_param["typ"])
         for node in walk(parsed_type):
-            if isinstance(node, Tuple):
-                maybe_choices = tuple(
-                    get_value(elt)
-                    for elt in node.elts
-                    if isinstance(elt, (Constant, Str))
-                )
-                if len(maybe_choices) == len(node.elts):
-                    choices = maybe_choices
-            elif isinstance(node, Name):
-                if node.id == "Optional":
-                    _required = False
-                elif node.id in simple_types:
-                    typ = node.id
-                elif node.id not in frozenset(("Union",)):
-                    typ = FALLBACK_TYP
-
-                if node.id == "List":
-                    action = "append"
+            _required, action, choices, typ = _parse_node_for_arg(
+                _required, action, choices, node, typ
+            )
     if _required is None and (typ or "").lower() in frozenset(
         ("str", "complex", "int", "float", "anystr", "list", "tuple", "dict")
     ):
@@ -506,6 +504,46 @@ def _resolve_arg(action, choices, param, required, typ):
         typ,
         (name, _param),
     )
+
+
+def _parse_node_for_arg(_required, action, choices, node, typ):
+    """
+    Resolve the arg type, required status, and choices
+
+    :param _required: Whether to require the argument
+    :type _required: ```bool```
+
+    :param action: Name of the action
+    :type action: ```Optional[str]```
+
+    :param choices: A container of values that should be allowed.
+    :type choices: ```Optional[List[str]]```
+
+    :param node: AST node
+    :type node: ```ast.AST```
+
+    :param typ: The type of the argument
+    :type typ: ```Optional[str]```
+
+    :return: _required, action, choices, typ
+    :rtype: ```Tuple[bool, Optional[str], Optional[List[str]], Optional[str]]```
+    """
+    if isinstance(node, Tuple):
+        maybe_choices = tuple(
+            get_value(elt) for elt in node.elts if isinstance(elt, (Constant, Str))
+        )
+        if len(maybe_choices) == len(node.elts):
+            choices = maybe_choices
+    elif isinstance(node, Name):
+        if node.id == "Optional":
+            _required = False
+        elif node.id in simple_types:
+            typ = node.id
+        elif node.id not in frozenset(("Union",)):
+            typ = FALLBACK_TYP
+        if node.id == "List":
+            action = "append"
+    return _required, action, choices, typ
 
 
 def func_arg2param(func_arg, default=None):

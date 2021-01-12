@@ -1078,8 +1078,10 @@ class TestAstUtils(TestCase):
             infer_type_and_default(0j, "str", False), (None, 0j, False, "complex")
         )
 
-    def test_parse_default_from_ast(self) -> None:
-        """"""
+    def test__parse_default_from_ast(self) -> None:
+        """
+        Test `_parse_default_from_ast`
+        """
         self.assertTupleEqual(
             _parse_default_from_ast(None, ast.parse("[1,2,56]").body[0], True, None),
             (None, "[1, 2, 56]", True, "loads"),
