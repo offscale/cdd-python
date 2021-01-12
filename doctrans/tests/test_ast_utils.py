@@ -35,6 +35,7 @@ from meta.asttools import cmp_ast
 from doctrans.ast_utils import (
     NoneStr,
     RewriteAtQuery,
+    _parse_default_from_ast,
     annotate_ancestry,
     emit_ann_assign,
     emit_arg,
@@ -43,9 +44,11 @@ from doctrans.ast_utils import (
     get_at_root,
     get_function_type,
     get_value,
+    infer_type_and_default,
     maybe_type_comment,
     param2argparse_param,
     param2ast,
+    parse_to_scalar,
     set_arg,
     set_slice,
     set_value,
@@ -989,6 +992,26 @@ class TestAstUtils(TestCase):
             test_case_instance=self,
         )
 
+    def test_param2argparse_param_default_class_str(self) -> None:
+        """
+        Tests that param2argparse_param works to change the type based on the default
+          whence said default is a proxy for an unexpected type
+        """
+
+        self.assertEqual(
+            get_value(
+                param2argparse_param(
+                    (
+                        "byo",
+                        {"default": 5.5, "typ": "<class 'float'>"},
+                    ),
+                )
+                .value.keywords[0]
+                .value
+            ),
+            "float",
+        )
+
     def test_param2argparse_param_default_notimplemented(self) -> None:
         """
         Tests that param2argparse_param works to change the type based on the default
@@ -1012,6 +1035,58 @@ class TestAstUtils(TestCase):
                     str(cm.exception),
                 ),
             )
+        )
+
+    def test_parse_to_scalar(self) -> None:
+        """ Test various inputs and outputs for `parse_to_scalar` """
+        for fst, snd in (5, 5), ("5", "5"), (set_value(5), 5), (ast.Expr(None), None):
+            self.assertEqual(parse_to_scalar(fst), snd)
+
+        self.assertEqual(
+            get_value(parse_to_scalar(ast.parse("[5]").body[0]).elts[0]), 5
+        )
+        self.assertTrue(
+            cmp_ast(
+                parse_to_scalar(ast.parse("[5]").body[0]),
+                List([set_value(5)], Load()),
+            )
+        )
+
+        self.assertEqual(parse_to_scalar(ast.parse("[5]")), "[5]")
+
+        parse_to_scalar(ast.parse("[5]").body[0])
+
+        self.assertRaises(NotImplementedError, parse_to_scalar, memoryview(b""))
+        self.assertRaises(NotImplementedError, parse_to_scalar, memoryview(b""))
+
+    def test_infer_type_and_default(self) -> None:
+        """ Test edge cases for `infer_type_and_default` """
+        self.assertTupleEqual(
+            infer_type_and_default(5, "str", False), (None, 5, False, "int")
+        )
+
+        self.assertTupleEqual(
+            infer_type_and_default([5], "str", False), ("append", 5, False, "int")
+        )
+
+        self.assertTupleEqual(
+            infer_type_and_default(tuple(range(5)), "str", False),
+            (None, str(list(range(5))), False, "loads"),
+        )
+
+        self.assertTupleEqual(
+            infer_type_and_default(0j, "str", False), (None, 0j, False, "complex")
+        )
+
+    def test_parse_default_from_ast(self) -> None:
+        """"""
+        self.assertTupleEqual(
+            _parse_default_from_ast(None, ast.parse("[1,2,56]").body[0], True, None),
+            (None, "[1, 2, 56]", True, "loads"),
+        )
+        self.assertTupleEqual(
+            _parse_default_from_ast(None, ast.parse("[5]").body[0], True, None),
+            ("append", 5, True, "int"),
         )
 
 

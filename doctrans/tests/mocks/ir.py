@@ -6,7 +6,7 @@ from copy import deepcopy
 
 from doctrans.ast_utils import NoneStr
 from doctrans.defaults_utils import remove_defaults_from_intermediate_repr
-from doctrans.pure_utils import params_to_ordered_dict
+from doctrans.pure_utils import params_to_ordered_dict, paren_wrap_code
 
 class_google_tf_tensorboard_ir = {
     "doc": "Enable visualizations for TensorBoard.\n"
@@ -774,9 +774,7 @@ method_complex_args_variety_ir = {
             (
                 "writer",
                 {
-                    "default": "stdout",
-                    "typ": "str",
-                    # TODO: {"default": "```stdout```", "doc": ...} and no typ
+                    "default": "```{}```".format(paren_wrap_code("stdout")),
                     "doc": "IO object to write out to",
                 },
             ),

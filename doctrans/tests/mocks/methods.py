@@ -793,9 +793,7 @@ function_default_complex_default_arg_ast = FunctionDef(
             set_arg("writer"),
         ],
         defaults=[
-            set_value(
-                "mnist",
-            ),
+            set_value("mnist"),
             Name("stdout", Load()),
         ],
         kw_defaults=[],
@@ -877,9 +875,7 @@ method_complex_args_variety_ast = FunctionDef(
         kw_defaults=[
             None,
             None,
-            set_value(
-                "~/tensorflow_datasets",
-            ),
+            set_value("~/tensorflow_datasets"),
             Name("stdout", Load()),
         ],
         kwarg=set_arg("kwargs"),
