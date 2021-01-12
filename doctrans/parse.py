@@ -12,19 +12,18 @@ from ast import (
     AnnAssign,
     Assign,
     ClassDef,
-    Constant,
     Dict,
     FunctionDef,
     Module,
-    NameConstant,
     Return,
     Tuple,
     get_docstring,
 )
 from collections import OrderedDict, deque
+from copy import deepcopy
 from functools import partial
 from inspect import getdoc, getsource, isfunction, signature
-from itertools import count, filterfalse
+from itertools import filterfalse
 from operator import setitem
 from types import FunctionType
 
@@ -37,6 +36,7 @@ from doctrans.ast_utils import (
     get_value,
     is_argparse_add_argument,
     is_argparse_description,
+    parse_to_scalar,
 )
 from doctrans.docstring_parsers import _set_name_and_type, parse_docstring
 from doctrans.emitter_utils import _parse_return, parse_out_param
@@ -148,7 +148,7 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
                             "{}": {} if isinstance(v, Dict) else set(),
                             "[]": [],
                             "()": (),
-                        }.get(value, value)
+                        }.get(value, parse_to_scalar(value))
                     )(to_code(v).rstrip("\n"))
                 }
             )(get_value(get_value(e)))
@@ -160,11 +160,11 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
                     intermediate_repr[key][e.target.id].update(typ_default)
                     typ_default = False
                     break
-                else:
-                    assert (
-                        e.target.id == "return_type"
-                    ), "Docstring was missing {!r}".format(e.target.id)
-
+                # elif e.target.id != "return_type":
+                #     if intermediate_repr[key] is None:
+                #         intermediate_repr[key] = OrderedDict()
+                #     print("Docstring was missing {!r}".format(e.target.id))
+                #     intermediate_repr[key][e.target.id] = typ_default
             # if typ_default:
             #     if e.target.id.endswith("kwargs") and typ_default["typ"] == "dict":
             #         typ_default["typ"] = "Optional[dict]"
@@ -422,17 +422,16 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
     intermediate_repr_docstring = (
         get_docstring(function_def) if isinstance(function_def, FunctionDef) else None
     )
+
+    function_def = deepcopy(function_def)
+    function_def.args.args = (
+        function_def.args.args if found_type == "static" else function_def.args.args[1:]
+    )
+
     if intermediate_repr_docstring is None:
         intermediate_repr = {
             "name": function_name or function_def.name,
-            "params": OrderedDict(
-                map(
-                    func_arg2param,
-                    function_def.args.args
-                    if found_type == "static"
-                    else function_def.args.args[1:],
-                )
-            ),
+            "params": OrderedDict(),
             "returns": None,
         }
     else:
@@ -469,78 +468,32 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
         # if "typ" not in _param:
         #     _param["typ"] = (
         #         "Optional[dict]"
-        #         if function_def.args.kwarg.annotation is None
-        #         else to_code(function_def.args.kwarg.annotation).rstrip("\n")
+        #         if function_arguments.kwarg.annotation is None
+        #         else to_code(function_arguments.kwarg.annotation).rstrip("\n")
         #     )
         params_to_append[function_def.args.kwarg.arg] = _param
         del _param
 
-    idx = count()
-
     # Set defaults
-    if intermediate_repr["params"]:
-        deque(
-            map(
-                lambda args_defaults: deque(
-                    map(
-                        lambda idxparam_idx_arg: intermediate_repr["params"][
-                            idxparam_idx_arg[2].arg
-                        ].update(
-                            dict(
-                                (
-                                    {}
-                                    if getattr(idxparam_idx_arg[2], "annotation", None)
-                                    is None
-                                    else dict(
-                                        typ=to_code(
-                                            idxparam_idx_arg[2].annotation
-                                        ).rstrip("\n")
-                                    )
-                                ),
-                                **(
-                                    lambda _defaults: dict(
-                                        default=(
-                                            lambda v: (
-                                                _defaults[idxparam_idx_arg[1]]
-                                                if isinstance(
-                                                    _defaults[idxparam_idx_arg[1]],
-                                                    (NameConstant, Constant),
-                                                )
-                                                else v
-                                            )
-                                            if v is None
-                                            else v
-                                        )(get_value(_defaults[idxparam_idx_arg[1]]))
-                                    )
-                                    if idxparam_idx_arg[1] < len(_defaults)
-                                    and _defaults[idxparam_idx_arg[1]] is not None
-                                    else {}
-                                )(getattr(function_def.args, args_defaults[1])),
-                            )
-                        ),
-                        (
-                            lambda _args: map(
-                                lambda idx_arg: (next(idx), idx_arg[0], idx_arg[1]),
-                                enumerate(
-                                    filterfalse(
-                                        lambda _arg: _arg.arg[0] == "*",
-                                        (
-                                            _args
-                                            if found_type == "static"
-                                            or args_defaults[0] == "kwonlyargs"
-                                            else _args[1:]
-                                        ),
-                                    )
-                                ),
-                            )
-                        )(getattr(function_def.args, args_defaults[0])),
-                    ),
-                    maxlen=0,
-                ),
-                (("args", "defaults"), ("kwonlyargs", "kw_defaults")),
+    ir_merge(
+        intermediate_repr,
+        {
+            "params": OrderedDict(
+                func_arg2param(
+                    arg,
+                    default=getattr(function_def.args, defaults)[idx]
+                    if len(getattr(function_def.args, defaults)) > idx
+                    else None,
+                )
+                for args, defaults in (
+                    ("args", "defaults"),
+                    ("kwonlyargs", "kw_defaults"),
+                )
+                for idx, arg in enumerate(getattr(function_def.args, args))
             ),
-            maxlen=0,
-        )
+            "returns": None,
+        },
+    )
 
     intermediate_repr["params"].update(params_to_append)
     intermediate_repr["params"] = OrderedDict(

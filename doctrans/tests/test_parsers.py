@@ -8,7 +8,7 @@ from unittest import TestCase
 
 from doctrans import emit, parse
 from doctrans.ast_utils import RewriteAtQuery, get_value
-from doctrans.pure_utils import PY_GTE_3_8, params_to_ordered_dict, tab
+from doctrans.pure_utils import PY_GTE_3_8, params_to_ordered_dict, paren_wrap_code, tab
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import (
     class_ast,
@@ -116,12 +116,15 @@ class TestParsers(TestCase):
                     (
                         "writer",
                         {
-                            "default": get_value(
-                                function_default_complex_default_arg_ast.args.defaults[
-                                    1
-                                ]
+                            "default": "```{}```".format(
+                                paren_wrap_code(
+                                    get_value(
+                                        function_default_complex_default_arg_ast.args.defaults[
+                                            1
+                                        ]
+                                    )
+                                )
                             ),
-                            "typ": "str",
                         },
                     ),
                 )
@@ -217,12 +220,9 @@ class TestParsers(TestCase):
         )
 
         # This extra typ is copied, for now. TODO: Update AST-level parser to set types when defaults are given.
-        ir["params"]["writer"].update(
-            {
-                "default": "stdout",
-                "typ": method_complex_args_variety_ir["params"]["writer"]["typ"],
-            }
-        )
+
+        del ir["params"]["writer"]["typ"]
+        ir["params"]["writer"]["default"] = "```{}```".format(paren_wrap_code("stdout"))
 
         self.assertDictEqual(
             ir,

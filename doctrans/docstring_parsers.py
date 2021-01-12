@@ -474,16 +474,18 @@ def _set_name_and_type(param: Tuple[str, dict], infer_type: bool):
 
     # if "doc" in _param and isinstance(_param["doc"], list):
     #     _param["doc"] = "".join(_param["doc"])
-    if (
-        "doc" in _param
-        and (
-            _param["doc"].startswith("(Optional)")
-            or _param["doc"].startswith("Optional")
-        )
-        and "typ" in _param
-        and not _param["typ"].startswith("Optional[")
-    ):
-        _param["typ"] = "Optional[{}]".format(_param["typ"])
+    if "doc" in _param:
+        if not isinstance(_param["doc"], str):
+            _param["doc"] = "".join(_param["doc"])
+        if (
+            (
+                _param["doc"].startswith("(Optional)")
+                or _param["doc"].startswith("Optional")
+            )
+            and "typ" in _param
+            and not _param["typ"].startswith("Optional[")
+        ):
+            _param["typ"] = "Optional[{}]".format(_param["typ"])
 
     return name, _param
 
@@ -614,7 +616,7 @@ def _parse_phase_numpydoc_and_google(
             s = scan[0][:offset].lstrip()
             name, delim, typ = partitioned or s.partition("(")
             name = name.rstrip()
-            typ = delim + typ
+            typ = (delim + typ).strip()
             # if not name: return None
             cur = {"name": name}
             if typ:

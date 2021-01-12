@@ -3,8 +3,7 @@ Functionality to generate classes, functions, and/or argparse functions from the
 """
 
 import ast
-import sys
-from ast import Assign, FunctionDef, Import, ImportFrom, Module, Name, Store, alias
+from ast import Assign, FunctionDef, Import, ImportFrom, Module, Name, Store
 from inspect import getfile, isfunction
 from itertools import chain
 from operator import itemgetter
@@ -195,7 +194,7 @@ def gen(
                     str(
                         list(
                             map(
-                                lambda s: s.rstrip("\n").strip('"'),
+                                lambda s: s.rstrip("\n").strip("'").strip('"'),
                                 map(to_code, map(set_value, global__all__)),
                             )
                         )

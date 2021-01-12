@@ -33,6 +33,7 @@ from ast import (
 from copy import deepcopy
 from importlib import import_module
 from inspect import isclass, isfunction
+from json import dumps
 from sys import version_info
 
 from doctrans.defaults_utils import extract_default, needs_quoting
@@ -138,9 +139,9 @@ def param2ast(param):
 
         value = set_value(None)
         if "default" in _param:
-            if not code_quoted(_param["default"]) or _param["default"][3:-3] not in frozenset(
-                ("None", "(None)")
-            ):
+            if not code_quoted(_param["default"]) or _param["default"][
+                3:-3
+            ] not in frozenset(("None", "(None)")):
                 try:
                     parsed_default = (
                         set_value(_param["default"])
@@ -452,6 +453,8 @@ def _resolve_arg(action, choices, param, required, typ):
     name, _param = param
     _required = None
     del param
+    if isinstance(_param["typ"], str) and _param["typ"].startswith("<class '"):
+        _param["typ"] = _param["typ"][len("<class '") : -len("'>")]
     if _param["typ"] in simple_types:
         typ = _param["typ"]
     # elif (
@@ -505,23 +508,27 @@ def _resolve_arg(action, choices, param, required, typ):
     )
 
 
-def func_arg2param(func_arg):
+def func_arg2param(func_arg, default=None):
     """
     Converts a function argument to a param tuple
 
     :param func_arg: Function argument
     :type func_arg: ```ast.arg```
 
+    :param default: The default value, if None isn't added to returned dict
+    :type default: ```Optional[Any]```
+
     :return: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
     """
     return func_arg.arg, dict(
         doc=getattr(func_arg, "type_comment", None),
-        **{
-            "typ": None
+        **dict(
+            typ=None
             if func_arg.annotation is None
-            else ast.parse(func_arg.annotation)
-        }
+            else _to_code(func_arg.annotation).rstrip("\n"),
+            **({} if default is None else {"default": default})
+        )
     )
 
 
@@ -1071,6 +1078,13 @@ def infer_type_and_default(default, typ, required):
         default = get_value(get_value(ast.parse(default[3:-3]).body[0]))
         if default is None:
             return action, default, False, typ
+
+        # Sometimes `default` is a string like `(-1)`
+        try:
+            default = ast.literal_eval(default)
+        except ValueError:
+            pass
+
         return infer_type_and_default(
             default, type(default).__name__, required=required
         )
@@ -1088,13 +1102,13 @@ def infer_type_and_default(default, typ, required):
     elif isinstance(default, (list, tuple)):
         if len(default) == 0:
             action, default, required, typ = "append", None, False, None
-        # elif len(default) == 1:
-        #    action, default, required = "append", get_value(default[0]), False
-        #    typ = type(default).__name__
-        # else:
-        #    typ, default = "loads", dumps(default)
-    elif default in simple_types:
-        typ = default
+        elif len(default) == 1:
+            action, default, required = "append", get_value(default[0]), False
+            typ = type(default).__name__
+        else:
+            typ, default = "loads", dumps(default)
+    # elif default in simple_types:
+    #     typ = default
     elif isinstance(default, type) or isfunction(default) or isclass(default):
         typ, default, required = "pickle.loads", pickle.dumps(default), False
     else:
@@ -1105,6 +1119,7 @@ def infer_type_and_default(default, typ, required):
     return action, default, required, typ
 
 
+# Should `infer_type_and_default` be folded into this?
 def _parse_default_from_ast(action, default, required, typ):
     """
     Internal function to acquire (action, default, required, typ) from AST types
@@ -1137,8 +1152,8 @@ def _parse_default_from_ast(action, default, required, typ):
         elif len(default.elts) == 1:
             action, default = "append", get_value(default.elts[0])
             typ = type(default).__name__
-    #    else:
-    #        typ, default = "loads", _to_code(default).rstrip("\n")
+        else:
+            typ, default = "loads", _to_code(default).rstrip("\n")
     elif default is not None:
         typ, default = None, "```{default}```".format(
             default=paren_wrap_code(_to_code(default).rstrip("\n"))
@@ -1148,6 +1163,26 @@ def _parse_default_from_ast(action, default, required, typ):
     #        typ or iter(())
     #    )  # TODO: Work for `Union[None, AnyStr]` and `Any`
     return action, default, required, typ
+
+
+def parse_to_scalar(node):
+    """
+    Parse the input to a scalar
+
+    :param node: Any value
+    :type node: ```Any```
+
+    :return: Scalar
+    :rtype: ```Union[str, int, float, complex, None]```
+    """
+    if isinstance(node, (int, float, complex, str, type(None))):
+        return node
+    elif isinstance(node, (Constant, Expr, Str, Num)):
+        return get_value(node)
+    elif isinstance(node, ast.AST):
+        return _to_code(node).rstrip("\n")
+    else:
+        raise NotImplementedError("Converting this to scalar: {!r}".format(node))
 
 
 # `to_code` doesn't work due to partially instantiated module
@@ -1191,6 +1226,7 @@ __all__ = [
     "maybe_type_comment",
     "param2argparse_param",
     "param2ast",
+    "parse_to_scalar",
     "set_arg",
     "set_slice",
     "set_value",
