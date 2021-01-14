@@ -1078,6 +1078,15 @@ class TestAstUtils(TestCase):
             infer_type_and_default(0j, "str", False), (None, 0j, False, "complex")
         )
 
+        self.assertTupleEqual(
+            infer_type_and_default(None, "str", False), (None, None, False, None)
+        )
+
+        self.assertTupleEqual(
+            infer_type_and_default("```{(5,6): (7,8)}```", "str", False),
+            (None, "- 5\n- 6\n", False, "loads"),
+        )
+
     def test__parse_default_from_ast(self) -> None:
         """
         Test `_parse_default_from_ast`
