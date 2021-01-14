@@ -479,17 +479,25 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
         intermediate_repr,
         {
             "params": OrderedDict(
-                func_arg2param(
-                    arg,
-                    default=getattr(function_def.args, defaults)[idx]
-                    if len(getattr(function_def.args, defaults)) > idx
-                    else None,
+                reversed(
+                    tuple(
+                        func_arg2param(
+                            getattr(function_def.args, args)[idx],
+                            default=(
+                                lambda _defaults: _defaults[idx]
+                                if len(_defaults) > idx
+                                else None
+                            )(getattr(function_def.args, defaults)),
+                        )
+                        for args, defaults in (
+                            ("args", "defaults"),
+                            ("kwonlyargs", "kw_defaults"),
+                        )
+                        for idx in range(  # enumerate(getattr(function_def.args, args))
+                            len(getattr(function_def.args, args)) - 1, -1, -1
+                        )
+                    )
                 )
-                for args, defaults in (
-                    ("args", "defaults"),
-                    ("kwonlyargs", "kw_defaults"),
-                )
-                for idx, arg in enumerate(getattr(function_def.args, args))
             ),
             "returns": None,
         },
