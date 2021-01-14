@@ -2,7 +2,7 @@
 Pure utils for pure functions. For the same input will always produce the same input_str.
 """
 import typing
-from ast import Str
+from ast import Name, Str
 from collections import OrderedDict, deque
 from functools import partial
 from importlib import import_module
@@ -242,6 +242,8 @@ def quote(s, mark='"'):
         if isinstance(s, (str, type(None)))
         else s.s
         if isinstance(s, Str)
+        else s.id
+        if isinstance(s, Name)
         else s.value
     )
     # ^ Poor man's `get_value`

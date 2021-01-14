@@ -36,6 +36,8 @@ from inspect import isclass, isfunction
 from json import dumps
 from sys import version_info
 
+from yaml import safe_dump_all
+
 from doctrans.defaults_utils import extract_default, needs_quoting
 from doctrans.pure_utils import (
     PY_GTE_3_8,
@@ -1145,8 +1147,15 @@ def infer_type_and_default(default, typ, required):
             typ = type(default).__name__
         else:
             typ, default = "loads", dumps(default)
-    # elif default in simple_types:
-    #     typ = default
+    elif isinstance(default, dict):
+        typ = "loads"
+        try:
+            default = dumps(default)
+        except TypeError:
+            # YAML is more permissive though less concise, but `loads` from yaml is used so this works
+            default = safe_dump_all(default)
+    elif default is None:
+        typ = default
     elif isinstance(default, type) or isfunction(default) or isclass(default):
         typ, default, required = "pickle.loads", pickle.dumps(default), False
     else:
