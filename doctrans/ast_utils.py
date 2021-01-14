@@ -1111,25 +1111,8 @@ def infer_type_and_default(default, typ, required):
     :rtype: ```Tuple[str, Any, bool, str]```
     """
     action = None
-    # if default is None:
-    #    if typ is None:
-    #        typ = "Any"
     if code_quoted(default):
-        default = get_value(get_value(ast.parse(default[3:-3]).body[0]))
-        if default is None:
-            return action, default, False, typ
-
-        # Sometimes `default` is a string like `(-1)`
-        try:
-            default = ast.literal_eval(default)
-        except ValueError:
-            pass
-
-        return infer_type_and_default(
-            default, type(default).__name__, required=required
-        )
-    # elif default in (None, "None", NoneStr):
-    #    required, typ = False, "Any"
+        return _infer_type_and_default_from_quoted(action, default, required, typ)
     elif type(default).__name__ in simple_types:
         typ = type(default).__name__
     elif isinstance(default, AST):
@@ -1143,8 +1126,12 @@ def infer_type_and_default(default, typ, required):
         if len(default) == 0:
             action, default, required, typ = "append", None, False, None
         elif len(default) == 1:
-            action, default, required = "append", get_value(default[0]), False
-            typ = type(default).__name__
+            action, default, required, typ = (
+                "append",
+                get_value(default[0]),
+                False,
+                type(default[0]).__name__,
+            )
         else:
             typ, default = "loads", dumps(default)
     elif isinstance(default, dict):
@@ -1164,6 +1151,36 @@ def infer_type_and_default(default, typ, required):
         )
 
     return action, default, required, typ
+
+
+def _infer_type_and_default_from_quoted(action, default, required, typ):
+    """
+    Internal function to acquire (action, default, required, typ) from code-quoted default
+
+    :param action: Name of the action
+    :type action: ```Optional[str]```
+
+    :param default: Initial default value
+    :type default: ```ast.AST```
+
+    :param required: Whether to require the argument
+    :type required: ```bool```
+
+    :param typ: The type of the argument
+    :type typ: ```Optional[str]```
+
+    :return: action, default, required, typ
+    :rtype: ```Tuple[Optional[str], Optional[List[str]], bool, Optional[str]]```
+    """
+    default = get_value(get_value(ast.parse(default[3:-3]).body[0]))
+    if default is None:
+        return action, default, False, typ
+    # Sometimes `default` is a string like `(-1)`
+    try:
+        default = ast.literal_eval(default)
+    except ValueError:
+        pass
+    return infer_type_and_default(default, type(default).__name__, required=required)
 
 
 # Should `infer_type_and_default` be folded into this?
