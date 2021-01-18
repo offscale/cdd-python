@@ -23,7 +23,6 @@ from itertools import chain
 from black import Mode, format_str
 
 from doctrans.ast_utils import (
-    NoneStr,
     get_value,
     maybe_type_comment,
     param2argparse_param,
@@ -38,7 +37,14 @@ from doctrans.emitter_utils import (
     get_internal_body,
     to_docstring,
 )
-from doctrans.pure_utils import PY3_8, rpartial, simple_types, tab
+from doctrans.pure_utils import (
+    PY3_8,
+    code_quoted,
+    none_types,
+    rpartial,
+    simple_types,
+    tab,
+)
 from doctrans.source_transformer import to_code
 
 
@@ -118,7 +124,7 @@ def argparse_function(
                                                 if intermediate_repr["returns"][
                                                     "return_type"
                                                 ].get("typ")
-                                                in (None, "None", NoneStr)
+                                                in none_types
                                                 else ":rtype: ```Tuple[ArgumentParser, {returns[typ]}]```\n{tab}"
                                                 "".format(returns=returns, tab=tab),
                                             )
@@ -201,12 +207,11 @@ def argparse_function(
                                                     "return_type"
                                                 ]["default"]
                                             )
-                                            if intermediate_repr["returns"][
-                                                "return_type"
-                                            ]["default"].startswith("```")
-                                            and intermediate_repr["returns"][
-                                                "return_type"
-                                            ]["default"].endswith("```")
+                                            if code_quoted(
+                                                intermediate_repr["returns"][
+                                                    "return_type"
+                                                ]["default"]
+                                            )
                                             else ast.parse(
                                                 intermediate_repr["returns"][
                                                     "return_type"
@@ -297,13 +302,18 @@ def class_(
     # TODO: Add correct classmethod/staticmethod to decorate function using `annotate_ancestry` and first-field checks
     # Such that the `self.` or `cls.` rewrite only applies to non-staticmethods
     # assert internal_body, "Expected `internal_body` to have contents"
-    if internal_body and param_names:
-        internal_body = list(
-            map(
-                ast.fix_missing_locations,
-                map(RewriteName(param_names).visit, internal_body),
+    if param_names:
+        if internal_body:
+            internal_body = list(
+                map(
+                    ast.fix_missing_locations,
+                    map(RewriteName(param_names).visit, internal_body),
+                )
             )
-        )
+        elif (returns or {"return_type": iter(())}).get(
+            "return_type", {"default"}
+        ) is not None:
+            internal_body = returns["return_type"]
 
     return ClassDef(
         bases=list(map(rpartial(Name, Load()), class_bases)),
@@ -333,22 +343,25 @@ def class_(
                     map(param2ast, intermediate_repr["params"].items()),
                     iter(
                         (
-                            _make_call_meth(
-                                internal_body,
-                                returns["return_type"]["default"]
-                                if "default"
-                                in (
-                                    (returns or {"return_type": iter(())}).get(
-                                        "return_type"
+                            (
+                                _make_call_meth(
+                                    internal_body,
+                                    returns["return_type"]["default"]
+                                    if "default"
+                                    in (
+                                        (returns or {"return_type": iter(())}).get(
+                                            "return_type"
+                                        )
+                                        or iter(())
                                     )
-                                    or iter(())
-                                )
-                                else None,
-                                param_names,
-                            ),
+                                    else None,
+                                    param_names,
+                                ),
+                            )
+                            or iter(())
                         )
                         if emit_call and internal_body
-                        else tuple()
+                        else iter(())
                     ),
                 )
             )
@@ -551,7 +564,7 @@ def function(
     defaults_from_params = list(
         map(
             lambda param: set_value(None)
-            if param[1].get("default") in (None, "None", NoneStr)
+            if param[1].get("default") in none_types
             else set_value(param[1].get("default")),
             params_no_kwargs,
         )

@@ -10,7 +10,14 @@ from functools import partial
 from itertools import takewhile
 from operator import contains, eq
 
-from doctrans.pure_utils import PY_GTE_3_9, count_iter_items, location_within, quote
+from doctrans.pure_utils import (
+    PY_GTE_3_9,
+    count_iter_items,
+    location_within,
+    none_types,
+    quote,
+    simple_types,
+)
 
 NoneStr = "```(None)```" if PY_GTE_3_9 else "```None```"
 
@@ -64,7 +71,11 @@ def needs_quoting(typ):
 
 
 def extract_default(
-    line, rstrip_default=True, default_search_announce=None, emit_default_doc=True
+    line,
+    rstrip_default=True,
+    default_search_announce=None,
+    typ=None,
+    emit_default_doc=True,
 ):
     """
     Extract the a tuple of (doc, default) from a doc line
@@ -77,6 +88,9 @@ def extract_default(
 
     :param default_search_announce: Default text(s) to look for. If None, uses default specified in default_utils.
     :type default_search_announce: ```Optional[Union[str, Iterable[str]]]```
+
+    :param typ: The type of the default value, useful to disambiguate `25` the float from  `25` the float
+    :type typ: ```Optional[str]```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
@@ -119,7 +133,15 @@ def extract_default(
     rest_offset = _end_idx + len(default)
 
     default = default.strip(" \t`")
-    if default.isdecimal():
+    if typ is not None and typ in simple_types and default not in none_types:
+        default = {
+            "bool": bool,
+            "int": int,
+            "float": float,
+            "complex": complex,
+            "str": str,
+        }[typ](literal_eval(default))
+    elif default.isdecimal():
         default = int(default)
     elif default in frozenset(("True", "False")):
         default = literal_eval(default)

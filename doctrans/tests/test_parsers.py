@@ -16,10 +16,13 @@ from doctrans.tests.mocks.classes import (
     class_google_tf_tensorboard_str,
     class_torch_nn_l1loss_ast,
     class_torch_nn_l1loss_str,
+    class_torch_nn_one_cycle_lr_ast,
+    class_torch_nn_one_cycle_lr_str,
 )
 from doctrans.tests.mocks.ir import (
     class_google_tf_tensorboard_ir,
     class_torch_nn_l1loss_ir,
+    class_torch_nn_one_cycle_lr_ir,
     docstring_google_tf_adadelta_function_ir,
     function_adder_ir,
     intermediate_repr_no_default_doc,
@@ -57,9 +60,9 @@ class TestParsers(TestCase):
         """
         Tests whether `argparse_ast` produces `intermediate_repr_no_default_doc`
               from `argparse_func_ast`"""
-        self.assertDictEqual(
-            parse.argparse_ast(argparse_func_ast), intermediate_repr_no_default_doc
-        )
+        ir = parse.argparse_ast(argparse_func_ast)
+        del ir["_internal"]  # Not needed for this test
+        self.assertDictEqual(ir, intermediate_repr_no_default_doc)
 
     def test_from_argparse_ast_empty(self) -> None:
         """
@@ -392,6 +395,27 @@ class TestParsers(TestCase):
         del parsed_ir["_internal"]  # Not needed for this test
 
         self.assertDictEqual(parsed_ir, class_torch_nn_l1loss_ir)
+
+    def test_from_class_torch_nn_one_cycle_lr(self) -> None:
+        """Tests that the parser can combine the outer class docstring + structure
+        with the inner function parameter defaults, given a PyTorch loss LR scheduler class"""
+
+        # Sanity check
+        run_ast_test(
+            self,
+            class_torch_nn_one_cycle_lr_ast,
+            gold=ast.parse(class_torch_nn_one_cycle_lr_str).body[0],
+        )
+
+        parsed_ir = parse.class_(
+            class_torch_nn_one_cycle_lr_ast,
+            merge_inner_function="__init__",
+            infer_type=True,
+        )
+
+        del parsed_ir["_internal"]  # Not needed for this test
+
+        self.assertDictEqual(parsed_ir, class_torch_nn_one_cycle_lr_ir)
 
 
 unittest_main()

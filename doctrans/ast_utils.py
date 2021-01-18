@@ -25,15 +25,18 @@ from ast import (
     Str,
     Subscript,
     Tuple,
+    UnaryOp,
     alias,
     iter_child_nodes,
     keyword,
     walk,
 )
+from contextlib import suppress
 from copy import deepcopy
 from importlib import import_module
 from inspect import isclass, isfunction
 from json import dumps
+from operator import inv, neg, not_, pos
 from sys import version_info
 
 from yaml import safe_dump_all
@@ -43,6 +46,7 @@ from doctrans.pure_utils import (
     PY_GTE_3_8,
     PY_GTE_3_9,
     code_quoted,
+    none_types,
     paren_wrap_code,
     quote,
     rpartial,
@@ -73,12 +77,12 @@ def param2ast(param):
     """
     name, _param = param
     del param
-    if _param.get("typ") is None and "default" in _param:
+    if _param.get("typ") is None and "default" in _param and "[" not in _param:
         _param["typ"] = type(_param["default"]).__name__
     if "default" in _param:
         if isinstance(_param["default"], (Constant, Str)):
             _param["default"] = get_value(_param["default"])
-            if _param["default"] in frozenset((NoneStr, None, "None")):
+            if _param["default"] in none_types:
                 _param["default"] = None
             if _param["typ"] in frozenset(("Constant", "Str", "NamedConstant")):
                 _param["typ"] = "object"
@@ -269,7 +273,7 @@ def param2argparse_param(param, emit_default_doc=True):
 
     _param.setdefault("doc", "")
     doc, _default = extract_default(_param["doc"], emit_default_doc=emit_default_doc)
-    _action, default, _required, typ = infer_type_and_default(
+    _action, default, _required, _typ = infer_type_and_default(
         _param.get("default", _default),
         typ,
         required=required
@@ -279,8 +283,12 @@ def param2argparse_param(param, emit_default_doc=True):
         required = False
     if _action:
         action = _action
+    if _typ is not None:
+        typ = _typ
     if typ == "pickle.loads":
         required = False
+    elif typ == "str" and action is None:
+        typ = None  # Because `str` is default anyway
     # elif _required is False and required is True:
     #    required = _required
     # if _param.get("default") == NoneStr:
@@ -292,6 +300,7 @@ def param2argparse_param(param, emit_default_doc=True):
 
     # if is_kwarg and required:
     #     required = False
+
     return Expr(
         Call(
             args=[set_value("--{name}".format(name=name))],
@@ -387,7 +396,7 @@ def param2argparse_param(param, emit_default_doc=True):
 #     if default in (NoneStr, None):
 #         required, default = False, None
 #     elif code_quoted(default, str):
-#         default = get_value(ast.parse(default[3:-3]).body[0])
+#         default = get_value(ast.parse(default.strip("`")).body[0])
 #
 #         if isinstance(default, ast.AST):
 #             default = get_value(default)
@@ -407,7 +416,7 @@ def param2argparse_param(param, emit_default_doc=True):
 #                     )
 #         # elif isinstance(default, str):
 #         #     if code_quoted(default):
-#         #         default = ast.parse(default[3:-3]).body[0]
+#         #         default = ast.parse(default.strip("`")).body[0]
 #         #         if isinstance(default, ast.Expr):
 #         #             default = default.value
 #         #             if isinstance(default, ast.List):
@@ -635,8 +644,15 @@ def get_value(node):
     elif isinstance(node, Num):
         return node.n
     elif isinstance(node, Constant) or hasattr(node, "value"):
-        return node.value
+        value = node.value
+        return NoneStr if value is None else value
     # elif isinstance(node, (Tuple, Name)):  # It used to be Index in Python < 3.9
+    elif isinstance(node, UnaryOp) and isinstance(
+        node.operand, (Str, Num, Constant, NameConstant)
+    ):
+        return {"USub": neg, "UAdd": pos, "not_": not_, "Invert": inv}[
+            type(node.op).__name__
+        ](get_value(node.operand))
     elif isinstance(node, Name):
         return node.id
     else:
@@ -1123,17 +1139,9 @@ def infer_type_and_default(default, typ, required):
         # Special type that PyTorch uses & defines
         action, default, required, typ = None, None, True, default.__class__.__name__
     elif isinstance(default, (list, tuple)):
-        if len(default) == 0:
-            action, default, required, typ = "append", None, False, None
-        elif len(default) == 1:
-            action, default, required, typ = (
-                "append",
-                get_value(default[0]),
-                False,
-                type(default[0]).__name__,
-            )
-        else:
-            typ, default = "loads", dumps(default)
+        action, default, required, typ = _infer_type_and_default_for_list_or_tuple(
+            action, default, required
+        )
     elif isinstance(default, dict):
         typ = "loads"
         try:
@@ -1142,7 +1150,10 @@ def infer_type_and_default(default, typ, required):
             # YAML is more permissive though less concise, but `loads` from yaml is used so this works
             default = safe_dump_all(default)
     elif default is None:
-        typ = default
+        if "Optional" not in (typ or iter(())) and typ not in frozenset(
+            ("Any", "pickle.loads", "loads")
+        ):
+            typ = None
     elif isinstance(default, type) or isfunction(default) or isclass(default):
         typ, default, required = "pickle.loads", pickle.dumps(default), False
     else:
@@ -1150,6 +1161,36 @@ def infer_type_and_default(default, typ, required):
             "Parsing type {!s}, which contains {!r}".format(type(default), default)
         )
 
+    return action, default, required, typ
+
+
+def _infer_type_and_default_for_list_or_tuple(action, default, required):
+    """
+    Infer the type string from the default and typ
+
+    :param action: Name of the action
+    :type action: ```Optional[str]```
+
+    :param default: Initial default value
+    :type default: ```Union[list, tuple]```
+
+    :param required: Whether to require the argument
+    :type required: ```bool```
+
+    :return: action (e.g., for `argparse.Action`), default, whether its required, inferred type str
+    :rtype: ```Tuple[Union[Literal["append"], Literal["loads"]], Any, bool, str]```
+    """
+    if len(default) == 0:
+        action, default, required, typ = "append", None, False, None
+    elif len(default) == 1:
+        action, default, required, typ = (
+            "append",
+            get_value(default[0]),
+            False,
+            type(default[0]).__name__,
+        )
+    else:
+        typ, default = "loads", dumps(default)
     return action, default, required, typ
 
 
@@ -1172,15 +1213,14 @@ def _infer_type_and_default_from_quoted(action, default, required, typ):
     :return: action, default, required, typ
     :rtype: ```Tuple[Optional[str], Optional[List[str]], bool, Optional[str]]```
     """
-    default = get_value(get_value(ast.parse(default[3:-3]).body[0]))
-    if default is None:
-        return action, default, False, typ
+    default = get_value(get_value(ast.parse(default.strip("`")).body[0]))
     # Sometimes `default` is a string like `(-1)`
-    try:
-        default = ast.literal_eval(default)
-    except ValueError:
-        pass
-    return infer_type_and_default(default, type(default).__name__, required=required)
+    if type(default).__name__ not in frozenset(("complex", "int", "float")):
+        with suppress(ValueError):
+            default = ast.literal_eval(
+                default.strip("`") if isinstance(default, str) else default
+            )
+    return infer_type_and_default(default, typ, required=required)
 
 
 # Should `infer_type_and_default` be folded into this?

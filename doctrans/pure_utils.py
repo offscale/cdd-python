@@ -12,10 +12,11 @@ from keyword import iskeyword
 from operator import attrgetter, eq
 from pprint import PrettyPrinter
 from sys import version_info
+from typing import Dict, FrozenSet, Optional, Union
 
 pp = PrettyPrinter(indent=4, width=80).pprint
-tab = " " * 4
-simple_types = {
+tab: str = " " * 4
+simple_types: Dict[Optional[str], Union[int, float, complex, str, bool, None]] = {
     "int": 0,
     "float": 0.0,
     "complex": 0j,
@@ -44,12 +45,14 @@ def identity(*args):
     return args[0] if len(args) == 1 else args
 
 
-_python_major_minor = version_info[:2]
-PY3_8 = _python_major_minor == (3, 8)
-PY_GTE_3_8 = _python_major_minor >= (3, 8)
-PY_GTE_3_9 = _python_major_minor >= (3, 9)
+_python_major_minor: typing.Tuple[int, int] = version_info[:2]
+PY3_8: bool = _python_major_minor == (3, 8)
+PY_GTE_3_8: bool = _python_major_minor >= (3, 8)
+PY_GTE_3_9: bool = _python_major_minor >= (3, 9)
 
-_ABERRANT_PLURAL_MAP = {
+none_types = None, "None", "```(None)```" if PY_GTE_3_9 else "```None```"
+
+_ABERRANT_PLURAL_MAP: Dict[str, str] = {
     "appendix": "appendices",
     "barracks": "barracks",
     "cactus": "cacti",
@@ -82,7 +85,7 @@ _ABERRANT_PLURAL_MAP = {
     "woman": "women",
 }
 
-VOWELS = frozenset("aeiou")
+VOWELS: FrozenSet[str] = frozenset("aeiou")
 
 
 def pluralise(singular):

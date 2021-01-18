@@ -15,6 +15,7 @@ from ast import (
     Load,
     Mult,
     Name,
+    Pass,
     Return,
     Store,
     Sub,
@@ -355,9 +356,12 @@ class_squared_hinge_config_ast = ClassDef(
     body=[
         Expr(
             set_value(
-                "\n    Computes the squared hinge loss between `y_true` and `y_pred`.\n    \n"
-                "    `loss = mean(square(maximum(1 - y_true * y_pred, 0)), axis=-1)`\n    \n"
-                "    Standalone usage:\n    \n"
+                "\n    Computes the squared hinge loss between `y_true` and `y_pred`.\n"
+                "    \n"
+                "    `loss = mean(square(maximum(1 - y_true * y_pred, 0)), axis=-1)`\n"
+                "    \n"
+                "    Standalone usage:\n"
+                "    \n"
                 "    >>> y_true = np.random.choice([-1, 1], size=(2, 3))\n"
                 "    >>> y_pred = np.random.random(size=(2, 3))\n"
                 "    >>> loss = tf.keras.losses.squared_hinge(y_true, y_pred)\n"
@@ -365,9 +369,9 @@ class_squared_hinge_config_ast = ClassDef(
                 "    >>> assert np.array_equal(\n"
                 "    ...     loss.numpy(),\n"
                 "    ...     np.mean(np.square(np.maximum(1. - y_true * y_pred, 0.)), axis=-1))\n\n"
-                "    :cvar y_true: The ground truth values. `y_true` values are expected to be -1 or 1.\n"
-                "    If binary (0 or 1) labels are provided we will convert them to -1 or 1.\n"
-                "    shape = `[batch_size, d0, .. dN]`.\n"
+                "    :cvar y_true: The ground truth values. `y_true` values are expected to be -1 or 1."
+                " If binary (0 or 1) labels are provided we will convert them to -1 or 1."
+                " shape = `[batch_size, d0, .. dN]`.\n"
                 "    :cvar y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.\n"
                 "    :cvar return_type: Squared hinge loss values. shape = `[batch_size, d0, .. dN-1]`."
                 " Defaults to ```K.mean(math_ops.square(math_ops.maximum(1.0 - y_true * y_pred, 0.0)), axis=-1)```"
@@ -1146,6 +1150,240 @@ class_torch_nn_l1loss_ast = ClassDef(
     identifier_name=None,
 )
 
+class_torch_nn_one_cycle_lr_str = (
+    "class OneCycleLR(_LRScheduler):\n"
+    '    r"""Sets the learning rate of each parameter group according to the\n'
+    "    1cycle learning rate policy.\n"
+    "    Note also that the total number of steps in the cycle can be determined in one\n"
+    "    of two ways (listed in order of precedence):\n\n"
+    "    #. A value for total_steps is explicitly provided.\n"
+    "    #. A number of epochs (epochs) and a number of steps per epoch\n"
+    "       (steps_per_epoch) are provided.\n"
+    "       In this case, the number of total steps is inferred by\n"
+    "       total_steps = epochs * steps_per_epoch\n\n"
+    "    You must either provide a value for total_steps or provide a value for both\n"
+    "    epochs and steps_per_epoch.\n\n"
+    "    Args:\n"
+    "        optimizer (Optimizer): Wrapped optimizer.\n"
+    "        max_lr (float or list): Upper learning rate boundaries in the cycle\n"
+    "            for each parameter group.\n"
+    "        total_steps (int): The total number of steps in the cycle. Note that\n"
+    "            if a value is not provided here, then it must be inferred by providing\n"
+    "            a value for epochs and steps_per_epoch.\n"
+    "            Default: None\n"
+    "        epochs (int): The number of epochs to train for. This is used along\n"
+    "            with steps_per_epoch in order to infer the total number of steps in the cycle\n"
+    "            if a value for total_steps is not provided.\n"
+    "            Default: None\n"
+    "        steps_per_epoch (int): The number of steps per epoch to train for. This is\n"
+    "            used along with epochs in order to infer the total number of steps in the\n"
+    "            cycle if a value for total_steps is not provided.\n"
+    "            Default: None\n"
+    "        pct_start (float): The percentage of the cycle (in number of steps) spent\n"
+    "            increasing the learning rate.\n"
+    "            Default: 0.3\n"
+    "        anneal_strategy (str): {'cos', 'linear'}\n"
+    '            Specifies the annealing strategy: "cos" for cosine annealing, "linear" for\n'
+    "            linear annealing.\n"
+    "            Default: 'cos'\n"
+    "        cycle_momentum (bool): If ``True``, momentum is cycled inversely\n"
+    "            to learning rate between 'base_momentum' and 'max_momentum'.\n"
+    "            Default: True\n"
+    "        base_momentum (float or list): Lower momentum boundaries in the cycle\n"
+    "            for each parameter group. Note that momentum is cycled inversely\n"
+    "            to learning rate; at the peak of a cycle, momentum is\n"
+    "            'base_momentum' and learning rate is 'max_lr'.\n"
+    "            Default: 0.85\n"
+    "        max_momentum (float or list): Upper momentum boundaries in the cycle\n"
+    "            for each parameter group. Functionally,\n"
+    "            it defines the cycle amplitude (max_momentum - base_momentum).\n"
+    "            Note that momentum is cycled inversely\n"
+    "            to learning rate; at the start of a cycle, momentum is 'max_momentum'\n"
+    "            and learning rate is 'base_lr'\n"
+    "            Default: 0.95\n"
+    "        div_factor (float): Determines the initial learning rate via\n"
+    "            initial_lr = max_lr/div_factor\n"
+    "            Default: 25\n"
+    "        final_div_factor (float): Determines the minimum learning rate via\n"
+    "            min_lr = initial_lr/final_div_factor\n"
+    "            Default: 1e4\n"
+    "        last_epoch (int): The index of the last batch. This parameter is used when\n"
+    "            resuming a training job. Since `step()` should be invoked after each\n"
+    "            batch instead of after each epoch, this number represents the total\n"
+    "            number of *batches* computed, not the total number of epochs computed.\n"
+    "            When last_epoch=-1, the schedule is started from the beginning.\n"
+    "            Default: -1\n"
+    "        verbose (bool): If ``True``, prints a message to stdout for\n"
+    "            each update. Default: ``False``.\n\n"
+    "    Example:\n"
+    "        >>> data_loader = torch.utils.data.DataLoader(...)\n"
+    "        >>> optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)\n"
+    "        >>> scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.01,"
+    " steps_per_epoch=len(data_loader), epochs=10)\n"
+    "        >>> for epoch in range(10):\n"
+    "        >>>     for batch in data_loader:\n"
+    "        >>>         train_batch(...)\n"
+    "        >>>         scheduler.step()\n\n\n    .. _Super-Convergence\\:"
+    " Very Fast Training of Neural Networks Using Large Learning Rates:\n"
+    "        https://arxiv.org/abs/1708.07120\n"
+    '    """\n'
+    "    def __init__(self,\n"
+    "                 optimizer,\n"
+    "                 max_lr,\n"
+    "                 total_steps=None,\n"
+    "                 epochs=None,\n"
+    "                 steps_per_epoch=None,\n"
+    "                 pct_start=0.3,\n"
+    "                 anneal_strategy='cos',\n"
+    "                 cycle_momentum=True,\n"
+    "                 base_momentum=0.85,\n"
+    "                 max_momentum=0.95,\n"
+    "                 div_factor=25.,\n"
+    "                 final_div_factor=1e4,\n"
+    "                 last_epoch=-1,\n"
+    "                 verbose=False):\n\n"
+    "        pass\n"
+)
+
+class_torch_nn_one_cycle_lr_ast = ClassDef(
+    bases=[Name("_LRScheduler", Load())],
+    body=[
+        Expr(
+            set_value(
+                "Sets the learning rate of each parameter group according to the\n"
+                "    1cycle learning rate policy.\n"
+                "    Note also that the total number of steps in the cycle can be determined in one\n"
+                "    of two ways (listed in order of precedence):\n\n"
+                "    #. A value for total_steps is explicitly provided.\n"
+                "    #. A number of epochs (epochs) and a number of steps per epoch\n"
+                "       (steps_per_epoch) are provided.\n"
+                "       In this case, the number of total steps is inferred by\n"
+                "       total_steps = epochs * steps_per_epoch\n\n"
+                "    You must either provide a value for total_steps or provide a value for both\n"
+                "    epochs and steps_per_epoch.\n\n"
+                "    Args:\n"
+                "        optimizer (Optimizer): Wrapped optimizer.\n"
+                "        max_lr (float or list): Upper learning rate boundaries in the cycle\n"
+                "            for each parameter group.\n"
+                "        total_steps (int): The total number of steps in the cycle. Note that\n"
+                "            if a value is not provided here, then it must be inferred by providing\n"
+                "            a value for epochs and steps_per_epoch.\n"
+                "            Default: None\n"
+                "        epochs (int): The number of epochs to train for. This is used along\n"
+                "            with steps_per_epoch in order to infer the total number of steps in the cycle\n"
+                "            if a value for total_steps is not provided.\n"
+                "            Default: None\n"
+                "        steps_per_epoch (int): The number of steps per epoch to train for. This is\n"
+                "            used along with epochs in order to infer the total number of steps in the\n"
+                "            cycle if a value for total_steps is not provided.\n"
+                "            Default: None\n"
+                "        pct_start (float): The percentage of the cycle (in number of steps) spent\n"
+                "            increasing the learning rate.\n"
+                "            Default: 0.3\n"
+                "        anneal_strategy (str): {'cos', 'linear'}\n"
+                '            Specifies the annealing strategy: "cos" for cosine annealing, "linear" for\n'
+                "            linear annealing.\n"
+                "            Default: 'cos'\n"
+                "        cycle_momentum (bool): If ``True``, momentum is cycled inversely\n"
+                "            to learning rate between 'base_momentum' and 'max_momentum'.\n"
+                "            Default: True\n"
+                "        base_momentum (float or list): Lower momentum boundaries in the cycle\n"
+                "            for each parameter group. Note that momentum is cycled inversely\n"
+                "            to learning rate; at the peak of a cycle, momentum is\n"
+                "            'base_momentum' and learning rate is 'max_lr'.\n"
+                "            Default: 0.85\n"
+                "        max_momentum (float or list): Upper momentum boundaries in the cycle\n"
+                "            for each parameter group. Functionally,\n"
+                "            it defines the cycle amplitude (max_momentum - base_momentum).\n"
+                "            Note that momentum is cycled inversely\n"
+                "            to learning rate; at the start of a cycle, momentum is 'max_momentum'\n"
+                "            and learning rate is 'base_lr'\n"
+                "            Default: 0.95\n"
+                "        div_factor (float): Determines the initial learning rate via\n"
+                "            initial_lr = max_lr/div_factor\n"
+                "            Default: 25\n"
+                "        final_div_factor (float): Determines the minimum learning rate via\n"
+                "            min_lr = initial_lr/final_div_factor\n"
+                "            Default: 1e4\n"
+                "        last_epoch (int): The index of the last batch. This parameter is used when\n"
+                "            resuming a training job. Since `step()` should be invoked after each\n"
+                "            batch instead of after each epoch, this number represents the total\n"
+                "            number of *batches* computed, not the total number of epochs computed.\n"
+                "            When last_epoch=-1, the schedule is started from the beginning.\n"
+                "            Default: -1\n"
+                "        verbose (bool): If ``True``, prints a message to stdout for\n"
+                "            each update. Default: ``False``.\n\n"
+                "    Example:\n"
+                "        >>> data_loader = torch.utils.data.DataLoader(...)\n"
+                "        >>> optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)\n"
+                "        >>> scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.01,"
+                " steps_per_epoch=len(data_loader), epochs=10)\n"
+                "        >>> for epoch in range(10):\n"
+                "        >>>     for batch in data_loader:\n"
+                "        >>>         train_batch(...)\n"
+                "        >>>         scheduler.step()\n\n\n"
+                "    .. _Super-Convergence\\:"
+                " Very Fast Training of Neural Networks Using Large Learning Rates:\n"
+                "        https://arxiv.org/abs/1708.07120\n"
+                "    "
+            )
+        ),
+        FunctionDef(
+            args=arguments(
+                args=list(
+                    map(
+                        set_arg,
+                        (
+                            "self",
+                            "optimizer",
+                            "max_lr",
+                            "total_steps",
+                            "epochs",
+                            "steps_per_epoch",
+                            "pct_start",
+                            "anneal_strategy",
+                            "cycle_momentum",
+                            "base_momentum",
+                            "max_momentum",
+                            "div_factor",
+                            "final_div_factor",
+                            "last_epoch",
+                            "verbose",
+                        ),
+                    )
+                ),
+                defaults=list(
+                    map(
+                        set_value,
+                        (None, None, None, 0.3, "cos", True, 0.85, 0.95, 25.0, 10000.0),
+                    )
+                )
+                + [UnaryOp(USub(), set_value(1)), set_value(False)],
+                kw_defaults=[],
+                kwarg=None,
+                kwonlyargs=[],
+                posonlyargs=[],
+                vararg=None,
+                arg=None,
+            ),
+            body=[Pass()],
+            decorator_list=[],
+            name="__init__",
+            returns=None,
+            type_comment=None,
+            arguments_args=None,
+            identifier_name=None,
+            stmt=None,
+            lineno=None,
+        ),
+    ],
+    decorator_list=[],
+    keywords=[],
+    expr=None,
+    identifier_name=None,
+    name="OneCycleLR",
+)
+
 __all__ = [
     "class_ast",
     "class_google_tf_tensorboard_ast",
@@ -1156,4 +1394,6 @@ __all__ = [
     "class_str",
     "class_torch_nn_l1loss_ast",
     "class_torch_nn_l1loss_str",
+    "class_torch_nn_one_cycle_lr_str",
+    "class_torch_nn_one_cycle_lr_ast",
 ]

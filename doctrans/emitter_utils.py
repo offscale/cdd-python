@@ -16,7 +16,7 @@ from doctrans.ast_utils import (
     set_value,
 )
 from doctrans.defaults_utils import extract_default, set_default_doc
-from doctrans.pure_utils import identity, simple_types, tab, unquote
+from doctrans.pure_utils import identity, none_types, simple_types, tab, unquote
 from doctrans.source_transformer import to_code
 
 
@@ -227,6 +227,7 @@ def interpolate_defaults(
     if "doc" in _param:
         doc, default = extract_default(
             _param["doc"],
+            typ=_param.get("typ"),
             default_search_announce=default_search_announce,
             emit_default_doc=emit_default_doc,
         )
@@ -322,8 +323,8 @@ def get_internal_body(target_name, target_type, intermediate_repr):
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
-    :return: Internal body or an empty list
-    :rtype: ```list```
+    :return: Internal body or an empty tuple
+    :rtype: ```Union[list, tuple]```
     """
     return (
         intermediate_repr["_internal"]["body"]
@@ -533,57 +534,85 @@ def _make_call_meth(body, return_type, param_names):
     :rtype: ```FunctionDef```
     """
     body_len = len(body)
-    return_ = (
+    # return_ = (
+    #     ast.fix_missing_locations(
+    #         RewriteName(param_names).visit(
+    #             Return(get_value(ast.parse(return_type.strip("`")).body[0]), expr=None)
+    #         )
+    #     )
+    #     if return_type is not None and code_quoted(return_type)
+    #     else None
+    # )
+    if body_len:
+        if isinstance(body, dict):
+            body = list(
+                filter(
+                    None,
+                    (
+                        None
+                        if body["doc"] in none_types
+                        else Expr(
+                            set_value("\n:return: {doc}\n\n".format(doc=body["doc"]))
+                        ),
+                        RewriteName(param_names).visit(
+                            Return(
+                                get_value(ast.parse(return_type.strip("`")).body[0]),
+                                expr=None,
+                            )
+                        )
+                        if code_quoted(body["default"])
+                        else Return(set_value(body["default"]), expr=None),
+                    ),
+                )
+            )
+
+        # elif isinstance(body[0], Expr):
+        #     doc_str = get_value(body[0].value)
+        #     if isinstance(doc_str, str) and body_len > 0:
+        #         body = (
+        #             body[1:]
+        #             if body_len > 1
+        #             else (
+        #                 [
+        #                     set_value(doc_str.replace(":cvar", ":param"))
+        #                     if return_ is None
+        #                     else return_
+        #                 ]
+        #                 if body_len == 1
+        #                 else body
+        #             )
+        #         )
+        # elif not isinstance(body[0], Return) and return_ is not None:
+        #     body.append(return_)
+    # elif return_ is not None:
+    #    body = [return_]
+
+    return (
         ast.fix_missing_locations(
-            RewriteName(param_names).visit(
-                Return(get_value(ast.parse(return_type[3:-3]).body[0]), expr=None)
+            FunctionDef(
+                args=arguments(
+                    args=[set_arg("self")],
+                    defaults=[],
+                    kw_defaults=[],
+                    kwarg=None,
+                    kwonlyargs=[],
+                    posonlyargs=[],
+                    vararg=None,
+                    arg=None,
+                ),
+                body=body,
+                decorator_list=[],
+                name="__call__",
+                returns=None,
+                arguments_args=None,
+                identifier_name=None,
+                stmt=None,
+                lineno=None,
+                **maybe_type_comment
             )
         )
-        if return_type is not None and code_quoted(return_type)
+        if body
         else None
-    )
-    if body_len:
-        if isinstance(body[0], Expr):
-            doc_str = get_value(body[0].value)
-            if isinstance(doc_str, str) and body_len > 0:
-                body = (
-                    body[1:]
-                    if body_len > 1
-                    else (
-                        [
-                            set_value(doc_str.replace(":cvar", ":param"))
-                            if return_ is None
-                            else return_
-                        ]
-                        if body_len == 1
-                        else body
-                    )
-                )
-    #         elif not isinstance(body[0], Return) and return_ is not None:
-    #             body.append(return_)
-    # elif return_ is not None:
-    #     body = [return_]
-
-    return FunctionDef(
-        args=arguments(
-            args=[set_arg("self")],
-            defaults=[],
-            kw_defaults=[],
-            kwarg=None,
-            kwonlyargs=[],
-            posonlyargs=[],
-            vararg=None,
-            arg=None,
-        ),
-        body=body,
-        decorator_list=[],
-        name="__call__",
-        returns=None,
-        arguments_args=None,
-        identifier_name=None,
-        stmt=None,
-        lineno=None,
-        **maybe_type_comment
     )
 
 

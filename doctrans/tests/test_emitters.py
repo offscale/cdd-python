@@ -113,12 +113,13 @@ class TestEmitters(TestCase):
         Tests whether `to_argparse` produces `argparse_function_google_tf_tensorboard_ast`
                                     given `class_google_tf_tensorboard_ast`
         """
+        ir = parse.class_(
+            class_google_tf_tensorboard_ast, merge_inner_function="__init__"
+        )
         run_ast_test(
             self,
             emit.argparse_function(
-                parse.class_(
-                    class_google_tf_tensorboard_ast, merge_inner_function="__init__"
-                ),
+                ir,
                 emit_default_doc=False,
                 emit_default_doc_in_return=False,
             ),
