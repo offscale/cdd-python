@@ -20,13 +20,7 @@ from ast import (
     keyword,
 )
 
-from doctrans.ast_utils import (
-    FALLBACK_ARGPARSE_TYP,
-    FALLBACK_TYP,
-    maybe_type_comment,
-    set_arg,
-    set_value,
-)
+from doctrans.ast_utils import FALLBACK_TYP, maybe_type_comment, set_arg, set_value
 
 argparse_add_argument_ast = Expr(
     Call(
@@ -63,21 +57,18 @@ def set_cli_args(argument_parser):
     argument_parser.description = "{description}"
     argument_parser.add_argument(
         "--dataset_name",
-        type=str,
         help="name of dataset.",
         required=True,
         default="mnist",
     )
     argument_parser.add_argument(
         "--tfds_dir",
-        type=str,
         help="directory to look for models in.",
         required=True,
         default="~/tensorflow_datasets",
     )
     argument_parser.add_argument(
         "--K",
-        type={FALLBACK_TYP},
         choices=("np", "tf"),
         help="backend engine, e.g., `np` or `tf`.",
         required=True,
@@ -95,7 +86,6 @@ def set_cli_args(argument_parser):
 '''.format(
     description="Acquire from the official tensorflow_datasets model zoo,"
     " or the ophthalmology focussed ml-prepare library",
-    FALLBACK_TYP=FALLBACK_TYP,
 )
 
 argparse_func_with_body_str = '''
@@ -231,7 +221,6 @@ argparse_func_ast = fix_missing_locations(
                         Load(),
                     ),
                     keywords=[
-                        keyword(arg="type", value=Name("str", Load()), identifier=None),
                         keyword(
                             arg="help",
                             value=set_value("name of dataset."),
@@ -261,7 +250,6 @@ argparse_func_ast = fix_missing_locations(
                         Load(),
                     ),
                     keywords=[
-                        keyword(arg="type", value=Name("str", Load()), identifier=None),
                         keyword(
                             arg="help",
                             value=set_value("directory to look for models in."),
@@ -291,11 +279,6 @@ argparse_func_ast = fix_missing_locations(
                         Load(),
                     ),
                     keywords=[
-                        keyword(
-                            arg="type",
-                            value=FALLBACK_ARGPARSE_TYP,
-                            identifier=None,
-                        ),
                         keyword(
                             arg="choices",
                             value=Tuple(
@@ -458,14 +441,6 @@ argparse_func_with_body_ast = fix_missing_locations(
                     ),
                     keywords=[
                         keyword(
-                            arg="type",
-                            value=Name(
-                                "str",
-                                Load(),
-                            ),
-                            identifier=None,
-                        ),
-                        keyword(
                             arg="help",
                             value=set_value("name of dataset."),
                             identifier=None,
@@ -499,14 +474,6 @@ argparse_func_with_body_ast = fix_missing_locations(
                     ),
                     keywords=[
                         keyword(
-                            arg="type",
-                            value=Name(
-                                "str",
-                                Load(),
-                            ),
-                            identifier=None,
-                        ),
-                        keyword(
                             arg="help",
                             value=set_value("directory to look for models in."),
                             identifier=None,
@@ -539,11 +506,6 @@ argparse_func_with_body_ast = fix_missing_locations(
                         Load(),
                     ),
                     keywords=[
-                        keyword(
-                            arg="type",
-                            value=FALLBACK_ARGPARSE_TYP,
-                            identifier=None,
-                        ),
                         keyword(
                             arg="choices",
                             value=Tuple(
@@ -739,7 +701,11 @@ argparse_func_action_append_ast = fix_missing_locations(
                     ),
                     args=[set_value("--callbacks")],
                     keywords=[
-                        keyword(arg="type", value=Name("str", Load()), identifier=None),
+                        keyword(
+                            arg="type",
+                            value=Name("str", Load()),
+                            identifier=None,
+                        ),
                         keyword(
                             arg="choices",
                             value=Tuple(
@@ -909,12 +875,10 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
                     Load(),
                 ),
                 keywords=[
-                    keyword(arg="type", value=Name("str", Load()), identifier=None),
                     keyword(
                         arg="help",
                         value=set_value(
-                            "the path of the directory where to save the log files to be\n"
-                            "      parsed by TensorBoard."
+                            "the path of the directory where to save the log files to be parsed by TensorBoard."
                         ),
                         identifier=None,
                     ),
@@ -938,10 +902,9 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
                     keyword(
                         arg="help",
                         value=set_value(
-                            "frequency (in epochs) at which to compute activation and\n"
-                            "      weight histograms for the layers of the model. If set to 0, histograms\n"
-                            "      won't be computed. Validation data (or split) must be specified for\n"
-                            "      histogram visualizations."
+                            "frequency (in epochs) at which to compute activation and weight histograms for the layers"
+                            " of the model. If set to 0, histograms won't be computed. Validation data (or split) must"
+                            " be specified for histogram visualizations."
                         ),
                         identifier=None,
                     ),
@@ -965,8 +928,8 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
                     keyword(
                         arg="help",
                         value=set_value(
-                            "whether to visualize the graph in TensorBoard. The log file\n"
-                            "      can become quite large when write_graph is set to True."
+                            "whether to visualize the graph in TensorBoard. The log file can become quite large when"
+                            " write_graph is set to True."
                         ),
                         identifier=None,
                     ),
@@ -990,8 +953,7 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
                     keyword(
                         arg="help",
                         value=set_value(
-                            "whether to write model weights to visualize as image in\n"
-                            "      TensorBoard."
+                            "whether to write model weights to visualize as image in TensorBoard."
                         ),
                         identifier=None,
                     ),
@@ -1011,16 +973,14 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
                     Load(),
                 ),
                 keywords=[
-                    keyword(arg="type", value=Name("str", Load()), identifier=None),
                     keyword(
                         arg="help",
                         value=set_value(
-                            "`'batch'` or `'epoch'` or integer. When using `'batch'`,\n"
-                            "      writes the losses and metrics to TensorBoard after each batch. The same\n"
-                            "      applies for `'epoch'`. If using an integer, let's say `1000`, the\n"
-                            "      callback will write the metrics and losses to TensorBoard every 1000\n"
-                            "      batches. Note that writing too frequently to TensorBoard can slow down\n"
-                            "      your training."
+                            "`'batch'` or `'epoch'` or integer. When using `'batch'`, writes the losses and metrics "
+                            "to TensorBoard after each batch. The same applies for `'epoch'`. If using an integer, "
+                            "let's say `1000`, the callback will write the metrics and losses to TensorBoard every "
+                            "1000 batches. Note that writing too frequently to TensorBoard can slow down your training"
+                            "."
                         ),
                         identifier=None,
                     ),
@@ -1044,11 +1004,10 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
                     keyword(
                         arg="help",
                         value=set_value(
-                            "Profile the batch(es) to sample compute characteristics.\n"
-                            "      profile_batch must be a non-negative integer or a tuple of integers.\n"
-                            "      A pair of positive integers signify a range of batches to profile.\n"
-                            "      By default, it will profile the second batch. Set profile_batch=0\n"
-                            "      to disable profiling."
+                            "Profile the batch(es) to sample compute characteristics. profile_batch must be a"
+                            " non-negative integer or a tuple of integers. A pair of positive integers signify a range"
+                            " of batches to profile. By default, it will profile the second batch. Set profile_batch=0"
+                            " to disable profiling."
                         ),
                         identifier=None,
                     ),
@@ -1072,8 +1031,8 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
                     keyword(
                         arg="help",
                         value=set_value(
-                            "frequency (in epochs) at which embedding layers will be\n"
-                            "      visualized. If set to 0, embeddings won't be visualized."
+                            "frequency (in epochs) at which embedding layers will be visualized. "
+                            "If set to 0, embeddings won't be visualized."
                         ),
                         identifier=None,
                     ),
@@ -1093,16 +1052,14 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
                     Load(),
                 ),
                 keywords=[
-                    keyword(arg="type", value=Name("str", Load()), identifier=None),
                     keyword(
                         arg="help",
                         value=set_value(
-                            "a dictionary which maps layer name to a file name in\n"
-                            "      which metadata for this embedding layer is saved. See the\n"
-                            "      [details](\n"
-                            "        https://www.tensorflow.org/how_tos/embedding_viz/#metadata_optional)\n"
-                            "      about metadata files format. In case if the same metadata file is\n"
-                            "      used for all embedding layers, string can be passed."
+                            "a dictionary which maps layer name to a file name in which metadata for this"
+                            " embedding layer is saved. See the "
+                            "[details]( https://www.tensorflow.org/how_tos/embedding_viz/#metadata_optional) about"
+                            " metadata files format. In case if the same metadata file is used for all embedding"
+                            " layers, string can be passed."
                         ),
                         identifier=None,
                     ),
@@ -1222,12 +1179,11 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
                     keyword(
                         arg="help",
                         value=set_value(
-                            "Deprecated (see :attr:`reduction`). By default,\n"
-                            "            the losses are averaged over each loss element in the batch. Note that for\n"
-                            "            some losses, there are multiple elements per sample."
-                            " If the field :attr:`size_average`\n"
-                            "            is set to ``False``, the losses are instead summed for each minibatch."
-                            " Ignored\n            when reduce is ``False``."
+                            "Deprecated (see :attr:`reduction`)."
+                            " By default, the losses are averaged over each loss element in the batch. Note that for"
+                            " some losses, there are multiple elements per sample. If the field :attr:`size_average`"
+                            " is set to ``False``, the losses are instead summed for each minibatch. Ignored when"
+                            " reduce is ``False``."
                         ),
                         identifier=None,
                     ),
@@ -1250,13 +1206,10 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
                     keyword(
                         arg="help",
                         value=set_value(
-                            "Deprecated (see :attr:`reduction`)."
-                            " By default, the\n"
-                            "            losses are averaged or summed over observations for each minibatch"
-                            " depending\n"
-                            "            on :attr:`size_average`. When :attr:`reduce` is ``False``,"
-                            " returns a loss per\n"
-                            "            batch element instead and ignores :attr:`size_average`."
+                            "Deprecated (see :attr:`reduction`). "
+                            "By default, the losses are averaged or summed over observations for each minibatch "
+                            "depending on :attr:`size_average`. When :attr:`reduce` is ``False``, returns a loss "
+                            "per batch element instead and ignores :attr:`size_average`."
                         ),
                         identifier=None,
                     ),
@@ -1305,14 +1258,6 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
                     Load(),
                 ),
                 keywords=[
-                    keyword(
-                        arg="type",
-                        value=Name(
-                            "str",
-                            Load(),
-                        ),
-                        identifier=None,
-                    ),
                     keyword(arg="required", value=set_value(True), identifier=None),
                     keyword(arg="default", value=set_value("mean"), identifier=None),
                 ],

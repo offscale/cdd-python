@@ -7,6 +7,7 @@ from ast import (
     Assign,
     ClassDef,
     Dict,
+    Expr,
     Import,
     ImportFrom,
     List,
@@ -32,6 +33,7 @@ from doctrans.tests.mocks.methods import function_adder_ast
 from doctrans.tests.utils_for_tests import run_ast_test
 
 method_adder_ast = deepcopy(function_adder_ast)
+method_adder_ast.body[0] = Expr(set_value(" C class (mocked!) "))
 method_adder_ast.decorator_list = [Name("staticmethod", Load())]
 del function_adder_ast
 

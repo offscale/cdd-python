@@ -418,6 +418,7 @@ class TestAstUtils(TestCase):
         self.assertIsInstance(get_value(Tuple(expr=None)), Tuple)
         self.assertIsInstance(get_value(Tuple(expr=None)), Tuple)
         self.assertIsNone(get_value(Name(None, None)))
+        self.assertEqual(get_value(get_value(ast.parse("-5").body[0])), -5)
 
     def test_set_value(self) -> None:
         """ Tests that `set_value` returns the right type for the right Python version """
@@ -616,9 +617,7 @@ class TestAstUtils(TestCase):
                         "add_argument",
                         Load(),
                     ),
-                    keywords=[
-                        keyword(arg="type", value=Name("str", Load()), identifier=None)
-                    ],
+                    keywords=[],
                     expr=None,
                     expr_func=None,
                 )
@@ -672,6 +671,7 @@ class TestAstUtils(TestCase):
                         Load(),
                     ),
                     keywords=[
+                        keyword(arg="type", value=Name("str", Load()), identifier=None),
                         keyword(
                             arg="action", value=set_value("append"), identifier=None
                         ),
@@ -753,6 +753,7 @@ class TestAstUtils(TestCase):
                         Load(),
                     ),
                     keywords=[
+                        keyword(arg="type", value=Name("str", Load()), identifier=None),
                         keyword(
                             arg="action", value=set_value("append"), identifier=None
                         ),
@@ -796,6 +797,7 @@ class TestAstUtils(TestCase):
                         Load(),
                     ),
                     keywords=[
+                        keyword(arg="type", value=Name("str", Load()), identifier=None),
                         keyword(
                             arg="action", value=set_value("append"), identifier=None
                         ),
@@ -1039,7 +1041,12 @@ class TestAstUtils(TestCase):
 
     def test_parse_to_scalar(self) -> None:
         """ Test various inputs and outputs for `parse_to_scalar` """
-        for fst, snd in (5, 5), ("5", "5"), (set_value(5), 5), (ast.Expr(None), None):
+        for fst, snd in (
+            (5, 5),
+            ("5", "5"),
+            (set_value(5), 5),
+            (ast.Expr(None), NoneStr),
+        ):
             self.assertEqual(parse_to_scalar(fst), snd)
 
         self.assertEqual(

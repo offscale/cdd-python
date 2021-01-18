@@ -23,8 +23,10 @@ from doctrans.defaults_utils import _remove_default_from_param, needs_quoting
 from doctrans.emit import to_code
 from doctrans.emitter_utils import interpolate_defaults
 from doctrans.pure_utils import (
+    code_quoted,
     count_iter_items,
     location_within,
+    none_types,
     paren_wrap_code,
     rpartial,
     unquote,
@@ -123,6 +125,7 @@ def parse_docstring(
         infer_type=infer_type,
         style=style,
     )
+
     # Apply certain functions regardless of style
     if style is Style.rest:
         ir.update(
@@ -477,6 +480,8 @@ def _set_name_and_type(param: Tuple[str, dict], infer_type: bool):
     if "doc" in _param:
         if not isinstance(_param["doc"], str):
             _param["doc"] = "".join(_param["doc"])
+        else:
+            _param["doc"] = " ".join(map(str.strip, _param["doc"].split("\n"))).rstrip()
         if (
             (
                 _param["doc"].startswith("(Optional)")
@@ -504,27 +509,30 @@ def _infer_default(_param, infer_type):
         _param["default"], (ast.Str, ast.Num, ast.Constant, ast.NameConstant)
     ):
         _param["default"] = get_value(_param["default"])
-    if _param.get("default", False) in (None, "None"):
+    if _param.get("default", False) in none_types:
         _param["default"] = NoneStr
-    if (
-        infer_type
-        and _param.get("typ") is None
-        and _param["default"] not in (None, "None", NoneStr)
-    ):
+    if infer_type and _param.get("typ") is None and _param["default"] not in none_types:
         _param["typ"] = type(_param["default"]).__name__
     if needs_quoting(_param.get("typ")) or isinstance(_param["default"], str):
         _param["default"] = unquote(_param["default"])
     elif isinstance(_param["default"], AST):
-        _param["default"] = "```{default}```".format(
-            default=paren_wrap_code(to_code(_param["default"]).rstrip("\n"))
-        )
-    if _param.get("typ") is None and _param["default"]:
+        try:
+            _param["default"] = ast.literal_eval(_param["default"])
+            # if _param.get("typ") is None or _param["typ"] == "UnaryOp":
+            #    _param["typ"] = type(_param["default"]).__name__
+        except ValueError:
+            _param["default"] = "```{default}```".format(
+                default=paren_wrap_code(to_code(_param["default"]).rstrip("\n"))
+            )
+    if _param.get("typ") is None and _param["default"] != NoneStr:
         _param["typ"] = type(_param["default"]).__name__
     if (
-        isinstance(_param["default"], str)
-        and _param["default"].startswith("```")
-        and _param["default"].endswith("```")
-        and "[" not in _param["typ"]  # Skip if you've actually formed a proper type
+        _param["default"] != NoneStr
+        and code_quoted(_param["default"])
+        and "["
+        not in _param.get(
+            "typ", iter(())
+        )  # Skip if you've actually formed a proper type
     ):
         del _param["typ"]  # Could make it `object` I suppose…
 
@@ -616,7 +624,7 @@ def _parse_phase_numpydoc_and_google(
             s = scan[0][:offset].lstrip()
             name, delim, typ = partitioned or s.partition("(")
             name = name.rstrip()
-            typ = (delim + typ).strip()
+            typ = (delim + typ).rstrip()
             # if not name: return None
             cur = {"name": name}
             if typ:
@@ -624,11 +632,20 @@ def _parse_phase_numpydoc_and_google(
                     ")"
                 ), "Expected third partition" " to be paren wrapped {!r}".format(s)
                 cur["typ"] = typ[1:-1]
+                if " or " in cur["typ"]:
+                    cur["typ"] = "Union[{}]".format(", ".join(cur["typ"].split(" or ")))
+                end = scan[0][offset + 1 :].lstrip()
+                if len(end) > 3 and end.startswith("{") and end.endswith("}"):
+                    # PyTorch invented their own syntax for this I guess?
+                    cur["typ"] = "Literal{}".format(
+                        list(map(rpartial(str.strip, "'"), end[1:-1].split(", ")))
+                    )
+                    scan[0] = ""
                 # elif partitioned is None:
                 #    return _parse(scan, " ".join((name, typ)).partition("="))
                 # else:
             # elif name.endswith("kwargs"): cur["typ"] = "dict"
-            cur["doc"] = "\n".join([scan[0][offset + 1 :].lstrip()] + scan[1:])
+            cur["doc"] = "\n".join([scan[0][offset + 1 :].lstrip()] + scan[1:]).lstrip()
             return cur
 
     scanned_params = scanned[arg_tokens[0]]
@@ -655,6 +672,7 @@ def _parse_phase_numpydoc_and_google(
                 )
             )
         )
+
     if "scanned_afterward" in scanned:
         scanned["doc"] += "\n\n\n{}".format("\n".join(scanned["scanned_afterward"]))
 

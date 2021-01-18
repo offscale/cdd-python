@@ -55,6 +55,12 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
             gen_ast.body.pop(0)
             gold.body.pop(0)
 
+    # from meta.asttools import print_ast
+    # print("#gen")
+    # print_ast(gen_ast)
+    # print("#gold")
+    # print_ast(gold)
+
     test_case_instance.assertEqual(
         *map(
             partial(
@@ -70,9 +76,6 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
         )
     )
 
-    # from meta.asttools import print_ast
-    # print_ast(gen_ast)
-    # print_ast(gold)
     test_case_instance.assertTrue(
         cmp_ast(gen_ast, gold), "Generated AST doesn't match reference AST"
     )

@@ -232,14 +232,13 @@ class TestMarshallDocstring(TestCase):
         Tests whether `parse_docstring` produces the right IR
               from `docstring_google_tf_squared_hinge_str`
         """
-        ir = parse_docstring(
-            docstring_google_tf_squared_hinge_str,
-            emit_default_doc=True,
-            infer_type=True,
-            default_search_announce=("Default value is", "defaults to"),
-        )
         self.assertDictEqual(
-            ir,
+            parse_docstring(
+                docstring_google_tf_squared_hinge_str,
+                emit_default_doc=True,
+                infer_type=True,
+                default_search_announce=("Default value is", "defaults to"),
+            ),
             docstring_google_tf_squared_hinge_ir,
         )
 

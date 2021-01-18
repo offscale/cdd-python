@@ -9,8 +9,8 @@ from inspect import _empty
 from itertools import chain
 from operator import itemgetter
 
-from doctrans.ast_utils import NoneStr, get_value
-from doctrans.pure_utils import lstrip_namespace, rpartial
+from doctrans.ast_utils import get_value
+from doctrans.pure_utils import lstrip_namespace, none_types, rpartial
 from doctrans.source_transformer import to_code
 
 lstrip_typings = partial(lstrip_namespace, namespaces=("typings.", "_extensions."))
@@ -53,8 +53,10 @@ def ir_merge(target, other):
             if target_params[name].get("typ") is None and other_params[name].get("typ"):
                 target_params[name]["typ"] = other_params[name]["typ"]
             if (
-                target_params[name].get("default") in (None, "None", NoneStr)
+                target_params[name].get("default") in none_types
                 and "default" in other_params[name]
+                and other_params[name]["default"]
+                not in frozenset((None, "None", "(None)"))
             ):
                 target_params[name]["default"] = other_params[name]["default"]
 
@@ -195,7 +197,8 @@ def _interpolate_return(function_def, intermediate_repr):
         filter(rpartial(isinstance, Return), function_def.body[::-1]), None
     )
     if return_ast is not None and return_ast.value is not None:
-        intermediate_repr.setdefault("returns", OrderedDict((("return_type", {}),)))
+        if intermediate_repr.get("returns") is None:
+            intermediate_repr["returns"] = OrderedDict((("return_type", {}),))
 
         if (
             "typ" in intermediate_repr["returns"]["return_type"]
@@ -239,4 +242,4 @@ def _interpolate_return(function_def, intermediate_repr):
 #     """
 #     return body if ast.get_docstring(source) is not None else body[1:]
 
-__all__ = ["lstrip_typings", "ir_merge"]
+__all__ = ["ir_merge", "lstrip_typings"]

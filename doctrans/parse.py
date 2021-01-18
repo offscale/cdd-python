@@ -23,7 +23,7 @@ from collections import OrderedDict, deque
 from copy import deepcopy
 from functools import partial
 from inspect import getdoc, getsource, isfunction, signature
-from itertools import filterfalse
+from itertools import cycle, filterfalse, islice
 from operator import setitem
 from types import FunctionType
 
@@ -81,6 +81,11 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
     if not is_supported_ast_node and isinstance(class_def, type):
         ir = _inspect(class_def, class_name)
         parsed_body = ast.parse(getsource(class_def).lstrip()).body[0]
+        parsed_body.body = (
+            parsed_body.body
+            if ast.get_docstring(parsed_body) is None
+            else parsed_body.body[1:]
+        )
 
         if merge_inner_function is not None:
             _merge_inner_function(
@@ -134,7 +139,8 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
             (("return_type", intermediate_repr["params"].pop("return_type")),)
         )
 
-    for e in class_def.body:
+    body = class_def.body if doc_str is None else class_def.body[1:]
+    for e in body:
         if isinstance(e, AnnAssign):
             typ = to_code(e.annotation).rstrip("\n")
             val = (
@@ -201,9 +207,7 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
             ),
             "_internal": {
                 "body": list(
-                    filterfalse(
-                        rpartial(isinstance, (AnnAssign, Assign)), class_def.body
-                    )
+                    filterfalse(rpartial(isinstance, (AnnAssign, Assign)), body)
                 ),
                 "from_name": class_def.name,
                 "from_type": "cls",
@@ -213,6 +217,7 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
 
     if merge_inner_function is not None:
         assert isinstance(class_def, ClassDef)
+
         _merge_inner_function(
             class_def,
             infer_type=infer_type,
@@ -400,10 +405,13 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
         # Dynamic function, i.e., this isn't source code; and is in your memory
         ir = _inspect(function_def, function_name)
         parsed_source = ast.parse(getsource(function_def).lstrip()).body[0]
+        body = (
+            parsed_source.body
+            if ast.get_docstring(parsed_source) is None
+            else parsed_source.body[1:]
+        )
         ir["_internal"] = {
-            "body": list(
-                filterfalse(rpartial(isinstance, AnnAssign), parsed_source.body)
-            ),
+            "body": list(filterfalse(rpartial(isinstance, AnnAssign), body)),
             "from_name": parsed_source.name,
             "from_type": "cls",
         }
@@ -419,7 +427,7 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
     found_type = get_function_type(function_def)
 
     # Read docstring
-    intermediate_repr_docstring = (
+    doc_str = (
         get_docstring(function_def) if isinstance(function_def, FunctionDef) else None
     )
 
@@ -428,7 +436,7 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
         function_def.args.args if found_type == "static" else function_def.args.args[1:]
     )
 
-    if intermediate_repr_docstring is None:
+    if doc_str is None:
         intermediate_repr = {
             "name": function_name or function_def.name,
             "params": OrderedDict(),
@@ -436,7 +444,7 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
         }
     else:
         intermediate_repr = docstring(
-            intermediate_repr_docstring.replace(":cvar", ":param"),
+            doc_str.replace(":cvar", ":param"),
             infer_type=infer_type,
         )
 
@@ -447,11 +455,10 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
         }
     )
 
+    function_def.body = function_def.body if doc_str is None else function_def.body[1:]
     if function_def.body:
         intermediate_repr["_internal"] = {
-            "body": function_def.body
-            if intermediate_repr_docstring is None
-            else function_def.body[1:],
+            "body": function_def.body,
             "from_name": function_def.name,
             "from_type": found_type,
         }
@@ -475,28 +482,36 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
         del _param
 
     # Set defaults
+
+    # Fill with `None`s when no default is given to make the `zip` below it work cleanly
+    for args, defaults in (
+        ("args", "defaults"),
+        ("kwonlyargs", "kw_defaults"),
+    ):
+        diff = len(getattr(function_def.args, args)) - len(
+            getattr(function_def.args, defaults)
+        )
+        if diff:
+            setattr(
+                function_def.args,
+                defaults,
+                list(islice(cycle((None,)), 10)) + getattr(function_def.args, defaults),
+            )
+
     ir_merge(
         intermediate_repr,
         {
             "params": OrderedDict(
-                reversed(
-                    tuple(
-                        func_arg2param(
-                            getattr(function_def.args, args)[idx],
-                            default=(
-                                lambda _defaults: _defaults[idx]
-                                if len(_defaults) > idx
-                                else None
-                            )(getattr(function_def.args, defaults)),
-                        )
-                        for args, defaults in (
-                            ("args", "defaults"),
-                            ("kwonlyargs", "kw_defaults"),
-                        )
-                        for idx in range(  # enumerate(getattr(function_def.args, args))
-                            len(getattr(function_def.args, args)) - 1, -1, -1
-                        )
+                (
+                    func_arg2param(
+                        getattr(function_def.args, args)[idx],
+                        default=getattr(function_def.args, defaults)[idx],
                     )
+                    for args, defaults in (
+                        ("args", "defaults"),
+                        ("kwonlyargs", "kw_defaults"),
+                    )
+                    for idx in range(len(getattr(function_def.args, args)))
                 )
             ),
             "returns": None,
@@ -520,6 +535,7 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
                 intermediate_repr["returns"].items(),
             )
         )
+
     return intermediate_repr
 
 
@@ -562,7 +578,8 @@ def argparse_ast(function_def, function_type=None, function_name=None):
     require_default = False
 
     # Parse all relevant nodes from function body
-    for node in function_def.body[1:]:
+    body = function_def.body if doc_string is None else function_def.body[1:]
+    for node in body:
         if is_argparse_add_argument(node):
             name, _param = parse_out_param(
                 node, emit_default_doc=False, require_default=require_default
@@ -588,14 +605,15 @@ def argparse_ast(function_def, function_type=None, function_name=None):
                 )
             )
 
-    if len(function_def.body) > len(intermediate_repr["params"]) + 3:
+    inner_body = list(
+        filterfalse(
+            is_argparse_description,
+            filterfalse(is_argparse_add_argument, body),
+        )
+    )
+    if inner_body:
         intermediate_repr["_internal"] = {
-            "body": list(
-                filterfalse(
-                    is_argparse_description,
-                    filterfalse(is_argparse_add_argument, function_def.body),
-                )
-            ),
+            "body": inner_body,
             "from_name": function_def.name,
             "from_type": "static",
         }
