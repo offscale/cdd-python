@@ -38,7 +38,10 @@ def _build_parser():
     ############
     property_parser = subparsers.add_parser(
         "sync_properties",
-        help="Synchronise one or more properties between input and input_str Python files",
+        help=(
+            "Synchronise one or more properties between input and input_str Python"
+            " files"
+        ),
     )
 
     property_parser.add_argument(
@@ -49,8 +52,10 @@ def _build_parser():
     )
     property_parser.add_argument(
         "--input-param",
-        help="Location within file of property."
-        " Can be top level like `a` for `a=5` or with the `.` syntax as in `--output-param`.",
+        help=(
+            "Location within file of property. Can be top level like `a` for `a=5` or"
+            " with the `.` syntax as in `--output-param`."
+        ),
         required=True,
         action="append",
         type=str,
@@ -63,13 +68,19 @@ def _build_parser():
     )
     property_parser.add_argument(
         "--output-filename",
-        help="Edited in place, the property within this file (to update) is selected by --output-param",
+        help=(
+            "Edited in place, the property within this file (to update) is selected by"
+            " --output-param"
+        ),
         type=str,
         required=True,
     )
     property_parser.add_argument(
         "--output-param",
-        help="Parameter to update. E.g., `A.F` for `class A: F`, `f.g` for `def f(g): pass`",
+        help=(
+            "Parameter to update. E.g., `A.F` for `class A: F`, `f.g` for `def f(g):"
+            " pass`"
+        ),
         required=True,
         action="append",
         type=str,
@@ -78,7 +89,10 @@ def _build_parser():
     property_parser.add_argument(
         "--output-param-wrap",
         type=str,
-        help="Wrap all input_str params with this. E.g., `Optional[Union[{output_param}, str]]`",
+        help=(
+            "Wrap all input_str params with this. E.g., `Optional[Union[{output_param},"
+            " str]]`"
+        ),
     )
 
     ########
@@ -125,15 +139,20 @@ def _build_parser():
     )
     sync_parser.add_argument(
         "--function-name",
-        help="Name of Function. If method, use Python resolution syntax,"
-        " i.e., ClassName.function_name",
+        help=(
+            "Name of Function. If method, use Python resolution syntax,"
+            " i.e., ClassName.function_name"
+        ),
         action="append",
         type=str,
         dest="function_names",
     )
     sync_parser.add_argument(
         "--truth",
-        help="Single source of truth. Others will be generated from this. Will run with first found choice.",
+        help=(
+            "Single source of truth. Others will be generated from this. Will run with"
+            " first found choice."
+        ),
         choices=("argparse_function", "class", "function"),
         type=str,
         required=True,
@@ -144,7 +163,10 @@ def _build_parser():
     #######
     gen_parser = subparsers.add_parser(
         "gen",
-        help="Generate classes, functions, and/or argparse functions from the input mapping",
+        help=(
+            "Generate classes, functions, and/or argparse functions from the input"
+            " mapping"
+        ),
     )
 
     gen_parser.add_argument(
@@ -162,8 +184,10 @@ def _build_parser():
     )
     gen_parser.add_argument(
         "--imports-from-file",
-        help="Extract imports from file and append to `output_file`. "
-        "If module or other symbol path given, resolve file then use it.",
+        help=(
+            "Extract imports from file and append to `output_file`. "
+            "If module or other symbol path given, resolve file then use it."
+        ),
     )
     gen_parser.add_argument(
         "--type",
@@ -178,7 +202,10 @@ def _build_parser():
     gen_parser.add_argument(
         "--emit-call",
         action="store_true",
-        help="Whether to place all the previous body into a new `__call__` internal function",
+        help=(
+            "Whether to place all the previous body into a new `__call__` internal"
+            " function"
+        ),
     )
     gen_parser.add_argument(
         "--decorator",
@@ -232,7 +259,8 @@ def main(cli_argv=None, return_args=False):
 
         if number_of_files < 2:
             _parser.error(
-                "Two or more of `--argparse-function`, `--class`, and `--function` must be specified"
+                "Two or more of `--argparse-function`, `--class`, and `--function` must"
+                " be specified"
             )
         elif truth_file is None or not path.isfile(truth_file):
             _parser.error(
@@ -262,9 +290,8 @@ def main(cli_argv=None, return_args=False):
     elif command == "gen":
         if path.isfile(args.output_filename):
             raise IOError(
-                "File exists and this is a destructive operation. Delete/move {!r} then rerun.".format(
-                    args.output_filename
-                )
+                "File exists and this is a destructive operation. Delete/move {!r} then"
+                " rerun.".format(args.output_filename)
             )
         gen(**args_dict)
 

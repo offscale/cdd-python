@@ -71,10 +71,10 @@ def ir_merge(target, other):
         target["returns"]["return_type"] = _join_non_none(
             target["returns"]["return_type"], other["returns"]["return_type"]
         )
-    if "return_type" in target.get("params", frozenset()):
-        target["returns"]["return_type"] = _join_non_none(
-            target["returns"]["return_type"], target["params"].pop("return_type")
-        )
+    # if "return_type" in target.get("params", frozenset()):
+    #     target["returns"]["return_type"] = _join_non_none(
+    #         target["returns"]["return_type"], target["params"].pop("return_type")
+    #     )
 
     other_internal = other.get("_internal", {})
     if other_internal.get("body"):

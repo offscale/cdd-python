@@ -10,8 +10,11 @@ from inspect import getmodule
 from itertools import chain, count, zip_longest
 from keyword import iskeyword
 from operator import attrgetter, eq
+from os import environ
 from pprint import PrettyPrinter
 from sys import version_info
+from textwrap import fill as _fill
+from textwrap import indent
 from typing import Dict, FrozenSet, Optional, Union
 
 pp = PrettyPrinter(indent=4, width=80).pprint
@@ -24,6 +27,9 @@ simple_types: Dict[Optional[str], Union[int, float, complex, str, bool, None]] =
     "bool": False,
     None: None,
 }
+
+line_length = environ.get("DOCTRANS_LINE_LENGTH", 100)
+fill = partial(_fill, width=line_length)
 
 
 # From https://github.com/Suor/funcy/blob/0ee7ae8/funcy/funcs.py#L34-L36
@@ -167,11 +173,66 @@ def reindent(s, indent_level=1, join_on="\n"):
     return join_on.join(
         map(
             lambda line: "{tab}{line}".format(
-                tab=indent_level * tab, line=line.lstrip()
+                tab=abs(indent_level) * tab, line=line.lstrip()
             ),
             s.split("\n"),
         )
     ).replace(tab, "", 1)
+
+
+def indent_all_but_first(s, indent_level=1, wipe_indents=False):
+    """
+    Indent all lines except the first one
+
+    :param s: Input string
+    :type s: ```str```
+
+    :param indent_level: indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
+    :type indent_level: ```int```
+
+    :param wipe_indents: Whether to clean the `s` of indents first
+    :type wipe_indents: ```bool```
+
+    :return: input string indented (except first line)
+    :rtype: ```str```
+    """
+    lines = indent(deindent(s) if wipe_indents else s, tab * abs(indent_level)).split(
+        "\n"
+    )
+    return "\n".join([lines[0].lstrip()] + lines[1:])
+
+
+def multiline(s, quote_with=("'", "'")):
+    """
+    For readability and linting, it's useful to turn a long line, like:
+    >>> '''123456789_\n123456789_\n123456789_\n123456789'''
+
+    Into:
+    >>> '''123456789_\n''' \
+        '''123456789_\n''' \
+        '''123456789_\n''' \
+        '''123456789'''
+
+    :param s: Input string
+    :type s: ```str```
+
+    :param quote_with: What to quote with
+    :type quote_with: ```Tuple[str, str]```
+
+    :return: multine input string
+    :rtype: ```str```
+    """
+    return "{}{}".format(
+        "",
+        tab.join(
+            map(
+                lambda _s: "{quote_with[0]}{_s}{quote_with[1]} \\\n".format(
+                    quote_with=quote_with, _s=_s
+                ),
+                s.splitlines(),
+            )
+        ).rstrip(" \n\\"),
+    )
 
 
 def sanitise(s):
@@ -359,7 +420,7 @@ def blockwise(t, size=2, fillvalue=None):
     :return: iterator with iterators inside of block size
     :rtype: ```Iterator```
     """
-    return zip_longest(*[iter(t)] * size, fillvalue=fillvalue)
+    return zip_longest(*[iter(t)] * abs(size), fillvalue=fillvalue)
 
 
 def location_within(container, iterable, cmp=eq):
@@ -530,6 +591,7 @@ __all__ = [
     "diff",
     "get_module",
     "identity",
+    "indent_all_but_first",
     "location_within",
     "lstrip_namespace",
     "params_to_ordered_dict",

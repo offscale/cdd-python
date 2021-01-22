@@ -12,11 +12,11 @@ from tempfile import NamedTemporaryFile
 from unittest import main
 from unittest.mock import MagicMock, patch
 
-from black import Mode, format_str
 from meta.asttools import cmp_ast
 
 import doctrans.source_transformer
-from doctrans.pure_utils import PY3_8
+from doctrans.ast_utils import set_value
+from doctrans.pure_utils import PY3_8, reindent, tab
 
 
 def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
@@ -44,16 +44,15 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     gen_ast = deepcopy(gen_ast)
     gold = deepcopy(gold)
 
-    if hasattr(gen_ast, "body") and len(gen_ast.body) > 0:
-        gen_docstring = ast.get_docstring(gen_ast)
-        gold_docstring = ast.get_docstring(gold)
-        if gen_docstring is not None and gold_docstring is not None:
-            test_case_instance.assertEqual(
-                gold_docstring.strip(), gen_docstring.strip()
-            )
-            # Following test issue with docstring indentation, remove them from the AST, as symmetry has been confirmed
-            gen_ast.body.pop(0)
-            gold.body.pop(0)
+    # if reindent_docstring:
+    #     #     gen_docstring = ast.get_docstring(gen_ast)
+    #     #     if gen_docstring is not None:
+    #     #         gen_ast.body[0] = set_value(
+    #     #             "\n{}".format(indent(cleandoc(gen_docstring), tab))
+    #     #         )
+    #     #     gold.body[0] = set_value(
+    #     #         "\n{}".format(indent(ast.get_docstring(gold, clean=True), tab))
+    #     #     )
 
     # from meta.asttools import print_ast
     # print("#gen")
@@ -62,18 +61,18 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     # print_ast(gold)
 
     test_case_instance.assertEqual(
-        *map(
-            partial(
-                (lambda _, **kwargs: _) if skip_black else format_str,
-                mode=Mode(
-                    target_versions=set(),
-                    line_length=60,
-                    is_pyi=False,
-                    string_normalization=False,
-                ),
-            ),
-            map(doctrans.source_transformer.to_code, (gold, gen_ast)),
-        )
+        # map(
+        # partial(
+        #     (lambda _, **kwargs: _) if skip_black else format_str,
+        #     mode=Mode(
+        #         target_versions=set(),
+        #         line_length=60,
+        #         is_pyi=False,
+        #         string_normalization=False,
+        #     ),
+        # ),
+        *map(doctrans.source_transformer.to_code, (gold, gen_ast)),
+        # )
     )
 
     test_case_instance.assertTrue(
@@ -229,6 +228,46 @@ def mock_function(*args, **kwargs):
     :rtype: ```Literal[True]```
     """
     return True
+
+
+def reindent_docstring(node, indent_level=1):
+    """
+    Reindent the docstring
+
+    :param node: AST node
+    :type node: ```ast.AST```
+
+    :param indent_level: docstring indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
+    :type indent_level: ```int```
+
+    :return: Node with reindent docstring
+    :rtype: ```ast.AST```
+    """
+    doc_str = ast.get_docstring(node)
+    if doc_str is not None:
+        node.body[0] = ast.Expr(
+            set_value(
+                "\n{tab}{s}\n{tab}".format(
+                    tab=tab * abs(indent_level), s=reindent(doc_str)
+                )
+            )
+        )
+    return node
+
+
+def emit_separating_tab(s, indent_level=1):
+    """
+    :param indent_level: docstring indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
+    :type indent_level: ```int```
+
+    """
+    sep = tab * indent_level
+    return "\n{sep}{}\n{sep}".format(
+        "\n".join(
+            map(lambda line: sep if len(line) == 0 else line, s.splitlines())
+        ).lstrip(),
+        sep=sep,
+    )
 
 
 __all__ = [

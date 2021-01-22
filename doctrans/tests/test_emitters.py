@@ -12,7 +12,7 @@ from meta.asttools import cmp_ast
 
 from doctrans import emit, parse
 from doctrans.ast_utils import annotate_ancestry, find_in_ast, get_function_type
-from doctrans.pure_utils import PY3_8, deindent, reindent, rpartial, tab
+from doctrans.pure_utils import rpartial
 from doctrans.tests.mocks.argparse import (
     argparse_func_action_append_ast,
     argparse_func_ast,
@@ -36,7 +36,11 @@ from doctrans.tests.mocks.methods import (
     class_with_method_types_str,
     function_google_tf_squared_hinge_str,
 )
-from doctrans.tests.utils_for_tests import run_ast_test, unittest_main
+from doctrans.tests.utils_for_tests import (
+    reindent_docstring,
+    run_ast_test,
+    unittest_main,
+)
 
 
 class TestEmitters(TestCase):
@@ -122,6 +126,7 @@ class TestEmitters(TestCase):
                 ir,
                 emit_default_doc=False,
                 emit_default_doc_in_return=False,
+                word_wrap=False,
             ),
             gold=argparse_function_google_tf_tensorboard_ast,
         )
@@ -205,19 +210,15 @@ class TestEmitters(TestCase):
         Tests whether `function` produces method from `class_with_method_types_ast` given `docstring_str`
         """
 
-        function_def = deepcopy(
-            next(
-                filter(
-                    rpartial(isinstance, FunctionDef), class_with_method_types_ast.body
+        function_def = reindent_docstring(
+            deepcopy(
+                next(
+                    filter(
+                        rpartial(isinstance, FunctionDef),
+                        class_with_method_types_ast.body,
+                    )
                 )
             )
-        )
-        # Reindent docstring
-        function_def.body[0].value.value = "\n{tab}{docstring}\n{tab}".format(
-            tab=tab,
-            docstring=reindent(
-                deindent(ast.get_docstring(function_def).translate("\n\t")),
-            ),
         )
 
         function_name = function_def.name
@@ -229,13 +230,9 @@ class TestEmitters(TestCase):
             function_type=function_type,
             emit_default_doc=False,
             inline_types=True,
-            emit_separating_tab=PY3_8,
-            indent_level=0,
+            emit_separating_tab=True,
+            indent_level=1,
             emit_as_kwonlyargs=False,
-        )
-
-        gen_ast.body[0].value.value = "\n{tab}{docstring}".format(
-            tab=tab, docstring=reindent(deindent(ast.get_docstring(gen_ast)))
         )
 
         run_ast_test(
@@ -256,12 +253,14 @@ class TestEmitters(TestCase):
             gold=ast.parse(class_with_method_str).body[0],
         )
 
-        function_def = deepcopy(
-            next(filter(rpartial(isinstance, FunctionDef), class_with_method_ast.body))
-        )
-        # Reindent docstring
-        function_def.body[0].value.value = "\n{tab}{docstring}\n{tab}".format(
-            tab=tab, docstring=reindent(ast.get_docstring(function_def))
+        function_def = reindent_docstring(
+            deepcopy(
+                next(
+                    filter(
+                        rpartial(isinstance, FunctionDef), class_with_method_ast.body
+                    )
+                )
+            )
         )
 
         ir = parse.function(function_def)
@@ -275,15 +274,8 @@ class TestEmitters(TestCase):
             emit_separating_tab=True,
             emit_as_kwonlyargs=False,
         )
-        gen_ast.body[0].value.value = "\n{tab}{docstring}\n{tab}".format(
-            tab=tab, docstring=reindent(ast.get_docstring(gen_ast))
-        )
 
-        run_ast_test(
-            self,
-            gen_ast=gen_ast,
-            gold=function_def,
-        )
+        run_ast_test(self, gen_ast=gen_ast, gold=function_def)
 
     def test_to_function_with_inline_types(self) -> None:
         """
@@ -298,10 +290,11 @@ class TestEmitters(TestCase):
         )
         function_name = function_def.name
         function_type = get_function_type(function_def)
+        reindent_docstring(function_def)
 
         gen_ast = emit.function(
-            intermediate_repr=parse.function(
-                function_def=function_def,
+            parse.function(
+                function_def,
                 function_name=function_name,
                 function_type=function_type,
             ),
@@ -324,25 +317,20 @@ class TestEmitters(TestCase):
         """
         Tests whether `function` produces method with keyword only arguments
         """
-
-        function_def = deepcopy(
-            next(
-                filter(
-                    rpartial(isinstance, FunctionDef),
-                    ast.parse(class_with_method_types_str.replace("self", "self, *"))
-                    .body[0]
-                    .body,
+        function_def = reindent_docstring(
+            deepcopy(
+                next(
+                    filter(
+                        rpartial(isinstance, FunctionDef),
+                        ast.parse(
+                            class_with_method_types_str.replace("self", "self, *")
+                        )
+                        .body[0]
+                        .body,
+                    )
                 )
             )
         )
-        # Reindent docstring
-        function_def.body[0].value.value = "\n{tab}{docstring}\n{tab}".format(
-            tab=tab,
-            docstring=reindent(
-                deindent(ast.get_docstring(function_def)),
-            ),
-        )
-
         function_name = function_def.name
         function_type = get_function_type(function_def)
 
@@ -352,13 +340,9 @@ class TestEmitters(TestCase):
             function_type=function_type,
             emit_default_doc=False,
             inline_types=True,
-            emit_separating_tab=PY3_8,
-            indent_level=0,
+            emit_separating_tab=True,
+            indent_level=1,
             emit_as_kwonlyargs=True,
-        )
-
-        gen_ast.body[0].value.value = "\n{tab}{docstring}".format(
-            tab=tab, docstring=reindent(deindent(ast.get_docstring(gen_ast)))
         )
 
         run_ast_test(
@@ -371,15 +355,13 @@ class TestEmitters(TestCase):
         """ Tests if this can make the roundtrip from a full function to a full function """
         annotate_ancestry(class_with_method_and_body_types_ast)
 
-        function_def = next(
-            filter(
-                rpartial(isinstance, FunctionDef),
-                class_with_method_and_body_types_ast.body,
+        function_def = reindent_docstring(
+            next(
+                filter(
+                    rpartial(isinstance, FunctionDef),
+                    class_with_method_and_body_types_ast.body,
+                )
             )
-        )
-        # Reindent docstring
-        function_def.body[0].value.value = "\n{tab}{docstring}\n{tab}".format(
-            tab=tab, docstring=reindent(ast.get_docstring(function_def))
         )
 
         ir = parse.function(
@@ -415,9 +397,11 @@ class TestEmitters(TestCase):
             parse.function(
                 ast.parse(function_google_tf_squared_hinge_str).body[0],
                 infer_type=True,
+                word_wrap=False,
             ),
             class_name="SquaredHingeConfig",
             emit_call=True,
+            word_wrap=False,
             emit_default_doc=True,
         )
         run_ast_test(
@@ -446,8 +430,10 @@ class TestEmitters(TestCase):
 
         func = emit.argparse_function(
             deepcopy(class_torch_nn_l1loss_ir),
-            emit_default_doc=False,
             emit_default_doc_in_return=False,
+            emit_default_doc=False,
+            wrap_description=False,
+            word_wrap=False,
         )
         run_ast_test(
             self,

@@ -40,6 +40,10 @@ from doctrans.emitter_utils import (
 from doctrans.pure_utils import (
     PY3_8,
     code_quoted,
+    fill,
+    identity,
+    indent_all_but_first,
+    multiline,
     none_types,
     rpartial,
     simple_types,
@@ -54,6 +58,8 @@ def argparse_function(
     emit_default_doc_in_return=False,
     function_name="set_cli_args",
     function_type="static",
+    wrap_description=False,
+    word_wrap=True,
 ):
     """
     Convert to an argparse FunctionDef
@@ -78,6 +84,12 @@ def argparse_function(
 
     :param function_type: Type of function, static is static or global method, others just become first arg
     :type function_type: ```Literal['self', 'cls', 'static']```
+
+    :param wrap_description: Whether to word-wrap the description. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type wrap_description: ```bool```
+
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
 
     :return:  AST node for function definition which constructs argparse
     :rtype: ```FunctionDef```
@@ -110,23 +122,28 @@ def argparse_function(
                         (
                             Expr(
                                 set_value(
-                                    "\n    Set CLI arguments\n\n    "
-                                    ":param argument_parser: argument parser\n    "
-                                    ":type argument_parser: ```ArgumentParser```\n\n    "
-                                    "{return_params}".format(
+                                    "\n    Set CLI arguments\n\n    :param"
+                                    " argument_parser: argument parser\n    :type"
+                                    " argument_parser: ```ArgumentParser```\n\n   "
+                                    " {return_params}".format(
                                         return_params=(
-                                            lambda returns: ":return: argument_parser{return_doc}\n    "
-                                            "{rtype}".format(
+                                            lambda returns: ":return: argument_parser{return_doc}\n    {rtype}".format(
                                                 return_doc=", {}".format(returns["doc"])
                                                 if "doc" in returns
                                                 else "",
-                                                rtype=":rtype: ```ArgumentParser```\n    "
+                                                rtype=(
+                                                    ":rtype: ```ArgumentParser```\n    "
+                                                )
                                                 if intermediate_repr["returns"][
                                                     "return_type"
                                                 ].get("typ")
                                                 in none_types
-                                                else ":rtype: ```Tuple[ArgumentParser, {returns[typ]}]```\n{tab}"
-                                                "".format(returns=returns, tab=tab),
+                                                else (
+                                                    ":rtype: ```Tuple[ArgumentParser,"
+                                                    " {returns[typ]}]```\n{tab}".format(
+                                                        returns=returns, tab=tab
+                                                    )
+                                                ),
                                             )
                                         )(
                                             returns=set_default_doc(
@@ -144,8 +161,10 @@ def argparse_function(
                                         in (
                                             intermediate_repr.get("returns") or iter(())
                                         )
-                                        else ":return: argument_parser\n    "
-                                        ":rtype: ```ArgumentParser```\n    "
+                                        else (
+                                            ":return: argument_parser\n    "
+                                            ":rtype: ```ArgumentParser```\n    "
+                                        )
                                     )
                                 )
                             ),
@@ -157,7 +176,11 @@ def argparse_function(
                                         Store(),
                                     )
                                 ],
-                                value=set_value(intermediate_repr["doc"]),
+                                value=set_value(
+                                    (fill if wrap_description else identity)(
+                                        intermediate_repr["doc"]
+                                    )
+                                ),
                                 lineno=None,
                                 expr=None,
                                 **maybe_type_comment
@@ -172,6 +195,7 @@ def argparse_function(
                                     map(
                                         partial(
                                             param2argparse_param,
+                                            word_wrap=word_wrap,
                                             emit_default_doc=emit_default_doc,
                                         ),
                                         intermediate_repr["params"].items(),
@@ -255,6 +279,7 @@ def class_(
     class_name="ConfigClass",
     class_bases=("object",),
     decorator_list=None,
+    word_wrap=True,
     emit_default_doc=False,
 ):
     """
@@ -281,6 +306,9 @@ def class_(
     :param decorator_list: List of decorators
     :type decorator_list: ```Optional[Union[List[Str], List[]]]```
 
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
+
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
@@ -289,7 +317,7 @@ def class_(
     """
     returns = (
         intermediate_repr["returns"]
-        if "return_type" in intermediate_repr.get("returns", {})
+        if "return_type" in ((intermediate_repr or {}).get("returns") or iter(()))
         else OrderedDict()
     )
 
@@ -310,11 +338,11 @@ def class_(
                     map(RewriteName(param_names).visit, internal_body),
                 )
             )
-        elif (returns or {"return_type": iter(())}).get(
-            "return_type", {"default"}
-        ) is not None:
+        elif (returns or {"return_type": None}).get("return_type") is not None:
             internal_body = returns["return_type"]
 
+    indent_level = 1
+    sep = indent_level * tab
     return ClassDef(
         bases=list(map(rpartial(Name, Load()), class_bases)),
         body=list(
@@ -325,15 +353,19 @@ def class_(
                             set_value(
                                 to_docstring(
                                     intermediate_repr,
-                                    indent_level=0,
-                                    emit_separating_tab=False,
+                                    indent_level=indent_level,
+                                    emit_separating_tab=True,
                                     emit_default_doc=emit_default_doc,
                                     emit_types=False,
+                                    word_wrap=word_wrap,
                                 )
-                                .replace("\n:param ", "{tab}:cvar ".format(tab=tab))
                                 .replace(
-                                    "{tab}:cvar ".format(tab=tab),
-                                    "\n{tab}:cvar ".format(tab=tab),
+                                    "\n{sep}:param ".format(sep=sep),
+                                    ":cvar ",
+                                )
+                                .replace(
+                                    "{sep}:cvar ".format(sep=sep),
+                                    "\n{sep}:cvar ".format(sep=sep),
                                     1,
                                 )
                                 .rstrip()
@@ -376,7 +408,9 @@ def class_(
     )
 
 
-def docstring(intermediate_repr, docstring_format="rest", emit_default_doc=True):
+def docstring(
+    intermediate_repr, docstring_format="rest", word_wrap=True, emit_default_doc=True
+):
     """
     Converts an AST to a docstring
 
@@ -392,6 +426,9 @@ def docstring(intermediate_repr, docstring_format="rest", emit_default_doc=True)
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpy', 'google']```
 
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
+
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
@@ -402,13 +439,16 @@ def docstring(intermediate_repr, docstring_format="rest", emit_default_doc=True)
         raise NotImplementedError(docstring_format)
 
     return "\n{doc}\n\n{params}\n{returns}\n".format(
-        doc=intermediate_repr["doc"],
+        doc=(fill if word_wrap else identity)(intermediate_repr["doc"]),
         params="\n".join(
-            ":param {name}: {param[doc]}\n{type_param}".format(
+            ":param {name}: {doc}\n{type_param}".format(
                 name=name,
-                param=set_default_doc((name, param), emit_default_doc=emit_default_doc)[
+                # multiline(
+                # indent_all_but_first(
+                doc=set_default_doc((name, param), emit_default_doc=emit_default_doc)[
                     1
-                ],
+                ]["doc"],
+                # quote_with=("", ""),
                 type_param=":type {name}: ```{typ}```\n".format(
                     name=name,
                     typ=param["typ"],
@@ -423,7 +463,11 @@ def docstring(intermediate_repr, docstring_format="rest", emit_default_doc=True)
                 lambda param: filter(
                     None,
                     (
-                        ":return: {param[doc]}".format(param=param)
+                        ":return: {doc}".format(
+                            doc=multiline(
+                                indent_all_but_first(param["doc"]), quote_with=("", "")
+                            )
+                        )
                         if "doc" in param
                         else None,
                         None
@@ -485,6 +529,7 @@ def function(
     intermediate_repr,
     function_name,
     function_type,
+    word_wrap=True,
     emit_default_doc=False,
     docstring_format="rest",
     indent_level=2,
@@ -512,6 +557,9 @@ def function(
 
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpy', 'google']```
+
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
@@ -623,6 +671,7 @@ def function(
                         set_value(
                             to_docstring(
                                 intermediate_repr,
+                                word_wrap=word_wrap,
                                 emit_default_doc=emit_default_doc,
                                 docstring_format=docstring_format,
                                 emit_types=not inline_types,

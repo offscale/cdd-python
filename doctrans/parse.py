@@ -51,7 +51,13 @@ from doctrans.source_transformer import to_code
 logger = get_logger("doctrans.parse")
 
 
-def class_(class_def, class_name=None, merge_inner_function=None, infer_type=False):
+def class_(
+    class_def,
+    class_name=None,
+    merge_inner_function=None,
+    infer_type=False,
+    word_wrap=True,
+):
     """
     Converts an AST to our IR
 
@@ -67,6 +73,9 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
     :param infer_type: Whether to try inferring the typ (from the default)
     :type infer_type: ```bool```
 
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
+
     :return: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
@@ -79,7 +88,7 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
     assert not isinstance(class_def, FunctionDef)
     is_supported_ast_node = isinstance(class_def, (Module, ClassDef))
     if not is_supported_ast_node and isinstance(class_def, type):
-        ir = _inspect(class_def, class_name)
+        ir = _inspect(class_def, class_name, word_wrap)
         parsed_body = ast.parse(getsource(class_def).lstrip()).body[0]
         parsed_body.body = (
             parsed_body.body
@@ -166,15 +175,12 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
                     intermediate_repr[key][e.target.id].update(typ_default)
                     typ_default = False
                     break
-                # elif e.target.id != "return_type":
-                #     if intermediate_repr[key] is None:
-                #         intermediate_repr[key] = OrderedDict()
-                #     print("Docstring was missing {!r}".format(e.target.id))
-                #     intermediate_repr[key][e.target.id] = typ_default
-            # if typ_default:
-            #     if e.target.id.endswith("kwargs") and typ_default["typ"] == "dict":
-            #         typ_default["typ"] = "Optional[dict]"
-            #     intermediate_repr["params"][e.target.id] = typ_default
+
+            if typ_default:
+                k = "returns" if e.target.id == "return_type" else "params"
+                if intermediate_repr.get(k) is None:
+                    intermediate_repr[k] = OrderedDict()
+                intermediate_repr[k][e.target.id] = typ_default
         elif isinstance(e, Assign):
             val = get_value(e)
             if val is not None:
@@ -201,7 +207,9 @@ def class_(class_def, class_name=None, merge_inner_function=None, infer_type=Fal
         {
             "params": OrderedDict(
                 map(
-                    partial(_set_name_and_type, infer_type=infer_type),
+                    partial(
+                        _set_name_and_type, infer_type=infer_type, word_wrap=word_wrap
+                    ),
                     intermediate_repr["params"].items(),
                 )
             ),
@@ -286,7 +294,7 @@ def _merge_inner_function(
     return intermediate_repr
 
 
-def _inspect(obj, name):
+def _inspect(obj, name, word_wrap):
     """
     Uses the `inspect` module to figure out the IR from the input
 
@@ -295,6 +303,9 @@ def _inspect(obj, name):
 
     :param name: Name of the object being inspected
     :type name: ```str```
+
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
 
     :return: a dictionary of form
         {  "name": Optional[str],
@@ -347,7 +358,7 @@ def _inspect(obj, name):
     if "return_type" in (ir.get("returns") or iter(())):
         ir["returns"] = OrderedDict(
             map(
-                partial(_set_name_and_type, infer_type=False),
+                partial(_set_name_and_type, infer_type=False, word_wrap=word_wrap),
                 ir["returns"].items(),
             )
         )
@@ -376,7 +387,13 @@ def _inspect(obj, name):
     return ir
 
 
-def function(function_def, infer_type=False, function_type=None, function_name=None):
+def function(
+    function_def,
+    infer_type=False,
+    word_wrap=True,
+    function_type=None,
+    function_name=None,
+):
     """
     Converts a method to our IR
 
@@ -385,6 +402,9 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
 
     :param infer_type: Whether to try inferring the typ (from the default)
     :type infer_type: ```bool```
+
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
 
     :param function_type: Type of function, static is static or global method, others just become first arg
     :type function_type: ```Literal['self', 'cls', 'static']```
@@ -403,7 +423,7 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
     """
     if isinstance(function_def, FunctionType):
         # Dynamic function, i.e., this isn't source code; and is in your memory
-        ir = _inspect(function_def, function_name)
+        ir = _inspect(function_def, function_name, word_wrap)
         parsed_source = ast.parse(getsource(function_def).lstrip()).body[0]
         body = (
             parsed_source.body
@@ -521,7 +541,7 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
     intermediate_repr["params"].update(params_to_append)
     intermediate_repr["params"] = OrderedDict(
         map(
-            partial(_set_name_and_type, infer_type=infer_type),
+            partial(_set_name_and_type, infer_type=infer_type, word_wrap=word_wrap),
             intermediate_repr["params"].items(),
         )
     )
@@ -531,7 +551,7 @@ def function(function_def, infer_type=False, function_type=None, function_name=N
     if "return_type" in (intermediate_repr.get("returns") or iter(())):
         intermediate_repr["returns"] = OrderedDict(
             map(
-                partial(_set_name_and_type, infer_type=infer_type),
+                partial(_set_name_and_type, infer_type=infer_type, word_wrap=word_wrap),
                 intermediate_repr["returns"].items(),
             )
         )

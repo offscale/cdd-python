@@ -1,6 +1,10 @@
 """
 Mocks for docstrings
 """
+from doctrans.pure_utils import tab
+
+header_doc_str = "Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare\n"
+"library".strip()
 
 docstring_extra_colons_str = """
 Some comment
@@ -186,7 +190,7 @@ model.fit(...,
 """
 
 docstring_google_str = """
-Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
+{header_doc_str}
 
 Args:
   dataset_name (str): name of dataset. Defaults to "mnist"
@@ -198,11 +202,12 @@ Args:
 Returns:
   Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
    Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
-"""
+""".format(
+    header_doc_str=header_doc_str
+)
 
 docstring_no_default_doc_str = """
-Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
-
+{header_doc_str}
 :param dataset_name: name of dataset.
 :type dataset_name: ```str```
 
@@ -220,11 +225,16 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 
 :return: Train and tests dataset splits.
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
-"""
+""".format(
+    header_doc_str=header_doc_str
+)
+
+docstring_no_default_doc_wrapped_str = docstring_no_default_doc_str.replace(
+    " np.ndarray]]```", "\n{tab}np.ndarray]]```".format(tab=tab)
+)
 
 docstring_no_default_str = """
-Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
-
+{header_doc_str}
 :param dataset_name: name of dataset.
 :type dataset_name: ```str```
 
@@ -242,11 +252,15 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 
 :return: Train and tests dataset splits.
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
-"""
+""".format(
+    header_doc_str=header_doc_str
+)
 
 docstring_numpydoc_only_doc_str = """
-Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
-"""
+{header_doc_str}
+""".format(
+    header_doc_str=header_doc_str
+)
 
 docstring_numpydoc_only_params_str = """
 Parameters
@@ -272,7 +286,7 @@ Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]
 """
 
 docstring_numpydoc_str = """
-Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
+{header_doc_str}
 
 Parameters
 ----------
@@ -292,7 +306,9 @@ Returns
 Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]
     Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 
-"""
+""".format(
+    header_doc_str=header_doc_str
+)
 
 docstring_only_return_type_str = """
 Some comment
@@ -304,8 +320,7 @@ Some comment
 """
 
 docstring_str = """
-Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
-
+{header_doc_str}
 :param dataset_name: name of dataset. Defaults to "mnist"
 :type dataset_name: ```str```
 
@@ -323,7 +338,48 @@ Acquire from the official tensorflow_datasets model zoo, or the ophthalmology fo
 
 :return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
-"""
+""".format(
+    header_doc_str=header_doc_str
+)
+
+docstring_wrapped_str = docstring_str.replace(
+    " np.ndarray]]```", "\n{tab}np.ndarray]]```".format(tab=tab)
+)
+
+docstring_no_type_str = """
+{header_doc_str}
+
+:param dataset_name: name of dataset. Defaults to "mnist"
+
+:param tfds_dir: directory to look for models in. Defaults to "~/tensorflow_datasets"
+
+:param K: backend engine, e.g., `np` or `tf`. Defaults to "np"
+
+:param as_numpy: Convert to numpy ndarrays. Defaults to None
+
+:param data_loader_kwargs: pass this as arguments to data_loader function
+
+:return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
+""".format(
+    header_doc_str=header_doc_str
+)
+
+docstring_no_type_no_default_str = """
+{header_doc_str}
+:param dataset_name: name of dataset.
+
+:param tfds_dir: directory to look for models in.
+
+:param K: backend engine, e.g., `np` or `tf`.
+
+:param as_numpy: Convert to numpy ndarrays.
+
+:param data_loader_kwargs: pass this as arguments to data_loader function
+
+:return: Train and tests dataset splits.
+""".format(
+    header_doc_str=header_doc_str
+)
 
 __all__ = [
     "docstring_extra_colons_str",

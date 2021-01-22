@@ -46,6 +46,8 @@ from doctrans.pure_utils import (
     PY_GTE_3_8,
     PY_GTE_3_9,
     code_quoted,
+    fill,
+    identity,
     none_types,
     paren_wrap_code,
     quote,
@@ -93,11 +95,21 @@ def param2ast(param):
             annotation=Name("object", Load()),
             simple=1,
             target=Name(name, Store()),
-            value=set_value(_param.get("default") or simple_types[_param["typ"]]),
+            value=set_value(_param.get("default")),
             expr=None,
             expr_target=None,
             expr_annotation=None,
         )
+        # return Assign(
+        #     annotation=None,
+        #     simple=1,
+        #     targets=[Name(name, Store())],
+        #     value=set_value(_param.get("default")),
+        #     expr=None,
+        #     expr_target=None,
+        #     expr_annotation=None,
+        #     **maybe_type_comment
+        # )
     elif needs_quoting(_param["typ"]):
         return AnnAssign(
             annotation=Name(_param["typ"], Load())
@@ -244,12 +256,15 @@ def find_ast_type(node, node_name=None, of_type=ClassDef):
         raise NotImplementedError(type(node).__name__)
 
 
-def param2argparse_param(param, emit_default_doc=True):
+def param2argparse_param(param, word_wrap=True, emit_default_doc=True):
     """
     Converts a param to an Expr `argparse.add_argument` call
 
     :param param: Name, dict with keys: 'typ', 'doc', 'default'
     :type param: ```Tuple[str, Dict[str, Any]]```
+
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
@@ -342,7 +357,7 @@ def param2argparse_param(param, emit_default_doc=True):
                         ),
                         keyword(
                             arg="help",
-                            value=set_value(doc),
+                            value=set_value((fill if word_wrap else identity)(doc)),
                             identifier=None,
                         )
                         if doc

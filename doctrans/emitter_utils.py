@@ -4,7 +4,7 @@ Functions which produce intermediate_repr from various different inputs
 import ast
 from ast import Attribute, Expr, FunctionDef, Load, Name, Return, arguments
 from functools import partial
-from operator import add
+from textwrap import indent
 from typing import Any
 
 from doctrans.ast_utils import (
@@ -16,7 +16,17 @@ from doctrans.ast_utils import (
     set_value,
 )
 from doctrans.defaults_utils import extract_default, set_default_doc
-from doctrans.pure_utils import identity, none_types, simple_types, tab, unquote
+from doctrans.pure_utils import (
+    fill,
+    identity,
+    indent_all_but_first,
+    line_length,
+    multiline,
+    none_types,
+    simple_types,
+    tab,
+    unquote,
+)
 from doctrans.source_transformer import to_code
 
 
@@ -53,7 +63,7 @@ def _handle_keyword(keyword, typ):
 
     type_ = "Union"
     if typ == Any or typ in simple_types:
-        if typ == "str" or typ == Any:
+        if typ in ("str", Any):
 
             def quote_f(s):
                 """
@@ -342,6 +352,7 @@ def to_docstring(
     indent_level=2,
     emit_types=False,
     emit_separating_tab=True,
+    word_wrap=True,
 ):
     """
     Converts a docstring to an AST
@@ -370,6 +381,9 @@ def to_docstring(
     :param emit_separating_tab: whether to put a tab between :param and return and desc
     :type emit_separating_tab: ```bool```
 
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
+
     :return: docstring
     :rtype: ```str```
     """
@@ -378,6 +392,20 @@ def to_docstring(
     )
     if docstring_format != "rest":
         raise NotImplementedError(docstring_format)
+
+    def _fill(s):
+        """
+        Word wrap if length suggests
+
+        :param s: Input string
+        :type s: ```str```
+
+        :return: Potentially word wrapped + 1+ indented output
+        :rtype: ```str```
+        """
+        if word_wrap and any(len(line) > line_length for line in s.splitlines()):
+            return indent_all_but_first(fill(s), indent_level + 1, wipe_indents=True)
+        return s
 
     def _param2docstring_param(
         param,
@@ -418,34 +446,59 @@ def to_docstring(
             if default is not None:
                 _param["default"] = default
 
-        _param["typ"] = (
-            "**{name}".format(name=name)
-            if _param.get("typ") == "dict" and name.endswith("kwargs")
-            else _param.get("typ")
-        )
+        sep = abs(indent_level) * tab
 
-        return "".join(
-            filter(
-                None,
+        def _joiner(param, param_type):
+            """
+            Internal function to join new lines
+
+            :param param: The `:param`
+            :type param: ```Optional[str]```
+
+            :param param_type: The `:type`
+            :type param_type: ```Optional[str]```
+
+            :return: Newline joined string
+            :rtype: ```str```
+            """
+            if param_type is None and param is not None:
+                return "{}\n{}".format(_fill(param), sep)
+            elif param is None:
+                return param
+            return "".join(
                 (
-                    (
-                        lambda name_param: "{tab}:param {name}: {doc}".format(
-                            tab=tab * indent_level,
-                            name=name_param[0],
-                            doc=name_param[1].get("doc"),
-                        )
-                    )(
-                        set_default_doc(
-                            (name, _param), emit_default_doc=emit_default_doc
-                        )
-                    ),
-                    None
-                    if _param["typ"] is None or not emit_types
-                    else "\n{tab}:type {name}: ```{_param[typ]}```".format(
-                        tab=tab * indent_level, name=name, _param=_param
-                    ),
-                ),
+                    _fill(param.replace("\n", "\n{sep}".format(sep=sep))),
+                    "\n",
+                    sep,
+                    _fill(param_type.replace("\n", "\n{sep}".format(sep=sep))),
+                    "\n",
+                    sep,
+                )
             )
+
+        return _joiner(
+            (
+                (
+                    lambda name_param: ":param {name}: {doc}".format(
+                        name=name_param[0],
+                        doc=multiline(
+                            indent_all_but_first(
+                                name_param[1]["doc"], indent_level=indent_level - 1
+                            ),
+                            quote_with=("", ""),
+                        ),
+                    )
+                )(set_default_doc((name, _param), emit_default_doc=emit_default_doc))
+                if _param.get("doc")
+                else None
+            ),
+            (
+                None
+                if _param.get("typ") is None or not emit_types
+                else ":type {name}: ```{_param[typ]}```".format(
+                    name=name, _param=_param
+                )
+            ),
         )
 
     param2docstring_param = partial(
@@ -455,32 +508,51 @@ def to_docstring(
         indent_level=indent_level,
         emit_types=emit_types,
     )
-    sep = (tab * indent_level) if emit_separating_tab else ""
-    return "\n{description}\n{sep}\n{params}\n{returns}".format(
-        sep=sep,
-        description="\n".join(
-            map(partial(add, tab), intermediate_repr["doc"].split("\n"))
-        ),
-        params="\n{sep}\n".format(sep=sep).join(
-            map(
-                partial(param2docstring_param, emit_default_doc=emit_default_doc),
-                intermediate_repr["params"].items(),
-            )
-        ),
+    sep = (tab * abs(indent_level)) if emit_separating_tab else ""
+
+    return "{header}{params}{returns}".format(
+        header="\n{description}{afterward}{sep}".format(
+            sep=sep,
+            description=indent(_fill(intermediate_repr["doc"]), sep),
+            afterward=""
+            if intermediate_repr["doc"].rstrip(" \t").endswith("\n")
+            else "\n",
+        )
+        if intermediate_repr.get("doc")
+        else "",
+        params="\n{sep}{s}\n{sep}".format(
+            sep=sep,
+            s="\n{sep}".format(sep=sep).join(
+                filter(
+                    None,
+                    map(
+                        partial(
+                            param2docstring_param, emit_default_doc=emit_default_doc
+                        ),
+                        intermediate_repr["params"].items(),
+                    ),
+                ),
+            ),
+        )
+        if intermediate_repr.get("params")
+        else "",
         returns=(
-            "{sep}\n{returns}\n{tab}".format(
+            lambda r: ""
+            if r is None
+            else "{returns}\n{sep}".format(
                 sep=sep,
-                returns=param2docstring_param(
-                    next(iter(intermediate_repr["returns"].items())),
-                    emit_default_doc=emit_default_doc,
-                )
-                .replace(":param return_type:", ":return:")
-                .replace(":type return_type:", ":rtype:"),
-                tab=tab,
+                returns=r.replace(":param return_type:", ":return:")
+                .replace(":type return_type:", ":rtype:")
+                .rstrip(),
             )
-            if intermediate_repr.get("returns")
-            else ""
-        ),
+        )(
+            param2docstring_param(
+                next(iter(intermediate_repr["returns"].items())),
+                emit_default_doc=emit_default_doc,
+            )
+        )
+        if intermediate_repr.get("returns")
+        else "",
     )
 
 
@@ -550,9 +622,13 @@ def _make_call_meth(body, return_type, param_names):
                     None,
                     (
                         None
-                        if body["doc"] in none_types
+                        if body.get("doc") in none_types
                         else Expr(
-                            set_value("\n:return: {doc}\n\n".format(doc=body["doc"]))
+                            set_value(
+                                "\n:return: {doc}\n\n".format(
+                                    doc=multiline(indent_all_but_first(body["doc"]))
+                                )
+                            )
                         ),
                         RewriteName(param_names).visit(
                             Return(

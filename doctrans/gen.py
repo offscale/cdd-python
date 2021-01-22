@@ -147,7 +147,7 @@ def gen(
     global__all__ = []
     content = "{prepend}{imports}\n{functions_and_classes}\n{__all}".format(
         prepend="" if prepend is None else prepend,
-        imports=imports,  # TODO: Optimize imports programmatically (rather than just with IDE or autoflake)
+        imports=imports,  # TODO: Optimize imports programmatically (akin to `autoflake --remove-all-unused-imports`)
         functions_and_classes="\n\n".join(
             print("Generating: {!r}".format(name))
             or global__all__.append(name_tpl.format(name=name))
