@@ -27,14 +27,33 @@ from ast import (
     keyword,
 )
 from copy import deepcopy
+from functools import partial
+from operator import itemgetter
+from textwrap import indent
 
 from doctrans.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
+from doctrans.defaults_utils import extract_default
+from doctrans.pure_utils import tab
+from doctrans.tests.mocks.docstrings import header_doc_str
+
+class_doc_str = tab.join(
+    (
+        "\n",
+        "{header_doc_str}\n".format(header_doc_str=header_doc_str),
+        ':cvar dataset_name: name of dataset. Defaults to "mnist"\n',
+        ':cvar tfds_dir: directory to look for models in. Defaults to "~/tensorflow_datasets"\n',
+        ':cvar K: backend engine, e.g., `np` or `tf`. Defaults to "np"\n',
+        ":cvar as_numpy: Convert to numpy ndarrays. Defaults to None\n",
+        ":cvar data_loader_kwargs: pass this as arguments to data_loader function\n",
+        ":cvar return_type: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))",
+    )
+)
+class_doc_str_expr = Expr(set_value(class_doc_str))
 
 class_str = '''
 class ConfigClass(object):
     """
-    Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
-
+{header_doc_str}
     :cvar dataset_name: name of dataset. Defaults to "mnist"
     :cvar tfds_dir: directory to look for models in. Defaults to "~/tensorflow_datasets"
     :cvar K: backend engine, e.g., `np` or `tf`. Defaults to "np"
@@ -53,12 +72,14 @@ class ConfigClass(object):
         np.empty(0),
         np.empty(0),
     )
-'''
+'''.format(
+    header_doc_str=indent(header_doc_str, tab)
+)
 
 class_nargs_str = '''
 class ConfigClass(object):
     """
-    Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
+    {header_doc_str}
 
     :cvar callbacks: Collection of callables that are run inside the training loop"""
 
@@ -82,23 +103,14 @@ class ConfigClass(object):
             ]
         ]
     ] = None
-'''
+'''.format(
+    header_doc_str=indent(header_doc_str, tab)
+)
 
 class_ast = ClassDef(
     bases=[Name("object", Load())],
     body=[
-        Expr(
-            set_value(
-                "\n    Acquire from the official tensorflow_datasets model zoo,"
-                " or the ophthalmology focussed ml-prepare library\n\n    "
-                ':cvar dataset_name: name of dataset. Defaults to "mnist"\n    '
-                ':cvar tfds_dir: directory to look for models in. Defaults to "~/tensorflow_datasets"\n    '
-                ':cvar K: backend engine, e.g., `np` or `tf`. Defaults to "np"\n    '
-                ":cvar as_numpy: Convert to numpy ndarrays. Defaults to None\n    "
-                ":cvar data_loader_kwargs: pass this as arguments to data_loader function\n    "
-                ":cvar return_type: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))",
-            )
-        ),
+        class_doc_str_expr,
         AnnAssign(
             annotation=Name(
                 "str",
@@ -271,15 +283,18 @@ class_ast = ClassDef(
 )
 
 class_ast_no_default_doc = deepcopy(class_ast)
-class_ast_no_default_doc.body[0].value = set_value(
-    "\n    Acquire from the official tensorflow_datasets model zoo,"
-    " or the ophthalmology focussed ml-prepare library\n\n"
-    "    :cvar dataset_name: name of dataset.\n"
-    "    :cvar tfds_dir: directory to look for models in.\n"
-    "    :cvar K: backend engine, e.g., `np` or `tf`.\n"
-    "    :cvar as_numpy: Convert to numpy ndarrays.\n"
-    "    :cvar data_loader_kwargs: pass this as arguments to data_loader function\n"
-    "    :cvar return_type: Train and tests dataset splits."
+class_ast_no_default_doc.body[0] = Expr(
+    set_value(
+        "\n".join(
+            map(
+                itemgetter(0),
+                map(
+                    partial(extract_default, emit_default_doc=False),
+                    class_doc_str.splitlines(),
+                ),
+            )
+        )
+    )
 )
 
 class_nargs_ast = ClassDef(
@@ -287,9 +302,10 @@ class_nargs_ast = ClassDef(
     body=[
         Expr(
             set_value(
-                "\n    Acquire from the official tensorflow_datasets model zoo,"
-                " or the ophthalmology focussed ml-prepare library\n\n    "
-                ":cvar callbacks: Collection of callables that are run inside the training loop",
+                "\n{tab}{header_doc_str}\n{tab}"
+                ":cvar callbacks: Collection of callables that are run inside the training loop".format(
+                    tab=tab, header_doc_str=header_doc_str
+                ),
             )
         ),
         AnnAssign(
@@ -356,25 +372,27 @@ class_squared_hinge_config_ast = ClassDef(
     body=[
         Expr(
             set_value(
-                "\n    Computes the squared hinge loss between `y_true` and `y_pred`.\n"
-                "    \n"
-                "    `loss = mean(square(maximum(1 - y_true * y_pred, 0)), axis=-1)`\n"
-                "    \n"
-                "    Standalone usage:\n"
-                "    \n"
-                "    >>> y_true = np.random.choice([-1, 1], size=(2, 3))\n"
-                "    >>> y_pred = np.random.random(size=(2, 3))\n"
-                "    >>> loss = tf.keras.losses.squared_hinge(y_true, y_pred)\n"
-                "    >>> assert loss.shape == (2,)\n"
-                "    >>> assert np.array_equal(\n"
-                "    ...     loss.numpy(),\n"
-                "    ...     np.mean(np.square(np.maximum(1. - y_true * y_pred, 0.)), axis=-1))\n\n"
-                "    :cvar y_true: The ground truth values. `y_true` values are expected to be -1 or 1."
+                # tab.join((
+                "\n{tab}Computes the squared hinge loss between `y_true` and `y_pred`.\n"
+                "\n"
+                "{tab}`loss = mean(square(maximum(1 - y_true * y_pred, 0)), axis=-1)`\n"
+                "\n"
+                "{tab}Standalone usage:\n"
+                "\n"
+                "{tab}>>> y_true = np.random.choice([-1, 1], size=(2, 3))\n"
+                "{tab}>>> y_pred = np.random.random(size=(2, 3))\n"
+                "{tab}>>> loss = tf.keras.losses.squared_hinge(y_true, y_pred)\n"
+                "{tab}>>> assert loss.shape == (2,)\n"
+                "{tab}>>> assert np.array_equal(\n"
+                "{tab}...     loss.numpy(),\n"
+                "{tab}...     np.mean(np.square(np.maximum(1. - y_true * y_pred, 0.)), axis=-1))\n\n"
+                "{tab}:cvar y_true: The ground truth values. `y_true` values are expected to be -1 or 1."
                 " If binary (0 or 1) labels are provided we will convert them to -1 or 1."
                 " shape = `[batch_size, d0, .. dN]`.\n"
-                "    :cvar y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.\n"
-                "    :cvar return_type: Squared hinge loss values. shape = `[batch_size, d0, .. dN-1]`."
+                "{tab}:cvar y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.\n"
+                "{tab}:cvar return_type: Squared hinge loss values. shape = `[batch_size, d0, .. dN-1]`."
                 " Defaults to ```K.mean(math_ops.square(math_ops.maximum(1.0 - y_true * y_pred, 0.0)), axis=-1)```"
+                "".format(tab=tab)
             )
         ),
         AnnAssign(

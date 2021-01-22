@@ -22,9 +22,18 @@ from ast import (
 )
 from functools import partial
 from operator import add
+from textwrap import indent
 
 from doctrans.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
-from doctrans.tests.mocks.docstrings import docstring_google_tf_adadelta_str
+from doctrans.pure_utils import tab
+from doctrans.tests.mocks.docstrings import (
+    docstring_google_tf_adadelta_str,
+    docstring_no_default_doc_wrapped_str,
+    docstring_no_type_no_default_str,
+    docstring_str,
+    header_doc_str,
+)
+from doctrans.tests.utils_for_tests import emit_separating_tab
 
 return_ast = Return(
     value=Tuple(
@@ -61,28 +70,30 @@ class C(object):
         **data_loader_kwargs
     ):
         """
-        Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
-
+{header_doc_str}{sep}
         :param dataset_name: name of dataset.
         :type dataset_name: ```str```
-
+{sep}
         :param tfds_dir: directory to look for models in.
         :type tfds_dir: ```str```
-
+{sep}
         :param K: backend engine, e.g., `np` or `tf`.
         :type K: ```Literal['np', 'tf']```
-
+{sep}
         :param as_numpy: Convert to numpy ndarrays.
         :type as_numpy: ```Optional[bool]```
-
+{sep}
         :param data_loader_kwargs: pass this as arguments to data_loader function
         :type data_loader_kwargs: ```Optional[dict]```
-
+{sep}
         :return: Train and tests dataset splits.
-        :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
+        :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray,
+        {tab}np.ndarray]]```
         """
         return np.empty(0), np.empty(0)
-'''
+'''.format(
+    tab=tab, header_doc_str=indent(header_doc_str, tab * 2), sep=tab * 2
+)
 
 class_with_method_types_str = '''
 class C(object):
@@ -97,8 +108,7 @@ class C(object):
         **data_loader_kwargs
     ) -> Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
         """
-        Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
-
+{header_doc_str}
         :param dataset_name: name of dataset.
 
         :param tfds_dir: directory to look for models in.
@@ -112,7 +122,9 @@ class C(object):
         :return: Train and tests dataset splits.
         """
         return np.empty(0), np.empty(0)
-'''
+'''.format(
+    header_doc_str=indent(header_doc_str, tab * 2)
+)
 
 class_with_method_and_body_types_str = '''
 class C(object):
@@ -127,7 +139,7 @@ class C(object):
         **data_loader_kwargs
     ) -> Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
         """
-        Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
+        {header_doc_str}
 
         :param dataset_name: name of dataset.
 
@@ -147,7 +159,9 @@ class C(object):
             print(True)
             return 5
         return np.empty(0), np.empty(0)
-'''
+'''.format(
+    header_doc_str=indent(header_doc_str, tab * 2)
+)
 
 class_with_optional_arg_method_str = '''
 class C(object):
@@ -159,7 +173,7 @@ class C(object):
         K: Optional[Literal["np", "tf"]] = None
     ) -> Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
         """
-        Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
+        {header_doc_str}
 
         :param dataset_name: name of dataset.
 
@@ -168,7 +182,9 @@ class C(object):
         :return: Train and tests dataset splits.
         """
         return np.empty(0), np.empty(0)
-'''
+'''.format(
+    header_doc_str=indent(header_doc_str, tab * 2)
+)
 
 class_with_method_and_body_types_ast = fix_missing_locations(
     ClassDef(
@@ -227,14 +243,7 @@ class_with_method_and_body_types_ast = fix_missing_locations(
                 body=[
                     Expr(
                         set_value(
-                            "\n        Acquire from the official tensorflow_datasets model zoo,"
-                            " or the ophthalmology focussed ml-prepare library\n\n        "
-                            ":param dataset_name: name of dataset.\n\n        "
-                            ":param tfds_dir: directory to look for models in.\n\n        "
-                            ":param K: backend engine, e.g., `np` or `tf`.\n\n        "
-                            ":param as_numpy: Convert to numpy ndarrays.\n\n        "
-                            ":param data_loader_kwargs: pass this as arguments to data_loader function\n\n        "
-                            ":return: Train and tests dataset splits.\n        ",
+                            docstring_no_type_no_default_str,
                         )
                     ),
                     Expr(
@@ -386,21 +395,9 @@ class_with_method_ast = fix_missing_locations(
                 body=[
                     Expr(
                         set_value(
-                            "\n        Acquire from the official tensorflow_datasets model zoo,"
-                            " or the ophthalmology focussed ml-prepare library\n\n        "
-                            ":param dataset_name: name of dataset.\n        "
-                            ":type dataset_name: ```str```\n\n        "
-                            ":param tfds_dir: directory to look for models in.\n        "
-                            ":type tfds_dir: ```str```\n\n        "
-                            ":param K: backend engine, e.g., `np` or `tf`.\n        "
-                            ":type K: ```Literal['np', 'tf']```\n\n        "
-                            ":param as_numpy: Convert to numpy ndarrays.\n        "
-                            ":type as_numpy: ```Optional[bool]```\n\n        "
-                            ":param data_loader_kwargs: pass this as arguments to data_loader function\n        "
-                            ":type data_loader_kwargs: ```Optional[dict]```\n\n        "
-                            ":return: Train and tests dataset splits.\n        "
-                            ":rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]"
-                            "```\n        ",
+                            emit_separating_tab(
+                                indent(docstring_no_default_doc_wrapped_str, tab * 2), 2
+                            )
                         )
                     ),
                     return_ast,
@@ -496,19 +493,7 @@ class_with_method_types_ast = fix_missing_locations(
                     arg=None,
                 ),
                 body=[
-                    Expr(
-                        set_value(
-                            "\n        Acquire from the official tensorflow_datasets"
-                            " model zoo, or the ophthalmology focussed ml-prepare library\n"
-                            "    \n        "
-                            ":param dataset_name: name of dataset.\n    \n        "
-                            ":param tfds_dir: directory to look for models in.\n    \n        "
-                            ":param K: backend engine, e.g., `np` or `tf`.\n    \n        "
-                            ":param as_numpy: Convert to numpy ndarrays.\n    \n        "
-                            ":param data_loader_kwargs: pass this as arguments to data_loader function\n    \n        "
-                            ":return: Train and tests dataset splits.\n        ",
-                        )
-                    ),
+                    Expr(set_value(indent(docstring_no_type_no_default_str, tab * 2))),
                     return_ast,
                 ],
                 decorator_list=[],
@@ -642,15 +627,7 @@ class_with_optional_arg_method_ast = ClassDef(
                 arg=None,
             ),
             body=[
-                Expr(
-                    set_value(
-                        "\n        Acquire from the official tensorflow_datasets model zoo,"
-                        " or the ophthalmology focussed ml-prepare library\n\n        "
-                        ":param dataset_name: name of dataset.\n\n        "
-                        ":param K: backend engine, e.g., `np` or `tf`.\n\n        "
-                        ":return: Train and tests dataset splits.\n        ",
-                    )
-                ),
+                Expr(set_value(indent(docstring_str, tab * 2))),
                 return_ast,
             ],
             decorator_list=[],

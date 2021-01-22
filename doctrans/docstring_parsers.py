@@ -29,6 +29,7 @@ from doctrans.pure_utils import (
     none_types,
     paren_wrap_code,
     rpartial,
+    tab,
     unquote,
     update_d,
 )
@@ -65,6 +66,7 @@ def parse_docstring(
     docstring,
     infer_type=False,
     default_search_announce=None,
+    word_wrap=True,
     emit_default_prop=True,
     emit_default_doc=False,
 ):
@@ -78,6 +80,9 @@ def parse_docstring(
 
     :param infer_type: Whether to try inferring the typ (from the default)
     :type infer_type: ```bool```
+
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
 
     :param emit_default_prop: Whether to include the default dictionary property.
     :type emit_default_prop: ```bool```
@@ -121,6 +126,7 @@ def parse_docstring(
         scanned,
         emit_default_doc=emit_default_doc,
         emit_default_prop=emit_default_prop,
+        word_wrap=word_wrap,
         default_search_announce=default_search_announce,
         infer_type=infer_type,
         style=style,
@@ -396,6 +402,7 @@ def _parse_phase(
     scanned,
     default_search_announce,
     infer_type,
+    word_wrap,
     emit_default_prop,
     emit_default_doc,
     style=Style.rest,
@@ -418,6 +425,9 @@ def _parse_phase(
 
     :param infer_type: Whether to try inferring the typ (from the default)
     :type infer_type: ```bool```
+
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
 
     :param emit_default_prop: Whether to include the default dictionary property.
     :type emit_default_prop: ```bool```
@@ -443,10 +453,11 @@ def _parse_phase(
         return_tokens=return_tokens,
         default_search_announce=default_search_announce,
         infer_type=infer_type,
+        word_wrap=word_wrap,
     )
 
 
-def _set_name_and_type(param: Tuple[str, dict], infer_type: bool):
+def _set_name_and_type(param, infer_type, word_wrap):
     """
     Sanitise the name and set the type (iff default and no existing type) for the param
 
@@ -455,6 +466,9 @@ def _set_name_and_type(param: Tuple[str, dict], infer_type: bool):
 
     :param infer_type: Whether to try inferring the typ (from the default)
     :type infer_type: ```bool```
+
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
 
     :return: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
@@ -479,9 +493,13 @@ def _set_name_and_type(param: Tuple[str, dict], infer_type: bool):
     #     _param["doc"] = "".join(_param["doc"])
     if "doc" in _param:
         if not isinstance(_param["doc"], str):
-            _param["doc"] = "".join(_param["doc"])
+            _param["doc"] = "".join(_param["doc"]).rstrip()
         else:
-            _param["doc"] = " ".join(map(str.strip, _param["doc"].split("\n"))).rstrip()
+            _param["doc"] = (
+                " ".join(map(str.strip, _param["doc"].split("\n")))
+                if word_wrap
+                else _param["doc"]
+            ).rstrip()
         if (
             (
                 _param["doc"].startswith("(Optional)")
@@ -542,6 +560,7 @@ def _parse_phase_numpydoc_and_google(
     scanned,
     default_search_announce,
     infer_type,
+    word_wrap,
     style,
     arg_tokens,
     return_tokens,
@@ -566,6 +585,9 @@ def _parse_phase_numpydoc_and_google(
 
     :param infer_type: Whether to try inferring the typ (from the default)
     :type infer_type: ```bool```
+
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
 
     :param style: the style of docstring
     :type style: ```Style```
@@ -630,7 +652,7 @@ def _parse_phase_numpydoc_and_google(
             if typ:
                 assert typ.startswith("(") and typ.endswith(
                     ")"
-                ), "Expected third partition" " to be paren wrapped {!r}".format(s)
+                ), "Expected third partition to be paren wrapped {!r}".format(s)
                 cur["typ"] = typ[1:-1]
                 if " or " in cur["typ"]:
                     cur["typ"] = "Union[{}]".format(", ".join(cur["typ"].split(" or ")))
@@ -645,7 +667,7 @@ def _parse_phase_numpydoc_and_google(
                 #    return _parse(scan, " ".join((name, typ)).partition("="))
                 # else:
             # elif name.endswith("kwargs"): cur["typ"] = "dict"
-            cur["doc"] = "\n".join([scan[0][offset + 1 :].lstrip()] + scan[1:]).lstrip()
+            cur["doc"] = "\n".join([scan[0][offset + 1 :].lstrip()] + scan[1:]).strip()
             return cur
 
     scanned_params = scanned[arg_tokens[0]]
@@ -665,7 +687,7 @@ def _parse_phase_numpydoc_and_google(
                     "\n".join,
                     map(
                         lambda l: map(
-                            lambda s: s if s.endswith(":") else "    {}".format(s), l
+                            lambda s: s if s.endswith(":") else "{}{}".format(tab, s), l
                         ),
                         scanned_afterward,
                     ),
@@ -706,7 +728,9 @@ def _parse_phase_numpydoc_and_google(
             "doc": scanned["doc"],
             "params": OrderedDict(
                 map(
-                    partial(_set_name_and_type, infer_type=infer_type),
+                    partial(
+                        _set_name_and_type, infer_type=infer_type, word_wrap=word_wrap
+                    ),
                     map(
                         _interpolate_defaults_and_force_future_default,
                         map(
@@ -747,6 +771,7 @@ def _parse_phase_numpydoc_and_google(
                                 },
                             ),
                             infer_type=infer_type,
+                            word_wrap=word_wrap,
                         ),
                     ),
                 ),
@@ -762,6 +787,7 @@ def _parse_phase_rest(
     scanned,
     default_search_announce,
     infer_type,
+    word_wrap,
     emit_default_prop,
     emit_default_doc,
     return_tokens,
@@ -784,6 +810,9 @@ def _parse_phase_rest(
 
     :param infer_type: Whether to try inferring the typ (from the default)
     :type infer_type: ```bool```
+
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
 
     :param emit_default_prop: Whether to include the default dictionary property.
     :type emit_default_prop: ```bool```
@@ -836,6 +865,7 @@ def _parse_phase_rest(
                         emit_default_doc=emit_default_doc,
                     ),
                     infer_type=infer_type,
+                    word_wrap=word_wrap,
                 )
                 if not emit_default_doc and not emit_default_prop:
                     param = _remove_default_from_param(
@@ -848,6 +878,7 @@ def _parse_phase_rest(
         name, param = _set_name_and_type(
             interpolate_defaults(param, emit_default_doc=emit_default_doc),
             infer_type=infer_type,
+            word_wrap=word_wrap,
         )
         if not emit_default_doc and not emit_default_prop:
             name, param = _remove_default_from_param(

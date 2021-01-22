@@ -21,6 +21,8 @@ from ast import (
 )
 
 from doctrans.ast_utils import FALLBACK_TYP, maybe_type_comment, set_arg, set_value
+from doctrans.pure_utils import tab
+from doctrans.tests.mocks.docstrings import header_doc_str
 
 argparse_add_argument_ast = Expr(
     Call(
@@ -43,18 +45,41 @@ argparse_add_argument_ast = Expr(
     )
 )
 
+__cli_doc_head = (
+    "Set CLI arguments\n",
+    ":param argument_parser: argument parser",
+    ":type argument_parser: ```ArgumentParser```\n",
+)
+
+_cli_doc_str = "\n{tab}".format(tab=tab).join(
+    __cli_doc_head
+    + (
+        ":return: argument_parser, Train and tests dataset splits.",
+        ":rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset],"
+        " Tuple[np.ndarray, np.ndarray]]]```",
+    )
+)
+_cli_doc_expr = Expr(set_value("\n{tab}{}\n{tab}".format(_cli_doc_str, tab=tab)))
+
+_cli_doc_nosplit_str = "\n{tab}".format(tab=tab).join(
+    __cli_doc_head
+    + (
+        ":return: argument_parser",
+        ":rtype: ```ArgumentParser```",
+    )
+)
+_cli_doc_nosplit_expr = Expr(
+    set_value("\n{tab}{}\n{tab}".format(_cli_doc_nosplit_str, tab=tab))
+)
+
 argparse_func_str = '''
 def set_cli_args(argument_parser):
     """
-    Set CLI arguments
-
-    :param argument_parser: argument parser
-    :type argument_parser: ```ArgumentParser```
-
-    :return: argument_parser, Train and tests dataset splits.
-    :rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]]```
+    {_cli_doc_str}
     """
-    argument_parser.description = "{description}"
+    argument_parser.description = (
+        {description!r}
+    )
     argument_parser.add_argument(
         "--dataset_name",
         help="name of dataset.",
@@ -84,23 +109,17 @@ def set_cli_args(argument_parser):
     )
     return argument_parser, (np.empty(0), np.empty(0))
 '''.format(
-    description="Acquire from the official tensorflow_datasets model zoo,"
-    " or the ophthalmology focussed ml-prepare library",
+    _cli_doc_str=_cli_doc_str,
+    description=header_doc_str.strip(),
 )
 
 argparse_func_with_body_str = '''
 def set_cli_args(argument_parser):
     """
-    Set CLI arguments
-
-    :param argument_parser: argument parser
-    :type argument_parser: ```ArgumentParser```
-
-    :return: argument_parser, Train and tests dataset splits.
-    :rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]]```
+    {_cli_doc_str}
     """
     argument_parser.description = (
-        'Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library'
+        {header_doc_str!r}
     )
     argument_parser.add_argument(
         '--dataset_name', type=str, help='name of dataset.', required=True, default='mnist'
@@ -130,21 +149,15 @@ def set_cli_args(argument_parser):
         return 5
     return argument_parser, (np.empty(0), np.empty(0))
 '''.format(
-    FALLBACK_TYP=FALLBACK_TYP
+    _cli_doc_str=_cli_doc_str, FALLBACK_TYP=FALLBACK_TYP, header_doc_str=header_doc_str
 )
 
 argparse_func_action_append_str = '''
 def set_cli_action_append(argument_parser):
     """
-    Set CLI arguments
-
-    :param argument_parser: argument parser
-    :type argument_parser: ```ArgumentParser```
-
-    :return: argument_parser
-    :rtype: ```ArgumentParser```
+    {_cli_doc_str}
     """
-    argument_parser.description = "{description}"
+    argument_parser.description = {header_doc_str!r}
     argument_parser.add_argument(
         "--callbacks",
         type=str,
@@ -169,8 +182,7 @@ def set_cli_action_append(argument_parser):
     )
     return argument_parser
 '''.format(
-    description="Acquire from the official tensorflow_datasets model zoo,"
-    " or the ophthalmology focussed ml-prepare library",
+    _cli_doc_str=_cli_doc_str, header_doc_str=header_doc_str
 )
 
 argparse_func_ast = fix_missing_locations(
@@ -186,17 +198,7 @@ argparse_func_ast = fix_missing_locations(
             arg=None,
         ),
         body=[
-            Expr(
-                set_value(
-                    "\n    Set CLI arguments\n\n    "
-                    ":param argument_parser: argument parser\n    "
-                    ":type argument_parser: ```ArgumentParser```\n\n    "
-                    ":return: argument_parser, Train and tests dataset splits.\n    "
-                    ":rtype: ```Tuple[ArgumentParser,"
-                    " Union[Tuple[tf.data.Dataset, tf.data.Dataset],"
-                    " Tuple[np.ndarray, np.ndarray]]]```\n    "
-                )
-            ),
+            _cli_doc_expr,
             Assign(
                 targets=[
                     Attribute(
@@ -205,10 +207,7 @@ argparse_func_ast = fix_missing_locations(
                         Store(),
                     )
                 ],
-                value=set_value(
-                    "Acquire from the official tensorflow_datasets model zoo,"
-                    " or the ophthalmology focussed ml-prepare library"
-                ),
+                value=set_value(header_doc_str.replace("\n", "")),
                 expr=None,
                 **maybe_type_comment
             ),
@@ -406,16 +405,7 @@ argparse_func_with_body_ast = fix_missing_locations(
             arg=None,
         ),
         body=[
-            Expr(
-                set_value(
-                    "\n    Set CLI arguments\n\n    "
-                    ":param argument_parser: argument parser\n    "
-                    ":type argument_parser: ```ArgumentParser```\n\n    "
-                    ":return: argument_parser, Train and tests dataset splits.\n    "
-                    ":rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset],"
-                    " Tuple[np.ndarray, np.ndarray]]]```\n    "
-                )
-            ),
+            _cli_doc_expr,
             Assign(
                 targets=[
                     Attribute(
@@ -424,10 +414,7 @@ argparse_func_with_body_ast = fix_missing_locations(
                         Store(),
                     )
                 ],
-                value=set_value(
-                    "Acquire from the official tensorflow_datasets model zoo,"
-                    " or the ophthalmology focussed ml-prepare library"
-                ),
+                value=set_value(header_doc_str),
                 expr=None,
                 **maybe_type_comment
             ),
@@ -674,23 +661,12 @@ argparse_func_action_append_ast = fix_missing_locations(
             kwarg=None,
         ),
         body=[
-            Expr(
-                set_value(
-                    "\n    Set CLI arguments\n\n    "
-                    ":param argument_parser: argument parser\n    "
-                    ":type argument_parser: ```ArgumentParser```\n\n    "
-                    ":return: argument_parser\n    "
-                    ":rtype: ```ArgumentParser```\n    "
-                )
-            ),
+            _cli_doc_nosplit_expr,
             Assign(
                 targets=[
                     Attribute(Name("argument_parser", Load()), "description", Store())
                 ],
-                value=set_value(
-                    "Acquire from the official tensorflow_datasets model zoo,"
-                    " or the ophthalmology focussed ml-prepare library"
-                ),
+                value=set_value(header_doc_str.rstrip()),
                 expr=None,
                 **maybe_type_comment
             ),
@@ -775,17 +751,7 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
         arg=None,
     ),
     body=[
-        Expr(
-            set_value(
-                "\n"
-                "    Set CLI arguments\n\n"
-                "    :param argument_parser: argument parser\n"
-                "    :type argument_parser: ```ArgumentParser```\n\n"
-                "    :return: argument_parser\n"
-                "    :rtype: ```ArgumentParser```\n"
-                "    "
-            )
-        ),
+        _cli_doc_nosplit_expr,
         Assign(
             targets=[
                 Attribute(
@@ -1092,15 +1058,7 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
         arg=None,
     ),
     body=[
-        Expr(
-            set_value(
-                "\n    Set CLI arguments\n\n"
-                "    :param argument_parser: argument parser\n"
-                "    :type argument_parser: ```ArgumentParser```\n\n"
-                "    :return: argument_parser\n"
-                "    :rtype: ```ArgumentParser```\n    "
-            )
-        ),
+        _cli_doc_nosplit_expr,
         Assign(
             targets=[
                 Attribute(

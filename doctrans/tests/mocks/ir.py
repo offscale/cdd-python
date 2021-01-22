@@ -7,6 +7,7 @@ from copy import deepcopy
 from doctrans.ast_utils import NoneStr
 from doctrans.defaults_utils import remove_defaults_from_intermediate_repr
 from doctrans.pure_utils import params_to_ordered_dict, paren_wrap_code
+from doctrans.tests.mocks.docstrings import header_doc_str
 
 class_google_tf_tensorboard_ir = {
     "doc": "Enable visualizations for TensorBoard.\n"
@@ -1024,9 +1025,7 @@ intermediate_repr_extra_colons = {
 intermediate_repr_no_default_doc = {
     "name": None,
     "type": "static",
-    "doc": "Acquire from the official tensorflow_datasets model "
-    "zoo, or the ophthalmology focussed ml-prepare "
-    "library",
+    "doc": header_doc_str.replace("\n", ""),
     "params": OrderedDict(
         (
             (
@@ -1108,9 +1107,7 @@ intermediate_repr_only_return_type = {
 intermediate_repr = {
     "name": None,
     "type": "static",
-    "doc": "Acquire from the official tensorflow_datasets model "
-    "zoo, or the ophthalmology focussed ml-prepare "
-    "library",
+    "doc": header_doc_str.replace("\n", ""),
     "params": OrderedDict(
         (
             (
