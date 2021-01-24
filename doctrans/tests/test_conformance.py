@@ -249,7 +249,6 @@ class TestConformance(TestCase):
                 argparse_func_ast,
                 argparse_function_filename,
                 mode="wt",
-                skip_black=True,
             )
 
             self.assertTupleEqual(
@@ -272,16 +271,17 @@ class TestConformance(TestCase):
             )
 
             emit.file(argparse_func_ast, argparse_function_filename, mode="wt")
-            self.assertTupleEqual(
-                _conform_filename(
-                    filename=argparse_function_filename,
-                    search=["set_cli_args"],
-                    emit_func=emit.argparse_function,
-                    replacement_node_ir=deepcopy(intermediate_repr),
-                    type_wanted=FunctionDef,
-                ),
-                (argparse_function_filename, False),
-            )
+            with patch("sys.stdout", new_callable=StringIO):
+                self.assertTupleEqual(
+                    _conform_filename(
+                        filename=argparse_function_filename,
+                        search=["set_cli_args"],
+                        emit_func=emit.argparse_function,
+                        replacement_node_ir=deepcopy(intermediate_repr),
+                        type_wanted=FunctionDef,
+                    ),
+                    (argparse_function_filename, False),
+                )
 
 
 unittest_main()

@@ -401,7 +401,7 @@ def set_cli_args(argument_parser):
 
 ## Future work
 
-  0. Add 4th 'type' of JSON-schema so it becomes useful in JSON-RPC, REST-API, and GUI environments
+  0. Add 4th 'type' of JSON-schema, so it becomes useful in JSON-RPC, REST-API, and GUI environments
   1. Add 5th type of SQLalchemy model
   2. Add 6th type of routing layer
   3. Add 7th type of Open API (at this point, rename to `cdd-python`)

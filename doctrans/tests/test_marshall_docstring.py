@@ -27,7 +27,6 @@ from doctrans.tests.mocks.docstrings import (
     docstring_numpydoc_str,
     docstring_only_return_type_str,
     docstring_str,
-    docstring_wrapped_str,
 )
 from doctrans.tests.mocks.ir import (
     docstring_google_tf_adadelta_ir,
@@ -93,13 +92,14 @@ class TestMarshallDocstring(TestCase):
     def test_ir2docstring(self) -> None:
         """ Tests whether `to_docstring` produces `docstring_str` from `intermediate_repr` """
         self.assertEqual(
-            docstring_wrapped_str.strip(),
+            docstring_str.strip(),
             doctrans.emitter_utils.to_docstring(
                 deepcopy(intermediate_repr),
                 indent_level=0,
                 emit_types=True,
                 emit_default_doc=True,
                 emit_separating_tab=False,
+                word_wrap=False,
             ).strip(),
         )
 

@@ -113,6 +113,7 @@ def parse_docstring(
     ir = {
         "name": None,
         "type": "static",
+        # "_internal": {"_style": style.value},
         "doc": "",
         "params": OrderedDict(),
         "returns": None,
