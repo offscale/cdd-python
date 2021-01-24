@@ -223,7 +223,7 @@ docstring_no_default_doc_str = """
 :param data_loader_kwargs: pass this as arguments to data_loader function
 :type data_loader_kwargs: ```Optional[dict]```
 
-:return: Train and tests dataset splits.
+:returns: Train and tests dataset splits.
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """.format(
     header_doc_str=header_doc_str
@@ -250,7 +250,7 @@ docstring_no_default_str = """
 :param data_loader_kwargs: pass this as arguments to data_loader function
 :type data_loader_kwargs: ```Optional[dict]```
 
-:return: Train and tests dataset splits.
+:returns: Train and tests dataset splits.
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """.format(
     header_doc_str=header_doc_str
@@ -315,7 +315,7 @@ Some comment
 
 :param dataset_name: Example: foo
 
-:return: Train and tests dataset splits.
+:returns: Train and tests dataset splits.
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """
 
@@ -336,7 +336,7 @@ docstring_str = """
 :param data_loader_kwargs: pass this as arguments to data_loader function
 :type data_loader_kwargs: ```Optional[dict]```
 
-:return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
+:returns: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """.format(
     header_doc_str=header_doc_str
@@ -359,7 +359,7 @@ docstring_no_type_str = """
 
 :param data_loader_kwargs: pass this as arguments to data_loader function
 
-:return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
+:returns: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 """.format(
     header_doc_str=header_doc_str
 )
@@ -376,7 +376,7 @@ docstring_no_type_no_default_str = """
 
 :param data_loader_kwargs: pass this as arguments to data_loader function
 
-:return: Train and tests dataset splits.
+:returns: Train and tests dataset splits.
 """.format(
     header_doc_str=header_doc_str
 )

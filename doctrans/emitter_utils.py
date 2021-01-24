@@ -37,7 +37,7 @@ def _handle_value(node):
     :param node: AST node from keyword.value
     :type node: ```Name```
 
-    :return: `str` or `Any`, representing the type for argparse
+    :returns: `str` or `Any`, representing the type for argparse
     :rtype: ```Union[str, Any]```
     """
     # if isinstance(node, Attribute): return Any
@@ -56,7 +56,7 @@ def _handle_keyword(keyword, typ):
     :param typ: string representation of type
     :type typ: ```str```
 
-    :return: string representation of type
+    :returns: string representation of type
     :rtype: ```str```
     """
     quote_f = identity
@@ -72,7 +72,7 @@ def _handle_keyword(keyword, typ):
                 :param s: Any value
                 :type s: ```Any```
 
-                :return: the input value
+                :returns: the input value
                 :rtype: ```Any```
                 """
                 return "'{}'".format(s)
@@ -101,7 +101,7 @@ def parse_out_param(expr, require_default=False, emit_default_doc=True):
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :return: Name, dict with keys: 'typ', 'doc', 'default'
+    :returns: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
     """
     required = get_value(
@@ -229,7 +229,7 @@ def interpolate_defaults(
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :return: Name, dict with keys: 'typ', 'doc', 'default'
+    :returns: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
     """
     name, _param = param
@@ -281,7 +281,7 @@ def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :return: Name, dict with keys: 'typ', 'doc', 'default'
+    :returns: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
     """
     assert isinstance(e, Return)
@@ -333,7 +333,7 @@ def get_internal_body(target_name, target_type, intermediate_repr):
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
-    :return: Internal body or an empty tuple
+    :returns: Internal body or an empty tuple
     :rtype: ```Union[list, tuple]```
     """
     return (
@@ -384,7 +384,7 @@ def to_docstring(
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
-    :return: docstring
+    :returns: docstring
     :rtype: ```str```
     """
     assert isinstance(intermediate_repr, dict), "Expected 'dict' got `{!r}`".format(
@@ -400,7 +400,7 @@ def to_docstring(
         :param s: Input string
         :type s: ```str```
 
-        :return: Potentially word wrapped + 1+ indented output
+        :returns: Potentially word wrapped + 1+ indented output
         :rtype: ```str```
         """
         if word_wrap and any(len(line) > line_length for line in s.splitlines()):
@@ -458,7 +458,7 @@ def to_docstring(
             :param param_type: The `:type`
             :type param_type: ```Optional[str]```
 
-            :return: Newline joined string
+            :returns: Newline joined string
             :rtype: ```str```
             """
             if param_type is None and param is not None:
@@ -541,7 +541,7 @@ def to_docstring(
             if r is None
             else "{returns}\n{sep}".format(
                 sep=sep,
-                returns=r.replace(":param return_type:", ":return:")
+                returns=r.replace(":param return_type:", ":returns:")
                 .replace(":type return_type:", ":rtype:")
                 .rstrip(),
             )
@@ -578,7 +578,7 @@ class RewriteName(ast.NodeTransformer):
         :param node: The AST node
         :type node: ```Name```
 
-        :return: `Name` iff `Name` is not a parameter else `Attribute`
+        :returns: `Name` iff `Name` is not a parameter else `Attribute`
         :rtype: ```Union[Name, Attribute]```
         """
         # print("loc:", getattr(node, "_location", None), ";")
@@ -602,7 +602,7 @@ def _make_call_meth(body, return_type, param_names):
     :param param_names: Container of AST `id`s to match for rename
     :type param_names: ```Optional[Iterator[str]]```
 
-    :return: Internal function for `__call__`
+    :returns: Internal function for `__call__`
     :rtype: ```FunctionDef```
     """
     body_len = len(body)
@@ -625,7 +625,7 @@ def _make_call_meth(body, return_type, param_names):
                         if body.get("doc") in none_types
                         else Expr(
                             set_value(
-                                "\n:return: {doc}\n\n".format(
+                                "\n:returns: {doc}\n\n".format(
                                     doc=multiline(indent_all_but_first(body["doc"]))
                                 )
                             )
@@ -700,7 +700,7 @@ def ast_parse_fix(s):
     :param s: String to parse
     :type s: ```str```
 
-    :return: Value
+    :returns: Value
     """
     balanced = (s.count("[") + s.count("]")) & 1 == 0
     return ast.parse(s if balanced else "{}]".format(s)).body[0].value

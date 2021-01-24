@@ -45,7 +45,7 @@ def identity(*args):
     :param args: Any values
     :type args: ```Tuple[Any]```
 
-    :return: the input value
+    :returns: the input value
     :rtype: ```Any```
     """
     return args[0] if len(args) == 1 else args
@@ -103,7 +103,7 @@ def pluralise(singular):
     :param singular: Non plural
     :type singular: ```str```
 
-    :return: Plural version
+    :returns: Plural version
     :rtype: ```str```
     """
     if not singular:
@@ -143,7 +143,7 @@ def deindent(s):
     :param s: Input string
     :type s: ```AnyStr```
 
-    :return: Deindented string
+    :returns: Deindented string
     :rtype: ```AnyStr```
     """
     return "\n".join(
@@ -167,7 +167,7 @@ def reindent(s, indent_level=1, join_on="\n"):
     :param join_on: What to join on, e.g., '\n'
     :type join_on: ```str```
 
-    :return: Reindented string
+    :returns: Reindented string
     :rtype: ```AnyStr```
     """
     return join_on.join(
@@ -193,7 +193,7 @@ def indent_all_but_first(s, indent_level=1, wipe_indents=False):
     :param wipe_indents: Whether to clean the `s` of indents first
     :type wipe_indents: ```bool```
 
-    :return: input string indented (except first line)
+    :returns: input string indented (except first line)
     :rtype: ```str```
     """
     lines = indent(deindent(s) if wipe_indents else s, tab * abs(indent_level)).split(
@@ -219,7 +219,7 @@ def multiline(s, quote_with=("'", "'")):
     :param quote_with: What to quote with
     :type quote_with: ```Tuple[str, str]```
 
-    :return: multine input string
+    :returns: multine input string
     :rtype: ```str```
     """
     return "{}{}".format(
@@ -242,7 +242,7 @@ def sanitise(s):
     :param s: Input string
     :type s: ```str```
 
-    :return: input string with '_' append if it's a keyword else input string
+    :returns: input string with '_' append if it's a keyword else input string
     :rtype: ```str```
     """
     return "{}_".format(s) if iskeyword(s) else s
@@ -258,7 +258,7 @@ def strip_split(param, sep):
     :param sep: Separator
     :type sep: ```str```
 
-    :return: Iterator of each element of the hierarchy
+    :returns: Iterator of each element of the hierarchy
     :rtype: ```Iterator[str, ...]```
     """
     return map(str.strip, param.split(sep))
@@ -271,7 +271,7 @@ def unquote(input_str):
     :param input_str: Input string
     :type input_str: ```Optional[str]```
 
-    :return: Unquoted string
+    :returns: Unquoted string
     :rtype: ```Optional[str]```
     """
     if (
@@ -298,7 +298,7 @@ def quote(s, mark='"'):
     :param mark: Quote mark to wrap with
     :type mark: ```str```
 
-    :return: Quoted string
+    :returns: Quoted string
     :rtype: ```str```
     """
     s = (
@@ -329,7 +329,7 @@ def assert_equal(a, b, cmp=eq):
     :param cmp: comparator function
     :type cmp: ```Callable[[a, b], bool]```
 
-    :return: True if equal, otherwise raises `AssertionError`
+    :returns: True if equal, otherwise raises `AssertionError`
     :rtype: ```Literal[True]```
     """
     assert cmp(a, b), "{!r} != {!r}".format(a, b)
@@ -349,7 +349,7 @@ def update_d(d, arg=None, **kwargs):
     :param kwargs: keyword args to update with
     :type kwargs: ```**kwargs```
 
-    :return: Updated dict
+    :returns: Updated dict
     :rtype: ```dict```
     """
     if arg:
@@ -369,7 +369,7 @@ def lstrip_namespace(s, namespaces):
     :param namespaces: namespaces to strip
     :type namespaces: ```Union[List[str], Tuple[str], Generator[str], Iterator[str]]```
 
-    :return: `.lstrip`ped input (potentially just the original!)
+    :returns: `.lstrip`ped input (potentially just the original!)
     :rtype: ```AnyStr```
     """
     for namespace in namespaces:
@@ -388,7 +388,7 @@ def diff(input_obj, op):
     :param op: The operation to run
     :type op: ```Callable[[Any], Any]```
 
-    :return: length of difference, response of operated input
+    :returns: length of difference, response of operated input
     :rtype: ```Tuple[int, Any]```
     """
     input_len = len(
@@ -417,7 +417,7 @@ def blockwise(t, size=2, fillvalue=None):
     :param fillvalue: What to use to "pair" with if uneven
     :type fillvalue: ```Any```
 
-    :return: iterator with iterators inside of block size
+    :returns: iterator with iterators inside of block size
     :rtype: ```Iterator```
     """
     return zip_longest(*[iter(t)] * abs(size), fillvalue=fillvalue)
@@ -437,7 +437,7 @@ def location_within(container, iterable, cmp=eq):
     :param cmp: Comparator to check input against
     :type cmp: ```Callable[[str, str], bool]```
 
-    :return: (Start index iff found else -1, End index iff found else -1, subset iff found else None)
+    :returns: (Start index iff found else -1, End index iff found else -1, subset iff found else None)
     :rtype: ```Tuple[int, int, Optional[Any]]```
     """
     if not hasattr(container, "__len__"):
@@ -482,7 +482,7 @@ def code_quoted(s):
     :param s: The input
     :type s: ```Any```
 
-    :return: Whether the input is code quoted
+    :returns: Whether the input is code quoted
     :rtype: ```bool```
     """
     return (
@@ -498,7 +498,7 @@ def count_iter_items(iterable):
     :param iterable: An iterable
     :type iterable: ```Iterable```
 
-    :return: Number of items in iterable
+    :returns: Number of items in iterable
     :rtype: ```int```
     """
     counter = count()
@@ -525,7 +525,7 @@ def get_module(name, package=None, extra_symbols=None):
     :param extra_symbols: Dictionary of extra symbols to use if `importlib.import_module` fails
     :type extra_symbols: ```Optional[dict]```
 
-    :return: Module
+    :returns: Module
     :rtype: ```Module```
     """
     try:
@@ -553,7 +553,7 @@ def params_to_ordered_dict(params):
     :param params: list of dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'required': ... }
     :type params: ```List[dict]```
 
-    :return: OrderedDict representation of the params dict, i.e.,
+    :returns: OrderedDict representation of the params dict, i.e.,
        OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
     :rtype: ```OrderedDict```
     """
@@ -570,7 +570,7 @@ def paren_wrap_code(code):
     :param code: Source code string
     :type code: ```str```
 
-    :return: Potentially parenthetically wrapped input
+    :returns: Potentially parenthetically wrapped input
     :rtype: ```str```
     """
     return (

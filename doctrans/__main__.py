@@ -18,7 +18,7 @@ def _build_parser():
     """
     Parser builder
 
-    :return: instanceof ArgumentParser
+    :returns: instanceof ArgumentParser
     :rtype: ```ArgumentParser```
     """
     parser = ArgumentParser(
@@ -228,7 +228,7 @@ def main(cli_argv=None, return_args=False):
     :param return_args: Primarily use is for tests. Returns the args rather than executing anything.
     :type return_args: ```bool```
 
-    :return: the args if `return_args`, else None
+    :returns: the args if `return_args`, else None
     :rtype: ```Optional[Namespace]```
     """
     _parser = _build_parser()

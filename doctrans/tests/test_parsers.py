@@ -87,7 +87,7 @@ class TestParsers(TestCase):
             "{tab}Set CLI arguments\n\n"
             "{tab}:param argument_parser: argument parser\n"
             "{tab}:type argument_parser: ```ArgumentParser```\n\n"
-            "{tab}:return: argument_parser\n"
+            "{tab}:returns: argument_parser\n"
             "{tab}:rtype: ```ArgumentParser```\n"
             '{tab}"""\n'
             "{tab}argument_parser.description = ''\n"

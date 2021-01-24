@@ -102,7 +102,7 @@ def sync_property(
     :param output_ast: AST of the input file
     :type output_ast: ```AST```
 
-    :return: New AST derived from `output_ast`
+    :returns: New AST derived from `output_ast`
     :rtype: ```AST```
     """
     search = list(strip_split(output_param, "."))

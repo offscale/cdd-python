@@ -178,7 +178,7 @@ class TestConformance(TestCase):
         :param _class_with_method_ast: AST node
         :type _class_with_method_ast: ```ClassDef```
 
-        :return: OrderedDict of filenames and whether they were changed, Args
+        :returns: OrderedDict of filenames and whether they were changed, Args
         :rtype: ```Tuple[OrderedDict, Namespace]```
         """
         argparse_function = os.path.join(tempdir, "argparse.py")
