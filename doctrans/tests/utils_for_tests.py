@@ -19,7 +19,7 @@ from doctrans.ast_utils import set_value
 from doctrans.pure_utils import PY3_8, reindent, tab
 
 
-def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
+def run_ast_test(test_case_instance, gen_ast, gold):
     """
     Compares `gen_ast` with `gold` standard
 
@@ -31,9 +31,6 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
 
     :param gold: mocked AST
     :type gold: ```Union[ast.Module, ast.ClassDef, ast.FunctionDef]```
-
-    :param skip_black: Whether to skip black
-    :type skip_black: ```bool```
     """
     if isinstance(gen_ast, str):
         gen_ast = ast.parse(gen_ast).body[0]
@@ -257,6 +254,11 @@ def reindent_docstring(node, indent_level=1):
 
 def emit_separating_tab(s, indent_level=1):
     """
+    Emit a separating tab between paragraphs
+
+    :param s: Input string (probably a docstring)
+    :type s: ```str```
+
     :param indent_level: docstring indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
     :type indent_level: ```int```
 

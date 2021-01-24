@@ -19,6 +19,7 @@ from ast import (
 from collections import OrderedDict
 from functools import partial
 from itertools import chain
+from textwrap import indent
 
 from black import Mode, format_str
 
@@ -30,7 +31,7 @@ from doctrans.ast_utils import (
     set_arg,
     set_value,
 )
-from doctrans.defaults_utils import set_default_doc
+from doctrans.docstring_utils import emit_param_str
 from doctrans.emitter_utils import (
     RewriteName,
     _make_call_meth,
@@ -42,8 +43,6 @@ from doctrans.pure_utils import (
     code_quoted,
     fill,
     identity,
-    indent_all_but_first,
-    multiline,
     none_types,
     rpartial,
     simple_types,
@@ -60,6 +59,7 @@ def argparse_function(
     function_type="static",
     wrap_description=False,
     word_wrap=True,
+    docstring_format="rest",
 ):
     """
     Convert to an argparse FunctionDef
@@ -90,6 +90,9 @@ def argparse_function(
 
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
+
+    :param docstring_format: Format of docstring
+    :type docstring_format: ```Literal['rest', 'numpy', 'google']```
 
     :returns:  AST node for function definition which constructs argparse
     :rtype: ```FunctionDef```
@@ -122,50 +125,74 @@ def argparse_function(
                         (
                             Expr(
                                 set_value(
-                                    "\n    Set CLI arguments\n\n    :param"
-                                    " argument_parser: argument parser\n    :type"
-                                    " argument_parser: ```ArgumentParser```\n\n   "
-                                    " {return_params}".format(
-                                        return_params=(
-                                            lambda returns: ":returns: argument_parser{return_doc}\n    {rtype}".format(
-                                                return_doc=", {}".format(returns["doc"])
-                                                if "doc" in returns
-                                                else "",
-                                                rtype=(
-                                                    ":rtype: ```ArgumentParser```\n    "
-                                                )
-                                                if intermediate_repr["returns"][
-                                                    "return_type"
-                                                ].get("typ")
-                                                in none_types
-                                                else (
-                                                    ":rtype: ```Tuple[ArgumentParser,"
-                                                    " {returns[typ]}]```\n{tab}".format(
-                                                        returns=returns, tab=tab
+                                    indent(
+                                        docstring(
+                                            {
+                                                "doc": "Set CLI arguments",
+                                                "params": OrderedDict(
+                                                    (
+                                                        (
+                                                            "argument_parser",
+                                                            {
+                                                                "doc": "argument parser",
+                                                                "typ": "ArgumentParser",
+                                                            },
+                                                        ),
                                                     )
                                                 ),
-                                            )
-                                        )(
-                                            returns=set_default_doc(
-                                                next(
-                                                    iter(
-                                                        intermediate_repr[
-                                                            "returns"
-                                                        ].items()
-                                                    )
+                                                "returns": OrderedDict(
+                                                    (
+                                                        (
+                                                            "return_type",
+                                                            {
+                                                                "doc": "argument_parser, {}".format(
+                                                                    intermediate_repr[
+                                                                        "returns"
+                                                                    ]["return_type"][
+                                                                        "doc"
+                                                                    ]
+                                                                )
+                                                                if intermediate_repr[
+                                                                    "returns"
+                                                                ]["return_type"].get(
+                                                                    "doc"
+                                                                )
+                                                                else "argument_parser",
+                                                                "typ": "Tuple[ArgumentParser, {typ}]".format(
+                                                                    typ=intermediate_repr[
+                                                                        "returns"
+                                                                    ][
+                                                                        "return_type"
+                                                                    ][
+                                                                        "typ"
+                                                                    ]
+                                                                ),
+                                                            }
+                                                            if "return_type"
+                                                            in (
+                                                                (
+                                                                    intermediate_repr
+                                                                    or {}
+                                                                ).get("returns")
+                                                                or iter(())
+                                                            )
+                                                            and intermediate_repr[
+                                                                "returns"
+                                                            ]["return_type"].get("typ")
+                                                            not in none_types
+                                                            else {
+                                                                "doc": "argument_parser",
+                                                                "typ": "ArgumentParser",
+                                                            },
+                                                        ),
+                                                    ),
                                                 ),
-                                                emit_default_doc=emit_default_doc_in_return,
-                                            )[1]
-                                        )
-                                        if "return_type"
-                                        in (
-                                            intermediate_repr.get("returns") or iter(())
-                                        )
-                                        else (
-                                            ":returns: argument_parser\n    "
-                                            ":rtype: ```ArgumentParser```\n    "
-                                        )
+                                            },
+                                            docstring_format=docstring_format,
+                                        ),
+                                        tab,
                                     )
+                                    + tab
                                 )
                             ),
                             Assign(
@@ -279,6 +306,7 @@ def class_(
     class_name="ConfigClass",
     class_bases=("object",),
     decorator_list=None,
+    docstring_format="rest",
     word_wrap=True,
     emit_default_doc=False,
 ):
@@ -306,8 +334,14 @@ def class_(
     :param decorator_list: List of decorators
     :type decorator_list: ```Optional[Union[List[Str], List[]]]```
 
+    :param docstring_format: Format of docstring
+    :type docstring_format: ```Literal['rest', 'numpy', 'google']```
+
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
+
+    :param docstring_format: Format of docstring
+    :type docstring_format: ```Literal['rest', 'numpy', 'google']```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
@@ -353,6 +387,7 @@ def class_(
                             set_value(
                                 to_docstring(
                                     intermediate_repr,
+                                    docstring_format=docstring_format,
                                     indent_level=indent_level,
                                     emit_separating_tab=True,
                                     emit_default_doc=emit_default_doc,
@@ -366,6 +401,11 @@ def class_(
                                 .replace(
                                     "{sep}:cvar ".format(sep=sep),
                                     "\n{sep}:cvar ".format(sep=sep),
+                                    1,
+                                )
+                                .replace(
+                                    "\n{sep}:returns:".format(sep=sep),
+                                    ":cvar return_type:".format(sep=sep),
                                     1,
                                 )
                                 .rstrip()
@@ -388,6 +428,8 @@ def class_(
                                     )
                                     else None,
                                     param_names,
+                                    docstring_format=docstring_format,
+                                    word_wrap=word_wrap,
                                 ),
                             )
                             or iter(())
@@ -440,52 +482,35 @@ def docstring(
 
     return "\n{doc}\n\n{params}\n{returns}\n".format(
         doc=(fill if word_wrap else identity)(intermediate_repr["doc"]),
-        params="\n".join(
-            ":param {name}: {doc}\n{type_param}".format(
-                name=name,
-                # multiline(
-                # indent_all_but_first(
-                doc=set_default_doc((name, param), emit_default_doc=emit_default_doc)[
-                    1
-                ]["doc"],
-                # quote_with=("", ""),
-                type_param=":type {name}: ```{typ}```\n".format(
-                    name=name,
-                    typ=param["typ"],
-                )
-                if param.get("typ")
-                else "",
-            )
-            for name, param in intermediate_repr["params"].items()
-        ),
-        returns="\n".join(
-            (
-                lambda param: filter(
-                    None,
-                    (
-                        ":returns: {doc}".format(
-                            doc=multiline(
-                                indent_all_but_first(param["doc"]), quote_with=("", "")
-                            )
-                        )
-                        if "doc" in param
-                        else None,
-                        None
-                        if param.get("typ") is None
-                        else ":rtype: ```{param[typ]}```".format(param=param),
-                    ),
-                )
-                if param
-                else param
-            )(
-                set_default_doc(
-                    next(iter(intermediate_repr["returns"].items())),
+        params="\n\n".join(
+            map(
+                partial(
+                    emit_param_str,
+                    style=docstring_format,
                     emit_default_doc=emit_default_doc,
-                )[1]
-                if "return_type" in (intermediate_repr.get("returns") or iter(()))
-                else ""
+                    word_wrap=word_wrap,
+                ),
+                intermediate_repr["params"].items(),
             )
         ),
+        returns="".join(
+            (lambda l: l if l is None else "\n{}".format(l))(
+                next(
+                    map(
+                        partial(
+                            emit_param_str,
+                            style=docstring_format,
+                            emit_default_doc=emit_default_doc,
+                            word_wrap=word_wrap,
+                        ),
+                        intermediate_repr["returns"].items(),
+                    ),
+                    None,
+                )
+            )
+        )
+        if "return_type" in (intermediate_repr.get("returns") or iter(()))
+        else "",
     )
 
 

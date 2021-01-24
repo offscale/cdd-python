@@ -221,7 +221,6 @@ class TestAstUtils(TestCase):
             self,
             find_in_ast(["call_peril"], module_with_fun),
             module_with_fun.body[0],
-            skip_black=True,
         )
 
     def test_find_in_ast_None(self) -> None:
@@ -466,7 +465,6 @@ class TestAstUtils(TestCase):
             self,
             find_ast_type(Module(body=[class_def], stmt=None)),
             class_def,
-            skip_black=True,
         )
 
     def test_find_ast_type_fails(self) -> None:
@@ -521,7 +519,6 @@ class TestAstUtils(TestCase):
                 node_name="foo",
             ),
             class_def,
-            skip_black=True,
         )
 
     def test_param2ast_with_assign(self) -> None:
@@ -1069,28 +1066,28 @@ class TestAstUtils(TestCase):
     def test_infer_type_and_default(self) -> None:
         """ Test edge cases for `infer_type_and_default` """
         self.assertTupleEqual(
-            infer_type_and_default(5, "str", False), (None, 5, False, "int")
+            infer_type_and_default(None, 5, "str", False), (None, 5, False, "int")
         )
 
         self.assertTupleEqual(
-            infer_type_and_default([5], "str", False), ("append", 5, False, "int")
+            infer_type_and_default(None, [5], "str", False), ("append", 5, False, "int")
         )
 
         self.assertTupleEqual(
-            infer_type_and_default(tuple(range(5)), "str", False),
+            infer_type_and_default(None, tuple(range(5)), "str", False),
             (None, str(list(range(5))), False, "loads"),
         )
 
         self.assertTupleEqual(
-            infer_type_and_default(0j, "str", False), (None, 0j, False, "complex")
+            infer_type_and_default(None, 0j, "str", False), (None, 0j, False, "complex")
         )
 
         self.assertTupleEqual(
-            infer_type_and_default(None, "str", False), (None, None, False, None)
+            infer_type_and_default(None, None, "str", False), (None, None, False, None)
         )
 
         self.assertTupleEqual(
-            infer_type_and_default("```{(5,6): (7,8)}```", "str", False),
+            infer_type_and_default(None, "```{(5,6): (7,8)}```", "str", False),
             (None, "- 5\n- 6\n", False, "loads"),
         )
 

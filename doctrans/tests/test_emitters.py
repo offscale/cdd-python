@@ -273,6 +273,7 @@ class TestEmitters(TestCase):
             indent_level=1,
             emit_separating_tab=True,
             emit_as_kwonlyargs=False,
+            word_wrap=False,
         )
 
         run_ast_test(self, gen_ast=gen_ast, gold=function_def)

@@ -7,6 +7,7 @@ from unittest import TestCase
 from doctrans.pure_utils import (
     assert_equal,
     blockwise,
+    deindent,
     diff,
     get_module,
     identity,
@@ -174,6 +175,10 @@ class TestPureUtils(TestCase):
         self.assertEqual(cm.exception.args[0].strip(), "5 != 6")
 
         self.assertTrue(assert_equal(5, 5))
+
+    def test_deindent(self) -> None:
+        """ Test that deindent deindents """
+        self.assertEqual(deindent("    foo\tbar\n\tcanhaz"), "foo\tbar\ncanhaz")
 
 
 unittest_main()

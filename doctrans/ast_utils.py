@@ -289,6 +289,7 @@ def param2argparse_param(param, word_wrap=True, emit_default_doc=True):
     _param.setdefault("doc", "")
     doc, _default = extract_default(_param["doc"], emit_default_doc=emit_default_doc)
     _action, default, _required, _typ = infer_type_and_default(
+        action,
         _param.get("default", _default),
         typ,
         required=required
@@ -1125,9 +1126,12 @@ def it2literal(it):
     )
 
 
-def infer_type_and_default(default, typ, required):
+def infer_type_and_default(action, default, typ, required):
     """
     Infer the type string from the default and typ
+
+    :param action: Name of the action
+    :type action: ```Optional[str]```
 
     :param default: Initial default value
     :type default: ```Any```
@@ -1141,7 +1145,6 @@ def infer_type_and_default(default, typ, required):
     :returns: action (e.g., for `argparse.Action`), default, whether its required, inferred type str
     :rtype: ```Tuple[str, Any, bool, str]```
     """
-    action = None
     if code_quoted(default):
         return _infer_type_and_default_from_quoted(action, default, required, typ)
     elif type(default).__name__ in simple_types:
@@ -1235,7 +1238,7 @@ def _infer_type_and_default_from_quoted(action, default, required, typ):
             default = ast.literal_eval(
                 default.strip("`") if isinstance(default, str) else default
             )
-    return infer_type_and_default(default, typ, required=required)
+    return infer_type_and_default(action, default, typ, required=required)
 
 
 # Should `infer_type_and_default` be folded into this?
