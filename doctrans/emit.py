@@ -405,7 +405,7 @@ def class_(
                                 )
                                 .replace(
                                     "\n{sep}:returns:".format(sep=sep),
-                                    ":cvar return_type:".format(sep=sep),
+                                    ":cvar return_type:",
                                     1,
                                 )
                                 .rstrip()
