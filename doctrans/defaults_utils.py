@@ -30,7 +30,7 @@ def ast_parse_fix(s):
     :param s: String to parse
     :type s: ```str```
 
-    :return: Value
+    :returns: Value
     """
     balanced = (s.count("[") + s.count("]")) & 1 == 0
     return ast.parse(s if balanced else "{}]".format(s)).body[0].value
@@ -43,7 +43,7 @@ def needs_quoting(typ):
     :param typ: The type
     :type typ: ```Optional[str]```
 
-    :return: Whether the type needs quoting
+    :returns: Whether the type needs quoting
     :rtype: ```bool```
     """
     if typ is None or typ.startswith("*"):
@@ -95,7 +95,7 @@ def extract_default(
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :return: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
+    :returns: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
     :rtype: Tuple[str, Optional[str]]
     """
     if line is None:
@@ -181,7 +181,7 @@ def remove_defaults_from_intermediate_repr(intermediate_repr, emit_default_prop=
     :param emit_default_prop: Whether to emit default property
     :type emit_default_prop: ```bool```
 
-    :return: a dictionary of form
+    :returns: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
@@ -216,7 +216,7 @@ def _remove_default_from_param(param, emit_default_prop=True):
     :param emit_default_prop: Whether to emit default property
     :type emit_default_prop: ```bool```
 
-    :return: Name, dict with keys: 'typ', 'doc', 'default'
+    :returns: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
     """
     name, _param = param
@@ -238,7 +238,7 @@ def set_default_doc(param, emit_default_doc=True):
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :return: Same shape as input but with Default append to doc.
+    :returns: Same shape as input but with Default append to doc.
     :rtype: ```dict```
     """
     name, _param = param

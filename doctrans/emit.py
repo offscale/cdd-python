@@ -91,7 +91,7 @@ def argparse_function(
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
-    :return:  AST node for function definition which constructs argparse
+    :returns:  AST node for function definition which constructs argparse
     :rtype: ```FunctionDef```
     """
     function_name = function_name or intermediate_repr["name"]
@@ -127,7 +127,7 @@ def argparse_function(
                                     " argument_parser: ```ArgumentParser```\n\n   "
                                     " {return_params}".format(
                                         return_params=(
-                                            lambda returns: ":return: argument_parser{return_doc}\n    {rtype}".format(
+                                            lambda returns: ":returns: argument_parser{return_doc}\n    {rtype}".format(
                                                 return_doc=", {}".format(returns["doc"])
                                                 if "doc" in returns
                                                 else "",
@@ -162,7 +162,7 @@ def argparse_function(
                                             intermediate_repr.get("returns") or iter(())
                                         )
                                         else (
-                                            ":return: argument_parser\n    "
+                                            ":returns: argument_parser\n    "
                                             ":rtype: ```ArgumentParser```\n    "
                                         )
                                     )
@@ -312,7 +312,7 @@ def class_(
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :return: Class AST of the docstring
+    :returns: Class AST of the docstring
     :rtype: ```ClassDef```
     """
     returns = (
@@ -432,7 +432,7 @@ def docstring(
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :return: docstring
+    :returns: docstring
     :rtype: ```str```
     """
     if docstring_format != "rest":
@@ -463,7 +463,7 @@ def docstring(
                 lambda param: filter(
                     None,
                     (
-                        ":return: {doc}".format(
+                        ":returns: {doc}".format(
                             doc=multiline(
                                 indent_all_but_first(param["doc"]), quote_with=("", "")
                             )
@@ -505,7 +505,7 @@ def file(node, filename, mode="a", skip_black=False):
     :param skip_black: Skip formatting with black
     :type skip_black: ```bool```
 
-    :return: None
+    :returns: None
     :rtype: ```NoneType```
     """
     if isinstance(node, (ClassDef, FunctionDef)):
@@ -576,7 +576,7 @@ def function(
     :param emit_as_kwonlyargs: Whether argument(s) emitted must be keyword only
     :type emit_as_kwonlyargs: ```bool```
 
-    :return: AST node for function definition
+    :returns: AST node for function definition
     :rtype: ```FunctionDef```
     """
     params_no_kwargs = tuple(

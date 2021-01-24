@@ -54,7 +54,7 @@ __cli_doc_head = (
 _cli_doc_str = "\n{tab}".format(tab=tab).join(
     __cli_doc_head
     + (
-        ":return: argument_parser, Train and tests dataset splits.",
+        ":returns: argument_parser, Train and tests dataset splits.",
         ":rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset],"
         " Tuple[np.ndarray, np.ndarray]]]```",
     )
@@ -64,7 +64,7 @@ _cli_doc_expr = Expr(set_value("\n{tab}{}\n{tab}".format(_cli_doc_str, tab=tab))
 _cli_doc_nosplit_str = "\n{tab}".format(tab=tab).join(
     __cli_doc_head
     + (
-        ":return: argument_parser",
+        ":returns: argument_parser",
         ":rtype: ```ArgumentParser```",
     )
 )

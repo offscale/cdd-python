@@ -86,7 +86,7 @@ class C(object):
         :param data_loader_kwargs: pass this as arguments to data_loader function
         :type data_loader_kwargs: ```Optional[dict]```
 {sep}
-        :return: Train and tests dataset splits.
+        :returns: Train and tests dataset splits.
         :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray,
         {tab}np.ndarray]]```
         """
@@ -119,7 +119,7 @@ class C(object):
 
         :param data_loader_kwargs: pass this as arguments to data_loader function
 
-        :return: Train and tests dataset splits.
+        :returns: Train and tests dataset splits.
         """
         return np.empty(0), np.empty(0)
 '''.format(
@@ -151,7 +151,7 @@ class C(object):
 
         :param data_loader_kwargs: pass this as arguments to data_loader function
 
-        :return: Train and tests dataset splits.
+        :returns: Train and tests dataset splits.
         """
         # some comment
         print(5 * 5)
@@ -179,7 +179,7 @@ class C(object):
 
         :param K: backend engine, e.g., `np` or `tf`.
 
-        :return: Train and tests dataset splits.
+        :returns: Train and tests dataset splits.
         """
         return np.empty(0), np.empty(0)
 '''.format(
@@ -706,7 +706,7 @@ def add_6_5(*, a=6, b=5):
     :param b: second param
     :type b: ```int```
 
-    :return: Aggregated summation of `a` and `b`.
+    :returns: Aggregated summation of `a` and `b`.
     :rtype: ```int```
     """
     return operator.add(a, b)
@@ -731,7 +731,7 @@ function_adder_ast = FunctionDef(
                 ":type a: ```int```\n\n    "
                 ":param b: second param\n    "
                 ":type b: ```int```\n\n    "
-                ":return: Aggregated summation of `a` and `b`.\n    "
+                ":returns: Aggregated summation of `a` and `b`.\n    "
                 ":rtype: ```int```\n    ",
             )
         ),
@@ -814,7 +814,7 @@ def call_cliff(
 
     :param **kwargs: additional keyword arguments
 
-    :return: backend engine
+    :returns: backend engine
     """
     return K
 '''
@@ -869,7 +869,7 @@ method_complex_args_variety_ast = FunctionDef(
                 ":param tfds_dir: directory to look for models in.\n\n    "
                 ":param writer: IO object to write out to\n\n    "
                 ":param **kwargs: additional keyword arguments\n\n    "
-                ":return: backend engine\n    ",
+                ":returns: backend engine\n    ",
             )
         ),
         Return(value=Name("K", Load()), expr=None),

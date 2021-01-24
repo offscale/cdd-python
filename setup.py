@@ -22,7 +22,7 @@ def to_funcs(*paths):
     :param paths: one or more str, referring to relative folder names
     :type paths: ```*paths```
 
-    :return: 2 functions
+    :returns: 2 functions
     :rtype: ```Tuple[Callable[Optional[List[str]], str], Callable[Optional[List[str]], str]]```
     """
     return (

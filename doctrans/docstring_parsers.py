@@ -90,7 +90,7 @@ def parse_docstring(
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :return: a dictionary of form
+    :returns: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
@@ -179,7 +179,7 @@ def _scan_phase(docstring, style=Style.rest):
     :param style: the style of docstring
     :type style: ```Style```
 
-    :return: List with each element a tuple of (whether value is a token, value)
+    :returns: List with each element a tuple of (whether value is a token, value)
     :rtype: ```Union[Dict[str, str], List[Tuple[bool, str]]]```
     """
     arg_tokens, return_tokens = map(attrgetter(style.name), (ARG_TOKENS, RETURN_TOKENS))
@@ -206,7 +206,7 @@ def _scan_phase_numpydoc_and_google(docstring, arg_tokens, return_tokens, style)
     :param style: the style of docstring
     :type style: ```Style```
 
-    :return: List with each element a tuple of (whether value is a token, value)
+    :returns: List with each element a tuple of (whether value is a token, value)
     :rtype: ```Dict[str, str]```
     """
     scanned: Dict[str, List[List[str]]] = {
@@ -326,7 +326,7 @@ def _return_parse_phase_numpydoc_and_google(return_tokens, scanned, stacker, sty
     :param style: the style of docstring
     :type style: ```Style```
 
-    :return: Whatever is left of `stacker`. This function may also set the return key of the `scanned`
+    :returns: Whatever is left of `stacker`. This function may also set the return key of the `scanned`
     :rtype: ```List[List[str]]```
     """
     rev_return_token = return_tokens[0].splitlines()[::-1]
@@ -364,7 +364,7 @@ def _scan_phase_rest(docstring, arg_tokens, return_tokens):
     :param return_tokens: Valid tokens like `":rtype:"`
     :type return_tokens: ```Tuple[str]```
 
-    :return: List with each element a tuple of (whether value is a token, value)
+    :returns: List with each element a tuple of (whether value is a token, value)
     :rtype: ```List[Tuple[bool, str]]```
     """
 
@@ -470,7 +470,7 @@ def _set_name_and_type(param, infer_type, word_wrap):
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
-    :return: Name, dict with keys: 'typ', 'doc', 'default'
+    :returns: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
     """
     name, _param = param
@@ -613,7 +613,7 @@ def _parse_phase_numpydoc_and_google(
             :param scan: Scanned input
             :type scan: ```List[str]```
 
-            :return: dict with keys: 'name', 'typ', 'doc'
+            :returns: dict with keys: 'name', 'typ', 'doc'
             :rtype: ```dict```
             """
             name, _, typ = scan[0].partition(":")
@@ -639,7 +639,7 @@ def _parse_phase_numpydoc_and_google(
             :param partitioned: Prep-partitioned `scan`, if given doesn't partition on `scan`, just uses this
             :type partitioned: ```Optional[Tuple[str, str, str]]```
 
-            :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+            :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
             :rtype: ```dict```
             """
             offset = next(idx for idx, ch in enumerate(scan[0]) if ch == ":")
@@ -705,7 +705,7 @@ def _parse_phase_numpydoc_and_google(
         :param name_param: Name, dict with keys: 'typ', 'doc', 'default'
         :type name_param: ```Tuple[str, dict]```
 
-        :return: Name, dict with keys: 'typ', 'doc', 'default'
+        :returns: Name, dict with keys: 'typ', 'doc', 'default'
         :rtype: ```Tuple[str, dict]```
         """
         name, param = interpolate_defaults(
@@ -897,7 +897,7 @@ def _set_param_values(input_str, val, sw=":type"):
     :param sw: Startswith condition
     :type sw: ```str```
 
-    :return: Properly derived key and [potentially modified] value
+    :returns: Properly derived key and [potentially modified] value
     :rtype: Tuple[Literal['doc', 'typ'], str]
     """
     return (

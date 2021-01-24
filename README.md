@@ -43,14 +43,18 @@ Some of these problems can be solved dynamically, however in doing so one loses 
 To create a `class` from [`tf.keras.optimizers.Adam`](https://www.tensorflow.org/api_docs/python/tf/keras/optimizers/Adam):
 
 ```py
-In [1]: from doctrans.source_transformer import to_code
+>>> from doctrans.source_transformer import to_code
 
-In [2]: from doctrans import emit, parse
+>>> from doctrans import emit, parse
 
-In [3]: import tensorflow as tf
+>>> import tensorflow as tf
 
-In [4]: print(to_code(emit.class_(parse.class_(tf.keras.optimizers.Adam, merge_inner_function="__init__"))))
-class ConfigClass(object):
+>>> from typing import Optional
+
+>>> print(to_code(emit.class_(parse.class_(tf.keras.optimizers.Adam,
+                                           merge_inner_function="__init__"),
+                              class_name="AdamConfig")))
+class AdamConfig(object):
     """
     Optimizer that implements the Adam algorithm.
 

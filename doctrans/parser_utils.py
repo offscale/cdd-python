@@ -39,7 +39,7 @@ def ir_merge(target, other):
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type other: ```dict```
 
-    :return: IR of updated target. `target` is also updated in-place, and the memory of `other` is used.
+    :returns: IR of updated target. `target` is also updated in-place, and the memory of `other` is used.
     :rtype: ```dict```
     """
     if not target["params"]:
@@ -97,7 +97,7 @@ def _join_non_none(primacy, other):
     :param other: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :type other: ```dict```
 
-    :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :rtype: ```dict```
     """
     if not primacy:
@@ -121,7 +121,7 @@ def _inspect_process_ir_param(param, sig):
     :param sig: The Signature
     :type sig: ```inspect.Signature```
 
-    :return: dict with keys: 'typ', 'doc', 'default'
+    :returns: dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
     """
     name, _param = param
@@ -148,7 +148,7 @@ def _inspect_process_sig(k_v):
     :param k_v: Key and value from `inspect._parameters` mapping
     :type k_v: ```Tuple[str, inspect.Parameter]```
 
-    :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :rtype: ```dict```
     """
     # return dict(
@@ -184,7 +184,7 @@ def _interpolate_return(function_def, intermediate_repr):
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
-    :return: a dictionary of form
+    :returns: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
@@ -237,7 +237,7 @@ def _interpolate_return(function_def, intermediate_repr):
 #     :param body: The body
 #     :type body: ```List[AST]```
 #
-#     :return: Docstring-free body
+#     :returns: Docstring-free body
 #     :rtype: ```List[AST]```
 #     """
 #     return body if ast.get_docstring(source) is not None else body[1:]

@@ -115,7 +115,7 @@ def run_cli_test(
     :param return_args: Primarily use is for tests. Returns the args rather than executing anything.
     :type return_args: ```bool```
 
-    :return: input_str
+    :returns: input_str
     :rtype: ```Tuple[str, Optional[Namespace]]```
     """
     argparse_mock, args = MagicMock(), None
@@ -184,7 +184,7 @@ class ShowSourceLoader(Loader):
         :param modname: Name of module
         :type modname: ```str```
 
-        :return: Source string
+        :returns: Source string
         :rtype: ```str```
         """
         assert modname == self.modname, ImportError(modname)
@@ -201,7 +201,7 @@ def inspectable_compile(s, modname=None):
     :param modname: Module name, generates a random one if None
     :type modname: ```Optional[str]```
 
-    :return: The compiled and executed input source module, such that `inspect.getsource` works
+    :returns: The compiled and executed input source module, such that `inspect.getsource` works
     :rtype: ```Any```
     """
     filename = NamedTemporaryFile(suffix=".py").name
@@ -224,7 +224,7 @@ def mock_function(*args, **kwargs):
     """
     Mock function to check if it is called
 
-    :return: True
+    :returns: True
     :rtype: ```Literal[True]```
     """
     return True
@@ -240,7 +240,7 @@ def reindent_docstring(node, indent_level=1):
     :param indent_level: docstring indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
     :type indent_level: ```int```
 
-    :return: Node with reindent docstring
+    :returns: Node with reindent docstring
     :rtype: ```ast.AST```
     """
     doc_str = ast.get_docstring(node)

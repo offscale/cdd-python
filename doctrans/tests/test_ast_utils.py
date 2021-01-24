@@ -955,7 +955,7 @@ class TestAstUtils(TestCase):
             def __str__(self):
                 """But a real str
 
-                :return: An actual str
+                :returns: An actual str
                 :rtype: ```Literal['<required parameter>']```
                 """
                 return "<required parameter>"

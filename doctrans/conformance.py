@@ -27,7 +27,7 @@ def _default_options(node, search, type_wanted):
     :param type_wanted: AST instance
     :type type_wanted: ```AST```
 
-    :return: Arguments to pass to `emit.*` function
+    :returns: Arguments to pass to `emit.*` function
     :rtype: ```Callable[[], dict]```
     """
     return {
@@ -51,7 +51,7 @@ def _get_name_from_namespace(args, fun_name):
     :param fun_name: Name of the start of the function
     :type fun_name: ```str```
 
-    :return: Argument from Namespace object
+    :returns: Argument from Namespace object
     :rtype: ```str```
     """
     return next(
@@ -71,7 +71,7 @@ def ground_truth(args, truth_file):
     :param truth_file: contains the filename of the one true source
     :type truth_file: ```str```
 
-    :return: Filenames and whether they were changed
+    :returns: Filenames and whether they were changed
     :rtype: ```OrderedDict```
     """
     arg2parse_emit_type = {
@@ -140,7 +140,7 @@ def _conform_filename(
     :param type_wanted: AST instance
     :type type_wanted: ```AST```
 
-    :return: filename, whether the file was modified
+    :returns: filename, whether the file was modified
     :rtype: ```Tuple[str, bool]```
     """
     filename = path.realpath(path.expanduser(filename))

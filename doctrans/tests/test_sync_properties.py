@@ -27,7 +27,7 @@ def populate_files(tempdir, input_str=None, output_str=None):
     :param output_str: Output string to write to the output_filename
     :type output_str: ```Optional[str]```
 
-    :return: input filename, input str, input_str filename
+    :returns: input filename, input str, input_str filename
     :rtype: ```Tuple[str, str, str]```
     """
     input_filename = os.path.join(tempdir, "class_.py")

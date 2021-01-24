@@ -76,7 +76,7 @@ def class_(
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
-    :return: a dictionary of form
+    :returns: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
@@ -262,7 +262,7 @@ def _merge_inner_function(
     :param merge_inner_function: Name of inner function to merge. If None, merge nothing.
     :type merge_inner_function: ```Optional[str]```
 
-    :return: a dictionary of form
+    :returns: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
@@ -307,7 +307,7 @@ def _inspect(obj, name, word_wrap):
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
-    :return: a dictionary of form
+    :returns: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
@@ -412,7 +412,7 @@ def function(
     :param function_name: name of function_def
     :type function_name: ```str```
 
-    :return: a dictionary of form
+    :returns: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
@@ -572,7 +572,7 @@ def argparse_ast(function_def, function_type=None, function_name=None):
     :param function_name: name of function_def
     :type function_name: ```str```
 
-    :return: a dictionary of form
+    :returns: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
@@ -672,7 +672,7 @@ def docstring(
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :return: intermediate_repr, whether it returns or not
+    :returns: intermediate_repr, whether it returns or not
     :rtype: ```Optional[Union[dict, Tuple[dict, bool]]]```
     """
     assert isinstance(doc_string, str), "Expected 'str' got {!r}".format(
