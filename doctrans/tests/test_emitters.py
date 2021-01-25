@@ -26,7 +26,11 @@ from doctrans.tests.mocks.classes import (
     class_nargs_ast,
     class_squared_hinge_config_ast,
 )
-from doctrans.tests.mocks.docstrings import docstring_no_default_str, docstring_str
+from doctrans.tests.mocks.docstrings import (
+    docstring_no_default_str,
+    docstring_numpydoc_str,
+    docstring_str,
+)
 from doctrans.tests.mocks.ir import class_torch_nn_l1loss_ir, intermediate_repr
 from doctrans.tests.mocks.methods import (
     class_with_method_and_body_types_ast,
@@ -89,12 +93,14 @@ class TestEmitters(TestCase):
         """
         run_ast_test(
             self,
-            emit.argparse_function(
-                parse.class_(class_ast),
-                emit_default_doc=False,
-                emit_default_doc_in_return=False,
+            reindent_docstring(
+                emit.argparse_function(
+                    parse.class_(class_ast),
+                    emit_default_doc=False,
+                    emit_default_doc_in_return=False,
+                )
             ),
-            gold=argparse_func_ast,
+            gold=reindent_docstring(argparse_func_ast),
         )
 
     def test_to_argparse_func_nargs(self) -> None:
@@ -111,6 +117,8 @@ class TestEmitters(TestCase):
             ),
             gold=argparse_func_action_append_ast,
         )
+
+    maxDiff = None
 
     def test_to_argparse_google_tf_tensorboard(self) -> None:
         """
@@ -150,17 +158,13 @@ class TestEmitters(TestCase):
             docstring_no_default_str,
         )
 
-    maxDiff = None
-
     def test_to_numpy_docstring_fails(self) -> None:
         """
-        Tests whether `docstring` fails when `docstring_format` is 'numpy'
+        Tests whether `docstring` fails when `docstring_format` is 'numpydoc'
         """
-        self.assertRaises(
-            NotImplementedError,
-            lambda: emit.docstring(
-                deepcopy(intermediate_repr), docstring_format="numpy"
-            ),
+        self.assertEqual(
+            docstring_numpydoc_str,
+            emit.docstring(deepcopy(intermediate_repr), docstring_format="numpydoc"),
         )
 
     def test_to_google_docstring_fails(self) -> None:
@@ -264,16 +268,18 @@ class TestEmitters(TestCase):
         )
 
         ir = parse.function(function_def)
-        gen_ast = emit.function(
-            ir,
-            function_name=function_def.name,
-            function_type=get_function_type(function_def),
-            emit_default_doc=False,
-            inline_types=False,
-            indent_level=1,
-            emit_separating_tab=True,
-            emit_as_kwonlyargs=False,
-            word_wrap=False,
+        gen_ast = reindent_docstring(
+            emit.function(
+                ir,
+                function_name=function_def.name,
+                function_type=get_function_type(function_def),
+                emit_default_doc=False,
+                inline_types=False,
+                indent_level=1,
+                emit_separating_tab=True,
+                emit_as_kwonlyargs=False,
+                word_wrap=False,
+            )
         )
 
         run_ast_test(self, gen_ast=gen_ast, gold=function_def)
@@ -416,14 +422,12 @@ class TestEmitters(TestCase):
 
         ir = parse.argparse_ast(argparse_func_with_body_ast)
         func = emit.argparse_function(
-            ir,
-            emit_default_doc=False,
-            emit_default_doc_in_return=False,
+            ir, emit_default_doc=False, emit_default_doc_in_return=False, word_wrap=True
         )
         run_ast_test(
             self,
-            func,
-            argparse_func_with_body_ast,
+            reindent_docstring(func),
+            reindent_docstring(argparse_func_with_body_ast),
         )
 
     def test_from_torch_ir_to_argparse(self) -> None:

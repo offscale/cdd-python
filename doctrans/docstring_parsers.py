@@ -10,7 +10,7 @@ Translates from [Google's docstring format](https://google.github.io/styleguide/
 """
 import ast
 from ast import AST
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 from copy import deepcopy
 from enum import Enum
 from functools import partial
@@ -20,6 +20,7 @@ from typing import Dict, List, Tuple
 
 from doctrans.ast_utils import NoneStr, get_value
 from doctrans.defaults_utils import _remove_default_from_param, needs_quoting
+from doctrans.docstring_utils import ARG_TOKENS, RETURN_TOKENS, TOKENS
 from doctrans.emit import to_code
 from doctrans.emitter_utils import interpolate_defaults
 from doctrans.pure_utils import (
@@ -33,22 +34,6 @@ from doctrans.pure_utils import (
     unquote,
     update_d,
 )
-
-Tokens = namedtuple("Tokens", ("rest", "google", "numpydoc"))
-
-TOKENS = Tokens(
-    (":param", ":cvar", ":ivar", ":var", ":type", ":return", ":rtype"),
-    ("Args:", "Kwargs:", "Raises:", "Returns:"),
-    ("Parameters\n----------", "Returns\n-------"),
-)
-
-ARG_TOKENS = Tokens(
-    TOKENS.rest[:-2],
-    (TOKENS.google[0],),
-    (TOKENS.numpydoc[0],),
-)
-
-RETURN_TOKENS = Tokens(TOKENS.rest[-2:], (TOKENS.google[-1],), (TOKENS.numpydoc[-1],))
 
 
 class Style(Enum):
