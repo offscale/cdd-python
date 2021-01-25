@@ -88,11 +88,13 @@ class C(object):
 {sep}
         :returns: Train and tests dataset splits.
         :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray,
-        {tab}np.ndarray]]```
+{indent}np.ndarray]]```
         """
         return np.empty(0), np.empty(0)
 '''.format(
-    tab=tab, header_doc_str=indent(header_doc_str, tab * 2), sep=tab * 2
+    header_doc_str=indent(header_doc_str, tab * 2),
+    sep=tab * 2,
+    indent=" " * 12,
 )
 
 class_with_method_types_str = '''

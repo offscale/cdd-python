@@ -16,6 +16,7 @@ from meta.asttools import cmp_ast
 
 import doctrans.source_transformer
 from doctrans.ast_utils import set_value
+from doctrans.docstring_utils import TOKENS
 from doctrans.pure_utils import PY3_8, reindent, tab
 
 
@@ -227,7 +228,7 @@ def mock_function(*args, **kwargs):
     return True
 
 
-def reindent_docstring(node, indent_level=1):
+def reindent_docstring(node, indent_level=1, emit_separating_tab=True):
     """
     Reindent the docstring
 
@@ -237,6 +238,9 @@ def reindent_docstring(node, indent_level=1):
     :param indent_level: docstring indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
     :type indent_level: ```int```
 
+    :param emit_separating_tab: whether to put a tab between :param and return and desc
+    :type emit_separating_tab: ```bool```
+
     :returns: Node with reindent docstring
     :rtype: ```ast.AST```
     """
@@ -245,7 +249,22 @@ def reindent_docstring(node, indent_level=1):
         node.body[0] = ast.Expr(
             set_value(
                 "\n{tab}{s}\n{tab}".format(
-                    tab=tab * abs(indent_level), s=reindent(doc_str)
+                    tab=tab * abs(indent_level),
+                    s="\n".join(
+                        map(
+                            lambda line: "{sep}{line}".format(
+                                sep=tab * 2, line=line.lstrip()
+                            )
+                            if line.startswith(tab)
+                            and len(line) > len(tab)
+                            and line[
+                                len(tab) : line.lstrip().find(" ") + len(tab)
+                            ].rstrip(":s")
+                            not in frozenset((False,) + TOKENS.rest)
+                            else line,
+                            reindent(doc_str).splitlines(),
+                        )
+                    ),
                 )
             )
         )

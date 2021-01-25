@@ -187,8 +187,6 @@ class TestParsers(TestCase):
             },
         )
 
-    maxDiff = None
-
     def test_from_method_in_memory(self) -> None:
         """
         Tests that `parse.function` produces properly from a function in memory of current interpreter with:

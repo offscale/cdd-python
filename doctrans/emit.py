@@ -31,7 +31,7 @@ from doctrans.ast_utils import (
     set_arg,
     set_value,
 )
-from doctrans.docstring_utils import emit_param_str
+from doctrans.docstring_utils import ARG_TOKENS, RETURN_TOKENS, emit_param_str
 from doctrans.emitter_utils import (
     RewriteName,
     _make_call_meth,
@@ -92,7 +92,7 @@ def argparse_function(
     :type word_wrap: ```bool```
 
     :param docstring_format: Format of docstring
-    :type docstring_format: ```Literal['rest', 'numpy', 'google']```
+    :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
 
     :returns:  AST node for function definition which constructs argparse
     :rtype: ```FunctionDef```
@@ -189,6 +189,7 @@ def argparse_function(
                                                 ),
                                             },
                                             docstring_format=docstring_format,
+                                            word_wrap=word_wrap,
                                         ),
                                         tab,
                                     )
@@ -335,13 +336,13 @@ def class_(
     :type decorator_list: ```Optional[Union[List[Str], List[]]]```
 
     :param docstring_format: Format of docstring
-    :type docstring_format: ```Literal['rest', 'numpy', 'google']```
+    :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
 
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
     :param docstring_format: Format of docstring
-    :type docstring_format: ```Literal['rest', 'numpy', 'google']```
+    :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
@@ -466,7 +467,7 @@ def docstring(
     :type intermediate_repr: ```dict```
 
     :param docstring_format: Format of docstring
-    :type docstring_format: ```Literal['rest', 'numpy', 'google']```
+    :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
 
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
@@ -477,24 +478,40 @@ def docstring(
     :returns: docstring
     :rtype: ```str```
     """
-    if docstring_format != "rest":
-        raise NotImplementedError(docstring_format)
-
-    return "\n{doc}\n\n{params}\n{returns}\n".format(
+    return "\n{doc}\n\n{nl}{params}\n{returns}\n{nl}".format(
         doc=(fill if word_wrap else identity)(intermediate_repr["doc"]),
-        params="\n\n".join(
-            map(
-                partial(
-                    emit_param_str,
-                    style=docstring_format,
-                    emit_default_doc=emit_default_doc,
-                    word_wrap=word_wrap,
-                ),
-                intermediate_repr["params"].items(),
+        nl="" if docstring_format == "rest" else "\n",
+        params="\n{}".format("\n" if docstring_format == "rest" else "").join(
+            (
+                lambda param_lines: [getattr(ARG_TOKENS, docstring_format)[0]]
+                + param_lines
+                if param_lines and docstring_format != "rest"
+                else param_lines
+            )(
+                list(
+                    map(
+                        partial(
+                            emit_param_str,
+                            style=docstring_format,
+                            emit_default_doc=emit_default_doc,
+                            word_wrap=word_wrap,
+                        ),
+                        intermediate_repr["params"].items(),
+                    )
+                )
             )
         ),
         returns="".join(
-            (lambda l: l if l is None else "\n{}".format(l))(
+            (
+                lambda l: l
+                if l is None
+                else "{}\n{}".format(
+                    ""
+                    if docstring_format == "rest"
+                    else "\n{}".format(getattr(RETURN_TOKENS, docstring_format)[0]),
+                    l,
+                )
+            )(
                 next(
                     map(
                         partial(
@@ -581,7 +598,7 @@ def function(
     :type function_type: ```Optional[Literal['self', 'cls', 'static']]```
 
     :param docstring_format: Format of docstring
-    :type docstring_format: ```Literal['rest', 'numpy', 'google']```
+    :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
 
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```

@@ -372,7 +372,7 @@ def to_docstring(
     :type emit_default_doc: ```bool```
 
     :param docstring_format: Format of docstring
-    :type docstring_format: ```Literal['rest', 'numpy', 'google']```
+    :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
 
     :param indent_level: indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
     :type indent_level: ```int```
@@ -425,7 +425,7 @@ def to_docstring(
         :type param: ```Tuple[str, dict]```
 
         :param docstring_format: Format of docstring
-        :type docstring_format: ```Literal['rest', 'numpy', 'google']```
+        :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
 
         :param emit_default_doc: Whether help/docstring should include 'With default' text
         :type emit_default_doc: ```bool```
@@ -616,7 +616,7 @@ def _make_call_meth(body, return_type, param_names, docstring_format, word_wrap)
     :type param_names: ```Optional[Iterator[str]]```
 
     :param docstring_format: Format of docstring
-    :type docstring_format: ```Literal['rest', 'numpy', 'google']```
+    :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
 
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```

@@ -297,7 +297,7 @@ tfds_dir : str
 K : Literal['np', 'tf']
     backend engine, e.g., `np` or `tf`. Defaults to "np"
 as_numpy : Optional[bool]
-    Convert to numpy ndarrays.
+    Convert to numpy ndarrays. Defaults to None
 data_loader_kwargs : Optional[dict]
     pass this as arguments to data_loader function
 

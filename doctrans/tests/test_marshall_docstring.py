@@ -220,8 +220,6 @@ class TestMarshallDocstring(TestCase):
             },
         )
 
-    maxDiff = None
-
     def test_from_docstring_google_str(self) -> None:
         """
         Tests whether `parse_docstring` produces `intermediate_repr_no_default_doc`
@@ -290,7 +288,7 @@ class TestMarshallDocstring(TestCase):
         self.assertRaises(
             NotImplementedError,
             lambda: to_docstring(
-                deepcopy(intermediate_repr_no_default_doc), docstring_format="numpy"
+                deepcopy(intermediate_repr_no_default_doc), docstring_format="numpydoc"
             ),
         )
 
