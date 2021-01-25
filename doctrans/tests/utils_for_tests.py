@@ -228,7 +228,7 @@ def mock_function(*args, **kwargs):
     return True
 
 
-def reindent_docstring(node, indent_level=1, emit_separating_tab=True):
+def reindent_docstring(node, indent_level=1):
     """
     Reindent the docstring
 
@@ -237,9 +237,6 @@ def reindent_docstring(node, indent_level=1, emit_separating_tab=True):
 
     :param indent_level: docstring indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
     :type indent_level: ```int```
-
-    :param emit_separating_tab: whether to put a tab between :param and return and desc
-    :type emit_separating_tab: ```bool```
 
     :returns: Node with reindent docstring
     :rtype: ```ast.AST```
