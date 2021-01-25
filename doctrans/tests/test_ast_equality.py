@@ -14,6 +14,8 @@ class TestAstEquality(TestCase):
     Tests whether the AST generated matches the mocked one expected
     """
 
+    maxDiff = None
+
     def test_argparse_func(self) -> None:
         """ Tests whether the `argparse_func_str` correctly produces `argparse_func_ast` """
         run_ast_test(self, ast.parse(argparse_func_str).body[0], argparse_func_ast)
