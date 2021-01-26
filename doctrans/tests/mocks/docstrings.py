@@ -196,7 +196,7 @@ Args:
   dataset_name (str): name of dataset. Defaults to "mnist"
   tfds_dir (str): directory to look for models in. Defaults to "~/tensorflow_datasets"
   K (Literal['np', 'tf']): backend engine, e.g., `np` or `tf`. Defaults to "np"
-  as_numpy (Optional[bool]): Convert to numpy ndarrays.
+  as_numpy (Optional[bool]): Convert to numpy ndarrays. Defaults to None
   data_loader_kwargs (Optional[dict]): pass this as arguments to data_loader function
 
 Returns:

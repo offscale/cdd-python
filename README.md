@@ -291,7 +291,7 @@ def set_cli_args(argument_parser):
 ## Minor other use-cases this facilitates
 
   - Switch between having types in the docstring and having the types inline ([PEP484](https://python.org/dev/peps/pep-0484)–style))
-  - Switch between docstring formats (WiP, SDK can go from {numpy, ReST, google} to {numpy, ReST}; but not to others)
+  - Switch between docstring formats (to/from {numpy, ReST, google})
   - Desktop GUI with wxWidgets, from the argparse layer through [Gooey](https://github.com/chriskiehl/Gooey) [one liner]
 
 ## CLI for this project

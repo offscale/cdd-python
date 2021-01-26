@@ -54,7 +54,6 @@ from doctrans.source_transformer import to_code
 def argparse_function(
     intermediate_repr,
     emit_default_doc=False,
-    emit_default_doc_in_return=False,
     function_name="set_cli_args",
     function_type="static",
     wrap_description=False,
@@ -75,9 +74,6 @@ def argparse_function(
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
-
-    :param emit_default_doc_in_return: Whether help/docstring in return should include 'With default' text
-    :type emit_default_doc_in_return: ```bool```
 
     :param function_name: name of function_def
     :type function_name: ```str```
@@ -478,9 +474,10 @@ def docstring(
     :returns: docstring
     :rtype: ```str```
     """
-    return "\n{doc}\n\n{nl}{params}\n{returns}\n{nl}".format(
+    return "\n{doc}\n\n{nl0}{params}\n{returns}\n{nl1}".format(
         doc=(fill if word_wrap else identity)(intermediate_repr["doc"]),
-        nl="" if docstring_format == "rest" else "\n",
+        nl0="" if docstring_format == "rest" else "\n",
+        nl1="\n" if docstring_format == "numpydoc" else "",
         params="\n{}".format("\n" if docstring_format == "rest" else "").join(
             (
                 lambda param_lines: [getattr(ARG_TOKENS, docstring_format)[0]]

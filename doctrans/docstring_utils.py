@@ -104,7 +104,36 @@ def emit_param_str(
             )
         )
     else:
-        raise NotImplementedError(style)
+        return "".join(
+            filter(
+                None,
+                # map(indent_all_but_first, map(_fill,
+                (
+                    (
+                        "  {typ}:".format(typ=_param["typ"])
+                        if _param.get("typ")
+                        else None
+                    )
+                    if name == "return_type"
+                    else "  {name} ({typ}): ".format(
+                        name=name,
+                        typ="{!s}".format(_param["typ"]) if _param.get("typ") else "",
+                    )
+                    if _param.get("typ")
+                    else None,
+                    "{nl}{tab}{doc}".format(
+                        doc=set_default_doc(
+                            (name, _param), emit_default_doc=emit_default_doc
+                        )[1]["doc"],
+                        **{"nl": "\n", "tab": " " * 3}
+                        if name == "return_type"
+                        else {"nl": "", "tab": ""}
+                    )
+                    if emit_doc and _param.get("doc")
+                    else None,
+                ),
+            )
+        )
 
 
 Tokens = namedtuple("Tokens", ("rest", "google", "numpydoc"))
