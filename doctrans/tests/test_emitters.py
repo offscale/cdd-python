@@ -27,6 +27,7 @@ from doctrans.tests.mocks.classes import (
     class_squared_hinge_config_ast,
 )
 from doctrans.tests.mocks.docstrings import (
+    docstring_google_str,
     docstring_no_default_str,
     docstring_numpydoc_str,
     docstring_str,
@@ -97,7 +98,6 @@ class TestEmitters(TestCase):
                 emit.argparse_function(
                     parse.class_(class_ast),
                     emit_default_doc=False,
-                    emit_default_doc_in_return=False,
                 )
             ),
             gold=reindent_docstring(argparse_func_ast),
@@ -112,7 +112,6 @@ class TestEmitters(TestCase):
             gen_ast=emit.argparse_function(
                 parse.class_(class_nargs_ast),
                 emit_default_doc=False,
-                emit_default_doc_in_return=False,
                 function_name="set_cli_action_append",
             ),
             gold=argparse_func_action_append_ast,
@@ -133,7 +132,6 @@ class TestEmitters(TestCase):
             emit.argparse_function(
                 ir,
                 emit_default_doc=False,
-                emit_default_doc_in_return=False,
                 word_wrap=False,
             ),
             gold=argparse_function_google_tf_tensorboard_ast,
@@ -158,24 +156,22 @@ class TestEmitters(TestCase):
             docstring_no_default_str,
         )
 
-    def test_to_numpy_docstring_fails(self) -> None:
+    def test_to_numpy_docstring(self) -> None:
         """
-        Tests whether `docstring` fails when `docstring_format` is 'numpydoc'
+        Tests whether `docstring` produces `docstring_numpydoc_str` when `docstring_format` is 'numpydoc'
         """
         self.assertEqual(
             docstring_numpydoc_str,
             emit.docstring(deepcopy(intermediate_repr), docstring_format="numpydoc"),
         )
 
-    def test_to_google_docstring_fails(self) -> None:
+    def test_to_google_docstring(self) -> None:
         """
-        Tests whether `docstring` fails when `docstring_format` is 'google'
+        Tests whether `docstring` produces `docstring_google_str` when `docstring_format` is 'google'
         """
-        self.assertRaises(
-            NotImplementedError,
-            lambda: emit.docstring(
-                deepcopy(intermediate_repr), docstring_format="google"
-            ),
+        self.assertEqual(
+            docstring_google_str,
+            emit.docstring(deepcopy(intermediate_repr), docstring_format="google"),
         )
 
     def test_to_file(self) -> None:
@@ -421,13 +417,9 @@ class TestEmitters(TestCase):
         """ Tests if this can make the roundtrip from a full argparse function to a argparse full function """
 
         ir = parse.argparse_ast(argparse_func_with_body_ast)
-        func = emit.argparse_function(
-            ir, emit_default_doc=False, emit_default_doc_in_return=False, word_wrap=True
-        )
+        func = emit.argparse_function(ir, emit_default_doc=False, word_wrap=True)
         run_ast_test(
-            self,
-            reindent_docstring(func),
-            reindent_docstring(argparse_func_with_body_ast),
+            self, *map(reindent_docstring, (func, argparse_func_with_body_ast))
         )
 
     def test_from_torch_ir_to_argparse(self) -> None:
@@ -435,7 +427,6 @@ class TestEmitters(TestCase):
 
         func = emit.argparse_function(
             deepcopy(class_torch_nn_l1loss_ir),
-            emit_default_doc_in_return=False,
             emit_default_doc=False,
             wrap_description=False,
             word_wrap=False,
