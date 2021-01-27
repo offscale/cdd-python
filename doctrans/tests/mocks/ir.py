@@ -6,7 +6,7 @@ from copy import deepcopy
 
 from doctrans.ast_utils import NoneStr
 from doctrans.defaults_utils import remove_defaults_from_intermediate_repr
-from doctrans.pure_utils import params_to_ordered_dict, paren_wrap_code
+from doctrans.pure_utils import paren_wrap_code
 from doctrans.tests.mocks.docstrings import header_doc_str
 
 class_google_tf_tensorboard_ir = {
@@ -580,6 +580,7 @@ docstring_google_tf_adadelta_ir = {
     "type": "static",
 }
 
+
 docstring_google_tf_lambda_callback_ir = {
     "doc": "Callback for creating simple, custom callbacks on-the-fly.\n"
     "\n"
@@ -632,23 +633,17 @@ docstring_google_tf_lambda_callback_ir = {
     "                   cleanup_callback])\n"
     "```",
     "name": None,
-    "params": params_to_ordered_dict(
+    "params": OrderedDict(
         (
-            {
-                "doc": "called at the beginning of every epoch.",
-                "name": "on_epoch_begin",
-            },
-            {"doc": "called at the end of every epoch.", "name": "on_epoch_end"},
-            {
-                "doc": "called at the beginning of every batch.",
-                "name": "on_batch_begin",
-            },
-            {"doc": "called at the end of every batch.", "name": "on_batch_end"},
-            {
-                "doc": "called at the beginning of model training.",
-                "name": "on_train_begin",
-            },
-            {"doc": "called at the end of model training.", "name": "on_train_end"},
+            ("on_epoch_begin", {"doc": "called at the beginning of every " "epoch."}),
+            ("on_epoch_end", {"doc": "called at the end of every epoch."}),
+            ("on_batch_begin", {"doc": "called at the beginning of every " "batch."}),
+            ("on_batch_end", {"doc": "called at the end of every batch."}),
+            (
+                "on_train_begin",
+                {"doc": "called at the beginning of model " "training."},
+            ),
+            ("on_train_end", {"doc": "called at the end of model " "training."}),
         )
     ),
     "returns": None,
@@ -1193,5 +1188,4 @@ __all__ = [
     "intermediate_repr_no_default_doc_or_prop",
     "intermediate_repr_only_return_type",
     "method_complex_args_variety_ir",
-    "params_to_ordered_dict",
 ]
