@@ -8,7 +8,7 @@ from unittest import TestCase
 
 from doctrans import emit, parse
 from doctrans.ast_utils import RewriteAtQuery, get_value
-from doctrans.pure_utils import PY_GTE_3_8, params_to_ordered_dict, paren_wrap_code, tab
+from doctrans.pure_utils import PY_GTE_3_8, paren_wrap_code, tab
 from doctrans.tests.mocks.argparse import argparse_func_ast
 from doctrans.tests.mocks.classes import (
     class_ast,
@@ -176,10 +176,10 @@ class TestParsers(TestCase):
             {
                 "doc": "the foo function",
                 "name": "TestParsers.test_from_function_in_memory.<locals>.foo",
-                "params": params_to_ordered_dict(
+                "params": OrderedDict(
                     (
-                        {"default": 5, "doc": "the a value", "name": "a", "typ": "int"},
-                        {"default": 6, "doc": "the b value", "name": "b", "typ": "int"},
+                        ("a", {"default": 5, "doc": "the a value", "typ": "int"}),
+                        ("b", {"default": 6, "doc": "the b value", "typ": "int"}),
                     )
                 ),
                 "returns": None,
@@ -349,24 +349,29 @@ class TestParsers(TestCase):
             {
                 "doc": "Replace the node at query with given node",
                 "name": "RewriteAtQuery",
-                "params": params_to_ordered_dict(
+                "params": OrderedDict(
                     (
-                        {
-                            "doc": "Search query, e.g., ['node_name', "
-                            "'function_name', 'arg_name']",
-                            "name": "search",
-                            "typ": "List[str]",
-                        },
-                        {
-                            "doc": "Node to replace this search",
-                            "name": "replacement_node",
-                            "typ": "AST",
-                        },
-                        {
-                            "doc": "whether a node has been replaced (only replaces "
-                            "first occurrence)",
-                            "name": "replaced",
-                        },
+                        (
+                            "search",
+                            {
+                                "doc": "Search query, e.g., "
+                                "['node_name', 'function_name', "
+                                "'arg_name']",
+                                "typ": "List[str]",
+                            },
+                        ),
+                        (
+                            "replacement_node",
+                            {"doc": "Node to replace this search", "typ": "AST"},
+                        ),
+                        (
+                            "replaced",
+                            {
+                                "doc": "whether a node has been replaced "
+                                "(only replaces first "
+                                "occurrence)"
+                            },
+                        ),
                     )
                 ),
                 "returns": None,

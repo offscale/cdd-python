@@ -3,7 +3,7 @@ Pure utils for pure functions. For the same input will always produce the same i
 """
 import typing
 from ast import Name, Str
-from collections import OrderedDict, deque
+from collections import deque
 from functools import partial
 from importlib import import_module
 from inspect import getmodule
@@ -544,25 +544,6 @@ def get_module(name, package=None, extra_symbols=None):
             raise
 
 
-def params_to_ordered_dict(params):
-    """
-    Convert the old params list with dicts to an OrderedDict
-
-    TODO: Remove this function when codebase is updated
-
-    :param params: list of dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'required': ... }
-    :type params: ```List[dict]```
-
-    :returns: OrderedDict representation of the params dict, i.e.,
-       OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
-    :rtype: ```OrderedDict```
-    """
-    return OrderedDict(
-        (param.pop("name"), param)
-        for param in ((params,) if isinstance(params, dict) else params)
-    )
-
-
 def paren_wrap_code(code):
     """
     The new builtin AST unparser adds extra parentheses, so match that behaviour on older versions
@@ -594,7 +575,6 @@ __all__ = [
     "indent_all_but_first",
     "location_within",
     "lstrip_namespace",
-    "params_to_ordered_dict",
     "paren_wrap_code",
     "pluralise",
     "pp",

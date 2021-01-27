@@ -449,14 +449,14 @@ def to_docstring(
             if default is not None:
                 _param["default"] = default
 
-        sep = abs(indent_level) * tab
+        _sep = abs(indent_level) * tab
 
-        def _joiner(param, param_type):
+        def _joiner(__param, param_type):
             """
             Internal function to join new lines
 
-            :param param: The `:param`
-            :type param: ```Optional[str]```
+            :param __param: The `:param`
+            :type __param: ```Optional[str]```
 
             :param param_type: The `:type`
             :type param_type: ```Optional[str]```
@@ -464,18 +464,18 @@ def to_docstring(
             :returns: Newline joined string
             :rtype: ```str```
             """
-            if param_type is None and param is not None:
-                return "{}\n{}".format(_fill(param), sep)
-            elif param is None:
-                return param
+            if param_type is None and __param is not None:
+                return "{}\n{}".format(_fill(__param), _sep)
+            elif __param is None:
+                return __param
             return "".join(
                 (
-                    _fill(param.replace("\n", "\n{sep}".format(sep=sep))),
+                    _fill(__param.replace("\n", "\n{sep}".format(sep=_sep))),
                     "\n",
-                    sep,
-                    _fill(param_type.replace("\n", "\n{sep}".format(sep=sep))),
+                    _sep,
+                    _fill(param_type.replace("\n", "\n{sep}".format(sep=_sep))),
                     "\n",
-                    sep,
+                    _sep,
                 )
             )
 
