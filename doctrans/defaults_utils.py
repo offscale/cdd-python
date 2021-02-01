@@ -129,18 +129,26 @@ def extract_default(
         elif ch in par:
             par[ch] += 1
         default += ch
-    # default = "".join(takewhile(rpartial(ne, "."), line[_end_idx:]))
     rest_offset = _end_idx + len(default)
 
     default = default.strip(" \t`")
+    if not default.startswith("("):
+        offset = int(default.endswith(")")) or 2 if default.endswith(").") else 0
+        default = default[:-offset] if offset else default
+
     if typ is not None and typ in simple_types and default not in none_types:
-        default = {
-            "bool": bool,
-            "int": int,
-            "float": float,
-            "complex": complex,
-            "str": str,
-        }[typ](literal_eval(default))
+        lit = literal_eval(default)
+        default = (
+            "```{}```".format(lit)
+            if isinstance(default, ast.AST)
+            else {
+                "bool": bool,
+                "int": int,
+                "float": float,
+                "complex": complex,
+                "str": str,
+            }[typ](lit)
+        )
     elif default.isdecimal():
         default = int(default)
     elif default in frozenset(("True", "False")):
