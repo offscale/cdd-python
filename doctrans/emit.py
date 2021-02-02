@@ -44,6 +44,7 @@ from doctrans.pure_utils import (
     fill,
     identity,
     none_types,
+    pp,
     rpartial,
     simple_types,
     tab,
@@ -547,7 +548,7 @@ def file(node, filename, mode="a", skip_black=False):
     :returns: None
     :rtype: ```NoneType```
     """
-    if isinstance(node, (ClassDef, FunctionDef)):
+    if not isinstance(node, Module):
         node = Module(body=[node], type_ignores=[], stmt=None)
     src = to_code(node)
     if not skip_black:
@@ -656,6 +657,7 @@ def function(
             params_no_kwargs,
         )
     )
+    # pp({"args_from_params": args_from_params, "defaults_from_params": defaults_from_params})
     if emit_as_kwonlyargs:
         kwonlyargs, kw_defaults, defaults = args_from_params, defaults_from_params, []
     else:
@@ -681,6 +683,8 @@ def function(
         )
         else None
     )
+
+    pp({"emit::defaults": defaults})
 
     return FunctionDef(
         args=arguments(

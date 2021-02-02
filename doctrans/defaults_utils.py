@@ -101,23 +101,42 @@ def extract_default(
     if line is None:
         return line, line
 
-    _start_idx, _end_idx, _found = location_within(
-        line,
+    default_search_announce_paren, default_search_announce = (
+        lambda _default_search_announce: (
+            map(partial(str.format, "({}"), _default_search_announce),
+            _default_search_announce,
+        )
+    )(
         ("defaults to ", "defaults to\n", "Default value is ", "Default:")
         if default_search_announce is None
         else (
             (default_search_announce,)
             if isinstance(default_search_announce, str)
             else default_search_announce
-        ),
-        cmp=lambda a, b: eq(*map(str.casefold, (a, b))),
+        )
     )
-    if _start_idx == -1:
-        return line, None
+
+    _end_idx, default_end_offset = None, None
+    for idx, _default_search_announce in enumerate(
+        (default_search_announce_paren, default_search_announce)
+    ):
+        _start_idx, _end_idx, _found = location_within(
+            line,
+            _default_search_announce,
+            cmp=lambda a, b: eq(*map(str.casefold, (a, b))),
+        )
+
+        if idx == 0:
+            if _start_idx != -1:
+                _start_idx += 1  # eat '('
+                default_end_offset = -1 if line[-1] == ")" else -2  # eat ')', ').'
+                break
+        elif _start_idx == -1:
+            return line, None
 
     default = ""
     par = {"{": 0, "[": 0, "(": 0, ")": 0, "]": 0, "}": 0}
-    sub_l = line[_end_idx:]
+    sub_l = line[_end_idx:default_end_offset]
     sub_l_len = len(sub_l)
     for idx, ch in enumerate(sub_l):
         if (
@@ -132,12 +151,9 @@ def extract_default(
     rest_offset = _end_idx + len(default)
 
     default = default.strip(" \t`")
-    if not default.startswith("("):
-        offset = int(default.endswith(")")) or 2 if default.endswith(").") else 0
-        default = default[:-offset] if offset else default
 
     if typ is not None and typ in simple_types and default not in none_types:
-        lit = literal_eval(default)
+        lit = literal_eval("({})".format(default))
         default = (
             "```{}```".format(lit)
             if isinstance(default, ast.AST)
