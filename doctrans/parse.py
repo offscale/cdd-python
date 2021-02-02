@@ -517,7 +517,6 @@ def function(
                 defaults,
                 list(islice(cycle((None,)), 10)) + getattr(function_def.args, defaults),
             )
-
     ir_merge(
         intermediate_repr,
         {

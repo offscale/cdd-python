@@ -258,6 +258,9 @@ def interpolate_defaults(
             if _param.get("typ", memoryview) in simple_types
             else NoneStr
         )
+
+    if "default" in _param:
+        print(name, '_param["default"]:', _param["default"], ";")
     return name, _param
 
 

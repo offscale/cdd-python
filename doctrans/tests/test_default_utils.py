@@ -65,6 +65,14 @@ class TestDefaultUtils(TestCase):
             (sample, True),
         )
 
+    def test_extract_default_with_parens(self) -> None:
+        """ Tests that `extract_default` works when wrapped in parentheses """
+        sample = "learning rate (default: 1)"
+        self.assertTupleEqual(
+            extract_default(sample, emit_default_doc=True),
+            (sample, 1),
+        )
+
     def test_set_default_doc_none(self) -> None:
         """ Tests that `set_default_doc` does nop whence no doc in param """
         name_param = "foo", {}
