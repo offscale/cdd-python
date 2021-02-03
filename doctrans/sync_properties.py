@@ -7,11 +7,9 @@ from os import path
 
 from doctrans import emit
 from doctrans.ast_utils import (
-    NoneStr,
     RewriteAtQuery,
     annotate_ancestry,
     find_in_ast,
-    get_value,
     it2literal,
 )
 from doctrans.pure_utils import strip_split
@@ -66,31 +64,6 @@ def sync_properties(
             output_param_wrap,
             output_ast,
         )
-        for node in ast.walk(output_ast):
-            if hasattr(node, "_location") and (
-                node._location == "```None```" or "```None```" in node._location
-            ):
-                print("node._location:", node._location, ";")
-            # if isinstance(node, ast.FunctionDef):
-            #    pp(node.args.defaults)
-
-    class RewriteNone(ast.NodeTransformer):
-        """ Rewrite `NoneStr` to `None` """
-
-        base = ast.NodeTransformer()
-
-        def generic_visit(self, node):
-            """
-            :param node: The node
-            :type node: ```ast.AST```
-
-            :returns: The initial node unless it's `NoneStr` then `None`
-            :rtype: ```Optional[ast.AST]```
-            """
-            return self.base.generic_visit(None if get_value(node) == NoneStr else node)
-
-    output_ast = RewriteNone().visit(output_ast)
-    annotate_ancestry(output_ast)
 
     emit.file(output_ast, output_filename, mode="wt", skip_black=False)
 
@@ -180,6 +153,7 @@ def sync_property(
     )
 
     gen_ast = rewrite_at_query.visit(output_ast)
+
     assert rewrite_at_query.replaced is True, "Failed to update with {!r}".format(
         to_code(replacement_node)
     )

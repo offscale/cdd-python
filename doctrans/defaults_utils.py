@@ -129,7 +129,9 @@ def extract_default(
         if idx == 0:
             if _start_idx != -1:
                 _start_idx += 1  # eat '('
-                default_end_offset = -1 if line[-1] == ")" else -2  # eat ')', ').'
+                default_end_offset = -1 if line[-1] == ")" else -2 if line[-2:] == ")." else 0  # eat ')', ').'
+                # if default_end_offset == 0:
+                #     _start_idx += 1
                 break
         elif _start_idx == -1:
             return line, None
@@ -153,10 +155,13 @@ def extract_default(
     default = default.strip(" \t`")
 
     if typ is not None and typ in simple_types and default not in none_types:
+        # try:
         lit = literal_eval("({})".format(default))
+        # except ValueError:
+        #     lit = ast.AST()
         default = (
-            "```{}```".format(lit)
-            if isinstance(default, ast.AST)
+            "```{}```".format(default)
+            if isinstance(lit, ast.AST)
             else {
                 "bool": bool,
                 "int": int,

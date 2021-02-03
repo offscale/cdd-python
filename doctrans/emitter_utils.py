@@ -259,8 +259,6 @@ def interpolate_defaults(
             else NoneStr
         )
 
-    if "default" in _param:
-        print(name, '_param["default"]:', _param["default"], ";")
     return name, _param
 
 

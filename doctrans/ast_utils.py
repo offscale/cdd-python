@@ -1026,7 +1026,7 @@ class RewriteAtQuery(NodeTransformer):
 
                 if idx is not None and len(node.args.defaults) > idx:
                     new_default = get_value(self.replacement_node)
-                    if new_default is not None:
+                    if new_default not in none_types:
                         node.args.defaults[idx] = new_default
 
                 self.replacement_node = emit_arg(self.replacement_node)

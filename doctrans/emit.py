@@ -44,7 +44,6 @@ from doctrans.pure_utils import (
     fill,
     identity,
     none_types,
-    pp,
     rpartial,
     simple_types,
     tab,
@@ -683,8 +682,6 @@ def function(
         )
         else None
     )
-
-    pp({"emit::defaults": defaults})
 
     return FunctionDef(
         args=arguments(

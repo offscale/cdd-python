@@ -73,6 +73,14 @@ class TestDefaultUtils(TestCase):
             (sample, 1),
         )
 
+    def test_extract_default_with_ast_default(self) -> None:
+        """ Tests that `extract_default` works when default parses to an AST type """
+        sample = 'maximal number of function evaluations per optimization\n        step (default: max_iter * 1.25).'
+        self.assertTupleEqual(
+            extract_default(sample, emit_default_doc=True),
+            (sample, "max_iter * 1.25"),
+        )
+
     def test_set_default_doc_none(self) -> None:
         """ Tests that `set_default_doc` does nop whence no doc in param """
         name_param = "foo", {}
