@@ -399,6 +399,8 @@ class TestParsers(TestCase):
 
         self.assertDictEqual(parsed_ir, class_torch_nn_l1loss_ir)
 
+    maxDiff = None
+
     def test_from_class_torch_nn_one_cycle_lr(self) -> None:
         """Tests that the parser can combine the outer class docstring + structure
         with the inner function parameter defaults, given a PyTorch loss LR scheduler class"""
