@@ -19,15 +19,16 @@ class TestDefaultUtils(TestCase):
     def test_extract_default_middle(self) -> None:
         """ Tests that `extract_default` produces the expected output """
         sample = "Why would you. Have this defaults to something. In the middle?"
-        self.assertTupleEqual(extract_default(sample), (sample, "something"))
+        default = "something"
+        self.assertTupleEqual(extract_default(sample), (sample, default))
 
         self.assertTupleEqual(
             extract_default(sample, rstrip_default=False, emit_default_doc=False),
-            ("Why would you. Have this. In the middle?", "something"),
+            ("Why would you. Have this. In the middle?", default),
         )
         self.assertTupleEqual(
             extract_default(sample, rstrip_default=True, emit_default_doc=False),
-            ("Why would you. Have thisIn the middle?", "something"),
+            ("Why would you. Have thisIn the middle?", default),
         )
 
     def test_extract_default_with_dot(self) -> None:
@@ -73,9 +74,29 @@ class TestDefaultUtils(TestCase):
             (sample, 1),
         )
 
+    def test_extract_default_with_many_parens(self) -> None:
+        """ Tests that `extract_default` works when default parses to an AST type """
+        sample = (
+            "betas (Tuple[float, float], optional): coefficients used for computing\n"
+            "        running averages of gradient and its square (default: (0.9, 0.999))"
+        )
+        default = "(0.9, 0.999)"
+        self.assertTupleEqual(
+            extract_default(sample, emit_default_doc=True),
+            (sample, default),
+        )
+        self.assertTupleEqual(
+            extract_default(sample, emit_default_doc=False),
+            (
+                "betas (Tuple[float, float], optional): coefficients used for computing\n"
+                "        running averages of gradient and its square",
+                default,
+            ),
+        )
+
     def test_extract_default_with_ast_default(self) -> None:
         """ Tests that `extract_default` works when default parses to an AST type """
-        sample = 'maximal number of function evaluations per optimization\n        step (default: max_iter * 1.25).'
+        sample = "maximal number of function evaluations per optimization\n        step (default: max_iter * 1.25)."
         self.assertTupleEqual(
             extract_default(sample, emit_default_doc=True),
             (sample, "max_iter * 1.25"),

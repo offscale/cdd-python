@@ -127,13 +127,14 @@ def extract_default(
         )
 
         if idx == 0:
-            if _start_idx != -1:
-                _start_idx += 1  # eat '('
-                default_end_offset = -1 if line[-1] == ")" else -2 if line[-2:] == ")." else 0  # eat ')', ').'
-                # if default_end_offset == 0:
-                #     _start_idx += 1
-                break
-        elif _start_idx == -1:
+            if idx == 0:
+                if _start_idx != -1:
+                    _start_idx += 1  # eat '('
+                    default_end_offset = (
+                        -1 if line[-1] == ")" else -2 if line[-2:] == ")." else 0
+                    )  # eat ')', ').'
+                    break
+        elif _start_idx < 0:
             return line, None
 
     default = ""
@@ -150,15 +151,64 @@ def extract_default(
         elif ch in par:
             par[ch] += 1
         default += ch
-    rest_offset = _end_idx + len(default)
+
+    start_rest_offset = _end_idx + len(default)
 
     default = default.strip(" \t`")
 
+    return _parse_out_default_and_doc(
+        _start_idx,
+        start_rest_offset,
+        default,
+        line,
+        rstrip_default,
+        typ,
+        emit_default_doc,
+    )
+
+
+def _parse_out_default_and_doc(
+    _start_idx, start_rest_offset, default, line, rstrip_default, typ, emit_default_doc
+):
+    """
+    Internal function to parse the default and extract out the doc iff `emit_default_doc is False`
+
+    :param _start_idx: The start index to look from
+    :type _start_idx: ```int```
+
+    :param start_rest_offset: The start index to look from, for the rest that's appended
+    :type start_rest_offset: ```int```
+
+    :param default: The currently parsed out default, could be the end form, could parse into something more specific
+    :type default: ```Any```
+
+    :param line: Example - "dataset. Defaults to mnist"
+    :type line: ```str```
+
+    :param rstrip_default: Whether to rstrip whitespace, newlines, and '.' from the default
+    :type rstrip_default: ```bool```
+
+    :param typ: The type of the default value, useful to disambiguate `25` the float from  `25` the float
+    :type typ: ```Optional[str]```
+
+    :param emit_default_doc: Whether help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool```
+
+    :returns: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
+    :rtype: Tuple[str, Optional[str]]
+    """
     if typ is not None and typ in simple_types and default not in none_types:
-        # try:
-        lit = literal_eval("({})".format(default))
-        # except ValueError:
-        #     lit = ast.AST()
+        lit = (
+            ast.AST()
+            if typ != "str"
+            and any(
+                map(
+                    partial(contains, frozenset(("*", "^", "&", "|", "$", "@", "!"))),
+                    default,
+                )
+            )
+            else literal_eval("({})".format(default))
+        )
         default = (
             "```{}```".format(default)
             if isinstance(lit, ast.AST)
@@ -177,21 +227,28 @@ def extract_default(
     else:
         with suppress(ValueError):
             default = float(default)
-
     if emit_default_doc:
         return line, default
     else:
+        whitetokens = frozenset((" ", "\t", "\n", "\n", "."))
+        extra_offset = int(
+            line[: _start_idx - 1][-1] in frozenset((" ", "\t", "\n", "\n"))
+        )
+
         if rstrip_default:
             offset = count_iter_items(
                 takewhile(
-                    partial(contains, frozenset((" ", "\t", "\n", "\n", "."))),
-                    line[rest_offset:],
+                    partial(contains, whitetokens),
+                    line[start_rest_offset:],
                 )
             )
-            rest_offset += offset
+            start_rest_offset += offset
 
-        fst = line[: _start_idx - 1]
-        return fst + line[rest_offset:], default
+        fst = line[: _start_idx - 1 - extra_offset]
+        return (
+            fst + line[start_rest_offset : -extra_offset if extra_offset > 0 else None],
+            default,
+        )
 
 
 def remove_defaults_from_intermediate_repr(intermediate_repr, emit_default_prop=True):

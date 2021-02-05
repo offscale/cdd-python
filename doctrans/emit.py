@@ -656,7 +656,6 @@ def function(
             params_no_kwargs,
         )
     )
-    # pp({"args_from_params": args_from_params, "defaults_from_params": defaults_from_params})
     if emit_as_kwonlyargs:
         kwonlyargs, kw_defaults, defaults = args_from_params, defaults_from_params, []
     else:
