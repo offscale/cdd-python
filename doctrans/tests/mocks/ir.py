@@ -974,7 +974,7 @@ docstring_google_pytorch_lbfgs_ir = {
             (
                 "line_search_fn",
                 {
-                    "default": "```None```",
+                    "default": NoneStr,
                     "doc": "either 'strong_wolfe' or None",
                     "typ": "str",
                 },
