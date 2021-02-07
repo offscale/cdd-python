@@ -99,7 +99,7 @@ def extract_default(
     :returns: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
     :rtype: Tuple[str, Optional[str]]
     """
-    if not line:
+    if line is None:
         return line, line
 
     default_search_announce_paren, default_search_announce = (
@@ -208,6 +208,7 @@ def _parse_out_default_and_doc(
     :returns: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
     :rtype: Tuple[str, Optional[str]]
     """
+    print("default: {!r}".format(default))
     if typ is not None and typ in simple_types and default not in none_types:
         lit = (
             ast.AST()
