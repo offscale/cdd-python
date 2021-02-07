@@ -15,6 +15,7 @@ from doctrans.docstring_parsers import _set_name_and_type, parse_docstring
 from doctrans.emitter_utils import to_docstring
 from doctrans.tests.mocks.docstrings import (
     docstring_extra_colons_str,
+    docstring_google_pytorch_lbfgs_str,
     docstring_google_str,
     docstring_google_tf_adadelta_str,
     docstring_google_tf_adam_str,
@@ -29,6 +30,7 @@ from doctrans.tests.mocks.docstrings import (
     docstring_str,
 )
 from doctrans.tests.mocks.ir import (
+    docstring_google_pytorch_lbfgs_ir,
     docstring_google_tf_adadelta_ir,
     docstring_google_tf_adam_ir,
     docstring_google_tf_lambda_callback_ir,
@@ -279,6 +281,22 @@ class TestMarshallDocstring(TestCase):
                 infer_type=True,
             ),
             docstring_google_tf_lambda_callback_ir,
+        )
+
+    maxDiff = None
+
+    def test_from_docstring_google_pytorch_lbfgs_str(self) -> None:
+        """
+        Tests whether `parse_docstring` produces the right IR
+              from `docstring_google_pytorch_lbfgs_str`
+        """
+        self.assertDictEqual(
+            parse_docstring(
+                docstring_google_pytorch_lbfgs_str,
+                emit_default_doc=False,
+                infer_type=True,
+            ),
+            docstring_google_pytorch_lbfgs_ir,
         )
 
     def test_to_docstring_fails(self) -> None:

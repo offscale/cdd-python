@@ -189,6 +189,24 @@ model.fit(...,
 ```
 """
 
+docstring_google_pytorch_lbfgs_str = """
+Implements L-BFGS algorithm, heavily inspired by `minFunc
+    <https://www.cs.ubc.ca/~schmidtm/Software/minFunc.html>`.
+
+    Args:
+        lr (float): learning rate (default: 1)
+        max_iter (int): maximal number of iterations per optimization step
+            (default: 20)
+        max_eval (int): maximal number of function evaluations per optimization
+            step (default: max_iter * 1.25).
+        tolerance_grad (float): termination tolerance on first order optimality
+            (default: 1e-5).
+        tolerance_change (float): termination tolerance on function
+            value/parameter changes (default: 1e-9).
+        history_size (int): update history size (default: 100).
+        line_search_fn (str): either 'strong_wolfe' or None (default: None).
+"""
+
 docstring_google_str = """
 {header_doc_str}
 

@@ -929,14 +929,70 @@ docstring_google_tf_squared_hinge_ir = {
     "type": "static",
 }
 
+docstring_google_pytorch_lbfgs_ir = {
+    "doc": "Implements L-BFGS algorithm, heavily inspired by `minFunc\n"
+    "    <https://www.cs.ubc.ca/~schmidtm/Software/minFunc.html>`.",
+    "name": None,
+    "params": OrderedDict(
+        (
+            ("lr", {"default": 1.0, "doc": "learning rate", "typ": "float"}),
+            (
+                "max_iter",
+                {
+                    "default": 20,
+                    "doc": "maximal number of iterations per optimization step",
+                    "typ": "int",
+                },
+            ),
+            (
+                "max_eval",
+                {
+                    "default": "```max_iter * 1.25```",
+                    "doc": "maximal number of function evaluations per optimization step",
+                },
+            ),
+            (
+                "tolerance_grad",
+                {
+                    "default": 1e-05,
+                    "doc": "termination tolerance on first order optimality",
+                    "typ": "float",
+                },
+            ),
+            (
+                "tolerance_change",
+                {
+                    "default": 1e-09,
+                    "doc": "termination tolerance on function value/parameter changes",
+                    "typ": "float",
+                },
+            ),
+            (
+                "history_size",
+                {"default": 100, "doc": "update history size", "typ": "int"},
+            ),
+            (
+                "line_search_fn",
+                {
+                    "default": "```None```",
+                    "doc": "either 'strong_wolfe' or None",
+                    "typ": "str",
+                },
+            ),
+        )
+    ),
+    "returns": None,
+    "type": "static",
+}
+
 function_adder_ir = {
     "doc": "",
     "name": "add_6_5",
     "params": OrderedDict(
-        [
+        (
             ("a", {"default": 6, "doc": "first param", "typ": "int"}),
             ("b", {"default": 5, "doc": "second param", "typ": "int"}),
-        ]
+        )
     ),
     "returns": OrderedDict(
         (
@@ -1176,6 +1232,7 @@ __all__ = [
     "class_google_tf_tensorboard_ir",
     "class_torch_nn_l1loss_ir",
     "class_torch_nn_one_cycle_lr_ir",
+    "docstring_google_pytorch_lbfgs_ir",
     "docstring_google_tf_adadelta_function_ir",
     "docstring_google_tf_adadelta_ir",
     "docstring_google_tf_adam_ir",

@@ -74,6 +74,15 @@ class TestDefaultUtils(TestCase):
             (sample, 1),
         )
 
+        sample = (
+            "tolerance_change (float): termination tolerance on function\n"
+            "             value/parameter changes (default: 1e-9)."
+        )
+        self.assertTupleEqual(
+            extract_default(sample, emit_default_doc=True),
+            (sample, 1e-9),
+        )
+
     def test_extract_default_with_many_parens(self) -> None:
         """ Tests that `extract_default` works when default parses to an AST type """
         sample = (
@@ -96,7 +105,10 @@ class TestDefaultUtils(TestCase):
 
     def test_extract_default_with_ast_default(self) -> None:
         """ Tests that `extract_default` works when default parses to an AST type """
-        sample = "maximal number of function evaluations per optimization\n        step (default: max_iter * 1.25)."
+        sample = (
+            "maximal number of function evaluations per optimization\n"
+            "        step (default: max_iter * 1.25)."
+        )
         self.assertTupleEqual(
             extract_default(sample, emit_default_doc=True),
             (sample, "max_iter * 1.25"),
