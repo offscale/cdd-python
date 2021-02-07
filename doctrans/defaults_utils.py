@@ -32,6 +32,7 @@ def ast_parse_fix(s):
 
     :returns: Value
     """
+    # return ast.parse(s).body[0].value
     balanced = (s.count("[") + s.count("]")) & 1 == 0
     return ast.parse(s if balanced else "{}]".format(s)).body[0].value
 
@@ -98,7 +99,7 @@ def extract_default(
     :returns: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
     :rtype: Tuple[str, Optional[str]]
     """
-    if line is None:
+    if not line:
         return line, line
 
     default_search_announce_paren, default_search_announce = (
@@ -127,13 +128,12 @@ def extract_default(
         )
 
         if idx == 0:
-            if idx == 0:
-                if _start_idx != -1:
-                    _start_idx += 1  # eat '('
-                    default_end_offset = (
-                        -1 if line[-1] == ")" else -2 if line[-2:] == ")." else 0
-                    )  # eat ')', ').'
-                    break
+            if _start_idx != -1:
+                _start_idx += 1  # eat '('
+                default_end_offset = (
+                    -1 if line[-1] == ")" else -2 if line[-2:] == ")." else 0
+                )  # eat ')', ').'
+                break
         elif _start_idx < 0:
             return line, None
 
@@ -163,12 +163,20 @@ def extract_default(
         line,
         rstrip_default,
         typ,
+        default_end_offset,
         emit_default_doc,
     )
 
 
 def _parse_out_default_and_doc(
-    _start_idx, start_rest_offset, default, line, rstrip_default, typ, emit_default_doc
+    _start_idx,
+    start_rest_offset,
+    default,
+    line,
+    rstrip_default,
+    typ,
+    default_end_offset,
+    emit_default_doc,
 ):
     """
     Internal function to parse the default and extract out the doc iff `emit_default_doc is False`
@@ -190,6 +198,9 @@ def _parse_out_default_and_doc(
 
     :param typ: The type of the default value, useful to disambiguate `25` the float from  `25` the float
     :type typ: ```Optional[str]```
+
+    :param default_end_offset: Set to -1 if one parenthesis, -2 if )., and 0 if none
+    :type default_end_offset: ```int```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
@@ -230,7 +241,7 @@ def _parse_out_default_and_doc(
     if emit_default_doc:
         return line, default
     else:
-        whitetokens = frozenset((" ", "\t", "\n", "\n", "."))
+        stop_tokens = frozenset((" ", "\t", "\n", "\n", "."))
         extra_offset = int(
             line[: _start_idx - 1][-1] in frozenset((" ", "\t", "\n", "\n"))
         )
@@ -238,15 +249,20 @@ def _parse_out_default_and_doc(
         if rstrip_default:
             offset = count_iter_items(
                 takewhile(
-                    partial(contains, whitetokens),
+                    partial(contains, stop_tokens),
                     line[start_rest_offset:],
                 )
             )
             start_rest_offset += offset
 
         fst = line[: _start_idx - 1 - extra_offset]
+        rest = line[
+            start_rest_offset : (-extra_offset if extra_offset > 0 else None)
+            if default_end_offset is None
+            else default_end_offset
+        ]
         return (
-            fst + line[start_rest_offset : -extra_offset if extra_offset > 0 else None],
+            fst + rest,
             default,
         )
 

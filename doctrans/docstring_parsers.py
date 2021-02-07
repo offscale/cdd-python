@@ -135,23 +135,6 @@ def parse_docstring(
                 for k in ("params", "returns")
             }
         )
-    if not emit_default_prop:
-        ir.update(
-            {
-                k: OrderedDict(
-                    map(
-                        partial(
-                            _remove_default_from_param,
-                            emit_default_prop=emit_default_prop,
-                        ),
-                        ir[k].items(),
-                    )
-                )
-                if ir[k]
-                else ir[k]
-                for k in ("params", "returns")
-            }
-        )
     return ir
 
 
@@ -292,6 +275,24 @@ def _scan_phase_numpydoc_and_google(docstring, arg_tokens, return_tokens, style)
 
     if stacker:
         scanned[namespace] = stacker
+
+    # # Join ["a", "b"] into ["ab"] as each has been resolved to a scanned symbol now
+    # scanned.update(
+    #     {
+    #         token: [
+    #             line_list
+    #             if len(line_list) < 3 or isinstance(line_list, str)
+    #             else [
+    #                 "{} {}".format(
+    #                     line_list[0], " ".join(map(str.lstrip, line_list[1:]))
+    #                 )
+    #             ]
+    #             for line_list in scanned[token]
+    #         ]
+    #         for token in arg_tokens + return_tokens
+    #         if scanned.get(token)
+    #     }
+    # )
 
     return scanned
 

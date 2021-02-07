@@ -82,16 +82,22 @@ class TestParsers(TestCase):
                     emit_default_doc=True,
                 )
             ).rstrip("\n"),
-            "def set_cli_args(argument_parser):\n"
-            '{tab}"""\n'
-            "{tab}Set CLI arguments\n\n"
-            "{tab}:param argument_parser: argument parser\n"
-            "{tab}:type argument_parser: ```ArgumentParser```\n\n"
-            "{tab}:returns: argument_parser\n"
-            "{tab}:rtype: ```ArgumentParser```\n"
-            '{tab}"""\n'
-            "{tab}argument_parser.description = ''\n"
-            "{tab}return argument_parser".format(tab=tab),
+            "def set_cli_args(argument_parser):\n{tab}{body}".format(
+                tab=tab,
+                body=tab.join(
+                    (
+                        '"""\n',
+                        "Set CLI arguments\n\n",
+                        ":param argument_parser: argument parser\n",
+                        ":type argument_parser: ```ArgumentParser```\n\n",
+                        ":returns: argument_parser\n",
+                        ":rtype: ```ArgumentParser```\n",
+                        '"""\n',
+                        "argument_parser.description = ''\n",
+                        "return argument_parser",
+                    )
+                ),
+            ),
         )
 
     def test_from_class(self) -> None:

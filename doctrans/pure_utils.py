@@ -17,7 +17,7 @@ from textwrap import fill as _fill
 from textwrap import indent
 from typing import Dict, FrozenSet, Optional, Union
 
-pp = PrettyPrinter(indent=4, width=80).pprint
+pp = PrettyPrinter(indent=4, width=100).pprint
 tab: str = " " * 4
 simple_types: Dict[Optional[str], Union[int, float, complex, str, bool, None]] = {
     "int": 0,
