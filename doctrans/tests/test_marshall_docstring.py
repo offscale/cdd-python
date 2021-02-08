@@ -21,6 +21,7 @@ from doctrans.tests.mocks.docstrings import (
     docstring_google_tf_adam_str,
     docstring_google_tf_lambda_callback_str,
     docstring_google_tf_squared_hinge_str,
+    docstring_header_and_return_str,
     docstring_no_default_doc_str,
     docstring_numpydoc_only_doc_str,
     docstring_numpydoc_only_params_str,
@@ -308,6 +309,14 @@ class TestMarshallDocstring(TestCase):
             lambda: to_docstring(
                 deepcopy(intermediate_repr_no_default_doc), docstring_format="numpydoc"
             ),
+        )
+
+    def test_docstring_header_and_return_str(self) -> None:
+        """ Tests that `docstring_header_and_return_str` can produce IR """
+        _intermediate_repr = deepcopy(intermediate_repr_no_default_doc)
+        _intermediate_repr["params"] = OrderedDict()
+        self.assertDictEqual(
+            parse_docstring(docstring_header_and_return_str), _intermediate_repr
         )
 
 

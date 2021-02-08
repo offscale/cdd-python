@@ -107,6 +107,7 @@ def parse_docstring(
         return ir
 
     scanned = _scan_phase(docstring, style=style)
+
     _parse_phase(
         ir,
         scanned,
@@ -462,7 +463,7 @@ def _set_name_and_type(param, infer_type, word_wrap):
     """
     name, _param = param
     del param
-    if name.endswith("kwargs") or name.startswith("**"):
+    if name is not None and (name.endswith("kwargs") or name.startswith("**")):
         name = name.lstrip("*")
         if _param.get("typ", "dict") == "dict":
             _param["typ"] = "Optional[dict]"
@@ -860,7 +861,7 @@ def _parse_phase_rest(
                     )
         elif not intermediate_repr["doc"]:
             intermediate_repr["doc"] = line.strip()
-    if param:
+    if param != [None, {}]:
         # if param['name'] == 'return_type': intermediate_repr['returns'] = param
         name, param = _set_name_and_type(
             interpolate_defaults(param, emit_default_doc=emit_default_doc),

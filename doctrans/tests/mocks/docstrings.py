@@ -6,6 +6,14 @@ from doctrans.pure_utils import tab
 header_doc_str = "Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare\n"
 "library".strip()
 
+docstring_header_and_return_str = "\n".join(
+    (
+        header_doc_str,
+        ":returns: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))",
+        ":rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```",
+    )
+)
+
 docstring_extra_colons_str = """
 Some comment
 
