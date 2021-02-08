@@ -35,6 +35,7 @@ from contextlib import suppress
 from copy import deepcopy
 from importlib import import_module
 from inspect import isclass, isfunction
+from itertools import chain
 from json import dumps
 from operator import inv, neg, not_, pos
 from sys import version_info
@@ -1305,6 +1306,73 @@ def parse_to_scalar(node):
         return _to_code(node).rstrip("\n")
     else:
         raise NotImplementedError("Converting this to scalar: {!r}".format(node))
+
+
+# Construct from https://docs.sqlalchemy.org/en/13/core/type_basics.html#generic-types
+column_type2typ = {
+    "String": "str",
+    "Boolean": "bool",
+    "boolean": "bool",
+    "Float": "float",
+    "BigInteger": "int",
+    "Integer": "int",
+    "Text": "str",
+    "Unicode": "str",
+    "UnicodeText": "str",
+    "str": "str",
+    "float": "float",
+    "int": "int",
+    "JSON": "Optional[dict]",
+    "dict": "dict",
+}
+
+
+def column_call_to_param(call):
+    """
+    Parse column call `Call(func=Name("Column", Load(), …)` into param
+
+    :param call: Column call from SQLAlchemy `Table` construction
+    :type call: ```Call```
+
+    :returns: Name, dict with keys: 'typ', 'doc', 'default'
+    :rtype: ```Tuple[str, dict]```
+    """
+    assert call.func.id == "Column"
+    assert len(call.args) == 2
+
+    _param = dict(
+        chain.from_iterable(
+            filter(
+                None,
+                (
+                    map(
+                        lambda key_word: (key_word.arg, get_value(key_word.value)),
+                        call.keywords,
+                    ),
+                    (("typ", column_type2typ[call.args[1].id]),)
+                    if isinstance(call.args[1], Name)
+                    else None,
+                ),
+            )
+        )
+    )
+
+    if "primary_key" in _param:
+        _param["doc"] = "[PK] {}".format(_param["doc"])
+        del _param["primary_key"]
+
+    if "nullable" in _param:
+        if _param["nullable"] is True:
+            _param["typ"] = "Optional[{}]".format(_param["typ"])
+            if "default" not in _param:
+                _param["default"] = NoneStr
+        del _param["nullable"]
+
+    if "default" in _param:
+        _param["doc"] += "."
+    #    _param["doc"] += '. Defaults to "{}"'.format(_param.pop("default"))
+
+    return get_value(call.args[0]), _param
 
 
 # `to_code` doesn't work due to partially instantiated module

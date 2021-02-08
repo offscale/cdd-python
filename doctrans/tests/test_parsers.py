@@ -4,6 +4,7 @@ Tests for the Intermediate Representation produced by the parsers
 import ast
 from ast import FunctionDef
 from collections import OrderedDict
+from copy import deepcopy
 from unittest import TestCase
 
 from doctrans import emit, parse
@@ -36,6 +37,7 @@ from doctrans.tests.mocks.methods import (
     method_complex_args_variety_ast,
     method_complex_args_variety_str,
 )
+from doctrans.tests.mocks.sqlalchemy import config_tbl_ast, config_tbl_str
 from doctrans.tests.utils_for_tests import (
     inspectable_compile,
     run_ast_test,
@@ -318,8 +320,10 @@ class TestParsers(TestCase):
         )
 
     def test_from_class_and_function(self) -> None:
-        """Tests that the parser can combine the outer class docstring + structure
-        with the inner function parameter defaults"""
+        """
+        Tests that the parser can combine the outer class docstring + structure
+        with the inner function parameter defaults
+        """
 
         # Sanity check
         run_ast_test(
@@ -339,8 +343,10 @@ class TestParsers(TestCase):
         self.assertDictEqual(parsed_ir, class_google_tf_tensorboard_ir)
 
     def test_from_class_and_function_in_memory(self) -> None:
-        """Tests that the parser can combine the outer class docstring + structure
-        with the inner function parameter defaults"""
+        """
+        Tests that the parser can combine the outer class docstring + structure
+        with the inner function parameter defaults
+        """
 
         parsed_ir = parse.class_(
             RewriteAtQuery,
@@ -385,8 +391,10 @@ class TestParsers(TestCase):
         )
 
     def test_from_class_and_function_torch(self) -> None:
-        """Tests that the parser can combine the outer class docstring + structure
-        with the inner function parameter defaults, given a PyTorch loss class"""
+        """
+        Tests that the parser can combine the outer class docstring + structure
+        with the inner function parameter defaults, given a PyTorch loss class
+        """
 
         # Sanity check
         run_ast_test(
@@ -408,8 +416,10 @@ class TestParsers(TestCase):
     maxDiff = None
 
     def test_from_class_torch_nn_one_cycle_lr(self) -> None:
-        """Tests that the parser can combine the outer class docstring + structure
-        with the inner function parameter defaults, given a PyTorch loss LR scheduler class"""
+        """
+        Tests that the parser can combine the outer class docstring + structure
+        with the inner function parameter defaults, given a PyTorch loss LR scheduler class
+        """
 
         # Sanity check
         run_ast_test(
@@ -427,6 +437,29 @@ class TestParsers(TestCase):
         del parsed_ir["_internal"]  # Not needed for this test
 
         self.assertDictEqual(parsed_ir, class_torch_nn_one_cycle_lr_ir)
+
+    def test_from_sqlalchemy_table(self) -> None:
+        """
+        Tests that `parse.sqlalchemy_table` produces `intermediate_repr` properly
+        """
+
+        # Sanity check
+        run_ast_test(
+            self,
+            config_tbl_ast,
+            gold=ast.parse(config_tbl_str).body[0],
+        )
+
+        ir = parse.sqlalchemy_table(config_tbl_ast)
+        self.assertEqual(ir["name"], "config_tbl")
+        ir["name"] = None
+        _intermediate_repr_no_default_doc = deepcopy(intermediate_repr_no_default_doc)
+        _intermediate_repr_no_default_doc["params"]["dataset_name"][
+            "doc"
+        ] = "[PK] {}".format(
+            _intermediate_repr_no_default_doc["params"]["dataset_name"]["doc"]
+        )
+        self.assertDictEqual(ir, _intermediate_repr_no_default_doc)
 
 
 unittest_main()

@@ -11,6 +11,7 @@ import ast
 from ast import (
     AnnAssign,
     Assign,
+    Call,
     ClassDef,
     Dict,
     FunctionDef,
@@ -30,6 +31,7 @@ from types import FunctionType
 from doctrans import get_logger
 from doctrans.ast_utils import (
     NoneStr,
+    column_call_to_param,
     find_ast_type,
     func_arg2param,
     get_function_type,
@@ -45,7 +47,7 @@ from doctrans.parser_utils import (
     _interpolate_return,
     ir_merge,
 )
-from doctrans.pure_utils import rpartial, simple_types
+from doctrans.pure_utils import assert_equal, rpartial, simple_types
 from doctrans.source_transformer import to_code
 
 logger = get_logger("doctrans.parse")
@@ -698,9 +700,55 @@ def docstring(
     return parsed
 
 
-__all__ = [
-    "argparse_ast",
-    "class_",
-    "docstring",
-    "function",
-]
+def sqlalchemy_table(call_or_name):
+    """
+    Parse out a `sqlalchemy.Table`, or a `name = sqlalchemy.Table`, into the IR
+
+    :param call_or_name: The call to `sqlalchemy.Table` or an assignment followed by the call
+    :type call_or_name: ```Union[AnnAssign, Assign, Call]```
+
+    :returns: a dictionary of form
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :rtype: ```dict```
+    """
+    if isinstance(call_or_name, Assign):
+        name, call_or_name = call_or_name.targets[0].id, call_or_name.value
+    elif isinstance(call_or_name, AnnAssign):
+        name, call_or_name = call_or_name.target[0].id, call_or_name.value
+    else:
+        name = None
+
+    comment = next(
+        map(
+            get_value,
+            map(
+                get_value, filter(lambda kw: kw.arg == "comment", call_or_name.keywords)
+            ),
+        ),
+        None,
+    )
+    intermediate_repr = (
+        {"type": None, "doc": "", "params": OrderedDict()}
+        if comment is None
+        else docstring(comment)
+    )
+    intermediate_repr["name"] = name
+    assert isinstance(call_or_name, Call)
+    assert_equal(call_or_name.func.id.rpartition(".")[2], "Table")
+    assert len(call_or_name.args) > 2
+
+    merge_ir = {
+        "params": OrderedDict(map(column_call_to_param, call_or_name.args[2:])),
+        "returns": None,
+    }
+    ir_merge(target=intermediate_repr, other=merge_ir)
+
+    return intermediate_repr
+
+
+__all__ = ["argparse_ast", "class_", "docstring", "function", "sqlalchemy_table"]
