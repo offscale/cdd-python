@@ -27,7 +27,7 @@ config_tbl = Table(
         default="np",
         nullable=False,
     ),
-    Column("as_numpy", Boolean, doc="Convert to numpy ndarrays"),
+    Column("as_numpy", Boolean, doc="Convert to numpy ndarrays", default=None),
     Column(
         "data_loader_kwargs", JSON, doc="pass this as arguments to data_loader function"
     ),
@@ -106,7 +106,8 @@ config_tbl_ast = Assign(
                         arg="doc",
                         value=set_value("Convert to numpy ndarrays"),
                         identifier=None,
-                    )
+                    ),
+                    keyword(arg="default", value=set_value(None), identifier=None),
                 ],
                 expr=None,
                 expr_func=None,
