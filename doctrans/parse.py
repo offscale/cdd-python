@@ -720,9 +720,14 @@ def sqlalchemy_table(call_or_name):
     if isinstance(call_or_name, Assign):
         name, call_or_name = call_or_name.targets[0].id, call_or_name.value
     elif isinstance(call_or_name, AnnAssign):
-        name, call_or_name = call_or_name.target[0].id, call_or_name.value
+        name, call_or_name = call_or_name.target.id, call_or_name.value
     else:
-        name = None
+        if not isinstance(call_or_name, Call):
+            call_or_name = get_value(call_or_name)
+        name = get_value(call_or_name.args[0])
+
+    # Binding should be same name as table… I guess?
+    assert_equal(get_value(call_or_name.args[0]), name)
 
     comment = next(
         map(

@@ -1357,18 +1357,33 @@ def column_call_to_param(call):
         )
     )
 
-    if "primary_key" in _param:
+    if (
+        isinstance(call.args[1], Call)
+        and call.args[1].func.id.rpartition(".")[2] == "Enum"
+    ):
+        _param["typ"] = "Literal{}".format(list(map(get_value, call.args[1].args)))
+
+    pk = "primary_key" in _param
+    if pk:
         _param["doc"] = "[PK] {}".format(_param["doc"])
         del _param["primary_key"]
 
-    if "nullable" in _param:
-        if _param["nullable"] is True:
+    def _handle_null():
+        """
+        Properly handle null condition
+        """
+        if not _param["typ"].startswith("Optional["):
             _param["typ"] = "Optional[{}]".format(_param["typ"])
-            if "default" not in _param:
-                _param["default"] = NoneStr
-        del _param["nullable"]
+        if "default" not in _param:
+            _param["default"] = NoneStr
 
-    if "default" in _param:
+    if "nullable" in _param:
+        not _param["nullable"] or _handle_null()
+        del _param["nullable"]
+    elif not pk:
+        _handle_null()
+
+    if "default" in _param and not get_value(call.args[0]).endswith("kwargs"):
         _param["doc"] += "."
     #    _param["doc"] += '. Defaults to "{}"'.format(_param.pop("default"))
 
