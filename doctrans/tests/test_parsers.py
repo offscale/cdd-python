@@ -450,16 +450,22 @@ class TestParsers(TestCase):
             gold=ast.parse(config_tbl_str).body[0],
         )
 
-        ir = parse.sqlalchemy_table(config_tbl_ast)
-        self.assertEqual(ir["name"], "config_tbl")
-        ir["name"] = None
         _intermediate_repr_no_default_doc = deepcopy(intermediate_repr_no_default_doc)
         _intermediate_repr_no_default_doc["params"]["dataset_name"][
             "doc"
         ] = "[PK] {}".format(
             _intermediate_repr_no_default_doc["params"]["dataset_name"]["doc"]
         )
-        self.assertDictEqual(ir, _intermediate_repr_no_default_doc)
+
+        for variant in (
+            config_tbl_str,
+            config_tbl_str.replace("config_tbl =", "config_tbl: Table =", 1),
+            config_tbl_str.replace("config_tbl =", "", 1).lstrip(),
+        ):
+            ir = parse.sqlalchemy_table(ast.parse(variant).body[0])
+            self.assertEqual(ir["name"], "config_tbl")
+            ir["name"] = None
+            self.assertDictEqual(ir, _intermediate_repr_no_default_doc)
 
 
 unittest_main()
