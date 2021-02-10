@@ -40,6 +40,7 @@ from doctrans.ast_utils import (
     is_argparse_description,
     parse_to_scalar,
 )
+from doctrans.defaults_utils import extract_default
 from doctrans.docstring_parsers import _set_name_and_type, parse_docstring
 from doctrans.emitter_utils import _parse_return, parse_out_param
 from doctrans.parser_utils import (
@@ -747,6 +748,12 @@ def sqlalchemy_table(call_or_name):
         "returns": None,
     }
     ir_merge(target=intermediate_repr, other=merge_ir)
+    if intermediate_repr["returns"] and intermediate_repr["returns"].get(
+        "return_type", {}
+    ).get("doc"):
+        intermediate_repr["returns"]["return_type"]["doc"] = extract_default(
+            intermediate_repr["returns"]["return_type"]["doc"], emit_default_doc=False
+        )[0]
 
     return intermediate_repr
 

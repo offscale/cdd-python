@@ -203,20 +203,24 @@ def inspectable_compile(s, modname=None):
     :returns: The compiled and executed input source module, such that `inspect.getsource` works
     :rtype: ```Any```
     """
-    filename = NamedTemporaryFile(suffix=".py").name
-    modname = modname or path.splitext(path.basename(filename))[0]
-    assert modname not in modules
-    # our loader is a dummy one which just spits out our source
-    loader = ShowSourceLoader(modname, s)
-    spec = spec_from_loader(modname, loader, origin=filename)
-    module = module_from_spec(spec)
-    # the code must be compiled so the function's code object has a filename
-    code = compile(s, mode="exec", filename=filename)
-    exec(code, module.__dict__)
-    # inspect.getmodule(...) requires it to be in sys.modules
-    setattr(module, "__file__", s)
-    modules[modname] = module
-    return module
+    fh = NamedTemporaryFile(suffix=".py")
+    filename = fh.name
+    try:
+        modname = modname or path.splitext(path.basename(filename))[0]
+        assert modname not in modules
+        # our loader is a dummy one which just spits out our source
+        loader = ShowSourceLoader(modname, s)
+        spec = spec_from_loader(modname, loader, origin=filename)
+        module = module_from_spec(spec)
+        # the code must be compiled so the function's code object has a filename
+        code = compile(s, mode="exec", filename=filename)
+        exec(code, module.__dict__)
+        # inspect.getmodule(...) requires it to be in sys.modules
+        setattr(module, "__file__", s)
+        modules[modname] = module
+        return module
+    finally:
+        fh.close()  # Is auto-deleted on close
 
 
 def mock_function(*args, **kwargs):
