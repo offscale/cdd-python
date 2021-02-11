@@ -1,10 +1,34 @@
 """
 Mocks for SQLalchemy
 """
-from ast import Assign, Call, Load, Name, Store, keyword
+from ast import (
+    Assign,
+    Attribute,
+    Call,
+    ClassDef,
+    FunctionDef,
+    Load,
+    Name,
+    Return,
+    Store,
+    arg,
+    arguments,
+    keyword,
+)
+from textwrap import indent
+
+from _ast import Expr
 
 from doctrans.ast_utils import maybe_type_comment, set_value
+from doctrans.pure_utils import tab
 from doctrans.tests.mocks.docstrings import docstring_header_and_return_str
+
+_docstring_header_and_return_str = "\n{docstring}\n{tab}".format(
+    docstring="{tab}\n".format(tab=tab).join(
+        indent(docstring_header_and_return_str, tab).split("\n")
+    ),
+    tab=tab,
+)
 
 config_tbl_str = """
 config_tbl = Table(
@@ -83,7 +107,11 @@ config_tbl_ast = Assign(
                     Call(
                         func=Name("Enum", Load()),
                         args=list(map(set_value, ("np", "tf"))),
-                        keywords=[keyword(arg="name", value=set_value("K"))],
+                        keywords=[
+                            keyword(arg="name", value=set_value("K"), identifier=None)
+                        ],
+                        expr=None,
+                        expr_func=None,
                     ),
                 ],
                 keywords=[
@@ -129,7 +157,11 @@ config_tbl_ast = Assign(
             ),
         ],
         keywords=[
-            keyword(arg="comment", value=set_value(docstring_header_and_return_str))
+            keyword(
+                arg="comment",
+                value=set_value(docstring_header_and_return_str),
+                identifier=None,
+            )
         ],
         expr=None,
         expr_func=None,
@@ -139,4 +171,247 @@ config_tbl_ast = Assign(
     **maybe_type_comment
 )
 
-__all__ = ["config_tbl_ast", "config_tbl_str"]
+config_decl_base_str = """
+class Config(Base):
+    {_docstring_header_and_return_str!r}
+    __tablename__ = 'config_tbl'
+
+    dataset_name = Column(
+        String, doc="name of dataset", default="mnist", primary_key=True
+    )
+
+    tfds_dir = Column(
+        String,
+        doc="directory to look for models in",
+        default="~/tensorflow_datasets",
+        nullable=False,
+    )
+
+    K = Column(
+        Enum("np", "tf", name="K"),
+        doc="backend engine, e.g., `np` or `tf`",
+        default="np",
+        nullable=False,
+    )
+
+    as_numpy = Column(Boolean, doc="Convert to numpy ndarrays", default=None)
+
+    data_loader_kwargs = Column(JSON, doc="pass this as arguments to data_loader function")
+
+    {__repr__}
+    """.format(
+    _docstring_header_and_return_str=_docstring_header_and_return_str,
+    __repr__="""
+    def __repr__(self):
+        return "Config(dataset_name={dataset_name!r}, tfds_dir={tfds_dir!r}, " \
+               "K={K!r}, as_numpy={as_numpy!r}, data_loader_kwargs={data_loader_kwargs!r})".format(
+            dataset_name=self.dataset_name, tfds_dir=self.tfds_dir, K=self.K,
+            as_numpy=self.as_numpy, data_loader_kwargs=self.data_loader_kwargs
+        )
+""",
+)
+
+config_decl_base_ast = ClassDef(
+    name="Config",
+    bases=[Name("Base", Load())],
+    keywords=[],
+    body=[
+        Expr(set_value(_docstring_header_and_return_str)),
+        Assign(
+            targets=[Name("__tablename__", Store())],
+            value=set_value("config_tbl"),
+            expr=None,
+            lineno=None,
+        ),
+        Assign(
+            targets=[Name("dataset_name", Store())],
+            value=Call(
+                func=Name("Column", Load()),
+                args=[Name("String", Load())],
+                keywords=[
+                    keyword(
+                        arg="doc", value=set_value("name of dataset"), identifier=None
+                    ),
+                    keyword(arg="default", value=set_value("mnist"), identifier=None),
+                    keyword(arg="primary_key", value=set_value(True), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            ),
+            expr=None,
+            lineno=None,
+        ),
+        Assign(
+            targets=[Name("tfds_dir", Store())],
+            value=Call(
+                func=Name("Column", Load()),
+                args=[Name("String", Load())],
+                keywords=[
+                    keyword(
+                        arg="doc",
+                        value=set_value("directory to look for models in"),
+                        identifier=None,
+                    ),
+                    keyword(
+                        arg="default",
+                        value=set_value("~/tensorflow_datasets"),
+                        identifier=None,
+                    ),
+                    keyword(arg="nullable", value=set_value(False), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            ),
+            expr=None,
+            lineno=None,
+        ),
+        Assign(
+            targets=[Name("K", Store())],
+            value=Call(
+                func=Name("Column", Load()),
+                args=[
+                    Call(
+                        func=Name("Enum", Load()),
+                        args=[set_value("np"), set_value("tf")],
+                        keywords=[
+                            keyword(arg="name", value=set_value("K"), identifier=None)
+                        ],
+                        expr=None,
+                        expr_func=None,
+                    )
+                ],
+                keywords=[
+                    keyword(
+                        arg="doc",
+                        value=set_value("backend engine, e.g., `np` or `tf`"),
+                        identifier=None,
+                    ),
+                    keyword(arg="default", value=set_value("np"), identifier=None),
+                    keyword(arg="nullable", value=set_value(False), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            ),
+            expr=None,
+            lineno=None,
+        ),
+        Assign(
+            targets=[Name("as_numpy", Store())],
+            value=Call(
+                func=Name("Column", Load()),
+                args=[Name("Boolean", Load())],
+                keywords=[
+                    keyword(
+                        arg="doc",
+                        value=set_value("Convert to numpy ndarrays"),
+                        identifier=None,
+                    ),
+                    keyword(arg="default", value=set_value(None), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            ),
+            expr=None,
+            lineno=None,
+        ),
+        Assign(
+            targets=[Name("data_loader_kwargs", Store())],
+            value=Call(
+                func=Name("Column", Load()),
+                args=[Name("JSON", Load())],
+                keywords=[
+                    keyword(
+                        arg="doc",
+                        value=set_value(
+                            "pass this as arguments to data_loader function"
+                        ),
+                        identifier=None,
+                    ),
+                ],
+                expr=None,
+                expr_func=None,
+            ),
+            expr=None,
+            lineno=None,
+        ),
+        FunctionDef(
+            name="__repr__",
+            args=arguments(
+                posonlyargs=[],
+                arg=None,
+                args=[arg(arg="self", expr=None, identifier_arg=None)],
+                kwonlyargs=[],
+                kw_defaults=[],
+                defaults=[],
+            ),
+            body=[
+                Return(
+                    value=Call(
+                        func=Attribute(
+                            set_value(
+                                "Config(dataset_name={dataset_name!r}, tfds_dir={tfds_dir!r}, K={K!r}, "
+                                "as_numpy={as_numpy!r}, data_loader_kwargs={data_loader_kwargs!r})"
+                            ),
+                            "format",
+                            Load(),
+                        ),
+                        args=[],
+                        keywords=[
+                            keyword(
+                                arg="dataset_name",
+                                value=Attribute(
+                                    Name("self", Load()), "dataset_name", Load()
+                                ),
+                                identifier=None,
+                            ),
+                            keyword(
+                                arg="tfds_dir",
+                                value=Attribute(
+                                    Name("self", Load()), "tfds_dir", Load()
+                                ),
+                                identifier=None,
+                            ),
+                            keyword(
+                                arg="K",
+                                value=Attribute(Name("self", Load()), "K", Load()),
+                                identifier=None,
+                            ),
+                            keyword(
+                                arg="as_numpy",
+                                value=Attribute(
+                                    Name("self", Load()), "as_numpy", Load()
+                                ),
+                                identifier=None,
+                            ),
+                            keyword(
+                                arg="data_loader_kwargs",
+                                value=Attribute(
+                                    Name("self", Load()), "data_loader_kwargs", Load()
+                                ),
+                                identifier=None,
+                            ),
+                        ],
+                        expr=None,
+                        expr_func=None,
+                    ),
+                    expr=None,
+                )
+            ],
+            decorator_list=[],
+            arguments_args=None,
+            identifier_name=None,
+            stmt=None,
+            lineno=None,
+        ),
+    ],
+    decorator_list=[],
+    expr=None,
+    identifier_name=None,
+)
+
+__all__ = [
+    "config_tbl_ast",
+    "config_tbl_str",
+    "config_decl_base_ast",
+    "config_decl_base_str",
+]

@@ -4,7 +4,6 @@ Tests for the Intermediate Representation produced by the parsers
 import ast
 from ast import FunctionDef
 from collections import OrderedDict
-from copy import deepcopy
 from unittest import TestCase
 
 from doctrans import emit, parse
@@ -27,6 +26,7 @@ from doctrans.tests.mocks.ir import (
     docstring_google_tf_adadelta_function_ir,
     function_adder_ir,
     intermediate_repr_no_default_doc,
+    intermediate_repr_no_default_sql_doc,
     method_complex_args_variety_ir,
 )
 from doctrans.tests.mocks.methods import (
@@ -37,7 +37,12 @@ from doctrans.tests.mocks.methods import (
     method_complex_args_variety_ast,
     method_complex_args_variety_str,
 )
-from doctrans.tests.mocks.sqlalchemy import config_tbl_ast, config_tbl_str
+from doctrans.tests.mocks.sqlalchemy import (
+    config_decl_base_ast,
+    config_decl_base_str,
+    config_tbl_ast,
+    config_tbl_str,
+)
 from doctrans.tests.utils_for_tests import (
     inspectable_compile,
     run_ast_test,
@@ -440,7 +445,7 @@ class TestParsers(TestCase):
 
     def test_from_sqlalchemy_table(self) -> None:
         """
-        Tests that `parse.sqlalchemy_table` produces `intermediate_repr` properly
+        Tests that `parse.sqlalchemy_table` produces `intermediate_repr_no_default_sql_doc` properly
         """
 
         # Sanity check
@@ -448,13 +453,6 @@ class TestParsers(TestCase):
             self,
             config_tbl_ast,
             gold=ast.parse(config_tbl_str).body[0],
-        )
-
-        _intermediate_repr_no_default_doc = deepcopy(intermediate_repr_no_default_doc)
-        _intermediate_repr_no_default_doc["params"]["dataset_name"][
-            "doc"
-        ] = "[PK] {}".format(
-            _intermediate_repr_no_default_doc["params"]["dataset_name"]["doc"]
         )
 
         for variant in (
@@ -465,7 +463,24 @@ class TestParsers(TestCase):
             ir = parse.sqlalchemy_table(ast.parse(variant).body[0])
             self.assertEqual(ir["name"], "config_tbl")
             ir["name"] = None
-            self.assertDictEqual(ir, _intermediate_repr_no_default_doc)
+            self.assertDictEqual(ir, intermediate_repr_no_default_sql_doc)
+
+    def test_from_sqlalchemy(self) -> None:
+        """
+        Tests that `parse.sqlalchemy` produces `intermediate_repr_no_default_sql_doc` properly
+        """
+
+        # Sanity check
+        run_ast_test(
+            self,
+            config_decl_base_ast,
+            gold=ast.parse(config_decl_base_str).body[0],
+        )
+
+        ir = parse.sqlalchemy(config_decl_base_ast)
+        self.assertEqual(ir["name"], "config_tbl")
+        ir["name"] = None
+        self.assertDictEqual(ir, intermediate_repr_no_default_sql_doc)
 
 
 unittest_main()
