@@ -10,6 +10,7 @@ from ast import (
     Load,
     Name,
     Return,
+    arg,
     arguments,
     keyword,
 )
@@ -41,6 +42,10 @@ from doctrans.pure_utils import (
     update_d,
 )
 from doctrans.source_transformer import to_code
+from doctrans.tests.mocks.docstrings import (
+    docstring_repr_google_str,
+    docstring_repr_str,
+)
 
 
 def _handle_value(node):
@@ -830,6 +835,93 @@ def param_to_sqlalchemy_column_call(param, include_name=True):
         keywords=keywords,
         expr=None,
         expr_func=None,
+    )
+
+
+def generate_repr_method(params, cls_name, docstring_format):
+    """
+    Generate a `__repr__` method with all params, using `str.format` syntax
+
+    :param params: an `OrderedDict` of form
+        OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+    :type params: ```OrderedDict```
+
+    :param cls_name: Name of class
+    :type cls_name: ```str```
+
+    :param docstring_format: Format of docstring
+    :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
+
+    :returns: `__repr__` method
+    :rtype: ```FunctionDef```
+    """
+    keys = tuple(params.keys())
+    return FunctionDef(
+        name="__repr__",
+        args=arguments(
+            posonlyargs=[],
+            arg=None,
+            args=[
+                arg(
+                    arg="self",
+                    annotation=None,
+                    expr=None,
+                    identifier_arg=None,
+                    **maybe_type_comment
+                )
+            ],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[],
+            vararg=None,
+            kwarg=None,
+        ),
+        body=[
+            Expr(
+                set_value(
+                    docstring_repr_str
+                    if docstring_format == "rest"
+                    else docstring_repr_google_str
+                )
+            ),
+            Return(
+                value=Call(
+                    func=Attribute(
+                        set_value(
+                            "{cls_name}({format_args})".format(
+                                cls_name=cls_name,
+                                format_args=", ".join(
+                                    map("{0}={{{0}!r}}".format, keys)
+                                ),
+                            )
+                        ),
+                        "format",
+                        Load(),
+                    ),
+                    args=[],
+                    keywords=list(
+                        map(
+                            lambda key: keyword(
+                                arg=key,
+                                value=Attribute(Name("self", Load()), key, Load()),
+                                identifier=None,
+                            ),
+                            keys,
+                        )
+                    ),
+                    expr=None,
+                    expr_func=None,
+                ),
+                expr=None,
+            ),
+        ],
+        decorator_list=[],
+        arguments_args=None,
+        identifier_name=None,
+        stmt=None,
+        lineno=None,
+        returns=None,
+        **maybe_type_comment
     )
 
 

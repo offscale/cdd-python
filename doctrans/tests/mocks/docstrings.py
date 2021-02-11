@@ -1,7 +1,9 @@
 """
 Mocks for docstrings
 """
-from doctrans.pure_utils import tab
+from textwrap import indent
+
+from doctrans.pure_utils import identity, tab
 
 header_doc_str = "Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare\n"
 "library".strip()
@@ -407,6 +409,32 @@ docstring_no_type_no_default_str = """
     header_doc_str=header_doc_str
 )
 
+docstring_repr_str = (
+    indent(
+        "\n".join(
+            (
+                "",
+                "Emit a string representation of the current instance",
+                "",
+                ":returns: String representation of instance",
+                ":rtype: ```str```",
+                "",
+            )
+        ),
+        tab * 2,
+        identity,
+    )
+    + tab * 2
+)
+
+# docstring_repr_google_str = emit.docstring(parse.docstring(docstring_repr_str), docstring_format="google")
+docstring_repr_google_str = (
+    "\nEmit a string representation of the current instance\n\n\n\n\n"
+    "Returns:\n"
+    "  str:\n"
+    "   String representation of instance\n"
+)
+
 __all__ = [
     "docstring_extra_colons_str",
     "docstring_google_str",
@@ -420,5 +448,6 @@ __all__ = [
     "docstring_numpydoc_only_returns_str",
     "docstring_numpydoc_str",
     "docstring_only_return_type_str",
+    "docstring_repr_str",
     "docstring_str",
 ]

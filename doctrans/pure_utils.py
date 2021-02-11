@@ -149,7 +149,7 @@ def deindent(s):
     return "\n".join(
         map(
             str.lstrip,
-            s.split("\n"),
+            s.splitlines(),
         )
     )
 

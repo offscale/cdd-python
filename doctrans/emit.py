@@ -5,6 +5,7 @@ import ast
 from ast import (
     Assign,
     Attribute,
+    Call,
     ClassDef,
     Expr,
     FunctionDef,
@@ -15,13 +16,13 @@ from ast import (
     Store,
     Tuple,
     arguments,
+    keyword,
 )
 from collections import OrderedDict
 from functools import partial
 from itertools import chain
 from textwrap import indent
 
-from _ast import Call, keyword
 from black import Mode, format_str
 
 from doctrans.ast_utils import (
@@ -36,6 +37,7 @@ from doctrans.docstring_utils import ARG_TOKENS, RETURN_TOKENS, emit_param_str
 from doctrans.emitter_utils import (
     RewriteName,
     _make_call_meth,
+    generate_repr_method,
     get_internal_body,
     param_to_sqlalchemy_column_call,
     to_docstring,
@@ -842,55 +844,142 @@ def sqlalchemy_table(
     )
 
 
-# def sqlalchemy(
-#     intermediate_repr,
-#     emit_repr=True,
-#     class_name="Config",
-#     class_bases=("Base",),
-#     decorator_list=None,
-#     docstring_format="rest",
-#     word_wrap=True,
-#     emit_default_doc=False,
-# ):
-#     """
-#     Construct a class
-#
-#     :param intermediate_repr: a dictionary of form
-#         {  "name": Optional[str],
-#            "type": Optional[str],
-#            "doc": Optional[str],
-#            "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
-#            "returns": Optional[OrderedDict[Literal['return_type'],
-#                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
-#     :type intermediate_repr: ```dict```
-#
-#     :param emit_repr: Whether to generate a `__repr__` method
-#     :type emit_repr: ```bool```
-#
-#     :param class_name: name of class
-#     :type class_name: ```str```
-#
-#     :param class_bases: bases of class (the generated class will inherit these)
-#     :type class_bases: ```Iterable[str]```
-#
-#     :param decorator_list: List of decorators
-#     :type decorator_list: ```Optional[Union[List[Str], List[]]]```
-#
-#     :param docstring_format: Format of docstring
-#     :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
-#
-#     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
-#     :type word_wrap: ```bool```
-#
-#     :param docstring_format: Format of docstring
-#     :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
-#
-#     :param emit_default_doc: Whether help/docstring should include 'With default' text
-#     :type emit_default_doc: ```bool```
-#
-#     :returns: Class AST of the docstring
-#     :rtype: ```ClassDef```
-#     """
+def sqlalchemy(
+    intermediate_repr,
+    emit_repr=True,
+    class_name="Config",
+    class_bases=("Base",),
+    decorator_list=None,
+    table_name=None,
+    docstring_format="rest",
+    word_wrap=True,
+    emit_default_doc=True,
+):
+    """
+    Construct an SQLAlchemy declarative class
+
+    :param intermediate_repr: a dictionary of form
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :type intermediate_repr: ```dict```
+
+    :param emit_repr: Whether to generate a `__repr__` method
+    :type emit_repr: ```bool```
+
+    :param class_name: name of class
+    :type class_name: ```str```
+
+    :param class_bases: bases of class (the generated class will inherit these)
+    :type class_bases: ```Iterable[str]```
+
+    :param decorator_list: List of decorators
+    :type decorator_list: ```Optional[Union[List[Str], List[]]]```
+
+    :param table_name: Table name, defaults to `class_name`
+    :type table_name: ```str```
+
+    :param docstring_format: Format of docstring
+    :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
+
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
+
+    :param docstring_format: Format of docstring
+    :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
+
+    :param emit_default_doc: Whether help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool```
+
+    :returns: SQLalchemy declarative class AST
+    :rtype: ```ClassDef```
+    """
+    return ClassDef(
+        name=class_name,
+        bases=list(map(lambda class_base: Name(class_base, Load()), class_bases)),
+        decorator_list=decorator_list or [],
+        keywords=[],
+        body=list(
+            filter(
+                None,
+                (
+                    Expr(
+                        set_value(
+                            "{doc}\n{tab}".format(
+                                doc=indent(
+                                    "\n".join(
+                                        map(
+                                            str.strip,
+                                            to_docstring(
+                                                {
+                                                    "doc": intermediate_repr[
+                                                        "doc"
+                                                    ].lstrip()
+                                                    + "\n\n"
+                                                    if intermediate_repr["returns"]
+                                                    else "",
+                                                    "params": OrderedDict(),
+                                                    "returns": intermediate_repr[
+                                                        "returns"
+                                                    ],
+                                                },
+                                                emit_default_doc=emit_default_doc,
+                                                docstring_format=docstring_format,
+                                                word_wrap=word_wrap,
+                                                emit_types=True,
+                                            ).splitlines(),
+                                        )
+                                    ),
+                                    tab,
+                                ).rstrip(),
+                                tab=tab,
+                            )
+                        )
+                    )
+                    if intermediate_repr["doc"]
+                    or intermediate_repr["returns"].get("return_type", {}).get("doc")
+                    else None,
+                    Assign(
+                        targets=[Name("__tablename__", Store())],
+                        value=set_value(table_name or class_name),
+                        expr=None,
+                        lineno=None,
+                        **maybe_type_comment
+                    ),
+                    *map(
+                        lambda param: Assign(
+                            targets=[Name(param[0], Store())],
+                            value=param_to_sqlalchemy_column_call(
+                                param, include_name=False
+                            ),
+                            expr=None,
+                            lineno=None,
+                            **maybe_type_comment
+                        ),
+                        intermediate_repr["params"].items(),
+                    ),
+                    generate_repr_method(
+                        intermediate_repr["params"], class_name, docstring_format
+                    )
+                    if emit_repr
+                    else None,
+                ),
+            )
+        ),
+        expr=None,
+        identifier_name=None,
+    )
 
 
-__all__ = ["argparse_function", "class_", "docstring", "file", "function"]
+__all__ = [
+    "argparse_function",
+    "class_",
+    "docstring",
+    "file",
+    "function",
+    "sqlalchemy_table",
+    "sqlalchemy",
+]
