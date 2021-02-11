@@ -1336,6 +1336,7 @@ typ2column_type.update(
     }
 )
 
+
 # `to_code` doesn't work due to partially instantiated module
 def _to_code(node):
     """
