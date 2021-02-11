@@ -222,6 +222,7 @@ config_decl_base_ast = ClassDef(
             value=set_value("config_tbl"),
             expr=None,
             lineno=None,
+            **maybe_type_comment
         ),
         Assign(
             targets=[Name("dataset_name", Store())],
@@ -240,6 +241,7 @@ config_decl_base_ast = ClassDef(
             ),
             expr=None,
             lineno=None,
+            **maybe_type_comment
         ),
         Assign(
             targets=[Name("tfds_dir", Store())],
@@ -264,6 +266,7 @@ config_decl_base_ast = ClassDef(
             ),
             expr=None,
             lineno=None,
+            **maybe_type_comment
         ),
         Assign(
             targets=[Name("K", Store())],
@@ -294,6 +297,7 @@ config_decl_base_ast = ClassDef(
             ),
             expr=None,
             lineno=None,
+            **maybe_type_comment
         ),
         Assign(
             targets=[Name("as_numpy", Store())],
@@ -313,6 +317,7 @@ config_decl_base_ast = ClassDef(
             ),
             expr=None,
             lineno=None,
+            **maybe_type_comment
         ),
         Assign(
             targets=[Name("data_loader_kwargs", Store())],
@@ -333,16 +338,27 @@ config_decl_base_ast = ClassDef(
             ),
             expr=None,
             lineno=None,
+            **maybe_type_comment
         ),
         FunctionDef(
             name="__repr__",
             args=arguments(
                 posonlyargs=[],
                 arg=None,
-                args=[arg(arg="self", expr=None, identifier_arg=None)],
+                args=[
+                    arg(
+                        arg="self",
+                        annotation=None,
+                        expr=None,
+                        identifier_arg=None,
+                        **maybe_type_comment
+                    )
+                ],
                 kwonlyargs=[],
                 kw_defaults=[],
                 defaults=[],
+                vararg=None,
+                kwarg=None,
             ),
             body=[
                 Return(
@@ -402,6 +418,8 @@ config_decl_base_ast = ClassDef(
             identifier_name=None,
             stmt=None,
             lineno=None,
+            returns=None,
+            **maybe_type_comment
         ),
     ],
     decorator_list=[],
