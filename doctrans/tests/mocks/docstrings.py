@@ -5,12 +5,15 @@ from textwrap import indent
 
 from doctrans.pure_utils import identity, tab
 
-header_doc_str = "Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare\n"
-"library".strip()
+docstring_header_str = (
+    "Acquire from the official tensorflow_datasets model zoo,"
+    " or the ophthalmology focussed ml-prepare\n"
+    "library".strip()
+)
 
 docstring_header_and_return_str = "\n".join(
     (
-        header_doc_str,
+        docstring_header_str,
         ":returns: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))",
         ":rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```",
     )
@@ -231,7 +234,7 @@ Returns:
   Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
    Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 """.format(
-    header_doc_str=header_doc_str
+    header_doc_str=docstring_header_str
 )
 
 docstring_no_default_doc_str = """
@@ -254,7 +257,7 @@ docstring_no_default_doc_str = """
 :returns: Train and tests dataset splits.
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """.format(
-    header_doc_str=header_doc_str
+    header_doc_str=docstring_header_str
 )
 
 docstring_no_default_doc_wrapped_str = docstring_no_default_doc_str.replace(
@@ -281,13 +284,13 @@ docstring_no_default_str = """
 :returns: Train and tests dataset splits.
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """.format(
-    header_doc_str=header_doc_str
+    header_doc_str=docstring_header_str
 )
 
 docstring_numpydoc_only_doc_str = """
 {header_doc_str}
 """.format(
-    header_doc_str=header_doc_str
+    header_doc_str=docstring_header_str
 )
 
 docstring_numpydoc_only_params_str = """
@@ -335,7 +338,7 @@ Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]
     Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 
 """.format(
-    header_doc_str=header_doc_str
+    header_doc_str=docstring_header_str
 )
 
 docstring_only_return_type_str = """
@@ -367,7 +370,7 @@ docstring_str = """
 :returns: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """.format(
-    header_doc_str=header_doc_str
+    header_doc_str=docstring_header_str
 )
 
 docstring_wrapped_str = docstring_str.replace(
@@ -389,7 +392,7 @@ docstring_no_type_str = """
 
 :returns: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 """.format(
-    header_doc_str=header_doc_str
+    header_doc_str=docstring_header_str
 )
 
 docstring_no_type_no_default_str = """
@@ -406,7 +409,7 @@ docstring_no_type_no_default_str = """
 
 :returns: Train and tests dataset splits.
 """.format(
-    header_doc_str=header_doc_str
+    header_doc_str=docstring_header_str
 )
 
 docstring_repr_str = (
@@ -442,6 +445,7 @@ __all__ = [
     "docstring_google_tf_adam_str",
     "docstring_google_tf_lambda_callback_str",
     "docstring_google_tf_squared_hinge_str",
+    "docstring_header_str",
     "docstring_no_default_doc_str",
     "docstring_numpydoc_only_doc_str",
     "docstring_numpydoc_only_params_str",

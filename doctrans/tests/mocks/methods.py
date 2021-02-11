@@ -31,7 +31,7 @@ from doctrans.tests.mocks.docstrings import (
     docstring_no_default_doc_wrapped_str,
     docstring_no_type_no_default_str,
     docstring_str,
-    header_doc_str,
+    docstring_header_str,
 )
 from doctrans.tests.utils_for_tests import emit_separating_tab
 
@@ -92,7 +92,7 @@ class C(object):
         """
         return np.empty(0), np.empty(0)
 '''.format(
-    header_doc_str=indent(header_doc_str, tab * 2),
+    header_doc_str=indent(docstring_header_str, tab * 2),
     sep=tab * 2,
     indent=" " * 12,
 )
@@ -125,7 +125,7 @@ class C(object):
         """
         return np.empty(0), np.empty(0)
 '''.format(
-    header_doc_str=indent(header_doc_str, tab * 2)
+    header_doc_str=indent(docstring_header_str, tab * 2)
 )
 
 class_with_method_and_body_types_str = '''
@@ -162,7 +162,7 @@ class C(object):
             return 5
         return np.empty(0), np.empty(0)
 '''.format(
-    header_doc_str=indent(header_doc_str, tab * 2)
+    header_doc_str=indent(docstring_header_str, tab * 2)
 )
 
 class_with_optional_arg_method_str = '''
@@ -185,7 +185,7 @@ class C(object):
         """
         return np.empty(0), np.empty(0)
 '''.format(
-    header_doc_str=indent(header_doc_str, tab * 2)
+    header_doc_str=indent(docstring_header_str, tab * 2)
 )
 
 class_with_method_and_body_types_ast = fix_missing_locations(

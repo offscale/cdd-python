@@ -137,9 +137,9 @@ def parse_out_param(expr, require_default=False, emit_default_doc=True):
 
     typ = next(
         (
-            _handle_value(get_value(keyword))
-            for keyword in expr.value.keywords
-            if keyword.arg == "type"
+            _handle_value(get_value(key_word))
+            for key_word in expr.value.keywords
+            if key_word.arg == "type"
         ),
         "str",
     )
