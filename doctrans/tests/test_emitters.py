@@ -45,7 +45,7 @@ from doctrans.tests.mocks.methods import (
     class_with_method_types_str,
     function_google_tf_squared_hinge_str,
 )
-from doctrans.tests.mocks.sqlalchemy import config_tbl_ast
+from doctrans.tests.mocks.sqlalchemy import config_decl_base_ast, config_tbl_ast
 from doctrans.tests.utils_for_tests import (
     reindent_docstring,
     run_ast_test,
@@ -446,14 +446,26 @@ class TestEmitters(TestCase):
         """
         Tests that `emit.sqlalchemy_table` with `intermediate_repr_no_default_sql_doc` produces `config_tbl_ast`
         """
-        gen_ast = emit.sqlalchemy_table(
-            deepcopy(intermediate_repr_no_default_sql_doc), name="config_tbl"
+        run_ast_test(
+            self,
+            emit.sqlalchemy_table(
+                deepcopy(intermediate_repr_no_default_sql_doc), name="config_tbl"
+            ),
+            gold=config_tbl_ast,
         )
 
+    def test_to_sqlalchemy(self):
+        """
+        Tests that `emit.sqlalchemy` with `intermediate_repr_no_default_sql_doc` produces `config_tbl_ast`
+        """
         run_ast_test(
-            gen_ast=gen_ast,
-            gold=config_tbl_ast,
-            test_case_instance=self,
+            self,
+            emit.sqlalchemy(
+                deepcopy(intermediate_repr_no_default_sql_doc),
+                class_name="Config",
+                table_name="config_tbl",
+            ),
+            gold=config_decl_base_ast,
         )
 
 

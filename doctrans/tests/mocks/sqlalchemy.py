@@ -19,32 +19,15 @@ from ast import (
 from textwrap import indent
 
 from doctrans.ast_utils import maybe_type_comment, set_value
-from doctrans.pure_utils import identity, tab
-from doctrans.tests.mocks.docstrings import docstring_header_and_return_str
-
-_docstring_header_and_return_str = "\n{docstring}\n{tab}".format(
-    docstring="{tab}\n".format(tab=tab).join(
-        indent(docstring_header_and_return_str, tab).split("\n")
-    ),
-    tab=tab,
+from doctrans.pure_utils import tab
+from doctrans.tests.mocks.docstrings import (
+    docstring_header_and_return_str,
+    docstring_repr_str,
 )
 
-_repr_docstring = (
-    indent(
-        "\n".join(
-            (
-                "",
-                "Emit a string representation of the current instance",
-                "",
-                ":returns: String representation of instance",
-                ":rtype: ```str```",
-                "",
-            )
-        ),
-        tab * 2,
-        identity,
-    )
-    + tab * 2
+_docstring_header_and_return_str = "\n{docstring}\n{tab}".format(
+    docstring="\n".join(indent(docstring_header_and_return_str, tab).split("\n")),
+    tab=tab,
 )
 
 config_tbl_str = """
@@ -251,7 +234,7 @@ class Config(Base):
     """.format(
     _docstring_header_and_return_str=_docstring_header_and_return_str,
     tab=tab,
-    _repr_docstring=_repr_docstring,
+    _repr_docstring=docstring_repr_str,
     __repr___body="""
         return "Config(dataset_name={dataset_name!r}, tfds_dir={tfds_dir!r}, " \
                "K={K!r}, as_numpy={as_numpy!r}, data_loader_kwargs={data_loader_kwargs!r})".format(
@@ -414,7 +397,7 @@ config_decl_base_ast = ClassDef(
                 kwarg=None,
             ),
             body=[
-                Expr(set_value(_repr_docstring)),
+                Expr(set_value(docstring_repr_str)),
                 Return(
                     value=Call(
                         func=Attribute(

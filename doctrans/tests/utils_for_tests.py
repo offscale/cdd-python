@@ -31,7 +31,7 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     :param gen_ast: generated AST
     :type gen_ast: ```Union[ast.Module, ast.ClassDef, ast.FunctionDef]```
 
-    :param skip_black: Whether to skip formatting with black
+    :param skip_black: Whether to skip formatting with black. Turned off for performance, turn on for pretty debug.
     :type skip_black: ```bool```
 
     :param gold: mocked AST
@@ -78,7 +78,6 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
             ),
             map(source_transformer.to_code, (gold, gen_ast)),
         )
-        # * map(doctrans.source_transformer.to_code, (gold, gen_ast)),
     )
 
     test_case_instance.assertTrue(
