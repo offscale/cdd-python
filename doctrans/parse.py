@@ -27,14 +27,13 @@ from collections import OrderedDict, deque
 from copy import deepcopy
 from functools import partial
 from inspect import getdoc, getsource, isfunction, signature
-from itertools import cycle, filterfalse, islice
+from itertools import chain, cycle, filterfalse, islice
 from operator import attrgetter, eq, setitem
 from types import FunctionType
 
 from doctrans import get_logger
 from doctrans.ast_utils import (
     NoneStr,
-    column_call_to_param,
     find_ast_type,
     func_arg2param,
     get_function_type,
@@ -50,6 +49,7 @@ from doctrans.emitter_utils import _parse_return, parse_out_param
 from doctrans.parser_utils import (
     _inspect_process_ir_param,
     _interpolate_return,
+    column_call_to_param,
     ir_merge,
 )
 from doctrans.pure_utils import assert_equal, rpartial, simple_types
@@ -819,22 +819,26 @@ def sqlalchemy(class_def):
     return sqlalchemy_table(
         Call(
             func=Name("Table", Load()),
-            args=[set_value(name), Name("metadata", Load())]
-            + list(
-                map(
-                    _merge_name_to_column,
-                    filterfalse(
-                        lambda assign: any(
-                            map(
-                                lambda target: target.id == "__tablename__"
-                                or hasattr(target, "value")
-                                and isinstance(target.value, Call)
-                                and target.func.rpartition(".")[2] == "Column",
-                                assign.targets,
+            args=list(
+                chain.from_iterable(
+                    (
+                        iter((set_value(name), Name("metadata", Load()))),
+                        map(
+                            _merge_name_to_column,
+                            filterfalse(
+                                lambda assign: any(
+                                    map(
+                                        lambda target: target.id == "__tablename__"
+                                        or hasattr(target, "value")
+                                        and isinstance(target.value, Call)
+                                        and target.func.rpartition(".")[2] == "Column",
+                                        assign.targets,
+                                    ),
+                                ),
+                                filter(rpartial(isinstance, Assign), class_def.body),
                             ),
                         ),
-                        filter(rpartial(isinstance, Assign), class_def.body),
-                    ),
+                    )
                 )
             ),
             keywords=[]

@@ -7,6 +7,8 @@ from functools import partial
 from textwrap import indent
 from typing import Any
 
+from ast import Call, keyword
+
 from doctrans.ast_utils import (
     NoneStr,
     code_quoted,
@@ -14,6 +16,7 @@ from doctrans.ast_utils import (
     maybe_type_comment,
     set_arg,
     set_value,
+    typ2column_type,
 )
 from doctrans.defaults_utils import extract_default, set_default_doc
 from doctrans.docstring_utils import emit_param_str
@@ -735,11 +738,99 @@ def ast_parse_fix(s):
     return ast.parse(s if balanced else "{}]".format(s)).body[0].value
 
 
+def param_to_sqlalchemy_column_call(param, include_name=True):
+    """
+    Turn a param into a `Column(…)`
+
+    :param param: Name, dict with keys: 'typ', 'doc', 'default'
+    :type param: ```Tuple[str, dict]```
+
+    :param include_name: Whether to include the name (exclude in declarative base)
+    :type include_name: ```bool```
+
+    :returns: Form of: `Column(…)`
+    :rtype: ```Call``
+    """
+    name, _param = param
+    del param
+
+    args, keywords, nullable = [], [], None
+
+    if _param["typ"].startswith("Optional["):
+        _param["typ"] = _param["typ"][len("Optional[") : -1]
+        nullable = True
+
+    if include_name:
+        args.append(set_value(name))
+
+    if "Literal[" in _param["typ"]:
+        parsed_typ = get_value(ast.parse(_param["typ"]).body[0])
+        assert (
+            parsed_typ.value.id == "Literal"
+        ), "Only basic Literal support is implemented, not {}".format(
+            parsed_typ.value.id
+        )
+        args.append(
+            Call(
+                func=Name("Enum", Load()),
+                args=parsed_typ.slice.value.elts,
+                keywords=[keyword(arg="name", value=set_value(name), identifier=None)],
+                expr=None,
+                expr_func=None,
+            )
+        )
+
+    else:
+        args.append(Name(typ2column_type[_param["typ"]], Load()))
+
+    has_default = _param.get("default", ast) is not ast
+    pk = _param.get("doc", "").startswith("[PK]")
+    if pk:
+        _param["doc"] = _param["doc"][4:].lstrip()
+    elif has_default and _param["default"] not in none_types:
+        nullable = False
+
+    keywords.append(
+        keyword(arg="doc", value=set_value(_param["doc"].rstrip(".")), identifier=None)
+    )
+
+    if has_default:
+        if _param["default"] == NoneStr:
+            _param["default"] = None
+        keywords.append(
+            keyword(
+                arg="default",
+                value=set_value(_param["default"]),
+                identifier=None,
+            )
+        )
+
+    # Sorting :\
+    if pk:
+        keywords.append(
+            keyword(arg="primary_key", value=set_value(True), identifier=None),
+        )
+
+    if isinstance(nullable, bool):
+        keywords.append(
+            keyword(arg="nullable", value=set_value(nullable), identifier=None)
+        )
+
+    return Call(
+        func=Name("Column", Load()),
+        args=args,
+        keywords=keywords,
+        expr=None,
+        expr_func=None,
+    )
+
+
 __all__ = [
     "_parse_return",
     "ast_parse_fix",
     "get_internal_body",
     "interpolate_defaults",
     "parse_out_param",
+    "param_to_sqlalchemy_column_call",
     "to_docstring",
 ]

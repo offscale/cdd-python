@@ -21,6 +21,7 @@ from functools import partial
 from itertools import chain
 from textwrap import indent
 
+from _ast import Call, keyword
 from black import Mode, format_str
 
 from doctrans.ast_utils import (
@@ -36,11 +37,13 @@ from doctrans.emitter_utils import (
     RewriteName,
     _make_call_meth,
     get_internal_body,
+    param_to_sqlalchemy_column_call,
     to_docstring,
 )
 from doctrans.pure_utils import (
     PY3_8,
     code_quoted,
+    deindent,
     fill,
     identity,
     none_types,
@@ -343,7 +346,7 @@ def class_(
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :returns: Class AST of the docstring
+    :returns: Class AST
     :rtype: ```ClassDef```
     """
     returns = (
@@ -541,7 +544,7 @@ def file(node, filename, mode="a", skip_black=False):
     :param mode: Mode to open the file in, defaults to append
     :type mode: ```str```
 
-    :param skip_black: Skip formatting with black
+    :param skip_black: Whether to skip formatting with black
     :type skip_black: ```bool```
 
     :returns: None
@@ -746,6 +749,148 @@ def function(
         stmt=None,
         **maybe_type_comment
     )
+
+
+def sqlalchemy_table(
+    intermediate_repr,
+    name="config_tbl",
+    docstring_format="rest",
+    word_wrap=True,
+    emit_default_doc=True,
+):
+    """
+    Construct an `name = sqlalchemy.Table(name, metadata, Column(…), …)`
+
+    :param intermediate_repr: a dictionary of form
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :type intermediate_repr: ```dict```
+
+    :param name: name of binding + table
+    :type name: ```str```
+
+    :param docstring_format: Format of docstring
+    :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
+
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
+
+    :param docstring_format: Format of docstring
+    :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
+
+    :param emit_default_doc: Whether help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool```
+
+    :returns: AST of the Table expression + assignment
+    :rtype: ```ClassDef```
+    """
+    return Assign(
+        targets=[Name(name, Store())],
+        value=Call(
+            func=Name("Table", Load()),
+            args=list(
+                chain.from_iterable(
+                    (
+                        iter(
+                            (
+                                set_value(name),
+                                Name("metadata", Load()),
+                            )
+                        ),
+                        map(
+                            param_to_sqlalchemy_column_call,
+                            intermediate_repr["params"].items(),
+                        ),
+                    )
+                )
+            ),
+            keywords=[
+                keyword(
+                    arg="comment",
+                    value=set_value(
+                        deindent(
+                            to_docstring(
+                                {
+                                    "doc": intermediate_repr["doc"].lstrip() + "\n\n"
+                                    if intermediate_repr["returns"]
+                                    else "",
+                                    "params": OrderedDict(),
+                                    "returns": intermediate_repr["returns"],
+                                },
+                                emit_default_doc=emit_default_doc,
+                                docstring_format=docstring_format,
+                                word_wrap=word_wrap,
+                                emit_types=True,
+                            ).strip()
+                        )
+                    ),
+                    identifier=None,
+                )
+            ]
+            if intermediate_repr["doc"]
+            else [],
+            expr=None,
+            expr_func=None,
+        ),
+        lineno=None,
+        expr=None,
+        **maybe_type_comment
+    )
+
+
+# def sqlalchemy(
+#     intermediate_repr,
+#     emit_repr=True,
+#     class_name="Config",
+#     class_bases=("Base",),
+#     decorator_list=None,
+#     docstring_format="rest",
+#     word_wrap=True,
+#     emit_default_doc=False,
+# ):
+#     """
+#     Construct a class
+#
+#     :param intermediate_repr: a dictionary of form
+#         {  "name": Optional[str],
+#            "type": Optional[str],
+#            "doc": Optional[str],
+#            "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+#            "returns": Optional[OrderedDict[Literal['return_type'],
+#                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+#     :type intermediate_repr: ```dict```
+#
+#     :param emit_repr: Whether to generate a `__repr__` method
+#     :type emit_repr: ```bool```
+#
+#     :param class_name: name of class
+#     :type class_name: ```str```
+#
+#     :param class_bases: bases of class (the generated class will inherit these)
+#     :type class_bases: ```Iterable[str]```
+#
+#     :param decorator_list: List of decorators
+#     :type decorator_list: ```Optional[Union[List[Str], List[]]]```
+#
+#     :param docstring_format: Format of docstring
+#     :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
+#
+#     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+#     :type word_wrap: ```bool```
+#
+#     :param docstring_format: Format of docstring
+#     :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
+#
+#     :param emit_default_doc: Whether help/docstring should include 'With default' text
+#     :type emit_default_doc: ```bool```
+#
+#     :returns: Class AST of the docstring
+#     :rtype: ```ClassDef```
+#     """
 
 
 __all__ = ["argparse_function", "class_", "docstring", "file", "function"]
