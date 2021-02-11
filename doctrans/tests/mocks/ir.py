@@ -1134,6 +1134,13 @@ intermediate_repr_no_default_doc = {
     ),
 }
 
+intermediate_repr_no_default_sql_doc = deepcopy(intermediate_repr_no_default_doc)
+intermediate_repr_no_default_sql_doc["params"]["dataset_name"][
+    "doc"
+] = "[PK] {}".format(
+    intermediate_repr_no_default_sql_doc["params"]["dataset_name"]["doc"]
+)
+
 intermediate_repr_only_return_type = {
     "name": None,
     "type": "static",
@@ -1243,6 +1250,7 @@ __all__ = [
     "intermediate_repr_extra_colons",
     "intermediate_repr_no_default_doc",
     "intermediate_repr_no_default_doc_or_prop",
+    "intermediate_repr_no_default_sql_doc",
     "intermediate_repr_only_return_type",
     "method_complex_args_variety_ir",
 ]
