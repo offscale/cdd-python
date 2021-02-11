@@ -7,7 +7,7 @@ from copy import deepcopy
 from doctrans.ast_utils import NoneStr
 from doctrans.defaults_utils import remove_defaults_from_intermediate_repr
 from doctrans.pure_utils import paren_wrap_code
-from doctrans.tests.mocks.docstrings import header_doc_str
+from doctrans.tests.mocks.docstrings import docstring_header_str
 
 class_google_tf_tensorboard_ir = {
     "doc": "Enable visualizations for TensorBoard.\n"
@@ -1076,7 +1076,7 @@ intermediate_repr_extra_colons = {
 intermediate_repr_no_default_doc = {
     "name": None,
     "type": "static",
-    "doc": header_doc_str.replace("\n", ""),
+    "doc": docstring_header_str.replace("\n", ""),
     "params": OrderedDict(
         (
             (
@@ -1165,7 +1165,7 @@ intermediate_repr_only_return_type = {
 intermediate_repr = {
     "name": None,
     "type": "static",
-    "doc": header_doc_str.replace("\n", ""),
+    "doc": docstring_header_str.replace("\n", ""),
     "params": OrderedDict(
         (
             (

@@ -576,6 +576,7 @@ __all__ = [
     "indent_all_but_first",
     "location_within",
     "lstrip_namespace",
+    "none_types",
     "paren_wrap_code",
     "pluralise",
     "pp",
@@ -586,5 +587,8 @@ __all__ = [
     "simple_types",
     "strip_split",
     "tab",
+    "unquote",
     "update_d",
+    "code_quoted",
+    "fill",
 ]

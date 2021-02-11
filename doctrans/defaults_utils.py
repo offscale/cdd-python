@@ -117,7 +117,7 @@ def extract_default(
         )
     )
 
-    _end_idx, default_end_offset = None, None
+    _start_idx, _end_idx, default_end_offset = None, None, None
     for idx, _default_search_announce in enumerate(
         (default_search_announce_paren, default_search_announce)
     ):
@@ -375,6 +375,7 @@ def set_default_doc(param, emit_default_doc=True):
 
 __all__ = [
     "extract_default",
+    "needs_quoting",
     "remove_defaults_from_intermediate_repr",
     "set_default_doc",
 ]

@@ -22,7 +22,7 @@ from ast import (
 
 from doctrans.ast_utils import FALLBACK_TYP, maybe_type_comment, set_arg, set_value
 from doctrans.pure_utils import tab
-from doctrans.tests.mocks.docstrings import header_doc_str
+from doctrans.tests.mocks.docstrings import docstring_header_str
 
 argparse_add_argument_ast = Expr(
     Call(
@@ -110,7 +110,7 @@ def set_cli_args(argument_parser):
     return argument_parser, (np.empty(0), np.empty(0))
 '''.format(
     _cli_doc_str=_cli_doc_str,
-    description=header_doc_str.strip(),
+    description=docstring_header_str.strip(),
 )
 
 argparse_func_with_body_str = '''
@@ -149,7 +149,9 @@ def set_cli_args(argument_parser):
         return 5
     return argument_parser, (np.empty(0), np.empty(0))
 '''.format(
-    _cli_doc_str=_cli_doc_str, FALLBACK_TYP=FALLBACK_TYP, header_doc_str=header_doc_str
+    _cli_doc_str=_cli_doc_str,
+    FALLBACK_TYP=FALLBACK_TYP,
+    header_doc_str=docstring_header_str,
 )
 
 argparse_func_action_append_str = '''
@@ -182,7 +184,7 @@ def set_cli_action_append(argument_parser):
     )
     return argument_parser
 '''.format(
-    _cli_doc_str=_cli_doc_str, header_doc_str=header_doc_str
+    _cli_doc_str=_cli_doc_str, header_doc_str=docstring_header_str
 )
 
 argparse_func_ast = fix_missing_locations(
@@ -207,7 +209,7 @@ argparse_func_ast = fix_missing_locations(
                         Store(),
                     )
                 ],
-                value=set_value(header_doc_str.replace("\n", "")),
+                value=set_value(docstring_header_str.replace("\n", "")),
                 expr=None,
                 **maybe_type_comment
             ),
@@ -414,7 +416,7 @@ argparse_func_with_body_ast = fix_missing_locations(
                         Store(),
                     )
                 ],
-                value=set_value(header_doc_str),
+                value=set_value(docstring_header_str),
                 expr=None,
                 **maybe_type_comment
             ),
@@ -666,7 +668,7 @@ argparse_func_action_append_ast = fix_missing_locations(
                 targets=[
                     Attribute(Name("argument_parser", Load()), "description", Store())
                 ],
-                value=set_value(header_doc_str.rstrip()),
+                value=set_value(docstring_header_str.rstrip()),
                 expr=None,
                 **maybe_type_comment
             ),

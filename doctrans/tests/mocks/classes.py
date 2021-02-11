@@ -35,12 +35,12 @@ from textwrap import indent
 from doctrans.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
 from doctrans.defaults_utils import extract_default
 from doctrans.pure_utils import tab
-from doctrans.tests.mocks.docstrings import header_doc_str
+from doctrans.tests.mocks.docstrings import docstring_header_str
 
 class_doc_str = tab.join(
     (
         "\n",
-        "{header_doc_str}\n".format(header_doc_str=header_doc_str),
+        "{header_doc_str}\n".format(header_doc_str=docstring_header_str),
         ':cvar dataset_name: name of dataset. Defaults to "mnist"\n',
         ':cvar tfds_dir: directory to look for models in. Defaults to "~/tensorflow_datasets"\n',
         ':cvar K: backend engine, e.g., `np` or `tf`. Defaults to "np"\n',
@@ -74,7 +74,7 @@ class ConfigClass(object):
         np.empty(0),
     )
 '''.format(
-    header_doc_str=indent(header_doc_str, tab)
+    header_doc_str=indent(docstring_header_str, tab)
 )
 
 class_nargs_str = '''
@@ -105,7 +105,7 @@ class ConfigClass(object):
         ]
     ] = None
 '''.format(
-    header_doc_str=indent(header_doc_str, tab)
+    header_doc_str=indent(docstring_header_str, tab)
 )
 
 class_ast = ClassDef(
@@ -305,7 +305,7 @@ class_nargs_ast = ClassDef(
             set_value(
                 "\n{tab}{header_doc_str}\n{tab}"
                 ":cvar callbacks: Collection of callables that are run inside the training loop".format(
-                    tab=tab, header_doc_str=header_doc_str
+                    tab=tab, header_doc_str=docstring_header_str
                 ),
             )
         ),
