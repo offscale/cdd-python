@@ -2,12 +2,20 @@
 Functions which produce intermediate_repr from various different inputs
 """
 import ast
-from ast import Attribute, Expr, FunctionDef, Load, Name, Return, arguments
+from ast import (
+    Attribute,
+    Call,
+    Expr,
+    FunctionDef,
+    Load,
+    Name,
+    Return,
+    arguments,
+    keyword,
+)
 from functools import partial
 from textwrap import indent
 from typing import Any
-
-from ast import Call, keyword
 
 from doctrans.ast_utils import (
     NoneStr,

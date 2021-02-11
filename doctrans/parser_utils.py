@@ -9,7 +9,7 @@ from inspect import _empty
 from itertools import chain
 from operator import itemgetter
 
-from doctrans.ast_utils import NoneStr, column_type2typ, get_value
+from doctrans.ast_utils import column_type2typ, get_value
 from doctrans.pure_utils import lstrip_namespace, none_types, rpartial
 from doctrans.source_transformer import to_code
 

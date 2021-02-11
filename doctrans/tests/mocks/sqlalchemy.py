@@ -31,7 +31,7 @@ _docstring_header_and_return_str = "\n{docstring}\n{tab}".format(
 
 _repr_docstring = (
     indent(
-        "\n".format(sep=tab * 2).join(
+        "\n".join(
             (
                 "",
                 "Emit a string representation of the current instance",
