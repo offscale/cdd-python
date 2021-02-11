@@ -35,7 +35,6 @@ from contextlib import suppress
 from copy import deepcopy
 from importlib import import_module
 from inspect import isclass, isfunction
-from itertools import chain
 from json import dumps
 from operator import inv, neg, not_, pos
 from sys import version_info
@@ -1310,85 +1309,32 @@ def parse_to_scalar(node):
 
 # Construct from https://docs.sqlalchemy.org/en/13/core/type_basics.html#generic-types
 column_type2typ = {
-    "String": "str",
-    "Boolean": "bool",
-    "boolean": "bool",
-    "Float": "float",
     "BigInteger": "int",
+    "Boolean": "bool",
+    "Float": "float",
     "Integer": "int",
+    "JSON": "Optional[dict]",
+    "String": "str",
     "Text": "str",
     "Unicode": "str",
     "UnicodeText": "str",
-    "str": "str",
+    "boolean": "bool",
+    "dict": "dict",
     "float": "float",
     "int": "int",
-    "JSON": "Optional[dict]",
-    "dict": "dict",
+    "str": "str",
 }
 
-
-def column_call_to_param(call):
-    """
-    Parse column call `Call(func=Name("Column", Load(), …)` into param
-
-    :param call: Column call from SQLAlchemy `Table` construction
-    :type call: ```Call```
-
-    :returns: Name, dict with keys: 'typ', 'doc', 'default'
-    :rtype: ```Tuple[str, dict]```
-    """
-    assert call.func.id == "Column"
-    assert len(call.args) == 2
-
-    _param = dict(
-        chain.from_iterable(
-            filter(
-                None,
-                (
-                    map(
-                        lambda key_word: (key_word.arg, get_value(key_word.value)),
-                        call.keywords,
-                    ),
-                    (("typ", column_type2typ[call.args[1].id]),)
-                    if isinstance(call.args[1], Name)
-                    else None,
-                ),
-            )
-        )
-    )
-
-    if (
-        isinstance(call.args[1], Call)
-        and call.args[1].func.id.rpartition(".")[2] == "Enum"
-    ):
-        _param["typ"] = "Literal{}".format(list(map(get_value, call.args[1].args)))
-
-    pk = "primary_key" in _param
-    if pk:
-        _param["doc"] = "[PK] {}".format(_param["doc"])
-        del _param["primary_key"]
-
-    def _handle_null():
-        """
-        Properly handle null condition
-        """
-        if not _param["typ"].startswith("Optional["):
-            _param["typ"] = "Optional[{}]".format(_param["typ"])
-        if "default" not in _param:
-            _param["default"] = NoneStr
-
-    if "nullable" in _param:
-        not _param["nullable"] or _handle_null()
-        del _param["nullable"]
-    elif not pk:
-        _handle_null()
-
-    if "default" in _param and not get_value(call.args[0]).endswith("kwargs"):
-        _param["doc"] += "."
-    #    _param["doc"] += '. Defaults to "{}"'.format(_param.pop("default"))
-
-    return get_value(call.args[0]), _param
-
+typ2column_type = {v: k for k, v in column_type2typ.items()}
+typ2column_type.update(
+    {
+        "bool": "Boolean",
+        "dict": "JSON",
+        "float": "Float",
+        "int": "Integer",
+        "str": "String",
+    }
+)
 
 # `to_code` doesn't work due to partially instantiated module
 def _to_code(node):

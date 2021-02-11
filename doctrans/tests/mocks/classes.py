@@ -28,6 +28,7 @@ from ast import (
 )
 from copy import deepcopy
 from functools import partial
+from itertools import chain
 from operator import itemgetter
 from textwrap import indent
 
@@ -1371,12 +1372,27 @@ class_torch_nn_one_cycle_lr_ast = ClassDef(
                     )
                 ),
                 defaults=list(
-                    map(
-                        set_value,
-                        (None, None, None, 0.3, "cos", True, 0.85, 0.95, 25.0, 10000.0),
+                    chain.from_iterable(
+                        (
+                            map(
+                                set_value,
+                                (
+                                    None,
+                                    None,
+                                    None,
+                                    0.3,
+                                    "cos",
+                                    True,
+                                    0.85,
+                                    0.95,
+                                    25.0,
+                                    10000.0,
+                                ),
+                            ),
+                            iter((UnaryOp(USub(), set_value(1)), set_value(False))),
+                        )
                     )
-                )
-                + [UnaryOp(USub(), set_value(1)), set_value(False)],
+                ),
                 kw_defaults=[],
                 kwarg=None,
                 kwonlyargs=[],

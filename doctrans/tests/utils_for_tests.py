@@ -12,15 +12,16 @@ from tempfile import NamedTemporaryFile
 from unittest import main
 from unittest.mock import MagicMock, patch
 
+from black import Mode, format_str
 from meta.asttools import cmp_ast
 
-import doctrans.source_transformer
+from doctrans import source_transformer
 from doctrans.ast_utils import set_value
 from doctrans.docstring_utils import TOKENS
-from doctrans.pure_utils import PY3_8, reindent, tab
+from doctrans.pure_utils import PY3_8, identity, reindent, tab
 
 
-def run_ast_test(test_case_instance, gen_ast, gold):
+def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     """
     Compares `gen_ast` with `gold` standard
 
@@ -29,6 +30,9 @@ def run_ast_test(test_case_instance, gen_ast, gold):
 
     :param gen_ast: generated AST
     :type gen_ast: ```Union[ast.Module, ast.ClassDef, ast.FunctionDef]```
+
+    :param skip_black: Whether to skip formatting with black
+    :type skip_black: ```bool```
 
     :param gold: mocked AST
     :type gold: ```Union[ast.Module, ast.ClassDef, ast.FunctionDef]```
@@ -43,14 +47,14 @@ def run_ast_test(test_case_instance, gen_ast, gold):
     gold = deepcopy(gold)
 
     # if reindent_docstring:
-    #     #     gen_docstring = ast.get_docstring(gen_ast)
-    #     #     if gen_docstring is not None:
-    #     #         gen_ast.body[0] = set_value(
-    #     #             "\n{}".format(indent(cleandoc(gen_docstring), tab))
-    #     #         )
-    #     #     gold.body[0] = set_value(
-    #     #         "\n{}".format(indent(ast.get_docstring(gold, clean=True), tab))
-    #     #     )
+    #           gen_docstring = ast.get_docstring(gen_ast)
+    #           if gen_docstring is not None:
+    #               gen_ast.body[0] = set_value(
+    #                   "\n{}".format(indent(cleandoc(gen_docstring), tab))
+    #               )
+    #           gold.body[0] = set_value(
+    #               "\n{}".format(indent(ast.get_docstring(gold, clean=True), tab))
+    #           )
 
     # from meta.asttools import print_ast
     #
@@ -60,18 +64,21 @@ def run_ast_test(test_case_instance, gen_ast, gold):
     # print_ast(gold)
 
     test_case_instance.assertEqual(
-        # map(
-        # partial(
-        #     (lambda _, **kwargs: _) if skip_black else format_str,
-        #     mode=Mode(
-        #         target_versions=set(),
-        #         line_length=60,
-        #         is_pyi=False,
-        #         string_normalization=False,
-        #     ),
-        # ),
-        *map(doctrans.source_transformer.to_code, (gold, gen_ast)),
-        # )
+        *map(
+            identity
+            if skip_black
+            else partial(
+                format_str,
+                mode=Mode(
+                    target_versions=set(),
+                    line_length=60,
+                    is_pyi=False,
+                    string_normalization=False,
+                ),
+            ),
+            map(source_transformer.to_code, (gold, gen_ast)),
+        )
+        # * map(doctrans.source_transformer.to_code, (gold, gen_ast)),
     )
 
     test_case_instance.assertTrue(

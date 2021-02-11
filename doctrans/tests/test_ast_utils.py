@@ -221,6 +221,7 @@ class TestAstUtils(TestCase):
             self,
             find_in_ast(["call_peril"], module_with_fun),
             module_with_fun.body[0],
+            skip_black=True,
         )
 
     def test_find_in_ast_None(self) -> None:
@@ -465,6 +466,7 @@ class TestAstUtils(TestCase):
             self,
             find_ast_type(Module(body=[class_def], stmt=None)),
             class_def,
+            skip_black=True,
         )
 
     def test_find_ast_type_fails(self) -> None:
@@ -519,6 +521,7 @@ class TestAstUtils(TestCase):
                 node_name="foo",
             ),
             class_def,
+            skip_black=True,
         )
 
     def test_param2ast_with_assign(self) -> None:

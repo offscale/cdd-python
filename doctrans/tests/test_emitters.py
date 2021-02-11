@@ -32,7 +32,11 @@ from doctrans.tests.mocks.docstrings import (
     docstring_numpydoc_str,
     docstring_str,
 )
-from doctrans.tests.mocks.ir import class_torch_nn_l1loss_ir, intermediate_repr
+from doctrans.tests.mocks.ir import (
+    class_torch_nn_l1loss_ir,
+    intermediate_repr,
+    intermediate_repr_no_default_sql_doc,
+)
 from doctrans.tests.mocks.methods import (
     class_with_method_and_body_types_ast,
     class_with_method_ast,
@@ -41,6 +45,7 @@ from doctrans.tests.mocks.methods import (
     class_with_method_types_str,
     function_google_tf_squared_hinge_str,
 )
+from doctrans.tests.mocks.sqlalchemy import config_tbl_ast
 from doctrans.tests.utils_for_tests import (
     reindent_docstring,
     run_ast_test,
@@ -435,6 +440,20 @@ class TestEmitters(TestCase):
             self,
             func,
             argparse_func_torch_nn_l1loss_ast,
+        )
+
+    def test_to_sqlalchemy_table(self):
+        """
+        Tests that `emit.sqlalchemy_table` with `intermediate_repr_no_default_sql_doc` produces `config_tbl_ast`
+        """
+        gen_ast = emit.sqlalchemy_table(
+            deepcopy(intermediate_repr_no_default_sql_doc), name="config_tbl"
+        )
+
+        run_ast_test(
+            gen_ast=gen_ast,
+            gold=config_tbl_ast,
+            test_case_instance=self,
         )
 
 

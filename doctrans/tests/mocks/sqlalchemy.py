@@ -6,6 +6,7 @@ from ast import (
     Attribute,
     Call,
     ClassDef,
+    Expr,
     FunctionDef,
     Load,
     Name,
@@ -17,10 +18,8 @@ from ast import (
 )
 from textwrap import indent
 
-from _ast import Expr
-
 from doctrans.ast_utils import maybe_type_comment, set_value
-from doctrans.pure_utils import tab
+from doctrans.pure_utils import identity, tab
 from doctrans.tests.mocks.docstrings import docstring_header_and_return_str
 
 _docstring_header_and_return_str = "\n{docstring}\n{tab}".format(
@@ -30,12 +29,34 @@ _docstring_header_and_return_str = "\n{docstring}\n{tab}".format(
     tab=tab,
 )
 
+_repr_docstring = (
+    indent(
+        "\n".format(sep=tab * 2).join(
+            (
+                "",
+                "Emit a string representation of the current instance",
+                "",
+                ":returns: String representation of instance",
+                ":rtype: ```str```",
+                "",
+            )
+        ),
+        tab * 2,
+        identity,
+    )
+    + tab * 2
+)
+
 config_tbl_str = """
 config_tbl = Table(
     "config_tbl",
     metadata,
     Column(
-        "dataset_name", String, doc="name of dataset", default="mnist", primary_key=True
+        "dataset_name",
+        String,
+        doc="name of dataset",
+        default="mnist",
+        primary_key=True,
     ),
     Column(
         "tfds_dir",
@@ -51,9 +72,19 @@ config_tbl = Table(
         default="np",
         nullable=False,
     ),
-    Column("as_numpy", Boolean, doc="Convert to numpy ndarrays", default=None),
     Column(
-        "data_loader_kwargs", JSON, doc="pass this as arguments to data_loader function"
+        "as_numpy",
+        Boolean,
+        doc="Convert to numpy ndarrays",
+        default=None,
+        nullable=True,
+    ),
+    Column(
+        "data_loader_kwargs",
+        JSON,
+        doc="pass this as arguments to data_loader function",
+        default=None,
+        nullable=True,
     ),
     comment={comment!r},
 )
@@ -136,6 +167,7 @@ config_tbl_ast = Assign(
                         identifier=None,
                     ),
                     keyword(arg="default", value=set_value(None), identifier=None),
+                    keyword(arg="nullable", value=set_value(True), identifier=None),
                 ],
                 expr=None,
                 expr_func=None,
@@ -150,7 +182,9 @@ config_tbl_ast = Assign(
                             "pass this as arguments to data_loader function"
                         ),
                         identifier=None,
-                    )
+                    ),
+                    keyword(arg="default", value=set_value(None), identifier=None),
+                    keyword(arg="nullable", value=set_value(True), identifier=None),
                 ],
                 expr=None,
                 expr_func=None,
@@ -174,10 +208,13 @@ config_tbl_ast = Assign(
 config_decl_base_str = """
 class Config(Base):
     {_docstring_header_and_return_str!r}
-    __tablename__ = 'config_tbl'
+    __tablename__ = "config_tbl"
 
     dataset_name = Column(
-        String, doc="name of dataset", default="mnist", primary_key=True
+        String,
+        doc="name of dataset",
+        default="mnist",
+        primary_key=True,
     )
 
     tfds_dir = Column(
@@ -194,15 +231,28 @@ class Config(Base):
         nullable=False,
     )
 
-    as_numpy = Column(Boolean, doc="Convert to numpy ndarrays", default=None)
+    as_numpy = Column(
+        Boolean,
+        doc="Convert to numpy ndarrays",
+        default=None,
+        nullable=True,
+    )
 
-    data_loader_kwargs = Column(JSON, doc="pass this as arguments to data_loader function")
+    data_loader_kwargs = Column(
+        JSON,
+        doc="pass this as arguments to data_loader function",
+        default=None,
+        nullable=True,
+    )
 
-    {__repr__}
+    def __repr__(self):
+    {tab}{_repr_docstring!r}
+    {__repr___body}
     """.format(
     _docstring_header_and_return_str=_docstring_header_and_return_str,
-    __repr__="""
-    def __repr__(self):
+    tab=tab,
+    _repr_docstring=_repr_docstring,
+    __repr___body="""
         return "Config(dataset_name={dataset_name!r}, tfds_dir={tfds_dir!r}, " \
                "K={K!r}, as_numpy={as_numpy!r}, data_loader_kwargs={data_loader_kwargs!r})".format(
             dataset_name=self.dataset_name, tfds_dir=self.tfds_dir, K=self.K,
@@ -311,6 +361,7 @@ config_decl_base_ast = ClassDef(
                         identifier=None,
                     ),
                     keyword(arg="default", value=set_value(None), identifier=None),
+                    keyword(arg="nullable", value=set_value(True), identifier=None),
                 ],
                 expr=None,
                 expr_func=None,
@@ -332,6 +383,8 @@ config_decl_base_ast = ClassDef(
                         ),
                         identifier=None,
                     ),
+                    keyword(arg="default", value=set_value(None), identifier=None),
+                    keyword(arg="nullable", value=set_value(True), identifier=None),
                 ],
                 expr=None,
                 expr_func=None,
@@ -361,6 +414,7 @@ config_decl_base_ast = ClassDef(
                 kwarg=None,
             ),
             body=[
+                Expr(set_value(_repr_docstring)),
                 Return(
                     value=Call(
                         func=Attribute(
@@ -411,7 +465,7 @@ config_decl_base_ast = ClassDef(
                         expr_func=None,
                     ),
                     expr=None,
-                )
+                ),
             ],
             decorator_list=[],
             arguments_args=None,
