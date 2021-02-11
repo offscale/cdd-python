@@ -781,7 +781,7 @@ def param_to_sqlalchemy_column_call(param, include_name=True):
         args.append(
             Call(
                 func=Name("Enum", Load()),
-                args=parsed_typ.slice.value.elts,
+                args=get_value(parsed_typ.slice).elts,
                 keywords=[keyword(arg="name", value=set_value(name), identifier=None)],
                 expr=None,
                 expr_func=None,
