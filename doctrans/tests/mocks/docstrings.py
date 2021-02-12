@@ -8,8 +8,8 @@ from doctrans.pure_utils import identity, tab
 docstring_header_str = (
     "Acquire from the official tensorflow_datasets model zoo,"
     " or the ophthalmology focussed ml-prepare\n"
-    "library".strip()
 )
+# "library".strip()
 
 docstring_header_and_return_str = "\n".join(
     (
