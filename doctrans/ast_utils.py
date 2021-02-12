@@ -1336,6 +1336,17 @@ typ2column_type.update(
     }
 )
 
+# https://json-schema.org/draft/2019-09/json-schema-core.html#rfc.section.4.2.1
+json_type2typ = {
+    "boolean": "bool",
+    "string": "str",
+    "object": "dict",
+    "array": "list",
+    "number": "int",  # <- Actually a problem, maybe `literal_eval` on default then `type()` or just `type(default)`?
+    "null": "NoneType",
+}
+typ2json_type = {v: k for k, v in json_type2typ.items()}
+
 
 # `to_code` doesn't work due to partially instantiated module
 def _to_code(node):

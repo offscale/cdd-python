@@ -29,6 +29,7 @@ from doctrans.tests.mocks.ir import (
     intermediate_repr_no_default_sql_doc,
     method_complex_args_variety_ir,
 )
+from doctrans.tests.mocks.json_schema import config_schema
 from doctrans.tests.mocks.methods import (
     docstring_google_tf_adadelta_function_str,
     function_adder_ast,
@@ -442,6 +443,14 @@ class TestParsers(TestCase):
         del parsed_ir["_internal"]  # Not needed for this test
 
         self.assertDictEqual(parsed_ir, class_torch_nn_one_cycle_lr_ir)
+
+    def test_from_json_schema(self) -> None:
+        """
+        Tests that `parse.json_schema` produces `intermediate_repr_no_default_sql_doc` properly
+        """
+        self.assertDictEqual(
+            parse.json_schema(config_schema), intermediate_repr_no_default_doc
+        )
 
     def test_from_sqlalchemy_table(self) -> None:
         """

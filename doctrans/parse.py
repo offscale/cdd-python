@@ -51,6 +51,7 @@ from doctrans.parser_utils import (
     _interpolate_return,
     column_call_to_param,
     ir_merge,
+    json_schema_property_to_param,
 )
 from doctrans.pure_utils import assert_equal, rpartial, simple_types
 from doctrans.source_transformer import to_code
@@ -703,6 +704,31 @@ def docstring(
         )
 
     return parsed
+
+
+def json_schema(json_schema_dict):
+    """
+    Parse a JSON schema into the IR
+
+    :param json_schema_dict: A valid JSON schema as a Python dict
+    :type json_schema_dict: ```dict```
+
+    :returns: IR representation of the given JSON schema
+    :rtype: ```dict```
+    """
+    # I suppose a JSON-schema validation routine could be executed here
+    schema = deepcopy(json_schema_dict)
+
+    required = frozenset(schema["required"]) if schema.get("required") else frozenset()
+    _json_schema_property_to_param = partial(
+        json_schema_property_to_param, required=required
+    )
+
+    ir = docstring(json_schema_dict["description"], emit_default_doc=False)
+    ir["params"] = OrderedDict(
+        map(_json_schema_property_to_param, schema["properties"].items())
+    )
+    return ir
 
 
 def sqlalchemy_table(call_or_name):

@@ -35,8 +35,10 @@ from doctrans.tests.mocks.docstrings import (
 from doctrans.tests.mocks.ir import (
     class_torch_nn_l1loss_ir,
     intermediate_repr,
+    intermediate_repr_no_default_doc,
     intermediate_repr_no_default_sql_doc,
 )
+from doctrans.tests.mocks.json_schema import config_schema
 from doctrans.tests.mocks.methods import (
     class_with_method_and_body_types_ast,
     class_with_method_ast,
@@ -440,6 +442,15 @@ class TestEmitters(TestCase):
             self,
             func,
             argparse_func_torch_nn_l1loss_ast,
+        )
+
+    def test_to_json_schema(self):
+        """
+        Tests that `emit.json_schema` with `intermediate_repr_no_default_doc` produces `config_schema`
+        """
+        self.assertDictEqual(
+            emit.json_schema(deepcopy(intermediate_repr_no_default_doc)),
+            config_schema,
         )
 
     def test_to_sqlalchemy_table(self):

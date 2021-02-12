@@ -9,7 +9,7 @@ from inspect import _empty
 from itertools import chain
 from operator import itemgetter
 
-from doctrans.ast_utils import column_type2typ, get_value
+from doctrans.ast_utils import NoneStr, column_type2typ, get_value, json_type2typ
 from doctrans.pure_utils import lstrip_namespace, none_types, rpartial
 from doctrans.source_transformer import to_code
 
@@ -306,4 +306,43 @@ def column_call_to_param(call):
     return get_value(call.args[0]), _param
 
 
-__all__ = ["column_call_to_param", "ir_merge", "lstrip_typings"]
+def json_schema_property_to_param(param, required):
+    """
+    Convert a JSON schema property to a param
+
+    :param param: Name, dict with keys: 'typ', 'doc', 'default'
+    :type param: ```Tuple[str, dict]```
+
+    :param required: Names of all required parameters
+    :type required: ```FrozenSet[str]```
+
+    :returns: Name, dict with keys: 'typ', 'doc', 'default'
+    :rtype: ```Tuple[str, dict]```
+    """
+    name, _param = param
+    del param
+    if name.endswith("kwargs"):
+        _param["typ"] = "Optional[dict]"
+    elif "enum" in _param:
+        _param["typ"] = "Literal{}".format(_param.pop("enum"))
+        del _param["type"]
+    if "description" in _param:
+        _param["doc"] = _param.pop("description")
+
+    if _param.get("type"):
+        _param["typ"] = json_type2typ[_param.pop("type")]
+
+    if name not in required and _param.get("typ") and "Optional[" not in _param["typ"]:
+        _param["typ"] = "Optional[{}]".format(_param["typ"])
+        if _param.get("default") in none_types:
+            _param["default"] = NoneStr
+
+    return name, _param
+
+
+__all__ = [
+    "column_call_to_param",
+    "ir_merge",
+    "json_schema_property_to_param",
+    "lstrip_typings",
+]
