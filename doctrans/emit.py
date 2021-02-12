@@ -39,6 +39,7 @@ from doctrans.emitter_utils import (
     _make_call_meth,
     generate_repr_method,
     get_internal_body,
+    param2json_schema_property,
     param_to_sqlalchemy_column_call,
     to_docstring,
 )
@@ -751,6 +752,47 @@ def function(
         stmt=None,
         **maybe_type_comment
     )
+
+
+def json_schema(intermediate_repr):
+    """
+    Construct a JSON schema dict
+
+    :param intermediate_repr: a dictionary of form
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :type intermediate_repr: ```dict```
+    """
+    required = []
+    _param2json_schema_property = partial(param2json_schema_property, required=required)
+    properties = dict(
+        map(_param2json_schema_property, intermediate_repr["params"].items())
+    )
+
+    return {
+        "$id": "https://offscale.io/json.schema.json",
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "description": deindent(
+            to_docstring(
+                {
+                    "doc": intermediate_repr["doc"].lstrip() + "\n\n"
+                    if intermediate_repr["returns"]
+                    else "",
+                    "params": OrderedDict(),
+                    "returns": intermediate_repr["returns"],
+                },
+                emit_default_doc=True,
+                emit_types=True,
+            ).strip()
+        ),
+        "type": "object",
+        "properties": properties,
+        "required": required,
+    }
 
 
 def sqlalchemy_table(
