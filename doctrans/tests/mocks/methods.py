@@ -28,10 +28,10 @@ from doctrans.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
 from doctrans.pure_utils import tab
 from doctrans.tests.mocks.docstrings import (
     docstring_google_tf_adadelta_str,
+    docstring_header_str,
     docstring_no_default_doc_wrapped_str,
     docstring_no_type_no_default_str,
     docstring_str,
-    docstring_header_str,
 )
 from doctrans.tests.utils_for_tests import emit_separating_tab
 
