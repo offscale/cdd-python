@@ -804,7 +804,7 @@ def sqlalchemy_table(
                             )
                         ),
                         map(
-                            param_to_sqlalchemy_column_call,
+                            partial(param_to_sqlalchemy_column_call, include_name=True),
                             intermediate_repr["params"].items(),
                         ),
                     )
