@@ -751,7 +751,7 @@ def ast_parse_fix(s):
     return ast.parse(s if balanced else "{}]".format(s)).body[0].value
 
 
-def param_to_sqlalchemy_column_call(param, include_name=True):
+def param_to_sqlalchemy_column_call(param, include_name):
     """
     Turn a param into a `Column(…)`
 
