@@ -19,9 +19,9 @@ jobs:
                     -   name: Windows
                         runs-on: windows-latest
                         python_platform: win32
-                    -   name: macOS
-                        runs-on: macos-latest
-                        python_platform: darwin
+#                    -   name: macOS
+#                        runs-on: macos-latest
+#                        python_platform: darwin
         steps:
             -   uses: actions/checkout@v2
             -   name: Set up Python ${{ matrix.python-version }}
