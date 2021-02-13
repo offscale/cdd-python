@@ -995,7 +995,7 @@ def sqlalchemy(
                         lambda param: Assign(
                             targets=[Name(param[0], Store())],
                             value=param_to_sqlalchemy_column_call(
-                                param, include_name=False
+                                param, include_name=True
                             ),
                             expr=None,
                             lineno=None,
