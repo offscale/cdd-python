@@ -754,7 +754,7 @@ def function(
     )
 
 
-def json_schema(intermediate_repr):
+def json_schema(intermediate_repr, identifier="https://offscale.io/json.schema.json"):
     """
     Construct a JSON schema dict
 
@@ -766,6 +766,12 @@ def json_schema(intermediate_repr):
            "returns": Optional[OrderedDict[Literal['return_type'],
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
+
+    :param identifier: The `$id` of the schema
+    :type identifier: ```str```
+
+    :returns: JSON Schema dict
+    :rtype: ```dict```
     """
     required = []
     _param2json_schema_property = partial(param2json_schema_property, required=required)
@@ -774,7 +780,7 @@ def json_schema(intermediate_repr):
     )
 
     return {
-        "$id": "https://offscale.io/json.schema.json",
+        "$id": identifier,
         "$schema": "http://json-schema.org/draft-07/schema#",
         "description": deindent(
             to_docstring(

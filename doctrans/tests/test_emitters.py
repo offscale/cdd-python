@@ -450,7 +450,10 @@ class TestEmitters(TestCase):
         Tests that `emit.json_schema` with `intermediate_repr_no_default_doc` produces `config_schema`
         """
         self.assertDictEqual(
-            emit.json_schema(deepcopy(intermediate_repr_no_default_doc)),
+            emit.json_schema(
+                deepcopy(intermediate_repr_no_default_doc),
+                "https://offscale.io/config.schema.json",
+            ),
             config_schema,
         )
 
