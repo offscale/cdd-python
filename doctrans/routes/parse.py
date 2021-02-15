@@ -11,6 +11,7 @@ import yaml
 
 from doctrans.ast_utils import get_value
 from doctrans.docstring_parsers import parse_docstring
+from doctrans.pure_utils import pp
 
 
 def bottle(function_def):
@@ -31,7 +32,11 @@ def bottle(function_def):
         typ=type(function_def).__name__
     )
     app_decorator = next(
-        filter(lambda call: call.func.attr == "post", function_def.decorator_list)
+        filter(
+            lambda call: call.func.attr
+            in frozenset(("patch", "post", "put", "get", "delete", "trace")),
+            function_def.decorator_list,
+        )
     )
     route = get_value(app_decorator.args[0])  # type: str
     name = app_decorator.func.value.id  # type: str
@@ -53,11 +58,11 @@ def bottle(function_def):
             - len(yml_end_str)
             + 2
         ]
-        return openapi(openapi_str, route_dict)
+        return openapi(openapi_str, route_dict, ir["doc"][:yml_start].rstrip())
     return route_dict
 
 
-def openapi(openapi_str, routes_dict):
+def openapi(openapi_str, routes_dict, summary):
     """
     OpenAPI parser
 
@@ -67,36 +72,62 @@ def openapi(openapi_str, routes_dict):
     :param routes_dict: Has keys ("route", "name", "method")
     :type routes_dict: ```dict```
 
+    :param summary: summary string (used as fallback)
+    :type summary: ```str```
+
     :returns: OpenAPI dictionary
     """
-    entities, ticks, stack, eat = [], 0, [], False
-    for ch in openapi_str:
-        if ticks > 2:
-            eat, ticks = True, 0
+    entities, ticks, space, stack = [], 0, 0, []
+
+    for idx, ch in enumerate(openapi_str):
+        if ch.isspace():
+            space += 1
+        elif ticks > 2:
+            eat, ticks, space = True, 0, 0
             if stack:
                 entity = "".join(stack)
-                if entity.strip():
-                    entities.append(entity[1:])
+                if entity.strip() and entity != "````":
+                    entities.append(entity[1:].strip("`"))
                 stack.clear()
             stack.append(ch)
 
         elif ch == "`":
             ticks += 1
+            if stack:
+                stack.append(ch)
 
-        elif stack and eat:
+        elif stack and not space:
             stack.append(ch)
 
-    entity = "".join(stack)
-    if entity.strip():
-        entities[-1] = entity[1:]
-    stack.clear()
+    non_error_entity = None
+
+    if routes_dict["method"] == "get":
+        print("openapi_str:", openapi_str, ";")
+        pp({"entities": entities})
+
     for entity in entities:
         openapi_str = openapi_str.replace(
-            "$ref: ```{entity}```".format(entity=entity), entity
+            "$ref: ```{entity}```".format(entity=entity),
+            "{{'$ref': '#/components/schemas/{entity}'}}".format(entity=entity),
         )
+        if entity != "ServerError":
+            non_error_entity = entity
     openapi_d = (json.loads if openapi_str.startswith("{") else yaml.safe_load)(
         openapi_str
     )
+    if non_error_entity is not None:
+        openapi_d["summary"] = "A `{entity}` object.".format(entity=non_error_entity)
+        if routes_dict["method"] in frozenset(("post", "patch")):
+            openapi_d["requestBody"] = {
+                "$ref": "#/components/requestBodies/{entity}Body".format(
+                    entity=non_error_entity
+                ),
+                "required": True,
+            }
+    else:
+        openapi_d["summary"] = summary
+    if "responses" in openapi_d:
+        openapi_d["responses"] = {k: v or {} for k, v in openapi_d["responses"].items()}
     return openapi_d
 
 
