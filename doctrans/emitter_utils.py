@@ -15,6 +15,7 @@ from ast import (
     keyword,
 )
 from functools import partial
+from platform import system
 from textwrap import indent
 from typing import Any
 
@@ -806,7 +807,8 @@ def param_to_sqlalchemy_column_call(param, include_name):
     :returns: Form of: `Column(…)`
     :rtype: ```Call```
     """
-    print("param_to_sqlalchemy_column_call::include_name:", include_name, ";")
+    if system() == "Darwin":
+        print("param_to_sqlalchemy_column_call::include_name:", include_name, ";")
     name, _param = param
     del param
 

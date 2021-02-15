@@ -4,7 +4,7 @@ Mocks for JSON Schema
 from doctrans.tests.mocks.docstrings import docstring_header_and_return_str
 
 config_schema = {
-    "$id": "https://offscale.io/json.schema.json",
+    "$id": "https://offscale.io/config.schema.json",
     "$schema": "http://json-schema.org/draft-07/schema#",
     "description": docstring_header_and_return_str,
     "type": "object",
@@ -37,5 +37,28 @@ config_schema = {
     "required": ["dataset_name", "tfds_dir", "K"],
 }
 
+server_error_schema = {
+    "$id": "https://offscale.io/error_json.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Error schema",
+    "type": "object",
+    "properties": {
+        "error": {"description": "Name of the error", "type": "string"},
+        "error_description": {
+            "description": "Description of the error",
+            "type": "string",
+        },
+        "error_code": {
+            "description": "Code of the error (usually is searchable in a KB for further information)",
+            "type": "string",
+        },
+        "status_code": {
+            "description": "Status code (usually for HTTP)",
+            "type": "number",
+        },
+    },
+    "required": ["error", "error_description"],
+}
 
-__all__ = ["config_schema"]
+
+__all__ = ["config_schema", "server_error_schema"]
