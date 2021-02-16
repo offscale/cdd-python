@@ -31,6 +31,10 @@ def to_funcs(*paths):
     )
 
 
+with open("README.md", "rt", encoding="utf-8") as fh:
+    long_description = fh.read()
+
+
 def main():
     """ Main function for setup.py; this actually does the installation """
     with open(
@@ -48,12 +52,14 @@ def main():
     _data_join, _data_install_dir = to_funcs("_data")
 
     setup(
-        name=package_name,
+        name=package_name + "-offscale",
         author=__author__,
         author_email="807580+SamuelMarks@users.noreply.github.com",
         version=__version__,
         description="Open API to/fro routes, models, and tests."
         " Convert between docstrings, classes, methods, argparse, and SQLalchemy.",
+        long_description=long_description,
+        long_description_content_type="text/markdown",
         install_requires=["pyyaml"],
         test_suite=package_name + ".tests",
         packages=find_packages(),

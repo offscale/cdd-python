@@ -921,9 +921,14 @@ def generate_repr_method(params, cls_name, docstring_format):
         body=[
             Expr(
                 set_value(
-                    docstring_repr_str
-                    if docstring_format == "rest"
-                    else docstring_repr_google_str
+                    """\n{sep}{_repr_docstring}""".format(
+                        sep=tab * 2,
+                        _repr_docstring=(
+                            docstring_repr_str
+                            if docstring_format == "rest"
+                            else docstring_repr_google_str
+                        ).lstrip(),
+                    )
                 )
             ),
             Return(
