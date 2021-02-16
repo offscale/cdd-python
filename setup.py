@@ -12,7 +12,7 @@ from os import listdir, path
 
 from setuptools import find_packages, setup
 
-package_name = "doctrans"
+package_name = "cdd"
 
 
 def to_funcs(*paths):
