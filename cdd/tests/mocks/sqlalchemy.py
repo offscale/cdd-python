@@ -19,7 +19,7 @@ from ast import (
 from textwrap import indent
 
 from cdd.ast_utils import maybe_type_comment, set_value
-from cdd.pure_utils import tab
+from cdd.pure_utils import reindent, tab
 from cdd.tests.mocks.docstrings import (
     docstring_header_and_return_str,
     docstring_repr_str,
@@ -188,9 +188,9 @@ config_tbl_ast = Assign(
     **maybe_type_comment
 )
 
-config_decl_base_str = """
+config_decl_base_str = '''
 class Config(Base):
-    {_docstring_header_and_return_str!r}
+    """{_docstring_header_and_return_str}"""
     __tablename__ = "config_tbl"
 
     dataset_name = Column(
@@ -229,12 +229,12 @@ class Config(Base):
     )
 
     def __repr__(self):
-    {tab}{_repr_docstring!r}
+    {tab}"""\n{tab}{tab}{_repr_docstring}"""
     {__repr___body}
-    """.format(
-    _docstring_header_and_return_str=_docstring_header_and_return_str,
+    '''.format(
+    _docstring_header_and_return_str=reindent(_docstring_header_and_return_str),
     tab=tab,
-    _repr_docstring=docstring_repr_str,
+    _repr_docstring=docstring_repr_str.lstrip(),
     __repr___body="""
         return "Config(dataset_name={dataset_name!r}, tfds_dir={tfds_dir!r}, " \
                "K={K!r}, as_numpy={as_numpy!r}, data_loader_kwargs={data_loader_kwargs!r})".format(

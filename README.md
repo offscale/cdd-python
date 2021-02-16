@@ -10,7 +10,7 @@ cdd-python
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 
-Translate between docstrings, classes, methods, and argparse.
+Open API to/fro routes, models, and tests. Convert between docstrings, classes, methods, argparse, and SQLalchemy.
 
 Public SDK works with filenames, source code, and even in memory constructs (e.g., as imported into your REPL).
 
@@ -272,6 +272,127 @@ def set_cli_args(argument_parser):
     return argument_parser, (np.empty(0), np.empty(0))
 ```
 
+##### SQLalchemy
+There are two variants in the latest SQLalchemy, both are supported:
+
+```py
+from sqlalchemy import JSON, Boolean, Column, Enum, MetaData, String, Table, create_engine
+
+engine = create_engine("sqlite://", echo=True, future=True)
+metadata = MetaData()
+
+config_tbl = Table(
+    "config_tbl",
+    metadata,
+    Column(
+        "dataset_name",
+        String,
+        doc="name of dataset",
+        default="mnist",
+        primary_key=True,
+    ),
+    Column(
+        "tfds_dir",
+        String,
+        doc="directory to look for models in",
+        default="~/tensorflow_datasets",
+        nullable=False,
+    ),
+    Column(
+        "K",
+        Enum("np", "tf", name="K"),
+        doc="backend engine, e.g., `np` or `tf`",
+        default="np",
+        nullable=False,
+    ),
+    Column(
+        "as_numpy",
+        Boolean,
+        doc="Convert to numpy ndarrays",
+        default=None,
+        nullable=True,
+    ),
+    Column(
+        "data_loader_kwargs",
+        JSON,
+        doc="pass this as arguments to data_loader function",
+        default=None,
+        nullable=True,
+    ),
+    comment='Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare\n'
+            '\n'
+            ':returns: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))\n'
+            ':rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```',
+)
+
+metadata.create_all(engine)
+```
+
+```py
+from sqlalchemy.orm import declarative_base
+from sqlalchemy import JSON, Boolean, Column, Enum, String
+
+Base = declarative_base()
+
+class Config(Base):
+    """
+    Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare
+    
+    :returns: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
+    :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
+    """
+    __tablename__ = "config_tbl"
+
+    dataset_name = Column(
+        String,
+        doc="name of dataset",
+        default="mnist",
+        primary_key=True,
+    )
+
+    tfds_dir = Column(
+        String,
+        doc="directory to look for models in",
+        default="~/tensorflow_datasets",
+        nullable=False,
+    )
+
+    K = Column(
+        Enum("np", "tf", name="K"),
+        doc="backend engine, e.g., `np` or `tf`",
+        default="np",
+        nullable=False,
+    )
+
+    as_numpy = Column(
+        Boolean,
+        doc="Convert to numpy ndarrays",
+        default=None,
+        nullable=True,
+    )
+
+    data_loader_kwargs = Column(
+        JSON,
+        doc="pass this as arguments to data_loader function",
+        default=None,
+        nullable=True,
+    )
+
+    def __repr__(self):
+        """
+        Emit a string representation of the current instance
+        
+        :returns: String representation of instance
+        :rtype: ```str```
+        """
+    
+        return ("Config(dataset_name={dataset_name!r}, tfds_dir={tfds_dir!r}, "
+                "K={K!r}, as_numpy={as_numpy!r}, data_loader_kwargs={data_loader_kwargs!r})").format(
+            dataset_name=self.dataset_name, tfds_dir=self.tfds_dir, K=self.K,
+            as_numpy=self.as_numpy, data_loader_kwargs=self.data_loader_kwargs
+        )
+```
+
 ## Advantages
 
   - CLI gives proper `--help` messages
@@ -298,9 +419,9 @@ def set_cli_args(argument_parser):
 
 ## CLI for this project
 
-    $ python -m doctrans --help
+    $ python -m cdd --help
 
-    usage: python -m doctrans [-h] [--version] {sync_properties,sync,gen} ...
+    usage: python -m cdd [-h] [--version] {sync_properties,sync,gen} ...
     
     Translate between docstrings, classes, methods, and argparse.
     
@@ -319,9 +440,9 @@ def set_cli_args(argument_parser):
 
 ### `sync`
 
-    $ python -m doctrans sync --help
+    $ python -m cdd sync --help
 
-    usage: python -m doctrans sync [-h] [--argparse-function ARGPARSE_FUNCTIONS]
+    usage: python -m cdd sync [-h] [--argparse-function ARGPARSE_FUNCTIONS]
                                    [--argparse-function-name ARGPARSE_FUNCTION_NAMES]
                                    [--class CLASSES] [--class-name CLASS_NAMES]
                                    [--function FUNCTIONS]
@@ -347,9 +468,9 @@ def set_cli_args(argument_parser):
 
 ### `sync_properties`
 
-    $ python -m doctrans sync_properties --help
+    $ python -m cdd sync_properties --help
 
-    usage: python -m doctrans sync_properties [-h] --input-filename INPUT_FILENAME
+    usage: python -m cdd sync_properties [-h] --input-filename INPUT_FILENAME
                                               --input-param INPUT_PARAMS
                                               [--input-eval] --output-filename
                                               OUTPUT_FILENAME --output-param
@@ -377,9 +498,9 @@ def set_cli_args(argument_parser):
 
 ### `gen`
 
-    $ python -m doctrans gen --help
+    $ python -m cdd gen --help
 
-    usage: python -m doctrans gen [-h] --name-tpl NAME_TPL --input-mapping
+    usage: python -m cdd gen [-h] --name-tpl NAME_TPL --input-mapping
                                   INPUT_MAPPING [--prepend PREPEND]
                                   [--imports-from-file IMPORTS_FROM_FILE] --type
                                   {argparse,class,function} --output-filename
