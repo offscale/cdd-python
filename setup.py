@@ -50,7 +50,10 @@ def main():
     setup(
         name=package_name,
         author=__author__,
+        author_email="807580+SamuelMarks@users.noreply.github.com",
         version=__version__,
+        description="Open API to/fro routes, models, and tests."
+        " Convert between docstrings, classes, methods, argparse, and SQLalchemy.",
         install_requires=["pyyaml"],
         test_suite=package_name + ".tests",
         packages=find_packages(),
@@ -65,8 +68,11 @@ def main():
             "Natural Language :: English",
             "Operating System :: OS Independent",
             "Programming Language :: Python :: 3 :: Only",
+            "Programming Language :: Python :: 3.7",
             "Programming Language :: Python :: 3.8",
+            "Programming Language :: Python :: 3.9",
             "Programming Language :: Python :: Implementation",
+            "Programming Language :: Python :: Implementation :: CPython",
             "Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator",
             "Topic :: Software Development",
             "Topic :: Software Development :: Build Tools",
@@ -75,6 +81,8 @@ def main():
             "Topic :: Software Development :: Pre-processors",
             "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
         ],
+        python_requires=">=3.6",
+        url="https://github.com/offscale/cdd-python",
         data_files=[
             (_data_install_dir(), list(map(_data_join, listdir(_data_join()))))
         ],

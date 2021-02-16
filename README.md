@@ -9,18 +9,22 @@ cdd-python
 [![codecov](https://codecov.io/gh/offscale/cdd-python/branch/master/graph/badge.svg)](https://codecov.io/gh/offscale/cdd-python)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
+[![](https://img.shields.io/pypi/v/cdd.svg?maxAge=3600)](https://pypi.org/project/cdd/)
 
 Open API to/fro routes, models, and tests. Convert between docstrings, classes, methods, argparse, and SQLalchemy.
 
 Public SDK works with filenames, source code, and even in memory constructs (e.g., as imported into your REPL).
 
-## Install dependencies
-
-    pip install -r requirements.txt
-
 ## Install package
 
-    pip install .
+### PyPi
+
+    pip install offscale/cdd
+
+### Developer
+
+    pip install -r https://raw.githubusercontent.com/offscale/cdd-python/master/requirements.txt
+    pip install https://api.github.com/repos/offscale/cdd-python/zipball#egg=cdd
 
 ## Purpose
 
