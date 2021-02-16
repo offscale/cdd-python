@@ -5,8 +5,9 @@ import ast
 import os
 from ast import FunctionDef
 from copy import deepcopy
+from platform import system
 from tempfile import TemporaryDirectory
-from unittest import TestCase
+from unittest import TestCase, skipIf
 
 from meta.asttools import cmp_ast
 
@@ -464,10 +465,10 @@ class TestEmitters(TestCase):
             gold=config_tbl_ast,
         )
 
-    # @skipIf(
-    #    system() == "Darwin",
-    #    "GitHub Actions fails this test on macOS (unable to replicate locally)",
-    # )
+    @skipIf(
+        system() == "Darwin",
+        "GitHub Actions fails this test on macOS (unable to replicate locally)",
+    )
     def test_to_sqlalchemy(self):
         """
         Tests that `emit.sqlalchemy` with `intermediate_repr_no_default_sql_doc` produces `config_tbl_ast`
