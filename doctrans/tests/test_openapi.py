@@ -14,6 +14,8 @@ from doctrans.tests.utils_for_tests import unittest_main
 class TestOpenApi(TestCase):
     """ Tests whether `NameModelRouteIdCrud` can construct a `dict` """
 
+    maxDiff = None
+
     def test_openapi_emitter(self) -> None:
         """
         Tests whether `openapi.emit` produces `openapi_dict` given `NameModelRouteIdCrud`

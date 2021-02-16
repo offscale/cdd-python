@@ -99,9 +99,7 @@ openapi_dict = {
                         "description": "A `ServerError` object.",
                     },
                 },
-                "summary": "Find one `{name}` or error".format(
-                    name=route_config["name"]
-                ),
+                "summary": "A `{name}` object.".format(name=route_config["name"]),
             },
             "parameters": [
                 {
@@ -118,4 +116,4 @@ openapi_dict = {
     },
 }
 
-__all__ = ["openapi"]
+__all__ = ["openapi_dict"]

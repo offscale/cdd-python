@@ -159,13 +159,13 @@ def read({id}):
     ```yml
     responses:
       '200':
-        description: Found `{name}` object.
+        description: A `{name}` object.
         content:
           application/json:
             schema:
               $ref: ```{name}```
       '404':
-        description: A `ServerError` object indicating no `{name}` was found.
+        description: A `ServerError` object.
         content:
           application/json:
             schema:

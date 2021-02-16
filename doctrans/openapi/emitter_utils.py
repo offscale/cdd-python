@@ -94,7 +94,7 @@ def components_paths_from_name_model_route_id_crud(
         }
         if "R" in crud:
             paths[_route]["get"] = {
-                "summary": "Find one `{name}` or error".format(name=name),
+                "summary": "A `{name}` object.".format(name=name),
                 "responses": {
                     "200": {
                         "description": "A `{name}` object.".format(name=name),
@@ -143,4 +143,4 @@ def components_paths_from_name_model_route_id_crud(
         }
 
 
-__all__ = ["emit", "NameModelRouteIdCrud"]
+__all__ = ["components_paths_from_name_model_route_id_crud", "NameModelRouteIdCrud"]

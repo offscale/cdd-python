@@ -4,6 +4,8 @@ Tests route parsing
 from unittest import TestCase
 
 from doctrans.routes import parse
+from doctrans.routes.emit import create_util
+from doctrans.routes.emit_constants import create_helper_variants
 from doctrans.tests.mocks.openapi import openapi_dict
 from doctrans.tests.mocks.routes import (
     create_route,
@@ -33,6 +35,17 @@ class TestRouteEmit(TestCase):
         self.assertDictEqual(
             parse.bottle(_create_route),
             openapi_dict["paths"][route_config["route"]]["post"],
+        )
+
+    def test_create_util(self) -> None:
+        """
+        Tests whether `create_util` is produced by `create_util`
+        """
+        self.assertEqual(
+            create_util(name=route_config["name"], route=route_config["route"]),
+            create_helper_variants[-1].format(
+                name=route_config["name"], route=route_config["route"]
+            ),
         )
 
     def test_read(self) -> None:
