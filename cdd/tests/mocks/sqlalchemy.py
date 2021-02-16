@@ -249,7 +249,7 @@ config_decl_base_ast = ClassDef(
     bases=[Name("Base", Load())],
     keywords=[],
     body=[
-        Expr(set_value(_docstring_header_and_return_str)),
+        Expr(set_value(reindent(_docstring_header_and_return_str))),
         Assign(
             targets=[Name("__tablename__", Store())],
             value=set_value("config_tbl"),
@@ -397,7 +397,7 @@ config_decl_base_ast = ClassDef(
                 kwarg=None,
             ),
             body=[
-                Expr(set_value(docstring_repr_str)),
+                Expr(set_value(docstring_repr_str.lstrip(" "))),
                 Return(
                     value=Call(
                         func=Attribute(
@@ -461,6 +461,10 @@ config_decl_base_ast = ClassDef(
     ],
     decorator_list=[],
     expr=None,
+    lineno=None,
+    col_offset=None,
+    end_lineno=None,
+    end_col_offset=None,
     identifier_name=None,
 )
 
