@@ -55,6 +55,7 @@ from cdd.pure_utils import (
     tab,
 )
 from cdd.source_transformer import to_code
+from cdd.tests.utils_for_tests import emit_separating_tab
 
 
 def argparse_function(
@@ -957,31 +958,33 @@ def sqlalchemy(
                     Expr(
                         set_value(
                             "{doc}\n{tab}".format(
-                                doc=indent(
-                                    "\n".join(
-                                        map(
-                                            str.strip,
-                                            to_docstring(
-                                                {
-                                                    "doc": intermediate_repr[
-                                                        "doc"
-                                                    ].lstrip()
-                                                    + "\n\n"
-                                                    if intermediate_repr["returns"]
-                                                    else "",
-                                                    "params": OrderedDict(),
-                                                    "returns": intermediate_repr[
-                                                        "returns"
-                                                    ],
-                                                },
-                                                emit_default_doc=emit_default_doc,
-                                                docstring_format=docstring_format,
-                                                word_wrap=word_wrap,
-                                                emit_types=True,
-                                            ).splitlines(),
-                                        )
-                                    ),
-                                    tab,
+                                doc=emit_separating_tab(
+                                    indent(
+                                        "\n".join(
+                                            map(
+                                                str.strip,
+                                                to_docstring(
+                                                    {
+                                                        "doc": intermediate_repr[
+                                                            "doc"
+                                                        ].lstrip()
+                                                        + "\n\n"
+                                                        if intermediate_repr["returns"]
+                                                        else "",
+                                                        "params": OrderedDict(),
+                                                        "returns": intermediate_repr[
+                                                            "returns"
+                                                        ],
+                                                    },
+                                                    emit_default_doc=emit_default_doc,
+                                                    docstring_format=docstring_format,
+                                                    word_wrap=word_wrap,
+                                                    emit_types=True,
+                                                ).splitlines(),
+                                            )
+                                        ),
+                                        tab,
+                                    )
                                 ).rstrip(),
                                 tab=tab,
                             )

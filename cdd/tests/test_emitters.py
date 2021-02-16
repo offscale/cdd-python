@@ -473,7 +473,8 @@ class TestEmitters(TestCase):
         """
         Tests that `emit.sqlalchemy` with `intermediate_repr_no_default_sql_doc` produces `config_tbl_ast`
         """
-        print("test_to_sqlalchemy")
+        if system() == "Darwin":
+            print("test_to_sqlalchemy")
         run_ast_test(
             self,
             emit.sqlalchemy(
