@@ -10,6 +10,7 @@ from os import path
 from cdd import __version__
 from cdd.conformance import ground_truth
 from cdd.gen import gen
+from cdd.openapi.gen_routes import gen_routes, upsert_routes
 from cdd.pure_utils import pluralise
 from cdd.sync_properties import sync_properties
 
@@ -215,6 +216,38 @@ def _build_parser():
         dest="decorator_list",
     )
 
+    ##############
+    # gen_routes #
+    ##############
+    routes_parser = subparsers.add_parser(
+        "gen_routes", help=("Generate per model route(s)")
+    )
+
+    routes_parser.add_argument(
+        "--crud",
+        help="What of (C)reate, (R)ead, (U)pdate, (D)elete to generate",
+        choices=("CRUD", "CR", "C", "R", "U", "D", "CR", "CU", "CD", "CRD"),
+        required=True,
+    )
+
+    routes_parser.add_argument(
+        "--app-name",
+        help="Name of app (e.g., `app_name = Bottle();\n@app_name.get('/api')\ndef slash(): pass`)",
+        default="rest_api",
+    )
+    routes_parser.add_argument(
+        "--model-path",
+        help="Python module resolution (foo.models) or filepath (foo/models)",
+        required=True,
+    )
+    routes_parser.add_argument(
+        "--model-name",
+        help="Name of model to generate from",  # required=True
+    )
+    routes_parser.add_argument(
+        "--route", help="Name of the route, defaults to `/api/{model_name.lower()}`"
+    )
+
     return parser
 
 
@@ -294,6 +327,20 @@ def main(cli_argv=None, return_args=False):
                 " rerun.".format(args.output_filename)
             )
         gen(**args_dict)
+    elif command == "gen_routes":
+        routes = gen_routes(
+            app=args.app_name,
+            crud=args.crud,
+            model_name=args.model_name,
+            model_path=args.model_path,
+            route=args.route,
+        )
+        upsert_routes(
+            app=args.app_name,
+            route=args.route,
+            routes=routes,
+            routes_path=getattr(args, "routes_path", None),
+        )
 
 
 if __name__ == "__main__":
