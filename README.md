@@ -3,13 +3,13 @@ cdd-python
 ![Python version range](https://img.shields.io/badge/python-3.6%20|%203.7%20|%203.8%20|%203.9%20|%203.10a5-blue.svg)
 ![Python implementation](https://img.shields.io/badge/implementation-cpython-blue.svg)
 [![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Linting, testing, and coverage](https://github.com/offscale/cdd-python/workflows/Linting,%20testing,%20and%20coverage/badge.svg)](https://github.com/offscale/cdd-python/actions)
+[![Linting, testing, coverage, and release](https://github.com/offscale/cdd-python/workflows/Linting,%20testing,%20coverage,%20and%20release/badge.svg)](https://github.com/offscale/cdd-python/actions)
 ![Tested OSs, others may work](https://img.shields.io/badge/Tested%20on-Linux%20|%20macOS%20|%20Windows-green)
 ![Documentation coverage](.github/doccoverage.svg)
 [![codecov](https://codecov.io/gh/offscale/cdd-python/branch/master/graph/badge.svg)](https://codecov.io/gh/offscale/cdd-python)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
-[![PyPi: release](https://img.shields.io/pypi/v/cdd-offscale.svg?maxAge=3600)](https://pypi.org/project/cdd-offscale/)
+[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort)
+[![PyPi: release](https://img.shields.io/pypi/v/cdd-offscale.svg?maxAge=3600)](https://pypi.org/project/cdd-offscale)
 
 Open API to/fro routes, models, and tests. Convert between docstrings, classes, methods, argparse, and SQLalchemy.
 
@@ -46,18 +46,18 @@ Some of these problems can be solved dynamically, however in doing so one loses 
 
 To create a `class` from [`tf.keras.optimizers.Adam`](https://www.tensorflow.org/api_docs/python/tf/keras/optimizers/Adam):
 
-```py
->> > from cdd.source_transformer import to_code
+```python
+>>> from cdd.source_transformer import to_code
 
->> > from cdd import emit, parse
+>>> from cdd import emit, parse
 
->> > import tensorflow as tf
+>>> import tensorflow as tf
 
->> > from typing import Optional
+>>> from typing import Optional
 
->> > print(to_code(emit.class_(parse.class_(tf.keras.optimizers.Adam,
-                                            merge_inner_function="__init__"),
-                               class_name="AdamConfig")))
+>>> print(to_code(emit.class_(parse.class_(tf.keras.optimizers.Adam,
+                                           merge_inner_function="__init__"),
+                              class_name="AdamConfig")))
 
 
 class AdamConfig(object):
