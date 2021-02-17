@@ -31,7 +31,7 @@ def create(app, name, route, variant=2):
     return create_route_variants[variant].format(app=app, name=name, route=route)
 
 
-def create_util(name="Config", route="/api/config", variant=1):
+def create_util(name, route, variant=1):
     """
     Create utility function that the `create` emitter above uses
 

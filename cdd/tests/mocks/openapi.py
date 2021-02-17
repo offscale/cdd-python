@@ -26,7 +26,7 @@ openapi_dict = {
         "schemas": {
             name: {k: v for k, v in schema.items() if not k.startswith("$")}
             for name, schema in {
-                "Config": config_schema,
+                route_config["name"]: config_schema,
                 "ServerError": server_error_schema,
             }.items()
         },
