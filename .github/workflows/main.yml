@@ -1,4 +1,4 @@
-name: Linting, testing, and coverage
+name: Linting, testing, coverage, and release
 
 on:
   push:
@@ -75,4 +75,14 @@ jobs:
                     bash <(curl -s https://codecov.io/bash)
                 env:
                     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+                if: matrix.python-version == '3.8' && matrix.os.name == 'Linux' && github.ref == 'refs/heads/master'
+            -   name: PyPi release
+                run: |
+                    pip install twine
+                    python setup.py sdist bdist_wheel
+                    python -m twine upload --repository pypi dist/*
+                env:
+                    TWINE_USERNAME: __token__
+                    TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+                    TWINE_NON_INTERACTIVE: 1
                 if: matrix.python-version == '3.8' && matrix.os.name == 'Linux' && github.ref == 'refs/heads/master'
