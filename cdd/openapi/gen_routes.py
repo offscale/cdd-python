@@ -2,8 +2,6 @@
 Generate routes
 """
 import ast
-from importlib import import_module
-from inspect import getfile
 from itertools import chain
 from operator import attrgetter, itemgetter
 from os import path
@@ -50,12 +48,12 @@ def gen_routes(app, model_path, model_name, crud, route):
     :rtype: ```Iterator[FunctionDef]```
     """
     if path.sep in model_path:
-        if not path.isfile(model_path):
-            raise IOError("{!r} not found.".format(model_path))
+        # if not path.isfile(model_path):
+        #     raise IOError("{!r} not found.".format(model_path))
         with open(model_path, "rt") as f:
             mod = ast.parse(f.read())
-    else:
-        mod = import_module(model_path)
+    # else:
+    #     mod = import_module(model_path)
 
     sqlalchemy_node = next(
         filter(
@@ -78,14 +76,15 @@ def gen_routes(app, model_path, model_name, crud, route):
         ),
         next(iter(sqlalchemy_ir["params"].keys())),
     )
-    route_config = dict(app=app, name=model_name, route=route, variant=-1)
+    _route_config = {"app": app, "name": model_name, "route": route, "variant": -1}
     routes = []
     if "C" in crud:
-        routes.append(routes_emit.create(**route_config))
-    route_config["primary_key"] = primary_key
+        routes.append(routes_emit.create(**_route_config))
+    _route_config["primary_key"] = primary_key
 
     funcs = {"R": routes_emit.read, "U": None, "D": routes_emit.destroy}
-    routes.extend(funcs[key](**route_config) for key in funcs if key in crud)
+    routes.extend(funcs[key](**_route_config) for key in funcs if key in crud)
+    print("routes.keys():", {key for key in funcs if key in crud}, ";")
     return map(itemgetter(0), map(attrgetter("body"), map(ast.parse, routes)))
 
 
@@ -123,27 +122,51 @@ def upsert_routes(app, routes, routes_path, route):
                     )
                 )
             return
-    else:
-        routes_path = getfile(routes_path)
+    # else:
+    #    routes_path = getfile(routes_path)
     with open(routes_path, "rt") as f:
         mod = ast.parse(f.read())
 
-    routes = tuple(routes)
-
     def get_names(it):
         """
+        Derive a name -> FunctionDef dictionary
+
         :param it: Objects with a `.name` attribute
         :type it: ```Iterator[FunctionDef]```
 
-        :returns: Frozenset of names
-        :rtype: ```FrozenSet[str]```
+        :returns: Dict of names to dict
+        :rtype: ```Dict[str, FunctionDef]```
         """
-        return frozenset(map(attrgetter("name"), it))
+        return dict(map(lambda node: (node.name, node), it))
 
-    routes_wanted = get_names(routes)
-    routes_found = get_names(filter(rpartial(isinstance, FunctionDef), ast.walk(mod)))
-    if routes_wanted == routes_found:
+    routes_required = get_names(routes)
+    routes_existing = get_names(
+        filter(rpartial(isinstance, FunctionDef), ast.walk(mod))
+    )
+    if routes_required.keys() == routes_existing.keys():
         return
+
+    with open(routes_path, "rt") as f:
+        print(f.read())
+
+    new_routes = tuple(
+        map(
+            to_code,
+            map(
+                routes_required.__getitem__,
+                routes_required.keys() & routes_existing.keys()
+                ^ routes_required.keys(),
+            ),
+        )
+    )
+
+    print("new_routes:", new_routes, ";")
+
+    # if new_routes:
+    #     with open(routes_path, "a") as f:
+    #         f.write("\n".join(new_routes))
+    # else:
+    #     print("No new routes")
 
 
 __all__ = ["gen_routes", "upsert_routes"]

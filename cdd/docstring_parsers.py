@@ -356,7 +356,8 @@ def _scan_phase_rest(docstring, arg_tokens, return_tokens):
     :rtype: ```List[Tuple[bool, str]]```
     """
 
-    rev_known_tokens_t = tuple(map(tuple, map(reversed, arg_tokens + return_tokens)))
+    all_tokens = arg_tokens + return_tokens
+    rev_known_tokens_t = tuple(map(tuple, map(reversed, all_tokens)))
     scanned: List[Tuple[bool, str]] = []
     stack: List[str] = []
 
@@ -377,7 +378,7 @@ def _scan_phase_rest(docstring, arg_tokens, return_tokens):
         scanned.append(
             (
                 bool(scanned and scanned[-1][0])
-                or any(map(final.startswith, arg_tokens + return_tokens)),
+                or any(map(final.startswith, all_tokens)),
                 final,
             )
         )

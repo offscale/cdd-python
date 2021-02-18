@@ -4,7 +4,12 @@ Mock routes
 from cdd.pure_utils import tab
 from cdd.routes import emit
 
-route_config = dict(app="rest_api", name="Config", route="/api/config", variant=-1)
+route_config = {
+    "app": "rest_api",
+    "name": "Config",
+    "route": "/api/config",
+    "variant": -1,
+}
 
 create_route = emit.create(**route_config)
 

@@ -70,7 +70,7 @@ class TestPureUtils(TestCase):
         self.assertTrue(identity(True))
         self.assertIsNone(identity(None))
 
-    def test_location_within(self) -> None:
+    def test_location_within0(self) -> None:
         """ Tests `location_within` responds with correct `start_idx`, `end_idx` and `found` elements """
 
         mock_str = "foocanhaz"
@@ -85,6 +85,12 @@ class TestPureUtils(TestCase):
         self.assertTupleEqual(
             location_within(mock_str, ("bar", "con", "bon")), none_res
         )
+
+    def test_location_within1(self) -> None:
+        """ Tests `location_within` responds with correct `start_idx`, `end_idx` and `found` elements """
+
+        none_res = -1, -1, None
+
         self.assertTupleEqual(location_within("a", ("bar", "con", "bon")), none_res)
         self.assertTupleEqual(location_within("can", ("can",)), (0, 3, "can"))
         self.assertTupleEqual(
