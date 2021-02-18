@@ -31,7 +31,7 @@ def to_funcs(*paths):
     )
 
 
-with open("README.md", "rt", encoding="utf-8") as fh:
+with open(path.join(path.dirname(__file__), "README.md"), "rt", encoding="utf-8") as fh:
     long_description = fh.read()
 
 
@@ -52,7 +52,7 @@ def main():
     _data_join, _data_install_dir = to_funcs("_data")
 
     setup(
-        name=package_name + "-offscale",
+        name="python-" + package_name,
         author=__author__,
         author_email="807580+SamuelMarks@users.noreply.github.com",
         version=__version__,

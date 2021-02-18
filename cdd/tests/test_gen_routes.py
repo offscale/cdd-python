@@ -30,7 +30,7 @@ def populate_files(tempdir):
     """
     model_path = path.join(tempdir, "model.py")
     routes_path = path.join(tempdir, "routes.py")
-    open("__init__.py", "a").close()
+    open(path.join(tempdir, "__init__.py"), "a").close()
 
     model = "\n".join(
         (
@@ -56,16 +56,33 @@ class TestGenRoutes(TestCase):
 
     def test_gen_routes_update(self) -> None:
         """ Tests `gen_routes` when routes do exists """
-        self.gen_routes_tester("update")
+        self.gen_routes_tester("update", "CRD")
+
+    def test_gen_routes_update_missing(self) -> None:
+        """ Tests `gen_routes` when routes do exists, but `destroy` route (DELETE method) is missing """
+        self.gen_routes_tester("update", "CR")
 
     def test_gen_routes_insert(self) -> None:
         """ Tests `gen_routes` when routes do not exist """
-        self.gen_routes_tester("insert")
+        self.gen_routes_tester("insert", "CRD")
 
-    def gen_routes_tester(self, approach):
+    def gen_routes_tester(self, approach, init_with_crud):
         """
         :param approach: How to upsert
         :type approach: ```Literal["insert", "update"]```
+
+        :param init_with_crud:
+        :type init_with_crud: ```Union[Literal['C', 'R'], Literal['C', 'U'], Literal['C', 'D'], Literal['R', 'C'],
+                         Literal['R', 'U'], Literal['R', 'D'], Literal['U', 'C'], Literal['U', 'R'],
+                         Literal['U', 'D'], Literal['D', 'C'], Literal['D', 'R'], Literal['D', 'U'],
+                         Literal['C', 'R', 'U'], Literal['C', 'R', 'D'], Literal['C', 'U', 'R'],
+                         Literal['C', 'U', 'D'], Literal['C', 'D', 'R'], Literal['C', 'D', 'U'],
+                         Literal['R', 'C', 'U'], Literal['R', 'C', 'D'], Literal['R', 'U', 'C'],
+                         Literal['R', 'U', 'D'], Literal['R', 'D', 'C'], Literal['R', 'D', 'U'],
+                         Literal['U', 'C', 'R'], Literal['U', 'C', 'D'], Literal['U', 'R', 'C'],
+                         Literal['U', 'R', 'D'], Literal['U', 'D', 'C'], Literal['U', 'D', 'R'],
+                         Literal['D', 'C', 'R'], Literal['D', 'C', 'U'], Literal['D', 'R', 'C'],
+                         Literal['D', 'R', 'U'], Literal['D', 'U', 'C'], Literal['D', 'U', 'R']]```
         """
         with TemporaryDirectory() as tempdir:
             model_path, routes_path = populate_files(tempdir)
@@ -78,13 +95,13 @@ class TestGenRoutes(TestCase):
                 route=route_config["route"],
                 model_path=model_path,
                 model_name=route_config["name"],
-                crud="CRD",
+                crud=init_with_crud,
             )
 
             routes, testable_routes = tee(routes)
-            testable_routes = list(testable_routes)
+            testable_routes = tuple(testable_routes)
 
-            self.assertIsInstance(testable_routes, list)
+            self.assertIsInstance(testable_routes, tuple)
             self.assertGreaterEqual(len(testable_routes), 1)
             self.assertIsInstance(testable_routes[0], FunctionDef)
 

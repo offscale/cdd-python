@@ -3,15 +3,15 @@ Parsers for routes
 """
 import ast
 from ast import FunctionDef
+from importlib import import_module
 from inspect import getsource
 from types import FunctionType
 
 from cdd.pure_utils import PY_GTE_3_8
 
-if PY_GTE_3_8:
-    from typing import Literal
-else:
-    from typing_extensions import Literal
+Literal = getattr(
+    import_module("typing" if PY_GTE_3_8 else "typing_extensions"), "Literal"
+)
 
 from cdd.ast_utils import get_value
 from cdd.docstring_parsers import parse_docstring
