@@ -5,6 +5,7 @@
 """
 from argparse import ArgumentParser, Namespace
 from codecs import decode
+from collections import deque
 from os import path
 
 from cdd import __version__
@@ -229,7 +230,6 @@ def _build_parser():
         choices=("CRUD", "CR", "C", "R", "U", "D", "CR", "CU", "CD", "CRD"),
         required=True,
     )
-
     routes_parser.add_argument(
         "--app-name",
         help="Name of app (e.g., `app_name = Bottle();\n@app_name.get('/api')\ndef slash(): pass`)",
@@ -241,11 +241,16 @@ def _build_parser():
         required=True,
     )
     routes_parser.add_argument(
-        "--model-name",
-        help="Name of model to generate from",  # required=True
+        "--model-name", help="Name of model to generate from", required=True
     )
     routes_parser.add_argument(
-        "--route", help="Name of the route, defaults to `/api/{model_name.lower()}`"
+        "--routes-path",
+        help="Python module resolution 'foo.routes' or filepath 'foo/routes'",
+        required=True,
+    )
+    routes_parser.add_argument(
+        "--route",
+        help="Name of the route, defaults to `/api/{model_name.lower()}`",
     )
 
     return parser
@@ -280,9 +285,7 @@ def main(cli_argv=None, return_args=False):
         if truth_file is None:
             _parser.error("--truth must be an existent file. Got: None")
         else:
-            truth_file = truth_file[0]
-
-        truth_file = path.realpath(path.expanduser(truth_file))
+            truth_file = path.realpath(path.expanduser(truth_file[0]))
 
         number_of_files = sum(
             len(val)
@@ -302,11 +305,17 @@ def main(cli_argv=None, return_args=False):
 
         return args if return_args else ground_truth(args, truth_file)
     elif command == "sync_properties":
-        for fname in "input_filename", "output_filename":
-            if path.isfile(getattr(args, fname)):
+        deque(
+            (
                 setattr(
                     args, fname, path.realpath(path.expanduser(getattr(args, fname)))
                 )
+                for fname in ("input_filename", "output_filename")
+                if path.isfile(getattr(args, fname))
+            ),
+            maxlen=0,
+        )
+
         if args.input_filename is None or not path.isfile(args.input_filename):
             _parser.error(
                 "--input-file must be an existent file. Got: {!r}".format(
@@ -328,7 +337,10 @@ def main(cli_argv=None, return_args=False):
             )
         gen(**args_dict)
     elif command == "gen_routes":
-        routes = gen_routes(
+        if args.route is None:
+            args.route = "/api/{model_name}".format(model_name=args.model_name.lower())
+
+        routes, primary_key = gen_routes(
             app=args.app_name,
             crud=args.crud,
             model_name=args.model_name,
@@ -340,6 +352,7 @@ def main(cli_argv=None, return_args=False):
             route=args.route,
             routes=routes,
             routes_path=getattr(args, "routes_path", None),
+            primary_key=primary_key,
         )
 
 

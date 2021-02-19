@@ -2,15 +2,16 @@
 Generate routes
 """
 import ast
+from ast import Attribute, Call, ClassDef, FunctionDef, Name
 from itertools import chain
 from operator import attrgetter, itemgetter
 from os import path
 
-from _ast import ClassDef, FunctionDef, Name
-
 from cdd import parse
-from cdd.pure_utils import rpartial
+from cdd.ast_utils import get_value
+from cdd.pure_utils import filename_from_mod_or_filename, rpartial
 from cdd.routes import emit as routes_emit
+from cdd.routes.parse import methods
 from cdd.source_transformer import to_code
 from cdd.tests.mocks.routes import route_prelude
 
@@ -47,13 +48,11 @@ def gen_routes(app, model_path, model_name, crud, route):
     :returns: Iterator of functions representing relevant CRUD operations
     :rtype: ```Iterator[FunctionDef]```
     """
-    if path.sep in model_path:
-        # if not path.isfile(model_path):
-        #     raise IOError("{!r} not found.".format(model_path))
-        with open(model_path, "rt") as f:
-            mod = ast.parse(f.read())
-    # else:
-    #     mod = import_module(model_path)
+    model_path = filename_from_mod_or_filename(model_path)
+
+    assert path.isfile(model_path)
+    with open(model_path, "rt") as f:
+        mod = ast.parse(f.read())
 
     sqlalchemy_node = next(
         filter(
@@ -84,11 +83,13 @@ def gen_routes(app, model_path, model_name, crud, route):
 
     funcs = {"R": routes_emit.read, "U": None, "D": routes_emit.destroy}
     routes.extend(funcs[key](**_route_config) for key in funcs if key in crud)
-    print("routes.keys():", {key for key in funcs if key in crud}, ";")
-    return map(itemgetter(0), map(attrgetter("body"), map(ast.parse, routes)))
+    return (
+        map(itemgetter(0), map(attrgetter("body"), map(ast.parse, routes))),
+        primary_key,
+    )
 
 
-def upsert_routes(app, routes, routes_path, route):
+def upsert_routes(app, routes, routes_path, route, primary_key):
     """
     Upsert the `routes` to the `routes_path`, on merge use existing body and replace interface/prototype
 
@@ -101,72 +102,120 @@ def upsert_routes(app, routes, routes_path, route):
     :param route: The path of the resource
     :type route: ```str```
 
+    :param primary_key: The primary key or id to lookup on for the route
+    :type primary_key: ```str```
+
     :param routes_path: The path/module-resolution whence the routes are / will be
     :type routes_path: ```str```
     """
-    if path.sep in routes_path:
-        if not path.isfile(routes_path):
-            with open(routes_path, "wt") as f:
-                f.write(
-                    "\n\n".join(
-                        chain.from_iterable(
+    routes_path = filename_from_mod_or_filename(routes_path)
+
+    if not path.isfile(routes_path):
+        with open(routes_path, "wt") as f:
+            f.write(
+                "\n\n".join(
+                    chain.from_iterable(
+                        (
                             (
-                                (
-                                    route_prelude.replace(
-                                        "rest_api =", "{app} =".format(app=app)
-                                    ),
+                                route_prelude.replace(
+                                    "rest_api =", "{app} =".format(app=app)
                                 ),
-                                map(to_code, routes),
-                            )
+                            ),
+                            map(to_code, routes),
                         )
                     )
                 )
-            return
-    # else:
-    #    routes_path = getfile(routes_path)
-    with open(routes_path, "rt") as f:
-        mod = ast.parse(f.read())
-
-    def get_names(it):
-        """
-        Derive a name -> FunctionDef dictionary
-
-        :param it: Objects with a `.name` attribute
-        :type it: ```Iterator[FunctionDef]```
-
-        :returns: Dict of names to dict
-        :rtype: ```Dict[str, FunctionDef]```
-        """
-        return dict(map(lambda node: (node.name, node), it))
-
-    routes_required = get_names(routes)
-    routes_existing = get_names(
-        filter(rpartial(isinstance, FunctionDef), ast.walk(mod))
-    )
-    if routes_required.keys() == routes_existing.keys():
+            )
         return
 
     with open(routes_path, "rt") as f:
-        print(f.read())
+        mod = ast.parse(f.read())
 
-    new_routes = tuple(
-        map(
-            to_code,
+    def get_names(functions):
+        """
+        Derive a method_name -> FunctionDef dictionary
+
+        :param functions: Routing functions
+        :type functions: ```Iterator[FunctionDef]```
+
+        :returns: Dict of `method_name` to `FunctionDef`
+        :rtype: ```Dict[str, FunctionDef]```
+        """
+        return dict(
             map(
-                routes_required.__getitem__,
-                routes_required.keys() & routes_existing.keys()
-                ^ routes_required.keys(),
+                lambda func: (
+                    next(
+                        map(
+                            lambda call: call.func.attr,
+                            filter(
+                                lambda call: all(
+                                    (
+                                        isinstance(call.func, Attribute),
+                                        call.func.attr in methods,
+                                    )
+                                ),
+                                filter(rpartial(isinstance, Call), func.decorator_list),
+                            ),
+                        )
+                    ),
+                    func,
+                ),
+                functions,
+            )
+        )
+
+    routes_required = get_names(routes)
+    routes_existing = get_names(
+        filter(
+            lambda node: any(
+                filter(
+                    lambda call: all(
+                        (
+                            isinstance(call.func, Attribute),
+                            call.func.attr in methods,
+                            get_value(call.args[0])
+                            == "{route}{rest}".format(
+                                route=route,
+                                rest=""
+                                if call.func.attr == "post"
+                                else "/:{primary_key}".format(primary_key=primary_key),
+                            ),
+                            call.func.value.id == app,
+                        )
+                    ),
+                    filter(rpartial(isinstance, Call), node.decorator_list),
+                )
             ),
+            filter(rpartial(isinstance, FunctionDef), ast.walk(mod)),
         )
     )
+    missing_routes = (
+        routes_required.keys() & routes_existing.keys() ^ routes_required.keys()
+    )
 
-    print("new_routes:", new_routes, ";")
+    if not missing_routes:
+        return
 
-    # if new_routes:
-    #     with open(routes_path, "a") as f:
-    #         f.write("\n".join(new_routes))
-    # else:
-    #     print("No new routes")
+    with open(routes_path, "a") as f:
+        f.write(
+            "\n\n".join(
+                map(
+                    to_code,
+                    map(
+                        routes_required.__getitem__,
+                        sorted(
+                            missing_routes,
+                            key={
+                                "post": 0,
+                                "get": 1,
+                                "update": 2,
+                                "delete": 3,
+                            }.__getitem__,
+                        ),
+                    ),
+                )
+            )
+        )
 
 
 __all__ = ["gen_routes", "upsert_routes"]

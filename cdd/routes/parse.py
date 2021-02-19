@@ -17,6 +17,8 @@ from cdd.ast_utils import get_value
 from cdd.docstring_parsers import parse_docstring
 from cdd.openapi.parse import openapi
 
+methods = frozenset(("patch", "post", "put", "get", "delete", "trace"))
+
 
 def bottle(function_def):
     """
@@ -37,8 +39,7 @@ def bottle(function_def):
     )
     app_decorator = next(
         filter(
-            lambda call: call.func.attr
-            in frozenset(("patch", "post", "put", "get", "delete", "trace")),
+            lambda call: call.func.attr in methods,
             function_def.decorator_list,
         )
     )
