@@ -6,11 +6,12 @@ from ast import Name, Str
 from collections import deque
 from functools import partial
 from importlib import import_module
+from importlib.util import find_spec
 from inspect import getmodule
 from itertools import chain, count, zip_longest
 from keyword import iskeyword
 from operator import attrgetter, eq
-from os import environ
+from os import environ, path
 from pprint import PrettyPrinter
 from sys import version_info
 from textwrap import fill as _fill
@@ -562,6 +563,24 @@ def paren_wrap_code(code):
     )
 
 
+def filename_from_mod_or_filename(mod_or_filename):
+    """
+    Resolve filename from module name or filename
+
+    :param mod_or_filename: Module name or filename
+    :type mod_or_filename: ```str```
+
+    :returns: Filename
+    :rtype: ```str```
+    """
+    filename = type("", tuple(), {"origin": mod_or_filename})
+    return (
+        filename
+        if path.sep in mod_or_filename or path.isfile(mod_or_filename)
+        else find_spec(mod_or_filename) or filename
+    ).origin
+
+
 __all__ = [
     "BUILTIN_TYPES",
     "PY3_8",
@@ -569,8 +588,11 @@ __all__ = [
     "PY_GTE_3_9",
     "assert_equal",
     "blockwise",
+    "code_quoted",
     "count_iter_items",
     "diff",
+    "filename_from_mod_or_filename",
+    "fill",
     "get_module",
     "identity",
     "indent_all_but_first",
@@ -589,6 +611,4 @@ __all__ = [
     "tab",
     "unquote",
     "update_d",
-    "code_quoted",
-    "fill",
 ]

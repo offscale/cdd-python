@@ -14,6 +14,9 @@ from setuptools import find_packages, setup
 
 package_name = "cdd"
 
+with open(path.join(path.dirname(__file__), "README.md"), "rt", encoding="utf-8") as fh:
+    long_description = fh.read()
+
 
 def to_funcs(*paths):
     """
@@ -29,10 +32,6 @@ def to_funcs(*paths):
         partial(path.join, path.dirname(__file__), package_name, *paths),
         partial(path.join, get_python_lib(prefix=""), package_name, *paths),
     )
-
-
-with open(path.join(path.dirname(__file__), "README.md"), "rt", encoding="utf-8") as fh:
-    long_description = fh.read()
 
 
 def main():
