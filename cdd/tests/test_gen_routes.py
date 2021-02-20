@@ -1,11 +1,14 @@
 """ Tests for gen_routes subcommand """
+import ast
 from ast import FunctionDef
+from binascii import crc32
 from itertools import tee
 from os import path, remove
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 from cdd.openapi.gen_routes import gen_routes, upsert_routes
+from cdd.routes.parser_utils import get_route_meta
 from cdd.tests.mocks.routes import (
     create_route,
     destroy_route,
@@ -76,23 +79,87 @@ def populate_files(tempdir, init_with_crud):
 class TestGenRoutes(TestCase):
     """ Test class for gen_routes.py """
 
+    def further_tests(self, mod):
+        """
+        Callback to run after the initial generic tests are done
+
+        :param mod: Parsed AST of the generated + augmented file
+        :type mod: ```Module```
+        """
+        self.assertEqual(len(mod.body), 4)
+        self.assertTupleEqual(
+            tuple(get_route_meta(mod)),
+            (
+                ("create", "rest_api", "/api/config", "post"),
+                ("read", "rest_api", "/api/config/:dataset_name", "get"),
+                ("destroy", "rest_api", "/api/config/:dataset_name", "delete"),
+            ),
+        )
+
     def test_gen_routes_no_change(self) -> None:
         """ Tests `gen_routes` when routes are identical in app name, route path and method """
-        self.gen_routes_tester("update", "CRD", "CRD")
+
+        self.gen_routes_tester(
+            approach="update",
+            init_with_crud="CRD",
+            upsert_crud="CRD",
+            file_change=False,
+            further_tests=self.further_tests,
+        )
 
     def test_gen_routes_update(self) -> None:
         """ Tests `gen_routes` when routes do exists """
-        self.gen_routes_tester("update", "CRD", "CRD")
+
+        self.gen_routes_tester(
+            approach="update",
+            init_with_crud="CRD",
+            upsert_crud="CRD",
+            file_change=False,
+            further_tests=self.further_tests,
+        )
 
     def test_gen_routes_update_missing(self) -> None:
         """ Tests `gen_routes` when routes do exists, but `destroy` route (DELETE method) is missing """
-        self.gen_routes_tester("update", "CR", "CRD")
+
+        self.gen_routes_tester(
+            approach="update",
+            init_with_crud="CR",
+            upsert_crud="CRD",
+            file_change=True,
+            further_tests=self.further_tests,
+        )
 
     def test_gen_routes_insert(self) -> None:
         """ Tests `gen_routes` when routes do not exist """
-        self.gen_routes_tester("insert", iter(()), "CRD")
 
-    def gen_routes_tester(self, approach, init_with_crud, upsert_crud):
+        def _further_tests(mod):
+            """
+            Callback to run after the initial generic tests are done
+
+            :param mod: Parsed AST of the generated + augmented file
+            :type mod: ```Module```
+            """
+            self.assertEqual(len(mod.body), 5)
+            self.assertTupleEqual(
+                tuple(get_route_meta(mod)),
+                (
+                    ("create", "rest_api", "/api/config", "post"),
+                    ("read", "rest_api", "/api/config/:dataset_name", "get"),
+                    ("destroy", "rest_api", "/api/config/:dataset_name", "delete"),
+                ),
+            )
+
+        self.gen_routes_tester(
+            approach="insert",
+            init_with_crud=iter(()),
+            upsert_crud="CRD",
+            file_change=True,
+            further_tests=_further_tests,
+        )
+
+    def gen_routes_tester(
+        self, approach, init_with_crud, upsert_crud, file_change, further_tests
+    ):
         """
         :param approach: How to upsert
         :type approach: ```Literal["insert", "update"]```
@@ -122,12 +189,21 @@ class TestGenRoutes(TestCase):
                          Literal['U', 'R', 'D'], Literal['U', 'D', 'C'], Literal['U', 'D', 'R'],
                          Literal['D', 'C', 'R'], Literal['D', 'C', 'U'], Literal['D', 'R', 'C'],
                          Literal['D', 'R', 'U'], Literal['D', 'U', 'C'], Literal['D', 'U', 'R']]```
+
+        :param file_change: Whether to expect a file change
+        :type file_change: ```bool```
+
+        :param further_tests: Run this function, which takes the parsed AST of the generated + augmented file
+        :type further_tests: ```Callback[[Module], None]```
         """
         with TemporaryDirectory() as tempdir:
             model_path, routes_path = populate_files(tempdir, init_with_crud)
+            with open(routes_path, "rb") as f:
+                init_hash = crc32(f.read())
 
             if approach == "insert":
                 remove(routes_path)
+                init_hash = None
 
             routes, primary_key = gen_routes(
                 app=route_config["app"],
@@ -153,6 +229,17 @@ class TestGenRoutes(TestCase):
                     primary_key=primary_key,
                 )
             )
+            with open(routes_path, "rb") as f:
+                routes_bin = f.read()
+
+            getattr(self, "assertNotEqual" if file_change else "assertEqual")(
+                init_hash,
+                crc32(routes_bin),
+                "File after processing compared to initial file",
+            )
+            parsed_routes = ast.parse(routes_bin)
+
+            further_tests(parsed_routes)
 
 
 unittest_main()
