@@ -52,8 +52,8 @@ def bottle(function_def):
         ir = parse_docstring(doc_str)
         yml_start_str, yml_end_str = "```yml", "```"
         yml_start = ir["doc"].find(yml_start_str)
-        if yml_start < 0:
-            return route_dict
+        # if yml_start < 0:
+        #    return route_dict
         openapi_str = ir["doc"][
             yml_start
             + len(yml_start_str) : ir["doc"].rfind(yml_end_str)
@@ -61,7 +61,7 @@ def bottle(function_def):
             + 2
         ]
         return openapi(openapi_str, route_dict, ir["doc"][:yml_start].rstrip())
-    return route_dict
+    # return route_dict
 
 
 __all__ = ["bottle"]

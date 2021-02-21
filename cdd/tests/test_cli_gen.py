@@ -16,8 +16,7 @@ class TestCliGen(TestCase):
             self,
             ["gen", "--wrong"],
             exit_code=2,
-            output="the following arguments are required:"
-            " --name-tpl, --input-mapping, --type, --output-filename/-o\n",
+            output="the following arguments are required: --name-tpl, --input-mapping, --emit, --output-filename/-o\n",
         )
 
     def test_existent_file_fails(self) -> None:
@@ -37,7 +36,7 @@ class TestCliGen(TestCase):
                     "{name}Config",
                     "--input-mapping",
                     "cdd.pure_utils.simple_types",
-                    "--type",
+                    "--emit",
                     "class",
                     "--output-filename",
                     filename,
@@ -63,7 +62,7 @@ class TestCliGen(TestCase):
                         "{name}Config",
                         "--input-mapping",
                         "cdd.pure_utils.simple_types",
-                        "--type",
+                        "--emit",
                         "class",
                         "--output-filename",
                         output_filename,

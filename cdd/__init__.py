@@ -11,7 +11,11 @@ from os import path
 import yaml
 
 __author__ = "Samuel Marks"
-__version__ = "0.0.66"
+__version__ = "0.0.67"
+__description__ = (
+    "Open API to/fro routes, models, and tests. "
+    "Convert between docstrings, classes, methods, argparse, and SQLalchemy."
+)
 
 
 def get_logger(name=None):

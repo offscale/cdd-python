@@ -3,14 +3,15 @@ Functionality to generate classes, functions, and/or argparse functions from the
 """
 
 import ast
-from ast import Assign, FunctionDef, Import, ImportFrom, Module, Name, Store
-from inspect import getfile, isfunction
+from ast import Assign, Import, ImportFrom, Module, Name, Store
+from inspect import getfile
 from itertools import chain
 from operator import itemgetter
 from os import path
 
 from cdd import emit, parse
 from cdd.ast_utils import get_at_root, maybe_type_comment, set_value
+from cdd.parser_utils import infer
 from cdd.pure_utils import get_module
 from cdd.source_transformer import to_code
 
@@ -18,7 +19,8 @@ from cdd.source_transformer import to_code
 def gen(
     name_tpl,
     input_mapping,
-    type_,
+    parse_name,
+    emit_name,
     output_filename,
     prepend=None,
     imports_from_file=None,
@@ -35,8 +37,11 @@ def gen(
     :param input_mapping: Import location of dictionary/mapping/2-tuple collection.
     :type input_mapping: ```str```
 
-    :param type_: What type to generate.
-    :type type_: ```Literal["argparse", "class", "function"]```
+    :param parse_name: What type to parse.
+    :type parse_name: ```Literal["argparse", "class", "function", "sqlalchemy", "sqlalchemy_table"]```
+
+    :param emit_name: What type to generate.
+    :type emit_name: ```Literal["argparse", "class", "function", "sqlalchemy", "sqlalchemy_table"]```
 
     :param output_filename: Output file to write to
     :type output_filename: ```str```
@@ -145,34 +150,26 @@ def gen(
     )
 
     global__all__ = []
+    emit_name = emit_name.replace("class", "class_").replace(
+        "argparse", "argparse_function"
+    )
     content = "{prepend}{imports}\n{functions_and_classes}\n{__all}".format(
         prepend="" if prepend is None else prepend,
         imports=imports,  # TODO: Optimize imports programmatically (akin to `autoflake --remove-all-unused-imports`)
         functions_and_classes="\n\n".join(
-            print("Generating: {!r}".format(name))
+            print("\nGenerating: {!r}".format(name))
             or global__all__.append(name_tpl.format(name=name))
             or to_code(
-                getattr(
-                    emit,
-                    type_.replace("class", "class_").replace(
-                        "argparse", "argparse_function"
-                    ),
-                )(
-                    (
-                        lambda is_func: getattr(
-                            parse,
-                            "function" if is_func else "class_",
-                        )(
-                            obj,
-                            **{} if is_func else {"merge_inner_function": "__init__"}
-                        )
-                    )(
-                        isinstance(obj, FunctionDef) or isfunction(obj)
-                    ),  # TODO: Figure out if it's a function or argparse function
+                getattr(emit, emit_name)(
+                    getattr(
+                        parse,
+                        infer(obj) if parse_name in (None, "infer") else parse_name,
+                    )(obj),
                     emit_default_doc=emit_default_doc,
                     **(
                         lambda _name: {
-                            "class": {
+                            "argparse": {"function_name": _name},
+                            "class_": {
                                 "class_name": _name,
                                 "decorator_list": decorator_list,
                                 "emit_call": emit_call,
@@ -180,9 +177,10 @@ def gen(
                             "function": {
                                 "function_name": _name,
                             },
-                            "argparse": {"function_name": _name},
-                        }[type_]
-                    )(name_tpl.format(name=name))
+                            "sqlalchemy": {"table_name": _name},
+                            "sqlalchemy_table": {"table_name": _name},
+                        }[emit_name]
+                    )(name_tpl.format(name=name)),
                 )
             )
             for name, obj in input_mapping_it
@@ -204,7 +202,7 @@ def gen(
                 .value,
                 expr=None,
                 lineno=None,
-                **maybe_type_comment
+                **maybe_type_comment,
             )
         ),
     )

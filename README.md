@@ -9,7 +9,7 @@ cdd-python
 [![codecov](https://codecov.io/gh/offscale/cdd-python/branch/master/graph/badge.svg)](https://codecov.io/gh/offscale/cdd-python)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort)
-[![PyPi: release](https://img.shields.io/pypi/v/cdd-offscale.svg?maxAge=3600)](https://pypi.org/project/python-cdd)
+[![PyPi: release](https://img.shields.io/pypi/v/python-cdd.svg?maxAge=3600)](https://pypi.org/project/python-cdd)
 
 Open API to/fro routes, models, and tests. Convert between docstrings, classes, methods, argparse, and SQLalchemy.
 
@@ -425,20 +425,22 @@ class Config(Base):
 
     $ python -m cdd --help
 
-    usage: python -m cdd [-h] [--version] {sync_properties,sync,gen} ...
-    
-    Translate between docstrings, classes, methods, and argparse.
+    usage: python -m cdd [-h] [--version]
+                     {sync_properties,sync,gen,gen_routes} ...
+
+    Open API to/fro routes, models, and tests. Convert between docstrings, classes, methods, argparse, and SQLalchemy.
     
     positional arguments:
-      {sync_properties,sync,gen}
+      {sync_properties,sync,gen,gen_routes}
         sync_properties     Synchronise one or more properties between input and
                             input_str Python files
         sync                Force argparse, classes, and/or methods to be
                             equivalent
         gen                 Generate classes, functions, and/or argparse functions
                             from the input mapping
+        gen_routes          Generate per model route(s)
     
-    optional arguments:
+    options:
       -h, --help            show this help message and exit
       --version             show program's version number and exit
 
@@ -447,13 +449,13 @@ class Config(Base):
     $ python -m cdd sync --help
 
     usage: python -m cdd sync [-h] [--argparse-function ARGPARSE_FUNCTIONS]
-                                   [--argparse-function-name ARGPARSE_FUNCTION_NAMES]
-                                   [--class CLASSES] [--class-name CLASS_NAMES]
-                                   [--function FUNCTIONS]
-                                   [--function-name FUNCTION_NAMES] --truth
-                                   {argparse_function,class,function}
+                              [--argparse-function-name ARGPARSE_FUNCTION_NAMES]
+                              [--class CLASSES] [--class-name CLASS_NAMES]
+                              [--function FUNCTIONS]
+                              [--function-name FUNCTION_NAMES] --truth
+                              {argparse_function,class,function}
     
-    optional arguments:
+    options:
       -h, --help            show this help message and exit
       --argparse-function ARGPARSE_FUNCTIONS
                             File where argparse function is `def`ined.
@@ -475,13 +477,12 @@ class Config(Base):
     $ python -m cdd sync_properties --help
 
     usage: python -m cdd sync_properties [-h] --input-filename INPUT_FILENAME
-                                              --input-param INPUT_PARAMS
-                                              [--input-eval] --output-filename
-                                              OUTPUT_FILENAME --output-param
-                                              OUTPUT_PARAMS
-                                              [--output-param-wrap OUTPUT_PARAM_WRAP]
+                                         --input-param INPUT_PARAMS [--input-eval]
+                                         --output-filename OUTPUT_FILENAME
+                                         --output-param OUTPUT_PARAMS
+                                         [--output-param-wrap OUTPUT_PARAM_WRAP]
     
-    optional arguments:
+    options:
       -h, --help            show this help message and exit
       --input-filename INPUT_FILENAME
                             File to find `--input-param` from
@@ -505,10 +506,13 @@ class Config(Base):
     $ python -m cdd gen --help
 
     usage: python -m cdd gen [-h] --name-tpl NAME_TPL --input-mapping
-                                  INPUT_MAPPING [--prepend PREPEND]
-                                  [--imports-from-file IMPORTS_FROM_FILE] --type
-                                  {argparse,class,function} --output-filename
-                                  OUTPUT_FILENAME
+                             INPUT_MAPPING [--prepend PREPEND]
+                             [--imports-from-file IMPORTS_FROM_FILE]
+                             [--parse {argparse,class,function,sqlalchemy,sqlalchemy_table}]
+                             --emit
+                             {argparse,class,function,sqlalchemy,sqlalchemy_table}
+                             --output-filename OUTPUT_FILENAME [--emit-call]
+                             [--decorator DECORATOR_LIST]
     
     optional arguments:
       -h, --help            show this help message and exit
@@ -521,10 +525,41 @@ class Config(Base):
                             Extract imports from file and append to `output_file`.
                             If module or other symbol path given, resolve file
                             then use it.
-      --type {argparse,class,function}
+      --parse {argparse,class,function,sqlalchemy,sqlalchemy_table}
+                            What type the input is.
+      --emit {argparse,class,function,sqlalchemy,sqlalchemy_table}
                             What type to generate.
       --output-filename OUTPUT_FILENAME, -o OUTPUT_FILENAME
                             Output file to write to.
+      --emit-call           Whether to place all the previous body into a new
+                            `__call__` internal function
+      --decorator DECORATOR_LIST
+                            List of decorators.
+
+### `gen_routes`
+
+    usage: python -m cdd gen_routes [-h] --crud {CRUD,CR,C,R,U,D,CR,CU,CD,CRD}
+                                    [--app-name APP_NAME] --model-path MODEL_PATH
+                                    --model-name MODEL_NAME --routes-path
+                                    ROUTES_PATH [--route ROUTE]
+    
+    options:
+      -h, --help            show this help message and exit
+      --crud {CRUD,CR,C,R,U,D,CR,CU,CD,CRD}
+                            What of (C)reate, (R)ead, (U)pdate, (D)elete to
+                            generate
+      --app-name APP_NAME   Name of app (e.g., `app_name = Bottle();
+                            @app_name.get('/api') def slash(): pass`)
+      --model-path MODEL_PATH
+                            Python module resolution (foo.models) or filepath
+                            (foo/models)
+      --model-name MODEL_NAME
+                            Name of model to generate from
+      --routes-path ROUTES_PATH
+                            Python module resolution 'foo.routes' or filepath
+                            'foo/routes'
+      --route ROUTE         Name of the route, defaults to
+                            `/api/{model_name.lower()}`
 
 ---
 
