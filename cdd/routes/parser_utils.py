@@ -1,10 +1,11 @@
 """
 Parser utils for routes
 """
-from ast import FunctionDef
+from ast import Call, FunctionDef
 
 from cdd.ast_utils import get_value
 from cdd.pure_utils import rpartial
+from cdd.routes.parse import methods
 
 
 def get_route_meta(mod):
@@ -20,9 +21,19 @@ def get_route_meta(mod):
     return map(
         lambda func: (
             func.name,
-            func.decorator_list[0].func.value.id,
-            get_value(func.decorator_list[0].args[0]),
-            func.decorator_list[0].func.attr,
+            *next(
+                map(
+                    lambda call: (
+                        call.func.value.id,
+                        get_value(call.args[0]),
+                        call.func.attr,
+                    ),
+                    filter(
+                        lambda call: call.args and call.func.attr in methods,
+                        filter(rpartial(isinstance, Call), func.decorator_list),
+                    ),
+                )
+            ),
         ),
         filter(rpartial(isinstance, FunctionDef), mod.body),
     )

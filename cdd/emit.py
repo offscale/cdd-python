@@ -353,6 +353,9 @@ def class_(
     :returns: Class AST
     :rtype: ```ClassDef```
     """
+    assert isinstance(intermediate_repr, dict), "{} != dict".format(
+        type(intermediate_repr).__name__
+    )
     returns = (
         intermediate_repr["returns"]
         if "return_type" in ((intermediate_repr or {}).get("returns") or iter(()))

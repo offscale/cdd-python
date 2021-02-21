@@ -4,10 +4,10 @@
 setup.py implementation, interesting because it parsed the first __init__.py and
     extracts the `__author__` and `__version__`
 """
-
-from ast import parse
+from ast import Assign, Constant, Str, parse
 from distutils.sysconfig import get_python_lib
 from functools import partial
+from operator import attrgetter
 from os import listdir, path
 
 from setuptools import find_packages, setup
@@ -39,14 +39,18 @@ def main():
     with open(
         path.join(path.abspath(path.dirname(__file__)), package_name, "__init__.py")
     ) as f:
-        __author__, __version__ = map(
-            lambda buf: next(map(lambda e: e.value.s, parse(buf).body)),
-            filter(
-                lambda line: line.startswith("__version__")
-                or line.startswith("__author__"),
-                f,
+        parsed_init = parse(f.read())
+
+    __author__, __version__, __description__ = map(
+        lambda node: node.value if isinstance(node, Constant) else node.s,
+        filter(
+            lambda node: isinstance(node, (Constant, Str)),
+            map(
+                attrgetter("value"),
+                filter(lambda node: isinstance(node, Assign), parsed_init.body),
             ),
-        )
+        ),
+    )
 
     _data_join, _data_install_dir = to_funcs("_data")
 
@@ -55,8 +59,7 @@ def main():
         author=__author__,
         author_email="807580+SamuelMarks@users.noreply.github.com",
         version=__version__,
-        description="Open API to/fro routes, models, and tests."
-        " Convert between docstrings, classes, methods, argparse, and SQLalchemy.",
+        description=__description__,
         long_description=long_description,
         long_description_content_type="text/markdown",
         install_requires=["pyyaml"],

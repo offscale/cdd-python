@@ -2,12 +2,23 @@
 Functions which help the functions within the parser module
 """
 import ast
-from ast import Call, Name, Return, Tuple
+from ast import (
+    AnnAssign,
+    Assign,
+    Call,
+    ClassDef,
+    FunctionDef,
+    Module,
+    Name,
+    Return,
+    Tuple,
+)
 from collections import OrderedDict
 from functools import partial
-from inspect import _empty
+from inspect import _empty, getsource
 from itertools import chain
-from operator import itemgetter
+from operator import attrgetter, eq, itemgetter
+from types import FunctionType
 
 from cdd.ast_utils import NoneStr, column_type2typ, get_value, json_type2typ
 from cdd.pure_utils import lstrip_namespace, none_types, rpartial
@@ -340,9 +351,70 @@ def json_schema_property_to_param(param, required):
     return name, _param
 
 
+def infer(*args, **kwargs):
+    """
+    Infer the `parse` type
+
+    :param args: The arguments
+    :type args: ```Tuple[args]```
+
+    :param kwargs: Keyword arguments
+    :type kwargs: ```dict```
+
+    :returns: Name of inferred parser
+    :rtype: ```str```
+    """
+    node = (
+        args[0]
+        if args
+        else kwargs.get(
+            "class_def", kwargs.get("function_def", kwargs.get("call_or_name"))
+        )
+    )
+    is_supported_ast_node = isinstance(
+        node, (Module, Assign, AnnAssign, Call, ClassDef, FunctionDef)
+    )
+    if not is_supported_ast_node and (
+        isinstance(node, (type, FunctionType)) or type(node).__name__ == "function"
+    ):
+        return infer(ast.parse(getsource(node)).body[0])
+
+    if not is_supported_ast_node:
+        if not isinstance(node, str):
+            node = get_value(node)
+        if (
+            isinstance(node, str)
+            and not node.startswith("def ")
+            and not node.startswith("class ")
+        ):
+            return "docstring"
+    assert is_supported_ast_node
+    if isinstance(node, FunctionDef):
+        if next(
+            filter(
+                partial(eq, "argument_parser"), map(attrgetter("arg"), node.args.args)
+            ),
+            False,
+        ):
+            return "argparse_ast"
+
+        return "function"
+
+    elif isinstance(node, ClassDef):
+        if any(filter(partial(eq, "Base"), map(attrgetter("id"), node.bases))):
+            return "sqlalchemy"
+        return "class_"
+    elif isinstance(node, (AnnAssign, Assign)):
+        return infer(node.value)
+    elif isinstance(node, Call):
+        if len(node.args) > 2 and node.args[1].id == "metadata":
+            return "sqlalchemy_table"
+
+
 __all__ = [
     "column_call_to_param",
     "ir_merge",
+    "infer",
     "json_schema_property_to_param",
     "lstrip_typings",
 ]

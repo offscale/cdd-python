@@ -8,7 +8,7 @@ from codecs import decode
 from collections import deque
 from os import path
 
-from cdd import __version__
+from cdd import __description__, __version__
 from cdd.conformance import ground_truth
 from cdd.gen import gen
 from cdd.openapi.gen_routes import gen_routes, upsert_routes
@@ -25,7 +25,7 @@ def _build_parser():
     """
     parser = ArgumentParser(
         prog="python -m cdd",
-        description="Translate between docstrings, classes, methods, and argparse.",
+        description=__description__,
     )
     parser.add_argument(
         "--version", action="version", version="%(prog)s {}".format(__version__)
@@ -155,7 +155,13 @@ def _build_parser():
             "Single source of truth. Others will be generated from this. Will run with"
             " first found choice."
         ),
-        choices=("argparse_function", "class", "function"),
+        choices=(
+            "argparse_function",
+            "class",
+            "function",
+            "sqlalchemy",
+            "sqlalchemy_table",
+        ),
         type=str,
         required=True,
     )
@@ -166,8 +172,8 @@ def _build_parser():
     gen_parser = subparsers.add_parser(
         "gen",
         help=(
-            "Generate classes, functions, and/or argparse functions from the input"
-            " mapping"
+            "Generate classes, functions, argparse function, sqlalchemy tables and/or sqlalchemy classes"
+            " from the input mapping"
         ),
     )
 
@@ -192,11 +198,18 @@ def _build_parser():
         ),
     )
     gen_parser.add_argument(
-        "--type",
+        "--parse",
+        help="What type the input is.",
+        choices=("argparse", "class", "function", "sqlalchemy", "sqlalchemy_table"),
+        default="infer",
+        dest="parse_name",
+    )
+    gen_parser.add_argument(
+        "--emit",
         help="What type to generate.",
-        choices=("argparse", "class", "function"),
+        choices=("argparse", "class", "function", "sqlalchemy", "sqlalchemy_table"),
         required=True,
-        dest="type_",
+        dest="emit_name",
     )
     gen_parser.add_argument(
         "--output-filename", "-o", help="Output file to write to.", required=True

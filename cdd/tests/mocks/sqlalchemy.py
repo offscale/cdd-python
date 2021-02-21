@@ -30,6 +30,20 @@ _docstring_header_and_return_str = "\n{docstring}\n{tab}".format(
     tab=tab,
 )
 
+sqlalchemy_imports_str = "\n".join(
+    map(
+        "def {}(*args, **kwargs): pass\n".format,
+        (
+            "Table",
+            "Boolean",
+            "JSON",
+            "String",
+            "Column",
+            "Enum",
+        ),
+    )
+)
+
 config_tbl_str = """
 config_tbl = Table(
     "config_tbl",

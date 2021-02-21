@@ -6,7 +6,7 @@ from importlib.util import module_from_spec, spec_from_loader
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
-from cdd import __version__
+from cdd import __description__, __version__
 from cdd.__main__ import _build_parser
 from cdd.pure_utils import PY3_8
 from cdd.tests.utils_for_tests import run_cli_test, unittest_main
@@ -19,10 +19,7 @@ class TestCli(TestCase):
         """ Test that `_build_parser` produces a parser object """
         parser = _build_parser()
         self.assertIsInstance(parser, ArgumentParser)
-        self.assertEqual(
-            parser.description,
-            "Translate between docstrings, classes, methods, and argparse.",
-        )
+        self.assertEqual(parser.description, __description__)
 
     def test_version(self) -> None:
         """ Tests CLI interface gives version """
