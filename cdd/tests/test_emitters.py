@@ -36,7 +36,6 @@ from cdd.tests.mocks.docstrings import (
 from cdd.tests.mocks.ir import (
     class_torch_nn_l1loss_ir,
     intermediate_repr,
-    intermediate_repr_no_default_doc,
     intermediate_repr_no_default_sql_doc,
 )
 from cdd.tests.mocks.json_schema import config_schema
@@ -120,8 +119,6 @@ class TestEmitters(TestCase):
             ),
             gold=argparse_func_action_append_ast,
         )
-
-    maxDiff = None
 
     def test_to_argparse_google_tf_tensorboard(self) -> None:
         """
@@ -447,7 +444,7 @@ class TestEmitters(TestCase):
         """
         self.assertDictEqual(
             emit.json_schema(
-                deepcopy(intermediate_repr_no_default_doc),
+                deepcopy(intermediate_repr_no_default_sql_doc),
                 "https://offscale.io/config.schema.json",
             ),
             config_schema,

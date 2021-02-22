@@ -11,6 +11,7 @@ from os import path
 from cdd import __description__, __version__
 from cdd.conformance import ground_truth
 from cdd.gen import gen
+from cdd.openapi.gen_openapi import openapi_bulk
 from cdd.openapi.gen_routes import gen_routes, upsert_routes
 from cdd.pure_utils import pluralise
 from cdd.sync_properties import sync_properties
@@ -234,7 +235,7 @@ def _build_parser():
     # gen_routes #
     ##############
     routes_parser = subparsers.add_parser(
-        "gen_routes", help=("Generate per model route(s)")
+        "gen_routes", help="Generate per model route(s)"
     )
 
     routes_parser.add_argument(
@@ -264,6 +265,30 @@ def _build_parser():
     routes_parser.add_argument(
         "--route",
         help="Name of the route, defaults to `/api/{model_name.lower()}`",
+    )
+
+    ###########
+    # openapi #
+    ###########
+    openapi_parser = subparsers.add_parser(
+        "openapi", help="Generate OpenAPI schema from specified project(s)"
+    )
+
+    openapi_parser.add_argument(
+        "--app-name",
+        help="Name of app (e.g., `app_name = Bottle();\n@app_name.get('/api')\ndef slash(): pass`)",
+        default="rest_api",
+    )
+    openapi_parser.add_argument(
+        "--model-paths",
+        help="Python module resolution (foo.models) or filepath (foo/models)",
+        required=True,
+    )
+    openapi_parser.add_argument(
+        "--routes-paths",
+        help="Python module resolution 'foo.routes' or filepath 'foo/routes'",
+        nargs="*",
+        required=True,
     )
 
     return parser
@@ -366,6 +391,12 @@ def main(cli_argv=None, return_args=False):
             routes=routes,
             routes_path=getattr(args, "routes_path", None),
             primary_key=primary_key,
+        )
+    elif command == "openapi":
+        openapi_bulk(
+            app_name=args.app_name,
+            model_paths=args.model_paths,
+            routes_paths=args.routes_paths,
         )
 
 

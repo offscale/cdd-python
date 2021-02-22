@@ -1,6 +1,7 @@
 """
 Mocks for JSON Schema
 """
+
 from cdd.tests.mocks.docstrings import docstring_header_and_return_str
 
 config_schema = {
@@ -10,7 +11,7 @@ config_schema = {
     "type": "object",
     "properties": {
         "dataset_name": {
-            "description": "name of dataset.",
+            "description": "[PK] name of dataset.",
             "type": "string",
             "default": "mnist",
         },

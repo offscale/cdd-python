@@ -810,7 +810,9 @@ def sqlalchemy(class_def):
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :rtype: ```dict```
     """
-    assert isinstance(class_def, ClassDef)
+    assert isinstance(class_def, ClassDef), "Expected `ClassDef` got `{}`".format(
+        type(class_def).__name__
+    )
 
     # Parse into the same format that `sqlalchemy_table` can read, then return with a call to it
 
