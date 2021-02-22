@@ -415,8 +415,6 @@ class TestParsers(TestCase):
 
         self.assertDictEqual(parsed_ir, class_torch_nn_l1loss_ir)
 
-    maxDiff = None
-
     def test_from_class_torch_nn_one_cycle_lr(self) -> None:
         """
         Tests that the parser can combine the outer class docstring + structure
@@ -445,7 +443,7 @@ class TestParsers(TestCase):
         Tests that `parse.json_schema` produces `intermediate_repr_no_default_sql_doc` properly
         """
         self.assertDictEqual(
-            parse.json_schema(config_schema), intermediate_repr_no_default_doc
+            parse.json_schema(config_schema), intermediate_repr_no_default_sql_doc
         )
 
     def test_from_sqlalchemy_table(self) -> None:

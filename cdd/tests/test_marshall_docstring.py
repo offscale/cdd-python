@@ -284,8 +284,6 @@ class TestMarshallDocstring(TestCase):
             docstring_google_tf_lambda_callback_ir,
         )
 
-    maxDiff = None
-
     def test_from_docstring_google_pytorch_lbfgs_str(self) -> None:
         """
         Tests whether `parse_docstring` produces the right IR

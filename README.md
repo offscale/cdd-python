@@ -21,28 +21,38 @@ Public SDK works with filenames, source code, and even in memory constructs (e.g
 
     pip install python-cdd
 
-### Developer
+### Master
 
     pip install -r https://raw.githubusercontent.com/offscale/cdd-python/master/requirements.txt
     pip install https://api.github.com/repos/offscale/cdd-python/zipball#egg=cdd
 
-## Purpose
+## Goal
+
+Easily create and maintain Database / ORM models and REST APIs out of existing Python SDKs.
+
+For example, this can be used to expose TensorFlow in a REST API and store its parameters in an SQL database.
+
+## Relation to other projects
 
 This was created to aid in the `ml_params` project. It exposes an `@abstractclass` which is implemented [officially] by more than 8 projects.
 
-Its `def train(self, <these>)` has a potentially large number of arguments.
-Additionally, there is a `def train_c(self, config)`, which accepts an instance of a `Config` class, or a dictionary.
-Finally: `ml_params` defines a CLI interface.
+Due to the nature of ML frameworks, `ml_params`' `def train(self, <these>)` has a potentially large number of arguments.
+Accumulate the complexity of maintaining interfaces as the underlying release changes (e.g, new version of PyTorch), 
+add in the extra interfaces folks find useful (CLIs, REST APIs, SQL models, &etc.); and you end up needing a team to maintain it.
 
-With current tooling there is no way to know:
+That's unacceptable. The only existing solutions maintainable by one engineer involve dynamic generation, 
+with no static, editable interfaces available. This means developer tooling becomes useless for debugging, introspection, and documentation.
+
+To break it down, with current tooling there is no way to know:
 
   - What arguments can be provided to `train`
   - What CLI arguments are available
   - What 'shape' the `Config` takes
 
-Some of these problems can be solved dynamically, however in doing so one loses developer-tool insights. There is no code-completion, and likely the CLI parser won't provide you with the enumeration of possibilities.
+Some of these problems can be solved dynamically, however in doing so one loses developer-tool insights.
+There is no code-completion, and likely the CLI parser won't provide you with the enumeration of possibilities.
 
-## Example (REPL)
+## SDK example (REPL)
 
 To create a `class` from [`tf.keras.optimizers.Adam`](https://www.tensorflow.org/api_docs/python/tf/keras/optimizers/Adam):
 
@@ -135,7 +145,11 @@ class AdamConfig(object):
 
 ### Approach
 
-Traverse the AST, and emit the modifications, such that each of these 4 can convert to each other.
+Traverse the AST, and emit the modifications, such that each "format" can convert to each other.
+Type asymmetries are added to the docstrings, e.g., "primary_key" has no equivalent in a regular python func argument, 
+so is added as `":param my_id: [PK] The unique identifier"`.
+
+The following are the different formats supported, all of which can convert betwixt eachother:
 
 #### Docstring
 
@@ -402,17 +416,19 @@ class Config(Base):
   - CLI gives proper `--help` messages
   - IDE and console gives proper insights to function, and arguments, including on type
   - `class`–based interface opens this up to clean object passing
+  - Rather than passing around odd ORM class entities, you can use POPO (Plain Old Python Objects) and serialise easily
   - `@abstractmethod` can add—remove, and change—as many arguments as it wants; including required arguments; without worry
   - Verbosity of output removes the magic. It's always clear what's going on.
   - Outputting regular code means things can be composed and extended as normally.
 
 ## Disadvantages
 
-  - You have to run a tool to synchronise your: docstring(s), config `class`(es), and argparse augmenting function.
+  - You have to run a tool to synchronise your various formats.
   - Duplication (but the tool handles this)
 
 ## Alternatives
 
+  - Slow, manual duplication; or
   - Dynamic code generation, e.g., with a singular interface for everything; so everything is in one place without duplication
 
 ## Minor other use-cases this facilitates
@@ -424,23 +440,26 @@ class Config(Base):
 ## CLI for this project
 
     $ python -m cdd --help
-
+    
     usage: python -m cdd [-h] [--version]
-                     {sync_properties,sync,gen,gen_routes} ...
-
-    Open API to/fro routes, models, and tests. Convert between docstrings, classes, methods, argparse, and SQLalchemy.
+                         {sync_properties,sync,gen,gen_routes,openapi} ...
+    
+    Open API to/fro routes, models, and tests. Convert between docstrings,
+    classes, methods, argparse, and SQLalchemy.
     
     positional arguments:
-      {sync_properties,sync,gen,gen_routes}
+      {sync_properties,sync,gen,gen_routes,openapi}
         sync_properties     Synchronise one or more properties between input and
                             input_str Python files
         sync                Force argparse, classes, and/or methods to be
                             equivalent
-        gen                 Generate classes, functions, and/or argparse functions
-                            from the input mapping
+        gen                 Generate classes, functions, argparse function,
+                            sqlalchemy tables and/or sqlalchemy classes from the
+                            input mapping
         gen_routes          Generate per model route(s)
+        openapi             Generate OpenAPI schema from specified project(s)
     
-    options:
+    optional arguments:
       -h, --help            show this help message and exit
       --version             show program's version number and exit
 
@@ -538,6 +557,8 @@ class Config(Base):
 
 ### `gen_routes`
 
+    $ python -m cdd gen_routes --help
+
     usage: python -m cdd gen_routes [-h] --crud {CRUD,CR,C,R,U,D,CR,CU,CD,CRD}
                                     [--app-name APP_NAME] --model-path MODEL_PATH
                                     --model-name MODEL_NAME --routes-path
@@ -560,6 +581,25 @@ class Config(Base):
                             'foo/routes'
       --route ROUTE         Name of the route, defaults to
                             `/api/{model_name.lower()}`
+
+### `openapi`
+
+    $ python -m cdd openapi --help
+
+    usage: python -m cdd openapi [-h] [--app-name APP_NAME] --model-paths
+                                 MODEL_PATHS --routes-paths
+                                 [ROUTES_PATHS [ROUTES_PATHS ...]]
+    
+    optional arguments:
+      -h, --help            show this help message and exit
+      --app-name APP_NAME   Name of app (e.g., `app_name = Bottle();
+                            @app_name.get('/api') def slash(): pass`)
+      --model-paths MODEL_PATHS
+                            Python module resolution (foo.models) or filepath
+                            (foo/models)
+      --routes-paths [ROUTES_PATHS [ROUTES_PATHS ...]]
+                            Python module resolution 'foo.routes' or filepath
+                            'foo/routes'
 
 ---
 
