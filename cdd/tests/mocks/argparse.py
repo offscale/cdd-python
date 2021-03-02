@@ -21,8 +21,13 @@ from ast import (
 )
 
 from cdd.ast_utils import FALLBACK_TYP, maybe_type_comment, set_arg, set_value
-from cdd.pure_utils import tab
+from cdd.pure_utils import deindent, tab
+from cdd.tests.mocks.classes import (
+    class_torch_nn_l1loss_docstring_str,
+    tensorboard_doc_str_no_args_str,
+)
 from cdd.tests.mocks.docstrings import docstring_header_str
+from cdd.tests.utils_for_tests import remove_args_from_docstring
 
 argparse_add_argument_ast = Expr(
     Call(
@@ -45,14 +50,14 @@ argparse_add_argument_ast = Expr(
     )
 )
 
-__cli_doc_head = (
+argparse_doc_str = (
     "Set CLI arguments\n",
     ":param argument_parser: argument parser",
     ":type argument_parser: ```ArgumentParser```\n",
 )
 
 _cli_doc_str = "\n{tab}".format(tab=tab).join(
-    __cli_doc_head
+    argparse_doc_str
     + (
         ":returns: argument_parser, Train and tests dataset splits.",
         ":rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset],"
@@ -62,7 +67,7 @@ _cli_doc_str = "\n{tab}".format(tab=tab).join(
 _cli_doc_expr = Expr(set_value("\n{tab}{}\n{tab}".format(_cli_doc_str, tab=tab)))
 
 _cli_doc_nosplit_str = "\n{tab}".format(tab=tab).join(
-    __cli_doc_head
+    argparse_doc_str
     + (
         ":returns: argument_parser",
         ":rtype: ```ArgumentParser```",
@@ -741,6 +746,8 @@ argparse_func_action_append_ast = fix_missing_locations(
     )
 )
 
+# print("tensorboard_doc_str_no_args_str:", tensorboard_doc_str_no_args_str, ";")
+
 argparse_function_google_tf_tensorboard_ast = FunctionDef(
     args=arguments(
         args=[set_arg("argument_parser")],
@@ -765,72 +772,7 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
             lineno=None,
             type_comment=None,
             value=set_value(
-                "Enable visualizations for TensorBoard.\n"
-                "TensorBoard is a visualization tool provided with TensorFlow.\n"
-                "This callback logs events for TensorBoard, including:\n"
-                "* Metrics summary plots\n"
-                "* Training graph visualization\n"
-                "* Activation histograms\n"
-                "* Sampled profiling\n"
-                "If you have installed TensorFlow with pip, you should be able\n"
-                "to launch TensorBoard from the command line:\n"
-                "```\n"
-                "tensorboard --logdir=path_to_your_logs\n"
-                "```\n"
-                "You can find more information about TensorBoard\n"
-                "[here](https://www.tensorflow.org/get_started/summaries_and_tensorboard).\n"
-                "\n"
-                "\n"
-                "Basic usage:\n"
-                "```python\n"
-                'tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")\n'
-                "model.fit(x_train, y_train, epochs=2, callbacks=[tensorboard_callback])\n"
-                "# Then run the tensorboard command to view the visualizations.\n"
-                "```\n"
-                "Custom batch-level summaries in a subclassed Model:\n"
-                "```python\n"
-                "class MyModel(tf.keras.Model):\n"
-                "  def build(self, _):\n"
-                "    self.dense = tf.keras.layers.Dense(10)\n"
-                "  def call(self, x):\n"
-                "    outputs = self.dense(x)\n"
-                "    tf.summary.histogram('outputs', outputs)\n"
-                "    return outputs\n"
-                "model = MyModel()\n"
-                "model.compile('sgd', 'mse')\n"
-                "# Make sure to set `update_freq=N` to log a batch-level summary every N batches.\n"
-                "# In addition to any `tf.summary` contained in `Model.call`, metrics added in\n"
-                "# `Model.compile` will be logged every N batches.\n"
-                "tb_callback = tf.keras.callbacks.TensorBoard('./logs', update_freq=1)\n"
-                "model.fit(x_train, y_train, callbacks=[tb_callback])\n"
-                "```\n"
-                "Custom batch-level summaries in a Functional API Model:\n"
-                "```python\n"
-                "def my_summary(x):\n"
-                "  tf.summary.histogram('x', x)\n"
-                "  return x\n"
-                "inputs = tf.keras.Input(10)\n"
-                "x = tf.keras.layers.Dense(10)(inputs)\n"
-                "outputs = tf.keras.layers.Lambda(my_summary)(x)\n"
-                "model = tf.keras.Model(inputs, outputs)\n"
-                "model.compile('sgd', 'mse')\n"
-                "# Make sure to set `update_freq=N` to log a batch-level summary every N batches.\n"
-                "# In addition to any `tf.summary` contained in `Model.call`, metrics added in\n"
-                "# `Model.compile` will be logged every N batches.\n"
-                "tb_callback = tf.keras.callbacks.TensorBoard('./logs', update_freq=1)\n"
-                "model.fit(x_train, y_train, callbacks=[tb_callback])\n"
-                "```\n"
-                "Profiling:\n"
-                "```python\n"
-                "# Profile a single batch, e.g. the 5th batch.\n"
-                "tensorboard_callback = tf.keras.callbacks.TensorBoard(\n"
-                "    log_dir='./logs', profile_batch=5)\n"
-                "model.fit(x_train, y_train, epochs=2, callbacks=[tensorboard_callback])\n"
-                "# Profile a range of batches, e.g. from 10 to 20.\n"
-                "tensorboard_callback = tf.keras.callbacks.TensorBoard(\n"
-                "    log_dir='./logs', profile_batch=(10,20))\n"
-                "model.fit(x_train, y_train, epochs=2, callbacks=[tensorboard_callback])\n"
-                "```"
+                deindent(tensorboard_doc_str_no_args_str, sep="  ", level=1)[:-1]
             ),
             expr=None,
         ),
@@ -846,7 +788,7 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
                     keyword(
                         arg="help",
                         value=set_value(
-                            "the path of the directory where to save the log files to be parsed by TensorBoard."
+                            "the path of the directory where to save the log files to be parsed by TensorBoard. e.g. log_dir = os.path.join(working_dir, 'logs') This directory should not be reused by any other callbacks."
                         ),
                         identifier=None,
                     ),
@@ -922,6 +864,30 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
                         arg="help",
                         value=set_value(
                             "whether to write model weights to visualize as image in TensorBoard."
+                        ),
+                        identifier=None,
+                    ),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                    keyword(arg="default", value=set_value(False), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            )
+        ),
+        Expr(
+            Call(
+                args=[set_value("--write_steps_per_second")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(arg="type", value=Name("bool", Load()), identifier=None),
+                    keyword(
+                        arg="help",
+                        value=set_value(
+                            "whether to log the training steps per second into Tensorboard. This supports both epoch and batch frequency logging."
                         ),
                         identifier=None,
                     ),
@@ -1072,50 +1038,7 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
             lineno=None,
             type_comment=None,
             value=set_value(
-                "Creates a criterion that measures the mean absolute error (MAE)"
-                " between each element in\n"
-                "    the input :math:`x` and target :math:`y`.\n"
-                "    The unreduced (i.e. with :attr:`reduction` set to ``'none'``) loss"
-                " can be described as:\n"
-                "    .. math::\n"
-                "        \\ell(x, y) = L = \\{l_1,\\dots,l_N\\}^     op, \\quad\n"
-                "        l_n = \\left| x_n - y_n \night|,\n"
-                "    where :math:`N` is the batch size. "
-                "If :attr:`reduction` is not ``'none'``\n"
-                "    (default ``'mean'``), then:\n"
-                "    .. math::\n"
-                "        \\ell(x, y) =\n"
-                "        \x08egin{cases}\n"
-                "            \\operatorname{mean}(L), &   ext{if reduction} ="
-                "     ext{`mean';}\\\n            \\operatorname{sum}(L),  &"
-                "   ext{if reduction} =     ext{`sum'.}\n"
-                "        \\end{cases}\n"
-                "    :math:`x` and :math:`y` are tensors of arbitrary shapes with a total\n"
-                "    of :math:`n` elements each.\n"
-                "    The sum operation still operates over all the elements, and divides by"
-                " :math:`n`.\n    The division by :math:`n` can be avoided if one sets"
-                " ``reduction = 'sum'``.\n\n\n"
-                "        reduction (string, optional): Specifies the reduction to apply"
-                " to the output:\n"
-                "                ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``:"
-                " no reduction will be applied,\n"
-                "                ``'mean'``: the sum of the output will be divided"
-                " by the number of\n                elements in the output, ``'sum'``: the output will be summed."
-                " Note: :attr:`size_average`\n"
-                "                and :attr:`reduce` are in the process of being deprecated, and in the meantime,"
-                "\n                specifying either of those two args will override :attr:`reduction`."
-                " Default: ``'mean'``\n\n\n"
-                "        - Input: :math:`(N, *)` where :math:`*` means, any number of additional\n"
-                "          dimensions\n        - Target: :math:`(N, *)`, same shape as the input\n"
-                "        - Output: scalar. If :attr:`reduction` is ``'none'``, then\n"
-                "          :math:`(N, *)`, same shape as the input\n"
-                "    Examples::\n"
-                "        >>> loss = nn.L1Loss()\n"
-                "        >>> input = torch.randn(3, 5, requires_grad=True)\n"
-                "        >>> target = torch.randn(3, 5)\n"
-                "        >>> output = loss(input, target)\n"
-                "        >>> output.backward()\n"
-                "    "
+                remove_args_from_docstring(class_torch_nn_l1loss_docstring_str)
             ),
             expr=None,
         ),
@@ -1245,6 +1168,7 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
 
 __all__ = [
     "argparse_add_argument_ast",
+    "argparse_doc_str",
     "argparse_func_action_append_ast",
     "argparse_func_action_append_str",
     "argparse_func_ast",

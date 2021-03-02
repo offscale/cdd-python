@@ -6,6 +6,7 @@ from copy import deepcopy
 from functools import partial
 from importlib.abc import Loader
 from importlib.util import module_from_spec, spec_from_loader
+from itertools import takewhile
 from os import path
 from sys import modules
 from tempfile import NamedTemporaryFile
@@ -18,7 +19,7 @@ from meta.asttools import cmp_ast
 from cdd import source_transformer
 from cdd.ast_utils import set_value
 from cdd.docstring_utils import TOKENS
-from cdd.pure_utils import PY3_8, identity, reindent, tab
+from cdd.pure_utils import PY3_8, count_iter_items, identity, reindent, tab
 
 
 def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
@@ -62,6 +63,21 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     # print_ast(gen_ast)
     # print("#gold")
     # print_ast(gold)
+
+    map(
+        identity
+        if skip_black
+        else partial(
+            format_str,
+            mode=Mode(
+                target_versions=set(),
+                line_length=60,
+                is_pyi=False,
+                string_normalization=False,
+            ),
+        ),
+        map(source_transformer.to_code, (gold, gen_ast)),
+    )
 
     test_case_instance.assertEqual(
         *map(
@@ -279,29 +295,37 @@ def reindent_docstring(node, indent_level=1):
     return node
 
 
-def emit_separating_tab(s, indent_level=1):
+def remove_args_from_docstring(doc_str):
     """
-    Emit a separating tab between paragraphs
+    Remove args, kwargs, raises, and any other "args" from the docstring
 
-    :param s: Input string (probably a docstring)
-    :type s: ```str```
+    :param doc_str: The doc str (any style)
+    :type doc_str: ```str```
 
-    :param indent_level: docstring indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
-    :type indent_level: ```int```
-
+    :returns: Docstring excluding args
+    :rtype: ```str```
     """
-    sep = tab * indent_level
-    return "\n{sep}{}\n{sep}".format(
-        "\n".join(
-            map(lambda line: sep if len(line) == 0 else line, s.splitlines())
-        ).lstrip(),
-        sep=sep,
-    )
+    stack, in_args = [], False
+    assert isinstance(doc_str, str)
+    for line in doc_str.splitlines():
+        stripped_line = line.lstrip()
+        if any(filter(stripped_line.startswith, TOKENS)):
+            in_args = True
+        elif (
+            not in_args
+            or stripped_line.endswith(":")
+            and count_iter_items(takewhile(str.isalpha, stripped_line[:-1]))
+            == len(stripped_line) - 1
+        ):
+            stack.append(line)
+            in_args = False
+    return "\n".join(stack)
 
 
 __all__ = [
     "inspectable_compile",
     "mock_function",
+    "remove_args_from_docstring",
     "run_ast_test",
     "run_cli_test",
     "unittest_main",

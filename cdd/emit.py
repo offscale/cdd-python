@@ -47,6 +47,7 @@ from cdd.pure_utils import (
     PY3_8,
     code_quoted,
     deindent,
+    emit_separating_tabs,
     fill,
     identity,
     none_types,
@@ -55,7 +56,6 @@ from cdd.pure_utils import (
     tab,
 )
 from cdd.source_transformer import to_code
-from cdd.tests.utils_for_tests import emit_separating_tab
 
 
 def argparse_function(
@@ -65,6 +65,7 @@ def argparse_function(
     function_type="static",
     wrap_description=False,
     word_wrap=True,
+    emit_original_whitespace=False,
     docstring_format="rest",
 ):
     """
@@ -93,6 +94,9 @@ def argparse_function(
 
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
+
+    :param emit_original_whitespace: Whether to emit an original whitespace or strip it out
+    :type emit_original_whitespace: ```bool```
 
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
@@ -384,6 +388,7 @@ def class_(
 
     indent_level = 1
     sep = indent_level * tab
+
     return ClassDef(
         bases=list(map(rpartial(Name, Load()), class_bases)),
         body=list(
@@ -396,8 +401,8 @@ def class_(
                                     intermediate_repr,
                                     docstring_format=docstring_format,
                                     indent_level=indent_level,
-                                    emit_separating_tab=True,
                                     emit_default_doc=emit_default_doc,
+                                    emit_separating_tab=True,
                                     emit_types=False,
                                     word_wrap=word_wrap,
                                 )
@@ -585,6 +590,7 @@ def function(
     emit_separating_tab=PY3_8,
     inline_types=True,
     emit_as_kwonlyargs=True,
+    emit_original_whitespace=False,
 ):
     """
     Construct a function from our IR
@@ -624,6 +630,9 @@ def function(
 
     :param emit_as_kwonlyargs: Whether argument(s) emitted must be keyword only
     :type emit_as_kwonlyargs: ```bool```
+
+    :param emit_original_whitespace: Whether to emit an original whitespace (in docstring) or strip it out
+    :type emit_original_whitespace: ```bool```
 
     :returns: AST node for function definition
     :rtype: ```FunctionDef```
@@ -720,12 +729,13 @@ def function(
                         set_value(
                             to_docstring(
                                 intermediate_repr,
-                                word_wrap=word_wrap,
-                                emit_default_doc=emit_default_doc,
                                 docstring_format=docstring_format,
+                                emit_default_doc=emit_default_doc,
+                                emit_original_whitespace=emit_original_whitespace,
+                                emit_separating_tab=emit_separating_tab,
                                 emit_types=not inline_types,
                                 indent_level=indent_level,
-                                emit_separating_tab=emit_separating_tab,
+                                word_wrap=word_wrap,
                             )
                         )
                     ),
@@ -758,7 +768,11 @@ def function(
     )
 
 
-def json_schema(intermediate_repr, identifier="https://offscale.io/json.schema.json"):
+def json_schema(
+    intermediate_repr,
+    identifier="https://offscale.io/json.schema.json",
+    emit_original_whitespace=False,
+):
     """
     Construct a JSON schema dict
 
@@ -773,6 +787,9 @@ def json_schema(intermediate_repr, identifier="https://offscale.io/json.schema.j
 
     :param identifier: The `$id` of the schema
     :type identifier: ```str```
+
+    :param emit_original_whitespace: Whether to emit an original whitespace (in top-level `description`) or strip it out
+    :type emit_original_whitespace: ```bool```
 
     :returns: JSON Schema dict
     :rtype: ```dict```
@@ -796,6 +813,7 @@ def json_schema(intermediate_repr, identifier="https://offscale.io/json.schema.j
                     "returns": intermediate_repr["returns"],
                 },
                 emit_default_doc=True,
+                emit_original_whitespace=emit_original_whitespace,
                 emit_types=True,
             ).strip()
         ),
@@ -810,6 +828,7 @@ def sqlalchemy_table(
     name="config_tbl",
     docstring_format="rest",
     word_wrap=True,
+    emit_original_whitespace=False,
     emit_default_doc=True,
 ):
     """
@@ -835,6 +854,12 @@ def sqlalchemy_table(
 
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
+
+    :param emit_original_whitespace: Whether to emit an original whitespace (in docstring) or strip it out
+    :type emit_original_whitespace: ```bool```
+
+    :param emit_original_whitespace: Whether to emit an original whitespace or strip it out
+    :type emit_original_whitespace: ```bool```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
@@ -878,6 +903,7 @@ def sqlalchemy_table(
                                 emit_default_doc=emit_default_doc,
                                 docstring_format=docstring_format,
                                 word_wrap=word_wrap,
+                                emit_original_whitespace=emit_original_whitespace,
                                 emit_types=True,
                             ).strip()
                         )
@@ -905,6 +931,7 @@ def sqlalchemy(
     table_name=None,
     docstring_format="rest",
     word_wrap=True,
+    emit_original_whitespace=False,
     emit_default_doc=True,
 ):
     """
@@ -943,6 +970,9 @@ def sqlalchemy(
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
 
+    :param emit_original_whitespace: Whether to emit an original whitespace (in docstring) or strip it out
+    :type emit_original_whitespace: ```bool```
+
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
@@ -961,7 +991,7 @@ def sqlalchemy(
                     Expr(
                         set_value(
                             "{doc}\n{tab}".format(
-                                doc=emit_separating_tab(
+                                doc=emit_separating_tabs(
                                     indent(
                                         "\n".join(
                                             map(
@@ -979,10 +1009,11 @@ def sqlalchemy(
                                                             "returns"
                                                         ],
                                                     },
-                                                    emit_default_doc=emit_default_doc,
                                                     docstring_format=docstring_format,
-                                                    word_wrap=word_wrap,
+                                                    emit_default_doc=emit_default_doc,
+                                                    emit_original_whitespace=emit_original_whitespace,
                                                     emit_types=True,
+                                                    word_wrap=word_wrap,
                                                 ).splitlines(),
                                             )
                                         ),

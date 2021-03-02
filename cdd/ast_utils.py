@@ -943,7 +943,7 @@ class RewriteAtQuery(NodeTransformer):
 
     :ivar search: Search query, e.g., ['node_name', 'function_name', 'arg_name']
     :ivar replacement_node: Node to replace this search
-    :ivar replaced: whether a node has been replaced (only replaces first occurrence)
+    :ivar replaced: Whether a node has been replaced (only replaces first occurrence)
     """
 
     def __init__(self, search, replacement_node):

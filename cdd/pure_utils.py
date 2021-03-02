@@ -137,22 +137,38 @@ def pluralise(singular):
     return root + suffix
 
 
-def deindent(s):
+def deindent(s, level=None, sep=tab):
     """
-    Remove all indentation from the input string
+    Remove all indentation from the input string, or `level`(s) of indent if specified
 
     :param s: Input string
     :type s: ```AnyStr```
 
+    :param level: Number of tabs to remove from input string or if None: remove all
+    :type level: ```Optional[int]```
+
+    :param sep: Separator (usually `tab`)
+    :type sep: ```str```
+
     :returns: Deindented string
     :rtype: ```AnyStr```
     """
-    return "\n".join(
-        map(
-            str.lstrip,
-            s.splitlines(),
-        )
-    )
+    if level is None:
+        process_line = str.lstrip
+    else:
+        sep *= level
+
+        def process_line(line):
+            """
+            :param line: The line to dedent
+            :type line: ```AnyStr```
+
+            :returns: Dedented line
+            :rtype: ```AnyStr```
+            """
+            return line[len(sep) :] if line.startswith(sep) else line
+
+    return "\n".join(map(process_line, s.splitlines()))
 
 
 def reindent(s, indent_level=1, join_on="\n"):
@@ -181,7 +197,7 @@ def reindent(s, indent_level=1, join_on="\n"):
     ).replace(tab, "", 1)
 
 
-def indent_all_but_first(s, indent_level=1, wipe_indents=False):
+def indent_all_but_first(s, indent_level=1, wipe_indents=False, sep=tab):
     """
     Indent all lines except the first one
 
@@ -194,10 +210,13 @@ def indent_all_but_first(s, indent_level=1, wipe_indents=False):
     :param wipe_indents: Whether to clean the `s` of indents first
     :type wipe_indents: ```bool```
 
+    :param sep: Separator (usually `tab`)
+    :type sep: ```str```
+
     :returns: input string indented (except first line)
     :rtype: ```str```
     """
-    lines = indent(deindent(s) if wipe_indents else s, tab * abs(indent_level)).split(
+    lines = indent(deindent(s) if wipe_indents else s, sep * abs(indent_level)).split(
         "\n"
     )
     return "\n".join([lines[0].lstrip()] + lines[1:])
@@ -581,6 +600,26 @@ def filename_from_mod_or_filename(mod_or_filename):
     ).origin
 
 
+def emit_separating_tabs(s, indent_level=1):
+    """
+    Emit a separating tab between paragraphs
+
+    :param s: Input string (probably a docstring)
+    :type s: ```str```
+
+    :param indent_level: docstring indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
+    :type indent_level: ```int```
+
+    """
+    sep = tab * indent_level
+    return "\n{sep}{}\n{sep}".format(
+        "\n".join(
+            map(lambda line: sep if len(line) == 0 else line, s.splitlines())
+        ).lstrip(),
+        sep=sep,
+    )
+
+
 __all__ = [
     "BUILTIN_TYPES",
     "PY3_8",
@@ -591,6 +630,7 @@ __all__ = [
     "code_quoted",
     "count_iter_items",
     "diff",
+    "emit_separating_tabs",
     "filename_from_mod_or_filename",
     "fill",
     "get_module",

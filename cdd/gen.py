@@ -153,7 +153,7 @@ def gen(
     emit_name = emit_name.replace("class", "class_").replace(
         "argparse", "argparse_function"
     )
-    content = "{prepend}{imports}\n{functions_and_classes}\n{__all}".format(
+    content = "{prepend}{imports}\n{functions_and_classes}\n{__all__}".format(
         prepend="" if prepend is None else prepend,
         imports=imports,  # TODO: Optimize imports programmatically (akin to `autoflake --remove-all-unused-imports`)
         functions_and_classes="\n\n".join(
@@ -168,7 +168,7 @@ def gen(
                     emit_default_doc=emit_default_doc,
                     **(
                         lambda _name: {
-                            "argparse": {"function_name": _name},
+                            "argparse_function": {"function_name": _name},
                             "class_": {
                                 "class_name": _name,
                                 "decorator_list": decorator_list,
@@ -185,7 +185,7 @@ def gen(
             )
             for name, obj in input_mapping_it
         ),
-        __all=to_code(
+        __all__=to_code(
             Assign(
                 targets=[Name("__all__", Store())],
                 value=ast.parse(  # `TypeError: Type List cannot be instantiated; use list() instead`

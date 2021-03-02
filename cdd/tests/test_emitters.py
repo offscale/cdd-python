@@ -5,6 +5,7 @@ import ast
 import os
 from ast import FunctionDef
 from copy import deepcopy
+from functools import partial
 from platform import system
 from tempfile import TemporaryDirectory
 from unittest import TestCase, skipIf
@@ -120,6 +121,8 @@ class TestEmitters(TestCase):
             gold=argparse_func_action_append_ast,
         )
 
+    maxDiff = None
+
     def test_to_argparse_google_tf_tensorboard(self) -> None:
         """
         Tests whether `to_argparse` produces `argparse_function_google_tf_tensorboard_ast`
@@ -128,13 +131,27 @@ class TestEmitters(TestCase):
         ir = parse.class_(
             class_google_tf_tensorboard_ast, merge_inner_function="__init__"
         )
+        self.assertEqual(
+            ir["doc"], argparse_function_google_tf_tensorboard_ast.body[1].value.value
+        )
+        gen_ast = emit.argparse_function(
+            ir,
+            emit_default_doc=False,
+            word_wrap=False,
+            emit_original_whitespace=True,
+        )
+        self.assertEqual(
+            *map(
+                lambda node: node.body[1].value.value,
+                (
+                    gen_ast,
+                    argparse_function_google_tf_tensorboard_ast,
+                ),
+            )
+        )
         run_ast_test(
             self,
-            emit.argparse_function(
-                ir,
-                emit_default_doc=False,
-                word_wrap=False,
-            ),
+            gen_ast=gen_ast,
             gold=argparse_function_google_tf_tensorboard_ast,
         )
 
@@ -171,7 +188,7 @@ class TestEmitters(TestCase):
         Tests whether `docstring` produces `docstring_google_str` when `docstring_format` is 'google'
         """
         self.assertEqual(
-            docstring_google_str,
+            "\n" + docstring_google_str,
             emit.docstring(deepcopy(intermediate_repr), docstring_format="google"),
         )
 
@@ -405,9 +422,15 @@ class TestEmitters(TestCase):
             ),
             class_name="SquaredHingeConfig",
             emit_call=True,
-            word_wrap=False,
             emit_default_doc=True,
+            word_wrap=False,
         )
+        gen, gold = map(
+            partial(ast.get_docstring, clean=False),
+            (gen_ast, class_squared_hinge_config_ast),
+        )
+        self.assertEqual("gen\n" + gen, "gold\n" + gold)
+
         run_ast_test(
             self,
             gen_ast=gen_ast,

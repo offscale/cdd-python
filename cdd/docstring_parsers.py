@@ -14,7 +14,7 @@ from collections import OrderedDict
 from copy import deepcopy
 from enum import Enum
 from functools import partial
-from itertools import takewhile
+from itertools import chain, takewhile
 from operator import attrgetter, contains, eq, le
 from typing import Dict, List, Tuple
 
@@ -26,11 +26,11 @@ from cdd.emitter_utils import interpolate_defaults
 from cdd.pure_utils import (
     code_quoted,
     count_iter_items,
+    identity,
     location_within,
     none_types,
     paren_wrap_code,
     rpartial,
-    tab,
     unquote,
     update_d,
 )
@@ -51,6 +51,7 @@ def parse_docstring(
     docstring,
     infer_type=False,
     default_search_announce=None,
+    parse_original_whitespace=False,
     word_wrap=True,
     emit_default_prop=True,
     emit_default_doc=False,
@@ -65,6 +66,9 @@ def parse_docstring(
 
     :param infer_type: Whether to try inferring the typ (from the default)
     :type infer_type: ```bool```
+
+    :param parse_original_whitespace: Whether to parse original whitespace or strip it out
+    :type parse_original_whitespace: ```bool```
 
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
@@ -107,16 +111,18 @@ def parse_docstring(
         return ir
 
     scanned = _scan_phase(docstring, style=style)
+    # pp(scanned)
 
     _parse_phase(
         ir,
         scanned,
+        default_search_announce=default_search_announce,
         emit_default_doc=emit_default_doc,
         emit_default_prop=emit_default_prop,
-        word_wrap=word_wrap,
-        default_search_announce=default_search_announce,
         infer_type=infer_type,
+        parse_original_whitespace=parse_original_whitespace,
         style=style,
+        word_wrap=word_wrap,
     )
 
     # Apply certain functions regardless of style
@@ -139,12 +145,15 @@ def parse_docstring(
     return ir
 
 
-def _scan_phase(docstring, style=Style.rest):
+def _scan_phase(docstring, parse_original_whitespace=False, style=Style.rest):
     """
     Scanner phase. Lexical analysis; to some degree…
 
     :param docstring: the docstring
     :type docstring: ```str```
+
+    :param parse_original_whitespace: Whether to parse original whitespace or strip it out
+    :type parse_original_whitespace: ```bool```
 
     :param style: the style of docstring
     :type style: ```Style```
@@ -156,16 +165,25 @@ def _scan_phase(docstring, style=Style.rest):
     return (
         _scan_phase_rest
         if style is Style.rest
-        else partial(_scan_phase_numpydoc_and_google, style=style)
+        else partial(
+            _scan_phase_numpydoc_and_google,
+            parse_original_whitespace=parse_original_whitespace,
+            style=style,
+        )
     )(docstring, arg_tokens=arg_tokens, return_tokens=return_tokens)
 
 
-def _scan_phase_numpydoc_and_google(docstring, arg_tokens, return_tokens, style):
+def _scan_phase_numpydoc_and_google(
+    docstring, parse_original_whitespace, arg_tokens, return_tokens, style
+):
     """
     numpydoc and google scanner phase. Lexical analysis; to some degree…
 
     :param docstring: the docstring
     :type docstring: ```str```
+
+    :param parse_original_whitespace: Whether to parse original whitespace or strip it out
+    :type parse_original_whitespace: ```bool```
 
     :param arg_tokens: Valid tokens like `"Parameters\n----------"`
     :type arg_tokens: ```Tuple[str]```
@@ -179,8 +197,16 @@ def _scan_phase_numpydoc_and_google(docstring, arg_tokens, return_tokens, style)
     :returns: List with each element a tuple of (whether value is a token, value)
     :rtype: ```Dict[str, str]```
     """
+    white_spacer = (
+        identity
+        if parse_original_whitespace
+        else lambda s: s
+        if s.isspace()
+        else s.strip()
+    )
     scanned: Dict[str, List[List[str]]] = {
-        token: [] for token in ("doc",) + arg_tokens + return_tokens
+        token: []
+        for token in chain.from_iterable((("doc",), arg_tokens, return_tokens))
     }
     # ^ Dict[Union[Literal["doc"], arg_tokens, return_tokens], List[dict]]
 
@@ -192,81 +218,84 @@ def _scan_phase_numpydoc_and_google(docstring, arg_tokens, return_tokens, style)
 
     if _start_idx > -1:
         namespace = _found
-        scanned["doc"] = docstring[:_start_idx].strip()
-        docstring = docstring[_end_idx + 1 :]  # .strip()
+        scanned["doc"] = white_spacer(docstring[:_start_idx])
+        docstring = docstring[_end_idx + 1 :]
     else:
-        scanned["doc"] = docstring.strip()
+        scanned["doc"] = docstring
         return scanned
 
     # Scan all lines so that that each element in `stacker` refers to one 'unit'
-    stacker, docstring_lines = [], docstring.splitlines()
+    stacker, docstring_lines, line = [], docstring.splitlines(), None
     first_indent = count_iter_items(takewhile(str.isspace, docstring_lines[0]))
     for line_no, line in enumerate(docstring_lines):
         indent = count_iter_items(takewhile(str.isspace, line))
 
         if indent == first_indent:
             stacker.append([line])
-        else:
-            if indent < first_indent:
-                scanned[namespace] = scanned.get(namespace, []) + deepcopy(stacker)
-                stacker.clear()
-                if len(docstring_lines) > line_no + 3 and any(
-                    filter(rpartial(eq, docstring_lines[line_no + 1]), return_tokens)
-                    # return_token = return_tokens[0].splitlines()
-                    # filter(rpartial(eq, docstring_lines[line_no + 1]), return_tokens)
+        elif indent < first_indent:
+            scanned[namespace] = scanned.get(namespace, []) + deepcopy(stacker)
+            stacker.clear()
+            if len(docstring_lines) > line_no + 3 and any(
+                filter(rpartial(eq, docstring_lines[line_no + 1]), return_tokens)
+                # return_token = return_tokens[0].splitlines()
+                # filter(rpartial(eq, docstring_lines[line_no + 1]), return_tokens)
+            ):
+                return_indent = count_iter_items(
+                    takewhile(str.isspace, docstring_lines[line_no + 3])
+                )
+                next_smallest_indent = count_iter_items(
+                    takewhile(
+                        partial(le, return_indent),
+                        map(
+                            lambda l: count_iter_items(takewhile(str.isspace, l)),
+                            docstring_lines[line_no + 3 :],
+                        ),
+                    )
+                )
+                scanned[return_tokens[0]] = docstring_lines[
+                    line_no + 2 : line_no + 3 + next_smallest_indent
+                ]
+                scanned_afterward = docstring_lines[
+                    line_no + 3 + next_smallest_indent :
+                ]
+            else:
+                scanned_afterward = docstring_lines[line_no + 1 :]
+                if (
+                    len(scanned_afterward) > 1
+                    and scanned_afterward[0] == return_tokens[0]
                 ):
                     return_indent = count_iter_items(
-                        takewhile(str.isspace, docstring_lines[line_no + 3])
+                        takewhile(str.isspace, scanned_afterward[1])
                     )
                     next_smallest_indent = count_iter_items(
                         takewhile(
                             partial(le, return_indent),
                             map(
                                 lambda l: count_iter_items(takewhile(str.isspace, l)),
-                                docstring_lines[line_no + 3 :],
+                                scanned_afterward[2:],
                             ),
                         )
                     )
-                    scanned[return_tokens[0]] = docstring_lines[
-                        line_no + 2 : line_no + 3 + next_smallest_indent
+                    scanned[return_tokens[0]] = scanned_afterward[
+                        1 : next_smallest_indent + 2
                     ]
-                    scanned_afterward = docstring_lines[
-                        line_no + 3 + next_smallest_indent :
-                    ]
-                else:
-                    scanned_afterward = docstring_lines[line_no + 1 :]
-                    if (
-                        len(scanned_afterward) > 1
-                        and scanned_afterward[0] == return_tokens[0]
-                    ):
-                        return_indent = count_iter_items(
-                            takewhile(str.isspace, scanned_afterward[1])
-                        )
-                        next_smallest_indent = count_iter_items(
-                            takewhile(
-                                partial(le, return_indent),
-                                map(
-                                    lambda l: count_iter_items(
-                                        takewhile(str.isspace, l)
-                                    ),
-                                    scanned_afterward[2:],
-                                ),
-                            )
-                        )
-                        scanned[return_tokens[0]] = scanned_afterward[
-                            1 : next_smallest_indent + 2
-                        ]
-                        scanned_afterward = (
-                            None
-                            if next_smallest_indent == 0
-                            else scanned_afterward[next_smallest_indent + 2 :]
-                        )
+                    scanned_afterward = (
+                        None
+                        if next_smallest_indent == 0
+                        else scanned_afterward[next_smallest_indent + 2 :]
+                    )
 
-                if scanned_afterward:
-                    scanned["scanned_afterward"] = scanned_afterward
-                break
-            else:
-                stacker[-1].append(line)
+            if scanned_afterward:
+                scanned["scanned_afterward"] = scanned_afterward
+            break
+        else:
+            stacker[-1].append(line)
+
+    if line is not None and (not stacker or not stacker[-1] or stacker[-1][0] != line):
+        if "scanned_afterward" in scanned:
+            scanned["scanned_afterward"].insert(0, line)
+        else:
+            scanned["scanned_afterward"] = [line]
 
     # Split out return, if present and not already set
     if not scanned.get(return_tokens[0], False):
@@ -391,6 +420,7 @@ def _parse_phase(
     scanned,
     default_search_announce,
     infer_type,
+    parse_original_whitespace,
     word_wrap,
     emit_default_prop,
     emit_default_doc,
@@ -415,6 +445,9 @@ def _parse_phase(
     :param infer_type: Whether to try inferring the typ (from the default)
     :type infer_type: ```bool```
 
+    :param parse_original_whitespace: Whether to parse original whitespace or strip it out
+    :type parse_original_whitespace: ```bool```
+
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
@@ -437,11 +470,12 @@ def _parse_phase(
     )(
         intermediate_repr,
         scanned,
+        default_search_announce=default_search_announce,
         emit_default_doc=emit_default_doc,
         emit_default_prop=emit_default_prop,
-        return_tokens=return_tokens,
-        default_search_announce=default_search_announce,
         infer_type=infer_type,
+        parse_original_whitespace=parse_original_whitespace,
+        return_tokens=return_tokens,
         word_wrap=word_wrap,
     )
 
@@ -473,8 +507,12 @@ def _set_name_and_type(param, infer_type, word_wrap):
     elif "default" in _param:
         _infer_default(_param, infer_type)
     google_opt = ", optional"
-    if (_param.get("typ") or "").endswith(google_opt):
-        _param["typ"] = "Optional[{}]".format(_param["typ"][: -len(google_opt)])
+    if _param.get("typ"):
+        _param["typ"] = (
+            "Optional[{}]".format(_param["typ"][: -len(google_opt)])
+            if _param["typ"].endswith(google_opt)
+            else _param["typ"]
+        )
     if "doc" in _param and not _param["doc"]:
         del _param["doc"]
 
@@ -553,6 +591,7 @@ def _parse_phase_numpydoc_and_google(
     style,
     arg_tokens,
     return_tokens,
+    parse_original_whitespace,
     emit_default_prop,
     emit_default_doc,
 ):
@@ -587,12 +626,16 @@ def _parse_phase_numpydoc_and_google(
     :param return_tokens: Valid tokens like `"Returns\n-------"`
     :type return_tokens: ```Tuple[str]```
 
+    :param parse_original_whitespace: Whether to parse original whitespace or strip it out
+    :type parse_original_whitespace: ```bool```
+
     :param emit_default_prop: Whether to include the default dictionary property.
     :type emit_default_prop: ```bool```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
     """
+    white_spacer = identity if parse_original_whitespace else str.lstrip
     if style is Style.numpydoc:
 
         def _parse(scan):
@@ -608,10 +651,10 @@ def _parse_phase_numpydoc_and_google(
             name, _, typ = scan[0].partition(":")
             if not name:
                 return None
-            cur = {"name": name.rstrip()}
+            cur = {"name": name.strip()}
             if typ:
                 cur.update(
-                    {"typ": typ.lstrip(), "doc": "\n".join(map(str.lstrip, scan[1:]))}
+                    {"typ": typ.lstrip(), "doc": "\n".join(map(white_spacer, scan[1:]))}
                 )
             # elif name.endswith("kwargs"): cur["typ"] = "dict"
             return cur
@@ -632,9 +675,9 @@ def _parse_phase_numpydoc_and_google(
             :rtype: ```dict```
             """
             offset = next(idx for idx, ch in enumerate(scan[0]) if ch == ":")
-            s = scan[0][:offset].lstrip()
+            s = white_spacer(scan[0][:offset])
             name, delim, typ = partitioned or s.partition("(")
-            name = name.rstrip()
+            name = name.strip()
             typ = (delim + typ).rstrip()
             # if not name: return None
             cur = {"name": name}
@@ -645,7 +688,7 @@ def _parse_phase_numpydoc_and_google(
                 cur["typ"] = typ[1:-1]
                 if " or " in cur["typ"]:
                     cur["typ"] = "Union[{}]".format(", ".join(cur["typ"].split(" or ")))
-                end = scan[0][offset + 1 :].lstrip()
+                end = white_spacer(scan[0][offset + 1 :])
                 if len(end) > 3 and end.startswith("{") and end.endswith("}"):
                     # PyTorch invented their own syntax for this I guess?
                     cur["typ"] = "Literal{}".format(
@@ -656,7 +699,13 @@ def _parse_phase_numpydoc_and_google(
                 #    return _parse(scan, " ".join((name, typ)).partition("="))
                 # else:
             # elif name.endswith("kwargs"): cur["typ"] = "dict"
-            cur["doc"] = "\n".join([scan[0][offset + 1 :].lstrip()] + scan[1:]).strip()
+            cur["doc"] = (lambda s_: s_ if parse_original_whitespace else s_.strip())(
+                "\n".join(
+                    chain.from_iterable(
+                        ((white_spacer(scan[0][offset + 1 :]),), scan[1:])
+                    )
+                )
+            )
             return cur
 
     scanned_params = scanned[arg_tokens[0]]
@@ -670,22 +719,25 @@ def _parse_phase_numpydoc_and_google(
             scanned_params[:afterward_idx],
             scanned_params[afterward_idx:],
         )
-        scanned["doc"] += "\n\n\n{}".format(
-            "\n".join(
-                map(
-                    "\n".join,
-                    map(
-                        lambda l: map(
-                            lambda s: s if s.endswith(":") else "{}{}".format(tab, s), l
-                        ),
-                        scanned_afterward,
-                    ),
-                )
-            )
-        )
+        scanned["doc"] += "\n\n{}".format("\n".join(map("\n".join, scanned_afterward)))
 
     if "scanned_afterward" in scanned:
-        scanned["doc"] += "\n\n\n{}".format("\n".join(scanned["scanned_afterward"]))
+        if next(
+            filter(
+                partial(eq, scanned["scanned_afterward"][0]),
+                (
+                    e
+                    for k, v in scanned.items()
+                    for elem in v
+                    for e in elem
+                    if k != "scanned_afterward"
+                ),
+            ),
+            False,
+        ):
+            del scanned["scanned_afterward"]
+        else:
+            scanned["doc"] += "\n".join(scanned["scanned_afterward"])
 
     def _interpolate_defaults_and_force_future_default(name_param):
         """
@@ -714,7 +766,7 @@ def _parse_phase_numpydoc_and_google(
 
     intermediate_repr.update(
         {
-            "doc": scanned["doc"],
+            "doc": "" if scanned["doc"].isspace() else white_spacer(scanned["doc"]),
             "params": OrderedDict(
                 map(
                     partial(
@@ -740,7 +792,9 @@ def _parse_phase_numpydoc_and_google(
                                         "typ": scanned[return_tokens[0]][0][
                                             :-1
                                         ].lstrip(),
-                                        "doc": scanned[return_tokens[0]][1].lstrip(),
+                                        "doc": white_spacer(
+                                            scanned[return_tokens[0]][1]
+                                        ),
                                     }
                                     if len(scanned[return_tokens[0]]) == 2
                                     and isinstance(scanned[return_tokens[0]][1], str)
@@ -748,7 +802,9 @@ def _parse_phase_numpydoc_and_google(
                                     if isinstance(scanned[return_tokens[0]][0], str)
                                     and scanned[return_tokens[0]][0].isspace()
                                     else {
-                                        "doc": scanned[return_tokens[0]][0].lstrip()
+                                        "doc": white_spacer(
+                                            scanned[return_tokens[0]][0]
+                                        )
                                         if isinstance(scanned[return_tokens[0]][0], str)
                                         else scanned[return_tokens[0]][0]
                                     }
@@ -756,7 +812,9 @@ def _parse_phase_numpydoc_and_google(
                                 if style is Style.google
                                 else {
                                     "typ": scanned[return_tokens[0]][0][0],
-                                    "doc": scanned[return_tokens[0]][0][1].lstrip(),
+                                    "doc": white_spacer(
+                                        scanned[return_tokens[0]][0][1]
+                                    ),
                                 },
                             ),
                             infer_type=infer_type,
@@ -777,6 +835,7 @@ def _parse_phase_rest(
     default_search_announce,
     infer_type,
     word_wrap,
+    parse_original_whitespace,
     emit_default_prop,
     emit_default_doc,
     return_tokens,
@@ -802,6 +861,9 @@ def _parse_phase_rest(
 
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
+
+    :param parse_original_whitespace: Whether to parse original whitespace or strip it out
+    :type parse_original_whitespace: ```bool```
 
     :param emit_default_prop: Whether to include the default dictionary property.
     :type emit_default_prop: ```bool```
@@ -843,7 +905,9 @@ def _parse_phase_rest(
                         intermediate_repr["params"][param[0]] = param[1]
                     param = [None, {}]
 
-                val = line[nxt_colon + 1 :].strip()
+                val = (lambda s_: s_ if parse_original_whitespace else s_.strip())(
+                    line[nxt_colon + 1 :]
+                )
 
                 param = _set_name_and_type(
                     interpolate_defaults(
@@ -861,7 +925,9 @@ def _parse_phase_rest(
                         param, emit_default_prop=emit_default_doc
                     )
         elif not intermediate_repr["doc"]:
-            intermediate_repr["doc"] = line.strip()
+            intermediate_repr["doc"] = (
+                lambda s_: s_ if parse_original_whitespace else s_.strip()
+            )(line)
     if param != [None, {}]:
         # if param['name'] == 'return_type': intermediate_repr['returns'] = param
         name, param = _set_name_and_type(
