@@ -25,15 +25,14 @@ from operator import add
 from textwrap import indent
 
 from cdd.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
-from cdd.pure_utils import tab
+from cdd.pure_utils import emit_separating_tabs, tab
 from cdd.tests.mocks.docstrings import (
-    docstring_google_tf_adadelta_str,
+    docstring_google_tf_adadelta,
     docstring_header_str,
     docstring_no_default_doc_wrapped_str,
     docstring_no_type_no_default_str,
     docstring_str,
 )
-from cdd.tests.utils_for_tests import emit_separating_tab
 
 return_ast = Return(
     value=Tuple(
@@ -397,7 +396,7 @@ class_with_method_ast = fix_missing_locations(
                 body=[
                     Expr(
                         set_value(
-                            emit_separating_tab(
+                            emit_separating_tabs(
                                 indent(docstring_no_default_doc_wrapped_str, tab * 2), 2
                             )
                         )
@@ -900,127 +899,137 @@ method_complex_args_variety_ast = FunctionDef(
 )
 
 # https://github.com/tensorflow/tensorflow/blob/7ad2723/tensorflow/python/keras/losses.py#L1327-L1355
-function_google_tf_squared_hinge_str = '''def squared_hinge(y_true, y_pred):
-  """Computes the squared hinge loss between `y_true` and `y_pred`.
+function_google_tf_squared_hinge_docstring = (
+    "Computes the squared hinge loss between `y_true` and `y_pred`.",
+    "",
+    "  `loss = mean(square(maximum(1 - y_true * y_pred, 0)), axis=-1)`",
+    "",
+    "  Standalone usage:",
+    "",
+    "  >>> y_true = np.random.choice([-1, 1], size=(2, 3))",
+    "  >>> y_pred = np.random.random(size=(2, 3))",
+    "  >>> loss = tf.keras.losses.squared_hinge(y_true, y_pred)",
+    "  >>> assert loss.shape == (2,)",
+    "  >>> assert np.array_equal(",
+    "  ...     loss.numpy(),",
+    "  ...     np.mean(np.square(np.maximum(1. - y_true * y_pred, 0.)), axis=-1))",
+    "",
+    "  Args:",
+    "    y_true: The ground truth values. `y_true` values are expected to be -1 or 1.",
+    "      If binary (0 or 1) labels are provided we will convert them to -1 or 1.",
+    "      shape = `[batch_size, d0, .. dN]`.",
+    "    y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.",
+    "",
+    "  Returns:",
+    "     Squared hinge loss values. shape = `[batch_size, d0, .. dN-1]`.",
+    "  ",
+)
+function_google_tf_squared_hinge_docstring_str = "\n".join(
+    function_google_tf_squared_hinge_docstring
+)
+function_google_tf_squared_hinge = (
+    "def squared_hinge(y_true, y_pred):",
+    '  """{}"""'.format(function_google_tf_squared_hinge_docstring_str),
+    "  y_pred = ops.convert_to_tensor_v2(y_pred)",
+    "  y_true = math_ops.cast(y_true, y_pred.dtype)",
+    "  y_true = _maybe_convert_labels(y_true)",
+    "  return K.mean(",
+    "      math_ops.square(math_ops.maximum(1. - y_true * y_pred, 0.)), axis=-1)",
+)
+function_google_tf_squared_hinge_str = "\n".join(function_google_tf_squared_hinge)
 
-  `loss = mean(square(maximum(1 - y_true * y_pred, 0)), axis=-1)`
-
-  Standalone usage:
-
-  >>> y_true = np.random.choice([-1, 1], size=(2, 3))
-  >>> y_pred = np.random.random(size=(2, 3))
-  >>> loss = tf.keras.losses.squared_hinge(y_true, y_pred)
-  >>> assert loss.shape == (2,)
-  >>> assert np.array_equal(
-  ...     loss.numpy(),
-  ...     np.mean(np.square(np.maximum(1. - y_true * y_pred, 0.)), axis=-1))
-
-  Args:
-    y_true: The ground truth values. `y_true` values are expected to be -1 or 1.
-      If binary (0 or 1) labels are provided we will convert them to -1 or 1.
-      shape = `[batch_size, d0, .. dN]`.
-    y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.
-
-  Returns:
-     Squared hinge loss values. shape = `[batch_size, d0, .. dN-1]`.
-  """
-  y_pred = ops.convert_to_tensor_v2(y_pred)
-  y_true = math_ops.cast(y_true, y_pred.dtype)
-  y_true = _maybe_convert_labels(y_true)
-  return K.mean(
-      math_ops.square(math_ops.maximum(1. - y_true * y_pred, 0.)), axis=-1)
-'''
-
-docstring_google_tf_adadelta_function_str = """
-class Adadelta(object):
-  \"\"\"\n{docstring_google_tf_adadelta_str}\n  \"\"\"\n{body}""".format(
-    docstring_google_tf_adadelta_str="\n".join(
-        map(partial(add, " " * 2), docstring_google_tf_adadelta_str.splitlines())
+docstring_google_tf_adadelta_function = (
+    "",
+    "class Adadelta(object):",
+    '  """{}"""'.format(
+        "\n".join(map(partial(add, " " * 2), docstring_google_tf_adadelta))
     ),
-    body="""
-  _HAS_AGGREGATE_GRAD = True
-
-  def __init__(self,
-               learning_rate=0.001,
-               rho=0.95,
-               epsilon=1e-7,
-               name='Adadelta',
-               **kwargs):
-    # super(Adadelta, self).__init__(name, **kwargs)
-    self._set_hyper('learning_rate', kwargs.get('lr', learning_rate))
-    self._set_hyper('decay', self._initial_decay)
-    self._set_hyper('rho', rho)
-    self.epsilon = epsilon or backend_config.epsilon()
-
-  def _create_slots(self, var_list):
-    # Separate for-loops to respect the ordering of slot variables from v1.
-    for v in var_list:
-      self.add_slot(v, 'accum_grad')
-    for v in var_list:
-      self.add_slot(v, 'accum_var')
-
-  def _prepare_local(self, var_device, var_dtype, apply_state):
-    # super(Adadelta, self)._prepare_local(var_device, var_dtype, apply_state)
-    apply_state[(var_device, var_dtype)].update(
-        dict(
-            epsilon=ops.convert_to_tensor_v2_with_dispatch(
-                self.epsilon, var_dtype),
-            rho=array_ops.identity(self._get_hyper('rho', var_dtype))))
-
-  def set_weights(self, weights):
-    params = self.weights
-    # Override set_weights for backward compatibility of Keras V1 optimizer
-    # since it does not include iteration at head of the weight list. Set
-    # iteration to 0.
-    if len(params) == len(weights) + 1:
-      weights = [np.array(0)] + weights
-    # super(Adadelta, self).set_weights(weights)
-
-  def _resource_apply_dense(self, grad, var, apply_state=None):
-    var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = ((apply_state or {}).get((var_device, var_dtype))
-                    or self._fallback_apply_state(var_device, var_dtype))
-
-    accum_grad = self.get_slot(var, 'accum_grad')
-    accum_var = self.get_slot(var, 'accum_var')
-    return gen_training_ops.ResourceApplyAdadelta(
-        var=var.handle,
-        accum=accum_grad.handle,
-        accum_update=accum_var.handle,
-        lr=coefficients['lr_t'],
-        rho=coefficients['rho'],
-        epsilon=coefficients['epsilon'],
-        grad=grad,
-        use_locking=self._use_locking)
-
-  def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
-    var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = ((apply_state or {}).get((var_device, var_dtype))
-                    or self._fallback_apply_state(var_device, var_dtype))
-
-    accum_grad = self.get_slot(var, 'accum_grad')
-    accum_var = self.get_slot(var, 'accum_var')
-    return gen_training_ops.ResourceSparseApplyAdadelta(
-        var=var.handle,
-        accum=accum_grad.handle,
-        accum_update=accum_var.handle,
-        lr=coefficients['lr_t'],
-        rho=coefficients['rho'],
-        epsilon=coefficients['epsilon'],
-        grad=grad,
-        indices=indices,
-        use_locking=self._use_locking)
-
-  def get_config(self):
-    config = super(Adadelta, self).get_config()
-    config.update({
-        'learning_rate': self._serialize_hyperparameter('learning_rate'),
-        'decay': self._serialize_hyperparameter('decay'),
-        'rho': self._serialize_hyperparameter('rho'),
-        'epsilon': self.epsilon,
-    })
-    return config
-""",
+    "",
+    "  _HAS_AGGREGATE_GRAD = True",
+    "",
+    "  def __init__(self,",
+    "               learning_rate=0.001,",
+    "               rho=0.95,",
+    "               epsilon=1e-7,",
+    "               name='Adadelta',",
+    "               **kwargs):",
+    "    # super(Adadelta, self).__init__(name, **kwargs)",
+    "    self._set_hyper('learning_rate', kwargs.get('lr', learning_rate))",
+    "    self._set_hyper('decay', self._initial_decay)",
+    "    self._set_hyper('rho', rho)",
+    "    self.epsilon = epsilon or backend_config.epsilon()",
+    "",
+    "  def _create_slots(self, var_list):",
+    "    # Separate for-loops to respect the ordering of slot variables from v1.",
+    "    for v in var_list:",
+    "      self.add_slot(v, 'accum_grad')",
+    "    for v in var_list:",
+    "      self.add_slot(v, 'accum_var')",
+    "",
+    "  def _prepare_local(self, var_device, var_dtype, apply_state):",
+    "    # super(Adadelta, self)._prepare_local(var_device, var_dtype, apply_state)",
+    "    apply_state[(var_device, var_dtype)].update(",
+    "        dict(",
+    "            epsilon=ops.convert_to_tensor_v2_with_dispatch(",
+    "                self.epsilon, var_dtype),",
+    "            rho=array_ops.identity(self._get_hyper('rho', var_dtype))))",
+    "",
+    "  def set_weights(self, weights):",
+    "    params = self.weights",
+    "    # Override set_weights for backward compatibility of Keras V1 optimizer",
+    "    # since it does not include iteration at head of the weight list. Set",
+    "    # iteration to 0.",
+    "    if len(params) == len(weights) + 1:",
+    "      weights = [np.array(0)] + weights",
+    "    # super(Adadelta, self).set_weights(weights)",
+    "",
+    "  def _resource_apply_dense(self, grad, var, apply_state=None):",
+    "    var_device, var_dtype = var.device, var.dtype.base_dtype",
+    "    coefficients = ((apply_state or {}).get((var_device, var_dtype))",
+    "                    or self._fallback_apply_state(var_device, var_dtype))",
+    "",
+    "    accum_grad = self.get_slot(var, 'accum_grad')",
+    "    accum_var = self.get_slot(var, 'accum_var')",
+    "    return gen_training_ops.ResourceApplyAdadelta(",
+    "        var=var.handle,",
+    "        accum=accum_grad.handle,",
+    "        accum_update=accum_var.handle,",
+    "        lr=coefficients['lr_t'],",
+    "        rho=coefficients['rho'],",
+    "        epsilon=coefficients['epsilon'],",
+    "        grad=grad,",
+    "        use_locking=self._use_locking)",
+    "",
+    "  def _resource_apply_sparse(self, grad, var, indices, apply_state=None):",
+    "    var_device, var_dtype = var.device, var.dtype.base_dtype",
+    "    coefficients = ((apply_state or {}).get((var_device, var_dtype))",
+    "                    or self._fallback_apply_state(var_device, var_dtype))",
+    "",
+    "    accum_grad = self.get_slot(var, 'accum_grad')",
+    "    accum_var = self.get_slot(var, 'accum_var')",
+    "    return gen_training_ops.ResourceSparseApplyAdadelta(",
+    "        var=var.handle,",
+    "        accum=accum_grad.handle,",
+    "        accum_update=accum_var.handle,",
+    "        lr=coefficients['lr_t'],",
+    "        rho=coefficients['rho'],",
+    "        epsilon=coefficients['epsilon'],",
+    "        grad=grad,",
+    "        indices=indices,",
+    "        use_locking=self._use_locking)",
+    "",
+    "  def get_config(self):",
+    "    config = super(Adadelta, self).get_config()",
+    "    config.update({",
+    "        'learning_rate': self._serialize_hyperparameter('learning_rate'),",
+    "        'decay': self._serialize_hyperparameter('decay'),",
+    "        'rho': self._serialize_hyperparameter('rho'),",
+    "        'epsilon': self.epsilon,",
+    "    })",
+    "    return config",
+)
+docstring_google_tf_adadelta_function_str = "\n".join(
+    docstring_google_tf_adadelta_function
 )
 
 __all__ = [

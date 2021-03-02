@@ -64,6 +64,7 @@ def class_(
     class_name=None,
     merge_inner_function=None,
     infer_type=False,
+    parse_original_whitespace=False,
     word_wrap=True,
 ):
     """
@@ -80,6 +81,9 @@ def class_(
 
     :param infer_type: Whether to try inferring the typ (from the default)
     :type infer_type: ```bool```
+
+    :param parse_original_whitespace: Whether to parse original whitespace or strip it out
+    :type parse_original_whitespace: ```bool```
 
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
@@ -147,7 +151,9 @@ def class_(
         }
         if doc_str is None
         else docstring(
-            get_docstring(class_def).replace(":cvar", ":param"), emit_default_doc=False
+            get_docstring(class_def).replace(":cvar", ":param"),
+            emit_default_doc=False,
+            parse_original_whitespace=parse_original_whitespace,
         )
     )
 
@@ -658,6 +664,7 @@ def docstring(
     doc_string,
     infer_type=False,
     return_tuple=False,
+    parse_original_whitespace=False,
     emit_default_prop=True,
     emit_default_doc=True,
 ):
@@ -672,6 +679,9 @@ def docstring(
 
     :param return_tuple: Whether to return a tuple, or just the intermediate_repr
     :type return_tuple: ```bool```
+
+    :param parse_original_whitespace: Whether to parse original whitespace or strip it out
+    :type parse_original_whitespace: ```bool```
 
     :param emit_default_prop: Whether to include the default dictionary property.
     :type emit_default_prop: ```bool```
@@ -693,6 +703,7 @@ def docstring(
             infer_type=infer_type,
             emit_default_prop=emit_default_prop,
             emit_default_doc=emit_default_doc,
+            parse_original_whitespace=parse_original_whitespace,
         )
     )
 

@@ -196,7 +196,7 @@ class TestMarshallDocstring(TestCase):
         self.assertDictEqual(
             ir,
             {
-                "doc": "",
+                "doc": ir["doc"],
                 "name": None,
                 "params": OrderedDict(),
                 "returns": intermediate_repr_no_default_doc["returns"],
@@ -209,7 +209,7 @@ class TestMarshallDocstring(TestCase):
         Tests whether `docstring` produces `intermediate_repr_no_default_doc`
               from `docstring_numpydoc_only_doc_str`"""
         ir, returns = parse.docstring(
-            docstring_numpydoc_only_doc_str, return_tuple=True
+            docstring_numpydoc_only_doc_str.strip(), return_tuple=True
         )
         self.assertFalse(returns)
         self.assertDictEqual(
@@ -228,7 +228,7 @@ class TestMarshallDocstring(TestCase):
         Tests whether `parse_docstring` produces `intermediate_repr_no_default_doc`
               from `docstring_google_str`
         """
-        ir = parse_docstring(docstring_google_str)
+        ir = parse_docstring(docstring_google_str, parse_original_whitespace=True)
         self.assertDictEqual(ir, intermediate_repr_no_default_doc)
 
     def test_from_docstring_google_tf_squared_hinge(self) -> None:
@@ -251,6 +251,13 @@ class TestMarshallDocstring(TestCase):
         Tests whether `parse_docstring` produces the right IR
               from `docstring_google_tf_squared_hinge_str`
         """
+        self.assertEqual(
+            "gold\n" + docstring_google_tf_adam_ir["doc"],
+            "gen\n"
+            + parse_docstring(
+                docstring_google_tf_adam_str, emit_default_doc=True, infer_type=True
+            )["doc"],
+        )
         self.assertDictEqual(
             parse_docstring(
                 docstring_google_tf_adam_str, emit_default_doc=True, infer_type=True
@@ -263,6 +270,14 @@ class TestMarshallDocstring(TestCase):
         Tests whether `parse_docstring` produces the right IR
               from `docstring_google_tf_adadelta_str`
         """
+        gold = docstring_google_tf_adadelta_ir
+        gen = parse_docstring(
+            docstring_google_tf_adadelta_str, emit_default_doc=True, infer_type=True
+        )
+        self.assertEqual(
+            gold["doc"],
+            gen["doc"],
+        )
         self.assertDictEqual(
             parse_docstring(
                 docstring_google_tf_adadelta_str, emit_default_doc=True, infer_type=True
@@ -284,6 +299,8 @@ class TestMarshallDocstring(TestCase):
             docstring_google_tf_lambda_callback_ir,
         )
 
+    maxDiff = None
+
     def test_from_docstring_google_pytorch_lbfgs_str(self) -> None:
         """
         Tests whether `parse_docstring` produces the right IR
@@ -294,6 +311,7 @@ class TestMarshallDocstring(TestCase):
                 docstring_google_pytorch_lbfgs_str,
                 emit_default_doc=False,
                 infer_type=True,
+                parse_original_whitespace=False,
             ),
             docstring_google_pytorch_lbfgs_ir,
         )

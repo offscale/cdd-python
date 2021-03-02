@@ -9,7 +9,8 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from cdd.pure_utils import PY_GTE_3_8
-from cdd.tests.utils_for_tests import unittest_main
+from cdd.tests.mocks.classes import tensorboard_doc_str, tensorboard_doc_str_no_args_str
+from cdd.tests.utils_for_tests import remove_args_from_docstring, unittest_main
 
 
 class TestUtilsForTests(TestCase):
@@ -107,6 +108,17 @@ class TestUtilsForTests(TestCase):
                 self.assertEqual(TestUtilsForTests.increment * 6, TestUtilsForTests.i)
         finally:
             cdd.tests.utils_for_tests.PY3_8 = _orig_cdd_tests_utils_for_tests_PY3_8
+
+    def test_remove_args_from_docstring(self) -> None:
+        """
+        Test that `remove_args_from_docstring`
+         produces `tensorboard_doc_str_no_args_str`
+             from `tensorboard_doc_str`
+        """
+        self.assertEqual(
+            remove_args_from_docstring(tensorboard_doc_str),
+            tensorboard_doc_str_no_args_str,
+        )
 
 
 unittest_main()

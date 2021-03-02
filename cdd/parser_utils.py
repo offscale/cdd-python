@@ -229,8 +229,7 @@ def _interpolate_return(function_def, intermediate_repr):
             )(get_value(get_value(return_ast)))
         )(to_code(return_ast.value).rstrip("\n"))
     if hasattr(function_def, "returns") and function_def.returns is not None:
-        if intermediate_repr.get("returns") is None:
-            intermediate_repr["returns"] = OrderedDict((("return_type", {}),))
+        intermediate_repr.setdefault("returns", OrderedDict((("return_type", {}),)))
         intermediate_repr["returns"]["return_type"]["typ"] = to_code(
             function_def.returns
         ).rstrip("\n")
@@ -401,7 +400,12 @@ def infer(*args, **kwargs):
         return "function"
 
     elif isinstance(node, ClassDef):
-        if any(filter(partial(eq, "Base"), map(attrgetter("id"), node.bases))):
+        if any(
+            filter(
+                partial(eq, "Base"),
+                map(attrgetter("id"), filter(rpartial(hasattr, "id"), node.bases)),
+            )
+        ):
             return "sqlalchemy"
         return "class_"
     elif isinstance(node, (AnnAssign, Assign)):

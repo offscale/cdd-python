@@ -370,6 +370,7 @@ def to_docstring(
     indent_level=2,
     emit_types=False,
     emit_separating_tab=True,
+    emit_original_whitespace=False,
     word_wrap=True,
 ):
     """
@@ -393,11 +394,14 @@ def to_docstring(
     :param indent_level: indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
     :type indent_level: ```int```
 
-    :param emit_types: whether to show `:type` lines
+    :param emit_types: Whether to show `:type` lines
     :type emit_types: ```bool```
 
-    :param emit_separating_tab: whether to put a tab between :param and return and desc
+    :param emit_separating_tab: Whether to put a tab between :param and return and desc
     :type emit_separating_tab: ```bool```
+
+    :param emit_original_whitespace: Whether to emit an original whitespace or strip it out
+    :type emit_original_whitespace: ```bool```
 
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
@@ -449,7 +453,7 @@ def to_docstring(
         :param indent_level: indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
         :type indent_level: ```int```
 
-        :param emit_types: whether to show `:type` lines
+        :param emit_types: Whether to show `:type` lines
         :type emit_types: ```bool```
         """
         # if not isinstance(param, tuple):
@@ -545,16 +549,24 @@ def to_docstring(
 
     sep = (tab * abs(indent_level)) if emit_separating_tab else ""
 
-    return "{header}{params}{returns}".format(
-        header="\n{description}{afterward}{sep}".format(
+    header = ""
+    if intermediate_repr.get("doc"):
+        endswith_nl = intermediate_repr["doc"].rstrip(" \t").endswith("\n")
+        header = "\n{description}{afterward}{sep}".format(
             sep=sep,
-            description=indent(_fill(intermediate_repr["doc"]), sep),
-            afterward=""
-            if intermediate_repr["doc"].rstrip(" \t").endswith("\n")
-            else "\n",
+            description=indent(
+                _fill(
+                    intermediate_repr["doc"].strip()
+                    if emit_original_whitespace
+                    else intermediate_repr["doc"]
+                ),
+                sep,
+            ),
+            afterward="" if endswith_nl else "\n",
         )
-        if intermediate_repr.get("doc")
-        else "",
+
+    return "{header}{params}{returns}".format(
+        header=header,
         params="\n{sep}{s}\n{sep}".format(
             sep=sep,
             s="\n{sep}".format(sep=sep).join(
