@@ -793,6 +793,7 @@ class_google_tf_tensorboard_ast = ClassDef(
                 defaults=list(
                     map(set_value, ("logs", 0, True, False, False, "epoch", 2, 0, None))
                 ),
+                vararg=None,
             ),
             body=[
                 Expr(
@@ -823,6 +824,7 @@ class_google_tf_tensorboard_ast = ClassDef(
             identifier_name=None,
             stmt=None,
             lineno=None,
+            returns=None,
         ),
         FunctionDef(
             name="set_model",
@@ -830,9 +832,11 @@ class_google_tf_tensorboard_ast = ClassDef(
                 posonlyargs=[],
                 arg=None,
                 args=list(map(set_arg, ("self", "model"))),
+                kwarg=None,
                 kwonlyargs=[],
                 kw_defaults=[],
                 defaults=[],
+                vararg=None,
             ),
             body=[Expr(set_value("Sets Keras model and writes graph if specified."))],
             decorator_list=[],
@@ -840,6 +844,7 @@ class_google_tf_tensorboard_ast = ClassDef(
             identifier_name=None,
             stmt=None,
             lineno=None,
+            returns=None,
         ),
     ],
     decorator_list=[],

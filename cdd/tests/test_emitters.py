@@ -125,30 +125,16 @@ class TestEmitters(TestCase):
         Tests whether `to_argparse` produces `argparse_function_google_tf_tensorboard_ast`
                                     given `class_google_tf_tensorboard_ast`
         """
-        ir = parse.class_(
-            class_google_tf_tensorboard_ast, merge_inner_function="__init__"
-        )
-        self.assertEqual(
-            ir["doc"], argparse_function_google_tf_tensorboard_ast.body[1].value.value
-        )
-        gen_ast = emit.argparse_function(
-            ir,
-            emit_default_doc=False,
-            word_wrap=False,
-            emit_original_whitespace=True,
-        )
-        self.assertEqual(
-            *map(
-                lambda node: node.body[1].value.value,
-                (
-                    gen_ast,
-                    argparse_function_google_tf_tensorboard_ast,
-                ),
-            )
-        )
         run_ast_test(
             self,
-            gen_ast=gen_ast,
+            gen_ast=emit.argparse_function(
+                parse.class_(
+                    class_google_tf_tensorboard_ast, merge_inner_function="__init__"
+                ),
+                emit_default_doc=False,
+                word_wrap=False,
+                emit_original_whitespace=True,
+            ),
             gold=argparse_function_google_tf_tensorboard_ast,
         )
 
