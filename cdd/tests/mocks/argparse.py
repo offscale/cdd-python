@@ -746,8 +746,6 @@ argparse_func_action_append_ast = fix_missing_locations(
     )
 )
 
-# print("tensorboard_doc_str_no_args_str:", tensorboard_doc_str_no_args_str, ";")
-
 argparse_function_google_tf_tensorboard_ast = FunctionDef(
     args=arguments(
         args=[set_arg("argument_parser")],

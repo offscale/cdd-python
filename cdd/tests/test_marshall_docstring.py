@@ -251,13 +251,6 @@ class TestMarshallDocstring(TestCase):
         Tests whether `parse_docstring` produces the right IR
               from `docstring_google_tf_squared_hinge_str`
         """
-        self.assertEqual(
-            "gold\n" + docstring_google_tf_adam_ir["doc"],
-            "gen\n"
-            + parse_docstring(
-                docstring_google_tf_adam_str, emit_default_doc=True, infer_type=True
-            )["doc"],
-        )
         self.assertDictEqual(
             parse_docstring(
                 docstring_google_tf_adam_str, emit_default_doc=True, infer_type=True
@@ -273,10 +266,6 @@ class TestMarshallDocstring(TestCase):
         gold = docstring_google_tf_adadelta_ir
         gen = parse_docstring(
             docstring_google_tf_adadelta_str, emit_default_doc=True, infer_type=True
-        )
-        self.assertEqual(
-            gold["doc"],
-            gen["doc"],
         )
         self.assertDictEqual(
             parse_docstring(
@@ -298,8 +287,6 @@ class TestMarshallDocstring(TestCase):
             ),
             docstring_google_tf_lambda_callback_ir,
         )
-
-    maxDiff = None
 
     def test_from_docstring_google_pytorch_lbfgs_str(self) -> None:
         """

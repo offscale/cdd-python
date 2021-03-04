@@ -311,6 +311,8 @@ def remove_args_from_docstring(doc_str):
         stripped_line = line.lstrip()
         if any(filter(stripped_line.startswith, TOKENS)):
             in_args = True
+        elif line.isspace():
+            stack.append("")
         elif (
             not in_args
             or stripped_line.endswith(":")
@@ -319,7 +321,7 @@ def remove_args_from_docstring(doc_str):
         ):
             stack.append(line)
             in_args = False
-    return "\n".join(stack)
+    return "{}{}".format("\n".join(stack), "")  # ("\n" if stack[-1] == "" else "")
 
 
 __all__ = [

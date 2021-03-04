@@ -29,12 +29,12 @@ from ast import (
 from copy import deepcopy
 from functools import partial
 from itertools import chain
-from operator import itemgetter
+from operator import add, itemgetter
 from textwrap import indent
 
 from cdd.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
 from cdd.defaults_utils import extract_default
-from cdd.pure_utils import reindent, tab
+from cdd.pure_utils import tab
 from cdd.tests.mocks.docstrings import docstring_header_str
 from cdd.tests.mocks.methods import function_google_tf_squared_hinge_docstring_str
 from cdd.tests.utils_for_tests import remove_args_from_docstring
@@ -375,26 +375,34 @@ class_squared_hinge_config_ast = ClassDef(
     body=[
         Expr(
             set_value(
-                "\n{tab}{doc}".format(
+                "\n{tab}{doc}\n{args}".format(
                     tab=tab,
-                    doc=reindent(
-                        "\n".join(
-                            (
-                                remove_args_from_docstring(
-                                    function_google_tf_squared_hinge_docstring_str
-                                ),
-                                "\n".join(
-                                    (
-                                        ":cvar y_true: The ground truth values. `y_true` values are expected to be -1 or 1. If binary (0 or 1) labels are provided we will convert them to -1 or 1. shape = `[batch_size, d0, .. dN]`.",
-                                        ":cvar y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.",
-                                        ":cvar return_type: Squared hinge loss values. shape = `[batch_size, d0, .. dN-1]`. Defaults to ```K.mean(math_ops.square(math_ops.maximum(1.0 - y_true * y_pred, 0.0)), axis=-1)```",
-                                    )
-                                ),
-                            )
+                    # Inverse `emit_separating_tabs`
+                    doc="\n".join(
+                        map(
+                            lambda line: (
+                                ""
+                                if line.isspace() or not line
+                                else tab + line[2:]
+                                if len(line) > 2 and line[:2].isspace()
+                                else line
+                            ),
+                            remove_args_from_docstring(
+                                function_google_tf_squared_hinge_docstring_str
+                            ).splitlines(),
                         ),
-                        indent_level=1,
                     ),
-                )
+                    args="\n".join(
+                        map(
+                            partial(add, tab),
+                            (
+                                ":cvar y_true: The ground truth values. `y_true` values are expected to be -1 or 1. If binary (0 or 1) labels are provided we will convert them to -1 or 1. shape = `[batch_size, d0, .. dN]`.",
+                                ":cvar y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.",
+                                ":cvar return_type: Squared hinge loss values. shape = `[batch_size, d0, .. dN-1]`. Defaults to ```K.mean(math_ops.square(math_ops.maximum(1.0 - y_true * y_pred, 0.0)), axis=-1)```",
+                            ),
+                        )
+                    ),
+                ),
             )
         ),
         AnnAssign(
@@ -663,10 +671,10 @@ tensorboard_doc_str_no_args = (
     "      log_dir='./logs', profile_batch=(10,20))",
     "  model.fit(x_train, y_train, epochs=2, callbacks=[tensorboard_callback])",
     "  ```",
-    "  ",
+    "",
 )
 
-tensorboard_doc_str_no_args_str = "\n".join(tensorboard_doc_str_no_args)
+tensorboard_doc_str_no_args_str = "\n".join(tensorboard_doc_str_no_args) + "\n"
 
 tensorboard_doc_str_no_args_examples_idx = tensorboard_doc_str_no_args.index(
     "  Examples:"
@@ -716,10 +724,10 @@ tensorboard_doc_str = "\n".join(
             tensorboard_doc_str_args,
             ("\n",),
             tensorboard_doc_str_no_args[tensorboard_doc_str_no_args_examples_idx:],
+            ("\n",),
         )
     )
 )
-# print("tensorboard_doc_str:", tensorboard_doc_str, ";")
 del tensorboard_doc_str_no_args_examples_idx
 
 class_google_tf_tensorboard_str = '''
