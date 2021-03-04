@@ -438,7 +438,6 @@ class TestParsers(TestCase):
 
         del parsed_ir["_internal"]  # Not needed for this test
 
-        self.assertEqual(parsed_ir["doc"], class_torch_nn_one_cycle_lr_ir["doc"])
         self.assertDictEqual(parsed_ir, class_torch_nn_one_cycle_lr_ir)
 
     def test_from_json_schema(self) -> None:

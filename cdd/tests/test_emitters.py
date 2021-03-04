@@ -5,7 +5,6 @@ import ast
 import os
 from ast import FunctionDef
 from copy import deepcopy
-from functools import partial
 from platform import system
 from tempfile import TemporaryDirectory
 from unittest import TestCase, skipIf
@@ -120,8 +119,6 @@ class TestEmitters(TestCase):
             ),
             gold=argparse_func_action_append_ast,
         )
-
-    maxDiff = None
 
     def test_to_argparse_google_tf_tensorboard(self) -> None:
         """
@@ -414,26 +411,20 @@ class TestEmitters(TestCase):
         Tests that `emit.function` produces correctly with:
         - __call__
         """
-        gen_ast = emit.class_(
-            parse.function(
-                ast.parse(function_google_tf_squared_hinge_str).body[0],
-                infer_type=True,
-                word_wrap=False,
-            ),
-            class_name="SquaredHingeConfig",
-            emit_call=True,
-            emit_default_doc=True,
-            word_wrap=False,
-        )
-        gen, gold = map(
-            partial(ast.get_docstring, clean=False),
-            (gen_ast, class_squared_hinge_config_ast),
-        )
-        self.assertEqual("gen\n" + gen, "gold\n" + gold)
 
         run_ast_test(
             self,
-            gen_ast=gen_ast,
+            gen_ast=emit.class_(
+                parse.function(
+                    ast.parse(function_google_tf_squared_hinge_str).body[0],
+                    infer_type=True,
+                    word_wrap=False,
+                ),
+                class_name="SquaredHingeConfig",
+                emit_call=True,
+                emit_default_doc=True,
+                word_wrap=False,
+            ),
             gold=class_squared_hinge_config_ast,
         )
 
