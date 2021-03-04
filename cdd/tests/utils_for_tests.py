@@ -64,21 +64,6 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     # print("#gold")
     # print_ast(gold)
 
-    map(
-        identity
-        if skip_black
-        else partial(
-            format_str,
-            mode=Mode(
-                target_versions=set(),
-                line_length=60,
-                is_pyi=False,
-                string_normalization=False,
-            ),
-        ),
-        map(source_transformer.to_code, (gold, gen_ast)),
-    )
-
     test_case_instance.assertEqual(
         *map(
             identity
