@@ -22,6 +22,7 @@ from cdd.tests.mocks.docstrings import (
     docstring_google_tf_lambda_callback_str,
     docstring_google_tf_squared_hinge_str,
     docstring_header_and_return_str,
+    docstring_header_str,
     docstring_no_default_doc_str,
     docstring_numpydoc_only_doc_str,
     docstring_numpydoc_only_params_str,
@@ -228,8 +229,10 @@ class TestMarshallDocstring(TestCase):
         Tests whether `parse_docstring` produces `intermediate_repr_no_default_doc`
               from `docstring_google_str`
         """
-        ir = parse_docstring(docstring_google_str, parse_original_whitespace=True)
-        self.assertDictEqual(ir, intermediate_repr_no_default_doc)
+        ir = parse_docstring(docstring_google_str)
+        _intermediate_repr_no_default_doc = deepcopy(intermediate_repr_no_default_doc)
+        _intermediate_repr_no_default_doc["doc"] = docstring_header_str
+        self.assertDictEqual(ir, _intermediate_repr_no_default_doc)
 
     def test_from_docstring_google_tf_squared_hinge(self) -> None:
         """
@@ -284,6 +287,7 @@ class TestMarshallDocstring(TestCase):
                 docstring_google_tf_lambda_callback_str,
                 emit_default_doc=True,
                 infer_type=True,
+                parse_original_whitespace=True,
             ),
             docstring_google_tf_lambda_callback_ir,
         )

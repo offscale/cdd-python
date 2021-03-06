@@ -104,7 +104,7 @@ def class_(
         parsed_body = ast.parse(getsource(class_def).lstrip()).body[0]
         parsed_body.body = (
             parsed_body.body
-            if ast.get_docstring(parsed_body) is None
+            if get_docstring(parsed_body) is None
             else parsed_body.body[1:]
         )
 
@@ -151,7 +151,7 @@ def class_(
         }
         if doc_str is None
         else docstring(
-            get_docstring(class_def).replace(":cvar", ":param"),
+            doc_str.replace(":cvar", ":param"),
             emit_default_doc=False,
             parse_original_whitespace=parse_original_whitespace,
         )

@@ -770,7 +770,7 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
             lineno=None,
             type_comment=None,
             value=set_value(
-                deindent(tensorboard_doc_str_no_args_str, sep="  ", level=1)[:-1]
+                deindent(tensorboard_doc_str_no_args_str, sep="  ", level=1)
             ),
             expr=None,
         ),
@@ -786,7 +786,7 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
                     keyword(
                         arg="help",
                         value=set_value(
-                            "the path of the directory where to save the log files to be parsed by TensorBoard. e.g. log_dir = os.path.join(working_dir, 'logs') This directory should not be reused by any other callbacks."
+                            "the path of the directory where to save the log files to be parsed by TensorBoard."
                         ),
                         identifier=None,
                     ),
@@ -862,30 +862,6 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
                         arg="help",
                         value=set_value(
                             "whether to write model weights to visualize as image in TensorBoard."
-                        ),
-                        identifier=None,
-                    ),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(arg="default", value=set_value(False), identifier=None),
-                ],
-                expr=None,
-                expr_func=None,
-            )
-        ),
-        Expr(
-            Call(
-                args=[set_value("--write_steps_per_second")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
-                ),
-                keywords=[
-                    keyword(arg="type", value=Name("bool", Load()), identifier=None),
-                    keyword(
-                        arg="help",
-                        value=set_value(
-                            "whether to log the training steps per second into Tensorboard. This supports both epoch and batch frequency logging."
                         ),
                         identifier=None,
                     ),
@@ -1000,6 +976,30 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
                 expr_func=None,
             )
         ),
+        Expr(
+            Call(
+                args=[set_value("--write_steps_per_second")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(arg="type", value=Name("bool", Load()), identifier=None),
+                    # keyword(
+                    #     arg="help",
+                    #     value=set_value(
+                    #         "whether to log the training steps per second into Tensorboard. This supports both epoch and batch frequency logging."
+                    #     ),
+                    #     identifier=None,
+                    # ),
+                    keyword(arg="required", value=set_value(True), identifier=None),
+                    keyword(arg="default", value=set_value(False), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            )
+        ),
         Return(value=Name("argument_parser", Load()), expr=None),
     ],
     decorator_list=[],
@@ -1036,7 +1036,9 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
             lineno=None,
             type_comment=None,
             value=set_value(
-                remove_args_from_docstring(class_torch_nn_l1loss_docstring_str)
+                deindent(
+                    remove_args_from_docstring(class_torch_nn_l1loss_docstring_str), 1
+                )
             ),
             expr=None,
         ),
@@ -1102,6 +1104,34 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
         ),
         Expr(
             Call(
+                args=[set_value("--reduction")],
+                func=Attribute(
+                    Name("argument_parser", Load()),
+                    "add_argument",
+                    Load(),
+                ),
+                keywords=[
+                    keyword(
+                        arg="help",
+                        value=set_value(
+                            "Specifies the reduction to apply to the output:"
+                            " ``'none'`` | ``'mean'`` | ``'sum'``. "
+                            "``'none'``: no reduction will be applied, `"
+                            "`'mean'``: the sum of the output will be divided by the number of elements in the output, "
+                            "``'sum'``: the output will be summed. "
+                            "Note: :attr:`size_average` and :attr:`reduce` are in the process of being deprecated, and in"
+                            " the meantime, specifying either of those two args will override :attr:`reduction`."
+                        ),
+                        identifier=None,
+                    ),
+                    keyword(arg="default", value=set_value("mean"), identifier=None),
+                ],
+                expr=None,
+                expr_func=None,
+            )
+        ),
+        Expr(
+            Call(
                 args=[set_value("--__constants__")],
                 func=Attribute(
                     Name(
@@ -1125,22 +1155,6 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
                     keyword(
                         arg="default", value=set_value("reduction"), identifier=None
                     ),
-                ],
-                expr=None,
-                expr_func=None,
-            )
-        ),
-        Expr(
-            Call(
-                args=[set_value("--reduction")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
-                ),
-                keywords=[
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(arg="default", value=set_value("mean"), identifier=None),
                 ],
                 expr=None,
                 expr_func=None,

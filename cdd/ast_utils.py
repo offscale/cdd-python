@@ -694,7 +694,7 @@ def get_at_root(node, types):
 
 def set_value(value, kind=None):
     """
-    Creates a Constant or a Str depending on Python version in use
+    Creates a `Constant` on Python >= 3.8 otherwise more specific AST type
 
     :param value: AST node
     :type value: ```Any```
@@ -703,7 +703,7 @@ def set_value(value, kind=None):
     :type kind: ```Optional[Any]```
 
     :returns: Probably a string, but could be any constant value
-    :rtype: ```Union[Constant, Str, NameConstant]```
+    :rtype: ```Union[Constant, Num, Str, NameConstant]```
     """
     if (
         value is not None

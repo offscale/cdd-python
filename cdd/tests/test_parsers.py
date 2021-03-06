@@ -392,8 +392,6 @@ class TestParsers(TestCase):
             },
         )
 
-    maxDiff = None
-
     def test_from_class_and_function_torch(self) -> None:
         """
         Tests that the parser can combine the outer class docstring + structure
@@ -411,6 +409,7 @@ class TestParsers(TestCase):
             class_torch_nn_l1loss_ast,
             merge_inner_function="__init__",
             infer_type=True,
+            parse_original_whitespace=True,
         )
 
         del parsed_ir["_internal"]  # Not needed for this test
