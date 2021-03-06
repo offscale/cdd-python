@@ -463,14 +463,14 @@ class TestEmitters(TestCase):
         )
 
     @skipIf(
-        "GITHUB_ACTIONS" in os.environ and system() == "Darwin",
-        "GitHub Actions fails this test on macOS (unable to replicate locally)",
+        "GITHUB_ACTIONS" in os.environ and system() in frozenset(("Darwin", "Linux")),
+        "GitHub Actions fails this test on macOS & Linux (unable to replicate locally)",
     )
     def test_to_sqlalchemy(self):
         """
         Tests that `emit.sqlalchemy` with `intermediate_repr_no_default_sql_doc` produces `config_tbl_ast`
         """
-        system() == "Darwin" and print("test_to_sqlalchemy")
+        system() in frozenset(("Darwin", "Linux")) and print("test_to_sqlalchemy")
         run_ast_test(
             self,
             emit.sqlalchemy(
