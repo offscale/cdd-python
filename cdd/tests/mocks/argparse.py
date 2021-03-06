@@ -989,7 +989,8 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
                     # keyword(
                     #     arg="help",
                     #     value=set_value(
-                    #         "whether to log the training steps per second into Tensorboard. This supports both epoch and batch frequency logging."
+                    #         "whether to log the training steps per second into Tensorboard."
+                    #         "This supports both epoch and batch frequency logging."
                     #     ),
                     #     identifier=None,
                     # ),
@@ -1117,10 +1118,12 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
                             "Specifies the reduction to apply to the output:"
                             " ``'none'`` | ``'mean'`` | ``'sum'``. "
                             "``'none'``: no reduction will be applied, `"
-                            "`'mean'``: the sum of the output will be divided by the number of elements in the output, "
+                            "`'mean'``: the sum of the output will be divided by the number of elements in the output,"
+                            " "
                             "``'sum'``: the output will be summed. "
-                            "Note: :attr:`size_average` and :attr:`reduce` are in the process of being deprecated, and in"
-                            " the meantime, specifying either of those two args will override :attr:`reduction`."
+                            "Note: :attr:`size_average` and :attr:`reduce` are in the process of being deprecated,"
+                            " and in the meantime, specifying either of those two args will"
+                            " override :attr:`reduction`."
                         ),
                         identifier=None,
                     ),

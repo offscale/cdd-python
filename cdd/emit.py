@@ -25,19 +25,6 @@ from itertools import chain
 from sys import modules
 from textwrap import indent
 
-black = (
-    import_module("black")
-    if "black" in modules
-    else type(
-        "black",
-        tuple(),
-        {
-            "format_str": lambda src_contents, mode: src_contents,
-            "Mode": lambda target_versions, line_length, is_pyi, string_normalization: None,
-        },
-    )
-)
-
 from cdd.ast_utils import (
     get_value,
     maybe_type_comment,
@@ -69,6 +56,19 @@ from cdd.pure_utils import (
     tab,
 )
 from cdd.source_transformer import to_code
+
+black = (
+    import_module("black")
+    if "black" in modules
+    else type(
+        "black",
+        tuple(),
+        {
+            "format_str": lambda src_contents, mode: src_contents,
+            "Mode": lambda target_versions, line_length, is_pyi, string_normalization: None,
+        },
+    )
+)
 
 
 def argparse_function(
@@ -797,7 +797,7 @@ def json_schema(
     :param identifier: The `$id` of the schema
     :type identifier: ```str```
 
-    :param emit_original_whitespace: Whether to emit an original whitespace (in top-level `description`) or strip it out
+    :param emit_original_whitespace: Whether to emit original whitespace (in top-level `description`) or strip it out
     :type emit_original_whitespace: ```bool```
 
     :returns: JSON Schema dict

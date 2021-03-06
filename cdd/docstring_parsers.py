@@ -677,8 +677,7 @@ def _parse_phase_numpydoc_and_google(
             offset = next(idx for idx, ch in enumerate(scan[0]) if ch == ":")
             s = white_spacer(scan[0][:offset])
             name, delim, typ = partitioned or s.partition("(")
-            name = name.strip()
-            typ = (delim + typ).rstrip()
+            name, typ = name.strip(), (delim + typ).rstrip()
             # if not name: return None
             cur = {"name": name}
             if typ:
@@ -691,10 +690,12 @@ def _parse_phase_numpydoc_and_google(
                 end = white_spacer(scan[0][offset + 1 :])
                 if len(end) > 3 and end.startswith("{") and end.endswith("}"):
                     # PyTorch invented their own syntax for this I guess?
-                    cur["typ"] = "Literal{}".format(
-                        list(map(rpartial(str.strip, "'"), end[1:-1].split(", ")))
+                    cur["typ"], scan[0] = (
+                        "Literal{}".format(
+                            list(map(rpartial(str.strip, "'"), end[1:-1].split(", ")))
+                        ),
+                        "",
                     )
-                    scan[0] = ""
                 # elif partitioned is None:
                 #    return _parse(scan, " ".join((name, typ)).partition("="))
                 # else:
@@ -742,9 +743,12 @@ def _parse_phase_numpydoc_and_google(
         ):
             del scanned["scanned_afterward"]
         else:
-            if scanned["scanned_afterward"] and scanned["scanned_afterward"][0] == "":
-                scanned["doc"] += "\n"
-            scanned["doc"] += "\n".join(scanned["scanned_afterward"])
+            scanned["doc"] += (
+                "\n"
+                if scanned["scanned_afterward"]
+                and scanned["scanned_afterward"][0] == ""
+                else ""
+            ) + "\n".join(scanned["scanned_afterward"])
 
     def _interpolate_defaults_and_force_future_default(name_param):
         """
@@ -933,8 +937,8 @@ def _parse_phase_rest(
                     )
         elif not intermediate_repr["doc"]:
             intermediate_repr["doc"] = (
-                lambda s_: s_ if parse_original_whitespace else s_.strip()
-            )(line)
+                line if parse_original_whitespace else line.strip()
+            )
     if param != [None, {}]:
         # if param['name'] == 'return_type': intermediate_repr['returns'] = param
         name, param = _set_name_and_type(

@@ -37,7 +37,7 @@ jobs:
                 run: |
                     python -m pip install --upgrade pip
                     python -m pip install --upgrade setuptools wheel
-                    python -c 'import sys; sys.exit(sys.version_info[:2] > (3,8))' && sed -i '/black/d,typing-extensions/d' requirements.txt || true
+                    python -c 'import sys; sys.exit(sys.version_info[:2] > (3,8))' && sed -i -E '/(astor|black|typing-extensions)/d' requirements.txt || true
                     pip install -r requirements.txt
             -   name: Test with unittest
                 run: |

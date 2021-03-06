@@ -396,9 +396,13 @@ class_squared_hinge_config_ast = ClassDef(
                         map(
                             partial(add, tab),
                             (
-                                ":cvar y_true: The ground truth values. `y_true` values are expected to be -1 or 1. If binary (0 or 1) labels are provided we will convert them to -1 or 1. shape = `[batch_size, d0, .. dN]`.",
+                                ":cvar y_true: The ground truth values. `y_true` values are expected to be -1 or 1."
+                                " If binary (0 or 1) labels are provided we will convert them to -1 or 1."
+                                " shape = `[batch_size, d0, .. dN]`.",
                                 ":cvar y_pred: The predicted values. shape = `[batch_size, d0, .. dN]`.",
-                                ":cvar return_type: Squared hinge loss values. shape = `[batch_size, d0, .. dN-1]`. Defaults to ```K.mean(math_ops.square(math_ops.maximum(1.0 - y_true * y_pred, 0.0)), axis=-1)```",
+                                ":cvar return_type: Squared hinge loss values. shape = `[batch_size, d0, .. dN-1]`."
+                                " Defaults to ```K.mean(math_ops.square(math_ops.maximum(1.0 - y_true * y_pred, 0.0)),"
+                                " axis=-1)```",
                             ),
                         )
                     ),
@@ -1169,7 +1173,8 @@ class_torch_nn_one_cycle_lr_docstring = (
     "    Example:",
     "        >>> data_loader = torch.utils.data.DataLoader(...)",
     "        >>> optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)",
-    "        >>> scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.01, steps_per_epoch=len(data_loader), epochs=10)",
+    "        >>> scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.01,"
+    " steps_per_epoch=len(data_loader), epochs=10)",
     "        >>> for epoch in range(10):",
     "        >>>     for batch in data_loader:",
     "        >>>         train_batch(...)",

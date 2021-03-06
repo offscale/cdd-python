@@ -266,10 +266,6 @@ class TestMarshallDocstring(TestCase):
         Tests whether `parse_docstring` produces the right IR
               from `docstring_google_tf_adadelta_str`
         """
-        gold = docstring_google_tf_adadelta_ir
-        gen = parse_docstring(
-            docstring_google_tf_adadelta_str, emit_default_doc=True, infer_type=True
-        )
         self.assertDictEqual(
             parse_docstring(
                 docstring_google_tf_adadelta_str, emit_default_doc=True, infer_type=True
