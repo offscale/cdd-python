@@ -603,75 +603,96 @@ class_squared_hinge_config_ast = ClassDef(
     name="SquaredHingeConfig",
 )
 
-# https://github.com/tensorflow/tensorflow/blob/a26dc6a/tensorflow/python/keras/callbacks.py#L1981-L2506 [- many funcs]
+# https://github.com/tensorflow/tensorflow/blob/v2.4.1/tensorflow/python/keras/callbacks.py#L1923-L2430 [- many funcs]
 tensorboard_doc_str_no_args = (
     "Enable visualizations for TensorBoard.",
+    "",
     "  TensorBoard is a visualization tool provided with TensorFlow.",
+    "",
     "  This callback logs events for TensorBoard, including:",
+    "",
     "  * Metrics summary plots",
     "  * Training graph visualization",
     "  * Activation histograms",
     "  * Sampled profiling",
+    "",
     "  If you have installed TensorFlow with pip, you should be able",
     "  to launch TensorBoard from the command line:",
+    "",
     "  ```",
     "  tensorboard --logdir=path_to_your_logs",
     "  ```",
+    "",
     "  You can find more information about TensorBoard",
     "  [here](https://www.tensorflow.org/get_started/summaries_and_tensorboard).",
     "",
+    "",
     "  Examples:",
+    "",
     "  Basic usage:",
+    "",
     "  ```python",
     '  tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")',
     "  model.fit(x_train, y_train, epochs=2, callbacks=[tensorboard_callback])",
     "  # Then run the tensorboard command to view the visualizations.",
     "  ```",
+    "",
     "  Custom batch-level summaries in a subclassed Model:",
+    "",
     "  ```python",
     "  class MyModel(tf.keras.Model):",
+    "",
     "    def build(self, _):",
     "      self.dense = tf.keras.layers.Dense(10)",
+    "",
     "    def call(self, x):",
     "      outputs = self.dense(x)",
     "      tf.summary.histogram('outputs', outputs)",
     "      return outputs",
+    "",
     "  model = MyModel()",
     "  model.compile('sgd', 'mse')",
+    "",
     "  # Make sure to set `update_freq=N` to log a batch-level summary every N batches.",
     "  # In addition to any `tf.summary` contained in `Model.call`, metrics added in",
     "  # `Model.compile` will be logged every N batches.",
     "  tb_callback = tf.keras.callbacks.TensorBoard('./logs', update_freq=1)",
     "  model.fit(x_train, y_train, callbacks=[tb_callback])",
     "  ```",
+    "",
     "  Custom batch-level summaries in a Functional API Model:",
+    "",
     "  ```python",
     "  def my_summary(x):",
     "    tf.summary.histogram('x', x)",
     "    return x",
+    "",
     "  inputs = tf.keras.Input(10)",
     "  x = tf.keras.layers.Dense(10)(inputs)",
     "  outputs = tf.keras.layers.Lambda(my_summary)(x)",
     "  model = tf.keras.Model(inputs, outputs)",
     "  model.compile('sgd', 'mse')",
+    "",
     "  # Make sure to set `update_freq=N` to log a batch-level summary every N batches.",
     "  # In addition to any `tf.summary` contained in `Model.call`, metrics added in",
     "  # `Model.compile` will be logged every N batches.",
     "  tb_callback = tf.keras.callbacks.TensorBoard('./logs', update_freq=1)",
     "  model.fit(x_train, y_train, callbacks=[tb_callback])",
     "  ```",
+    "",
     "  Profiling:",
+    "",
     "  ```python",
     "  # Profile a single batch, e.g. the 5th batch.",
     "  tensorboard_callback = tf.keras.callbacks.TensorBoard(",
     "      log_dir='./logs', profile_batch=5)",
     "  model.fit(x_train, y_train, epochs=2, callbacks=[tensorboard_callback])",
+    "",
     "  # Profile a range of batches, e.g. from 10 to 20.",
     "  tensorboard_callback = tf.keras.callbacks.TensorBoard(",
     "      log_dir='./logs', profile_batch=(10,20))",
     "  model.fit(x_train, y_train, epochs=2, callbacks=[tensorboard_callback])",
     "  ```",
-    "",
 )
 
 tensorboard_doc_str_no_args_str = "\n".join(tensorboard_doc_str_no_args) + "\n"
@@ -683,8 +704,7 @@ tensorboard_doc_str_no_args_examples_idx = tensorboard_doc_str_no_args.index(
 tensorboard_doc_str_args = (
     "  Args:",
     "      log_dir: the path of the directory where to save the log files to be",
-    "        parsed by TensorBoard. e.g. log_dir = os.path.join(working_dir, 'logs')",
-    "        This directory should not be reused by any other callbacks.",
+    "        parsed by TensorBoard.",
     "      histogram_freq: frequency (in epochs) at which to compute activation and",
     "        weight histograms for the layers of the model. If set to 0, histograms",
     "        won't be computed. Validation data (or split) must be specified for",
@@ -693,8 +713,6 @@ tensorboard_doc_str_args = (
     "        can become quite large when write_graph is set to True.",
     "      write_images: whether to write model weights to visualize as image in",
     "        TensorBoard.",
-    "      write_steps_per_second: whether to log the training steps per second into",
-    "        Tensorboard. This supports both epoch and batch frequency logging.",
     "      update_freq: `'batch'` or `'epoch'` or integer. When using `'batch'`,",
     "        writes the losses and metrics to TensorBoard after each batch. The same",
     "        applies for `'epoch'`. If using an integer, let's say `1000`, the",
@@ -733,7 +751,7 @@ del tensorboard_doc_str_no_args_examples_idx
 class_google_tf_tensorboard_str = '''
 class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
   # pylint: disable=line-too-long
-  """{tensorboard_doc_str}"""
+  r"""{tensorboard_doc_str}"""
 
   # pylint: enable=line-too-long
 
@@ -916,7 +934,7 @@ class_torch_nn_l1loss_docstring_str = "\n".join(class_torch_nn_l1loss_docstring)
 
 class_torch_nn_l1loss_str = '''
 class L1Loss(_Loss):
-    """{class_torch_nn_l1loss_docstring_str}"""
+    r"""{class_torch_nn_l1loss_docstring_str!s}"""
     __constants__ = ['reduction']
 
     def __init__(self, size_average=None, reduce=None, reduction: str = 'mean') -> None:
@@ -1069,7 +1087,18 @@ class_torch_nn_l1loss_ast = ClassDef(
 
 class_torch_nn_one_cycle_lr_docstring = (
     "Sets the learning rate of each parameter group according to the",
-    "    1cycle learning rate policy.",
+    "    1cycle learning rate policy. The 1cycle policy anneals the learning",
+    "    rate from an initial learning rate to some maximum learning rate and then",
+    "    from that maximum learning rate to some minimum learning rate much lower",
+    "    than the initial learning rate.",
+    "    This policy was initially described in the paper `Super-Convergence:",
+    "    Very Fast Training of Neural Networks Using Large Learning Rates`_.",
+    "",
+    "    The 1cycle learning rate policy changes the learning rate after every batch.",
+    "    `step` should be called after a batch has been used for training.",
+    "",
+    "    This scheduler is not chainable.",
+    "",
     "    Note also that the total number of steps in the cycle can be determined in one",
     "    of two ways (listed in order of precedence):",
     "",
@@ -1135,7 +1164,6 @@ class_torch_nn_one_cycle_lr_docstring = (
     "        verbose (bool): If ``True``, prints a message to stdout for",
     "            each update. Default: ``False``.",
     "",
-    "",
     "    Example:",
     "        >>> data_loader = torch.utils.data.DataLoader(...)",
     "        >>> optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)",
@@ -1148,6 +1176,7 @@ class_torch_nn_one_cycle_lr_docstring = (
     "",
     "    .. _Super-Convergence\\: Very Fast Training of Neural Networks Using Large Learning Rates:",
     "        https://arxiv.org/abs/1708.07120",
+    "    ",
 )
 class_torch_nn_one_cycle_lr_docstring_str = "\n".join(
     class_torch_nn_one_cycle_lr_docstring
@@ -1155,7 +1184,7 @@ class_torch_nn_one_cycle_lr_docstring_str = "\n".join(
 
 class_torch_nn_one_cycle_lr = (
     "class OneCycleLR(_LRScheduler):",
-    '    """{}"""'.format(class_torch_nn_one_cycle_lr_docstring_str),
+    '    r"""{}"""'.format(class_torch_nn_one_cycle_lr_docstring_str),
     "    def __init__(self,",
     "                 optimizer,",
     "                 max_lr,",

@@ -31,9 +31,8 @@ class_google_tf_tensorboard_ir = {
                 "log_dir",
                 {
                     "default": "logs",
-                    "doc": "the path of the directory where to save the log files to be parsed "
-                    "by TensorBoard. e.g. log_dir = os.path.join(working_dir, 'logs') "
-                    "This directory should not be reused by any other callbacks.",
+                    "doc": "the path of the directory where to save the log "
+                    "files to be parsed by TensorBoard.",
                     "typ": "str",
                 },
             ),
@@ -41,10 +40,11 @@ class_google_tf_tensorboard_ir = {
                 "histogram_freq",
                 {
                     "default": 0,
-                    "doc": "frequency (in epochs) at which to compute activation and weight "
-                    "histograms for the layers of the model. If set to 0, histograms "
-                    "won't be computed. Validation data (or split) must be specified "
-                    "for histogram visualizations.",
+                    "doc": "frequency (in epochs) at which to compute activation "
+                    "and weight histograms for the layers of the model. "
+                    "If set to 0, histograms won't be computed. "
+                    "Validation data (or split) must be specified for "
+                    "histogram visualizations.",
                     "typ": "int",
                 },
             ),
@@ -52,8 +52,9 @@ class_google_tf_tensorboard_ir = {
                 "write_graph",
                 {
                     "default": True,
-                    "doc": "whether to visualize the graph in TensorBoard. The log file can "
-                    "become quite large when write_graph is set to True.",
+                    "doc": "whether to visualize the graph in TensorBoard. The "
+                    "log file can become quite large when write_graph is "
+                    "set to True.",
                     "typ": "bool",
                 },
             ),
@@ -61,17 +62,8 @@ class_google_tf_tensorboard_ir = {
                 "write_images",
                 {
                     "default": False,
-                    "doc": "whether to write model weights to visualize as image in "
-                    "TensorBoard.",
-                    "typ": "bool",
-                },
-            ),
-            (
-                "write_steps_per_second",
-                {
-                    "default": False,
-                    "doc": "whether to log the training steps per second into Tensorboard. "
-                    "This supports both epoch and batch frequency logging.",
+                    "doc": "whether to write model weights to visualize as image "
+                    "in TensorBoard.",
                     "typ": "bool",
                 },
             ),
@@ -79,12 +71,14 @@ class_google_tf_tensorboard_ir = {
                 "update_freq",
                 {
                     "default": "epoch",
-                    "doc": "`'batch'` or `'epoch'` or integer. When using `'batch'`, writes "
-                    "the losses and metrics to TensorBoard after each batch. The same "
-                    "applies for `'epoch'`. If using an integer, let's say `1000`, the "
-                    "callback will write the metrics and losses to TensorBoard every "
-                    "1000 batches. Note that writing too frequently to TensorBoard can "
-                    "slow down your training.",
+                    "doc": "`'batch'` or `'epoch'` or integer. When using "
+                    "`'batch'`, writes the losses and metrics to "
+                    "TensorBoard after each batch. The same applies for "
+                    "`'epoch'`. If using an integer, let's say `1000`, "
+                    "the callback will write the metrics and losses to "
+                    "TensorBoard every 1000 batches. Note that writing "
+                    "too frequently to TensorBoard can slow down your "
+                    "training.",
                     "typ": "str",
                 },
             ),
@@ -92,11 +86,12 @@ class_google_tf_tensorboard_ir = {
                 "profile_batch",
                 {
                     "default": 2,
-                    "doc": "Profile the batch(es) to sample compute characteristics. "
-                    "profile_batch must be a non-negative integer or a tuple of "
-                    "integers. A pair of positive integers signify a range of batches "
-                    "to profile. By default, it will profile the second batch. Set "
-                    "profile_batch=0 to disable profiling.",
+                    "doc": "Profile the batch(es) to sample compute "
+                    "characteristics. profile_batch must be a "
+                    "non-negative integer or a tuple of integers. A pair "
+                    "of positive integers signify a range of batches to "
+                    "profile. By default, it will profile the second "
+                    "batch. Set profile_batch=0 to disable profiling.",
                     "typ": "int",
                 },
             ),
@@ -104,8 +99,9 @@ class_google_tf_tensorboard_ir = {
                 "embeddings_freq",
                 {
                     "default": 0,
-                    "doc": "frequency (in epochs) at which embedding layers will be "
-                    "visualized. If set to 0, embeddings won't be visualized.",
+                    "doc": "frequency (in epochs) at which embedding layers will "
+                    "be visualized. If set to 0, embeddings won't be "
+                    "visualized.",
                     "typ": "int",
                 },
             ),
@@ -113,13 +109,16 @@ class_google_tf_tensorboard_ir = {
                 "embeddings_metadata",
                 {
                     "default": NoneStr,
-                    "doc": "a dictionary which maps layer name to a file name in which "
-                    "metadata for this embedding layer is saved. See the [details]( "
+                    "doc": "a dictionary which maps layer name to a file name in "
+                    "which metadata for this embedding layer is saved. "
+                    "See the [details]( "
                     "https://www.tensorflow.org/how_tos/embedding_viz/#metadata_optional) "
-                    "about metadata files format. In case if the same metadata file is "
-                    "used for all embedding layers, string can be passed.",
+                    "about metadata files format. In case if the same "
+                    "metadata file is used for all embedding layers, "
+                    "string can be passed.",
                 },
             ),
+            ("write_steps_per_second", {"default": False, "typ": "bool"}),
         )
     ),
     "returns": None,
@@ -127,7 +126,7 @@ class_google_tf_tensorboard_ir = {
 }
 
 class_torch_nn_l1loss_ir = {
-    "doc": remove_args_from_docstring(class_torch_nn_l1loss_docstring_str),
+    "doc": deindent(remove_args_from_docstring(class_torch_nn_l1loss_docstring_str), 1),
     "name": None,
     "params": OrderedDict(
         (
@@ -135,18 +134,13 @@ class_torch_nn_l1loss_ir = {
                 "size_average",
                 {
                     "default": True,
-                    "doc": "Deprecated (see "
-                    ":attr:`reduction`). By default, "
-                    "the losses are averaged over "
-                    "each loss element in the batch. "
-                    "Note that for some losses, there "
-                    "are multiple elements per "
-                    "sample. If the field "
-                    ":attr:`size_average` is set to "
-                    "``False``, the losses are "
-                    "instead summed for each "
-                    "minibatch. Ignored when reduce "
-                    "is ``False``.",
+                    "doc": "Deprecated (see :attr:`reduction`). By default, the "
+                    "losses are averaged over each loss element in the "
+                    "batch. Note that for some losses, there are multiple "
+                    "elements per sample. If the field "
+                    ":attr:`size_average` is set to ``False``, the losses "
+                    "are instead summed for each minibatch. Ignored when "
+                    "reduce is ``False``.",
                     "typ": "Optional[bool]",
                 },
             ),
@@ -154,21 +148,32 @@ class_torch_nn_l1loss_ir = {
                 "reduce",
                 {
                     "default": True,
-                    "doc": "Deprecated (see "
-                    ":attr:`reduction`). By default, "
-                    "the losses are averaged or "
-                    "summed over observations for "
-                    "each minibatch depending on "
-                    ":attr:`size_average`. When "
-                    ":attr:`reduce` is ``False``, "
-                    "returns a loss per batch element "
-                    "instead and ignores "
+                    "doc": "Deprecated (see :attr:`reduction`). By default, the "
+                    "losses are averaged or summed over observations for "
+                    "each minibatch depending on :attr:`size_average`. "
+                    "When :attr:`reduce` is ``False``, returns a loss per "
+                    "batch element instead and ignores "
                     ":attr:`size_average`.",
                     "typ": "Optional[bool]",
                 },
             ),
+            (
+                "reduction",
+                {
+                    "default": "mean",
+                    "doc": "Specifies the reduction to apply to the output: "
+                    "``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no "
+                    "reduction will be applied, ``'mean'``: the sum of "
+                    "the output will be divided by the number of elements "
+                    "in the output, ``'sum'``: the output will be summed. "
+                    "Note: :attr:`size_average` and :attr:`reduce` are in "
+                    "the process of being deprecated, and in the "
+                    "meantime, specifying either of those two args will "
+                    "override :attr:`reduction`.",
+                    "typ": "Optional[string]",
+                },
+            ),
             ("__constants__", {"default": ["reduction"], "typ": "List"}),
-            ("reduction", {"default": "mean", "typ": "str"}),
         )
     ),
     "returns": OrderedDict((("return_type", {"typ": "None"}),)),
@@ -767,7 +772,7 @@ intermediate_repr_extra_colons = {
 intermediate_repr_no_default_doc = {
     "name": None,
     "type": "static",
-    "doc": docstring_header_str.replace("\n", ""),
+    "doc": docstring_header_str.rstrip("\n"),
     "params": OrderedDict(
         (
             (

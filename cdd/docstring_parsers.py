@@ -111,7 +111,6 @@ def parse_docstring(
         return ir
 
     scanned = _scan_phase(docstring, style=style)
-    # pp(scanned)
 
     _parse_phase(
         ir,
@@ -212,6 +211,7 @@ def _scan_phase_numpydoc_and_google(
 
     # First doc, if present
     _start_idx, _end_idx, _found = location_within(docstring, arg_tokens)
+    # _leading_whitespace = "".join(takewhile(str.isspace, docstring[:_start_idx][::-1]))
     if _start_idx == -1:
         # Return type no args?
         _start_idx, _end_idx, _found = location_within(docstring, return_tokens)
@@ -712,9 +712,14 @@ def _parse_phase_numpydoc_and_google(
 
     # Handle stuff after the Args, e.g., usage notes; doctests; references.
     afterward_idx = next(
-        (idx for idx, elem in enumerate(scanned_params) if elem[0].endswith(":")), None
+        (
+            idx
+            for idx, elem in enumerate(scanned_params)
+            if elem[0].endswith(":") and elem[0].count(":") == 1
+        ),
+        -1,
     )
-    if afterward_idx:
+    if afterward_idx > -1:
         scanned_params, scanned_afterward = (
             scanned_params[:afterward_idx],
             scanned_params[afterward_idx:],
@@ -737,6 +742,8 @@ def _parse_phase_numpydoc_and_google(
         ):
             del scanned["scanned_afterward"]
         else:
+            if scanned["scanned_afterward"] and scanned["scanned_afterward"][0] == "":
+                scanned["doc"] += "\n"
             scanned["doc"] += "\n".join(scanned["scanned_afterward"])
 
     def _interpolate_defaults_and_force_future_default(name_param):

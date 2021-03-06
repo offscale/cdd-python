@@ -229,7 +229,9 @@ def _interpolate_return(function_def, intermediate_repr):
             )(get_value(get_value(return_ast)))
         )(to_code(return_ast.value).rstrip("\n"))
     if hasattr(function_def, "returns") and function_def.returns is not None:
-        intermediate_repr.setdefault("returns", OrderedDict((("return_type", {}),)))
+        intermediate_repr["returns"] = intermediate_repr.get("returns") or OrderedDict(
+            (("return_type", {}),)
+        )
         intermediate_repr["returns"]["return_type"]["typ"] = to_code(
             function_def.returns
         ).rstrip("\n")
