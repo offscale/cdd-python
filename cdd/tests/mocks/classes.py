@@ -843,7 +843,7 @@ class_google_tf_tensorboard_ast = ClassDef(
             stmt=None,
             lineno=None,
             returns=None,
-            **maybe_type_comment
+            **maybe_type_comment,
         ),
         FunctionDef(
             name="set_model",
@@ -864,7 +864,7 @@ class_google_tf_tensorboard_ast = ClassDef(
             stmt=None,
             lineno=None,
             returns=None,
-            **maybe_type_comment
+            **maybe_type_comment,
         ),
     ],
     decorator_list=[],
