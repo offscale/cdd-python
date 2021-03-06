@@ -30,13 +30,12 @@ from ast import (
 from os import path
 from unittest import TestCase
 
-from meta.asttools import cmp_ast
-
 from cdd.ast_utils import (
     NoneStr,
     RewriteAtQuery,
     _parse_default_from_ast,
     annotate_ancestry,
+    cmp_ast,
     emit_ann_assign,
     emit_arg,
     find_ast_type,
@@ -271,6 +270,7 @@ class TestAstUtils(TestCase):
             imports = get_at_root(ast.parse(f.read()), (Import, ImportFrom))
         self.assertIsInstance(imports, list)
         self.assertEqual(len(imports), 1)
+
         self.assertTrue(
             cmp_ast(
                 imports[0],

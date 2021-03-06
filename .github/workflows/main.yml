@@ -37,9 +37,7 @@ jobs:
                 run: |
                     python -m pip install --upgrade pip
                     python -m pip install --upgrade setuptools wheel
-                    # `astor` is still used in `unittest.mock.patch`
-                    # python --version | grep -qF '3.9.' && sed -i '/astor/d' requirements.txt || true
-                    python --version | grep -qF '3.10.' && sed -i '/black/d' requirements.txt && pip install https://github.com/SamuelMarks/black/releases/download/3.10/black-20.8b2.dev50+gd6a17ba-py3-none-any.whl || true
+                    python -c 'import sys; sys.exit(sys.version_info[:2] > (3,8))' && sed -i '/black/d,typing-extensions/d' requirements.txt || true
                     pip install -r requirements.txt
             -   name: Test with unittest
                 run: |

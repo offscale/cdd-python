@@ -6,13 +6,12 @@ import os
 from ast import FunctionDef
 from copy import deepcopy
 from platform import system
+from sys import modules
 from tempfile import TemporaryDirectory
 from unittest import TestCase, skipIf
 
-from meta.asttools import cmp_ast
-
 from cdd import emit, parse
-from cdd.ast_utils import annotate_ancestry, find_in_ast, get_function_type
+from cdd.ast_utils import annotate_ancestry, cmp_ast, find_in_ast, get_function_type
 from cdd.pure_utils import rpartial
 from cdd.tests.mocks.argparse import (
     argparse_func_action_append_ast,
@@ -133,7 +132,6 @@ class TestEmitters(TestCase):
                 ),
                 emit_default_doc=False,
                 word_wrap=False,
-                emit_original_whitespace=True,
             ),
             gold=argparse_function_google_tf_tensorboard_ast,
         )
@@ -195,7 +193,7 @@ class TestEmitters(TestCase):
                 with open(filename, "rt") as f:
                     blacked = f.read()
 
-                self.assertNotEqual(ugly, blacked)
+                self.assertNotEqual(ugly + "" if "black" in modules else "\t", blacked)
                 # if PY3_8:
                 self.assertTrue(
                     cmp_ast(ast.parse(ugly), ast.parse(blacked)),

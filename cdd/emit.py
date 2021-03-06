@@ -20,10 +20,23 @@ from ast import (
 )
 from collections import OrderedDict
 from functools import partial
+from importlib import import_module
 from itertools import chain
+from sys import modules
 from textwrap import indent
 
-from black import Mode, format_str
+black = (
+    import_module("black")
+    if "black" in modules
+    else type(
+        "black",
+        tuple(),
+        {
+            "format_str": lambda src_contents, mode: src_contents,
+            "Mode": lambda target_versions, line_length, is_pyi, string_normalization: None,
+        },
+    )
+)
 
 from cdd.ast_utils import (
     get_value,
@@ -65,7 +78,6 @@ def argparse_function(
     function_type="static",
     wrap_description=False,
     word_wrap=True,
-    emit_original_whitespace=False,
     docstring_format="rest",
 ):
     """
@@ -94,9 +106,6 @@ def argparse_function(
 
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
-
-    :param emit_original_whitespace: Whether to emit an original whitespace or strip it out
-    :type emit_original_whitespace: ```bool```
 
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
@@ -566,9 +575,9 @@ def file(node, filename, mode="a", skip_black=False):
         node = Module(body=[node], type_ignores=[], stmt=None)
     src = to_code(node)
     if not skip_black:
-        src = format_str(
+        src = black.format_str(
             src,
-            mode=Mode(
+            mode=black.Mode(
                 target_versions=set(),
                 line_length=119,
                 is_pyi=False,

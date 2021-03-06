@@ -1,4 +1,3 @@
-meta
 astor
 black
 pyyaml
