@@ -6,10 +6,8 @@ from ast import ClassDef, FunctionDef, Module
 from collections import OrderedDict
 from os import path
 
-from meta.asttools import cmp_ast
-
 from cdd import emit, parse
-from cdd.ast_utils import RewriteAtQuery, find_in_ast, get_function_type
+from cdd.ast_utils import RewriteAtQuery, cmp_ast, find_in_ast, get_function_type
 from cdd.pure_utils import pluralise, strip_split
 from cdd.source_transformer import ast_parse
 

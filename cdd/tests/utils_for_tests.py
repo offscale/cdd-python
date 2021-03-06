@@ -4,6 +4,7 @@ Shared utility functions used by many tests
 import ast
 from copy import deepcopy
 from functools import partial
+from importlib import import_module
 from importlib.abc import Loader
 from importlib.util import module_from_spec, spec_from_loader
 from itertools import takewhile
@@ -13,13 +14,23 @@ from tempfile import NamedTemporaryFile
 from unittest import main
 from unittest.mock import MagicMock, patch
 
-from black import Mode, format_str
-from meta.asttools import cmp_ast
-
 from cdd import source_transformer
-from cdd.ast_utils import set_value
+from cdd.ast_utils import cmp_ast, set_value
 from cdd.docstring_utils import TOKENS
 from cdd.pure_utils import PY3_8, count_iter_items, identity, reindent, tab
+
+black = (
+    import_module("black")
+    if "black" in modules
+    else type(
+        "black",
+        tuple(),
+        {
+            "format_str": lambda src_contents, mode: None,
+            "Mode": lambda target_versions, line_length, is_pyi, string_normalization: None,
+        },
+    )
+)
 
 
 def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
@@ -69,8 +80,8 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
             identity
             if skip_black
             else partial(
-                format_str,
-                mode=Mode(
+                black.format_str,
+                mode=black.Mode(
                     target_versions=set(),
                     line_length=60,
                     is_pyi=False,
