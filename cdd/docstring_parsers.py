@@ -728,27 +728,7 @@ def _parse_phase_numpydoc_and_google(
         scanned["doc"] += "\n\n{}".format("\n".join(map("\n".join, scanned_afterward)))
 
     if "scanned_afterward" in scanned:
-        if next(
-            filter(
-                partial(eq, scanned["scanned_afterward"][0]),
-                (
-                    e
-                    for k, v in scanned.items()
-                    for elem in v
-                    for e in elem
-                    if k != "scanned_afterward"
-                ),
-            ),
-            False,
-        ):
-            del scanned["scanned_afterward"]
-        else:
-            scanned["doc"] += (
-                "\n"
-                if scanned["scanned_afterward"]
-                and scanned["scanned_afterward"][0] == ""
-                else ""
-            ) + "\n".join(scanned["scanned_afterward"])
+        _fill_doc_with_afterward(scanned)
 
     def _interpolate_defaults_and_force_future_default(name_param):
         """
@@ -838,6 +818,36 @@ def _parse_phase_numpydoc_and_google(
             else None,
         }
     )
+
+
+def _fill_doc_with_afterward(scanned):
+    """
+    Internal func for `_parse_phase_numpydoc_and_google` to parse then add `scanned_afterward` to `doc` of `scanned`
+
+    :param scanned: Dict with `scanned_afterward` and `doc` properties
+    :type scanned: ```Dict[str, str]```
+    """
+
+    if next(
+        filter(
+            partial(eq, scanned["scanned_afterward"][0]),
+            (
+                e
+                for k, v in scanned.items()
+                for elem in v
+                for e in elem
+                if k != "scanned_afterward"
+            ),
+        ),
+        False,
+    ):
+        del scanned["scanned_afterward"]
+    else:
+        scanned["doc"] += (
+            "\n"
+            if scanned["scanned_afterward"] and scanned["scanned_afterward"][0] == ""
+            else ""
+        ) + "\n".join(scanned["scanned_afterward"])
 
 
 def _parse_phase_rest(
