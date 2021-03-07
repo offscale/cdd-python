@@ -20,7 +20,7 @@ def to_code(node):
     :returns: Python source
     :rtype: ```str```
     """
-
+    print("version_info:", version_info, ';')
     return (
         getattr(import_module("astor"), "to_source")
         if version_info[:2] < (3, 9)
