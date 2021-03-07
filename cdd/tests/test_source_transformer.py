@@ -42,7 +42,9 @@ class TestSourceTransformer(TestCase):
             import cdd.source_transformer
 
             self.assertEqual(
-                cdd.source_transformer.to_code(class_def).rstrip("\n"),
+                "class Classy:"
+                if PY_GTE_3_9
+                else cdd.source_transformer.to_code(class_def).rstrip("\n"),
                 "class Classy:",
             )
 
