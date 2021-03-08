@@ -77,6 +77,180 @@ _cli_doc_nosplit_expr = Expr(
     set_value("\n{tab}{}\n{tab}".format(_cli_doc_nosplit_str, tab=tab))
 )
 
+_argparse_add_arguments = (
+    Expr(
+        Call(
+            args=[set_value("--dataset_name")],
+            func=Attribute(
+                Name("argument_parser", Load()),
+                "add_argument",
+                Load(),
+            ),
+            keywords=[
+                keyword(
+                    arg="help",
+                    value=set_value("name of dataset."),
+                    identifier=None,
+                ),
+                keyword(
+                    arg="required",
+                    value=set_value(True),
+                    identifier=None,
+                ),
+                keyword(
+                    arg="default",
+                    value=set_value("mnist"),
+                    identifier=None,
+                ),
+            ],
+            expr=None,
+            expr_func=None,
+        )
+    ),
+    Expr(
+        Call(
+            args=[set_value("--tfds_dir")],
+            func=Attribute(
+                Name("argument_parser", Load()),
+                "add_argument",
+                Load(),
+            ),
+            keywords=[
+                keyword(
+                    arg="help",
+                    value=set_value("directory to look for models in."),
+                    identifier=None,
+                ),
+                keyword(
+                    arg="required",
+                    value=set_value(True),
+                    identifier=None,
+                ),
+                keyword(
+                    arg="default",
+                    value=set_value("~/tensorflow_datasets"),
+                    identifier=None,
+                ),
+            ],
+            expr=None,
+            expr_func=None,
+        )
+    ),
+    Expr(
+        Call(
+            args=[set_value("--K")],
+            func=Attribute(
+                Name("argument_parser", Load()),
+                "add_argument",
+                Load(),
+            ),
+            keywords=[
+                keyword(
+                    arg="choices",
+                    value=Tuple(
+                        ctx=Load(),
+                        elts=list(map(set_value, ("np", "tf"))),
+                        expr=None,
+                    ),
+                    identifier=None,
+                ),
+                keyword(
+                    arg="help",
+                    value=set_value(
+                        "backend engine, e.g., `np` or `tf`.",
+                    ),
+                    identifier=None,
+                ),
+                keyword(
+                    arg="required",
+                    value=set_value(True),
+                    identifier=None,
+                ),
+                keyword(
+                    arg="default",
+                    value=set_value("np"),
+                    identifier=None,
+                ),
+            ],
+            expr=None,
+            expr_func=None,
+        )
+    ),
+    Expr(
+        Call(
+            args=[set_value("--as_numpy")],
+            func=Attribute(
+                Name("argument_parser", Load()),
+                "add_argument",
+                Load(),
+            ),
+            keywords=[
+                keyword(arg="type", value=Name("bool", Load()), identifier=None),
+                keyword(
+                    arg="help",
+                    value=set_value(
+                        "Convert to numpy ndarrays.",
+                    ),
+                    identifier=None,
+                ),
+            ],
+            expr=None,
+            expr_func=None,
+        )
+    ),
+    Expr(
+        Call(
+            args=[set_value("--data_loader_kwargs")],
+            func=Attribute(
+                Name("argument_parser", Load()),
+                "add_argument",
+                Load(),
+            ),
+            keywords=[
+                keyword(arg="type", value=Name("loads", Load()), identifier=None),
+                keyword(
+                    arg="help",
+                    value=set_value(
+                        "pass this as arguments to data_loader function",
+                    ),
+                    identifier=None,
+                ),
+            ],
+            expr=None,
+            expr_func=None,
+        )
+    ),
+)
+
+_argparse_return = Return(
+    value=Tuple(
+        ctx=Load(),
+        elts=[
+            Name("argument_parser", Load()),
+            Tuple(
+                ctx=Load(),
+                elts=[
+                    Call(
+                        args=[set_value(0)],
+                        func=Attribute(
+                            Name("np", Load()),
+                            "empty",
+                            Load(),
+                        ),
+                        keywords=[],
+                        expr=None,
+                        expr_func=None,
+                    )
+                ]
+                * 2,
+                expr=None,
+            ),
+        ],
+        expr=None,
+    ),
+    expr=None,
+)
+
 argparse_func_str = '''
 def set_cli_args(argument_parser):
     """
@@ -218,176 +392,8 @@ argparse_func_ast = fix_missing_locations(
                 expr=None,
                 **maybe_type_comment
             ),
-            Expr(
-                Call(
-                    args=[set_value("--dataset_name")],
-                    func=Attribute(
-                        Name("argument_parser", Load()),
-                        "add_argument",
-                        Load(),
-                    ),
-                    keywords=[
-                        keyword(
-                            arg="help",
-                            value=set_value("name of dataset."),
-                            identifier=None,
-                        ),
-                        keyword(
-                            arg="required",
-                            value=set_value(True),
-                            identifier=None,
-                        ),
-                        keyword(
-                            arg="default",
-                            value=set_value("mnist"),
-                            identifier=None,
-                        ),
-                    ],
-                    expr=None,
-                    expr_func=None,
-                )
-            ),
-            Expr(
-                Call(
-                    args=[set_value("--tfds_dir")],
-                    func=Attribute(
-                        Name("argument_parser", Load()),
-                        "add_argument",
-                        Load(),
-                    ),
-                    keywords=[
-                        keyword(
-                            arg="help",
-                            value=set_value("directory to look for models in."),
-                            identifier=None,
-                        ),
-                        keyword(
-                            arg="required",
-                            value=set_value(True),
-                            identifier=None,
-                        ),
-                        keyword(
-                            arg="default",
-                            value=set_value("~/tensorflow_datasets"),
-                            identifier=None,
-                        ),
-                    ],
-                    expr=None,
-                    expr_func=None,
-                )
-            ),
-            Expr(
-                Call(
-                    args=[set_value("--K")],
-                    func=Attribute(
-                        Name("argument_parser", Load()),
-                        "add_argument",
-                        Load(),
-                    ),
-                    keywords=[
-                        keyword(
-                            arg="choices",
-                            value=Tuple(
-                                ctx=Load(),
-                                elts=list(map(set_value, ("np", "tf"))),
-                                expr=None,
-                            ),
-                            identifier=None,
-                        ),
-                        keyword(
-                            arg="help",
-                            value=set_value("backend engine, e.g., `np` or `tf`."),
-                            identifier=None,
-                        ),
-                        keyword(
-                            arg="required",
-                            value=set_value(True),
-                            identifier=None,
-                        ),
-                        keyword(
-                            arg="default",
-                            value=set_value("np"),
-                            identifier=None,
-                        ),
-                    ],
-                    expr=None,
-                    expr_func=None,
-                )
-            ),
-            Expr(
-                Call(
-                    args=[set_value("--as_numpy")],
-                    func=Attribute(
-                        Name("argument_parser", Load()),
-                        "add_argument",
-                        Load(),
-                    ),
-                    keywords=[
-                        keyword(
-                            arg="type", value=Name("bool", Load()), identifier=None
-                        ),
-                        keyword(
-                            arg="help",
-                            value=set_value("Convert to numpy ndarrays."),
-                            identifier=None,
-                        ),
-                    ],
-                    expr=None,
-                    expr_func=None,
-                )
-            ),
-            Expr(
-                Call(
-                    args=[set_value("--data_loader_kwargs")],
-                    func=Attribute(
-                        Name("argument_parser", Load()),
-                        "add_argument",
-                        Load(),
-                    ),
-                    keywords=[
-                        keyword(
-                            arg="type", value=Name("loads", Load()), identifier=None
-                        ),
-                        keyword(
-                            arg="help",
-                            value=set_value(
-                                "pass this as arguments to data_loader function"
-                            ),
-                            identifier=None,
-                        ),
-                    ],
-                    expr=None,
-                    expr_func=None,
-                )
-            ),
-            Return(
-                value=Tuple(
-                    ctx=Load(),
-                    elts=[
-                        Name("argument_parser", Load()),
-                        Tuple(
-                            ctx=Load(),
-                            elts=[
-                                Call(
-                                    args=[set_value(0)],
-                                    func=Attribute(
-                                        Name("np", Load()),
-                                        "empty",
-                                        Load(),
-                                    ),
-                                    keywords=[],
-                                    expr=None,
-                                    expr_func=None,
-                                )
-                            ]
-                            * 2,
-                            expr=None,
-                        ),
-                    ],
-                    expr=None,
-                ),
-                expr=None,
-            ),
+            *_argparse_add_arguments,
+            _argparse_return,
         ],
         decorator_list=[],
         name="set_cli_args",
@@ -425,160 +431,7 @@ argparse_func_with_body_ast = fix_missing_locations(
                 expr=None,
                 **maybe_type_comment
             ),
-            Expr(
-                Call(
-                    args=[set_value("--dataset_name")],
-                    func=Attribute(
-                        Name("argument_parser", Load()),
-                        "add_argument",
-                        Load(),
-                    ),
-                    keywords=[
-                        keyword(
-                            arg="help",
-                            value=set_value("name of dataset."),
-                            identifier=None,
-                        ),
-                        keyword(
-                            arg="required",
-                            value=set_value(True),
-                            identifier=None,
-                        ),
-                        keyword(
-                            arg="default",
-                            value=set_value("mnist"),
-                            identifier=None,
-                        ),
-                    ],
-                    expr=None,
-                    expr_func=None,
-                )
-            ),
-            Expr(
-                Call(
-                    args=[
-                        set_value(
-                            "--tfds_dir",
-                        )
-                    ],
-                    func=Attribute(
-                        Name("argument_parser", Load()),
-                        "add_argument",
-                        Load(),
-                    ),
-                    keywords=[
-                        keyword(
-                            arg="help",
-                            value=set_value("directory to look for models in."),
-                            identifier=None,
-                        ),
-                        keyword(
-                            arg="required",
-                            value=set_value(True),
-                            identifier=None,
-                        ),
-                        keyword(
-                            arg="default",
-                            value=set_value("~/tensorflow_datasets"),
-                            identifier=None,
-                        ),
-                    ],
-                    expr=None,
-                    expr_func=None,
-                )
-            ),
-            Expr(
-                Call(
-                    args=[
-                        set_value(
-                            "--K",
-                        )
-                    ],
-                    func=Attribute(
-                        Name("argument_parser", Load()),
-                        "add_argument",
-                        Load(),
-                    ),
-                    keywords=[
-                        keyword(
-                            arg="choices",
-                            value=Tuple(
-                                ctx=Load(),
-                                elts=list(map(set_value, ("np", "tf"))),
-                                expr=None,
-                            ),
-                            identifier=None,
-                        ),
-                        keyword(
-                            arg="help",
-                            value=set_value(
-                                "backend engine, e.g., `np` or `tf`.",
-                            ),
-                            identifier=None,
-                        ),
-                        keyword(
-                            arg="required",
-                            value=set_value(True),
-                            identifier=None,
-                        ),
-                        keyword(
-                            arg="default",
-                            value=set_value("np"),
-                            identifier=None,
-                        ),
-                    ],
-                    expr=None,
-                    expr_func=None,
-                )
-            ),
-            Expr(
-                Call(
-                    args=[set_value("--as_numpy")],
-                    func=Attribute(
-                        Name("argument_parser", Load()),
-                        "add_argument",
-                        Load(),
-                    ),
-                    keywords=[
-                        keyword(
-                            arg="type", value=Name("bool", Load()), identifier=None
-                        ),
-                        keyword(
-                            arg="help",
-                            value=set_value(
-                                "Convert to numpy ndarrays.",
-                            ),
-                            identifier=None,
-                        ),
-                    ],
-                    expr=None,
-                    expr_func=None,
-                )
-            ),
-            Expr(
-                Call(
-                    args=[set_value("--data_loader_kwargs")],
-                    func=Attribute(
-                        Name("argument_parser", Load()),
-                        "add_argument",
-                        Load(),
-                    ),
-                    keywords=[
-                        keyword(
-                            arg="type", value=Name("loads", Load()), identifier=None
-                        ),
-                        keyword(
-                            arg="help",
-                            value=set_value(
-                                "pass this as arguments to data_loader function",
-                            ),
-                            identifier=None,
-                        ),
-                    ],
-                    expr=None,
-                    expr_func=None,
-                )
-            ),
+            *_argparse_add_arguments,
             Expr(
                 Call(
                     args=[
@@ -615,34 +468,7 @@ argparse_func_with_body_ast = fix_missing_locations(
                 expr_test=None,
                 stmt=None,
             ),
-            Return(
-                value=Tuple(
-                    ctx=Load(),
-                    elts=[
-                        Name("argument_parser", Load()),
-                        Tuple(
-                            ctx=Load(),
-                            elts=[
-                                Call(
-                                    args=[set_value(0)],
-                                    func=Attribute(
-                                        Name("np", Load()),
-                                        "empty",
-                                        Load(),
-                                    ),
-                                    keywords=[],
-                                    expr=None,
-                                    expr_func=None,
-                                )
-                            ]
-                            * 2,
-                            expr=None,
-                        ),
-                    ],
-                    expr=None,
-                ),
-                expr=None,
-            ),
+            _argparse_return,
         ],
         decorator_list=[],
         name="set_cli_args",
@@ -1156,8 +982,27 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
     lineno=None,
 )
 
+argparse_add_argument_expr = Expr(
+    Call(
+        args=[set_value("--byo")],
+        func=Attribute(
+            Name("argument_parser", Load()),
+            "add_argument",
+            Load(),
+        ),
+        keywords=[
+            keyword(arg="type", value=Name("str", Load()), identifier=None),
+            keyword(arg="action", value=set_value("append"), identifier=None),
+            keyword(arg="required", value=set_value(True), identifier=None),
+        ],
+        expr=None,
+        expr_func=None,
+    )
+)
+
 __all__ = [
     "argparse_add_argument_ast",
+    "argparse_add_argument_expr",
     "argparse_doc_str",
     "argparse_func_action_append_ast",
     "argparse_func_action_append_str",

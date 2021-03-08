@@ -152,33 +152,6 @@ def _inspect_process_ir_param(param, sig):
     return name, _param
 
 
-def _inspect_process_sig(k_v):
-    """
-    Postprocess the param
-
-    :param k_v: Key and value from `inspect._parameters` mapping
-    :type k_v: ```Tuple[str, inspect.Parameter]```
-
-    :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
-    :rtype: ```dict```
-    """
-    # return dict(
-    #     name=k_v[0],
-    #     **(
-    #         {}
-    #         if k_v[1].default is _empty
-    #         else {
-    #             "default": k_v[1].default,
-    #             "typ": lstrip_typings(
-    #                 type(k_v[1].default).__name__
-    #                 if k_v[1].annotation is _empty
-    #                 else "{!s}".format(k_v[1].annotation)
-    #             ),
-    #         }
-    #     ),
-    # )
-
-
 def _interpolate_return(function_def, intermediate_repr):
     """
     Interpolate the return value into the IR.
@@ -239,22 +212,6 @@ def _interpolate_return(function_def, intermediate_repr):
     return intermediate_repr
 
 
-# def strip_docstring_from_body(source, body):
-#     """
-#     Since we generate the docstring, remove it from the body (to avoid duplicate docstrings)
-#
-#     :param source: The parsed source code
-#     :type source: ```AST```
-#
-#     :param body: The body
-#     :type body: ```List[AST]```
-#
-#     :returns: Docstring-free body
-#     :rtype: ```List[AST]```
-#     """
-#     return body if ast.get_docstring(source) is not None else body[1:]
-
-
 def column_call_to_param(call):
     """
     Parse column call `Call(func=Name("Column", Load(), …)` into param
@@ -302,18 +259,13 @@ def column_call_to_param(call):
         """
         if not _param["typ"].startswith("Optional["):
             _param["typ"] = "Optional[{}]".format(_param["typ"])
-        # if "default" not in _param:
-        #    _param["default"] = NoneStr
 
     if "nullable" in _param:
         not _param["nullable"] or _handle_null()
         del _param["nullable"]
-    # elif not pk:
-    #    _handle_null()
 
     if "default" in _param and not get_value(call.args[0]).endswith("kwargs"):
         _param["doc"] += "."
-    #    _param["doc"] += '. Defaults to "{}"'.format(_param.pop("default"))
 
     return get_value(call.args[0]), _param
 

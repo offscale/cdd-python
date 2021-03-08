@@ -377,27 +377,6 @@ def _inspect(obj, name, word_wrap):
             )
         )
 
-    # if ir.get("returns") and "returns" not in ir["returns"]:
-    #     if sig.return_annotation is not _empty:
-    #         ir["returns"]["return_type"]["typ"] = lstrip_typings("{!s}".format(sig.return_annotation))
-    #
-    #     return_q = deque(
-    #         filter(
-    #             rpartial(isinstance, ast.Return),
-    #             ast.walk(parsed_body),
-    #         ),
-    #         maxlen=1,
-    #     )
-    #     if return_q:
-    #         return_val = get_value(return_q.pop())
-    #         ir["returns"]["return_type"]["default"] = get_value(return_val)
-    #         if not isinstance(
-    #             ir["returns"]["return_type"]["default"],
-    #             (str, int, float, complex, ast.Num, ast.Str, ast.Constant),
-    #         ):
-    #             ir["returns"]["return_type"]["default"] = "```{}```".format(
-    #                 to_code(ir["returns"]["return_type"]["default"]).rstrip("\n")
-    #             )
     return ir
 
 
@@ -506,12 +485,6 @@ def function(
         _param = intermediate_repr["params"].pop(function_def.args.kwarg.arg)
         assert "typ" in _param
         _param["default"] = NoneStr
-        # if "typ" not in _param:
-        #     _param["typ"] = (
-        #         "Optional[dict]"
-        #         if function_arguments.kwarg.annotation is None
-        #         else to_code(function_arguments.kwarg.annotation).rstrip("\n")
-        #     )
         params_to_append[function_def.args.kwarg.arg] = _param
         del _param
 
@@ -650,12 +623,6 @@ def argparse_ast(function_def, function_type=None, function_name=None):
             "from_name": function_def.name,
             "from_type": "static",
         }
-
-    # if "return_type" in intermediate_repr.get("returns", {}):
-    #     pp({'intermediate_repr["returns"]["return_type"]': intermediate_repr["returns"]["return_type"]})
-    #     intermediate_repr["returns"]["return_type"].update = dict(
-    #         interpolate_defaults(intermediate_repr["returns"]["return_type"])
-    #     )
 
     return intermediate_repr
 

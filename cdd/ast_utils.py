@@ -305,17 +305,6 @@ def param2argparse_param(param, word_wrap=True, emit_default_doc=True):
         required = False
     elif typ == "str" and action is None:
         typ = None  # Because `str` is default anyway
-    # elif _required is False and required is True:
-    #    required = _required
-    # if _param.get("default") == NoneStr:
-    #    required = False
-    # if typ in frozenset(("Any", "object")):
-    #     required, typ = False, "str"
-    # if param[1].get("typ") and typ == "str":
-    #    pass
-
-    # if is_kwarg and required:
-    #     required = False
 
     return Expr(
         Call(
@@ -386,89 +375,6 @@ def param2argparse_param(param, word_wrap=True, emit_default_doc=True):
     )
 
 
-# def _parse_out_default(default, param, action, required, typ):
-#     """
-#     Parse out the default value
-#
-#     :param default: Initial default value
-#     :type default: ```Any```
-#
-#     :param param: Name, dict with keys: 'typ', 'doc', 'default'
-#     :type param: ```Tuple[str, dict]```
-#
-#     :param action: Name of the action
-#     :type action: ```Optional[str]```
-#
-#     :param required: Whether to require the argument
-#     :type required: ```bool```
-#
-#     :param typ: The type of the argument
-#     :type typ: ```Optional[str]```
-#
-#     :returns: action, default, required, typ
-#     :rtype: ```Tuple[Optional[str], Optional[List[str]], bool, Optional[str]]```
-#     """
-#     default = param.get("default", default)
-#     if default in (NoneStr, None):
-#         required, default = False, None
-#     elif code_quoted(default, str):
-#         default = get_value(ast.parse(default.strip("`")).body[0])
-#
-#         if isinstance(default, ast.AST):
-#             default = get_value(default)
-#
-#             if type(default).__name__ not in simple_types:
-#                 if isinstance(default, (ast.Dict, ast.Tuple)):
-#                     typ, default = "loads", _to_code(default).rstrip("\n")
-#                 elif isinstance(default, ast.List):
-#                     if len(default.elts) == 1:
-#                         action, default = "append", get_value(default.elts[0])
-#                         typ = type(default).__name__
-#                     else:
-#                         typ, default = "loads", _to_code(default).rstrip("\n")
-#                 elif default is not None:
-#                     default = "```{default}```".format(
-#                         default=paren_wrap_code(_to_code(default).rstrip("\n"))
-#                     )
-#         # elif isinstance(default, str):
-#         #     if code_quoted(default):
-#         #         default = ast.parse(default.strip("`")).body[0]
-#         #         if isinstance(default, ast.Expr):
-#         #             default = default.value
-#         #             if isinstance(default, ast.List):
-#         #                 # assert (len(default.elts) == 1), "NotImplemented: Multiple default elements"
-#         #                 if len(default.elts) == 1:
-#         #                     action, default, typ = (
-#         #                         "append",
-#         #                         get_value(default.elts[0]),
-#         #                         type(default).__name__,
-#         #                     )
-#         #                 else:
-#         #                     typ, default = "loads", "{!r}".format(_to_code(default))
-#     elif isinstance(default, (tuple, list)):
-#         typ, default = "loads", "'{!r}'".format(default)
-#     elif isfunction(default):
-#         typ, default = "pickle.loads", "{!r}".format(pickle.dumps(default))
-#     elif typ == "str":
-#         typ = type(default).__name__
-#
-#     if typ and "[" not in typ and typ not in frozenset(("pickle.loads", "loads")):
-#         typ = type(default).__name__
-#     # elif default
-#     if not isinstance(default, (type(None), str, int, float, complex)):
-#         if hasattr(default, "__str__") and str(default) == "<required parameter>":
-#             required, default = True, None
-#         elif isinstance(default, AST):
-#             from cdd.source_transformer import to_code
-#
-#             typ, default = "loads", to_code(default)
-#         else:
-#             raise NotImplementedError(
-#                 "Parsing type {}, which contains {!r}".format(type(default), default)
-#             )
-#     return action, default, required, typ
-
-
 def _resolve_arg(action, choices, param, required, typ):
     """
     Resolve the arg type, required status, and choices
@@ -497,12 +403,6 @@ def _resolve_arg(action, choices, param, required, typ):
         _param["typ"] = _param["typ"][len("<class '") : -len("'>")]
     if _param["typ"] in simple_types:
         typ = _param["typ"]
-    # elif (
-    #     isinstance(_param["typ"], str)
-    #     and _param["typ"].startswith("<class '")
-    #     and _param["typ"].endswith("'>")
-    # ):
-    #     typ = _param["typ"][8:-2]
     elif _param["typ"] == "dict" or name.endswith("kwargs"):
         typ, required = "loads", not name.endswith("kwargs")
     elif _param["typ"]:
@@ -517,13 +417,6 @@ def _resolve_arg(action, choices, param, required, typ):
         ("str", "complex", "int", "float", "anystr", "list", "tuple", "dict")
     ):
         _required = True
-
-    # if isinstance(_param.get("default"), (list, tuple)):
-    #    if len()
-    #    typ, action = None, "append"
-
-    # if isinstance(param.get("default"), (Constant, Str, Num)):
-    #     param["default"] = get_value(param["default"])
     return (
         action,
         choices,
@@ -597,28 +490,6 @@ def func_arg2param(func_arg, default=None):
     )
 
 
-# def needs_quoting(node):
-#     """
-#     Determine whether the input needs to be quoted
-#
-#     :param node: AST node
-#     :type node: ```Union[AST, AnyStr]```
-#
-#     :returns: True if input needs quoting
-#     :rtype: ```bool```
-#     """
-#     if isinstance(node, str):
-#         if node == "str":
-#             return True
-#         node = ast.parse(node)
-#     elif type(node).__name__ == "_SpecialForm":
-#         return False
-#     for _node in walk(node):
-#         if hasattr(_node, "id") and _node.id == "str":
-#             return True
-#     return False
-
-
 def get_function_type(function_def):
     """
     Get the type of the function
@@ -653,8 +524,6 @@ def get_value(node):
     :returns: Probably a string, but could be any constant value
     :rtype: ```Optional[Union[str, int, float, bool]]```
     """
-    # if isinstance(node, (bool, complex, float, int, type(None))):
-    #    return node
     if isinstance(node, Str):
         return node.s
     elif isinstance(node, Num):
@@ -1417,6 +1286,7 @@ __all__ = [
     "NoneStr",
     "RewriteAtQuery",
     "annotate_ancestry",
+    "code_quoted",
     "emit_ann_assign",
     "emit_arg",
     "find_ast_type",

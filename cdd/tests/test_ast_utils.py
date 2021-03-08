@@ -54,6 +54,7 @@ from cdd.ast_utils import (
 )
 from cdd.pure_utils import PY3_8, PY_GTE_3_8, tab
 from cdd.source_transformer import ast_parse
+from cdd.tests.mocks.argparse import argparse_add_argument_expr
 from cdd.tests.mocks.classes import class_ast, class_str
 from cdd.tests.mocks.methods import (
     class_with_method_and_body_types_ast,
@@ -658,25 +659,7 @@ class TestAstUtils(TestCase):
             gen_ast=param2argparse_param(
                 ("byo", {"default": [], "typ": "str"}),
             ),
-            gold=Expr(
-                Call(
-                    args=[set_value("--byo")],
-                    func=Attribute(
-                        Name("argument_parser", Load()),
-                        "add_argument",
-                        Load(),
-                    ),
-                    keywords=[
-                        keyword(arg="type", value=Name("str", Load()), identifier=None),
-                        keyword(
-                            arg="action", value=set_value("append"), identifier=None
-                        ),
-                        keyword(arg="required", value=set_value(True), identifier=None),
-                    ],
-                    expr=None,
-                    expr_func=None,
-                ),
-            ),
+            gold=argparse_add_argument_expr,
             test_case_instance=self,
         )
 
@@ -740,25 +723,7 @@ class TestAstUtils(TestCase):
                     },
                 ),
             ),
-            gold=Expr(
-                Call(
-                    args=[set_value("--byo")],
-                    func=Attribute(
-                        Name("argument_parser", Load()),
-                        "add_argument",
-                        Load(),
-                    ),
-                    keywords=[
-                        keyword(arg="type", value=Name("str", Load()), identifier=None),
-                        keyword(
-                            arg="action", value=set_value("append"), identifier=None
-                        ),
-                        keyword(arg="required", value=set_value(True), identifier=None),
-                    ],
-                    expr=None,
-                    expr_func=None,
-                )
-            ),
+            gold=argparse_add_argument_expr,
             test_case_instance=self,
         )
 
@@ -784,25 +749,7 @@ class TestAstUtils(TestCase):
                     },
                 ),
             ),
-            gold=Expr(
-                Call(
-                    args=[set_value("--byo")],
-                    func=Attribute(
-                        Name("argument_parser", Load()),
-                        "add_argument",
-                        Load(),
-                    ),
-                    keywords=[
-                        keyword(arg="type", value=Name("str", Load()), identifier=None),
-                        keyword(
-                            arg="action", value=set_value("append"), identifier=None
-                        ),
-                        keyword(arg="required", value=set_value(True), identifier=None),
-                    ],
-                    expr=None,
-                    expr_func=None,
-                )
-            ),
+            gold=argparse_add_argument_expr,
             test_case_instance=self,
         )
 

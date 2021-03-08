@@ -36,7 +36,10 @@ from cdd.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
 from cdd.defaults_utils import extract_default
 from cdd.pure_utils import tab
 from cdd.tests.mocks.docstrings import docstring_header_str
-from cdd.tests.mocks.methods import function_google_tf_squared_hinge_docstring_str
+from cdd.tests.mocks.methods import (
+    function_google_tf_squared_hinge_docstring_str,
+    returns_subscript,
+)
 from cdd.tests.utils_for_tests import remove_args_from_docstring
 
 class_doc_str = tab.join(
@@ -201,58 +204,7 @@ class_ast = ClassDef(
             expr_annotation=None,
         ),
         AnnAssign(
-            annotation=Subscript(
-                Name("Union", Load()),
-                Index(
-                    value=Tuple(
-                        ctx=Load(),
-                        elts=[
-                            Subscript(
-                                Name("Tuple", Load()),
-                                Index(
-                                    value=Tuple(
-                                        ctx=Load(),
-                                        elts=[
-                                            Attribute(
-                                                Attribute(
-                                                    Name("tf", Load()),
-                                                    "data",
-                                                    Load(),
-                                                ),
-                                                "Dataset",
-                                                Load(),
-                                            )
-                                        ]
-                                        * 2,
-                                        expr=None,
-                                    )
-                                ),
-                                Load(),
-                            ),
-                            Subscript(
-                                Name("Tuple", Load()),
-                                Index(
-                                    Tuple(
-                                        ctx=Load(),
-                                        elts=[
-                                            Attribute(
-                                                Name("np", Load()),
-                                                "ndarray",
-                                                Load(),
-                                            )
-                                        ]
-                                        * 2,
-                                        expr=None,
-                                    )
-                                ),
-                                Load(),
-                            ),
-                        ],
-                        expr=None,
-                    )
-                ),
-                Load(),
-            ),
+            annotation=returns_subscript,
             simple=1,
             target=Name("return_type", Store()),
             value=Tuple(
