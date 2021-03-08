@@ -764,7 +764,6 @@ class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
                histogram_freq=0,
                write_graph=True,
                write_images=False,
-               write_steps_per_second=False,
                update_freq='epoch',
                profile_batch=2,
                embeddings_freq=0,
@@ -801,7 +800,6 @@ class_google_tf_tensorboard_ast = ClassDef(
                             "histogram_freq",
                             "write_graph",
                             "write_images",
-                            "write_steps_per_second",
                             "update_freq",
                             "profile_batch",
                             "embeddings_freq",
@@ -813,7 +811,7 @@ class_google_tf_tensorboard_ast = ClassDef(
                 kw_defaults=[],
                 kwarg=set_arg("kwargs"),
                 defaults=list(
-                    map(set_value, ("logs", 0, True, False, False, "epoch", 2, 0, None))
+                    map(set_value, ("logs", 0, True, False, "epoch", 2, 0, None))
                 ),
                 vararg=None,
             ),

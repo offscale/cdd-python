@@ -976,31 +976,6 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
                 expr_func=None,
             )
         ),
-        Expr(
-            Call(
-                args=[set_value("--write_steps_per_second")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
-                ),
-                keywords=[
-                    keyword(arg="type", value=Name("bool", Load()), identifier=None),
-                    # keyword(
-                    #     arg="help",
-                    #     value=set_value(
-                    #         "whether to log the training steps per second into Tensorboard."
-                    #         "This supports both epoch and batch frequency logging."
-                    #     ),
-                    #     identifier=None,
-                    # ),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(arg="default", value=set_value(False), identifier=None),
-                ],
-                expr=None,
-                expr_func=None,
-            )
-        ),
         Return(value=Name("argument_parser", Load()), expr=None),
     ],
     decorator_list=[],

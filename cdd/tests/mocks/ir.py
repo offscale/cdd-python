@@ -118,7 +118,6 @@ class_google_tf_tensorboard_ir = {
                     "string can be passed.",
                 },
             ),
-            ("write_steps_per_second", {"default": False, "typ": "bool"}),
         )
     ),
     "returns": None,
