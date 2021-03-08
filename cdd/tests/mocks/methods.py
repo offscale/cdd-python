@@ -187,6 +187,60 @@ class C(object):
     header_doc_str=indent(docstring_header_str, tab * 2)
 )
 
+
+returns_subscript = Subscript(
+    Name("Union", Load()),
+    set_slice(
+        Tuple(
+            [
+                Subscript(
+                    Name("Tuple", Load()),
+                    set_slice(
+                        Tuple(
+                            [
+                                Attribute(
+                                    Attribute(
+                                        Name("tf", Load()),
+                                        "data",
+                                        Load(),
+                                    ),
+                                    "Dataset",
+                                    Load(),
+                                )
+                            ]
+                            * 2,
+                            Load(),
+                            expr=None,
+                        )
+                    ),
+                    Load(),
+                ),
+                Subscript(
+                    Name("Tuple", Load()),
+                    set_slice(
+                        Tuple(
+                            [
+                                Attribute(
+                                    Name("np", Load()),
+                                    "ndarray",
+                                    Load(),
+                                )
+                            ]
+                            * 2,
+                            Load(),
+                            expr=None,
+                        )
+                    ),
+                    Load(),
+                ),
+            ],
+            Load(),
+        )
+    ),
+    Load(),
+)
+
+
 class_with_method_and_body_types_ast = fix_missing_locations(
     ClassDef(
         name="C",
@@ -302,57 +356,7 @@ class_with_method_and_body_types_ast = fix_missing_locations(
                     ),
                 ],
                 decorator_list=[],
-                returns=Subscript(
-                    Name("Union", Load()),
-                    set_slice(
-                        Tuple(
-                            [
-                                Subscript(
-                                    Name("Tuple", Load()),
-                                    set_slice(
-                                        Tuple(
-                                            [
-                                                Attribute(
-                                                    Attribute(
-                                                        Name("tf", Load()),
-                                                        "data",
-                                                        Load(),
-                                                    ),
-                                                    "Dataset",
-                                                    Load(),
-                                                )
-                                            ]
-                                            * 2,
-                                            Load(),
-                                            expr=None,
-                                        )
-                                    ),
-                                    Load(),
-                                ),
-                                Subscript(
-                                    Name("Tuple", Load()),
-                                    set_slice(
-                                        Tuple(
-                                            [
-                                                Attribute(
-                                                    Name("np", Load()),
-                                                    "ndarray",
-                                                    Load(),
-                                                )
-                                            ]
-                                            * 2,
-                                            Load(),
-                                            expr=None,
-                                        )
-                                    ),
-                                    Load(),
-                                ),
-                            ],
-                            Load(),
-                        )
-                    ),
-                    Load(),
-                ),
+                returns=returns_subscript,
                 arguments_args=None,
                 identifier_name=None,
                 stmt=None,
@@ -499,58 +503,7 @@ class_with_method_types_ast = fix_missing_locations(
                 ],
                 decorator_list=[],
                 name="function_name",
-                returns=Subscript(
-                    Name("Union", Load()),
-                    Index(
-                        value=Tuple(
-                            ctx=Load(),
-                            elts=[
-                                Subscript(
-                                    Name("Tuple", Load()),
-                                    Index(
-                                        value=Tuple(
-                                            ctx=Load(),
-                                            elts=[
-                                                Attribute(
-                                                    Attribute(
-                                                        Name("tf", Load()),
-                                                        "data",
-                                                        Load(),
-                                                    ),
-                                                    "Dataset",
-                                                    Load(),
-                                                )
-                                            ]
-                                            * 2,
-                                            expr=None,
-                                        )
-                                    ),
-                                    Load(),
-                                ),
-                                Subscript(
-                                    Name("Tuple", Load()),
-                                    Index(
-                                        value=Tuple(
-                                            ctx=Load(),
-                                            elts=[
-                                                Attribute(
-                                                    Name("np", Load()),
-                                                    "ndarray",
-                                                    Load(),
-                                                )
-                                            ]
-                                            * 2,
-                                            expr=None,
-                                        )
-                                    ),
-                                    Load(),
-                                ),
-                            ],
-                            expr=None,
-                        )
-                    ),
-                    Load(),
-                ),
+                returns=returns_subscript,
                 arguments_args=None,
                 identifier_name=None,
                 stmt=None,
@@ -633,58 +586,7 @@ class_with_optional_arg_method_ast = ClassDef(
             ],
             decorator_list=[],
             name="function_name",
-            returns=Subscript(
-                Name("Union", Load()),
-                Index(
-                    value=Tuple(
-                        ctx=Load(),
-                        elts=[
-                            Subscript(
-                                Name("Tuple", Load()),
-                                Index(
-                                    value=Tuple(
-                                        ctx=Load(),
-                                        elts=[
-                                            Attribute(
-                                                Attribute(
-                                                    Name("tf", Load()),
-                                                    "data",
-                                                    Load(),
-                                                ),
-                                                "Dataset",
-                                                Load(),
-                                            )
-                                        ]
-                                        * 2,
-                                        expr=None,
-                                    )
-                                ),
-                                Load(),
-                            ),
-                            Subscript(
-                                Name("Tuple", Load()),
-                                Index(
-                                    value=Tuple(
-                                        ctx=Load(),
-                                        elts=[
-                                            Attribute(
-                                                Name("np", Load()),
-                                                "ndarray",
-                                                Load(),
-                                            )
-                                        ]
-                                        * 2,
-                                        expr=None,
-                                    )
-                                ),
-                                Load(),
-                            ),
-                        ],
-                        expr=None,
-                    )
-                ),
-                Load(),
-            ),
+            returns=returns_subscript,
             arguments_args=None,
             identifier_name=None,
             stmt=None,

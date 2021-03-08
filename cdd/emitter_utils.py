@@ -2,18 +2,7 @@
 Functions which produce intermediate_repr from various different inputs
 """
 import ast
-from ast import (
-    Attribute,
-    Call,
-    Expr,
-    FunctionDef,
-    Load,
-    Name,
-    Return,
-    arg,
-    arguments,
-    keyword,
-)
+from ast import Attribute, Call, Expr, FunctionDef, Load, Name, Return, arg, arguments
 from functools import partial
 from platform import system
 from textwrap import indent
@@ -188,15 +177,6 @@ def parse_out_param(expr, require_default=False, emit_default_doc=True):
         elif require_default or typ.startswith("Optional"):
             default = NoneStr
 
-    # nargs = next(
-    #     (
-    #         get_value(key_word.value)
-    #         for key_word in expr.value.keywords
-    #         if key_word.arg == "nargs"
-    #     ),
-    #     None,
-    # )
-
     action = next(
         (
             get_value(key_word.value)
@@ -219,9 +199,6 @@ def parse_out_param(expr, require_default=False, emit_default_doc=True):
 
     if not required and "Optional" not in typ:
         typ = "Optional[{typ}]".format(typ=typ)
-
-    # if "str" in typ or "Literal" in typ and (typ.count("'") > 1 or typ.count('"') > 1):
-    #    default = quote(default)
 
     return name, dict(
         doc=doc, typ=typ, **({} if default is None else {"default": default})
@@ -622,7 +599,6 @@ class RewriteName(ast.NodeTransformer):
         :returns: `Name` iff `Name` is not a parameter else `Attribute`
         :rtype: ```Union[Name, Attribute]```
         """
-        # print("loc:", getattr(node, "_location", None), ";")
         return (
             Attribute(Name("self", Load()), node.id, Load())
             if not self.node_ids or node.id in self.node_ids
@@ -653,15 +629,6 @@ def _make_call_meth(body, return_type, param_names, docstring_format, word_wrap)
     :rtype: ```FunctionDef```
     """
     body_len = len(body)
-    # return_ = (
-    #     ast.fix_missing_locations(
-    #         RewriteName(param_names).visit(
-    #             Return(get_value(ast.parse(return_type.strip("`")).body[0]), expr=None)
-    #         )
-    #     )
-    #     if return_type is not None and code_quoted(return_type)
-    #     else None
-    # )
     if body_len:
         if isinstance(body, dict):
             body = list(
@@ -697,27 +664,6 @@ def _make_call_meth(body, return_type, param_names, docstring_format, word_wrap)
                     ),
                 )
             )
-
-        # elif isinstance(body[0], Expr):
-        #     doc_str = get_value(body[0].value)
-        #     if isinstance(doc_str, str) and body_len > 0:
-        #         body = (
-        #             body[1:]
-        #             if body_len > 1
-        #             else (
-        #                 [
-        #                     set_value(doc_str.replace(":cvar", ":param"))
-        #                     if return_ is None
-        #                     else return_
-        #                 ]
-        #                 if body_len == 1
-        #                 else body
-        #             )
-        #         )
-        # elif not isinstance(body[0], Return) and return_ is not None:
-        #     body.append(return_)
-    # elif return_ is not None:
-    #    body = [return_]
 
     return (
         ast.fix_missing_locations(
@@ -841,7 +787,9 @@ def param_to_sqlalchemy_column_call(param, include_name):
             Call(
                 func=Name("Enum", Load()),
                 args=get_value(parsed_typ.slice).elts,
-                keywords=[keyword(arg="name", value=set_value(name), identifier=None)],
+                keywords=[
+                    ast.keyword(arg="name", value=set_value(name), identifier=None)
+                ],
                 expr=None,
                 expr_func=None,
             )
@@ -858,14 +806,16 @@ def param_to_sqlalchemy_column_call(param, include_name):
         nullable = False
 
     keywords.append(
-        keyword(arg="doc", value=set_value(_param["doc"].rstrip(".")), identifier=None)
+        ast.keyword(
+            arg="doc", value=set_value(_param["doc"].rstrip(".")), identifier=None
+        )
     )
 
     if has_default:
         if _param["default"] == NoneStr:
             _param["default"] = None
         keywords.append(
-            keyword(
+            ast.keyword(
                 arg="default",
                 value=set_value(_param["default"]),
                 identifier=None,
@@ -875,12 +825,12 @@ def param_to_sqlalchemy_column_call(param, include_name):
     # Sorting :\
     if pk:
         keywords.append(
-            keyword(arg="primary_key", value=set_value(True), identifier=None),
+            ast.keyword(arg="primary_key", value=set_value(True), identifier=None),
         )
 
     if isinstance(nullable, bool):
         keywords.append(
-            keyword(arg="nullable", value=set_value(nullable), identifier=None)
+            ast.keyword(arg="nullable", value=set_value(nullable), identifier=None)
         )
 
     return Call(
@@ -960,7 +910,7 @@ def generate_repr_method(params, cls_name, docstring_format):
                     args=[],
                     keywords=list(
                         map(
-                            lambda key: keyword(
+                            lambda key: ast.keyword(
                                 arg=key,
                                 value=Attribute(Name("self", Load()), key, Load()),
                                 identifier=None,

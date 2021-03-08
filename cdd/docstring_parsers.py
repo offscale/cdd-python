@@ -306,24 +306,6 @@ def _scan_phase_numpydoc_and_google(
     if stacker:
         scanned[namespace] = stacker
 
-    # # Join ["a", "b"] into ["ab"] as each has been resolved to a scanned symbol now
-    # scanned.update(
-    #     {
-    #         token: [
-    #             line_list
-    #             if len(line_list) < 3 or isinstance(line_list, str)
-    #             else [
-    #                 "{} {}".format(
-    #                     line_list[0], " ".join(map(str.lstrip, line_list[1:]))
-    #                 )
-    #             ]
-    #             for line_list in scanned[token]
-    #         ]
-    #         for token in arg_tokens + return_tokens
-    #         if scanned.get(token)
-    #     }
-    # )
-
     return scanned
 
 
@@ -354,17 +336,7 @@ def _return_parse_phase_numpydoc_and_google(return_tokens, scanned, stacker, sty
                 scanned[return_tokens[0]] = stacker[i + 1 :]
                 stacker = stacker[: i - 1]
                 break
-    # # All the google docstring examples are now handled earlier in the scan phase
-    # else:
-    #     for i in rng:
-    #         for idx, token in enumerate(stacker[i]):
-    #             if token == return_tokens[0]:
-    #                 scanned[return_tokens[0]] = (
-    #                     stacker[i][idx + 1 :] + stacker[i + 1 :]
-    #                 )[0]
-    #                 stacker[i] = stacker[i][: idx - 1]
-    #                 stacker = stacker[: i + 1]
-    #                 break
+
     return stacker
 
 
@@ -656,7 +628,6 @@ def _parse_phase_numpydoc_and_google(
                 cur.update(
                     {"typ": typ.lstrip(), "doc": "\n".join(map(white_spacer, scan[1:]))}
                 )
-            # elif name.endswith("kwargs"): cur["typ"] = "dict"
             return cur
 
     else:
@@ -678,7 +649,6 @@ def _parse_phase_numpydoc_and_google(
             s = white_spacer(scan[0][:offset])
             name, delim, typ = partitioned or s.partition("(")
             name, typ = name.strip(), (delim + typ).rstrip()
-            # if not name: return None
             cur = {"name": name}
             if typ:
                 assert typ.startswith("(") and typ.endswith(
@@ -696,10 +666,6 @@ def _parse_phase_numpydoc_and_google(
                         ),
                         "",
                     )
-                # elif partitioned is None:
-                #    return _parse(scan, " ".join((name, typ)).partition("="))
-                # else:
-            # elif name.endswith("kwargs"): cur["typ"] = "dict"
             cur["doc"] = (lambda s_: s_ if parse_original_whitespace else s_.strip())(
                 "\n".join(
                     chain.from_iterable(

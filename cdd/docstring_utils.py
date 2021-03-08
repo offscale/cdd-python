@@ -107,7 +107,6 @@ def emit_param_str(
         return "".join(
             filter(
                 None,
-                # map(indent_all_but_first, map(_fill,
                 (
                     (
                         "  {typ}:".format(typ=_param["typ"])
