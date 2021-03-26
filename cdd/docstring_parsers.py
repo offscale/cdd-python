@@ -92,12 +92,7 @@ def parse_docstring(
     assert isinstance(docstring, (type(None), str)), "{typ} != str".format(
         typ=type(docstring).__name__
     )
-    if docstring is None or any(map(partial(contains, docstring), TOKENS.rest)):
-        style = Style.rest
-    elif any(map(partial(contains, docstring), TOKENS.google)):
-        style = Style.google
-    else:
-        style = Style.numpydoc
+    style = derive_docstring_format(docstring)
 
     ir = {
         "name": None,
@@ -142,6 +137,25 @@ def parse_docstring(
             }
         )
     return ir
+
+
+def derive_docstring_format(docstring):
+    """
+    Infer the docstring format of the provided docstring
+
+    :param docstring: the docstring
+    :type docstring: ```Optional[str]```
+
+    :returns: the style of docstring
+    :rtype: ```Literal['rest', 'numpydoc', 'google']```
+    """
+    if docstring is None or any(map(partial(contains, docstring), TOKENS.rest)):
+        style = Style.rest
+    elif any(map(partial(contains, docstring), TOKENS.google)):
+        style = Style.google
+    else:
+        style = Style.numpydoc
+    return style
 
 
 def _scan_phase(docstring, parse_original_whitespace=False, style=Style.rest):
@@ -949,4 +963,4 @@ def _set_param_values(input_str, val, sw=":type"):
     )
 
 
-__all__ = ["parse_docstring"]
+__all__ = ["derive_docstring_format", "parse_docstring"]

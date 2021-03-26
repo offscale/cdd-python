@@ -1,4 +1,4 @@
-# !/usr/bin/env python
+#!/usr/bin/env python
 
 """
 `__main__` implementation, can be run directly or with `python -m cdd`
@@ -6,14 +6,18 @@
 from argparse import ArgumentParser, Namespace
 from codecs import decode
 from collections import deque
+from itertools import filterfalse
+from operator import eq
 from os import path
 
 from cdd import __description__, __version__
 from cdd.conformance import ground_truth
+from cdd.docstring_parsers import Style
+from cdd.doctrans import doctrans
 from cdd.gen import gen
 from cdd.openapi.gen_openapi import openapi_bulk
 from cdd.openapi.gen_routes import gen_routes, upsert_routes
-from cdd.pure_utils import pluralise
+from cdd.pure_utils import pluralise, rpartial
 from cdd.sync_properties import sync_properties
 
 
@@ -291,6 +295,36 @@ def _build_parser():
         required=True,
     )
 
+    ############
+    # doctrans #
+    ############
+    doctrans_parser = subparsers.add_parser(
+        "doctrans",
+        help=(
+            "Convert docstring format of all classes and functions within target file"
+        ),
+    )
+
+    doctrans_parser.add_argument(
+        "--filename",
+        help="Python file to convert docstrings within. Edited in place.",
+        type=str,
+        required=True,
+    )
+    doctrans_parser.add_argument(
+        "--format",
+        help="The docstring format to replace existing format with.",
+        type=str,
+        choices=tuple(filterfalse(rpartial(eq, "auto"), Style.__members__.keys())),
+        required=True,
+    )
+    doctrans_parser.add_argument(
+        "--inline-types",
+        help="Whether the type should be inline or in docstring",
+        type=bool,
+        required=True,
+    )
+
     return parser
 
 
@@ -398,6 +432,12 @@ def main(cli_argv=None, return_args=False):
             model_paths=args.model_paths,
             routes_paths=args.routes_paths,
         )
+    elif command == "doctrans":
+        if args.filename is None or not path.isfile(args.filename):
+            _parser.error(
+                "--filename must be an existent file. Got: {!r}".format(args.filename)
+            )
+        doctrans(filename=args.filename, docstring_format=args.format)
 
 
 if __name__ == "__main__":

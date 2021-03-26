@@ -1286,6 +1286,7 @@ __all__ = [
     "NoneStr",
     "RewriteAtQuery",
     "annotate_ancestry",
+    "cmp_ast",
     "code_quoted",
     "emit_ann_assign",
     "emit_arg",
