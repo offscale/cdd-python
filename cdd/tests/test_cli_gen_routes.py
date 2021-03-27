@@ -6,7 +6,7 @@ from unittest.mock import patch
 from cdd.tests.utils_for_tests import mock_function, run_cli_test, unittest_main
 
 
-class TestGenRoutes(TestCase):
+class TestCliGenRoutes(TestCase):
     """ Test class for __main__.py """
 
     def test_gen_routes_fails(self) -> None:

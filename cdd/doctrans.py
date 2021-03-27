@@ -149,44 +149,8 @@ class DocTrans(NodeTransformer):
         return (
             self._handle_node_with_docstring
             if isinstance(node, (AsyncFunctionDef, FunctionDef, ClassDef))
-            else super(DocTrans, self).generic_visit(node)
+            else super(DocTrans, self).generic_visit
         )(node)
-
-    def visit_AsyncFunctionDef(self, node):
-        """
-        Handle `AsyncFunctionDef`
-
-        :param node: AsyncFunctionDef
-        :type node: ```AsyncFunctionDef```
-
-        :returns: Potentially changed `AsyncFunctionDef`, i.e., inlined||docstringed types and changed docstring_format
-        :rtype: ```AsyncFunctionDef```
-        """
-        self._handle_node_with_docstring(node)
-
-    def visit_FunctionDef(self, node):
-        """
-        Handle `FunctionDef`
-
-        :param node: FunctionDef
-        :type node: ```FunctionDef```
-
-        :returns: Potentially changed `FunctionDef`, i.e., inlined||docstringed types and changed docstring_format
-        :rtype: ```FunctionDef```
-        """
-        self._handle_node_with_docstring(node)
-
-    def visit_ClassDef(self, node):
-        """
-        Handle `ClassDef`
-
-        :param node: ClassDef
-        :type node: ```ClassDef```
-
-        :returns: Potentially changed `ClassDef`, i.e., inlined||docstringed types and changed docstring_format
-        :rtype: ```ClassDef```
-        """
-        self._handle_node_with_docstring(node)
 
     def visit_AnnAssign(self, node):
         """
