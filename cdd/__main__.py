@@ -318,11 +318,19 @@ def _build_parser():
         choices=tuple(filterfalse(rpartial(eq, "auto"), Style.__members__.keys())),
         required=True,
     )
-    doctrans_parser.add_argument(
+
+    doctrans_parser_group = doctrans_parser.add_mutually_exclusive_group(required=True)
+    doctrans_parser_group.add_argument(
         "--inline-types",
-        help="Whether the type should be inline or in docstring",
-        type=bool,
-        required=True,
+        help="Inline the type, i.e., annotate PEP484 (outside docstring)",
+        dest="inline_types",
+        action="store_true",
+    )
+    doctrans_parser_group.add_argument(
+        "--no-inline-types",
+        help="Ensure all types are in docstring (rather than a PEP484 type annotation)",
+        dest="inline_types",
+        action="store_false",
     )
 
     return parser
@@ -437,7 +445,11 @@ def main(cli_argv=None, return_args=False):
             _parser.error(
                 "--filename must be an existent file. Got: {!r}".format(args.filename)
             )
-        doctrans(filename=args.filename, docstring_format=args.format)
+        doctrans(
+            filename=args.filename,
+            docstring_format=args.format,
+            inline_types=args.inline_types,
+        )
 
 
 if __name__ == "__main__":
