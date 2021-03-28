@@ -11,7 +11,8 @@ class TestCliDocTrans(TestCase):
     """ Test class for __main__.py """
 
     def test_doctrans_fails_with_wrong_args(self) -> None:
-        """ Tests CLI interface failure cases """
+        """ Tests CLI interface wrong args failure case """
+
         run_cli_test(
             self,
             ["doctrans", "--wrong"],
@@ -20,7 +21,7 @@ class TestCliDocTrans(TestCase):
         )
 
     def test_doctrans_fails_with_file_missing(self) -> None:
-        """ Tests CLI interface gets all the way to the doctrans call without error """
+        """ Tests CLI interface file missing failure case """
 
         with patch("cdd.__main__.doctrans", mock_function):
             self.assertTrue(

@@ -102,6 +102,10 @@ class TestAstUtils(TestCase):
         self.assertEqual(node.body[0]._location, ["dataset_name"])
         self.assertEqual(node.body[1]._location, ["epochs"])
 
+    def test_cmp_ast(self) -> None:
+        """ Test `cmp_ast` branch that isn't tested anywhere else """
+        self.assertFalse(cmp_ast(None, 5))
+
     def test_emit_ann_assign(self) -> None:
         """ Tests that AnnAssign is emitted from `emit_ann_assign` """
         self.assertIsInstance(class_ast.body[1], AnnAssign)
