@@ -344,8 +344,7 @@ as_numpy : Optional[bool]
 data_loader_kwargs : Optional[dict]
     pass this as arguments to data_loader function
 
-{docstring_numpydoc_only_returns_str}
-""".format(
+{docstring_numpydoc_only_returns_str}""".format(
     header_doc_str=docstring_header_str,
     docstring_numpydoc_only_returns_str=docstring_numpydoc_only_returns_str.lstrip(
         "\n"

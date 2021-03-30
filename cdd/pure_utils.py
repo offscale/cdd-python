@@ -39,7 +39,7 @@ def rpartial(func, *args):
     return lambda *a: func(*(a + args))
 
 
-def identity(*args):
+def identity(*args, **kwargs):
     """
     Identity function
 
@@ -600,7 +600,7 @@ def filename_from_mod_or_filename(mod_or_filename):
     ).origin
 
 
-def emit_separating_tabs(s, indent_level=1):
+def emit_separating_tabs(s, indent_level=1, run_per_line=str.lstrip):
     """
     Emit a separating tab between paragraphs
 
@@ -610,12 +610,17 @@ def emit_separating_tabs(s, indent_level=1):
     :param indent_level: docstring indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
     :type indent_level: ```int```
 
+    :param run_per_line: Run this function per line
+    :type run_per_line: ```Callable[[str], str]```
+
+    :returns: Original string with a separating tab between paragraphs, & possibly addition indentation on other lines
+    :rtype: ```str```
     """
     sep = tab * indent_level
     return "\n{sep}{}\n{sep}".format(
-        "\n".join(
-            map(lambda line: sep if len(line) == 0 else line, s.splitlines())
-        ).lstrip(),
+        run_per_line(
+            "\n".join(map(lambda line: sep if len(line) == 0 else line, s.splitlines()))
+        ),
         sep=sep,
     )
 

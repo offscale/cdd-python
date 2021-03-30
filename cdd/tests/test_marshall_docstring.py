@@ -12,7 +12,6 @@ import cdd.emitter_utils
 from cdd import parse
 from cdd.ast_utils import set_value
 from cdd.docstring_parsers import _set_name_and_type, parse_docstring
-from cdd.emitter_utils import to_docstring
 from cdd.tests.mocks.docstrings import (
     docstring_extra_colons_str,
     docstring_google_pytorch_lbfgs_str,
@@ -94,10 +93,10 @@ class TestMarshallDocstring(TestCase):
         )
 
     def test_ir2docstring(self) -> None:
-        """ Tests whether `to_docstring` produces `docstring_str` from `intermediate_repr` """
+        """ Tests whether `emit.docstring` produces `docstring_str` from `intermediate_repr` """
         self.assertEqual(
             docstring_str.strip(),
-            cdd.emitter_utils.to_docstring(
+            cdd.emit.docstring(
                 deepcopy(intermediate_repr),
                 indent_level=0,
                 emit_types=True,
@@ -301,17 +300,6 @@ class TestMarshallDocstring(TestCase):
                 parse_original_whitespace=False,
             ),
             docstring_google_pytorch_lbfgs_ir,
-        )
-
-    def test_to_docstring_fails(self) -> None:
-        """
-        Tests docstring failure conditions
-        """
-        self.assertRaises(
-            NotImplementedError,
-            lambda: to_docstring(
-                deepcopy(intermediate_repr_no_default_doc), docstring_format="numpydoc"
-            ),
         )
 
     def test_docstring_header_and_return_str(self) -> None:

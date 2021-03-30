@@ -22,6 +22,7 @@ from collections import OrderedDict
 from functools import partial
 from importlib import import_module
 from itertools import chain
+from operator import add
 from sys import modules
 from textwrap import indent
 
@@ -41,7 +42,6 @@ from cdd.emitter_utils import (
     get_internal_body,
     param2json_schema_property,
     param_to_sqlalchemy_column_call,
-    to_docstring,
 )
 from cdd.pure_utils import (
     PY3_8,
@@ -323,8 +323,9 @@ def class_(
     class_name="ConfigClass",
     class_bases=("object",),
     decorator_list=None,
-    docstring_format="rest",
     word_wrap=True,
+    docstring_format="rest",
+    emit_original_whitespace=False,
     emit_default_doc=False,
 ):
     """
@@ -351,14 +352,14 @@ def class_(
     :param decorator_list: List of decorators
     :type decorator_list: ```Optional[Union[List[Str], List[]]]```
 
-    :param docstring_format: Format of docstring
-    :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
-
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
+
+    :param emit_original_whitespace: Whether to emit original whitespace or strip it out (in docstring)
+    :type emit_original_whitespace: ```bool```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
@@ -398,6 +399,15 @@ def class_(
     indent_level = 1
     sep = indent_level * tab
 
+    _emit_docstring = partial(
+        docstring,
+        docstring_format=docstring_format,
+        indent_level=indent_level,
+        emit_default_doc=emit_default_doc,
+        emit_separating_tab=True,
+        emit_types=False,
+        word_wrap=word_wrap,
+    )
     return ClassDef(
         bases=list(map(rpartial(Name, Load()), class_bases)),
         body=list(
@@ -406,30 +416,40 @@ def class_(
                     (
                         Expr(
                             set_value(
-                                to_docstring(
-                                    intermediate_repr,
-                                    docstring_format=docstring_format,
-                                    indent_level=indent_level,
-                                    emit_default_doc=emit_default_doc,
-                                    emit_separating_tab=True,
-                                    emit_types=False,
-                                    word_wrap=word_wrap,
-                                )
-                                .replace(
-                                    "\n{sep}:param ".format(sep=sep),
-                                    ":cvar ",
-                                )
-                                .replace(
-                                    "{sep}:cvar ".format(sep=sep),
-                                    "\n{sep}:cvar ".format(sep=sep),
-                                    1,
-                                )
-                                .replace(
-                                    "\n{sep}:returns:".format(sep=sep),
-                                    ":cvar return_type:",
-                                    1,
-                                )
-                                .rstrip()
+                                "\n{sep}".format(sep=sep).join(
+                                    (
+                                        _emit_docstring(
+                                            {
+                                                "doc": intermediate_repr["doc"],
+                                                "params": OrderedDict(),
+                                                "returns": None,
+                                            },
+                                            emit_original_whitespace=emit_original_whitespace,
+                                        ),
+                                        _emit_docstring(
+                                            {
+                                                "doc": "",
+                                                "params": intermediate_repr.get(
+                                                    "params"
+                                                ),
+                                                "returns": intermediate_repr.get(
+                                                    "returns"
+                                                ),
+                                            },
+                                            emit_original_whitespace=False,
+                                        )
+                                        .replace(
+                                            "\n{sep}:param ".format(sep=sep),
+                                            ":cvar ",
+                                        )
+                                        .replace(
+                                            "\n{sep}:returns:".format(sep=sep),
+                                            ":cvar return_type:",
+                                            1,
+                                        )
+                                        .rstrip(),
+                                    )
+                                ),
                             )
                         ),
                     ),
@@ -472,10 +492,17 @@ def class_(
 
 
 def docstring(
-    intermediate_repr, docstring_format="rest", word_wrap=True, emit_default_doc=True
+    intermediate_repr,
+    docstring_format="rest",
+    word_wrap=True,
+    indent_level=0,
+    emit_separating_tab=True,
+    emit_types=True,
+    emit_original_whitespace=False,
+    emit_default_doc=True,
 ):
     """
-    Converts an AST to a docstring
+    Converts an IR to a docstring
 
     :param intermediate_repr: a dictionary of form
         {  "name": Optional[str],
@@ -489,6 +516,18 @@ def docstring(
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
 
+    :param indent_level: indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
+    :type indent_level: ```int```
+
+    :param emit_types: Whether to show `:type` lines
+    :type emit_types: ```bool```
+
+    :param emit_separating_tab: Whether to put a tab between :param and return and desc
+    :type emit_separating_tab: ```bool```
+
+    :param emit_original_whitespace: Whether to emit original whitespace or strip it out
+    :type emit_original_whitespace: ```bool```
+
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
@@ -498,57 +537,80 @@ def docstring(
     :returns: docstring
     :rtype: ```str```
     """
-    return "\n{doc}\n\n{nl0}{params}\n{returns}\n{nl1}".format(
-        doc=(fill if word_wrap else identity)(intermediate_repr["doc"]),
-        nl0="" if docstring_format == "rest" else "\n",
-        nl1="\n" if docstring_format == "numpydoc" else "",
-        params="\n{}".format("\n" if docstring_format == "rest" else "").join(
-            (
-                lambda param_lines: [getattr(ARG_TOKENS, docstring_format)[0]]
-                + param_lines
-                if param_lines and docstring_format != "rest"
-                else param_lines
-            )(
-                list(
-                    map(
-                        partial(
-                            emit_param_str,
-                            style=docstring_format,
-                            emit_default_doc=emit_default_doc,
-                            word_wrap=word_wrap,
-                        ),
-                        intermediate_repr["params"].items(),
-                    )
-                )
-            )
-        ),
-        returns="".join(
-            (
-                lambda l: l
-                if l is None
-                else "{}\n{}".format(
-                    ""
-                    if docstring_format == "rest"
-                    else "\n{}".format(getattr(RETURN_TOKENS, docstring_format)[0]),
-                    l,
-                )
-            )(
-                next(
-                    map(
-                        partial(
-                            emit_param_str,
-                            style=docstring_format,
-                            emit_default_doc=emit_default_doc,
-                            word_wrap=word_wrap,
-                        ),
-                        intermediate_repr["returns"].items(),
+    _sep = tab * indent_level
+    return "\n{_sep}{}\n{_sep}".format(
+        (
+            emit_separating_tabs
+            if emit_separating_tab and emit_original_whitespace is False
+            else identity
+        )(
+            indent(
+                "\n{doc}\n\n{nl0}{params}\n{returns}\n{nl1}".format(
+                    doc=(fill if word_wrap else identity)(intermediate_repr["doc"]),
+                    nl0="" if docstring_format == "rest" else "\n",
+                    nl1="\n" if docstring_format == "numpydoc" else "",
+                    params="\n{}".format(
+                        "\n" if docstring_format == "rest" else ""
+                    ).join(
+                        (
+                            lambda param_lines: [
+                                getattr(ARG_TOKENS, docstring_format)[0]
+                            ]
+                            + param_lines
+                            if param_lines and docstring_format != "rest"
+                            else param_lines
+                        )(
+                            list(
+                                map(
+                                    partial(
+                                        emit_param_str,
+                                        style=docstring_format,
+                                        emit_type=emit_types,
+                                        emit_default_doc=emit_default_doc,
+                                        word_wrap=word_wrap,
+                                    ),
+                                    intermediate_repr["params"].items(),
+                                ),
+                            )
+                        )
                     ),
-                    None,
-                )
-            )
-        )
-        if "return_type" in (intermediate_repr.get("returns") or iter(()))
-        else "",
+                    returns="".join(
+                        (
+                            lambda l: l
+                            if l is None
+                            else "{}\n{}".format(
+                                ""
+                                if docstring_format == "rest"
+                                else "\n{}".format(
+                                    getattr(RETURN_TOKENS, docstring_format)[0]
+                                ),
+                                l,
+                            )
+                        )(
+                            next(
+                                map(
+                                    partial(
+                                        emit_param_str,
+                                        style=docstring_format,
+                                        emit_type=emit_types,
+                                        emit_default_doc=emit_default_doc,
+                                        word_wrap=word_wrap,
+                                    ),
+                                    intermediate_repr["returns"].items(),
+                                ),
+                                None,
+                            )
+                        )
+                    )
+                    if "return_type" in (intermediate_repr.get("returns") or iter(()))
+                    else "",
+                ),
+                _sep,
+            ),
+            indent_level=indent_level,
+            run_per_line=identity,
+        ).strip(),
+        _sep=_sep,
     )
 
 
@@ -736,7 +798,7 @@ def function(
                 (
                     Expr(
                         set_value(
-                            to_docstring(
+                            docstring(
                                 intermediate_repr,
                                 docstring_format=docstring_format,
                                 emit_default_doc=emit_default_doc,
@@ -813,19 +875,29 @@ def json_schema(
         "$id": identifier,
         "$schema": "http://json-schema.org/draft-07/schema#",
         "description": deindent(
-            to_docstring(
-                {
-                    "doc": intermediate_repr["doc"].lstrip() + "\n\n"
-                    if intermediate_repr["returns"]
-                    else "",
-                    "params": OrderedDict(),
-                    "returns": intermediate_repr["returns"],
-                },
-                emit_default_doc=True,
-                emit_original_whitespace=emit_original_whitespace,
-                emit_types=True,
-            ).strip()
-        ),
+            add(
+                *map(
+                    partial(
+                        docstring,
+                        emit_default_doc=True,
+                        emit_original_whitespace=emit_original_whitespace,
+                        emit_types=True,
+                    ),
+                    (
+                        {
+                            "doc": intermediate_repr["doc"],
+                            "params": OrderedDict(),
+                            "returns": None,
+                        },
+                        {
+                            "doc": "",
+                            "params": OrderedDict(),
+                            "returns": intermediate_repr["returns"],
+                        },
+                    ),
+                )
+            )
+        ).lstrip("\n"),
         "type": "object",
         "properties": properties,
         "required": required,
@@ -867,7 +939,7 @@ def sqlalchemy_table(
     :param emit_original_whitespace: Whether to emit an original whitespace (in docstring) or strip it out
     :type emit_original_whitespace: ```bool```
 
-    :param emit_original_whitespace: Whether to emit an original whitespace or strip it out
+    :param emit_original_whitespace: Whether to emit original whitespace or strip it out
     :type emit_original_whitespace: ```bool```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
@@ -901,19 +973,32 @@ def sqlalchemy_table(
                     arg="comment",
                     value=set_value(
                         deindent(
-                            to_docstring(
-                                {
-                                    "doc": intermediate_repr["doc"].lstrip() + "\n\n"
-                                    if intermediate_repr["returns"]
-                                    else "",
-                                    "params": OrderedDict(),
-                                    "returns": intermediate_repr["returns"],
-                                },
-                                emit_default_doc=emit_default_doc,
-                                docstring_format=docstring_format,
-                                word_wrap=word_wrap,
-                                emit_original_whitespace=emit_original_whitespace,
-                                emit_types=True,
+                            add(
+                                *map(
+                                    partial(
+                                        docstring,
+                                        emit_default_doc=emit_default_doc,
+                                        docstring_format=docstring_format,
+                                        word_wrap=word_wrap,
+                                        emit_original_whitespace=emit_original_whitespace,
+                                        emit_types=True,
+                                    ),
+                                    (
+                                        {
+                                            "doc": intermediate_repr["doc"].lstrip()
+                                            + "\n\n"
+                                            if intermediate_repr["returns"]
+                                            else "",
+                                            "params": OrderedDict(),
+                                            "returns": None,
+                                        },
+                                        {
+                                            "doc": "",
+                                            "params": OrderedDict(),
+                                            "returns": intermediate_repr["returns"],
+                                        },
+                                    ),
+                                )
                             ).strip()
                         )
                     ),
@@ -999,37 +1084,31 @@ def sqlalchemy(
                 (
                     Expr(
                         set_value(
-                            "{doc}\n{tab}".format(
-                                doc=emit_separating_tabs(
-                                    indent(
-                                        "\n".join(
-                                            map(
-                                                str.strip,
-                                                to_docstring(
-                                                    {
-                                                        "doc": intermediate_repr[
-                                                            "doc"
-                                                        ].lstrip()
-                                                        + "\n\n"
-                                                        if intermediate_repr["returns"]
-                                                        else "",
-                                                        "params": OrderedDict(),
-                                                        "returns": intermediate_repr[
-                                                            "returns"
-                                                        ],
-                                                    },
-                                                    docstring_format=docstring_format,
-                                                    emit_default_doc=emit_default_doc,
-                                                    emit_original_whitespace=emit_original_whitespace,
-                                                    emit_types=True,
-                                                    word_wrap=word_wrap,
-                                                ).splitlines(),
-                                            )
-                                        ),
-                                        tab,
-                                    )
-                                ).rstrip(),
-                                tab=tab,
+                            add(
+                                *map(
+                                    partial(
+                                        docstring,
+                                        docstring_format=docstring_format,
+                                        emit_default_doc=emit_default_doc,
+                                        emit_original_whitespace=emit_original_whitespace,
+                                        emit_separating_tab=True,
+                                        emit_types=True,
+                                        indent_level=1,
+                                        word_wrap=word_wrap,
+                                    ),
+                                    (
+                                        {
+                                            "doc": intermediate_repr["doc"],
+                                            "params": OrderedDict(),
+                                            "returns": None,
+                                        },
+                                        {
+                                            "doc": "",
+                                            "params": OrderedDict(),
+                                            "returns": intermediate_repr["returns"],
+                                        },
+                                    ),
+                                )
                             )
                         )
                     )

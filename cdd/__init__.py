@@ -11,7 +11,7 @@ from os import path
 import yaml
 
 __author__ = "Samuel Marks"
-__version__ = "0.0.71-beta"
+__version__ = "0.0.71-beta1"
 __description__ = (
     "Open API to/fro routes, models, and tests. "
     "Convert between docstrings, classes, methods, argparse, and SQLalchemy."

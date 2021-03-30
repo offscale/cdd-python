@@ -59,14 +59,14 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     gold = deepcopy(gold)
 
     # if reindent_docstring:
-    #           gen_docstring = ast.get_docstring(gen_ast)
-    #           if gen_docstring is not None:
-    #               gen_ast.body[0] = set_value(
-    #                   "\n{}".format(indent(cleandoc(gen_docstring), tab))
-    #               )
-    #           gold.body[0] = set_value(
-    #               "\n{}".format(indent(ast.get_docstring(gold, clean=True), tab))
-    #           )
+    #     gen_docstring = ast.get_docstring(gen_ast)
+    #     if gen_docstring is not None:
+    #         gen_ast.body[0] = set_value(
+    #             "\n{}".format(indent(cleandoc(gen_docstring), tab))
+    #         )
+    #     gold.body[0] = set_value(
+    #       "\n{}".format(indent(ast.get_docstring(gold, clean=True), tab))
+    #     )
 
     # from meta.asttools import print_ast
     #
@@ -74,6 +74,11 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     # print_ast(gen_ast)
     # print("#gold")
     # print_ast(gold)
+
+    if isinstance(gen_ast, (ast.ClassDef, ast.AsyncFunctionDef, ast.FunctionDef)):
+        test_case_instance.assertEqual(
+            *map(partial(ast.get_docstring, clean=False), (gen_ast, gold))
+        )
 
     test_case_instance.assertEqual(
         *map(
@@ -88,7 +93,7 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
                     string_normalization=False,
                 ),
             ),
-            map(source_transformer.to_code, (gold, gen_ast)),
+            map(source_transformer.to_code, (gen_ast, gold)),
         )
     )
 

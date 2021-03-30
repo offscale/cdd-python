@@ -39,6 +39,7 @@ from json import dumps
 from operator import inv, neg, not_, pos
 from sys import version_info
 
+from _ast import AsyncFunctionDef
 from yaml import safe_dump_all
 
 from cdd.defaults_utils import extract_default, needs_quoting
@@ -766,7 +767,7 @@ def annotate_ancestry(node):
             ):
                 child_node._location = name + [child_node.target.id]
 
-            if isinstance(child_node, FunctionDef):
+            if isinstance(child_node, (AsyncFunctionDef, FunctionDef)):
 
                 def set_index_and_location(idx_arg):
                     """
