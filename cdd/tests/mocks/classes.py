@@ -45,7 +45,7 @@ from cdd.tests.utils_for_tests import remove_args_from_docstring
 class_doc_str = tab.join(
     (
         "\n",
-        "{header_doc_str}\n".format(header_doc_str=docstring_header_str),
+        "{header_doc_str}{tab}\n".format(header_doc_str=docstring_header_str, tab=tab),
         ':cvar dataset_name: name of dataset. Defaults to "mnist"\n',
         ':cvar tfds_dir: directory to look for models in. Defaults to "~/tensorflow_datasets"\n',
         ':cvar K: backend engine, e.g., `np` or `tf`. Defaults to "np"\n',
@@ -59,7 +59,7 @@ class_doc_str_expr = Expr(set_value(class_doc_str))
 class_str = '''
 class ConfigClass(object):
     """
-{header_doc_str}
+{header_doc_str}{tab}
     :cvar dataset_name: name of dataset. Defaults to "mnist"
     :cvar tfds_dir: directory to look for models in. Defaults to "~/tensorflow_datasets"
     :cvar K: backend engine, e.g., `np` or `tf`. Defaults to "np"
@@ -79,7 +79,7 @@ class ConfigClass(object):
         np.empty(0),
     )
 '''.format(
-    header_doc_str=indent(docstring_header_str, tab)
+    header_doc_str=indent(docstring_header_str, tab), tab=tab
 )
 
 class_nargs_str = '''
@@ -257,7 +257,7 @@ class_nargs_ast = ClassDef(
     body=[
         Expr(
             set_value(
-                "\n{tab}{header_doc_str}\n{tab}"
+                "\n{tab}{header_doc_str}{tab}\n{tab}"
                 ":cvar callbacks: Collection of callables that are run inside the training loop".format(
                     tab=tab, header_doc_str=docstring_header_str
                 ),
@@ -327,7 +327,7 @@ class_squared_hinge_config_ast = ClassDef(
     body=[
         Expr(
             set_value(
-                "\n{tab}{doc}\n{args}".format(
+                "\n{tab}{doc}{tab}\n{args}".format(
                     tab=tab,
                     # Inverse `emit_separating_tabs`
                     doc="\n".join(

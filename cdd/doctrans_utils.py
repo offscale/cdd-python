@@ -12,11 +12,12 @@ from ast import (
     get_docstring,
     walk,
 )
-from functools import partial
+from collections import OrderedDict
 
 from cdd import emit
-from cdd.ast_utils import set_value
+from cdd.ast_utils import get_value, set_value
 from cdd.docstring_parsers import derive_docstring_format, parse_docstring
+from cdd.parser_utils import ir_merge
 
 
 def has_inline_types(node):
@@ -74,12 +75,12 @@ class DocTrans(NodeTransformer):
         :param emit_default_doc: Whether help/docstring should include 'With default' text
         :type emit_default_doc: ```bool```
 
-        :returns: Potentially changed `node`, i.e., inlined||docstringed types and changed docstring_format
-        :rtype: ```AST```
+        :returns: Potentially changed `node`, i.e., inlined||docstringed types and changed docstring_format, doc_str
+        :rtype: ```Union[AST, str]```
         """
         doc_str = get_docstring(node)
         if doc_str is None:
-            return node
+            return node, doc_str
 
         style = derive_docstring_format(doc_str)
         if (
@@ -87,7 +88,7 @@ class DocTrans(NodeTransformer):
             and self.inline_types
             and self.existing_inline_types
         ):
-            return node
+            return node, doc_str
 
         parsed_emit_common_kwargs = dict(
             word_wrap=word_wrap, emit_default_doc=emit_default_doc
@@ -106,12 +107,7 @@ class DocTrans(NodeTransformer):
                 )
             )
         )
-        print("\n_handle_node_with_docstring\n" "type:", type(node), ";")
-        return (
-            self.visit_functions
-            if isinstance(node, (AsyncFunctionDef, FunctionDef))
-            else partial(NodeTransformer.generic_visit, self)
-        )(node)
+        return super(DocTrans, self).generic_visit(node), doc_str
 
     def generic_visit(self, node):
         """
@@ -123,18 +119,12 @@ class DocTrans(NodeTransformer):
         :returns: Potentially changed AST node
         :rtype: ```AST```
         """
-        self.print_node(node)
-        print(
-            "\ngeneric_visit"
-            "\nisinstance(node, (AsyncFunctionDef, FunctionDef, ClassDef):",
-            isinstance(node, (AsyncFunctionDef, FunctionDef, ClassDef)),
-            ";",
-        )
-        return (
-            self._handle_node_with_docstring
-            if isinstance(node, (AsyncFunctionDef, FunctionDef, ClassDef))
-            else partial(NodeTransformer.generic_visit, self)
-        )(node)
+        is_func, doc_str = isinstance(node, (AsyncFunctionDef, FunctionDef)), None
+        if is_func or isinstance(node, ClassDef):
+            node, doc_str = self._handle_node_with_docstring(node)
+        if is_func:
+            node = self._handle_function(node, doc_str)
+        return super(DocTrans, self).generic_visit(node)
 
     def visit_AnnAssign(self, node):
         """
@@ -178,30 +168,72 @@ class DocTrans(NodeTransformer):
                 )
         return node
 
-    def visit_arguments(self, node):
-        return self.print_node(node)
-
-    def visit_args(self, node):
-        return self.print_node(node)
-
-    @staticmethod
-    def print_node(node):
-        print("\nprint_node\n", "node:", node, ";")
-        # print_ast(node)
-        return node
-
-    @staticmethod
-    def visit_functions(node):
+    def _handle_function(self, node, doc_str):
         """
         Handle functions
 
         :param node: AsyncFunctionDef | FunctionDef
         :type node: ```Union[AsyncFunctionDef, FunctionDef]```
 
+        :param doc_str: The docstring
+        :type doc_str: ```Optional[str]```
+
         :returns: Same type as input with args, returns, and docstring potentially modified
         :rtype: ```Union[AsyncFunctionDef, FunctionDef]```
         """
-        print("\nvisit_functions\n", "type(node):", type(node), ";")
+        ir, changed = parse_docstring(doc_str), False
+        ir["name"] = node.name
+        if node.returns:
+            return_value = get_value(node.returns)
+            if return_value is not None:
+                ir.__setitem__(
+                    "returns", OrderedDict((("return_type", {"typ": return_value}),))
+                ) if ir.get("returns") is None else ir["returns"][
+                    "return_type"
+                ].__setitem__(
+                    "typ", return_value
+                )
+            changed = True
+        if node.args:
+            ir_merge(
+                target=ir,
+                other={
+                    "params": OrderedDict(
+                        map(
+                            lambda _arg: (
+                                _arg.arg,
+                                {
+                                    "typ": get_value(
+                                        _arg.annotation or _arg.type_comment
+                                    )
+                                },
+                            ),
+                            node.args.args,
+                        )
+                    ),
+                    "returns": None,
+                },
+            )
+            changed = True
+
+        if changed:
+            (
+                node.body.__setitem__
+                if isinstance(node.body[0], Expr)
+                and isinstance(get_value(node.body[0].value), str)
+                else node.body.insert
+            )(
+                0,
+                Expr(
+                    set_value(
+                        emit.docstring(
+                            ir,
+                            emit_types=True,  # self.inline_types,
+                            docstring_format=self.docstring_format,
+                        )
+                    )
+                ),
+            )
         return node
 
 

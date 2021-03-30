@@ -407,6 +407,7 @@ class TestEmitters(TestCase):
                 class_name="SquaredHingeConfig",
                 emit_call=True,
                 emit_default_doc=True,
+                emit_original_whitespace=True,
                 word_wrap=False,
             ),
             gold=class_squared_hinge_config_ast,
@@ -436,14 +437,25 @@ class TestEmitters(TestCase):
             argparse_func_torch_nn_l1loss_ast,
         )
 
+    maxDiff = None
+
     def test_to_json_schema(self):
         """
         Tests that `emit.json_schema` with `intermediate_repr_no_default_doc` produces `config_schema`
         """
+        self.assertEqual(
+            emit.json_schema(
+                deepcopy(intermediate_repr_no_default_sql_doc),
+                "https://offscale.io/config.schema.json",
+                emit_original_whitespace=True,
+            )["description"],
+            config_schema["description"],
+        )
         self.assertDictEqual(
             emit.json_schema(
                 deepcopy(intermediate_repr_no_default_sql_doc),
                 "https://offscale.io/config.schema.json",
+                emit_original_whitespace=True,
             ),
             config_schema,
         )
