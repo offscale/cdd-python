@@ -1,6 +1,20 @@
 """ Tests for doctrans_utils """
+from ast import (
+    Add,
+    Assign,
+    BinOp,
+    Expr,
+    FunctionDef,
+    Load,
+    Module,
+    Name,
+    Return,
+    Store,
+    arguments,
+)
 from unittest import TestCase
 
+from cdd.ast_utils import set_arg, set_value
 from cdd.doctrans_utils import DocTrans, has_inline_types
 from cdd.pure_utils import tab
 from cdd.source_transformer import ast_parse
@@ -37,22 +51,54 @@ class TestDocTransUtils(TestCase):
             whole_ast=original_node,
         )
         gen_ast = doc_trans.visit(original_node)
-        gold_ast = ast_parse(
-            "\n{tab}".format(tab=tab).join(
-                (
-                    "def sum(a, b):",
-                    '"""',
-                    ":type a: ```int```",
-                    "",
-                    ":type b: ```int```",
-                    "",
-                    ":rtype: ```int```",
-                    '"""',
-                    "res = a + b  # type: int",
-                    "return res",
+
+        gold_ast = Module(
+            body=[
+                FunctionDef(
+                    name="sum",
+                    args=arguments(
+                        posonlyargs=[],
+                        args=list(map(set_arg, ("a", "b"))),
+                        kwonlyargs=[],
+                        kw_defaults=[],
+                        defaults=[],
+                    ),
+                    body=[
+                        Expr(
+                            value=set_value(
+                                "\n{tab}".format(tab=tab)
+                                + "\n{tab}".format(tab=tab).join(
+                                    (
+                                        ":type a: ```int```",
+                                        "",
+                                        ":type b: ```int```",
+                                        "",
+                                        ":rtype: ```int```",
+                                        "",
+                                    )
+                                )
+                            )
+                        ),
+                        Assign(
+                            targets=[Name("res", Store())],
+                            value=BinOp(
+                                left=Name("a", Load()),
+                                op=Add(),
+                                right=Name("b", Load()),
+                            ),
+                            type_comment=Name("int", Load()),
+                            lineno=None,
+                        ),
+                        Return(value=Name("res", Load())),
+                    ],
+                    decorator_list=[],
+                    lineno=None,
+                    returns=None,
                 )
-            )
+            ],
+            type_ignores=[],
         )
+
         run_ast_test(self, gen_ast, gold_ast)
 
 
