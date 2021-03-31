@@ -2,7 +2,8 @@
 from unittest import TestCase
 
 from cdd.doctrans_utils import DocTrans, has_inline_types
-from cdd.source_transformer import ast_parse, to_code
+from cdd.pure_utils import tab
+from cdd.source_transformer import ast_parse
 from cdd.tests.utils_for_tests import run_ast_test, unittest_main
 
 
@@ -29,29 +30,29 @@ class TestDocTransUtils(TestCase):
                 )
             )
         )
+        doc_trans = DocTrans(
+            docstring_format="rest",
+            inline_types=False,
+            existing_inline_types=True,
+            whole_ast=original_node,
+        )
+        gen_ast = doc_trans.visit(original_node)
         gold_ast = ast_parse(
-            "\n\t".join(
+            "\n{tab}".format(tab=tab).join(
                 (
                     "def sum(a, b):",
                     '"""',
-                    ":param a:",
                     ":type a: ```int```",
                     "",
-                    ":param b:",
                     ":type b: ```int```",
                     "",
-                    ":returns:",
-                    ":rtype: ```int```" '"""',
-                    "res: int = a + b",
+                    ":rtype: ```int```",
+                    '"""',
+                    "res = a + b  # type: int",
                     "return res",
                 )
             )
         )
-        doc_trans = DocTrans(
-            docstring_format="rest", inline_types=False, existing_inline_types=True
-        )
-        gen_ast = doc_trans.visit(original_node)
-        self.assertEqual(*map(to_code, (gen_ast, gold_ast)))
         run_ast_test(self, gen_ast, gold_ast)
 
 

@@ -702,5 +702,4 @@ __all__ = [
     "interpolate_defaults",
     "parse_out_param",
     "param_to_sqlalchemy_column_call",
-    "emit.docstring",
 ]
