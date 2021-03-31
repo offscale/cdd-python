@@ -437,8 +437,6 @@ class TestEmitters(TestCase):
             argparse_func_torch_nn_l1loss_ast,
         )
 
-    maxDiff = None
-
     def test_to_json_schema(self):
         """
         Tests that `emit.json_schema` with `intermediate_repr_no_default_doc` produces `config_schema`

@@ -7,6 +7,7 @@ from ast import (
     AST,
     AnnAssign,
     Assign,
+    AsyncFunctionDef,
     Attribute,
     Call,
     ClassDef,
@@ -39,7 +40,6 @@ from json import dumps
 from operator import inv, neg, not_, pos
 from sys import version_info
 
-from _ast import AsyncFunctionDef
 from yaml import safe_dump_all
 
 from cdd.defaults_utils import extract_default, needs_quoting
@@ -1239,6 +1239,15 @@ def _to_code(node):
 
 class Undedined:
     """ Null class """
+
+
+# print_node = lambda _pd: {
+#     attr: getattr(_pd, attr)
+#     for attr in dir(_pd)
+#     if not attr.startswith("_")
+#     and not attr.endswith("lineno")
+#     and not attr.endswith("offset")
+# }
 
 
 def cmp_ast(node0, node1):
