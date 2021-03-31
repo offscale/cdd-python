@@ -160,7 +160,10 @@ class DocTrans(NodeTransformer):
             node.type_comment = None
             return node
         return Assign(
-            targets=[node.target], value=node.value, type_comment=node.annotation
+            targets=[node.target],
+            value=node.value,
+            type_comment=node.annotation,
+            lineno=None,
         )
 
     def visit_Assign(self, node):
