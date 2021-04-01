@@ -1,6 +1,7 @@
 """ Tests for doctrans_utils """
 from ast import (
     Add,
+    AnnAssign,
     Assign,
     BinOp,
     Expr,
@@ -14,7 +15,7 @@ from ast import (
 )
 from unittest import TestCase
 
-from cdd.ast_utils import set_arg, set_value
+from cdd.ast_utils import annotate_ancestry, set_arg, set_value
 from cdd.doctrans_utils import DocTrans, has_inline_types
 from cdd.pure_utils import tab
 from cdd.source_transformer import ast_parse
@@ -35,21 +36,50 @@ class TestDocTransUtils(TestCase):
     def test_doctrans(self) -> None:
         """ Tests `DocTrans` """
 
-        original_node = ast_parse(
-            "\n\t".join(
-                (
-                    "def sum(a: int, b: int) -> int:",
-                    "res: int = a + b",
-                    "return res",
+        original_node = Module(
+            body=[
+                FunctionDef(
+                    name="sum",
+                    args=arguments(
+                        posonlyargs=[],
+                        args=[
+                            set_arg(arg="a", annotation=Name("int", Load())),
+                            set_arg(arg="b", annotation=Name("int", Load())),
+                        ],
+                        kwonlyargs=[],
+                        kw_defaults=[],
+                        defaults=[],
+                        vararg=None,
+                        kwarg=None,
+                    ),
+                    body=[
+                        AnnAssign(
+                            target=Name("res", Store()),
+                            annotation=Name("int", Load()),
+                            value=BinOp(
+                                left=Name("a", Load()),
+                                op=Add(),
+                                right=Name("b", Load()),
+                            ),
+                            simple=1,
+                        ),
+                        Return(value=Name("res", Load())),
+                    ],
+                    decorator_list=[],
+                    lineno=None,
+                    returns=Name("int", Load()),
                 )
-            )
+            ],
+            type_ignores=[],
         )
+        annotate_ancestry(original_node)
         doc_trans = DocTrans(
             docstring_format="rest",
             inline_types=False,
             existing_inline_types=True,
             whole_ast=original_node,
         )
+
         gen_ast = doc_trans.visit(original_node)
 
         gold_ast = Module(
@@ -62,6 +92,8 @@ class TestDocTransUtils(TestCase):
                         kwonlyargs=[],
                         kw_defaults=[],
                         defaults=[],
+                        vararg=None,
+                        kwarg=None,
                     ),
                     body=[
                         Expr(
