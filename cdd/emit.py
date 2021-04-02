@@ -659,7 +659,7 @@ def function(
     docstring_format="rest",
     indent_level=2,
     emit_separating_tab=PY3_8,
-    inline_types=True,
+    type_annotations=True,
     emit_as_kwonlyargs=True,
     emit_original_whitespace=False,
 ):
@@ -696,8 +696,8 @@ def function(
     :param emit_separating_tab: docstring decider for whether to put a tab between :param and return and desc
     :type emit_separating_tab: ```bool```
 
-    :param inline_types: Whether the type should be inline or in docstring
-    :type inline_types: ```bool```
+    :param type_annotations: True to have type annotations (3.6+), False to place in docstring
+    :type type_annotations: ```bool```
 
     :param emit_as_kwonlyargs: Whether argument(s) emitted must be keyword only
     :type emit_as_kwonlyargs: ```bool```
@@ -731,7 +731,7 @@ def function(
                     if param[1]["typ"] in simple_types
                     else ast_parse_fix(param[1]["typ"])
                 )
-                if inline_types and "typ" in param[1]
+                if type_annotations and "typ" in param[1]
                 else None,
                 arg=param[0],
             ),
@@ -804,7 +804,7 @@ def function(
                                 emit_default_doc=emit_default_doc,
                                 emit_original_whitespace=emit_original_whitespace,
                                 emit_separating_tab=emit_separating_tab,
-                                emit_types=not inline_types,
+                                emit_types=not type_annotations,
                                 indent_level=indent_level,
                                 word_wrap=word_wrap,
                             )
@@ -825,7 +825,7 @@ def function(
         name=function_name,
         returns=(
             ast.parse(intermediate_repr["returns"]["return_type"]["typ"]).body[0].value
-            if inline_types
+            if type_annotations
             and (intermediate_repr.get("returns") or {"return_type": {}})[
                 "return_type"
             ].get("typ")

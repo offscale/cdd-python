@@ -1241,13 +1241,27 @@ class Undedined:
     """ Null class """
 
 
-# print_node = lambda _pd: {
-#     attr: getattr(_pd, attr)
-#     for attr in dir(_pd)
-#     if not attr.startswith("_")
-#     and not attr.endswith("lineno")
-#     and not attr.endswith("offset")
-# }
+def node_to_dict(node):
+    """
+    Convert AST node to a dict
+
+    :param node: AST node
+    :type node: ```AST```
+
+    :returns: Dict representation
+    :rtype: ```dict```
+    """
+    return {
+        attr: (
+            lambda val: type(val)(map(get_value, val))
+            if isinstance(val, (tuple, list))
+            else get_value(val)
+        )(getattr(node, attr))
+        for attr in dir(node)
+        if not attr.startswith("_")
+        and not attr.endswith("lineno")
+        and not attr.endswith("offset")
+    }
 
 
 def cmp_ast(node0, node1):
@@ -1310,6 +1324,7 @@ __all__ = [
     "is_argparse_description",
     "it2literal",
     "maybe_type_comment",
+    "node_to_dict",
     "param2argparse_param",
     "param2ast",
     "parse_to_scalar",

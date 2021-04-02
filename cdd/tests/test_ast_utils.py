@@ -45,6 +45,7 @@ from cdd.ast_utils import (
     get_value,
     infer_type_and_default,
     maybe_type_comment,
+    node_to_dict,
     param2argparse_param,
     param2ast,
     parse_to_scalar,
@@ -291,6 +292,19 @@ class TestAstUtils(TestCase):
                     alias=None,
                 ),
             )
+        )
+
+    def test_node_to_dict(self) -> None:
+        """
+        Tests `node_to_dict`
+        """
+        self.assertDictEqual(
+            node_to_dict(set_arg(arg="a", annotation=Name("int", Load()))),
+            dict(
+                annotation="int",
+                arg="a",
+                **{"expr": None, "type_comment": None} if PY_GTE_3_8 else {}
+            ),
         )
 
     def test_replace_in_ast_with_val(self) -> None:
