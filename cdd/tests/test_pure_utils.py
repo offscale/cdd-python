@@ -97,6 +97,13 @@ class TestPureUtils(TestCase):
             location_within(map(str, range(10)), map(str, range(10, 20))), none_res
         )
 
+    def test_multiline(self) -> None:
+        """ Tests that `multiline` multilines """
+        self.assertEqual(
+            """123456789_\n123456789_\n123456789_\n123456789""",
+            """123456789_\n""" """123456789_\n""" """123456789_\n""" """123456789""",
+        )
+
     def test_pluralises(self) -> None:
         """ Tests that pluralises pluralises """
         self.assertEqual(pluralise(""), "")

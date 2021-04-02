@@ -16,7 +16,7 @@ from pprint import PrettyPrinter
 from sys import version_info
 from textwrap import fill as _fill
 from textwrap import indent
-from typing import Dict, FrozenSet, Optional, Union
+from typing import Dict, FrozenSet, Optional, Tuple, Union
 
 pp = PrettyPrinter(indent=4, width=100).pprint
 tab: str = " " * 4
@@ -52,7 +52,7 @@ def identity(*args, **kwargs):
     return args[0] if len(args) == 1 else args
 
 
-_python_major_minor: typing.Tuple[int, int] = version_info[:2]
+_python_major_minor: Tuple[int, int] = version_info[:2]
 PY3_8: bool = _python_major_minor == (3, 8)
 PY_GTE_3_8: bool = _python_major_minor >= (3, 8)
 PY_GTE_3_9: bool = _python_major_minor >= (3, 9)
@@ -625,6 +625,48 @@ def emit_separating_tabs(s, indent_level=1, run_per_line=str.lstrip):
     )
 
 
+def set_attr(obj, key, val):
+    """
+    Sets the named attribute on the given object to the specified value.
+
+    set_attr(x, 'y', v) is equivalent to ``x.y = v; return x''
+
+    :param obj: An object
+    :type obj: ```Any```
+
+    :param key: A key
+    :type key: ```str```
+
+    :param val: A value
+    :type val: ```Any```
+
+    :returns: The modified `obj`
+    :rtype: ```Any```
+    """
+    setattr(obj, key, val)
+    return obj
+
+def set_item(obj, key, val):
+    """
+    Sets the item on the given object to the specified value.
+
+    set_item(x, 'y', v) is equivalent to ``x[y] = v; return x''
+
+    :param obj: An object
+    :type obj: ```Any```
+
+    :param key: A key
+    :type key: ```Union[str, int]```
+
+    :param val: A value
+    :type val: ```Any```
+
+    :returns: The modified `obj`
+    :rtype: ```Any```
+    """
+    obj[key] = val
+    return obj
+
 __all__ = [
     "BUILTIN_TYPES",
     "PY3_8",
@@ -651,6 +693,8 @@ __all__ = [
     "reindent",
     "rpartial",
     "sanitise",
+    "set_attr",
+    "set_item",
     "simple_types",
     "strip_split",
     "tab",

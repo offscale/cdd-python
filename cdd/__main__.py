@@ -321,15 +321,15 @@ def _build_parser():
 
     doctrans_parser_group = doctrans_parser.add_mutually_exclusive_group(required=True)
     doctrans_parser_group.add_argument(
-        "--inline-types",
-        help="Inline the type, i.e., annotate PEP484 (outside docstring)",
-        dest="inline_types",
+        "--type-annotations",
+        help="Inline the type, i.e., annotate PEP484 (outside docstring. Requires 3.6+)",
+        dest="type_annotations",
         action="store_true",
     )
     doctrans_parser_group.add_argument(
-        "--no-inline-types",
+        "--no-type-annotations",
         help="Ensure all types are in docstring (rather than a PEP484 type annotation)",
-        dest="inline_types",
+        dest="type_annotations",
         action="store_false",
     )
 
@@ -448,7 +448,7 @@ def main(cli_argv=None, return_args=False):
         doctrans(
             filename=args.filename,
             docstring_format=args.format,
-            inline_types=args.inline_types,
+            type_annotations=args.type_annotations,
         )
 
 

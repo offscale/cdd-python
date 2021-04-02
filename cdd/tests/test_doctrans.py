@@ -26,7 +26,9 @@ class TestDocTrans(TestCase):
                 f.write("5*5")
             self.assertIsNone(
                 doctrans(
-                    filename=filename, docstring_format="numpydoc", inline_types=True
+                    filename=filename,
+                    docstring_format="numpydoc",
+                    type_annotations=True,
                 )
             )
 

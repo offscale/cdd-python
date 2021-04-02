@@ -1,137 +1,122 @@
 """ Tests for doctrans_utils """
-from ast import (
-    Add,
-    AnnAssign,
-    Assign,
-    BinOp,
-    Expr,
-    FunctionDef,
-    Load,
-    Module,
-    Name,
-    Return,
-    Store,
-    arguments,
-)
+from collections import deque
+from copy import deepcopy
 from unittest import TestCase
 
-from cdd.ast_utils import annotate_ancestry, set_arg, set_value
-from cdd.doctrans_utils import DocTrans, has_inline_types
-from cdd.pure_utils import tab
+from cdd.ast_utils import annotate_ancestry, node_to_dict
+from cdd.doctrans_utils import DocTrans, clear_annotation, has_type_annotations
+from cdd.pure_utils import pp
 from cdd.source_transformer import ast_parse
+from cdd.tests.mocks.doctrans import (
+    ann_assign_with_annotation,
+    assign_with_type_comment,
+    function_type_annotated,
+    function_type_in_docstring,
+)
 from cdd.tests.utils_for_tests import run_ast_test, unittest_main
 
 
 class TestDocTransUtils(TestCase):
     """ Test class for doctrans_utils.py """
 
-    def test_has_inline_types(self) -> None:
-        """ Tests has_inline_types """
+    def test_has_type_annotations(self) -> None:
+        """ Tests has_type_annotations """
 
-        self.assertTrue(has_inline_types(ast_parse("a: int = 5")))
-        self.assertFalse(has_inline_types(ast_parse("a = 5")))
-        self.assertTrue(has_inline_types(ast_parse("def a() -> None: pass")))
-        self.assertFalse(has_inline_types(ast_parse("def a(): pass")))
+        self.assertTrue(has_type_annotations(ast_parse("a: int = 5")))
+        self.assertFalse(has_type_annotations(ast_parse("a = 5")))
+        self.assertTrue(has_type_annotations(ast_parse("def a() -> None: pass")))
+        self.assertFalse(has_type_annotations(ast_parse("def a(): pass")))
 
-    def test_doctrans(self) -> None:
-        """ Tests `DocTrans` """
+    def test_doctrans_function_from_annotated_to_docstring(self) -> None:
+        """ Tests `DocTrans` converts type annotated function to docstring function """
 
-        original_node = Module(
-            body=[
-                FunctionDef(
-                    name="sum",
-                    args=arguments(
-                        posonlyargs=[],
-                        args=[
-                            set_arg(arg="a", annotation=Name("int", Load())),
-                            set_arg(arg="b", annotation=Name("int", Load())),
-                        ],
-                        kwonlyargs=[],
-                        kw_defaults=[],
-                        defaults=[],
-                        vararg=None,
-                        kwarg=None,
-                    ),
-                    body=[
-                        AnnAssign(
-                            target=Name("res", Store()),
-                            annotation=Name("int", Load()),
-                            value=BinOp(
-                                left=Name("a", Load()),
-                                op=Add(),
-                                right=Name("b", Load()),
-                            ),
-                            simple=1,
-                        ),
-                        Return(value=Name("res", Load())),
-                    ],
-                    decorator_list=[],
-                    lineno=None,
-                    returns=Name("int", Load()),
-                )
-            ],
-            type_ignores=[],
-        )
-        annotate_ancestry(original_node)
+        original_node = annotate_ancestry(deepcopy(function_type_annotated))
         doc_trans = DocTrans(
             docstring_format="rest",
-            inline_types=False,
-            existing_inline_types=True,
+            type_annotations=False,
+            existing_type_annotations=True,
             whole_ast=original_node,
         )
-
         gen_ast = doc_trans.visit(original_node)
 
-        gold_ast = Module(
-            body=[
-                FunctionDef(
-                    name="sum",
-                    args=arguments(
-                        posonlyargs=[],
-                        args=list(map(set_arg, ("a", "b"))),
-                        kwonlyargs=[],
-                        kw_defaults=[],
-                        defaults=[],
-                        vararg=None,
-                        kwarg=None,
-                    ),
-                    body=[
-                        Expr(
-                            value=set_value(
-                                "\n{tab}".format(tab=tab)
-                                + "\n{tab}".format(tab=tab).join(
-                                    (
-                                        ":type a: ```int```",
-                                        "",
-                                        ":type b: ```int```",
-                                        "",
-                                        ":rtype: ```int```",
-                                        "",
-                                    )
-                                )
-                            )
-                        ),
-                        Assign(
-                            targets=[Name("res", Store())],
-                            value=BinOp(
-                                left=Name("a", Load()),
-                                op=Add(),
-                                right=Name("b", Load()),
-                            ),
-                            type_comment=Name("int", Load()),
-                            lineno=None,
-                        ),
-                        Return(value=Name("res", Load())),
-                    ],
-                    decorator_list=[],
-                    lineno=None,
-                    returns=None,
-                )
-            ],
-            type_ignores=[],
+        run_ast_test(self, gen_ast, gold=function_type_in_docstring)
+
+    def test_doctrans_function_from_docstring_to_annotated(self) -> None:
+        """ Tests `DocTrans` converts docstring function to type annotated function """
+
+        original_node = annotate_ancestry(deepcopy(function_type_in_docstring))
+        doc_trans = DocTrans(
+            docstring_format="rest",
+            type_annotations=True,
+            existing_type_annotations=True,
+            whole_ast=original_node,
+        )
+        gen_ast = doc_trans.visit(original_node)
+
+        run_ast_test(self, gen_ast, gold=function_type_annotated)
+
+    def test_doctrans_assign_to_annassign(self) -> None:
+        """
+        Tests that `Assign` converts to `AnnAssign`
+        """
+        original_node = annotate_ancestry(deepcopy(assign_with_type_comment))
+        doc_trans = DocTrans(
+            docstring_format="rest",
+            type_annotations=True,
+            existing_type_annotations=True,
+            whole_ast=original_node,
+        )
+        run_ast_test(
+            self,
+            gen_ast=doc_trans.visit(original_node),
+            gold=ann_assign_with_annotation,
         )
 
-        run_ast_test(self, gen_ast, gold_ast)
+    def test_doctrans_annassign_to_assign(self) -> None:
+        """
+        Tests that `AnnAssign` converts to `Assign`
+        """
+        original_node = annotate_ancestry(deepcopy(ann_assign_with_annotation))
+        doc_trans = DocTrans(
+            docstring_format="rest",
+            type_annotations=False,
+            existing_type_annotations=True,
+            whole_ast=original_node,
+        )
+        run_ast_test(
+            self, gen_ast=doc_trans.visit(original_node), gold=assign_with_type_comment
+        )
+
+    def test_doctrans_annassign_to_assign_with_clearing_type_annotations(self) -> None:
+        """
+        Tests that `AnnAssign` converts to `Assign`
+        """
+        original_node = annotate_ancestry(deepcopy(ann_assign_with_annotation))
+        original_node.type_comment = "NEVER SEE THIS"
+        doc_trans = DocTrans(
+            docstring_format="rest",
+            type_annotations=True,
+            existing_type_annotations=True,
+            whole_ast=original_node,
+        )
+        gen_ast = doc_trans.visit(original_node)
+        run_ast_test(self, gen_ast=gen_ast, gold=ann_assign_with_annotation)
+
+    def test_clear_annotation(self) -> None:
+        """ Tests that `clear_annotation` clears correctly """
+        node_cls = type("Node", tuple(), {"annotation": None, "type_comment": None})
+        node = node_cls()
+        node.annotation = 5
+        node.type_comment = 6
+        clear_annotation(node)
+        deque(
+            (
+                self.assertIsNone(getattr(node, attr))
+                for attr in dir(node_cls)
+                if not attr.startswith("_")
+            ),
+            maxlen=0,
+        )
 
 
 unittest_main()

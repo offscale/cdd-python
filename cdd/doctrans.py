@@ -5,11 +5,11 @@ from copy import deepcopy
 
 from cdd import emit
 from cdd.ast_utils import cmp_ast
-from cdd.doctrans_utils import DocTrans, has_inline_types
+from cdd.doctrans_utils import DocTrans, has_type_annotations
 from cdd.source_transformer import ast_parse
 
 
-def doctrans(filename, docstring_format, inline_types):
+def doctrans(filename, docstring_format, type_annotations):
     """
     Transform the docstrings found within provided filename to intended docstring_format
 
@@ -19,8 +19,8 @@ def doctrans(filename, docstring_format, inline_types):
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
 
-    :param inline_types: Whether the type should be inline or in docstring
-    :type inline_types: ```bool```
+    :param type_annotations: True to have type annotations (3.6+), False to place in docstring
+    :type type_annotations: ```bool```
     """
     with open(filename, "rt") as f:
         node = ast_parse(f.read(), skip_docstring_remit=True)
@@ -28,8 +28,9 @@ def doctrans(filename, docstring_format, inline_types):
 
     node = DocTrans(
         docstring_format=docstring_format,
-        inline_types=inline_types,
-        existing_inline_types=has_inline_types(node),
+        type_annotations=type_annotations,
+        existing_type_annotations=has_type_annotations(node),
+        whole_ast=orig_node,
     ).visit(node)
 
     if not cmp_ast(node, orig_node):

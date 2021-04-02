@@ -228,7 +228,7 @@ class TestEmitters(TestCase):
             function_name=function_name,
             function_type=function_type,
             emit_default_doc=False,
-            inline_types=True,
+            type_annotations=True,
             emit_separating_tab=True,
             indent_level=1,
             emit_as_kwonlyargs=False,
@@ -269,7 +269,7 @@ class TestEmitters(TestCase):
                 function_name=function_def.name,
                 function_type=get_function_type(function_def),
                 emit_default_doc=False,
-                inline_types=False,
+                type_annotations=False,
                 indent_level=1,
                 emit_separating_tab=True,
                 emit_as_kwonlyargs=False,
@@ -279,7 +279,7 @@ class TestEmitters(TestCase):
 
         run_ast_test(self, gen_ast=gen_ast, gold=function_def)
 
-    def test_to_function_with_inline_types(self) -> None:
+    def test_to_function_with_type_annotations(self) -> None:
         """
         Tests that `function` can generate a function_def with inline types
         """
@@ -303,7 +303,7 @@ class TestEmitters(TestCase):
             function_name=function_name,
             function_type=function_type,
             emit_default_doc=False,
-            inline_types=True,
+            type_annotations=True,
             emit_separating_tab=True,
             indent_level=1,
             emit_as_kwonlyargs=False,
@@ -341,7 +341,7 @@ class TestEmitters(TestCase):
             function_name=function_name,
             function_type=function_type,
             emit_default_doc=False,
-            inline_types=True,
+            type_annotations=True,
             emit_separating_tab=True,
             indent_level=1,
             emit_as_kwonlyargs=True,

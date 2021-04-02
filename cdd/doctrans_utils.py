@@ -3,12 +3,15 @@ Helpers to traverse the AST, extract the docstring out, parse and format to inte
 """
 import ast
 from ast import (
+    AST,
     AnnAssign,
     Assign,
     AsyncFunctionDef,
     ClassDef,
     Expr,
     FunctionDef,
+    Load,
+    Name,
     NodeTransformer,
     get_docstring,
     walk,
@@ -19,9 +22,10 @@ from cdd import emit, parse
 from cdd.ast_utils import find_in_ast, get_value, set_value
 from cdd.docstring_parsers import derive_docstring_format, parse_docstring
 from cdd.parser_utils import ir_merge
+from cdd.pure_utils import set_attr, simple_types, set_item, pp
 
 
-def has_inline_types(node):
+def has_type_annotations(node):
     """
     Whether the node—incl. any nodes within this node—have type annotations
 
@@ -45,7 +49,7 @@ class DocTrans(NodeTransformer):
     """
 
     def __init__(
-        self, docstring_format, inline_types, existing_inline_types, whole_ast
+        self, docstring_format, type_annotations, existing_type_annotations, whole_ast
     ):
         """
         Transform the docstrings found to intended docstring_format, potentially manipulating type annotations also
@@ -53,69 +57,20 @@ class DocTrans(NodeTransformer):
         :param docstring_format: Format of docstring
         :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
 
-        :param inline_types: Whether the type should be inline or in docstring
-        :type inline_types: ```bool```
+        :param type_annotations: True to have type annotations (3.6+), False to place in docstring
+        :type type_annotations: ```bool```
 
-        :param existing_inline_types: Whether any inline types exist
-        :type existing_inline_types: ```bool```
+        :param existing_type_annotations: Whether there are any type annotations (3.6+)
+        :type existing_type_annotations: ```bool```
 
         :param whole_ast: The entire input AST, useful for lookups by location
         :type whole_ast: ```AST``
         """
         self.docstring_format = docstring_format
-        self.inline_types = inline_types
-        self.existing_inline_types = existing_inline_types
+        self.type_annotations = type_annotations
+        self.existing_type_annotations = existing_type_annotations
         self.whole_ast = whole_ast
-
-    def _handle_node_with_docstring(
-        self, node, word_wrap=False, emit_default_doc=False
-    ):
-        """
-        Potentially change a node with docstring, by inlining or doc-stringing its type & changing its docstring_format
-
-        :param node: AST node that `ast.get_docstring` can work with
-        :type node: ```Union[AsyncFunctionDef, FunctionDef, ClassDef]```
-
-        :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
-        :type word_wrap: ```bool```
-
-        :param emit_default_doc: Whether help/docstring should include 'With default' text
-        :type emit_default_doc: ```bool```
-
-        :returns: Potentially changed `node`, i.e., inlined||docstringed types and changed docstring_format, doc_str
-        :rtype: ```Union[AST, str]```
-        """
-        doc_str = get_docstring(node)
-        if doc_str is None:
-            return node, doc_str
-
-        style = derive_docstring_format(doc_str)
-        if (
-            style == self.docstring_format
-            and self.inline_types
-            and self.existing_inline_types
-        ):
-            return node, doc_str
-
-        # parsed_emit_common_kwargs = dict(
-        #    word_wrap=word_wrap, emit_default_doc=emit_default_doc
-        # )
-        # ir = parse_docstring(
-        #     docstring=doc_str,
-        #     parse_original_whitespace=True,
-        #     **parsed_emit_common_kwargs
-        # )
-        # node.body[0] = Expr(
-        #     set_value(
-        #         emit.docstring(
-        #             ir,
-        #             docstring_format=self.docstring_format,
-        #             indent_level=1,
-        #             **parsed_emit_common_kwargs
-        #         )
-        #     )
-        # )
-        return super(DocTrans, self).generic_visit(node), doc_str
+        self.memoized = {}
 
     def generic_visit(self, node):
         """
@@ -142,21 +97,11 @@ class DocTrans(NodeTransformer):
         :param node: AnnAssign
         :type node: ```AnnAssign```
 
-        :returns: `AnnAssign` if `inline_types` and type found else `Assign`
+        :returns: `AnnAssign` if `type_annotations` and type found else `Assign`
         :rtype: ```Union[AnnAssign, Assign]```
         """
-        parent = find_in_ast(node._location[:-1], self.whole_ast)
-        ir = (
-            parse.docstring(get_docstring(parent))
-            if isinstance(parent, (ClassDef, AsyncFunctionDef, FunctionDef))
-            else {"params": OrderedDict()}
-        )
-
-        typ = ir["params"].get(
-            node.target, {"typ": node.annotation or node.type_comment}
-        )["typ"]
-        if self.inline_types:
-            node.annotation = typ
+        if self.type_annotations:
+            node.annotation = self._get_ass_typ(node)
             node.type_comment = None
             return node
         return Assign(
@@ -173,22 +118,115 @@ class DocTrans(NodeTransformer):
         :param node: Assign
         :type node: ```Assign```
 
-        :returns: `AnnAssign` if `inline_types` and type found else `Assign`
+        :returns: `AnnAssign` if `type_annotations` and type found else `Assign`
         :rtype: ```Union[Assign, AnnAssign]```
         """
-        print("visit_Assign::node._location:", node._location, ";")
-        if self.inline_types:
-            if node.type_comment is None:
-                # TODO: Look at parent structure to see if IR contains the type
-                pass
-            else:
-                assert len(node.targets) == 1
-                return AnnAssign(
-                    target=node.targets[0],
-                    value=node.value,
-                    annotation=node.type_comment,
-                )
+        typ = self._get_ass_typ(node)
+        if self.type_annotations:
+            assert len(node.targets) == 1
+            return AnnAssign(
+                annotation=typ,
+                value=node.value,
+                type_comment=None,
+                lineno=None,
+                simple=1,
+                target=node.targets[0],
+                expr=None,
+                expr_target=None,
+                expr_annotation=None,
+            )
+        else:
+            node.type_comment = typ
         return node
+
+    def _handle_node_with_docstring(
+        self, node, word_wrap=False, emit_default_doc=False
+    ):
+        """
+        Potentially change a node with docstring, by inlining or doc-stringing its type & changing its docstring_format
+
+        :param node: AST node that `ast.get_docstring` can work with
+        :type node: ```Union[AsyncFunctionDef, FunctionDef, ClassDef]```
+
+        :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+        :type word_wrap: ```bool```
+
+        :param emit_default_doc: Whether help/docstring should include 'With default' text
+        :type emit_default_doc: ```bool```
+
+        :returns: Potentially changed `node`, i.e., inlined||docstringed types and changed docstring_format, doc_str
+        :rtype: ```Union[AST, str]```
+        """
+        doc_str = get_docstring(node)
+        if doc_str is None:
+            return node, doc_str
+
+        style = derive_docstring_format(doc_str)
+        if (
+            style == self.docstring_format
+            and self.type_annotations
+            and self.existing_type_annotations
+        ):
+            return node, doc_str
+
+        # parsed_emit_common_kwargs = dict(
+        #    word_wrap=word_wrap, emit_default_doc=emit_default_doc
+        # )
+        # ir = parse_docstring(
+        #     docstring=doc_str,
+        #     parse_original_whitespace=True,
+        #     **parsed_emit_common_kwargs
+        # )
+        # node.body[0] = Expr(
+        #     set_value(
+        #         emit.docstring(
+        #             ir,
+        #             docstring_format=self.docstring_format,
+        #             indent_level=1,
+        #             **parsed_emit_common_kwargs
+        #         )
+        #     )
+        # )
+        return super(DocTrans, self).generic_visit(node), doc_str
+
+    def _get_ass_typ(self, node):
+        """
+        Get the type of the assignment
+
+        :param node: Assignment
+        :type node: ```Union[Assign, AnnAssign]```
+
+        :returns: The type of the assignment, e.g., `int`
+        :rtype: ```Optional[str]```
+        """
+        search = node._location[:-1]
+        search_str = ".".join(search)
+
+        self.memoized[search_str] = ir = (
+            self.memoized.get(
+                search_str,
+                (
+                    lambda parent: (
+                        (
+                            lambda doc_str: None
+                            if doc_str is None
+                            else parse.docstring(doc_str)
+                        )(get_docstring(parent))
+                        if isinstance(parent, (ClassDef, AsyncFunctionDef, FunctionDef))
+                        else {"params": OrderedDict()}
+                    )
+                )(find_in_ast(search, self.whole_ast)),
+            )
+            or {"params": OrderedDict()}
+        )
+
+        return ir["params"].get(
+            *(node.targets[0], {"typ": node.type_comment})
+            if isinstance(node, Assign)
+            else (node.target, {"typ": node.annotation or node.type_comment})
+        )[
+            "typ"
+        ]  # if ir is not None and ir.get("params") else None
 
     def _handle_function(self, node, doc_str):
         """
@@ -215,8 +253,8 @@ class DocTrans(NodeTransformer):
                 ].__setitem__(
                     "typ", return_value
                 )
-                if not self.inline_types:
-                    node.returns = None
+                if not self.type_annotations:
+                    ir["returns"] = node.returns = None
             changed = True
         if node.args:
             ir_merge(
@@ -228,7 +266,8 @@ class DocTrans(NodeTransformer):
                                 _arg.arg,
                                 {
                                     "typ": get_value(
-                                        _arg.annotation or _arg.type_comment
+                                        _arg.annotation
+                                        or getattr(_arg, "type_comment", None)
                                     )
                                 },
                             ),
@@ -239,10 +278,59 @@ class DocTrans(NodeTransformer):
                 },
             )
             changed = True
-            if not self.inline_types:
+            if not self.type_annotations:
                 node.args.args = list(map(clear_annotation, node.args.args))
+                ir["params"] = OrderedDict()
 
         if changed:
+            if self.type_annotations:
+
+                def _to_ast_typ(typ):
+                    """
+                    :param typ: The type as stored in the IR
+                    :type typ: ```Union[str, AST]```
+
+                    :returns: Type to annotate with
+                    :rtype: ```AST```
+                    """
+                    return (
+                        Name(typ, Load())
+                        if typ in simple_types
+                        else typ
+                        if isinstance(typ, AST)
+                        else ast.parse(typ)
+                    )
+
+                if ir["returns"].get("return_type", {"typ": None}).get("typ"):
+                    node.returns = _to_ast_typ(ir["returns"]["return_type"]["typ"])
+                node.args.args = list(
+                    map(
+                        lambda _arg: set_attr(
+                            _arg,
+                            "annotation",
+                            _to_ast_typ(ir["params"][_arg.arg]["typ"]),
+                        )
+                        if ir["params"][_arg.arg].get("typ")
+                        else _arg,
+                        node.args.args,
+                    )
+                )
+
+            else:
+                # Remove types from IR
+                ir.update(
+                    {
+                        k: OrderedDict(
+                            map(
+                                lambda _param: set_item(_param, "typ", None),
+                                ir[k].items(),
+                            )
+                        )
+                        if ir[k]
+                        else ir[k]
+                        for k in ("params", "returns")
+                    }
+                )
             (
                 node.body.__setitem__
                 if isinstance(node.body[0], Expr)
@@ -254,13 +342,15 @@ class DocTrans(NodeTransformer):
                     set_value(
                         emit.docstring(
                             ir,
-                            emit_types=not self.inline_types,
+                            emit_types=not self.type_annotations,
                             docstring_format=self.docstring_format,
                             indent_level=1,
                         )
                     )
                 ),
             )
+            if get_value(node.body[0].value).isspace():
+                del node.body[0]
         return node
 
 
@@ -281,4 +371,4 @@ def clear_annotation(node):
     return node
 
 
-__all__ = ["DocTrans", "has_inline_types"]
+__all__ = ["DocTrans", "has_type_annotations"]
