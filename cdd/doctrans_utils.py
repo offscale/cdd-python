@@ -20,9 +20,9 @@ from collections import OrderedDict
 
 from cdd import emit, parse
 from cdd.ast_utils import find_in_ast, get_value, set_value
-from cdd.docstring_parsers import derive_docstring_format, parse_docstring
+from cdd.docstring_parsers import parse_docstring
 from cdd.parser_utils import ir_merge
-from cdd.pure_utils import set_attr, simple_types, set_item, pp
+from cdd.pure_utils import set_attr, set_item, simple_types
 
 
 def has_type_annotations(node):
@@ -139,55 +139,57 @@ class DocTrans(NodeTransformer):
             node.type_comment = typ
         return node
 
-    def _handle_node_with_docstring(
-        self, node, word_wrap=False, emit_default_doc=False
-    ):
-        """
-        Potentially change a node with docstring, by inlining or doc-stringing its type & changing its docstring_format
-
-        :param node: AST node that `ast.get_docstring` can work with
-        :type node: ```Union[AsyncFunctionDef, FunctionDef, ClassDef]```
-
-        :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
-        :type word_wrap: ```bool```
-
-        :param emit_default_doc: Whether help/docstring should include 'With default' text
-        :type emit_default_doc: ```bool```
-
-        :returns: Potentially changed `node`, i.e., inlined||docstringed types and changed docstring_format, doc_str
-        :rtype: ```Union[AST, str]```
-        """
-        doc_str = get_docstring(node)
-        if doc_str is None:
-            return node, doc_str
-
-        style = derive_docstring_format(doc_str)
-        if (
-            style == self.docstring_format
-            and self.type_annotations
-            and self.existing_type_annotations
-        ):
-            return node, doc_str
-
-        # parsed_emit_common_kwargs = dict(
-        #    word_wrap=word_wrap, emit_default_doc=emit_default_doc
-        # )
-        # ir = parse_docstring(
-        #     docstring=doc_str,
-        #     parse_original_whitespace=True,
-        #     **parsed_emit_common_kwargs
-        # )
-        # node.body[0] = Expr(
-        #     set_value(
-        #         emit.docstring(
-        #             ir,
-        #             docstring_format=self.docstring_format,
-        #             indent_level=1,
-        #             **parsed_emit_common_kwargs
-        #         )
-        #     )
-        # )
-        return super(DocTrans, self).generic_visit(node), doc_str
+    # TODO: Implement class and test docstring type conversion
+    #
+    # def _handle_node_with_docstring(
+    #     self, node, word_wrap=False, emit_default_doc=False
+    # ):
+    #     """
+    #  Potentially change a node with docstring, by inlining or doc-stringing its type & changing its docstring_format
+    #
+    #     :param node: AST node that `ast.get_docstring` can work with
+    #     :type node: ```Union[AsyncFunctionDef, FunctionDef, ClassDef]```
+    #
+    #     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    #     :type word_wrap: ```bool```
+    #
+    #     :param emit_default_doc: Whether help/docstring should include 'With default' text
+    #     :type emit_default_doc: ```bool```
+    #
+    #     :returns: Potentially changed `node`, i.e., inlined||docstringed types and changed docstring_format, doc_str
+    #     :rtype: ```Union[AST, str]```
+    #     """
+    #     doc_str = get_docstring(node)
+    #     if doc_str is None:
+    #         return node, doc_str
+    #
+    #     style = derive_docstring_format(doc_str)
+    #     if (
+    #         style == self.docstring_format
+    #         and self.type_annotations
+    #         and self.existing_type_annotations
+    #     ):
+    #         return node, doc_str
+    #
+    #     parsed_emit_common_kwargs = dict(
+    #        word_wrap=word_wrap, emit_default_doc=emit_default_doc
+    #     )
+    #     ir = parse_docstring(
+    #         docstring=doc_str,
+    #         parse_original_whitespace=True,
+    #         **parsed_emit_common_kwargs
+    #     )
+    #     node.body[0] = Expr(
+    #         set_value(
+    #             emit.docstring(
+    #                 ir,
+    #                 docstring_format=self.docstring_format,
+    #                 indent_level=1,
+    #                 **parsed_emit_common_kwargs
+    #             )
+    #         )
+    #     )
+    #     return super(DocTrans, self).generic_visit(node), doc_str
 
     def _get_ass_typ(self, node):
         """
@@ -349,7 +351,7 @@ class DocTrans(NodeTransformer):
                     )
                 ),
             )
-            if get_value(node.body[0].value).isspace():
+            if not ir["doc"] or get_value(node.body[0].value).isspace():
                 del node.body[0]
         return node
 

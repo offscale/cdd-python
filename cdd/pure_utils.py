@@ -646,6 +646,7 @@ def set_attr(obj, key, val):
     setattr(obj, key, val)
     return obj
 
+
 def set_item(obj, key, val):
     """
     Sets the item on the given object to the specified value.
@@ -666,6 +667,7 @@ def set_item(obj, key, val):
     """
     obj[key] = val
     return obj
+
 
 __all__ = [
     "BUILTIN_TYPES",
