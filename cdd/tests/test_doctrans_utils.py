@@ -3,9 +3,8 @@ from collections import deque
 from copy import deepcopy
 from unittest import TestCase
 
-from cdd.ast_utils import annotate_ancestry, node_to_dict
+from cdd.ast_utils import annotate_ancestry
 from cdd.doctrans_utils import DocTrans, clear_annotation, has_type_annotations
-from cdd.pure_utils import pp
 from cdd.source_transformer import ast_parse
 from cdd.tests.mocks.doctrans import (
     ann_assign_with_annotation,
@@ -39,7 +38,9 @@ class TestDocTransUtils(TestCase):
         )
         gen_ast = doc_trans.visit(original_node)
 
-        run_ast_test(self, gen_ast, gold=function_type_in_docstring)
+        function_no_docstring = deepcopy(function_type_in_docstring)
+        del function_no_docstring.body[0].body[0]
+        run_ast_test(self, gen_ast, gold=function_no_docstring)
 
     def test_doctrans_function_from_docstring_to_annotated(self) -> None:
         """ Tests `DocTrans` converts docstring function to type annotated function """

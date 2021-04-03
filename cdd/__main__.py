@@ -396,18 +396,11 @@ def main(cli_argv=None, return_args=False):
             maxlen=0,
         )
 
-        if args.input_filename is None or not path.isfile(args.input_filename):
-            _parser.error(
-                "--input-file must be an existent file. Got: {!r}".format(
-                    args.input_filename
-                )
-            )
-        elif args.output_filename is None or not path.isfile(args.output_filename):
-            _parser.error(
-                "--output-file must be an existent file. Got: {!r}".format(
-                    args.output_filename
-                )
-            )
+        for filename, arg_name in (args.input_filename, "input-file"), (
+            args.output_filename,
+            "output-file",
+        ):
+            require_file_existent(_parser, filename, name=arg_name)
         sync_properties(**args_dict)
     elif command == "gen":
         if path.isfile(args.output_filename):
@@ -441,15 +434,29 @@ def main(cli_argv=None, return_args=False):
             routes_paths=args.routes_paths,
         )
     elif command == "doctrans":
-        if args.filename is None or not path.isfile(args.filename):
-            _parser.error(
-                "--filename must be an existent file. Got: {!r}".format(args.filename)
-            )
+        require_file_existent(_parser, args.filename, name="filename")
         doctrans(
             filename=args.filename,
             docstring_format=args.format,
             type_annotations=args.type_annotations,
         )
+
+
+def require_file_existent(_parser, filename, name):
+    """
+    Raise SystemExit(2) if filename is None or not found
+
+    :param _parser: The argparse parser
+    :type _parser: ```ArgumentParser```
+
+    :param filename: The filename
+    :type filename: ```Optional[str]```
+
+    :param name: Argument name
+    :type name: ```str```
+    """
+    if filename is None or not path.isfile(filename):
+        _parser.error("--{} must be an existent file. Got: {!r}".format(name, filename))
 
 
 if __name__ == "__main__":
