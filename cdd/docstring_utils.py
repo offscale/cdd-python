@@ -9,7 +9,13 @@ from cdd.pure_utils import fill, identity, indent_all_but_first, tab
 
 
 def emit_param_str(
-    param, style, emit_doc=True, emit_type=True, word_wrap=True, emit_default_doc=True
+    param,
+    style,
+    purpose,
+    emit_doc=True,
+    emit_type=True,
+    word_wrap=True,
+    emit_default_doc=True,
 ):
     """
     Produce the docstring param/return lines
@@ -19,6 +25,9 @@ def emit_param_str(
 
     :param style: the style of docstring
     :type style: ```Literal['rest', 'numpydoc', 'google']```
+
+    :param purpose: Emit `:param` if purpose == 'function' elif purpose == 'class' then `:cvar` (ReST only)
+    :type purpose: ```Literal['class', 'function']```
 
     :param emit_doc: Whether to emit the doc
     :type emit_doc: ```bool```
@@ -41,10 +50,16 @@ def emit_param_str(
     _fill = fill if word_wrap else identity
 
     if style == "rest":
+        emit_type &= purpose == "function"
         key, key_typ = (
             ("returns", "rtype")
             if name == "return_type"
-            else ("param {name}".format(name=name), "type {name}".format(name=name))
+            else (
+                "{var} {name}".format(
+                    var="param" if purpose == "function" else "cvar", name=name
+                ),
+                "type {name}".format(name=name),
+            )
         )
 
         return "\n".join(
@@ -59,7 +74,7 @@ def emit_param_str(
                                 key=key,
                                 doc=set_default_doc(
                                     (name, _param), emit_default_doc=emit_default_doc
-                                )[1]["doc"],
+                                )[1]["doc"].lstrip(),
                             )
                             if emit_doc and _param.get("doc")
                             else None,

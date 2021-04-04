@@ -9,6 +9,8 @@ from cdd.source_transformer import ast_parse
 from cdd.tests.mocks.doctrans import (
     ann_assign_with_annotation,
     assign_with_type_comment,
+    class_with_internal_annotated,
+    class_with_internal_type_commented_and_docstring_typed,
     function_type_annotated,
     function_type_in_docstring,
 )
@@ -39,7 +41,7 @@ class TestDocTransUtils(TestCase):
         gen_ast = doc_trans.visit(original_node)
 
         function_no_docstring = deepcopy(function_type_in_docstring)
-        del function_no_docstring.body[0].body[0]
+        del function_no_docstring.body[0]
         run_ast_test(self, gen_ast, gold=function_no_docstring)
 
     def test_doctrans_function_from_docstring_to_annotated(self) -> None:
@@ -102,6 +104,50 @@ class TestDocTransUtils(TestCase):
         )
         gen_ast = doc_trans.visit(original_node)
         run_ast_test(self, gen_ast=gen_ast, gold=ann_assign_with_annotation)
+
+    def test_class_with_internal_annotated(self) -> None:
+        """ Tests that class, function, and class variable hierarchy is correctly annotated handles the ident case """
+        original_node = annotate_ancestry(deepcopy(class_with_internal_annotated))
+        doc_trans = DocTrans(
+            docstring_format="rest",
+            type_annotations=True,
+            existing_type_annotations=True,
+            whole_ast=original_node,
+        )
+        gen_ast = doc_trans.visit(original_node)
+        run_ast_test(self, gen_ast=gen_ast, gold=class_with_internal_annotated)
+
+    def test_class_with_internal_converts_to_annotated(self) -> None:
+        """ Tests that class, function, and class variable hierarchy is correctly converts to annotated """
+        original_node = annotate_ancestry(
+            deepcopy(class_with_internal_type_commented_and_docstring_typed)
+        )
+        doc_trans = DocTrans(
+            docstring_format="rest",
+            type_annotations=True,
+            existing_type_annotations=False,
+            whole_ast=original_node,
+        )
+        gen_ast = doc_trans.visit(original_node)
+        run_ast_test(self, gen_ast=gen_ast, gold=class_with_internal_annotated)
+
+    def test_class_annotated_converts_to_type_commented_and_docstring_typed(
+        self,
+    ) -> None:
+        """ Tests that class, function, and class variable hierarchy is correctly converted to annotated """
+        original_node = annotate_ancestry(deepcopy(class_with_internal_annotated))
+        doc_trans = DocTrans(
+            docstring_format="rest",
+            type_annotations=False,
+            existing_type_annotations=True,
+            whole_ast=original_node,
+        )
+        gen_ast = doc_trans.visit(original_node)
+        run_ast_test(
+            self,
+            gen_ast=gen_ast,
+            gold=class_with_internal_type_commented_and_docstring_typed,
+        )
 
     def test_clear_annotation(self) -> None:
         """ Tests that `clear_annotation` clears correctly """
