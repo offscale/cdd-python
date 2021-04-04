@@ -494,6 +494,7 @@ def class_(
 def docstring(
     intermediate_repr,
     docstring_format="rest",
+    purpose="function",
     word_wrap=True,
     indent_level=0,
     emit_separating_tab=True,
@@ -516,20 +517,23 @@ def docstring(
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
 
+    :param purpose: Emit `:param` if purpose == 'function' elif purpose == 'class' then `:cvar`
+    :type purpose: ```Literal['class', 'function']```
+
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
+
     :param indent_level: indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
     :type indent_level: ```int```
-
-    :param emit_types: Whether to show `:type` lines
-    :type emit_types: ```bool```
 
     :param emit_separating_tab: Whether to put a tab between :param and return and desc
     :type emit_separating_tab: ```bool```
 
+    :param emit_types: Whether to show `:type` lines
+    :type emit_types: ```bool```
+
     :param emit_original_whitespace: Whether to emit original whitespace or strip it out
     :type emit_original_whitespace: ```bool```
-
-    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
-    :type word_wrap: ```bool```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
@@ -565,6 +569,7 @@ def docstring(
                                     partial(
                                         emit_param_str,
                                         style=docstring_format,
+                                        purpose=purpose,
                                         emit_type=emit_types,
                                         emit_default_doc=emit_default_doc,
                                         word_wrap=word_wrap,
@@ -592,6 +597,7 @@ def docstring(
                                     partial(
                                         emit_param_str,
                                         style=docstring_format,
+                                        purpose=purpose,
                                         emit_type=emit_types,
                                         emit_default_doc=emit_default_doc,
                                         word_wrap=word_wrap,

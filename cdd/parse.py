@@ -151,7 +151,7 @@ def class_(
         }
         if doc_str is None
         else docstring(
-            doc_str.replace(":cvar", ":param"),
+            doc_str,
             emit_default_doc=False,
             parse_original_whitespace=parse_original_whitespace,
         )
@@ -457,8 +457,7 @@ def function(
         }
     else:
         intermediate_repr = docstring(
-            doc_str.replace(":cvar", ":param"),
-            infer_type=infer_type,
+            doc_str.replace(":cvar", ":param"), infer_type=infer_type
         )
 
     intermediate_repr.update(
