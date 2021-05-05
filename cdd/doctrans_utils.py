@@ -204,7 +204,7 @@ class DocTrans(NodeTransformer):
         :returns: Same type as input with args, returns, and docstring potentially modified
         :rtype: ```Union[AsyncFunctionDef, FunctionDef]```
         """
-        ir, changed = parse_docstring(doc_str), False
+        ir = parse_docstring(doc_str)
         ir_merge(ir, parse.function(node))
         ir["name"] = node.name
         _doc_str = emit.docstring(
