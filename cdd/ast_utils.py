@@ -630,6 +630,32 @@ def set_arg(arg, annotation=None):
     )
 
 
+def set_docstring(doc_str, empty, node):
+    """
+    Set docstring on node that can have a docstring. If doc_str is empty, the doc_str node is removed.
+
+    :param doc_str: Docstring
+    :type doc_str: ```Optional[str]```
+
+    :param empty: Whether the doc_str is empty (micro-optimization)
+    :type empty: ```bool```
+
+    :param node: AST node to set the docstring on
+    :type node: ```Union[AsyncFunctionDef, FunctionDef, ClassDef]```
+    """
+    (
+        node.body.__setitem__
+        if isinstance(node.body[0], Expr)
+        and isinstance(get_value(node.body[0].value), str)
+        else node.body.insert
+    )(
+        0,
+        Expr(set_value(doc_str)),
+    )
+    if empty or get_value(node.body[0].value).isspace():
+        del node.body[0]
+
+
 maybe_lineno = {"line_no": None} if PY_GTE_3_8 else {}
 maybe_type_comment = {"type_comment": None} if PY_GTE_3_8 else {}
 
@@ -1238,7 +1264,7 @@ def _to_code(node):
 
 
 class Undedined:
-    """ Null class """
+    """Null class"""
 
 
 def node_to_dict(node):
@@ -1302,6 +1328,31 @@ def cmp_ast(node0, node1):
     return True
 
 
+def to_annotation(typ):
+    """
+    Converts the typ to an annotation
+
+    :param typ: A string representation of the type to annotate with. Else return give identity.
+    :type typ: ```Union[str, AST]```
+
+    :returns: The annotation as a `Name` (usually) or else some more complex type
+    :rtype: ```AST```
+    """
+    if isinstance(typ, AST):
+        return typ
+    return (
+        Name(typ, Load())
+        if typ in simple_types
+        else get_value(
+            (
+                lambda parsed: parsed.body[0]
+                if getattr(parsed, "body", None)
+                else parsed
+            )(ast.parse(typ))
+        )
+    )
+
+
 NoneStr = "```(None)```" if PY_GTE_3_9 else "```None```"
 
 __all__ = [
@@ -1331,4 +1382,5 @@ __all__ = [
     "set_arg",
     "set_slice",
     "set_value",
+    "to_annotation",
 ]

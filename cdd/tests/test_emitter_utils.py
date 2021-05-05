@@ -12,10 +12,10 @@ from cdd.tests.utils_for_tests import unittest_main
 
 
 class TestEmitterUtils(TestCase):
-    """ Test class for emitter_utils """
+    """Test class for emitter_utils"""
 
     def test_parse_out_param(self) -> None:
-        """ Test that parse_out_param parses out the right dict """
+        """Test that parse_out_param parses out the right dict"""
         self.assertDictEqual(
             parse_out_param(
                 next(filter(rpartial(isinstance, Expr), argparse_func_ast.body[::-1]))
@@ -25,7 +25,7 @@ class TestEmitterUtils(TestCase):
         )
 
     def test_parse_out_param_default(self) -> None:
-        """ Test that parse_out_param sets default when required and unset """
+        """Test that parse_out_param sets default when required and unset"""
 
         self.assertDictEqual(
             parse_out_param(argparse_add_argument_ast)[1],
@@ -33,7 +33,7 @@ class TestEmitterUtils(TestCase):
         )
 
     def test_parse_out_param_fails(self) -> None:
-        """ Test that parse_out_param throws NotImplementedError when unsupported type given """
+        """Test that parse_out_param throws NotImplementedError when unsupported type given"""
         self.assertRaises(
             NotImplementedError,
             lambda: parse_out_param(
@@ -69,7 +69,7 @@ class TestEmitterUtils(TestCase):
         )
 
     def test_interpolate_defaults(self) -> None:
-        """ Test that interpolate_defaults corrects sets the default property """
+        """Test that interpolate_defaults corrects sets the default property"""
         param = "K", deepcopy(intermediate_repr["params"]["K"])
         param_with_correct_default = deepcopy(param[1])
         del param[1]["default"]

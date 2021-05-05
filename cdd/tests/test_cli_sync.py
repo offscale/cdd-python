@@ -12,10 +12,10 @@ from cdd.tests.utils_for_tests import run_cli_test, unittest_main
 
 
 class TestCliSync(TestCase):
-    """ Test class for __main__.py """
+    """Test class for __main__.py"""
 
     def test_version(self) -> None:
-        """ Tests CLI interface gives version """
+        """Tests CLI interface gives version"""
         run_cli_test(
             self,
             ["--version"],
@@ -25,7 +25,7 @@ class TestCliSync(TestCase):
         )
 
     def test_args_example0(self) -> None:
-        """ Tests CLI interface sets namespace correctly """
+        """Tests CLI interface sets namespace correctly"""
         with TemporaryDirectory() as tempdir:
             filename = os.path.join(
                 os.path.realpath(tempdir),
@@ -66,7 +66,7 @@ class TestCliSync(TestCase):
         self.assertEqual(args.truth, "class")
 
     def test_args_example1(self) -> None:
-        """ Tests CLI interface sets namespace correctly """
+        """Tests CLI interface sets namespace correctly"""
 
         with TemporaryDirectory() as tempdir:
             argparse_filename = os.path.join(
@@ -122,7 +122,7 @@ class TestCliSync(TestCase):
             self.assertEqual(args.truth, "function")
 
     def test_non_existent_file_fails(self) -> None:
-        """ Tests nonexistent file throws the right error """
+        """Tests nonexistent file throws the right error"""
         with TemporaryDirectory() as tempdir:
             filename = os.path.join(
                 os.path.realpath(tempdir),
@@ -145,7 +145,7 @@ class TestCliSync(TestCase):
             )
 
     def test_missing_argument_fails(self) -> None:
-        """ Tests missing argument throws the right error """
+        """Tests missing argument throws the right error"""
         run_cli_test(
             self,
             ["sync", "--truth", "class"],
@@ -154,7 +154,7 @@ class TestCliSync(TestCase):
         )
 
     def test_missing_argument_fails_insufficient_args(self) -> None:
-        """ Tests missing argument throws the right error """
+        """Tests missing argument throws the right error"""
         with TemporaryDirectory() as tempdir:
             filename = os.path.join(
                 os.path.realpath(tempdir),
@@ -170,7 +170,7 @@ class TestCliSync(TestCase):
             )
 
     def test_incorrect_arg_fails(self) -> None:
-        """ Tests CLI interface failure cases """
+        """Tests CLI interface failure cases"""
         run_cli_test(
             self,
             ["sync", "--wrong"],

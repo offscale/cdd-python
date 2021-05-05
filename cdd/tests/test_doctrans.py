@@ -10,10 +10,10 @@ from cdd.tests.utils_for_tests import unittest_main
 
 
 class TestDocTrans(TestCase):
-    """ Test class for doctrans.py """
+    """Test class for doctrans.py"""
 
     def test_doctrans(self) -> None:
-        """ Tests doctrans """
+        """Tests doctrans"""
 
         with TemporaryDirectory() as temp_dir, patch(
             "cdd.doctrans.DocTrans",

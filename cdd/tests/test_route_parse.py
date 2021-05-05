@@ -18,7 +18,7 @@ from cdd.tests.utils_for_tests import inspectable_compile, unittest_main
 
 
 class TestRouteEmit(TestCase):
-    """ Tests `routes.parse` """
+    """Tests `routes.parse`"""
 
     route_id_url = "{route_config[route]}/{{{route_config[primary_key]}}}".format(
         route_config=route_config

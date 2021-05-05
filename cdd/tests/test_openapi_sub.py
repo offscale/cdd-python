@@ -19,7 +19,7 @@ from cdd.tests.utils_for_tests import unittest_main
 
 
 class TestOpenApiBulk(TestCase):
-    """ Tests whether `openapi` can construct a `dict` """
+    """Tests whether `openapi` can construct a `dict`"""
 
     def test_openapi_bulk(self) -> None:
         """

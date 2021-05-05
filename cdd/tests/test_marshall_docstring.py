@@ -93,7 +93,7 @@ class TestMarshallDocstring(TestCase):
         )
 
     def test_ir2docstring(self) -> None:
-        """ Tests whether `emit.docstring` produces `docstring_str` from `intermediate_repr` """
+        """Tests whether `emit.docstring` produces `docstring_str` from `intermediate_repr`"""
         self.assertEqual(
             docstring_str.strip(),
             cdd.emit.docstring(
@@ -303,7 +303,7 @@ class TestMarshallDocstring(TestCase):
         )
 
     def test_docstring_header_and_return_str(self) -> None:
-        """ Tests that `docstring_header_and_return_str` can produce IR """
+        """Tests that `docstring_header_and_return_str` can produce IR"""
         _intermediate_repr = deepcopy(intermediate_repr_no_default_doc)
         _intermediate_repr["params"] = OrderedDict()
         self.assertDictEqual(

@@ -13,16 +13,16 @@ from cdd.tests.utils_for_tests import run_cli_test, unittest_main
 
 
 class TestCli(TestCase):
-    """ Test class for __main__.py """
+    """Test class for __main__.py"""
 
     def test_build_parser(self) -> None:
-        """ Test that `_build_parser` produces a parser object """
+        """Test that `_build_parser` produces a parser object"""
         parser = _build_parser()
         self.assertIsInstance(parser, ArgumentParser)
         self.assertEqual(parser.description, __description__)
 
     def test_version(self) -> None:
-        """ Tests CLI interface gives version """
+        """Tests CLI interface gives version"""
         run_cli_test(
             self,
             ["--version"],
@@ -32,7 +32,7 @@ class TestCli(TestCase):
         )
 
     def test_name_main(self) -> None:
-        """ Test the `if __name__ == '__main___'` block """
+        """Test the `if __name__ == '__main___'` block"""
 
         argparse_mock = MagicMock()
 

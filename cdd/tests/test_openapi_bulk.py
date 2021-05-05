@@ -12,7 +12,7 @@ from cdd.tests.utils_for_tests import unittest_main
 
 
 class TestOpenApi(TestCase):
-    """ Tests whether `NameModelRouteIdCrud` can construct a `dict` """
+    """Tests whether `NameModelRouteIdCrud` can construct a `dict`"""
 
     def test_openapi_emitter(self) -> None:
         """

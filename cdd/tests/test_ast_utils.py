@@ -27,6 +27,7 @@ from ast import (
     arguments,
     keyword,
 )
+from copy import deepcopy
 from os import path
 from unittest import TestCase
 
@@ -50,6 +51,7 @@ from cdd.ast_utils import (
     param2ast,
     parse_to_scalar,
     set_arg,
+    set_docstring,
     set_slice,
     set_value,
 )
@@ -57,19 +59,21 @@ from cdd.pure_utils import PY3_8, PY_GTE_3_8, tab
 from cdd.source_transformer import ast_parse
 from cdd.tests.mocks.argparse import argparse_add_argument_expr
 from cdd.tests.mocks.classes import class_ast, class_str
+from cdd.tests.mocks.doctrans import function_type_annotated
 from cdd.tests.mocks.methods import (
     class_with_method_and_body_types_ast,
     class_with_method_and_body_types_str,
     class_with_optional_arg_method_ast,
+    function_adder_str,
 )
 from cdd.tests.utils_for_tests import inspectable_compile, run_ast_test, unittest_main
 
 
 class TestAstUtils(TestCase):
-    """ Test class for ast_utils """
+    """Test class for ast_utils"""
 
     def test_annotate_ancestry(self) -> None:
-        """ Tests that `annotate_ancestry` properly decorates """
+        """Tests that `annotate_ancestry` properly decorates"""
         node = Module(
             body=[
                 AnnAssign(
@@ -104,11 +108,11 @@ class TestAstUtils(TestCase):
         self.assertEqual(node.body[1]._location, ["epochs"])
 
     def test_cmp_ast(self) -> None:
-        """ Test `cmp_ast` branch that isn't tested anywhere else """
+        """Test `cmp_ast` branch that isn't tested anywhere else"""
         self.assertFalse(cmp_ast(None, 5))
 
     def test_emit_ann_assign(self) -> None:
-        """ Tests that AnnAssign is emitted from `emit_ann_assign` """
+        """Tests that AnnAssign is emitted from `emit_ann_assign`"""
         self.assertIsInstance(class_ast.body[1], AnnAssign)
         self.assertIsInstance(emit_ann_assign(class_ast.body[1]), AnnAssign)
         self.assertIsInstance(emit_ann_assign(class_ast.body[1]), AnnAssign)
@@ -137,12 +141,12 @@ class TestAstUtils(TestCase):
         )
 
     def test_emit_ann_assign_fails(self) -> None:
-        """ Tests that `emit_ann_assign` raised the right error """
+        """Tests that `emit_ann_assign` raised the right error"""
         for typ_ in FunctionDef, ClassDef, Module:
             self.assertRaises(NotImplementedError, lambda: emit_ann_assign(typ_))
 
     def test_emit_arg(self) -> None:
-        """ Tests that `arg` is emitted from `emit_arg` """
+        """Tests that `arg` is emitted from `emit_arg`"""
         self.assertIsInstance(
             class_with_method_and_body_types_ast.body[1].args.args[1], arg
         )
@@ -164,12 +168,12 @@ class TestAstUtils(TestCase):
         )
 
     def test_emit_arg_fails(self) -> None:
-        """ Tests that `emit_arg` raised the right error """
+        """Tests that `emit_arg` raised the right error"""
         for typ_ in FunctionDef, ClassDef, Module:
             self.assertRaises(NotImplementedError, lambda: emit_arg(typ_))
 
     def test_find_in_ast(self) -> None:
-        """ Tests that `find_in_ast` successfully finds nodes in AST """
+        """Tests that `find_in_ast` successfully finds nodes in AST"""
 
         run_ast_test(
             self,
@@ -189,7 +193,7 @@ class TestAstUtils(TestCase):
         )
 
     def test_find_in_ast_self(self) -> None:
-        """ Tests that `find_in_ast` successfully finds itself in AST """
+        """Tests that `find_in_ast` successfully finds itself in AST"""
         run_ast_test(self, find_in_ast(["ConfigClass"], class_ast), class_ast)
         module = Module(body=[], type_ignores=[], stmt=None)
         run_ast_test(self, find_in_ast([], module), module)
@@ -226,7 +230,7 @@ class TestAstUtils(TestCase):
         )
 
     def test_find_in_ast_None(self) -> None:
-        """ Tests that `find_in_ast` fails correctly in AST """
+        """Tests that `find_in_ast` fails correctly in AST"""
         self.assertIsNone(find_in_ast(["John Galt"], class_ast))
 
     def test_find_in_ast_no_val(self) -> None:
@@ -271,7 +275,7 @@ class TestAstUtils(TestCase):
         )
 
     def test_get_at_root(self) -> None:
-        """ Tests that `get_at_root` successfully gets the imports """
+        """Tests that `get_at_root` successfully gets the imports"""
         with open(path.join(path.dirname(__file__), "mocks", "eval.py")) as f:
             imports = get_at_root(ast.parse(f.read()), (Import, ImportFrom))
         self.assertIsInstance(imports, list)
@@ -368,7 +372,7 @@ class TestAstUtils(TestCase):
         )
 
     def test_get_function_type(self) -> None:
-        """ Test get_function_type returns the right type """
+        """Test get_function_type returns the right type"""
         self.assertEqual(
             get_function_type(
                 FunctionDef(
@@ -424,7 +428,7 @@ class TestAstUtils(TestCase):
         )
 
     def test_get_value(self) -> None:
-        """ Tests get_value succeeds """
+        """Tests get_value succeeds"""
         val = "foo"
         self.assertEqual(get_value(Str(s=val, constant_value=None, string=None)), val)
         self.assertEqual(
@@ -436,7 +440,7 @@ class TestAstUtils(TestCase):
         self.assertEqual(get_value(get_value(ast.parse("-5").body[0])), -5)
 
     def test_set_value(self) -> None:
-        """ Tests that `set_value` returns the right type for the right Python version """
+        """Tests that `set_value` returns the right type for the right Python version"""
         import cdd.ast_utils
 
         _cdd_ast_utils_PY3_8_orig = PY3_8
@@ -465,8 +469,23 @@ class TestAstUtils(TestCase):
         finally:
             cdd.ast_utils = _cdd_ast_utils_PY3_8_orig
 
+    def test_set_docstring(self) -> None:
+        """
+        Tests that `set_docstring` sets the docstring
+        """
+        with_doc_str = deepcopy(function_type_annotated)
+        doc_str = ast.get_docstring(ast.parse(function_adder_str))
+        set_docstring(doc_str, False, with_doc_str)
+        self.assertIsNone(ast.get_docstring(function_type_annotated))
+        self.assertEqual(ast.get_docstring(with_doc_str), doc_str)
+
+        without_doc_str = deepcopy(function_type_annotated)
+        doc_str = "\t\n"
+        set_docstring(doc_str, False, without_doc_str)
+        self.assertIsNone(ast.get_docstring(without_doc_str), doc_str)
+
     def test_find_ast_type(self) -> None:
-        """ Test that `find_ast_type` gives the wrapped class back """
+        """Test that `find_ast_type` gives the wrapped class back"""
 
         class_def = ClassDef(
             name="",
@@ -485,7 +504,7 @@ class TestAstUtils(TestCase):
         )
 
     def test_find_ast_type_fails(self) -> None:
-        """ Test that `find_ast_type` throws the right errors """
+        """Test that `find_ast_type` throws the right errors"""
 
         self.assertRaises(NotImplementedError, lambda: find_ast_type(None))
         self.assertRaises(NotImplementedError, lambda: find_ast_type(""))
@@ -504,7 +523,7 @@ class TestAstUtils(TestCase):
         )
 
     def test_to_named_class_def(self) -> None:
-        """ Test that find_ast_type gives the wrapped named class back """
+        """Test that find_ast_type gives the wrapped named class back"""
 
         class_def = ClassDef(
             name="foo",
@@ -540,7 +559,7 @@ class TestAstUtils(TestCase):
         )
 
     def test_param2ast_with_assign(self) -> None:
-        """ Check that `param2ast` behaves correctly with a non annotated (typeless) input """
+        """Check that `param2ast` behaves correctly with a non annotated (typeless) input"""
 
         run_ast_test(
             self,
@@ -559,7 +578,7 @@ class TestAstUtils(TestCase):
         )
 
     def test_param2ast_with_assign_dict(self) -> None:
-        """ Check that `param2ast` behaves correctly with dict type """
+        """Check that `param2ast` behaves correctly with dict type"""
 
         run_ast_test(
             self,
@@ -578,7 +597,7 @@ class TestAstUtils(TestCase):
         )
 
     def test_param2ast_with_bad_default(self) -> None:
-        """ Check that `param2ast` behaves correctly with a bad default """
+        """Check that `param2ast` behaves correctly with a bad default"""
 
         run_ast_test(
             self,
@@ -600,7 +619,7 @@ class TestAstUtils(TestCase):
         )
 
     def test_param2ast_with_wrapped_default(self) -> None:
-        """ Check that `param2ast` behaves correctly with a wrapped default """
+        """Check that `param2ast` behaves correctly with a wrapped default"""
 
         run_ast_test(
             self,
@@ -911,7 +930,7 @@ class TestAstUtils(TestCase):
         """
 
         class FakeTorch(object):
-            """ Not a real torch """
+            """Not a real torch"""
 
             def __str__(self):
                 """But a real str
@@ -1001,7 +1020,7 @@ class TestAstUtils(TestCase):
         )
 
     def test_parse_to_scalar(self) -> None:
-        """ Test various inputs and outputs for `parse_to_scalar` """
+        """Test various inputs and outputs for `parse_to_scalar`"""
         for fst, snd in (
             (5, 5),
             ("5", "5"),
@@ -1028,7 +1047,7 @@ class TestAstUtils(TestCase):
         self.assertRaises(NotImplementedError, parse_to_scalar, memoryview(b""))
 
     def test_infer_type_and_default(self) -> None:
-        """ Test edge cases for `infer_type_and_default` """
+        """Test edge cases for `infer_type_and_default`"""
         self.assertTupleEqual(
             infer_type_and_default(None, 5, "str", False), (None, 5, False, "int")
         )

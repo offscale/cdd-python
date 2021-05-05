@@ -22,10 +22,10 @@ from cdd.tests.utils_for_tests import inspectable_compile, unittest_main
 
 
 class TestParserUtils(TestCase):
-    """ Test class for parser_utils """
+    """Test class for parser_utils"""
 
     def test_ir_merge_empty(self) -> None:
-        """ Tests for `ir_merge` when both are empty """
+        """Tests for `ir_merge` when both are empty"""
         target = {"params": OrderedDict(), "returns": None}
         other = {"params": OrderedDict(), "returns": None}
         self.assertDictEqual(
@@ -34,7 +34,7 @@ class TestParserUtils(TestCase):
         )
 
     def test_ir_merge_other_empty(self) -> None:
-        """ Tests for `ir_merge` when only non-target is empty """
+        """Tests for `ir_merge` when only non-target is empty"""
         target = {
             "params": OrderedDict(
                 (("something", {}),),
@@ -48,7 +48,7 @@ class TestParserUtils(TestCase):
         )
 
     def test_ir_merge_same_len(self) -> None:
-        """ Tests for `ir_merge` when target and non-target have same size """
+        """Tests for `ir_merge` when target and non-target have same size"""
         target = {
             "params": OrderedDict(
                 (("something", {"typ": "str"}),),
@@ -72,7 +72,7 @@ class TestParserUtils(TestCase):
         )
 
     def test_ir_merge_same_len_returns(self) -> None:
-        """ Tests for `ir_merge` when target and non-target have same size and a return """
+        """Tests for `ir_merge` when target and non-target have same size and a return"""
         target = {
             "params": OrderedDict(),
             "returns": OrderedDict(
@@ -106,7 +106,7 @@ class TestParserUtils(TestCase):
         )
 
     def test__join_non_none_returns_early(self) -> None:
-        """ Tests that `_join_non_none` returns early """
+        """Tests that `_join_non_none` returns early"""
         empty_str_dict = {"": ""}
         self.assertDictEqual(
             _join_non_none(primacy={}, other=empty_str_dict), empty_str_dict

@@ -15,7 +15,7 @@ class TestAstEquality(TestCase):
     """
 
     def test_argparse_func(self) -> None:
-        """ Tests whether the `argparse_func_str` correctly produces `argparse_func_ast` """
+        """Tests whether the `argparse_func_str` correctly produces `argparse_func_ast`"""
         run_ast_test(
             self,
             *map(
@@ -25,7 +25,7 @@ class TestAstEquality(TestCase):
         )
 
     def test_class(self) -> None:
-        """ Tests whether the `class_str` correctly produces `class_ast` """
+        """Tests whether the `class_str` correctly produces `class_ast`"""
         run_ast_test(self, class_str, class_ast)
 
 
