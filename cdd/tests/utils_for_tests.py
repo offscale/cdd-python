@@ -75,11 +75,6 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     # print("#gold")
     # print_ast(gold)
 
-    # from cdd.ast_utils import node_to_dict
-    #
-    # test_case_instance.maxDiff = None
-    # test_case_instance.assertDictEqual(*map(node_to_dict, (gen_ast.body[0], gold.body[0])))
-
     _gen_ast, _gold_ast = (
         (gen_ast.body[0], gold.body[0])
         if isinstance(gen_ast, ast.Module) and gen_ast.body
@@ -185,7 +180,7 @@ def run_cli_test(
 
 
 def unittest_main():
-    """ Runs unittest.main if __main__ """
+    """Runs unittest.main if __main__"""
     if __name__ == "__main__":
         main()
 

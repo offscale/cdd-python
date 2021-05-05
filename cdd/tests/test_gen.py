@@ -152,14 +152,14 @@ _import_gen_test_module_str = "{}\n".format(
 
 
 class TestGen(TestCase):
-    """ Test class for gen.py """
+    """Test class for gen.py"""
 
     sys_path = deepcopy(sys.path)
     tempdir = None
 
     @classmethod
     def setUpClass(cls) -> None:
-        """ Construct temporary module for use by tests """
+        """Construct temporary module for use by tests"""
         cls.tempdir = mkdtemp()
         temp_module_dir = os.path.join(cls.tempdir, "gen_test_module")
         os.mkdir(temp_module_dir)
@@ -176,13 +176,13 @@ class TestGen(TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        """ Drop the new module from the path and delete the temporary directory """
+        """Drop the new module from the path and delete the temporary directory"""
         sys.path = cls.sys_path
         # input("removing: {!r}".format(cls.tempdir))
         rmtree(cls.tempdir)
 
     def test_gen(self) -> None:
-        """ Tests `gen` """
+        """Tests `gen`"""
 
         output_filename = os.path.join(self.tempdir, "test_gen_output.py")
         with patch("sys.stdout", new_callable=StringIO), patch(
@@ -210,7 +210,7 @@ class TestGen(TestCase):
         )
 
     def test_gen_with_imports_from_file(self) -> None:
-        """ Tests `gen` with `imports_from_file` """
+        """Tests `gen` with `imports_from_file`"""
 
         output_filename = os.path.join(
             self.tempdir, "test_gen_with_imports_from_file_output.py"
@@ -257,7 +257,7 @@ class TestGen(TestCase):
         )
 
     def test_gen_with_imports_from_file_and_prepended_import(self) -> None:
-        """ Tests `gen` with `imports_from_file` and `prepend` """
+        """Tests `gen` with `imports_from_file` and `prepend`"""
 
         output_filename = os.path.join(
             self.tempdir,

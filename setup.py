@@ -35,7 +35,7 @@ def to_funcs(*paths):
 
 
 def main():
-    """ Main function for setup.py; this actually does the installation """
+    """Main function for setup.py; this actually does the installation"""
     with open(
         path.join(path.abspath(path.dirname(__file__)), package_name, "__init__.py")
     ) as f:
@@ -98,7 +98,7 @@ def main():
 
 
 def setup_py_main():
-    """ Calls main if `__name__ == '__main__'` """
+    """Calls main if `__name__ == '__main__'`"""
     if __name__ == "__main__":
         main()
 

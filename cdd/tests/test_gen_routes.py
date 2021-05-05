@@ -77,7 +77,7 @@ def populate_files(tempdir, init_with_crud):
 
 
 class TestGenRoutes(TestCase):
-    """ Test class for gen_routes.py """
+    """Test class for gen_routes.py"""
 
     def further_tests(self, mod):
         """
@@ -97,7 +97,7 @@ class TestGenRoutes(TestCase):
         )
 
     def test_gen_routes_no_change(self) -> None:
-        """ Tests `gen_routes` when routes are identical in app name, route path and method """
+        """Tests `gen_routes` when routes are identical in app name, route path and method"""
 
         self.gen_routes_tester(
             approach="update",
@@ -108,7 +108,7 @@ class TestGenRoutes(TestCase):
         )
 
     def test_gen_routes_update(self) -> None:
-        """ Tests `gen_routes` when routes do exists """
+        """Tests `gen_routes` when routes do exists"""
 
         self.gen_routes_tester(
             approach="update",
@@ -119,7 +119,7 @@ class TestGenRoutes(TestCase):
         )
 
     def test_gen_routes_update_missing(self) -> None:
-        """ Tests `gen_routes` when routes do exists, but `destroy` route (DELETE method) is missing """
+        """Tests `gen_routes` when routes do exists, but `destroy` route (DELETE method) is missing"""
 
         self.gen_routes_tester(
             approach="update",
@@ -130,7 +130,7 @@ class TestGenRoutes(TestCase):
         )
 
     def test_gen_routes_insert(self) -> None:
-        """ Tests `gen_routes` when routes do not exist """
+        """Tests `gen_routes` when routes do not exist"""
 
         def _further_tests(mod):
             """

@@ -7,10 +7,10 @@ from cdd.tests.utils_for_tests import mock_function, run_cli_test, unittest_main
 
 
 class TestOpenApi(TestCase):
-    """ Test class for __main__.py """
+    """Test class for __main__.py"""
 
     def test_gen_routes_fails(self) -> None:
-        """ Tests CLI interface failure cases """
+        """Tests CLI interface failure cases"""
         run_cli_test(
             self,
             ["openapi", "--wrong"],
@@ -19,7 +19,7 @@ class TestOpenApi(TestCase):
         )
 
     def test_openapi(self) -> None:
-        """ Tests CLI interface gets all the way to the `openapi` call without error """
+        """Tests CLI interface gets all the way to the `openapi` call without error"""
 
         with patch("cdd.__main__.openapi_bulk", mock_function):
             self.assertTrue(

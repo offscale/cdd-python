@@ -55,10 +55,10 @@ def populate_files(tempdir, input_str=None, output_str=None):
 
 
 class TestSyncProperties(TestCase):
-    """ Test class for sync_properties.py """
+    """Test class for sync_properties.py"""
 
     def test_sync_properties(self) -> None:
-        """ Tests `sync_properties` with `call=False` """
+        """Tests `sync_properties` with `call=False`"""
 
         with TemporaryDirectory() as tempdir:
             (
@@ -86,7 +86,7 @@ class TestSyncProperties(TestCase):
             )
 
     def test_sync_properties_eval(self) -> None:
-        """ Tests `sync_properties` with `call=True` """
+        """Tests `sync_properties` with `call=True`"""
 
         with open(
             os.path.join(
@@ -131,7 +131,7 @@ class TestSyncProperties(TestCase):
             )
 
     def test_sync_properties_output_param_wrap(self) -> None:
-        """ Tests `sync_properties` with `output_param_wrap` set """
+        """Tests `sync_properties` with `output_param_wrap` set"""
 
         with TemporaryDirectory() as tempdir:
             (
@@ -164,7 +164,7 @@ class TestSyncProperties(TestCase):
             )
 
     def test_sync_properties_output_param_wrap_no_annotation(self) -> None:
-        """ Tests `sync_properties` with `output_param_wrap` set when type annotation isn't being replaced """
+        """Tests `sync_properties` with `output_param_wrap` set when type annotation isn't being replaced"""
 
         with TemporaryDirectory() as tempdir:
             (input_filename, input_str, output_filename, output_str,) = populate_files(
@@ -198,7 +198,7 @@ class TestSyncProperties(TestCase):
             )
 
     def test_sync_properties_output_param_wrap_no_type(self) -> None:
-        """ Tests `sync_properties` with `output_param_wrap` set when replacement_node has no type """
+        """Tests `sync_properties` with `output_param_wrap` set when replacement_node has no type"""
 
         with TemporaryDirectory() as tempdir:
             (input_filename, input_str, output_filename, output_str,) = populate_files(
@@ -236,7 +236,7 @@ class TestSyncProperties(TestCase):
             )
 
     def test_sync_properties_output_param_wrap_subscript(self) -> None:
-        """ Tests `sync_properties` with `output_param_wrap` set when replacement_node is subscript and !input_eval """
+        """Tests `sync_properties` with `output_param_wrap` set when replacement_node is subscript and !input_eval"""
 
         with TemporaryDirectory() as tempdir:
             (input_filename, input_str, output_filename, output_str,) = populate_files(
@@ -264,7 +264,7 @@ class TestSyncProperties(TestCase):
                 )
 
     def test_sync_properties_output_param_wrap_subscript_eval0(self) -> None:
-        """ Tests `sync_properties` with `output_param_wrap` set when replacement_node is subscript """
+        """Tests `sync_properties` with `output_param_wrap` set when replacement_node is subscript"""
 
         with TemporaryDirectory() as tempdir:
             (input_filename, input_str, output_filename, output_str,) = populate_files(
@@ -292,7 +292,7 @@ class TestSyncProperties(TestCase):
             )
 
     def test_sync_properties_output_param_wrap_subscript_eval1(self) -> None:
-        """ Tests `sync_properties` with `output_param_wrap` set when replacement_node is subscript """
+        """Tests `sync_properties` with `output_param_wrap` set when replacement_node is subscript"""
 
         with TemporaryDirectory() as tempdir:
             (input_filename, input_str, output_filename, output_str,) = populate_files(
@@ -330,7 +330,7 @@ class TestSyncProperties(TestCase):
             )
 
     def test_sync_properties_output_param_wrap_fails(self) -> None:
-        """ Tests `sync_properties` fails with `output_param_wrap` set when replacement_node is unknown """
+        """Tests `sync_properties` fails with `output_param_wrap` set when replacement_node is unknown"""
 
         with TemporaryDirectory() as tempdir:
             (
@@ -353,7 +353,7 @@ class TestSyncProperties(TestCase):
             )
 
     def test_sync_properties_eval_fails(self) -> None:
-        """ Tests `sync_properties` fails with `call=True` and dots """
+        """Tests `sync_properties` fails with `call=True` and dots"""
         with TemporaryDirectory() as tempdir:
             input_filename = os.path.join(tempdir, "input_.py")
             output_filename = os.path.join(tempdir, "input_str.py")
@@ -373,7 +373,7 @@ class TestSyncProperties(TestCase):
             )
 
     def test_eval(self) -> None:
-        """ Ensure mock returns the right result """
+        """Ensure mock returns the right result"""
         self.assertTupleEqual(get_modules, ("mocks",))
 
     def run_sync_properties_test(

@@ -91,16 +91,18 @@ function_type_in_docstring = FunctionDef(
     body=[
         Expr(
             value=set_value(
-                "\n{tab}".format(tab=tab)
-                + "\n{tab}".format(tab=tab).join(
-                    (
-                        ":type a: ```int```",
-                        "",
-                        ":type b: ```int```",
-                        "",
-                        ":rtype: ```int```",
-                        "",
-                    )
+                "\n{tab}{body}".format(
+                    tab=tab,
+                    body="\n{tab}".format(tab=tab).join(
+                        (
+                            ":type a: ```int```",
+                            "",
+                            ":type b: ```int```",
+                            "",
+                            ":rtype: ```int```",
+                            "",
+                        )
+                    ),
                 )
             )
         ),

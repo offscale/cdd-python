@@ -19,7 +19,7 @@ class TestSetupPy(TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        """ Construct the setup_py module """
+        """Construct the setup_py module"""
         cls.mod = cls.import_setup_py()
 
     @staticmethod
@@ -47,7 +47,7 @@ class TestSetupPy(TestCase):
         self.assertEqual(self.mod.__name__, "setup_py")
 
     def test_to_funcs(self) -> None:
-        """ Tests that `to_funcs` produces the right local and install dirs """
+        """Tests that `to_funcs` produces the right local and install dirs"""
         to_funcs = getattr(self.mod, "to_funcs")
         args = "5", "6"
         local_dir_join_func_resp, install_dir_join_func_resp = map(

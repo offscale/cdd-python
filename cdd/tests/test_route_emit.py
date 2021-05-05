@@ -14,7 +14,7 @@ from cdd.tests.utils_for_tests import unittest_main
 
 
 class TestRouteEmit(TestCase):
-    """ Tests `routes.emit` """
+    """Tests `routes.emit`"""
 
     @classmethod
     def setUpClass(cls) -> None:

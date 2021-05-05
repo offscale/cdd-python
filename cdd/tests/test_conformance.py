@@ -32,7 +32,7 @@ class TestConformance(TestCase):
     """
 
     def test_ground_truth(self) -> None:
-        """ Straight from the ministry. Absolutely. """
+        """Straight from the ministry. Absolutely."""
 
         with TemporaryDirectory() as tempdir:
             self.assertTupleEqual(
@@ -51,7 +51,7 @@ class TestConformance(TestCase):
             )
 
     def test_ground_truths(self) -> None:
-        """ My truth is being tested. """
+        """My truth is being tested."""
 
         with TemporaryDirectory() as tempdir:
             tempdir_join = partial(path.join, tempdir)
@@ -127,7 +127,7 @@ class TestConformance(TestCase):
             )
 
     def test_ground_truth_changes(self) -> None:
-        """ Time for a new master. """
+        """Time for a new master."""
 
         ir = deepcopy(intermediate_repr)
         ir["returns"]["return_type"]["typ"] = "Tuple[np.ndarray, np.ndarray]"
@@ -207,12 +207,12 @@ class TestConformance(TestCase):
             )
 
     def test__get_name_from_namespace(self) -> None:
-        """ Test `_get_name_from_namespace` """
+        """Test `_get_name_from_namespace`"""
         args = Namespace(foo_names=("bar",))
         self.assertEqual(_get_name_from_namespace(args, "foo"), args.foo_names[0])
 
     def test__conform_filename_nonexistent(self) -> None:
-        """ Tests that _conform_filename returns the right result """
+        """Tests that _conform_filename returns the right result"""
 
         with TemporaryDirectory() as tempdir:
             argparse_function_filename = os.path.realpath(
@@ -231,7 +231,7 @@ class TestConformance(TestCase):
             )
 
     def test__conform_filename_filled(self) -> None:
-        """ Tests that _conform_filename returns the right result """
+        """Tests that _conform_filename returns the right result"""
 
         with TemporaryDirectory() as tempdir:
             argparse_function_filename = os.path.realpath(
@@ -256,7 +256,7 @@ class TestConformance(TestCase):
             )
 
     def test__conform_filename_unchanged(self) -> None:
-        """ Tests that _conform_filename returns the right result """
+        """Tests that _conform_filename returns the right result"""
 
         with TemporaryDirectory() as tempdir:
             argparse_function_filename = os.path.realpath(

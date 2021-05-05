@@ -8,10 +8,10 @@ from cdd.tests.utils_for_tests import mock_function, run_cli_test, unittest_main
 
 
 class TestCliGen(TestCase):
-    """ Test class for __main__.py """
+    """Test class for __main__.py"""
 
     def test_gen_fails(self) -> None:
-        """ Tests CLI interface failure cases """
+        """Tests CLI interface failure cases"""
         run_cli_test(
             self,
             ["gen", "--wrong"],
@@ -20,7 +20,7 @@ class TestCliGen(TestCase):
         )
 
     def test_existent_file_fails(self) -> None:
-        """ Tests nonexistent file throws the right error """
+        """Tests nonexistent file throws the right error"""
         with TemporaryDirectory() as tempdir:
             filename = os.path.join(
                 tempdir,
@@ -49,7 +49,7 @@ class TestCliGen(TestCase):
             )
 
     def test_gen(self) -> None:
-        """ Tests CLI interface gets all the way to the gen call without error """
+        """Tests CLI interface gets all the way to the gen call without error"""
         with TemporaryDirectory() as tempdir:
             output_filename = os.path.join(tempdir, "classes.py")
 

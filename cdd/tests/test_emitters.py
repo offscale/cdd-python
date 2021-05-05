@@ -51,7 +51,7 @@ from cdd.tests.utils_for_tests import reindent_docstring, run_ast_test, unittest
 
 
 class TestEmitters(TestCase):
-    """ Tests whether conversion between formats works """
+    """Tests whether conversion between formats works"""
 
     def test_to_class_from_argparse_ast(self) -> None:
         """
@@ -354,7 +354,7 @@ class TestEmitters(TestCase):
         )
 
     def test_from_class_with_body_in_method_to_method_with_body(self) -> None:
-        """ Tests if this can make the roundtrip from a full function to a full function """
+        """Tests if this can make the roundtrip from a full function to a full function"""
         annotate_ancestry(class_with_method_and_body_types_ast)
 
         function_def = reindent_docstring(
@@ -414,7 +414,7 @@ class TestEmitters(TestCase):
         )
 
     def test_from_argparse_with_extra_body_to_argparse_with_extra_body(self) -> None:
-        """ Tests if this can make the roundtrip from a full argparse function to a argparse full function """
+        """Tests if this can make the roundtrip from a full argparse function to a argparse full function"""
 
         ir = parse.argparse_ast(argparse_func_with_body_ast)
         func = emit.argparse_function(ir, emit_default_doc=False, word_wrap=True)
@@ -423,7 +423,7 @@ class TestEmitters(TestCase):
         )
 
     def test_from_torch_ir_to_argparse(self) -> None:
-        """ Tests if emission of class from torch IR is as expected """
+        """Tests if emission of class from torch IR is as expected"""
 
         func = emit.argparse_function(
             deepcopy(class_torch_nn_l1loss_ir),
