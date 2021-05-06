@@ -1,9 +1,10 @@
 """ Tests for doctrans_utils """
+from ast import Expr, Load, Module, Name
 from collections import deque
 from copy import deepcopy
 from unittest import TestCase
 
-from cdd.ast_utils import annotate_ancestry
+from cdd.ast_utils import annotate_ancestry, set_value
 from cdd.doctrans_utils import DocTrans, clear_annotation, has_type_annotations
 from cdd.source_transformer import ast_parse
 from cdd.tests.mocks.doctrans import (
@@ -102,6 +103,20 @@ class TestDocTransUtils(TestCase):
         gen_ast = doc_trans.visit(original_node)
         run_ast_test(self, gen_ast=gen_ast, gold=ann_assign_with_annotation)
 
+    def test_doctrans_assign_to_assign(self) -> None:
+        """
+        Tests that `AnnAssign` converts to `Assign`
+        """
+        original_node = annotate_ancestry(deepcopy(assign_with_type_comment))
+        doc_trans = DocTrans(
+            docstring_format="rest",
+            type_annotations=False,
+            existing_type_annotations=False,
+            whole_ast=original_node,
+        )
+        gen_ast = doc_trans.visit(original_node)
+        run_ast_test(self, gen_ast=gen_ast, gold=assign_with_type_comment)
+
     def test_class_with_internal_annotated(self) -> None:
         """Tests that class, function, and class variable hierarchy is correctly annotated handles the ident case"""
         original_node = annotate_ancestry(deepcopy(class_with_internal_annotated))
@@ -113,6 +128,22 @@ class TestDocTransUtils(TestCase):
         )
         gen_ast = doc_trans.visit(original_node)
         run_ast_test(self, gen_ast=gen_ast, gold=class_with_internal_annotated)
+
+    def test__get_ass_typ(self) -> None:
+        """Tests that _get_ass_typ returns when location isn't set"""
+        original_node = annotate_ancestry(deepcopy(assign_with_type_comment))
+        doc_trans = DocTrans(
+            docstring_format="rest",
+            type_annotations=True,
+            existing_type_annotations=True,
+            whole_ast=original_node,
+        )
+        del original_node._location
+        run_ast_test(
+            self,
+            gen_ast=doc_trans._get_ass_typ(original_node),
+            gold=Name("int", Load()),
+        )
 
     def test_class_with_internal_converts_to_annotated(self) -> None:
         """Tests that class, function, and class variable hierarchy is correctly converts to annotated"""
@@ -145,6 +176,21 @@ class TestDocTransUtils(TestCase):
             gen_ast=gen_ast,
             gold=class_with_internal_type_commented_and_docstring_typed,
         )
+
+    def test_module_docstring(self) -> None:
+        """Tests that module gets the right new docstring"""
+        module_node = Module(
+            body=[Expr(set_value("\nModule\n"))], stmt=None, type_ignores=[]
+        )
+        original = deepcopy(module_node)
+        doc_trans = DocTrans(
+            docstring_format="rest",
+            type_annotations=True,
+            existing_type_annotations=True,
+            whole_ast=module_node,
+        )
+        doc_trans.visit_Module(module_node)
+        run_ast_test(self, gen_ast=module_node, gold=original)
 
     def test_clear_annotation(self) -> None:
         """Tests that `clear_annotation` clears correctly"""

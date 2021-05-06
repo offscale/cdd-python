@@ -641,7 +641,7 @@ def set_docstring(doc_str, empty, node):
     :type empty: ```bool```
 
     :param node: AST node to set the docstring on
-    :type node: ```Union[AsyncFunctionDef, FunctionDef, ClassDef]```
+    :type node: ```Union[Module, AsyncFunctionDef, FunctionDef, ClassDef]```
     """
     (
         node.body.__setitem__
@@ -1380,6 +1380,7 @@ __all__ = [
     "param2ast",
     "parse_to_scalar",
     "set_arg",
+    "set_docstring",
     "set_slice",
     "set_value",
     "to_annotation",

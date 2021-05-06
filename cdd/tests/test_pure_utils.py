@@ -143,15 +143,15 @@ class TestPureUtils(TestCase):
         self.assertEqual(sanitise("class"), "class_")
 
     def test_set_attr(self) -> None:
-        """ Tests `set_attr` """
+        """Tests `set_attr`"""
 
         class Att(object):
-            """ Mock class for `test_set_attr` """
+            """Mock class for `test_set_attr`"""
 
         self.assertEqual(set_attr(Att, "bar", 5).bar, 5)
 
     def test_set_item(self) -> None:
-        """ Tests `set_item` """
+        """Tests `set_item`"""
         self.assertEqual(set_item({}, "foo", "haz")["foo"], "haz")
 
     def test_strip_split(self) -> None:

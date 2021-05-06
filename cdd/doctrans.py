@@ -23,7 +23,7 @@ def doctrans(filename, docstring_format, type_annotations):
     :type type_annotations: ```bool```
     """
     with open(filename, "rt") as f:
-        node = ast_parse(f.read(), skip_docstring_remit=True)
+        node = ast_parse(f.read(), skip_docstring_remit=False)
     orig_node = deepcopy(node)
 
     node = DocTrans(
