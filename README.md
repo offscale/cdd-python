@@ -433,7 +433,7 @@ class Config(Base):
 
 ## Minor other use-cases this facilitates
 
-  - Switch between having types in the docstring and having the types inline ([PEP484](https://python.org/dev/peps/pep-0484)–style)
+  - Switch between having types in the docstring and having the types inline ([PEP484](https://python.org/dev/peps/pep-0484)–style))
   - Switch between docstring formats (to/from {numpy, ReST, google})
   - Desktop GUI with wxWidgets, from the argparse layer through [Gooey](https://github.com/chriskiehl/Gooey) [one liner]
 
@@ -442,13 +442,14 @@ class Config(Base):
     $ python -m cdd --help
     
     usage: python -m cdd [-h] [--version]
-                         {sync_properties,sync,gen,gen_routes,openapi} ...
+                         {sync_properties,sync,gen,gen_routes,openapi,doctrans}
+                         ...
     
     Open API to/fro routes, models, and tests. Convert between docstrings,
     classes, methods, argparse, and SQLalchemy.
     
     positional arguments:
-      {sync_properties,sync,gen,gen_routes,openapi}
+      {sync_properties,sync,gen,gen_routes,openapi,doctrans}
         sync_properties     Synchronise one or more properties between input and
                             input_str Python files
         sync                Force argparse, classes, and/or methods to be
@@ -458,8 +459,10 @@ class Config(Base):
                             input mapping
         gen_routes          Generate per model route(s)
         openapi             Generate OpenAPI schema from specified project(s)
+        doctrans            Convert docstring format of all classes and functions
+                            within target file
     
-    optional arguments:
+    options:
       -h, --help            show this help message and exit
       --version             show program's version number and exit
 
@@ -600,6 +603,26 @@ class Config(Base):
       --routes-paths [ROUTES_PATHS [ROUTES_PATHS ...]]
                             Python module resolution 'foo.routes' or filepath
                             'foo/routes'
+
+### `doctrans`
+
+    $ python -m cdd doctrans --help
+    
+    usage: python -m cdd doctrans [-h] --filename FILENAME --format
+                                  {rest,google,numpydoc}
+                                  (--type-annotations | --no-type-annotations)
+    
+    options:
+      -h, --help            show this help message and exit
+      --filename FILENAME   Python file to convert docstrings within. Edited in
+                            place.
+      --format {rest,google,numpydoc}
+                            The docstring format to replace existing format with.
+      --type-annotations    Inline the type, i.e., annotate PEP484 (outside
+                            docstring. Requires 3.6+)
+      --no-type-annotations
+                            Ensure all types are in docstring (rather than a
+                            PEP484 type annotation)
 
 ---
 
