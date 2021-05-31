@@ -442,14 +442,14 @@ class Config(Base):
     $ python -m cdd --help
     
     usage: python -m cdd [-h] [--version]
-                         {sync_properties,sync,gen,gen_routes,openapi,doctrans}
+                         {sync_properties,sync,gen,gen_routes,openapi,doctrans,exmod}
                          ...
     
     Open API to/fro routes, models, and tests. Convert between docstrings,
     classes, methods, argparse, and SQLalchemy.
     
     positional arguments:
-      {sync_properties,sync,gen,gen_routes,openapi,doctrans}
+      {sync_properties,sync,gen,gen_routes,openapi,doctrans,exmod}
         sync_properties     Synchronise one or more properties between input and
                             input_str Python files
         sync                Force argparse, classes, and/or methods to be
@@ -461,6 +461,8 @@ class Config(Base):
         openapi             Generate OpenAPI schema from specified project(s)
         doctrans            Convert docstring format of all classes and functions
                             within target file
+        exmod               Expose module hierarchy->{functions,classes,vars} for
+                            parameterisation via {REST API + database,CLI,SDK}
     
     options:
       -h, --help            show this help message and exit
@@ -623,6 +625,30 @@ class Config(Base):
       --no-type-annotations
                             Ensure all types are in docstring (rather than a
                             PEP484 type annotation)
+
+### `exmod`
+
+    $ python -m cdd exmod --help
+    
+    usage: python -m cdd exmod [-h] --module MODULE --emit
+                               {argparse,class,function,sqlalchemy,sqlalchemy_table}
+                               [--blacklist BLACKLIST] [--whitelist WHITELIST]
+                               --output-directory OUTPUT_DIRECTORY
+    
+    options:
+      -h, --help            show this help message and exit
+      --module MODULE       The module or fully-qualified name (FQN) to expose.
+      --emit {argparse,class,function,sqlalchemy,sqlalchemy_table}
+                            What type to generate.
+      --blacklist BLACKLIST
+                            Modules/FQN to omit. If unspecified will emit all
+                            (unless whitelist).
+      --whitelist WHITELIST
+                            Modules/FQN to emit. If unspecified will emit all
+                            (minus blacklist).
+      --output-directory OUTPUT_DIRECTORY
+                            Where to place the generated exposed interfaces to the
+                            given `--module`.
 
 ---
 

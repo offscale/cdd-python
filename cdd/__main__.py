@@ -14,6 +14,7 @@ from cdd import __description__, __version__
 from cdd.conformance import ground_truth
 from cdd.docstring_parsers import Style
 from cdd.doctrans import doctrans
+from cdd.exmod import exmod
 from cdd.gen import gen
 from cdd.openapi.gen_openapi import openapi_bulk
 from cdd.openapi.gen_routes import gen_routes, upsert_routes
@@ -39,6 +40,8 @@ def _build_parser():
     subparsers = parser.add_subparsers()
     subparsers.required = True
     subparsers.dest = "command"
+
+    parse_emit_types = "argparse", "class", "function", "sqlalchemy", "sqlalchemy_table"
 
     ############
     # Property #
@@ -205,14 +208,14 @@ def _build_parser():
     gen_parser.add_argument(
         "--parse",
         help="What type the input is.",
-        choices=("argparse", "class", "function", "sqlalchemy", "sqlalchemy_table"),
+        choices=parse_emit_types,
         default="infer",
         dest="parse_name",
     )
     gen_parser.add_argument(
         "--emit",
         help="What type to generate.",
-        choices=("argparse", "class", "function", "sqlalchemy", "sqlalchemy_table"),
+        choices=parse_emit_types,
         required=True,
         dest="emit_name",
     )
@@ -333,6 +336,45 @@ def _build_parser():
         action="store_false",
     )
 
+    #########
+    # exmod #
+    #########
+    exmod_parser = subparsers.add_parser(
+        "exmod",
+        help=(
+            "Expose module hierarchy->{functions,classes,vars} for parameterisation "
+            "via {REST API + database,CLI,SDK}"
+        ),
+    )
+
+    exmod_parser.add_argument(
+        "--module",
+        help="The module or fully-qualified name (FQN) to expose.",
+        required=True,
+    )
+    exmod_parser.add_argument(
+        "--emit",
+        help="What type to generate.",
+        choices=parse_emit_types,
+        required=True,
+        action="append",
+    )
+    exmod_parser.add_argument(
+        "--blacklist",
+        help="Modules/FQN to omit. If unspecified will emit all (unless whitelist).",
+        action="append",
+    )
+    exmod_parser.add_argument(
+        "--whitelist",
+        help="Modules/FQN to emit. If unspecified will emit all (minus blacklist).",
+        action="append",
+    )
+    exmod_parser.add_argument(
+        "--output-directory",
+        help="Where to place the generated exposed interfaces to the given `--module`.",
+        required=True,
+    )
+
     return parser
 
 
@@ -362,10 +404,10 @@ def main(cli_argv=None, return_args=False):
         )
 
         truth_file = getattr(args, pluralise(args.truth))
-        if truth_file is None:
-            _parser.error("--truth must be an existent file. Got: None")
-        else:
-            truth_file = path.realpath(path.expanduser(truth_file[0]))
+        require_file_existent(
+            _parser, truth_file[0] if truth_file else truth_file, name="truth"
+        )
+        truth_file = path.realpath(path.expanduser(truth_file[0]))
 
         number_of_files = sum(
             len(val)
@@ -378,10 +420,7 @@ def main(cli_argv=None, return_args=False):
                 "Two or more of `--argparse-function`, `--class`, and `--function` must"
                 " be specified"
             )
-        elif truth_file is None or not path.isfile(truth_file):
-            _parser.error(
-                "--truth must be an existent file. Got: {!r}".format(truth_file)
-            )
+        require_file_existent(_parser, truth_file, name="truth")
 
         return args if return_args else ground_truth(args, truth_file)
     elif command == "sync_properties":
@@ -413,19 +452,22 @@ def main(cli_argv=None, return_args=False):
         if args.route is None:
             args.route = "/api/{model_name}".format(model_name=args.model_name.lower())
 
-        routes, primary_key = gen_routes(
-            app=args.app_name,
-            crud=args.crud,
-            model_name=args.model_name,
-            model_path=args.model_path,
-            route=args.route,
-        )
-        upsert_routes(
-            app=args.app_name,
-            route=args.route,
-            routes=routes,
-            routes_path=getattr(args, "routes_path", None),
-            primary_key=primary_key,
+        (
+            lambda routes__primary_key: upsert_routes(
+                app=args.app_name,
+                route=args.route,
+                routes=routes__primary_key[0],
+                routes_path=getattr(args, "routes_path", None),
+                primary_key=routes__primary_key[1],
+            )
+        )(
+            gen_routes(
+                app=args.app_name,
+                crud=args.crud,
+                model_name=args.model_name,
+                model_path=args.model_path,
+                route=args.route,
+            )
         )
     elif command == "openapi":
         openapi_bulk(
@@ -439,6 +481,14 @@ def main(cli_argv=None, return_args=False):
             filename=args.filename,
             docstring_format=args.format,
             type_annotations=args.type_annotations,
+        )
+    elif command == "exmod":
+        exmod(
+            module=args.module,
+            emit=args.emit,
+            blacklist=args.blacklist,
+            whitelist=args.whitelist,
+            output_directory=args.output_directory,
         )
 
 
