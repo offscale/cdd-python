@@ -57,6 +57,8 @@ PY3_8: bool = _python_major_minor == (3, 8)
 PY_GTE_3_8: bool = _python_major_minor >= (3, 8)
 PY_GTE_3_9: bool = _python_major_minor >= (3, 9)
 
+ENCODING = "# -*- coding: utf-8 -*-"
+
 none_types = None, "None", "```(None)```" if PY_GTE_3_9 else "```None```"
 
 _ABERRANT_PLURAL_MAP: Dict[str, str] = {
@@ -669,8 +671,28 @@ def set_item(obj, key, val):
     return obj
 
 
+def no_magic_dir2attr(p_object):
+    """
+    Dictionary of `dir` without the __ prefix magics (also without _ prefix)
+    return the names comprising (some of) the attributes
+    of the given object, and of attributes reachable from it.
+
+    :param p_object: Object
+    :type p_object: ```Any```
+
+    :returns: Dict of name to attribute value
+    :rtype: ```dict```
+    """
+    return {
+        attr: getattr(p_object, attr)
+        for attr in dir(p_object)
+        if not attr.startswith("_")
+    }
+
+
 __all__ = [
     "BUILTIN_TYPES",
+    "ENCODING",
     "PY3_8",
     "PY_GTE_3_8",
     "PY_GTE_3_9",
