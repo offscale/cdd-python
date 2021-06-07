@@ -2,11 +2,12 @@
 Shared utility functions used by many tests
 """
 import ast
+import sys
 from copy import deepcopy
 from functools import partial
 from importlib import import_module
 from importlib.abc import Loader
-from importlib.util import module_from_spec, spec_from_loader
+from importlib.util import module_from_spec, spec_from_file_location, spec_from_loader
 from itertools import takewhile
 from os import path
 from sys import modules
@@ -251,6 +252,35 @@ def inspectable_compile(s, modname=None):
         fh.close()  # Is auto-deleted on close
 
 
+def module_from_file(file_path, module_name):
+    """
+    Creates a module out of the file_path
+
+    :param file_path: Input source
+    :type file_path: ```str```
+
+    :param module_name: Module name
+    :type module_name: ```Optional[str]```
+
+    :returns: The module itself. Alternative `import` should now work from it.
+    :rtype: ```Any```
+    """
+    spec = spec_from_file_location(module_name, file_path)
+    assert spec is not None
+    print("spec:", spec, ";")
+    module = module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+    spec = spec_from_file_location(module_name, file_path)
+    input(file_path)
+    assert spec is not None
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def mock_function(*args, **kwargs):
     """
     Mock function to check if it is called
@@ -333,6 +363,7 @@ def remove_args_from_docstring(doc_str):
 __all__ = [
     "inspectable_compile",
     "mock_function",
+    "module_from_file",
     "remove_args_from_docstring",
     "run_ast_test",
     "run_cli_test",
