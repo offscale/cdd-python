@@ -195,7 +195,7 @@ def _generic_param2ast(param):
                     )
                     else ast.parse(_param["default"])
                 )
-            except SyntaxError:
+            except (SyntaxError, TypeError):
                 parsed_default = set_value(
                     _param["default"]
                     if code_quoted(_param["default"])

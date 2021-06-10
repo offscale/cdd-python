@@ -299,9 +299,9 @@ def exmod(
                                 module=module_names[0],
                                 names=list(
                                     map(
-                                        partial(
-                                            alias,
-                                            asname=None,
+                                        lambda names: alias(
+                                            names,
+                                            None,
                                             identifier=None,
                                             identifier_name=None,
                                         ),
