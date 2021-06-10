@@ -2,7 +2,6 @@
 Shared utility functions used by many tests
 """
 import ast
-import sys
 from copy import deepcopy
 from functools import partial
 from importlib import import_module
@@ -267,18 +266,18 @@ def module_from_file(file_path, module_name):
     """
     spec = spec_from_file_location(module_name, file_path)
     assert spec is not None
-    print("spec:", spec, ";")
-    module = module_from_spec(spec)
-    sys.modules[module_name] = module
-    spec.loader.exec_module(module)
-    return module
+    # TODO
+    # print("spec:", spec, ";")
+    # module = module_from_spec(spec)
+    # sys.modules[module_name] = module
+    # spec.loader.exec_module(module)
+    # return module
 
-    spec = spec_from_file_location(module_name, file_path)
-    input(file_path)
-    assert spec is not None
-    module = module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    # spec = spec_from_file_location(module_name, file_path)
+    # assert spec is not None
+    # module = module_from_spec(spec)
+    # spec.loader.exec_module(module)
+    # return module
 
 
 def mock_function(*args, **kwargs):

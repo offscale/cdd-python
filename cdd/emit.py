@@ -420,7 +420,7 @@ def class_(
                                     (
                                         _emit_docstring(
                                             {
-                                                "doc": intermediate_repr["doc"],
+                                                "doc": intermediate_repr.get("doc", ""),
                                                 "params": OrderedDict(),
                                                 "returns": None,
                                             },

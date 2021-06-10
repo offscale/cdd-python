@@ -709,6 +709,7 @@ __all__ = [
     "indent_all_but_first",
     "location_within",
     "lstrip_namespace",
+    "no_magic_dir2attr",
     "none_types",
     "paren_wrap_code",
     "pluralise",

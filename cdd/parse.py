@@ -50,6 +50,7 @@ from cdd.parser_utils import (
     _inspect_process_ir_param,
     _interpolate_return,
     column_call_to_param,
+    get_source,
     ir_merge,
     json_schema_property_to_param,
 )
@@ -100,41 +101,9 @@ def class_(
     assert not isinstance(class_def, FunctionDef)
     is_supported_ast_node = isinstance(class_def, (Module, ClassDef))
     if not is_supported_ast_node and isinstance(class_def, type):
-        ir = _inspect(class_def, class_name, word_wrap)
-        parsed_body = ast.parse(getsource(class_def).lstrip()).body[0]
-        parsed_body.body = (
-            parsed_body.body
-            if get_docstring(parsed_body) is None
-            else parsed_body.body[1:]
+        return _class_from_memory(
+            class_def, class_name, infer_type, merge_inner_function, word_wrap
         )
-
-        if merge_inner_function is not None:
-            _merge_inner_function(
-                parsed_body,
-                infer_type=infer_type,
-                intermediate_repr=ir,
-                merge_inner_function=merge_inner_function,
-            )
-            return ir
-
-        ir["_internal"] = {
-            "body": list(
-                filterfalse(
-                    rpartial(isinstance, AnnAssign),
-                    parsed_body.body,
-                )
-            ),
-            "from_name": class_name,
-            "from_type": "cls",
-        }
-        body_ir = class_(
-            class_def=parsed_body,
-            class_name=class_name,
-            merge_inner_function=merge_inner_function,
-        )
-        ir_merge(ir, body_ir)
-
-        return ir
 
     assert (
         is_supported_ast_node
@@ -204,10 +173,13 @@ def class_(
                         lambda target: setitem(
                             *(
                                 (intermediate_repr["params"][target.id], "default", val)
-                                if target.id in intermediate_repr["params"]
+                                if isinstance(target, Name)
+                                and target.id in intermediate_repr["params"]
                                 else (
                                     intermediate_repr["params"],
-                                    target.id,
+                                    target.id
+                                    if isinstance(target, Name)
+                                    else get_value(get_value(target)),
                                     {"default": val},
                                 )
                             )
@@ -250,6 +222,72 @@ def class_(
     # intermediate_repr['_internal']["body"]= list(filterfalse(rpartial(isinstance,(AnnAssign,Assign)),class_def.body))
 
     return intermediate_repr
+
+
+def _class_from_memory(
+    class_def, class_name, infer_type, merge_inner_function, word_wrap
+):
+    """
+    Merge the inner function if found within the class, with the class IR.
+    Internal func just for internal memory. Uses `inspect`.
+
+    :param class_def: Class AST
+    :type class_def: ```ClassDef```
+
+    :param class_name: Class name
+    :type class_name: ```str```
+
+    :param infer_type: Whether to try inferring the typ (from the default)
+    :type infer_type: ```bool```
+
+    :param merge_inner_function: Name of inner function to merge. If None, merge nothing.
+    :type merge_inner_function: ```Optional[str]```
+
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
+
+    :returns: a dictionary of form
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :rtype: ```dict```
+    """
+    ir = _inspect(class_def, class_name, word_wrap)
+    src = get_source(class_def)
+    if src is None:
+        return ir
+    parsed_body = ast.parse(src.lstrip()).body[0]
+    parsed_body.body = (
+        parsed_body.body if get_docstring(parsed_body) is None else parsed_body.body[1:]
+    )
+    if merge_inner_function is not None:
+        _merge_inner_function(
+            parsed_body,
+            infer_type=infer_type,
+            intermediate_repr=ir,
+            merge_inner_function=merge_inner_function,
+        )
+        return ir
+    ir["_internal"] = {
+        "body": list(
+            filterfalse(
+                rpartial(isinstance, AnnAssign),
+                parsed_body.body,
+            )
+        ),
+        "from_name": class_name,
+        "from_type": "cls",
+    }
+    body_ir = class_(
+        class_def=parsed_body,
+        class_name=class_name,
+        merge_inner_function=merge_inner_function,
+    )
+    ir_merge(ir, body_ir)
+    return ir
 
 
 def _merge_inner_function(
@@ -348,7 +386,7 @@ def _inspect(obj, name, word_wrap):
                     None,
                     map(
                         partial(_inspect_process_ir_param, sig=sig),
-                        ir["params"].items(),
+                        ir.get("params", {}).items(),
                     )
                     # if ir.get("params")
                     # else map(_inspect_process_sig, sig.parameters.items()),
@@ -357,7 +395,10 @@ def _inspect(obj, name, word_wrap):
         }
     )
 
-    parsed_body = ast.parse(getsource(obj).lstrip()).body[0]
+    src = get_source(obj)
+    if src is None:
+        return ir
+    parsed_body = ast.parse(src.lstrip()).body[0]
 
     if is_function:
         ir["type"] = {"self": "self", "cls": "cls"}.get(

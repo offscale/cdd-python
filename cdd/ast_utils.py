@@ -15,6 +15,8 @@ from ast import (
     Dict,
     Expr,
     FunctionDef,
+    Import,
+    ImportFrom,
     Index,
     Load,
     Module,
@@ -36,10 +38,12 @@ from contextlib import suppress
 from copy import deepcopy
 from importlib import import_module
 from inspect import isclass, isfunction
+from itertools import chain, filterfalse
 from json import dumps
-from operator import inv, neg, not_, pos
+from operator import attrgetter, inv, neg, not_, pos
 from sys import version_info
 
+from _ast import List
 from yaml import safe_dump_all
 
 from cdd.defaults_utils import extract_default, needs_quoting
@@ -1353,6 +1357,147 @@ def to_annotation(typ):
     )
 
 
+def get_ass_where_name(node, name):
+    """
+    Find all `Assign`/`AnnAssign` in node body where id matches name
+
+    :param node: AST node with a '.body'
+    :type node: ```Union[Module, ClassDef, FunctionDef, If, Try, While, With, AsyncFor, AsyncFunctionDef, AsyncWith,
+                         ExceptHandler, Expression, For, IfExp, Interactive, Lambda ]```
+
+    :param name: Name to match (matches against `id` field of `Name`)
+    :type name: ```str```
+
+    :returns: Generator of all matches names (.value)
+    :rtype: ```Generator[Any]```
+    """
+    return (
+        get_value(node)
+        for node in node.body
+        if isinstance(node, Assign)
+        and name
+        in frozenset(
+            map(attrgetter("id"), filter(rpartial(isinstance, Name), node.targets))
+        )
+        or isinstance(node, AnnAssign)
+        and node.target == name
+    )
+
+
+def del_ass_where_name(node, name):
+    """
+    Delete all `Assign`/`AnnAssign` in node body where id matches name
+
+    :param node: AST node with a '.body'
+    :type node: ```Union[Module, ClassDef, FunctionDef, If, Try, While, With, AsyncFor, AsyncFunctionDef, AsyncWith,
+                         ExceptHandler, Expression, For, IfExp, Interactive, Lambda ]```
+
+    :param name: Name to match (matches against `id` field of `Name`)
+    :type name: ```str```
+    """
+    node.body = list(
+        filter(
+            None,
+            (
+                None
+                if isinstance(_node, Assign)
+                and name
+                in frozenset(
+                    map(
+                        attrgetter("id"),
+                        filter(rpartial(isinstance, Name), _node.targets),
+                    )
+                )
+                or isinstance(_node, AnnAssign)
+                and _node.target == name
+                else _node
+                for _node in node.body
+            ),
+        )
+    )
+
+
+def merge_assignment_lists(node, name, unique_sort=True):
+    """
+    Merge multiple same-name lists within the body of a node into one, e.g., if you have multiple ```__all__```
+
+    :param node: AST node with a '.body'
+    :type node: ```Union[Module, ClassDef, FunctionDef, If, Try, While, With, AsyncFor, AsyncFunctionDef, AsyncWith,
+                         ExceptHandler, Expression, For, IfExp, Interactive, Lambda ]```
+
+    :param name: Name to match (matches against `id` field of `Name`)
+    :type name: ```str```
+
+    :param unique_sort: Whether to ensure its unique + sorted
+    :type unique_sort: ```bool```
+    """
+    asses = tuple(get_ass_where_name(node, name))
+
+    # if len(asses) < 2: return
+
+    # Could extract the `AnnAssign` stuff I suppose…
+
+    del_ass_where_name(node, name)
+    elts = chain.from_iterable(
+        map(
+            attrgetter("elts"),
+            asses,
+        )
+    )
+    node.body.append(
+        Assign(
+            targets=[Name("__all__", Store())],
+            value=List(
+                ctx=Load(),
+                elts=sorted(frozenset(elts), key=get_value)
+                if unique_sort
+                else list(elts),
+                expr=None,
+            ),
+            expr=None,
+            lineno=None,
+            **maybe_type_comment
+        )
+    )
+
+
+def merge_modules(mod0, mod1, remove_imports_from_second=True):
+    """
+    Merge modules (removing module docstring)
+
+    :param mod0: Module
+    :type mod0: ```Module```
+
+    :param mod1: Module
+    :type mod1: ```Module```
+
+    :param remove_imports_from_second: Whether to remove global imports from second module
+    :type remove_imports_from_second: ```bool```
+
+    :returns: Merged module (copy)
+    :rtype: ```Module```
+    """
+    mod1_body = (
+        mod1.body[1:]
+        if mod1.body and isinstance(mod1.body[0], (Str, Constant))
+        else mod1.body
+    )
+    new_mod = deepcopy(mod0)
+
+    new_mod.body += (
+        list(
+            filterfalse(
+                rpartial(isinstance, (ImportFrom, Import)),
+                mod1_body,
+            )
+        )
+        if remove_imports_from_second
+        else deepcopy(mod1_body)
+    )
+
+    return new_mod
+
+
 NoneStr = "```(None)```" if PY_GTE_3_9 else "```None```"
 
 __all__ = [
@@ -1375,6 +1520,7 @@ __all__ = [
     "is_argparse_description",
     "it2literal",
     "maybe_type_comment",
+    "merge_modules",
     "node_to_dict",
     "param2argparse_param",
     "param2ast",

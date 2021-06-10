@@ -1,11 +1,12 @@
 """ Tests for exmod subcommand """
-from functools import partial
-from operator import add, itemgetter, methodcaller
+from operator import add, itemgetter
 from os import environ, mkdir, path
 from subprocess import DEVNULL, call
 from sys import executable
 from tempfile import TemporaryDirectory
 from unittest import TestCase
+
+from _ast import ClassDef
 
 from cdd import parse
 from cdd.exmod import exmod
@@ -14,7 +15,7 @@ from cdd.source_transformer import ast_parse
 from cdd.tests.mocks import imports_header
 from cdd.tests.mocks.classes import class_str
 from cdd.tests.mocks.exmod import setup_py_mock
-from cdd.tests.utils_for_tests import run_ast_test, unittest_main
+from cdd.tests.utils_for_tests import unittest_main
 
 
 class TestExMod(TestCase):
@@ -26,7 +27,7 @@ class TestExMod(TestCase):
         with TemporaryDirectory() as tempdir, self.assertRaises(NotImplementedError):
             exmod(
                 module="unittest",
-                emit=None,
+                emit_name=None,
                 blacklist=("unittest.TestCase",),
                 whitelist=tuple(),
                 output_directory=tempdir,
@@ -38,7 +39,7 @@ class TestExMod(TestCase):
         with TemporaryDirectory() as tempdir, self.assertRaises(NotImplementedError):
             exmod(
                 module="unittest",
-                emit=None,
+                emit_name=None,
                 blacklist=tuple(),
                 whitelist=("unittest.TestCase",),
                 output_directory=tempdir,
@@ -50,8 +51,8 @@ class TestExMod(TestCase):
         with TemporaryDirectory() as tempdir, self.assertRaises(NotImplementedError):
             exmod(
                 module=tempdir,
-                emit=None,
-                blacklist=tuple(),
+                emit_name=None,
+                blacklist=["foo", "bar"],
                 whitelist=tuple(),
                 output_directory=tempdir,
             )
@@ -59,17 +60,16 @@ class TestExMod(TestCase):
     def test_exmod_output_directory_nonexistent(self) -> None:
         """Tests `exmod` module whence directory does not exist"""
 
-        with TemporaryDirectory() as tempdir:
+        with TemporaryDirectory() as tempdir, self.assertRaises(AssertionError):
             output_directory = path.join(tempdir, "stuff")
             self.assertFalse(path.isdir(output_directory))
             exmod(
-                module="unittest",
-                emit=None,
+                module=output_directory,
+                emit_name=None,
                 blacklist=tuple(),
                 whitelist=tuple(),
                 output_directory=output_directory,
             )
-            self.assertTrue(path.isdir(output_directory))
 
     def create_fs(self, tempdir):
         """
@@ -82,9 +82,7 @@ class TestExMod(TestCase):
         :rtype: ```str```
         """
         self.module_name, self.gold_dir = path.basename(tempdir), tempdir
-        self.parent_name, self.parent_dir = "parent", path.join(
-            self.module_name, "parent_dir"
-        )
+        self.parent_name, self.parent_dir = "parent", "parent_dir"
         self.child_name, self.child_dir = "child", path.join(
             self.parent_dir, "child_dir"
         )
@@ -114,19 +112,22 @@ class TestExMod(TestCase):
                     encoding=ENCODING,
                     imports="\n".join(
                         (
-                            "import "
-                            + "\nimport ".join(
-                                map(
-                                    rpartial(str.replace, path.sep, "."),
-                                    map(itemgetter(1), self.module_hierarchy),
-                                )
+                            "import {module_name}.{other_imports}\n".format(
+                                module_name=self.module_name,
+                                other_imports="\nimport {module_name}.".format(
+                                    module_name=self.module_name
+                                ).join(
+                                    map(
+                                        rpartial(str.replace, path.sep, "."),
+                                        map(itemgetter(1), self.module_hierarchy),
+                                    )
+                                ),
                             ),
-                            "\n",
                         )
                     ),
-                    module_name=self.module_name,
-                    parent_name=self.parent_name,
-                    cls_name="{name}Class".format(name=self.parent_name.title()),
+                    # module_name=self.module_name,
+                    # parent_name=self.parent_name,
+                    # cls_name="{name}Class".format(name=self.parent_name.title()),
                     author=environ.get("CDD_AUTHOR", "Samuel Marks"),
                     version=environ.get("CDD_VERSION", "0.0.0"),
                     all__="__all__ = {!r}".format(
@@ -145,7 +146,7 @@ class TestExMod(TestCase):
             )
 
         for name, _folder in self.module_hierarchy:
-            folder = path.join(tempdir, _folder)
+            folder = path.join(tempdir, self.module_name, _folder)
             mkdir(folder)
             cls_name = "{name}Class".format(name=name.title())
             with open(path.join(folder, "__init__.py"), "wt") as f:
@@ -180,10 +181,11 @@ class TestExMod(TestCase):
         :param tempdir: Temporary directory
         :type tempdir: ```str```
         """
+        new_module_name = path.basename(tempdir)
 
         for name, _folder in self.module_hierarchy:
-            gen_folder = path.join(tempdir, _folder)
-            gold_folder = path.join(self.gold_dir, _folder)
+            gen_folder = path.join(tempdir, new_module_name, _folder)
+            gold_folder = path.join(self.gold_dir, self.module_name, _folder)
 
             def _open(folder):
                 """
@@ -197,16 +199,38 @@ class TestExMod(TestCase):
 
             self.assertTrue(path.isdir(gold_folder))
             self.assertTrue(path.isdir(gen_folder))
+
             with _open(gen_folder) as gen, _open(gold_folder) as gold:
-                run_ast_test(
-                    self,
-                    *map(
-                        parse.class_,
-                        map(
-                            partial(ast_parse, skip_annotate=True),
-                            map(methodcaller("read"), (gen, gold)),
-                        ),
+                # self.maxDiff = None
+                # tuple(map(
+                #     lambda node: print(to_code(
+                #         next(
+                #             filter(
+                #                 rpartial(isinstance, ClassDef),
+                #                 ast_parse(node.read()).body,
+                #             )
+                #         )
+                #     )),
+                #     (gen, gold),
+                # ))
+                # gen.seek(0)
+                # gold.seek(0)
+                gen_ir, gold_ir = map(
+                    lambda node: parse.class_(
+                        next(
+                            filter(
+                                rpartial(isinstance, ClassDef),
+                                ast_parse(node.read()).body,
+                            )
+                        )
                     ),
+                    (gen, gold),
+                )
+                self.assertDictEqual(
+                    *(
+                        {key: d[key] for key in ("returns",)}  # "params",
+                        for d in (gold_ir, gen_ir)
+                    )
                 )
 
     def test_exmod(self) -> None:
@@ -235,12 +259,16 @@ class TestExMod(TestCase):
             )
 
         try:
-            with TemporaryDirectory() as existent_module_dir, TemporaryDirectory() as new_module_dir:
+            with TemporaryDirectory(
+                prefix="gold", suffix="gold"
+            ) as existent_module_dir, TemporaryDirectory(
+                prefix="gen", suffix="gen"
+            ) as new_module_dir:
                 self.create_fs(existent_module_dir)
                 _pip(["install", "."], existent_module_dir)
                 exmod(
                     module=self.module_name,
-                    emit="class",
+                    emit_name="class",
                     blacklist=tuple(),
                     whitelist=tuple(),
                     output_directory=new_module_dir,

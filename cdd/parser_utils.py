@@ -369,8 +369,27 @@ def infer(*args, **kwargs):
             return "sqlalchemy_table"
 
 
+def get_source(obj):
+    """
+    Call inspect.getsource and raise an error unless class definition could not be found
+
+    :param obj: object to inspect
+    :type obj: ```Any```
+
+    :returns: The source
+    :rtype: ```str```
+    """
+    try:
+        return getsource(obj)
+    except OSError as e:
+        if e.args and e.args[0] == "could not find class definition":
+            return None
+        raise
+
+
 __all__ = [
     "column_call_to_param",
+    "get_source",
     "ir_merge",
     "infer",
     "json_schema_property_to_param",
