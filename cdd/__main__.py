@@ -485,7 +485,7 @@ def main(cli_argv=None, return_args=False):
     elif command == "exmod":
         exmod(
             module=args.module,
-            emit=args.emit,
+            emit_name=args.emit,
             blacklist=args.blacklist,
             whitelist=args.whitelist,
             output_directory=args.output_directory,

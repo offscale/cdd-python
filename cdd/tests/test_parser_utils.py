@@ -2,9 +2,10 @@
 from collections import OrderedDict
 from copy import deepcopy
 from unittest import TestCase
+from unittest.mock import patch
 
 from cdd.ast_utils import set_value
-from cdd.parser_utils import _join_non_none, infer, ir_merge
+from cdd.parser_utils import _join_non_none, get_source, infer, ir_merge
 from cdd.tests.mocks import imports_header
 from cdd.tests.mocks.argparse import argparse_func_ast, argparse_func_str
 from cdd.tests.mocks.classes import class_ast, class_str
@@ -212,6 +213,20 @@ class TestParserUtils(TestCase):
             "Config",
         )
         self.assertEqual(infer(Config), "sqlalchemy")
+
+    def test_get_source_raises(self):
+        """Tests that `get_source` raises an exception"""
+        with self.assertRaises(TypeError):
+            get_source(None)
+
+        def raise_os_error(_):
+            """raise_OSError"""
+            raise OSError
+
+        with patch("inspect.getsourcelines", raise_os_error), self.assertRaises(
+            OSError
+        ):
+            print(get_source(min))
 
 
 unittest_main()
