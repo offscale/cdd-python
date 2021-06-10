@@ -50,9 +50,6 @@ from cdd.tests.mocks.sqlalchemy import config_decl_base_ast, config_tbl_ast
 from cdd.tests.utils_for_tests import reindent_docstring, run_ast_test, unittest_main
 
 
-
-# git commit -S -am '[cdd/exmod] Implement beta; [cdd/__main__.py] emit => emit_name; [cdd/__init__.py] Bump version (beta)'
-
 class TestEmitters(TestCase):
     """Tests whether conversion between formats works"""
 
