@@ -226,7 +226,7 @@ class TestParserUtils(TestCase):
         with patch("inspect.getsourcelines", raise_os_error), self.assertRaises(
             OSError
         ):
-            print(get_source(min))
+            get_source(min)
 
 
 unittest_main()

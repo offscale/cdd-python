@@ -1,12 +1,11 @@
 """ Tests for exmod subcommand """
+from ast import ClassDef
 from operator import add, itemgetter
 from os import environ, mkdir, path
 from subprocess import DEVNULL, call
 from sys import executable
 from tempfile import TemporaryDirectory
 from unittest import TestCase
-
-from _ast import ClassDef
 
 from cdd import parse
 from cdd.exmod import exmod
@@ -251,8 +250,8 @@ class TestExMod(TestCase):
                 call(
                     [executable, "-m", "pip"] + pip_args,
                     cwd=cwd,
-                    # stdout=DEVNULL,
-                    # stderr=DEVNULL,
+                    stdout=DEVNULL,
+                    stderr=DEVNULL,
                 ),
                 0,
                 "EXIT_SUCCESS not reached",

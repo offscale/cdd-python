@@ -18,6 +18,7 @@ from ast import (
     Import,
     ImportFrom,
     Index,
+    List,
     Load,
     Module,
     Name,
@@ -43,7 +44,6 @@ from json import dumps
 from operator import attrgetter, inv, neg, not_, pos
 from sys import version_info
 
-from _ast import List
 from yaml import safe_dump_all
 
 from cdd.defaults_utils import extract_default, needs_quoting
@@ -1520,6 +1520,7 @@ __all__ = [
     "is_argparse_description",
     "it2literal",
     "maybe_type_comment",
+    "merge_assignment_lists",
     "merge_modules",
     "node_to_dict",
     "param2argparse_param",
