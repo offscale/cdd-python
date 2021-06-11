@@ -385,7 +385,8 @@ class TestEmitters(TestCase):
             emit_as_kwonlyargs=False,
         )
 
-        # emit.file(gen_ast, os.path.join(os.path.dirname(__file__), "delme.py"), mode="wt")
+        # emit.file(gen_ast, os.path.join(os.path.dirname(__file__),
+        #           "delme{extsep}py".format(extsep=extsep), mode="wt")
 
         run_ast_test(
             self,

@@ -22,7 +22,7 @@ def main():
         path.join(
             path.abspath(path.dirname(__file__)),
             package_name,
-            "__init__{extsep}py".format(extsep=extsep),
+            "__init__{{extsep}}py".format(extsep=extsep),
         )
     ) as f:
         parsed_init = parse(f.read())
