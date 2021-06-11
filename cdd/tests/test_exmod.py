@@ -207,6 +207,15 @@ class TestExMod(TestCase):
                 :returns: Open IO
                 :rtype: ```open```
                 """
+                from sys import platform
+
+                if platform == "win32":
+                    from os import listdir
+
+                    from cdd.pure_utils import pp
+
+                    pp({folder: listdir(folder)})
+
                 return open(
                     path.join(
                         folder, "{name}{extsep}py".format(name=name, extsep=extsep)
