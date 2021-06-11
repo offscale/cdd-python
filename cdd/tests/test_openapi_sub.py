@@ -3,6 +3,7 @@ Tests OpenAPI bulk
 """
 from functools import partial
 from os import path
+from os.path import extsep
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
@@ -27,10 +28,10 @@ class TestOpenApiBulk(TestCase):
         """
         with TemporaryDirectory() as tempdir:
             temp_dir_join = partial(path.join, tempdir)
-            open(temp_dir_join("__init__.py"), "a").close()
+            open(temp_dir_join("__init__{extsep}py".format(extsep=extsep)), "a").close()
 
-            models_filename = temp_dir_join("models.py")
-            routes_filename = temp_dir_join("routes.py")
+            models_filename = temp_dir_join("models{extsep}py".format(extsep=extsep))
+            routes_filename = temp_dir_join("routes{extsep}py".format(extsep=extsep))
 
             with open(models_filename, "wt") as f:
                 f.write("\n".join((sqlalchemy_imports_str, config_tbl_str)))

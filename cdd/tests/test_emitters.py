@@ -5,6 +5,7 @@ import ast
 import os
 from ast import FunctionDef
 from copy import deepcopy
+from os.path import extsep
 from platform import system
 from sys import modules
 from tempfile import TemporaryDirectory
@@ -179,7 +180,9 @@ class TestEmitters(TestCase):
         """
 
         with TemporaryDirectory() as tempdir:
-            filename = os.path.join(tempdir, "delete_me.py")
+            filename = os.path.join(
+                tempdir, "delete_me{extsep}py".format(extsep=extsep)
+            )
             try:
                 emit.file(class_ast, filename, skip_black=True)
 

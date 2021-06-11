@@ -19,6 +19,7 @@ from ast import (
 )
 from copy import deepcopy
 from io import StringIO
+from os.path import extsep
 from shutil import rmtree
 from tempfile import mkdtemp
 from unittest import TestCase
@@ -51,7 +52,7 @@ def populate_files(tempdir, input_module_str=None):
     :returns: input filename, input str, expected_output
     :rtype: ```Tuple[str, str, str, Module]```
     """
-    input_filename = os.path.join(tempdir, "input.py")
+    input_filename = os.path.join(tempdir, "input{extsep}py".format(extsep=extsep))
     input_class_name = "Foo"
     input_class_ast = emit.class_(
         parse.function(deepcopy(method_adder_ast)),
@@ -169,7 +170,10 @@ class TestGen(TestCase):
             cls.input_class_ast,
             cls.expected_class_ast,
         ) = populate_files(temp_module_dir)
-        with open(os.path.join(temp_module_dir, "__init__.py"), "w") as f:
+        with open(
+            os.path.join(temp_module_dir, "__init__{extsep}py".format(extsep=extsep)),
+            "w",
+        ) as f:
             f.write(_import_star_from_input_str)
 
         sys.path.append(cls.tempdir)
@@ -184,7 +188,9 @@ class TestGen(TestCase):
     def test_gen(self) -> None:
         """Tests `gen`"""
 
-        output_filename = os.path.join(self.tempdir, "test_gen_output.py")
+        output_filename = os.path.join(
+            self.tempdir, "test_gen_output{extsep}py".format(extsep=extsep)
+        )
         with patch("sys.stdout", new_callable=StringIO), patch(
             "sys.stderr", new_callable=StringIO
         ):
@@ -213,7 +219,8 @@ class TestGen(TestCase):
         """Tests `gen` with `imports_from_file`"""
 
         output_filename = os.path.join(
-            self.tempdir, "test_gen_with_imports_from_file_output.py"
+            self.tempdir,
+            "test_gen_with_imports_from_file_output{extsep}py".format(extsep=extsep),
         )
         with patch("sys.stdout", new_callable=StringIO), patch(
             "sys.stderr", new_callable=StringIO
@@ -261,7 +268,9 @@ class TestGen(TestCase):
 
         output_filename = os.path.join(
             self.tempdir,
-            "test_gen_with_imports_from_file_and_prepended_import_output.py",
+            "test_gen_with_imports_from_file_and_prepended_import_output{extsep}py".format(
+                extsep=extsep
+            ),
         )
         with patch("sys.stdout", new_callable=StringIO), patch(
             "sys.stderr", new_callable=StringIO

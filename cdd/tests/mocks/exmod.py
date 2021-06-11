@@ -9,6 +9,7 @@ setup.py implementation, interesting because it parsed the first __init__.py and
 from ast import Assign, Constant, Str, parse
 from operator import attrgetter
 from os import path
+from os.path import extsep
 
 from setuptools import find_packages, setup
 
@@ -18,7 +19,11 @@ package_name = {package_name!r}
 def main():
     """Main function for setup.py; this actually does the installation"""
     with open(
-        path.join(path.abspath(path.dirname(__file__)), package_name, "__init__.py")
+        path.join(
+            path.abspath(path.dirname(__file__)),
+            package_name,
+            "__init__{extsep}py".format(extsep=extsep),
+        )
     ) as f:
         parsed_init = parse(f.read())
 

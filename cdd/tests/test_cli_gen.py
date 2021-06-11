@@ -1,5 +1,6 @@
 """ Tests for CLI gen subparser (__main__.py) """
 import os
+from os.path import extsep
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch
@@ -51,7 +52,9 @@ class TestCliGen(TestCase):
     def test_gen(self) -> None:
         """Tests CLI interface gets all the way to the gen call without error"""
         with TemporaryDirectory() as tempdir:
-            output_filename = os.path.join(tempdir, "classes.py")
+            output_filename = os.path.join(
+                tempdir, "classes{extsep}py".format(extsep=extsep)
+            )
 
             with patch("cdd.__main__.gen", mock_function):
                 run_cli_test(

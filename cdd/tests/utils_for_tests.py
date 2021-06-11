@@ -9,6 +9,7 @@ from importlib.abc import Loader
 from importlib.util import module_from_spec, spec_from_file_location, spec_from_loader
 from itertools import takewhile
 from os import path
+from os.path import extsep
 from sys import modules
 from tempfile import NamedTemporaryFile
 from unittest import main
@@ -231,7 +232,7 @@ def inspectable_compile(s, modname=None):
     :returns: The compiled and executed input source module, such that `inspect.getsource` works
     :rtype: ```Any```
     """
-    fh = NamedTemporaryFile(suffix=".py")
+    fh = NamedTemporaryFile(suffix="{extsep}py".format(extsep=extsep))
     filename = fh.name
     try:
         modname = modname or path.splitext(path.basename(filename))[0]

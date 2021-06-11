@@ -7,7 +7,7 @@ from importlib import import_module
 from inspect import getfile
 from itertools import chain, groupby
 from operator import itemgetter
-from os import makedirs, path
+from os import extsep, makedirs, path
 
 from cdd import emit, parse
 from cdd.ast_utils import maybe_type_comment, set_value
@@ -174,7 +174,11 @@ def exmod(
             stmt=None,
             type_ignores=[],
         ),
-        path.join(output_directory, new_module_name, "__init__.py"),
+        path.join(
+            output_directory,
+            new_module_name,
+            "__init__{extsep}py".format(extsep=extsep),
+        ),
         mode="wt",
     )
 

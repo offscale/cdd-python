@@ -9,12 +9,17 @@ from distutils.sysconfig import get_python_lib
 from functools import partial
 from operator import attrgetter
 from os import listdir, path
+from os.path import extsep
 
 from setuptools import find_packages, setup
 
 package_name = "cdd"
 
-with open(path.join(path.dirname(__file__), "README.md"), "rt", encoding="utf-8") as fh:
+with open(
+    path.join(path.dirname(__file__), "README{extsep}md".format(extsep=extsep)),
+    "rt",
+    encoding="utf-8",
+) as fh:
     long_description = fh.read()
 
 
@@ -37,7 +42,11 @@ def to_funcs(*paths):
 def main():
     """Main function for setup.py; this actually does the installation"""
     with open(
-        path.join(path.abspath(path.dirname(__file__)), package_name, "__init__.py")
+        path.join(
+            path.abspath(path.dirname(__file__)),
+            package_name,
+            "__init__{extsep}py".format(extsep=extsep),
+        )
     ) as f:
         parsed_init = parse(f.read())
 

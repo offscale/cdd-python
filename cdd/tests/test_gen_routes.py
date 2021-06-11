@@ -4,6 +4,7 @@ from ast import FunctionDef
 from binascii import crc32
 from itertools import tee
 from os import path, remove
+from os.path import extsep
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
@@ -43,9 +44,9 @@ def populate_files(tempdir, init_with_crud):
     :returns: model_path, routes_path
     :rtype: ```Tuple[str, str]```
     """
-    model_path = path.join(tempdir, "model.py")
-    routes_path = path.join(tempdir, "routes.py")
-    open(path.join(tempdir, "__init__.py"), "a").close()
+    model_path = path.join(tempdir, "model{extsep}py".format(extsep=extsep))
+    routes_path = path.join(tempdir, "routes{extsep}py".format(extsep=extsep))
+    open(path.join(tempdir, "__init__{extsep}py".format(extsep=extsep)), "a").close()
 
     model = "\n".join(
         (

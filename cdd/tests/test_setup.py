@@ -5,6 +5,7 @@ from importlib.machinery import SourceFileLoader
 from importlib.util import module_from_spec, spec_from_loader
 from operator import methodcaller
 from os import path
+from os.path import extsep
 from sys import modules
 from unittest import TestCase
 from unittest.mock import patch
@@ -33,7 +34,10 @@ class TestSetupPy(TestCase):
         modname = "setup_py"
         loader = SourceFileLoader(
             modname,
-            path.join(path.dirname(path.dirname(path.dirname(__file__))), "setup.py"),
+            path.join(
+                path.dirname(path.dirname(path.dirname(__file__))),
+                "setup{extsep}py".format(extsep=extsep),
+            ),
         )
         modules[modname] = module_from_spec(spec_from_loader(loader.name, loader))
         loader.exec_module(modules[modname])

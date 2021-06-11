@@ -1,5 +1,6 @@
 """ Tests for CLI sync_properties subparser (__main__.py) """
 import os
+from os.path import extsep
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch
@@ -50,11 +51,11 @@ class TestCliSyncProperties(TestCase):
         with TemporaryDirectory() as tempdir:
             input_filename = os.path.join(
                 tempdir,
-                "input_filename.py",
+                "input_filename{extsep}py".format(extsep=extsep),
             )
             output_filename = os.path.join(
                 tempdir,
-                "output_filename.py",
+                "output_filename{extsep}py".format(extsep=extsep),
             )
             open(input_filename, "wt").close()
 
@@ -80,8 +81,12 @@ class TestCliSyncProperties(TestCase):
     def test_sync_properties(self) -> None:
         """Tests CLI interface gets all the way to the sync_properties call without error"""
         with TemporaryDirectory() as tempdir:
-            input_filename = os.path.join(tempdir, "class_.py")
-            output_filename = os.path.join(tempdir, "method.py")
+            input_filename = os.path.join(
+                tempdir, "class_{extsep}py".format(extsep=extsep)
+            )
+            output_filename = os.path.join(
+                tempdir, "method{extsep}py".format(extsep=extsep)
+            )
             open(input_filename, "wt").close()
             open(output_filename, "wt").close()
 
