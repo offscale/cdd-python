@@ -251,8 +251,8 @@ class TestExMod(TestCase):
                 call(
                     [executable, "-m", "pip"] + pip_args,
                     cwd=cwd,
-                    stdout=DEVNULL,
-                    stderr=DEVNULL,
+                    # stdout=DEVNULL,
+                    # stderr=DEVNULL,
                 ),
                 0,
                 "EXIT_SUCCESS not reached",
