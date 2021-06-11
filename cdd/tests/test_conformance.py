@@ -8,6 +8,7 @@ from copy import deepcopy
 from functools import partial
 from io import StringIO
 from os import path
+from os.path import extsep
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch
@@ -47,7 +48,11 @@ class TestConformance(TestCase):
                         )[0].items(),
                     )
                 ),
-                (("argparse.py", False), ("classes.py", False), ("methods.py", False)),
+                (
+                    ("argparse{extsep}py".format(extsep=extsep), False),
+                    ("classes{extsep}py".format(extsep=extsep), False),
+                    ("methods{extsep}py".format(extsep=extsep), False),
+                ),
             )
 
     def test_ground_truths(self) -> None:
@@ -63,20 +68,24 @@ class TestConformance(TestCase):
                             argparse_func_ast, argparse_function, mode="wt"
                         )
                         or argparse_function
-                    )(tempdir_join("argparse{i}.py".format(i=i))),
+                    )(tempdir_join("argparse{i}{extsep}py".format(i=i, extsep=extsep))),
                     range(10),
                 )
             )
             # Test if can create missing file
-            argparse_functions.append(tempdir_join("argparse_missing.py"))
+            argparse_functions.append(
+                tempdir_join("argparse_missing{extsep}py".format(extsep=extsep))
+            )
 
             # Test if can fill in empty file
-            argparse_functions.append(tempdir_join("argparse_empty.py"))
+            argparse_functions.append(
+                tempdir_join("argparse_empty{extsep}py".format(extsep=extsep))
+            )
 
-            class_ = tempdir_join("classes.py")
+            class_ = tempdir_join("classes{extsep}py".format(extsep=extsep))
             emit.file(class_ast_no_default_doc, class_, mode="wt")
 
-            function = tempdir_join("methods.py")
+            function = tempdir_join("methods{extsep}py".format(extsep=extsep))
             emit.file(class_with_method_ast, function, mode="wt")
 
             args = Namespace(
@@ -109,20 +118,20 @@ class TestConformance(TestCase):
                     )
                 ),
                 (
-                    ("argparse0.py", False),
-                    ("argparse1.py", False),
-                    ("argparse2.py", False),
-                    ("argparse3.py", False),
-                    ("argparse4.py", False),
-                    ("argparse5.py", False),
-                    ("argparse6.py", False),
-                    ("argparse7.py", False),
-                    ("argparse8.py", False),
-                    ("argparse9.py", False),
-                    ("argparse_missing.py", True),
-                    ("argparse_empty.py", True),
-                    ("classes.py", False),
-                    ("methods.py", False),
+                    ("argparse0{extsep}py".format(extsep=extsep), False),
+                    ("argparse1{extsep}py".format(extsep=extsep), False),
+                    ("argparse2{extsep}py".format(extsep=extsep), False),
+                    ("argparse3{extsep}py".format(extsep=extsep), False),
+                    ("argparse4{extsep}py".format(extsep=extsep), False),
+                    ("argparse5{extsep}py".format(extsep=extsep), False),
+                    ("argparse6{extsep}py".format(extsep=extsep), False),
+                    ("argparse7{extsep}py".format(extsep=extsep), False),
+                    ("argparse8{extsep}py".format(extsep=extsep), False),
+                    ("argparse9{extsep}py".format(extsep=extsep), False),
+                    ("argparse_missing{extsep}py".format(extsep=extsep), True),
+                    ("argparse_empty{extsep}py".format(extsep=extsep), True),
+                    ("classes{extsep}py".format(extsep=extsep), False),
+                    ("methods{extsep}py".format(extsep=extsep), False),
                 ),
             )
 
@@ -146,7 +155,11 @@ class TestConformance(TestCase):
                         )[0].items(),
                     )
                 ),
-                (("argparse.py", False), ("classes.py", True), ("methods.py", False)),
+                (
+                    ("argparse{extsep}py".format(extsep=extsep), False),
+                    ("classes{extsep}py".format(extsep=extsep), True),
+                    ("methods{extsep}py".format(extsep=extsep), False),
+                ),
             )
 
     @staticmethod
@@ -174,13 +187,15 @@ class TestConformance(TestCase):
         :returns: OrderedDict of filenames and whether they were changed, Args
         :rtype: ```Tuple[OrderedDict, Namespace]```
         """
-        argparse_function = os.path.join(tempdir, "argparse.py")
+        argparse_function = os.path.join(
+            tempdir, "argparse{extsep}py".format(extsep=extsep)
+        )
         emit.file(_argparse_func_ast, argparse_function, mode="wt")
 
-        class_ = os.path.join(tempdir, "classes.py")
+        class_ = os.path.join(tempdir, "classes{extsep}py".format(extsep=extsep))
         emit.file(_class_ast, class_, mode="wt")
 
-        function = os.path.join(tempdir, "methods.py")
+        function = os.path.join(tempdir, "methods{extsep}py".format(extsep=extsep))
         emit.file(_class_with_method_ast, function, mode="wt")
 
         args = Namespace(
@@ -216,7 +231,7 @@ class TestConformance(TestCase):
 
         with TemporaryDirectory() as tempdir:
             argparse_function_filename = os.path.realpath(
-                os.path.join(tempdir, "no_file_here.py")
+                os.path.join(tempdir, "no_file_here{extsep}py".format(extsep=extsep))
             )
 
             self.assertTupleEqual(
@@ -235,7 +250,9 @@ class TestConformance(TestCase):
 
         with TemporaryDirectory() as tempdir:
             argparse_function_filename = os.path.realpath(
-                os.path.join(tempdir, "correct_contents.py")
+                os.path.join(
+                    tempdir, "correct_contents{extsep}py".format(extsep=extsep)
+                )
             )
 
             emit.file(
@@ -260,7 +277,9 @@ class TestConformance(TestCase):
 
         with TemporaryDirectory() as tempdir:
             argparse_function_filename = os.path.realpath(
-                os.path.join(tempdir, "do_not_touch_this.py")
+                os.path.join(
+                    tempdir, "do_not_touch_this{extsep}py".format(extsep=extsep)
+                )
             )
 
             emit.file(argparse_func_ast, argparse_function_filename, mode="wt")

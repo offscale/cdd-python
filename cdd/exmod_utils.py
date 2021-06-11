@@ -98,7 +98,10 @@ def mkdir_and_emit_file(
     )
     if not path.isdir(mod_path):
         makedirs(mod_path)
-    open(path.join(path.dirname(mod_path), "__init__.py"), "a").close()
+    open(
+        path.join(path.dirname(mod_path), "__init__{extsep}py".format(extsep=extsep)),
+        "a",
+    ).close()
     gen_node = getattr(emit, emit_name.replace("class", "class_"))(
         ir,
         **dict(
@@ -150,7 +153,7 @@ def mkdir_and_emit_file(
                 output_directory,
                 new_module_name,
                 path.dirname(original_relative_filename_path),
-                "__init__.py",
+                "__init__{extsep}py".format(extsep=extsep),
             ),
         )
         if filesystem_layout == "as_input"

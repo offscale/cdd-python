@@ -3,6 +3,7 @@ import os
 from argparse import ArgumentParser
 from importlib.machinery import SourceFileLoader
 from importlib.util import module_from_spec, spec_from_loader
+from os.path import extsep
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
@@ -38,7 +39,10 @@ class TestCli(TestCase):
 
         loader = SourceFileLoader(
             "__main__",
-            os.path.join(os.path.dirname(os.path.dirname(__file__)), "__main__.py"),
+            os.path.join(
+                os.path.dirname(os.path.dirname(__file__)),
+                "__main__{extsep}py".format(extsep=extsep),
+            ),
         )
         with patch("argparse.ArgumentParser._print_message", argparse_mock), patch(
             "sys.argv", []

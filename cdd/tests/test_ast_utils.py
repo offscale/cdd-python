@@ -28,7 +28,7 @@ from ast import (
     keyword,
 )
 from copy import deepcopy
-from os import path
+from os import extsep, path
 from unittest import TestCase
 
 from cdd.ast_utils import (
@@ -276,7 +276,11 @@ class TestAstUtils(TestCase):
 
     def test_get_at_root(self) -> None:
         """Tests that `get_at_root` successfully gets the imports"""
-        with open(path.join(path.dirname(__file__), "mocks", "eval.py")) as f:
+        with open(
+            path.join(
+                path.dirname(__file__), "mocks", "eval{extsep}py".format(extsep=extsep)
+            )
+        ) as f:
             imports = get_at_root(ast.parse(f.read()), (Import, ImportFrom))
         self.assertIsInstance(imports, list)
         self.assertEqual(len(imports), 1)

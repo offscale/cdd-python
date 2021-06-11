@@ -1,6 +1,7 @@
 """ Tests for CLI sync subparser (__main__.py) """
 
 import os
+from os.path import extsep
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
@@ -71,15 +72,15 @@ class TestCliSync(TestCase):
         with TemporaryDirectory() as tempdir:
             argparse_filename = os.path.join(
                 os.path.realpath(tempdir),
-                "argparse.py",
+                "argparse{extsep}py".format(extsep=extsep),
             )
             class_filename = os.path.join(
                 os.path.realpath(tempdir),
-                "class_.py",
+                "class_{extsep}py".format(extsep=extsep),
             )
             method_filename = os.path.join(
                 os.path.realpath(tempdir),
-                "method.py",
+                "method{extsep}py".format(extsep=extsep),
             )
 
             with open(argparse_filename, "wt") as f:

@@ -2,6 +2,7 @@
 
 import ast
 import os
+from os.path import extsep
 from sys import modules
 from tempfile import TemporaryDirectory
 from unittest import TestCase
@@ -30,8 +31,8 @@ def populate_files(tempdir, input_str=None, output_str=None):
     :returns: input filename, input str, input_str filename
     :rtype: ```Tuple[str, str, str]```
     """
-    input_filename = os.path.join(tempdir, "class_.py")
-    output_filename = os.path.join(tempdir, "method.py")
+    input_filename = os.path.join(tempdir, "class_{extsep}py".format(extsep=extsep))
+    output_filename = os.path.join(tempdir, "method{extsep}py".format(extsep=extsep))
     input_str = input_str or (
         "from {package} import Literal\n\n"
         "class Foo(object):\n"
@@ -92,12 +93,15 @@ class TestSyncProperties(TestCase):
             os.path.join(
                 os.path.dirname(
                     os.path.dirname(
-                        resource_filename(modules[__name__].__name__, "__init__.py")
+                        resource_filename(
+                            modules[__name__].__name__,
+                            "__init__{extsep}py".format(extsep=extsep),
+                        )
                     )
                 ),
                 "tests",
                 "mocks",
-                "eval.py",
+                "eval{extsep}py".format(extsep=extsep),
             ),
             "rt",
         ) as f:
@@ -355,8 +359,12 @@ class TestSyncProperties(TestCase):
     def test_sync_properties_eval_fails(self) -> None:
         """Tests `sync_properties` fails with `call=True` and dots"""
         with TemporaryDirectory() as tempdir:
-            input_filename = os.path.join(tempdir, "input_.py")
-            output_filename = os.path.join(tempdir, "input_str.py")
+            input_filename = os.path.join(
+                tempdir, "input_{extsep}py".format(extsep=extsep)
+            )
+            output_filename = os.path.join(
+                tempdir, "input_str{extsep}py".format(extsep=extsep)
+            )
 
             open(input_filename, "wt").close()
             open(output_filename, "wt").close()

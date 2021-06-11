@@ -2,6 +2,7 @@
 from ast import ClassDef
 from operator import add, itemgetter
 from os import environ, mkdir, path
+from os.path import extsep
 from subprocess import DEVNULL, call
 from sys import executable
 from tempfile import TemporaryDirectory
@@ -94,14 +95,21 @@ class TestExMod(TestCase):
             (self.grandchild_name, self.grandchild_dir),
         )
 
-        with open(path.join(tempdir, "setup.py"), "wt") as f:
+        with open(
+            path.join(tempdir, "setup{extsep}py".format(extsep=extsep)), "wt"
+        ) as f:
             f.write(
                 setup_py_mock.format(encoding=ENCODING, package_name=self.module_name)
             )
 
-        open(path.join(tempdir, "README.md"), "a").close()
+        open(path.join(tempdir, "README{extsep}md".format(extsep=extsep)), "a").close()
         mkdir(path.join(tempdir, self.module_name))
-        with open(path.join(tempdir, self.module_name, "__init__.py"), "wt") as f:
+        with open(
+            path.join(
+                tempdir, self.module_name, "__init__{extsep}py".format(extsep=extsep)
+            ),
+            "wt",
+        ) as f:
             f.write(
                 "{encoding}\n\n"
                 "{imports}\n"
@@ -148,7 +156,9 @@ class TestExMod(TestCase):
             folder = path.join(tempdir, self.module_name, _folder)
             mkdir(folder)
             cls_name = "{name}Class".format(name=name.title())
-            with open(path.join(folder, "__init__.py"), "wt") as f:
+            with open(
+                path.join(folder, "__init__{extsep}py".format(extsep=extsep)), "wt"
+            ) as f:
                 f.write(
                     "{encoding}\n\n"
                     "from .{name} import {cls_name}\n\n"
@@ -158,7 +168,10 @@ class TestExMod(TestCase):
                         cls_name=cls_name,
                     )
                 )
-            with open(path.join(folder, "{name}.py".format(name=name)), "wt") as f:
+            with open(
+                path.join(folder, "{name}{extsep}py".format(name=name, extsep=extsep)),
+                "wt",
+            ) as f:
                 f.write(
                     "{encoding}\n\n"
                     "{imports_header}\n"
@@ -194,7 +207,12 @@ class TestExMod(TestCase):
                 :returns: Open IO
                 :rtype: ```open```
                 """
-                return open(path.join(folder, "{name}.py".format(name=name)), "rt")
+                return open(
+                    path.join(
+                        folder, "{name}{extsep}py".format(name=name, extsep=extsep)
+                    ),
+                    "rt",
+                )
 
             self.assertTrue(path.isdir(gold_folder))
             self.assertTrue(path.isdir(gen_folder))
@@ -227,7 +245,7 @@ class TestExMod(TestCase):
                 )
                 self.assertDictEqual(
                     *(
-                        {key: d[key] for key in ("returns",)}  # "params",
+                        {key: d[key] for key in ("returns",)}  # TODO: "params",
                         for d in (gold_ir, gen_ir)
                     )
                 )
