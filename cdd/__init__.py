@@ -6,7 +6,7 @@ Root __init__
 
 import logging
 from logging.config import dictConfig as _dictConfig
-from os import path
+from os import extsep, path
 
 import yaml
 
@@ -28,7 +28,12 @@ def get_logger(name=None):
     :returns: logger instance
     :rtype: ```logging.Logger```
     """
-    with open(path.join(path.dirname(__file__), "_data", "logging.yml"), "rt") as f:
+    with open(
+        path.join(
+            path.dirname(__file__), "_data", "logging{extsep}yml".format(extsep=extsep)
+        ),
+        "rt",
+    ) as f:
         data = yaml.load(f, Loader=yaml.SafeLoader)
     _dictConfig(data)
     return logging.getLogger(name=name)
