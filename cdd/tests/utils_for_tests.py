@@ -69,13 +69,6 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     #       "\n{}".format(indent(ast.get_docstring(gold, clean=True), tab))
     #     )
 
-    # from meta.asttools import print_ast
-    #
-    # print("#gen")
-    # print_ast(gen_ast)
-    # print("#gold")
-    # print_ast(gold)
-
     _gen_ast, _gold_ast = (
         (gen_ast.body[0], gold.body[0])
         if isinstance(gen_ast, ast.Module) and gen_ast.body
@@ -102,6 +95,14 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
             map(source_transformer.to_code, (gen_ast, gold)),
         )
     )
+
+    # if not cmp_ast(gen_ast, gold):
+    #     from meta.asttools import print_ast
+    #
+    #     print("#gen")
+    #     print_ast(gen_ast)
+    #     print("#gold")
+    #     print_ast(gold)
 
     test_case_instance.assertTrue(
         cmp_ast(gen_ast, gold), "Generated AST doesn't match reference AST"
