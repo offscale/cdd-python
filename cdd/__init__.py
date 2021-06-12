@@ -3,40 +3,15 @@
 """
 Root __init__
 """
-
 import logging
-from logging.config import dictConfig as _dictConfig
-from os import extsep, path
-
-import yaml
+from logging import getLogger as get_logger
 
 __author__ = "Samuel Marks"
-__version__ = "0.0.73-beta1"
+__version__ = "0.0.73-beta2"
 __description__ = (
     "Open API to/fro routes, models, and tests. "
     "Convert between docstrings, classes, methods, argparse, and SQLalchemy."
 )
-
-
-def get_logger(name=None):
-    """
-    Create a logger instance with the provided name, and default YAML config from this package
-
-    :param name: Name of logger instance. Usually the module name with filename dot-appended. None gives root logger.
-    :type name: Optional[str]
-
-    :returns: logger instance
-    :rtype: ```logging.Logger```
-    """
-    with open(
-        path.join(
-            path.dirname(__file__), "_data", "logging{extsep}yml".format(extsep=extsep)
-        ),
-        "rt",
-    ) as f:
-        data = yaml.load(f, Loader=yaml.SafeLoader)
-    _dictConfig(data)
-    return logging.getLogger(name=name)
 
 
 root_logger = get_logger()

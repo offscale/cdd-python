@@ -174,11 +174,7 @@ def mkdir_and_emit_file(
         filename=emit_filename,
         mode="wt",
     )
-    # print(
-    #     "Emitted: {emit_filename!r}\n".format(
-    #         emit_filename=emit_filename,
-    #     )
-    # )
+    print("Emitted: {emit_filename!r} ;".format(emit_filename=emit_filename))
     if name != "__init__" and not path.isfile(init_filepath):
         emit.file(
             Module(
@@ -206,7 +202,8 @@ def mkdir_and_emit_file(
             mode="wt",
         )
 
-        # print("Emitted: {init_filepath!r} ;".format(init_filepath=init_filepath))
+        print("Emitted: {init_filepath!r} ;".format(init_filepath=init_filepath))
+    print("\n", end="")
 
     return (
         mod_name,
