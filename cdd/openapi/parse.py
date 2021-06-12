@@ -1,9 +1,12 @@
 """
 OpenAPI parsers
 """
-import json
+from json import loads
 
-import yaml
+try:
+    from yaml import safe_load
+except ImportError:
+    safe_load = loads
 
 from cdd.openapi.parser_utils import extract_entities
 
@@ -34,9 +37,7 @@ def openapi(openapi_str, routes_dict, summary):
         )
         if entity != "ServerError":
             non_error_entity = entity
-    openapi_d = (json.loads if openapi_str.startswith("{") else yaml.safe_load)(
-        openapi_str
-    )
+    openapi_d = (loads if openapi_str.startswith("{") else safe_load)(openapi_str)
     if non_error_entity is not None:
         openapi_d["summary"] = "{located} `{entity}` object.".format(
             located="A", entity=non_error_entity
