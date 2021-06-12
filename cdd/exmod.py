@@ -45,6 +45,9 @@ def exmod(
     :param filesystem_layout: Hierarchy of folder and file names generated. "java" is file per package per name.
     :type filesystem_layout: ```Literal["java", "as_input"]```
     """
+    print(
+        "output_directory: {!r} ;\n" "module: {!r} ;".format(output_directory, module)
+    )
     if not path.isdir(output_directory):
         makedirs(output_directory)
     if blacklist:
@@ -116,6 +119,9 @@ def exmod(
             ),
         )
     )
+    init_filepath = path.join(
+        output_directory, new_module_name, "__init__{extsep}py".format(extsep=extsep)
+    )
     emit.file(
         Module(
             body=list(
@@ -174,13 +180,10 @@ def exmod(
             stmt=None,
             type_ignores=[],
         ),
-        path.join(
-            output_directory,
-            new_module_name,
-            "__init__{extsep}py".format(extsep=extsep),
-        ),
+        init_filepath,
         mode="wt",
     )
+    print("#Emitted: {init_filepath!r} ;".format(init_filepath=init_filepath))
 
 
 __all__ = ["exmod"]

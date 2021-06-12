@@ -8,7 +8,7 @@ from ast import Assign, Constant, Str, parse
 from distutils.sysconfig import get_python_lib
 from functools import partial
 from operator import attrgetter
-from os import listdir, path
+from os import path
 from os.path import extsep
 
 from setuptools import find_packages, setup
@@ -61,8 +61,6 @@ def main():
         ),
     )
 
-    _data_join, _data_install_dir = to_funcs("_data")
-
     setup(
         name="python-" + package_name,
         author=__author__,
@@ -100,9 +98,6 @@ def main():
         ],
         python_requires=">=3.6",
         url="https://github.com/offscale/cdd-python",
-        data_files=[
-            (_data_install_dir(), list(map(_data_join, listdir(_data_join()))))
-        ],
     )
 
 

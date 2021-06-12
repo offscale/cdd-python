@@ -1,4 +1,3 @@
 astor
 black
-pyyaml
 typing-extensions

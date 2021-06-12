@@ -214,7 +214,21 @@ class TestExMod(TestCase):
 
                     from cdd.pure_utils import pp
 
-                    pp({folder: listdir(folder)})
+                    pp(
+                        {
+                            folder: list(
+                                map(
+                                    lambda _filename: (
+                                        (lambda fd: path.isfile(fd) or listdir(fd))(
+                                            path.join(folder, _filename)
+                                        ),
+                                        _filename,
+                                    ),
+                                    listdir(folder),
+                                )
+                            )
+                        }
+                    )
 
                 return open(
                     path.join(
