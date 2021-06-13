@@ -1,6 +1,7 @@
 """
 Tests for the Intermediate Representation produced by the parsers
 """
+
 import ast
 from ast import FunctionDef
 from collections import OrderedDict

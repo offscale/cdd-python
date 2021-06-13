@@ -1,6 +1,7 @@
 """
 Functions which help the functions within the parser module
 """
+
 import ast
 from ast import (
     AnnAssign,

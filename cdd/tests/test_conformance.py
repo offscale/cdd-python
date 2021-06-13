@@ -1,6 +1,7 @@
 """
 Tests for reeducation
 """
+
 import os
 from argparse import Namespace
 from ast import FunctionDef

@@ -3,11 +3,12 @@
 """
 Root __init__
 """
+
 import logging
 from logging import getLogger as get_logger
 
 __author__ = "Samuel Marks"
-__version__ = "0.0.73-beta2"
+__version__ = "0.0.73-beta3"
 __description__ = (
     "Open API to/fro routes, models, and tests. "
     "Convert between docstrings, classes, methods, argparse, and SQLalchemy."

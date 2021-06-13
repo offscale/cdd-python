@@ -8,6 +8,7 @@ Translates from the [numpydoc docstring format](https://numpydoc.readthedocs.io/
 
 Translates from [Google's docstring format](https://google.github.io/styleguide/pyguide.html)
 """
+
 import ast
 from ast import AST
 from collections import OrderedDict

@@ -1,6 +1,7 @@
 """
 pkg_utils
 """
+
 from distutils.sysconfig import get_python_lib
 
 
@@ -17,8 +18,9 @@ def relative_filename(filename, remove_hints=tuple()):
     :returns: Relative path (if derived) else original
     :rtype: ```str```
     """
+    _filename = filename.casefold()
     for elem in remove_hints + (get_python_lib(), get_python_lib(prefix="")):
-        if filename.startswith(elem):
+        if _filename.startswith(elem.casefold()):
             return filename[len(elem) + 1 :]
     return filename
 

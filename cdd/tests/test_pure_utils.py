@@ -1,4 +1,5 @@
 """ Tests for pure utils """
+
 import unittest
 from functools import partial
 from itertools import zip_longest

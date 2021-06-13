@@ -1,6 +1,7 @@
 """
 Tests route emission
 """
+
 from copy import deepcopy
 from unittest import TestCase
 

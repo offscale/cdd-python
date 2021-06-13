@@ -1,6 +1,7 @@
 """
 Not a dead module
 """
+
 from ast import Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias
 from functools import partial
 from importlib import import_module
@@ -45,9 +46,6 @@ def exmod(
     :param filesystem_layout: Hierarchy of folder and file names generated. "java" is file per package per name.
     :type filesystem_layout: ```Literal["java", "as_input"]```
     """
-    print(
-        "output_directory: {!r} ;\n" "module: {!r} ;".format(output_directory, module)
-    )
     if not path.isdir(output_directory):
         makedirs(output_directory)
     if blacklist:
@@ -183,7 +181,7 @@ def exmod(
         init_filepath,
         mode="wt",
     )
-    print("#Emitted: {init_filepath!r} ;".format(init_filepath=init_filepath))
+    # print("#Emitted: {init_filepath!r} ;".format(init_filepath=init_filepath))
 
 
 __all__ = ["exmod"]

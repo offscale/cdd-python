@@ -1,6 +1,7 @@
 """
 Tests OpenAPI bulk
 """
+
 from functools import partial
 from os import path
 from os.path import extsep

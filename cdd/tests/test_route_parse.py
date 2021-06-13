@@ -1,6 +1,7 @@
 """
 Tests route parsing
 """
+
 from unittest import TestCase
 
 from cdd.routes import parse

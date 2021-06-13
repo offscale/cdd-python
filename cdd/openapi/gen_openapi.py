@@ -1,6 +1,7 @@
 """
 All encompassing solution to generating the OpenAPI schema
 """
+
 import ast
 from ast import Call, ClassDef, FunctionDef, Module
 from itertools import chain, groupby

@@ -1,6 +1,7 @@
 """
 Generate routes
 """
+
 import ast
 from ast import Attribute, Call, ClassDef, FunctionDef, Name
 from itertools import chain

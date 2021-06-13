@@ -3,6 +3,7 @@
 """
 `__main__` implementation, can be run directly or with `python -m cdd`
 """
+
 from argparse import ArgumentParser, Namespace
 from codecs import decode
 from collections import deque

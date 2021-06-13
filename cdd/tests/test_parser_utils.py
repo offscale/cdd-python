@@ -1,4 +1,5 @@
 """ Tests for parser_utils """
+
 from collections import OrderedDict
 from copy import deepcopy
 from unittest import TestCase

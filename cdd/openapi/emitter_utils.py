@@ -1,6 +1,7 @@
 """
 OpenAPI emitter util(s)
 """
+
 from collections import namedtuple
 
 NameModelRouteIdCrud = namedtuple(

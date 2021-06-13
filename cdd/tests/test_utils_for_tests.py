@@ -1,6 +1,7 @@
 """
 Tests for docstring parsing
 """
+
 from ast import Module
 from collections import namedtuple
 from io import StringIO

@@ -1,6 +1,7 @@
 """
 Tests for AST equality
 """
+
 import ast
 from unittest import TestCase
 

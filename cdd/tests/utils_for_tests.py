@@ -1,6 +1,7 @@
 """
 Shared utility functions used by many tests
 """
+
 import ast
 from copy import deepcopy
 from functools import partial

@@ -1,6 +1,7 @@
 """
 Mocks with inline types vs types in docstrings
 """
+
 from ast import (
     Add,
     AnnAssign,

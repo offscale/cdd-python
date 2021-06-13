@@ -1,4 +1,5 @@
 """ Tests for pkg utils """
+
 from unittest import TestCase
 
 from cdd.pkg_utils import relative_filename
