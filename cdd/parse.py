@@ -287,6 +287,7 @@ def _class_from_memory(
         class_name=class_name,
         merge_inner_function=merge_inner_function,
     )
+
     ir_merge(ir, body_ir)
     return ir
 

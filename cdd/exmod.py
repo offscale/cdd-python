@@ -52,6 +52,7 @@ def exmod(
         raise NotImplementedError("blacklist")
     elif whitelist:
         raise NotImplementedError("whitelist")
+
     module_name, new_module_name = map(path.basename, (module, output_directory))
     module = (
         partial(module_from_file, module_name=module_name)
@@ -69,6 +70,7 @@ def exmod(
         filesystem_layout=filesystem_layout,
         output_directory=output_directory,
     )
+
     # Might need some `groupby` in case multiple files are in the one project; same for `get_module_contents`
     imports = list(
         map(

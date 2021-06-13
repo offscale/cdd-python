@@ -196,9 +196,9 @@ class TestExMod(TestCase):
         """
         new_module_name = path.basename(tempdir)
 
-        for name, _folder in self.module_hierarchy:
-            gen_folder = path.join(tempdir, new_module_name, _folder)
-            gold_folder = path.join(self.gold_dir, self.module_name, _folder)
+        for name, folder in self.module_hierarchy:
+            gen_folder = path.join(tempdir, new_module_name, folder)
+            gold_folder = path.join(self.gold_dir, self.module_name, folder)
 
             def _open(folder):
                 """
@@ -230,12 +230,7 @@ class TestExMod(TestCase):
                     ),
                     (gen, gold),
                 )
-                self.assertDictEqual(
-                    *(
-                        {key: d[key] for key in ("returns",)}  # TODO: "params",
-                        for d in (gold_ir, gen_ir)
-                    )
-                )
+                self.assertDictEqual(gold_ir, gen_ir)
 
     def test_exmod(self) -> None:
         """Tests `exmod`"""
