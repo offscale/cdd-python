@@ -22,7 +22,7 @@ from operator import attrgetter, eq, itemgetter
 from types import FunctionType
 
 from cdd.ast_utils import NoneStr, column_type2typ, get_value, json_type2typ
-from cdd.pure_utils import lstrip_namespace, none_types, rpartial
+from cdd.pure_utils import lstrip_namespace, none_types, rpartial, simple_types
 from cdd.source_transformer import to_code
 
 lstrip_typings = partial(lstrip_namespace, namespaces=("typings.", "_extensions."))
@@ -62,13 +62,16 @@ def ir_merge(target, other):
         for name in other_params.keys() & target_params.keys():
             if not target_params[name].get("doc") and other_params[name].get("doc"):
                 target_params[name]["doc"] = other_params[name]["doc"]
-            if target_params[name].get("typ") is None and other_params[name].get("typ"):
+
+            if other_params[name].get("typ") is not None and (
+                target_params[name].get("typ") is None
+                or target_params[name]["typ"] in simple_types
+                and other_params[name]["typ"] not in simple_types
+            ):
                 target_params[name]["typ"] = other_params[name]["typ"]
             if (
                 target_params[name].get("default") in none_types
-                and "default" in other_params[name]
-                and other_params[name]["default"]
-                not in frozenset((None, "None", "(None)"))
+                and other_params[name].get("default") is not None
             ):
                 target_params[name]["default"] = other_params[name]["default"]
 

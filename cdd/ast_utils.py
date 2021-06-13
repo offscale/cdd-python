@@ -45,10 +45,7 @@ from json import dumps
 from operator import attrgetter, inv, neg, not_, pos
 from sys import version_info
 
-try:
-    from yaml import safe_dump_all
-except ImportError:
-    safe_dump_all = dumps
+from yaml import safe_dump_all
 
 from cdd.defaults_utils import extract_default, needs_quoting
 from cdd.pure_utils import (

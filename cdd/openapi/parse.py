@@ -4,10 +4,7 @@ OpenAPI parsers
 
 from json import loads
 
-try:
-    from yaml import safe_load
-except ImportError:
-    safe_load = loads
+from yaml import safe_load
 
 from cdd.openapi.parser_utils import extract_entities
 

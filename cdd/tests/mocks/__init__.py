@@ -5,7 +5,6 @@ Shared by the mocks. Currently unused, but has some imports mocked for later use
 from cdd.pure_utils import PY_GTE_3_8
 
 imports_header = """
-
 from {package} import Literal
 from typing import Optional, Tuple, Union
 

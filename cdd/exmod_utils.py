@@ -68,7 +68,7 @@ def mkdir_and_emit_file(
     output_directory,
 ):
     """
-    Generate Java-package style file hierarchy from fully-qualified module name
+    Generate Java-package—or match input—style file hierarchy from fully-qualified module name
 
     :param name_orig_ir: FQ module name, original filename path, IR
     :type name_orig_ir: ```Tuple[str, str, dict]```
