@@ -7,6 +7,7 @@ Transform from string or AST representations of input, to intermediate_repr, a d
            "returns": Optional[OrderedDict[Literal['return_type'],
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
 """
+
 import ast
 from ast import (
     AnnAssign,

@@ -1,6 +1,7 @@
 """
 Mocks for the argparse function
 """
+
 from ast import (
     Assign,
     Attribute,

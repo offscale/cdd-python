@@ -1,4 +1,5 @@
 """ Tests for exmod subcommand """
+
 from ast import ClassDef
 from operator import add, itemgetter
 from os import environ, mkdir, path
@@ -207,29 +208,6 @@ class TestExMod(TestCase):
                 :returns: Open IO
                 :rtype: ```open```
                 """
-                from sys import platform
-
-                if platform == "win32":
-                    from os import listdir
-
-                    from cdd.pure_utils import pp
-
-                    pp(
-                        {
-                            folder: list(
-                                map(
-                                    lambda _filename: (
-                                        (lambda fd: path.isfile(fd) or listdir(fd))(
-                                            path.join(folder, _filename)
-                                        ),
-                                        _filename,
-                                    ),
-                                    listdir(folder),
-                                )
-                            )
-                        }
-                    )
-
                 return open(
                     path.join(
                         folder, "{name}{extsep}py".format(name=name, extsep=extsep)
@@ -241,20 +219,6 @@ class TestExMod(TestCase):
             self.assertTrue(path.isdir(gen_folder))
 
             with _open(gen_folder) as gen, _open(gold_folder) as gold:
-                # self.maxDiff = None
-                # tuple(map(
-                #     lambda node: print(to_code(
-                #         next(
-                #             filter(
-                #                 rpartial(isinstance, ClassDef),
-                #                 ast_parse(node.read()).body,
-                #             )
-                #         )
-                #     )),
-                #     (gen, gold),
-                # ))
-                # gen.seek(0)
-                # gold.seek(0)
                 gen_ir, gold_ir = map(
                     lambda node: parse.class_(
                         next(

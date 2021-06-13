@@ -1,6 +1,7 @@
 """
 Parser utils for routes
 """
+
 from ast import Call, FunctionDef
 
 from cdd.ast_utils import get_value

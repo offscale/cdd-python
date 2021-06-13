@@ -1,6 +1,7 @@
 """
 Mocks for the `class`
 """
+
 from ast import (
     AnnAssign,
     Assign,

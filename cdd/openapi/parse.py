@@ -1,6 +1,7 @@
 """
 OpenAPI parsers
 """
+
 from json import loads
 
 try:

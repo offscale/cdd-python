@@ -1,6 +1,7 @@
 """
 Mock routes
 """
+
 from cdd.pure_utils import tab
 from cdd.routes import emit
 

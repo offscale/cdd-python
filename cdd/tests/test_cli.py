@@ -1,4 +1,5 @@
 """ Tests for CLI (__main__.py) """
+
 import os
 from argparse import ArgumentParser
 from importlib.machinery import SourceFileLoader

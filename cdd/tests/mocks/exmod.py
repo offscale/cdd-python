@@ -6,6 +6,7 @@ setup_py_mock = '''{encoding}
 setup.py implementation, interesting because it parsed the first __init__.py and
     extracts the `__author__` and `__version__`
 """
+
 from ast import Assign, Constant, Str, parse
 from operator import attrgetter
 from os import path

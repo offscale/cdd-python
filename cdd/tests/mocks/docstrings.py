@@ -1,6 +1,7 @@
 """
 Mocks for docstrings
 """
+
 from textwrap import indent
 
 from cdd.pure_utils import identity, tab

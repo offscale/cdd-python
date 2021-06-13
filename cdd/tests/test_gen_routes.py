@@ -1,4 +1,5 @@
 """ Tests for gen_routes subcommand """
+
 import ast
 from ast import FunctionDef
 from binascii import crc32

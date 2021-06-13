@@ -1,6 +1,7 @@
 """
 Mocks for methods
 """
+
 from ast import (
     Attribute,
     BinOp,

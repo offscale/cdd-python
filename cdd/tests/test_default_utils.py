@@ -1,4 +1,5 @@
 """ Tests for default utils """
+
 from unittest import TestCase
 
 from cdd.defaults_utils import extract_default, set_default_doc

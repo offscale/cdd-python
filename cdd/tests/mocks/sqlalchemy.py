@@ -1,6 +1,7 @@
 """
 Mocks for SQLalchemy
 """
+
 from ast import (
     Assign,
     Attribute,

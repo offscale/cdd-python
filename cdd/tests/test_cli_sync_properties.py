@@ -1,4 +1,5 @@
 """ Tests for CLI sync_properties subparser (__main__.py) """
+
 import os
 from os.path import extsep
 from tempfile import TemporaryDirectory

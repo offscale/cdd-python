@@ -1,4 +1,5 @@
 """ Tests for emitter_utils """
+
 from ast import Attribute, Call, Expr, Load, Name, Subscript, keyword
 from copy import deepcopy
 from unittest import TestCase

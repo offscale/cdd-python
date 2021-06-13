@@ -1,6 +1,7 @@
 """
 Tests OpenAPI
 """
+
 from unittest import TestCase
 
 from cdd.openapi.emit import openapi

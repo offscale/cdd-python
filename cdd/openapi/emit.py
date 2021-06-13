@@ -1,6 +1,7 @@
 """
 OpenAPI emitter function(s)
 """
+
 from collections import deque
 
 from cdd.openapi.emitter_utils import components_paths_from_name_model_route_id_crud

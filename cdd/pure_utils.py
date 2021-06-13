@@ -1,6 +1,7 @@
 """
 Pure utils for pure functions. For the same input will always produce the same input_str.
 """
+
 import typing
 from ast import Name, Str
 from collections import deque

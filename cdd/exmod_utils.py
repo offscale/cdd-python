@@ -1,6 +1,8 @@
 """ Exmod utils """
+
 import ast
 from ast import Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias
+from functools import partial
 from inspect import getfile, ismodule
 from itertools import chain
 from os import extsep, makedirs, path
@@ -145,21 +147,23 @@ def mkdir_and_emit_file(
         )
 
     emit_filename, init_filepath = (
-        (
-            path.join(
-                output_directory, new_module_name, original_relative_filename_path
-            ),
-            path.join(
-                output_directory,
-                new_module_name,
-                path.dirname(original_relative_filename_path),
-                "__init__{extsep}py".format(extsep=extsep),
+        map(
+            partial(path.join, output_directory, new_module_name),
+            (
+                original_relative_filename_path,
+                path.join(
+                    path.dirname(original_relative_filename_path),
+                    "__init__{extsep}py".format(extsep=extsep),
+                ),
             ),
         )
         if filesystem_layout == "as_input"
-        else (
-            path.join(mod_path, "{name}{extsep}py".format(name=name, extsep=extsep)),
-            path.join(mod_path, "__init__{extsep}py".format(extsep=extsep)),
+        else map(
+            partial(path.join, mod_path),
+            (
+                "{name}{extsep}py".format(name=name, extsep=extsep),
+                "__init__{extsep}py".format(extsep=extsep),
+            ),
         )
     )
 
@@ -169,17 +173,13 @@ def mkdir_and_emit_file(
         gen_node = merge_modules(mod, gen_node)
         merge_assignment_lists(gen_node, "__all__")
 
-    emit.file(
-        gen_node,
-        filename=emit_filename,
-        mode="wt",
-    )
-    print("Emitted: {emit_filename!r} ;".format(emit_filename=emit_filename))
+    emit.file(gen_node, filename=emit_filename, mode="wt")
+    # print("Emitted: {emit_filename!r} ;".format(emit_filename=emit_filename))
     if name != "__init__" and not path.isfile(init_filepath):
         emit.file(
             Module(
                 body=[
-                    Expr(set_value("__init__ to expose internals of this module")),
+                    Expr(set_value("\n__init__ to expose internals of this module\n")),
                     ImportFrom(
                         module=name,
                         names=[
@@ -202,8 +202,8 @@ def mkdir_and_emit_file(
             mode="wt",
         )
 
-        print("Emitted: {init_filepath!r} ;".format(init_filepath=init_filepath))
-    print("\n", end="")
+        # print("Emitted: {init_filepath!r} ;".format(init_filepath=init_filepath))
+    # print("\n", end="")
 
     return (
         mod_name,
@@ -222,3 +222,6 @@ def mkdir_and_emit_file(
             identifier=None,
         ),
     )
+
+
+__all__ = ["get_module_contents", "mkdir_and_emit_file"]

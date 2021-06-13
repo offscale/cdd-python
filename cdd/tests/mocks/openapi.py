@@ -1,6 +1,7 @@
 """
 OpenAPI mocks
 """
+
 from cdd.tests.mocks.json_schema import config_schema, server_error_schema
 from cdd.tests.mocks.routes import route_config
 

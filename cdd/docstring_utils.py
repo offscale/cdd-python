@@ -1,6 +1,7 @@
 """
 Functions which produce docstring portions from various inputs
 """
+
 from collections import namedtuple
 from textwrap import indent
 

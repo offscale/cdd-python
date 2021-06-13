@@ -1,4 +1,5 @@
 """ Tests for doctrans """
+
 from os import path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
