@@ -52,7 +52,7 @@ class TestUtilsForTests(TestCase):
             :type msg: ```Optional[str]```
             """
             TestUtilsForTests.i += TestUtilsForTests.increment
-            assert value, msg or "{!r} not truthy".format(value)
+            assert value, msg or "{value!r} not truthy".format(value=value)
 
         def assert_equal(a, b, msg=None):
             """Version of `self.assertEqual` which also keeps count
@@ -67,7 +67,7 @@ class TestUtilsForTests(TestCase):
             :type msg: ```Optional[str]```
             """
             TestUtilsForTests.i += TestUtilsForTests.increment
-            assert a == b, msg or "{!r} != {!r}".format(a, b)
+            assert a == b, msg or "{a!r} != {b!r}".format(a=a, b=b)
 
         TestUtilsForTests.increment = 2 if PY_GTE_3_8 else 1
         TestUtilsForTests.i = 0

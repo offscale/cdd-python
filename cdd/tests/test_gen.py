@@ -182,7 +182,7 @@ class TestGen(TestCase):
     def tearDownClass(cls) -> None:
         """Drop the new module from the path and delete the temporary directory"""
         sys.path = cls.sys_path
-        # input("removing: {!r}".format(cls.tempdir))
+        # input("removing: {tempdir!r}".format(tempdir=cls.tempdir))
         rmtree(cls.tempdir)
 
     def test_gen(self) -> None:

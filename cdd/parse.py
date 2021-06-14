@@ -108,7 +108,9 @@ def class_(
 
     assert (
         is_supported_ast_node
-    ), "Expected 'Union[Module, ClassDef]' got `{!r}`".format(type(class_def).__name__)
+    ), "Expected 'Union[Module, ClassDef]' got `{node_name!r}`".format(
+        node_name=type(class_def).__name__
+    )
     class_def = find_ast_type(class_def, class_name)
     doc_str = get_docstring(class_def)
     intermediate_repr = (
@@ -475,10 +477,14 @@ def function(
 
     assert isinstance(
         function_def, FunctionDef
-    ), "Expected 'FunctionDef' got `{!r}`".format(type(function_def).__name__)
+    ), "Expected 'FunctionDef' got `{node_name!r}`".format(
+        node_name=type(function_def).__name__
+    )
     assert (
         function_name is None or function_def.name == function_name
-    ), "Expected {!r} got {!r}".format(function_name, function_def.name)
+    ), "Expected {function_name!r} got {function_def_name!r}".format(
+        function_name=function_name, function_def_name=function_def.name
+    )
 
     found_type = get_function_type(function_def)
 
@@ -611,7 +617,9 @@ def argparse_ast(function_def, function_type=None, function_name=None):
     """
     assert isinstance(
         function_def, FunctionDef
-    ), "Expected 'FunctionDef' got `{!r}`".format(type(function_def).__name__)
+    ), "Expected 'FunctionDef' got `{node_name!r}`".format(
+        node_name=type(function_def).__name__
+    )
 
     doc_string = get_docstring(function_def)
     intermediate_repr = {
@@ -701,8 +709,8 @@ def docstring(
     :returns: intermediate_repr, whether it returns or not
     :rtype: ```Optional[Union[dict, Tuple[dict, bool]]]```
     """
-    assert isinstance(doc_string, str), "Expected 'str' got {!r}".format(
-        type(doc_string).__name__
+    assert isinstance(doc_string, str), "Expected 'str' got {doc_string_type!r}".format(
+        doc_string_type=type(doc_string).__name__
     )
     parsed = (
         doc_string

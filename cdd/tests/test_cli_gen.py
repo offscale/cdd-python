@@ -26,7 +26,9 @@ class TestCliGen(TestCase):
         with TemporaryDirectory() as tempdir:
             filename = os.path.join(
                 tempdir,
-                "delete_this_1{}".format(os.path.basename(__file__)),
+                "delete_this_1{__file___basename}".format(
+                    __file___basename=os.path.basename(__file__)
+                ),
             )
             open(filename, "a").close()
 
@@ -45,8 +47,8 @@ class TestCliGen(TestCase):
                 ],
                 exception=OSError,
                 exit_code=2,
-                output="File exists and this is a destructive operation. Delete/move {!r} then rerun.".format(
-                    filename
+                output="File exists and this is a destructive operation. Delete/move {filename!r} then rerun.".format(
+                    filename=filename
                 ),
             )
 

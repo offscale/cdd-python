@@ -146,7 +146,9 @@ def _inspect_process_ir_param(param, sig):
         return name, _param
     sig_param = sig.parameters[name]
     if sig_param.annotation is not _empty:
-        _param["typ"] = lstrip_typings("{!s}".format(sig_param.annotation))
+        _param["typ"] = lstrip_typings(
+            "{annotation!s}".format(annotation=sig_param.annotation)
+        )
     if sig_param.default is not _empty:
         _param["default"] = sig_param.default
         if _param.get("typ", _empty) is _empty:

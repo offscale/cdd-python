@@ -98,7 +98,9 @@ def ground_truth(args, truth_file):
         filenames = getattr(args, pluralise(fun_name))
         assert isinstance(
             filenames, (list, tuple)
-        ), "Expected Union[list, tuple] got {!r}".format(type(filenames).__name__)
+        ), "Expected Union[list, tuple] got {type_name!r}".format(
+            type_name=type(filenames).__name__
+        )
 
         effect.update(
             map(
@@ -169,8 +171,10 @@ def _conform_filename(
         return filename, True
     assert len(search) > 0
 
-    assert type(replacement_node) == type_wanted, "Expected {!r} got {!r}".format(
-        type_wanted, type(replacement_node).__name__
+    assert (
+        type(replacement_node) == type_wanted
+    ), "Expected {type_wanted!r} got {type_replacement_node!r}".format(
+        type_wanted=type_wanted, type_replacement_node=type(replacement_node).__name__
     )
 
     replaced = False

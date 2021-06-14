@@ -356,7 +356,7 @@ def assert_equal(a, b, cmp=eq):
     :rtype: ```Literal[True]```
     """
     if not cmp(a, b):
-        raise AssertionError("{!r} != {!r}".format(a, b))
+        raise AssertionError("{a!r} != {b!r}".format(a=a, b=b))
     return True
 
 

@@ -142,7 +142,9 @@ class TestCliSync(TestCase):
                     "class",
                 ],
                 exit_code=2,
-                output="--truth must be an existent file. Got: {!r}\n".format(filename),
+                output="--truth must be an existent file. Got: {filename!r}\n".format(
+                    filename=filename
+                ),
             )
 
     def test_missing_argument_fails(self) -> None:

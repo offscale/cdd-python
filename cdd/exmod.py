@@ -3,6 +3,7 @@ Not a dead module
 """
 
 from ast import Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias
+from collections import OrderedDict
 from functools import partial
 from importlib import import_module
 from inspect import getfile
@@ -23,6 +24,7 @@ def exmod(
     blacklist,
     whitelist,
     output_directory,
+    dry_run,
     filesystem_layout="as_input",
 ):
     """
@@ -43,10 +45,15 @@ def exmod(
     :param output_directory: Where to place the generated exposed interfaces to the given `--module`.
     :type output_directory: ```str```
 
+    :param dry_run: Show what would be created; don't actually write to the filesystem
+    :type dry_run: ```bool```
+
     :param filesystem_layout: Hierarchy of folder and file names generated. "java" is file per package per name.
     :type filesystem_layout: ```Literal["java", "as_input"]```
     """
-    if not path.isdir(output_directory):
+    if dry_run:
+        print("mkdir\t{output_directory!r}".format(output_directory=output_directory))
+    elif not path.isdir(output_directory):
         makedirs(output_directory)
     if blacklist:
         raise NotImplementedError("blacklist")
@@ -69,6 +76,7 @@ def exmod(
         new_module_name=new_module_name,
         filesystem_layout=filesystem_layout,
         output_directory=output_directory,
+        dry_run=dry_run,
     )
 
     # Might need some `groupby` in case multiple files are in the one project; same for `get_module_contents`
@@ -83,7 +91,9 @@ def exmod(
                         if filename.startswith(module_name)
                         else filename
                     )(relative_filename(getfile(name_source[1]))),
-                    parse.class_(name_source[1]),
+                    {"params": OrderedDict(), "returns": OrderedDict()}
+                    if dry_run
+                    else parse.class_(name_source[1]),
                 ),
                 # sorted(
                 map(
@@ -122,68 +132,70 @@ def exmod(
     init_filepath = path.join(
         output_directory, new_module_name, "__init__{extsep}py".format(extsep=extsep)
     )
-    emit.file(
-        Module(
-            body=list(
-                chain.from_iterable(
-                    (
-                        (Expr(set_value("\nExport internal imports\n")),),
-                        map(
-                            lambda module_names: ImportFrom(
-                                module=module_names[0],
-                                names=list(
-                                    map(
-                                        lambda names: alias(
-                                            names,
-                                            None,
-                                            identifier=None,
-                                            identifier_name=None,
-                                        ),
-                                        module_names[1],
-                                    )
-                                ),
-                                level=1,
-                                identifier=None,
-                            ),
-                            modules_names,
-                        ),
+    if dry_run:
+        print("write\t{init_filepath!r}".format(init_filepath=init_filepath))
+    else:
+        emit.file(
+            Module(
+                body=list(
+                    chain.from_iterable(
                         (
-                            Assign(
-                                targets=[Name("__all__", Store())],
-                                value=List(
-                                    ctx=Load(),
-                                    elts=list(
+                            (Expr(set_value("\nExport internal imports\n")),),
+                            map(
+                                lambda module_names: ImportFrom(
+                                    module=module_names[0],
+                                    names=list(
                                         map(
-                                            set_value,
-                                            sorted(
-                                                frozenset(
-                                                    chain.from_iterable(
-                                                        map(
-                                                            itemgetter(1),
-                                                            modules_names,
-                                                        )
-                                                    ),
-                                                )
+                                            lambda names: alias(
+                                                names,
+                                                None,
+                                                identifier=None,
+                                                identifier_name=None,
                                             ),
+                                            module_names[1],
                                         )
                                     ),
-                                    expr=None,
+                                    level=1,
+                                    identifier=None,
                                 ),
-                                expr=None,
-                                lineno=None,
-                                **maybe_type_comment
+                                modules_names,
                             ),
-                        ),
+                            (
+                                Assign(
+                                    targets=[Name("__all__", Store())],
+                                    value=List(
+                                        ctx=Load(),
+                                        elts=list(
+                                            map(
+                                                set_value,
+                                                sorted(
+                                                    frozenset(
+                                                        chain.from_iterable(
+                                                            map(
+                                                                itemgetter(1),
+                                                                modules_names,
+                                                            )
+                                                        ),
+                                                    )
+                                                ),
+                                            )
+                                        ),
+                                        expr=None,
+                                    ),
+                                    expr=None,
+                                    lineno=None,
+                                    **maybe_type_comment
+                                ),
+                            ),
+                        )
                     )
-                )
+                ),
+                stmt=None,
+                type_ignores=[],
             ),
-            stmt=None,
-            type_ignores=[],
-        ),
-        init_filepath,
-        mode="wt",
-    )
-    # print("#Emitted: {init_filepath!r} ;".format(init_filepath=init_filepath))
+            init_filepath,
+            mode="wt",
+        )
 
 
 __all__ = ["exmod"]

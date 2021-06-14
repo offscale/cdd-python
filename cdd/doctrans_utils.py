@@ -150,7 +150,7 @@ class DocTrans(NodeTransformer):
         doc_str = get_docstring(node, clean=True)
         empty = doc_str is None
         if not empty:
-            set_docstring("\n{}\n".format(doc_str), empty, node)
+            set_docstring("\n{doc_str}\n".format(doc_str=doc_str), empty, node)
         node.body = list(map(self.visit, node.body))
         return node
 

@@ -157,7 +157,7 @@ def gen(
         prepend="" if prepend is None else prepend,
         imports=imports,  # TODO: Optimize imports programmatically (akin to `autoflake --remove-all-unused-imports`)
         functions_and_classes="\n\n".join(
-            print("\nGenerating: {!r}".format(name))
+            print("\nGenerating: {name!r}".format(name=name))
             or global__all__.append(name_tpl.format(name=name))
             or to_code(
                 getattr(emit, emit_name)(

@@ -219,10 +219,10 @@ def _parse_out_default_and_doc(
                     default,
                 )
             )
-            else literal_eval("({})".format(default))
+            else literal_eval("({default})".format(default=default))
         )
         default = (
-            "```{}```".format(default)
+            "```{default}```".format(default=default)
             if isinstance(lit, ast.AST)
             else {
                 "bool": bool,
