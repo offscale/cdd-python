@@ -44,8 +44,8 @@ class TestCliSyncProperties(TestCase):
                     "f.h",
                 ],
                 exit_code=2,
-                output="--input-file must be an existent file. Got: {!r}\n".format(
-                    filename
+                output="--input-file must be an existent file. Got: {filename!r}\n".format(
+                    filename=filename
                 ),
             )
 
@@ -74,8 +74,8 @@ class TestCliSyncProperties(TestCase):
                     "f.h",
                 ],
                 exit_code=2,
-                output="--output-file must be an existent file. Got: {!r}\n".format(
-                    output_filename
+                output="--output-file must be an existent file. Got: {output_filename!r}\n".format(
+                    output_filename=output_filename
                 ),
             )
 

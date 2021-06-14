@@ -496,7 +496,7 @@ def _set_name_and_type(param, infer_type, word_wrap):
     google_opt = ", optional"
     if _param.get("typ"):
         _param["typ"] = (
-            "Optional[{}]".format(_param["typ"][: -len(google_opt)])
+            "Optional[{typ}]".format(typ=_param["typ"][: -len(google_opt)])
             if _param["typ"].endswith(google_opt)
             else _param["typ"]
         )
@@ -522,7 +522,7 @@ def _set_name_and_type(param, infer_type, word_wrap):
             and "typ" in _param
             and not _param["typ"].startswith("Optional[")
         ):
-            _param["typ"] = "Optional[{}]".format(_param["typ"])
+            _param["typ"] = "Optional[{typ}]".format(typ=_param["typ"])
 
     return name, _param
 
@@ -668,16 +668,20 @@ def _parse_phase_numpydoc_and_google(
             if typ:
                 assert typ.startswith("(") and typ.endswith(
                     ")"
-                ), "Expected third partition to be paren wrapped {!r}".format(s)
+                ), "Expected third partition to be paren wrapped {s!r}".format(s=s)
                 cur["typ"] = typ[1:-1]
                 if " or " in cur["typ"]:
-                    cur["typ"] = "Union[{}]".format(", ".join(cur["typ"].split(" or ")))
+                    cur["typ"] = "Union[{types}]".format(
+                        types=", ".join(cur["typ"].split(" or "))
+                    )
                 end = white_spacer(scan[0][offset + 1 :])
                 if len(end) > 3 and end.startswith("{") and end.endswith("}"):
                     # PyTorch invented their own syntax for this I guess?
                     cur["typ"], scan[0] = (
-                        "Literal{}".format(
-                            list(map(rpartial(str.strip, "'"), end[1:-1].split(", ")))
+                        "Literal{literal_type_list}".format(
+                            literal_type_list=list(
+                                map(rpartial(str.strip, "'"), end[1:-1].split(", "))
+                            )
                         ),
                         "",
                     )
@@ -706,7 +710,9 @@ def _parse_phase_numpydoc_and_google(
             scanned_params[:afterward_idx],
             scanned_params[afterward_idx:],
         )
-        scanned["doc"] += "\n\n{}".format("\n".join(map("\n".join, scanned_afterward)))
+        scanned["doc"] += "\n\n{afterward}".format(
+            afterward="\n".join(map("\n".join, scanned_afterward))
+        )
 
     if "scanned_afterward" in scanned:
         _fill_doc_with_afterward(scanned)

@@ -35,7 +35,9 @@ def _build_parser():
         description=__description__,
     )
     parser.add_argument(
-        "--version", action="version", version="%(prog)s {}".format(__version__)
+        "--version",
+        action="version",
+        version="%(prog)s {__version__}".format(__version__=__version__),
     )
 
     subparsers = parser.add_subparsers()
@@ -350,6 +352,7 @@ def _build_parser():
 
     exmod_parser.add_argument(
         "--module",
+        "-m",
         help="The module or fully-qualified name (FQN) to expose.",
         required=True,
     )
@@ -372,8 +375,14 @@ def _build_parser():
     )
     exmod_parser.add_argument(
         "--output-directory",
+        "-o",
         help="Where to place the generated exposed interfaces to the given `--module`.",
         required=True,
+    )
+    exmod_parser.add_argument(
+        "--dry-run",
+        help="Show what would be created; don't actually write to the filesystem.",
+        action="store_true",
     )
 
     return parser
@@ -445,8 +454,8 @@ def main(cli_argv=None, return_args=False):
     elif command == "gen":
         if path.isfile(args.output_filename):
             raise IOError(
-                "File exists and this is a destructive operation. Delete/move {!r} then"
-                " rerun.".format(args.output_filename)
+                "File exists and this is a destructive operation. Delete/move {output_filename!r} then"
+                " rerun.".format(output_filename=args.output_filename)
             )
         gen(**args_dict)
     elif command == "gen_routes":
@@ -490,6 +499,7 @@ def main(cli_argv=None, return_args=False):
             blacklist=args.blacklist,
             whitelist=args.whitelist,
             output_directory=args.output_directory,
+            dry_run=args.dry_run,
         )
 
 
@@ -507,7 +517,11 @@ def require_file_existent(_parser, filename, name):
     :type name: ```str```
     """
     if filename is None or not path.isfile(filename):
-        _parser.error("--{} must be an existent file. Got: {!r}".format(name, filename))
+        _parser.error(
+            "--{name} must be an existent file. Got: {filename!r}".format(
+                name=name, filename=filename
+            )
+        )
 
 
 if __name__ == "__main__":

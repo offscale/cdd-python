@@ -149,8 +149,10 @@ def sync_property(
 
     gen_ast = rewrite_at_query.visit(output_ast)
 
-    assert rewrite_at_query.replaced is True, "Failed to update with {!r}".format(
-        to_code(replacement_node)
+    assert (
+        rewrite_at_query.replaced is True
+    ), "Failed to update with {replacement_node_str!r}".format(
+        replacement_node_str=to_code(replacement_node)
     )
     return gen_ast
 

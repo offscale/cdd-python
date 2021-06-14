@@ -66,6 +66,7 @@ def mkdir_and_emit_file(
     new_module_name,
     filesystem_layout,
     output_directory,
+    dry_run,
 ):
     """
     Generate Java-package—or match input—style file hierarchy from fully-qualified module name
@@ -88,6 +89,9 @@ def mkdir_and_emit_file(
     :param output_directory: Where to place the generated exposed interfaces to the given `--module`.
     :type output_directory: ```str```
 
+    :param dry_run: Show what would be created; don't actually write to the filesystem
+    :type dry_run: ```bool```
+
     :returns: Import to generated module
     :rtype: ```ImportFrom```
     """
@@ -99,11 +103,18 @@ def mkdir_and_emit_file(
         mod_name.replace(".", path.sep),
     )
     if not path.isdir(mod_path):
-        makedirs(mod_path)
-    open(
-        path.join(path.dirname(mod_path), "__init__{extsep}py".format(extsep=extsep)),
-        "a",
-    ).close()
+        if dry_run:
+            print("mkdir\t{mod_path!r}".format(mod_path=mod_path))
+        else:
+            makedirs(mod_path)
+
+    init_filepath = path.join(
+        path.dirname(mod_path), "__init__{extsep}py".format(extsep=extsep)
+    )
+    if dry_run:
+        print("touch\t{init_filepath!r}".format(init_filepath=init_filepath))
+    else:
+        open(init_filepath, "a").close()
     gen_node = getattr(emit, emit_name.replace("class", "class_"))(
         ir,
         **dict(
@@ -173,34 +184,41 @@ def mkdir_and_emit_file(
         gen_node = merge_modules(mod, gen_node)
         merge_assignment_lists(gen_node, "__all__")
 
-    emit.file(gen_node, filename=emit_filename, mode="wt")
-    # print("Emitted: {emit_filename!r} ;".format(emit_filename=emit_filename))
+    if dry_run:
+        print("write\t{emit_filename!r}".format(emit_filename=emit_filename))
+    else:
+        emit.file(gen_node, filename=emit_filename, mode="wt")
     if name != "__init__" and not path.isfile(init_filepath):
-        emit.file(
-            Module(
-                body=[
-                    Expr(set_value("\n__init__ to expose internals of this module\n")),
-                    ImportFrom(
-                        module=name,
-                        names=[
-                            alias(
-                                name=name,
-                                asname=None,
-                                identifier=None,
-                                identifier_name=None,
-                            ),
-                        ],
-                        level=1,
-                        identifier=None,
-                    ),
-                    __all___node,
-                ],
-                stmt=None,
-                type_ignores=[],
-            ),
-            filename=init_filepath,
-            mode="wt",
-        )
+        if dry_run:
+            print("write\t{emit_filename!r}".format(emit_filename=emit_filename))
+        else:
+            emit.file(
+                Module(
+                    body=[
+                        Expr(
+                            set_value("\n__init__ to expose internals of this module\n")
+                        ),
+                        ImportFrom(
+                            module=name,
+                            names=[
+                                alias(
+                                    name=name,
+                                    asname=None,
+                                    identifier=None,
+                                    identifier_name=None,
+                                ),
+                            ],
+                            level=1,
+                            identifier=None,
+                        ),
+                        __all___node,
+                    ],
+                    stmt=None,
+                    type_ignores=[],
+                ),
+                filename=init_filepath,
+                mode="wt",
+            )
 
         # print("Emitted: {init_filepath!r} ;".format(init_filepath=init_filepath))
     # print("\n", end="")

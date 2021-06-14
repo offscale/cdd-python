@@ -99,7 +99,7 @@ def emit_param_str(
                         if name == "return_type"
                         else "{name} :{typ}".format(
                             name=name,
-                            typ=" {}".format(_param["typ"])
+                            typ=" {typ}".format(typ=_param["typ"])
                             if _param.get("typ")
                             else "",
                         )
@@ -132,7 +132,9 @@ def emit_param_str(
                     if name == "return_type"
                     else "  {name} ({typ}): ".format(
                         name=name,
-                        typ="{!s}".format(_param["typ"]) if _param.get("typ") else "",
+                        typ="{typ!s}".format(typ=_param["typ"])
+                        if _param.get("typ")
+                        else "",
                     )
                     if _param.get("typ")
                     else None,

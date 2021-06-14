@@ -200,7 +200,7 @@ def _generic_param2ast(param):
                 parsed_default = set_value(
                     _param["default"]
                     if code_quoted(_param["default"])
-                    else "```{}```".format(_param["default"])
+                    else "```{default}```".format(default=_param["default"])
                 )
 
             value = (
@@ -254,7 +254,9 @@ def find_ast_type(node, node_name=None, of_type=ClassDef):
         elif matching_nodes:
             return matching_nodes[0]
         else:
-            raise TypeError("No {!r} in AST".format(type(of_type).__name__))
+            raise TypeError(
+                "No {type_name!r} in AST".format(type_name=type(of_type).__name__)
+            )
     elif isinstance(node, AST):
         assert node_name is None or not hasattr(node, "name") or node.name == node_name
         return node
@@ -933,7 +935,9 @@ class RewriteAtQuery(NodeTransformer):
                 self.replacement_node = emit_arg(self.replacement_node)
             assert isinstance(
                 self.replacement_node, ast.arg
-            ), "Expected ast.arg got {!r}".format(type(self.replacement_node).__name__)
+            ), "Expected ast.arg got {replacement_node_name!r}".format(
+                replacement_node_name=type(self.replacement_node).__name__
+            )
 
             for arg_attr in "args", "kwonlyargs":
                 arg_l = getattr(node.args, arg_attr)
@@ -1077,7 +1081,9 @@ def infer_type_and_default(action, default, typ, required):
         typ, default, required = "pickle.loads", pickle.dumps(default), False
     else:
         raise NotImplementedError(
-            "Parsing type {!s}, which contains {!r}".format(type(default), default)
+            "Parsing type {default_type!s}, which contains {default!r}".format(
+                default_type=type(default), default=default
+            )
         )
 
     return action, default, required, typ
@@ -1205,7 +1211,9 @@ def parse_to_scalar(node):
     elif isinstance(node, ast.AST):
         return _to_code(node).rstrip("\n")
     else:
-        raise NotImplementedError("Converting this to scalar: {!r}".format(node))
+        raise NotImplementedError(
+            "Converting this to scalar: {node!r}".format(node=node)
+        )
 
 
 # Construct from https://docs.sqlalchemy.org/en/13/core/type_basics.html#generic-types

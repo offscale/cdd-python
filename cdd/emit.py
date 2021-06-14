@@ -162,10 +162,12 @@ def argparse_function(
                                                         (
                                                             "return_type",
                                                             {
-                                                                "doc": "argument_parser, {}".format(
-                                                                    intermediate_repr[
+                                                                "doc": "argument_parser, {returns_doc}".format(
+                                                                    returns_doc=intermediate_repr[
                                                                         "returns"
-                                                                    ]["return_type"][
+                                                                    ][
+                                                                        "return_type"
+                                                                    ][
                                                                         "doc"
                                                                     ]
                                                                 )
@@ -368,8 +370,10 @@ def class_(
     :returns: Class AST
     :rtype: ```ClassDef```
     """
-    assert isinstance(intermediate_repr, dict), "{} != dict".format(
-        type(intermediate_repr).__name__
+    assert isinstance(
+        intermediate_repr, dict
+    ), "{intermediate_repr_type_name} != dict".format(
+        intermediate_repr_type_name=type(intermediate_repr).__name__
     )
     returns = (
         intermediate_repr["returns"]
@@ -543,8 +547,8 @@ def docstring(
     :rtype: ```str```
     """
     _sep = tab * indent_level
-    return "\n{_sep}{}\n{_sep}".format(
-        (
+    return "\n{_sep}{_docstring}\n{_sep}".format(
+        _docstring=(
             emit_separating_tabs
             if emit_separating_tab and emit_original_whitespace is False
             else identity
@@ -554,8 +558,8 @@ def docstring(
                     doc=(fill if word_wrap else identity)(intermediate_repr["doc"]),
                     nl0="" if docstring_format == "rest" else "\n",
                     nl1="\n" if docstring_format == "numpydoc" else "",
-                    params="\n{}".format(
-                        "\n" if docstring_format == "rest" else ""
+                    params="\n{maybe_nl}".format(
+                        maybe_nl="\n" if docstring_format == "rest" else ""
                     ).join(
                         (
                             lambda param_lines: [
@@ -584,13 +588,15 @@ def docstring(
                         (
                             lambda l: l
                             if l is None
-                            else "{}\n{}".format(
-                                ""
+                            else "{maybe_nl}\n{returns_doc}".format(
+                                maybe_nl=""
                                 if docstring_format == "rest"
-                                else "\n{}".format(
-                                    getattr(RETURN_TOKENS, docstring_format)[0]
+                                else "\n{return_token}".format(
+                                    return_token=getattr(
+                                        RETURN_TOKENS, docstring_format
+                                    )[0]
                                 ),
-                                l,
+                                returns_doc=l,
                             )
                         )(
                             next(

@@ -633,11 +633,12 @@ class Config(Base):
     usage: python -m cdd exmod [-h] --module MODULE --emit
                                {argparse,class,function,sqlalchemy,sqlalchemy_table}
                                [--blacklist BLACKLIST] [--whitelist WHITELIST]
-                               --output-directory OUTPUT_DIRECTORY
+                               --output-directory OUTPUT_DIRECTORY [--dry-run]
     
     options:
       -h, --help            show this help message and exit
-      --module MODULE       The module or fully-qualified name (FQN) to expose.
+      --module MODULE, -m MODULE
+                            The module or fully-qualified name (FQN) to expose.
       --emit {argparse,class,function,sqlalchemy,sqlalchemy_table}
                             What type to generate.
       --blacklist BLACKLIST
@@ -646,9 +647,11 @@ class Config(Base):
       --whitelist WHITELIST
                             Modules/FQN to emit. If unspecified will emit all
                             (minus blacklist).
-      --output-directory OUTPUT_DIRECTORY
+      --output-directory OUTPUT_DIRECTORY, -o OUTPUT_DIRECTORY
                             Where to place the generated exposed interfaces to the
                             given `--module`.
+      --dry-run             Show what would be created; don't actually write to
+                            the filesystem.
 
 ---
 

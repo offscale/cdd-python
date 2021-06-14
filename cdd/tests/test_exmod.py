@@ -1,6 +1,9 @@
 """ Tests for exmod subcommand """
 
 from ast import ClassDef
+from functools import partial
+from io import StringIO
+from itertools import groupby
 from operator import add, itemgetter
 from os import environ, mkdir, path
 from os.path import extsep
@@ -8,10 +11,12 @@ from subprocess import DEVNULL, call
 from sys import executable
 from tempfile import TemporaryDirectory
 from unittest import TestCase
+from unittest.mock import patch
 
 from cdd import parse
 from cdd.exmod import exmod
-from cdd.pure_utils import ENCODING, rpartial
+from cdd.pkg_utils import relative_filename
+from cdd.pure_utils import ENCODING, rpartial, unquote
 from cdd.source_transformer import ast_parse
 from cdd.tests.mocks import imports_header
 from cdd.tests.mocks.classes import class_str
@@ -32,6 +37,7 @@ class TestExMod(TestCase):
                 blacklist=("unittest.TestCase",),
                 whitelist=tuple(),
                 output_directory=tempdir,
+                dry_run=False,
             )
 
     def test_exmod_whitelist(self) -> None:
@@ -44,6 +50,7 @@ class TestExMod(TestCase):
                 blacklist=tuple(),
                 whitelist=("unittest.TestCase",),
                 output_directory=tempdir,
+                dry_run=False,
             )
 
     def test_exmod_module_directory(self) -> None:
@@ -56,6 +63,7 @@ class TestExMod(TestCase):
                 blacklist=["foo", "bar"],
                 whitelist=tuple(),
                 output_directory=tempdir,
+                dry_run=False,
             )
 
     def test_exmod_output_directory_nonexistent(self) -> None:
@@ -70,6 +78,7 @@ class TestExMod(TestCase):
                 blacklist=tuple(),
                 whitelist=tuple(),
                 output_directory=output_directory,
+                dry_run=False,
             )
 
     def create_fs(self, tempdir):
@@ -138,8 +147,8 @@ class TestExMod(TestCase):
                     # cls_name="{name}Class".format(name=self.parent_name.title()),
                     author=environ.get("CDD_AUTHOR", "Samuel Marks"),
                     version=environ.get("CDD_VERSION", "0.0.0"),
-                    all__="__all__ = {!r}".format(
-                        list(
+                    all__="__all__ = {__all__!r}".format(
+                        __all__=list(
                             map(
                                 rpartial(add, "_dir"),
                                 (
@@ -187,12 +196,15 @@ class TestExMod(TestCase):
 
         return tempdir
 
-    def check_emission(self, tempdir):
+    def check_emission(self, tempdir, dry_run=False):
         """
         Confirm whether emission conforms to gen by verifying their IRs are equivalent
 
         :param tempdir: Temporary directory
         :type tempdir: ```str```
+
+        :param dry_run: Show what would be created; don't actually write to the filesystem
+        :type dry_run: ```bool```
         """
         new_module_name = path.basename(tempdir)
 
@@ -200,62 +212,67 @@ class TestExMod(TestCase):
             gen_folder = path.join(tempdir, new_module_name, folder)
             gold_folder = path.join(self.gold_dir, self.module_name, folder)
 
-            def _open(folder):
+            def _open(_folder):
                 """
-                :param folder: Folder to join on
-                :type folder: ```str``
+                :param _folder: Folder to join on
+                :type _folder: ```str``
 
                 :returns: Open IO
                 :rtype: ```open```
                 """
                 return open(
                     path.join(
-                        folder, "{name}{extsep}py".format(name=name, extsep=extsep)
+                        _folder, "{name}{extsep}py".format(name=name, extsep=extsep)
                     ),
                     "rt",
                 )
 
             self.assertTrue(path.isdir(gold_folder))
-            self.assertTrue(path.isdir(gen_folder))
 
-            with _open(gen_folder) as gen, _open(gold_folder) as gold:
-                gen_ir, gold_ir = map(
-                    lambda node: parse.class_(
-                        next(
-                            filter(
-                                rpartial(isinstance, ClassDef),
-                                ast_parse(node.read()).body,
+            gen_is_dir = path.isdir(gen_folder)
+            if dry_run:
+                self.assertFalse(gen_is_dir)
+            else:
+                self.assertTrue(gen_is_dir)
+
+                with _open(gen_folder) as gen, _open(gold_folder) as gold:
+                    gen_ir, gold_ir = map(
+                        lambda node: parse.class_(
+                            next(
+                                filter(
+                                    rpartial(isinstance, ClassDef),
+                                    ast_parse(node.read()).body,
+                                )
                             )
-                        )
-                    ),
-                    (gen, gold),
-                )
-                self.assertDictEqual(gold_ir, gen_ir)
+                        ),
+                        (gen, gold),
+                    )
+                    self.assertDictEqual(gold_ir, gen_ir)
+
+    def _pip(self, pip_args, cwd=None):
+        """
+        Run `pip` with given args (and assert success).
+        [Not using InstallCommand from pip anymore as its been deprecated (and now removed).]
+
+        :param pip_args: Arguments to give pip
+        :type pip_args: ```List[str]```
+
+        :param cwd: Current working directory to run the command from. Defaults to current dir.
+        :type cwd: ```Optional[str]```
+        """
+        self.assertEqual(
+            call(
+                [executable, "-m", "pip"] + pip_args,
+                cwd=cwd,
+                stdout=DEVNULL,
+                stderr=DEVNULL,
+            ),
+            0,
+            "EXIT_SUCCESS not reached",
+        )
 
     def test_exmod(self) -> None:
         """Tests `exmod`"""
-
-        def _pip(pip_args, cwd=None):
-            """
-            Run `pip` with given args (and assert success).
-            [Not using InstallCommand from pip anymore as its been deprecated (and now removed).]
-
-            :param pip_args: Arguments to give pip
-            :type pip_args: ```List[str]```
-
-            :param cwd: Current working directory to run the command from. Defaults to current dir.
-            :type cwd: ```Optional[str]```
-            """
-            self.assertEqual(
-                call(
-                    [executable, "-m", "pip"] + pip_args,
-                    cwd=cwd,
-                    stdout=DEVNULL,
-                    stderr=DEVNULL,
-                ),
-                0,
-                "EXIT_SUCCESS not reached",
-            )
 
         try:
             with TemporaryDirectory(
@@ -264,17 +281,91 @@ class TestExMod(TestCase):
                 prefix="gen", suffix="gen"
             ) as new_module_dir:
                 self.create_fs(existent_module_dir)
-                _pip(["install", "."], existent_module_dir)
+                self._pip(["install", "."], existent_module_dir)
                 exmod(
                     module=self.module_name,
                     emit_name="class",
                     blacklist=tuple(),
                     whitelist=tuple(),
                     output_directory=new_module_dir,
+                    dry_run=False,
                 )
                 self.check_emission(new_module_dir)
         finally:
-            _pip(["uninstall", "-y", self.module_name])
+            self._pip(["uninstall", "-y", self.module_name])
+
+    def test_exmod_dry_run(self) -> None:
+        """Tests `exmod` dry_run"""
+
+        try:
+            with TemporaryDirectory(
+                prefix="gold", suffix="gold"
+            ) as existent_module_dir, TemporaryDirectory(
+                prefix="gen", suffix="gen"
+            ) as new_module_dir:
+                self.create_fs(existent_module_dir)
+                self._pip(["install", "."], existent_module_dir)
+
+                with patch("sys.stdout", new_callable=StringIO) as f:
+                    exmod(
+                        module=self.module_name,
+                        emit_name="class",
+                        blacklist=tuple(),
+                        whitelist=tuple(),
+                        output_directory=new_module_dir,
+                        dry_run=True,
+                    )
+                    r = f.getvalue()
+                result = dict(
+                    map(
+                        lambda k_v: (
+                            k_v[0],
+                            tuple(
+                                map(
+                                    partial(
+                                        relative_filename,
+                                        remove_hints=(
+                                            path.join(
+                                                new_module_dir,
+                                                path.basename(new_module_dir),
+                                            ),
+                                        ),
+                                    ),
+                                    map(unquote, sorted(map(itemgetter(1), k_v[1]))),
+                                )
+                            ),
+                        ),
+                        groupby(
+                            map(rpartial(str.split, "\t"), r.splitlines()),
+                            key=itemgetter(0),
+                        ),
+                    )
+                )
+                for key, count in ("mkdir", 1), ("touch", 1), ("write", 3):
+                    self.assertEqual(len(result[key]), count)
+
+                self.assertDictEqual(
+                    result,
+                    {
+                        "mkdir": (
+                            path.join(
+                                self.module_hierarchy[0][1], self.module_hierarchy[0][0]
+                            ),
+                        ),
+                        "touch": (
+                            path.join(self.module_hierarchy[0][1], "__init__.py"),
+                        ),
+                        "write": (
+                            "__init__.py",
+                            path.join(self.module_hierarchy[0][1], "parent.py"),
+                            path.join(self.module_hierarchy[0][1], "parent.py"),
+                        ),
+                    },
+                )
+
+                self.check_emission(new_module_dir, dry_run=True)
+        finally:
+            self._pip(["uninstall", "-y", self.module_name])
 
 
 unittest_main()
