@@ -3,12 +3,12 @@
 from ast import ClassDef
 from functools import partial
 from io import StringIO
-from itertools import groupby
+from itertools import chain, groupby
 from operator import add, itemgetter
 from os import environ, mkdir, path
 from os.path import extsep
 from subprocess import DEVNULL, call
-from sys import executable
+from sys import executable, platform
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch
@@ -316,52 +316,149 @@ class TestExMod(TestCase):
                         dry_run=True,
                     )
                     r = f.getvalue()
+
                 result = dict(
                     map(
                         lambda k_v: (
                             k_v[0],
                             tuple(
-                                map(
-                                    partial(
-                                        relative_filename,
-                                        remove_hints=(
-                                            path.join(
-                                                new_module_dir,
-                                                path.basename(new_module_dir),
+                                sorted(
+                                    set(
+                                        map(
+                                            partial(
+                                                relative_filename,
+                                                remove_hints=(
+                                                    (
+                                                        lambda directory: unquote(
+                                                            repr(directory)
+                                                        )
+                                                        + path.sep
+                                                        if platform == "win32"
+                                                        else directory
+                                                    )(
+                                                        path.join(
+                                                            new_module_dir,
+                                                            path.basename(
+                                                                new_module_dir
+                                                            ),
+                                                        ),
+                                                    ),
+                                                ),
                                             ),
-                                        ),
-                                    ),
-                                    map(unquote, sorted(map(itemgetter(1), k_v[1]))),
+                                            map(unquote, map(itemgetter(1), k_v[1])),
+                                        )
+                                    )
                                 )
                             ),
                         ),
                         groupby(
-                            map(rpartial(str.split, "\t"), r.splitlines()),
+                            map(rpartial(str.split, "\t", 2), sorted(r.splitlines())),
                             key=itemgetter(0),
                         ),
                     )
                 )
-                for key, count in ("mkdir", 1), ("touch", 1), ("write", 3):
-                    self.assertEqual(len(result[key]), count)
 
-                self.assertDictEqual(
-                    result,
-                    {
+                all_tests_running = len(result["write"]) == 7
+
+                key_counts = (
+                    (("mkdir", 7), ("touch", 4), ("write", 7))
+                    if all_tests_running
+                    else (("mkdir", 7), ("touch", 4), ("write", 4))
+                )
+
+                for key, count in key_counts:
+                    self.assertEqual(len(result[key]), count, key)
+
+                gold_module_name = next(
+                    map(
+                        lambda p: p.partition(path.sep)[0],
+                        filter(rpartial(str.startswith, "gold"), result["write"]),
+                    ),
+                    "",
+                )
+
+                expect = {
+                    k: tuple(map(unquote, map(repr, v)))
+                    for k, v in {
                         "mkdir": (
+                            new_module_dir,
+                            self.module_hierarchy[0][1],
+                            self.module_hierarchy[1][1],
                             path.join(
-                                self.module_hierarchy[0][1], self.module_hierarchy[0][0]
+                                self.module_hierarchy[1][1],
+                                self.module_hierarchy[1][0],
+                            ),
+                            self.module_hierarchy[2][1],
+                            path.join(
+                                self.module_hierarchy[2][1],
+                                self.module_hierarchy[2][0],
+                            ),
+                            path.join(
+                                self.module_hierarchy[0][1],
+                                self.module_hierarchy[0][0],
                             ),
                         ),
                         "touch": (
-                            path.join(self.module_hierarchy[0][1], "__init__.py"),
+                            "__init__{extsep}py".format(extsep=extsep),
+                            path.join(
+                                self.module_hierarchy[0][1],
+                                "__init__{extsep}py".format(extsep=extsep),
+                            ),
+                            path.join(
+                                self.module_hierarchy[1][1],
+                                "__init__{extsep}py".format(extsep=extsep),
+                            ),
+                            path.join(
+                                self.module_hierarchy[2][1],
+                                "__init__{extsep}py".format(extsep=extsep),
+                            ),
                         ),
                         "write": (
-                            "__init__.py",
-                            path.join(self.module_hierarchy[0][1], "parent.py"),
-                            path.join(self.module_hierarchy[0][1], "parent.py"),
+                            lambda write_block: tuple(
+                                sorted(
+                                    chain.from_iterable(
+                                        (
+                                            map(
+                                                partial(path.join, gold_module_name),
+                                                write_block[1:],
+                                            ),
+                                            write_block,
+                                        )
+                                    )
+                                )
+                            )
+                            if all_tests_running
+                            else write_block
+                        )(
+                            (
+                                "__init__{extsep}py".format(extsep=extsep),
+                                path.join(
+                                    self.module_hierarchy[1][1],
+                                    "{name}{extsep}py".format(
+                                        name=self.module_hierarchy[1][0],
+                                        extsep=extsep,
+                                    ),
+                                ),
+                                path.join(
+                                    self.module_hierarchy[2][1],
+                                    "{name}{extsep}py".format(
+                                        name=self.module_hierarchy[2][0],
+                                        extsep=extsep,
+                                    ),
+                                ),
+                                path.join(
+                                    self.module_hierarchy[0][1],
+                                    "{name}{extsep}py".format(
+                                        name=self.module_hierarchy[0][0],
+                                        extsep=extsep,
+                                    ),
+                                ),
+                            )
                         ),
-                    },
-                )
+                    }.items()
+                }
+
+                self.assertDictEqual(result, expect)
 
                 self.check_emission(new_module_dir, dry_run=True)
         finally:

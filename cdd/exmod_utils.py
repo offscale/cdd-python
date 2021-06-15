@@ -220,9 +220,6 @@ def mkdir_and_emit_file(
                 mode="wt",
             )
 
-        # print("Emitted: {init_filepath!r} ;".format(init_filepath=init_filepath))
-    # print("\n", end="")
-
     return (
         mod_name,
         original_relative_filename_path,
