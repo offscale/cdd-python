@@ -25,6 +25,7 @@ from ast import (
     keyword,
 )
 from collections import OrderedDict, deque
+from contextlib import suppress
 from copy import deepcopy
 from functools import partial
 from inspect import getdoc, getsource, isfunction, signature
@@ -153,37 +154,51 @@ def class_(
                     )(to_code(v).rstrip("\n"))
                 }
             )(get_value(get_value(e)))
+
             # if 'str' in typ and val: val["default"] = val["default"].strip("'")  # Unquote?
             typ_default = dict(typ=typ, **val)
 
+            target_id = e.target.id.lstrip("*")
+
             for key in "params", "returns":
-                if e.target.id in (intermediate_repr[key] or iter(())):
-                    intermediate_repr[key][e.target.id].update(typ_default)
+                if target_id in (intermediate_repr[key] or iter(())):
+                    intermediate_repr[key][target_id].update(typ_default)
                     typ_default = False
                     break
 
             if typ_default:
-                k = "returns" if e.target.id == "return_type" else "params"
+                k = "returns" if target_id == "return_type" else "params"
                 if intermediate_repr.get(k) is None:
                     intermediate_repr[k] = OrderedDict()
-                intermediate_repr[k][e.target.id] = typ_default
+                intermediate_repr[k][target_id] = typ_default
         elif isinstance(e, Assign):
             val = get_value(e)
+
             if val is not None:
                 val = get_value(val)
                 deque(
                     map(
                         lambda target: setitem(
                             *(
-                                (intermediate_repr["params"][target.id], "default", val)
-                                if isinstance(target, Name)
-                                and target.id in intermediate_repr["params"]
-                                else (
-                                    intermediate_repr["params"],
-                                    target.id
+                                (
+                                    lambda _target_id: (
+                                        intermediate_repr["params"][_target_id],
+                                        "default",
+                                        val,
+                                    )
                                     if isinstance(target, Name)
-                                    else get_value(get_value(target)),
-                                    {"default": val},
+                                    and _target_id in intermediate_repr["params"]
+                                    else (
+                                        intermediate_repr["params"],
+                                        _target_id
+                                        if isinstance(target, Name)
+                                        else get_value(get_value(target)),
+                                        {"default": val},
+                                    )
+                                )(
+                                    target.id.lstrip("*")
+                                    if hasattr(target, "id")
+                                    else target.value.id
                                 )
                             )
                         ),
@@ -277,13 +292,15 @@ def _class_from_memory(
     ir["_internal"] = {
         "body": list(
             filterfalse(
-                rpartial(isinstance, AnnAssign),
+                rpartial(isinstance, (AnnAssign, Assign)),
                 parsed_body.body,
             )
         ),
         "from_name": class_name,
         "from_type": "cls",
     }
+    if class_name is None:
+        class_name = parsed_body.name
     body_ir = class_(
         class_def=parsed_body,
         class_name=class_name,
@@ -374,30 +391,45 @@ def _inspect(obj, name, word_wrap):
     """
 
     doc = getdoc(obj) or ""
-    sig = signature(obj)
+
+    # def is_builtin_class_instance(obj):
+    #     builtin_types = tuple(
+    #         getattr(builtins, t)
+    #         for t in dir(builtins)
+    #         if isinstance(getattr(builtins, t), type)
+    #     )
+    #     return obj.__class__.__module__ == "__builtin__" or isinstance(
+    #         obj, builtin_types
+    #     )
+
     is_function = isfunction(obj)
     ir = docstring(doc, emit_default_doc=is_function) if doc else {}
     if not is_function and "type" in ir:
         del ir["type"]
 
-    ir.update(
-        {
-            "name": name or obj.__qualname__
-            if hasattr(obj, "__qualname__")
-            else obj.__name__,
-            "params": OrderedDict(
-                filter(
-                    None,
-                    map(
-                        partial(_inspect_process_ir_param, sig=sig),
-                        ir.get("params", {}).items(),
-                    )
-                    # if ir.get("params")
-                    # else map(_inspect_process_sig, sig.parameters.items()),
-                )
-            ),
-        }
+    ir["name"] = (
+        name or obj.__qualname__ if hasattr(obj, "__qualname__") else obj.__name__
     )
+    assert ir["name"], "IR name is empty"
+
+    # if is_builtin_class_instance(obj):
+    #    return ir
+
+    sig = None
+    with suppress(ValueError):
+        sig = signature(obj)
+    if sig is not None:
+        ir["params"] = OrderedDict(
+            filter(
+                None,
+                map(
+                    partial(_inspect_process_ir_param, sig=sig),
+                    ir.get("params", {}).items(),
+                )
+                # if ir.get("params")
+                # else map(_inspect_process_sig, sig.parameters.items()),
+            )
+        )
 
     src = get_source(obj)
     if src is None:
@@ -405,8 +437,12 @@ def _inspect(obj, name, word_wrap):
     parsed_body = ast.parse(src.lstrip()).body[0]
 
     if is_function:
-        ir["type"] = {"self": "self", "cls": "cls"}.get(
-            next(iter(sig.parameters.values())).name, "static"
+        ir["type"] = (
+            "static"
+            if sig is None
+            else {"self": "self", "cls": "cls"}.get(
+                next(iter(sig.parameters.values())).name, "static"
+            )
         )
         parser = function
     else:
@@ -469,7 +505,7 @@ def function(
             else parsed_source.body[1:]
         )
         ir["_internal"] = {
-            "body": list(filterfalse(rpartial(isinstance, AnnAssign), body)),
+            "body": list(filterfalse(rpartial(isinstance, (AnnAssign, Assign)), body)),
             "from_name": parsed_source.name,
             "from_type": "cls",
         }
@@ -550,7 +586,8 @@ def function(
             setattr(
                 function_def.args,
                 defaults,
-                list(islice(cycle((None,)), 10)) + getattr(function_def.args, defaults),
+                list(islice(cycle((None,)), diff))
+                + getattr(function_def.args, defaults),
             )
     ir_merge(
         intermediate_repr,
@@ -589,7 +626,6 @@ def function(
                 intermediate_repr["returns"].items(),
             )
         )
-
     return intermediate_repr
 
 
@@ -623,7 +659,7 @@ def argparse_ast(function_def, function_type=None, function_name=None):
 
     doc_string = get_docstring(function_def)
     intermediate_repr = {
-        "name": function_name,
+        "name": function_name or function_def.name,
         "type": function_type or get_function_type(function_def),
         "doc": "",
         "params": OrderedDict(),

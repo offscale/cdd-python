@@ -833,12 +833,18 @@ function_google_tf_squared_hinge_docstring_str = "\n".join(
 function_google_tf_squared_hinge = (
     "def squared_hinge(y_true, y_pred):",
     '  """{}"""'.format(function_google_tf_squared_hinge_docstring_str),
-    "  y_pred = ops.convert_to_tensor_v2(y_pred)",
-    "  y_true = math_ops.cast(y_true, y_pred.dtype)",
-    "  y_true = _maybe_convert_labels(y_true)",
-    "  return K.mean(",
-    "      math_ops.square(math_ops.maximum(1. - y_true * y_pred, 0.)), axis=-1)",
+    "  "
+    + "\n  ".join(
+        (
+            "y_pred = ops.convert_to_tensor_v2(y_pred)",
+            "y_true = math_ops.cast(y_true, y_pred.dtype)",
+            "y_true = _maybe_convert_labels(y_true)",
+            "return K.mean(",
+            "    math_ops.square(math_ops.maximum(1. - y_true * y_pred, 0.)), axis=-1)",
+        )
+    ),
 )
+
 function_google_tf_squared_hinge_str = "\n".join(function_google_tf_squared_hinge)
 
 docstring_google_tf_adadelta_function = (

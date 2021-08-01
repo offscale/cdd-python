@@ -1012,4 +1012,5 @@ __all__ = [
     "argparse_func_torch_nn_l1loss_ast",
     "argparse_func_with_body_ast",
     "argparse_func_with_body_str",
+    "argparse_function_google_tf_tensorboard_ast",
 ]

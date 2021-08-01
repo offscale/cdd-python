@@ -391,41 +391,41 @@ def _make_call_meth(body, return_type, param_names, docstring_format, word_wrap)
     :rtype: ```FunctionDef```
     """
     body_len = len(body)
-    if body_len:
-        if isinstance(body, dict):
-            body = list(
-                filter(
-                    None,
-                    (
-                        None
-                        if body.get("doc") in none_types
-                        else Expr(
-                            set_value(
-                                emit_param_str(
-                                    (
-                                        "return_type",
-                                        {
-                                            "doc": multiline(
-                                                indent_all_but_first(body["doc"])
-                                            )
-                                        },
-                                    ),
-                                    style=docstring_format,
-                                    word_wrap=word_wrap,
-                                )
-                            )
-                        ),
-                        RewriteName(param_names).visit(
-                            Return(
-                                get_value(ast.parse(return_type.strip("`")).body[0]),
-                                expr=None,
+    if body_len and isinstance(body, dict):
+        body = list(
+            filter(
+                None,
+                (
+                    None
+                    if body.get("doc") in none_types
+                    else Expr(
+                        set_value(
+                            emit_param_str(
+                                (
+                                    "return_type",
+                                    {
+                                        "doc": multiline(
+                                            indent_all_but_first(body["doc"])
+                                        )
+                                    },
+                                ),
+                                style=docstring_format,
+                                word_wrap=word_wrap,
+                                purpose="function",
                             )
                         )
-                        if code_quoted(body["default"])
-                        else Return(set_value(body["default"]), expr=None),
                     ),
-                )
+                    RewriteName(param_names).visit(
+                        Return(
+                            get_value(ast.parse(return_type.strip("`")).body[0]),
+                            expr=None,
+                        )
+                    )
+                    if code_quoted(body["default"])
+                    else Return(set_value(body["default"]), expr=None),
+                ),
             )
+        )
 
     return (
         ast.fix_missing_locations(

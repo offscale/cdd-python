@@ -142,6 +142,7 @@ def _inspect_process_ir_param(param, sig):
     name, _param = param
     del param
     name = name.lstrip("*")
+
     if name not in sig.parameters:
         return name, _param
     sig_param = sig.parameters[name]
@@ -388,7 +389,12 @@ def get_source(obj):
     try:
         return getsource(obj)
     except OSError as e:
-        if e.args and e.args[0] == "could not find class definition":
+        if e.args and e.args[0] in frozenset(
+            (
+                "could not find class definition",
+                "source code not available",
+            )
+        ):
             return None
         raise
 

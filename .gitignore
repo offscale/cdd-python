@@ -4,6 +4,9 @@ dist
 # Jetbrains IDEs
 .idea
 out/
+.project
+.pydevproject
+.vscode
 
 # File-based project format
 *.iws

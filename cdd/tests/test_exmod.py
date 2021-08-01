@@ -16,7 +16,7 @@ from unittest.mock import patch
 from cdd import parse
 from cdd.exmod import exmod
 from cdd.pkg_utils import relative_filename
-from cdd.pure_utils import ENCODING, rpartial, unquote
+from cdd.pure_utils import ENCODING, INIT_FILENAME, rpartial, unquote
 from cdd.source_transformer import ast_parse
 from cdd.tests.mocks import imports_header
 from cdd.tests.mocks.classes import class_str
@@ -59,17 +59,17 @@ class TestExMod(TestCase):
         with TemporaryDirectory() as tempdir, self.assertRaises(NotImplementedError):
             exmod(
                 module=tempdir,
-                emit_name=None,
+                emit_name="cjvxclkvjclxkjvlcx",
                 blacklist=["foo", "bar"],
                 whitelist=tuple(),
-                output_directory=tempdir,
+                output_directory=path.join(tempdir, "nonexistent"),
                 dry_run=False,
             )
 
     def test_exmod_output_directory_nonexistent(self) -> None:
         """Tests `exmod` module whence directory does not exist"""
 
-        with TemporaryDirectory() as tempdir, self.assertRaises(AssertionError):
+        with TemporaryDirectory() as tempdir, self.assertRaises(ModuleNotFoundError):
             output_directory = path.join(tempdir, "stuff")
             self.assertFalse(path.isdir(output_directory))
             exmod(
@@ -115,9 +115,7 @@ class TestExMod(TestCase):
         open(path.join(tempdir, "README{extsep}md".format(extsep=extsep)), "a").close()
         mkdir(path.join(tempdir, self.module_name))
         with open(
-            path.join(
-                tempdir, self.module_name, "__init__{extsep}py".format(extsep=extsep)
-            ),
+            path.join(tempdir, self.module_name, INIT_FILENAME),
             "wt",
         ) as f:
             f.write(
@@ -361,13 +359,13 @@ class TestExMod(TestCase):
                 all_tests_running = len(result["write"]) == 7
 
                 key_counts = (
-                    (("mkdir", 7), ("touch", 4), ("write", 7))
+                    (("mkdir", 10), ("touch", 4), ("write", 7))
                     if all_tests_running
                     else (("mkdir", 7), ("touch", 4), ("write", 4))
                 )
 
                 for key, count in key_counts:
-                    self.assertEqual(len(result[key]), count, key)
+                    self.assertEqual(count, len(result[key]), key)
 
                 gold_module_name = next(
                     map(
@@ -376,41 +374,57 @@ class TestExMod(TestCase):
                     ),
                     "",
                 )
-
-                expect = {
+                gold = {
                     k: tuple(map(unquote, map(repr, v)))
                     for k, v in {
-                        "mkdir": (
-                            new_module_dir,
-                            self.module_hierarchy[0][1],
-                            self.module_hierarchy[1][1],
-                            path.join(
-                                self.module_hierarchy[1][1],
-                                self.module_hierarchy[1][0],
-                            ),
-                            self.module_hierarchy[2][1],
-                            path.join(
-                                self.module_hierarchy[2][1],
-                                self.module_hierarchy[2][0],
-                            ),
-                            path.join(
-                                self.module_hierarchy[0][1],
-                                self.module_hierarchy[0][0],
-                            ),
+                        "mkdir": chain.from_iterable(
+                            (
+                                (new_module_dir,),
+                                (
+                                    path.join(
+                                        gold_module_name, self.module_hierarchy[0][1]
+                                    ),
+                                    path.join(
+                                        gold_module_name, self.module_hierarchy[1][1]
+                                    ),
+                                    path.join(
+                                        gold_module_name, self.module_hierarchy[2][1]
+                                    ),
+                                )
+                                if all_tests_running
+                                else iter(()),
+                                (
+                                    self.module_hierarchy[0][1],
+                                    self.module_hierarchy[1][1],
+                                    path.join(
+                                        self.module_hierarchy[1][1],
+                                        self.module_hierarchy[1][0],
+                                    ),
+                                    self.module_hierarchy[2][1],
+                                    path.join(
+                                        self.module_hierarchy[2][1],
+                                        self.module_hierarchy[2][0],
+                                    ),
+                                    path.join(
+                                        self.module_hierarchy[0][1],
+                                        self.module_hierarchy[0][0],
+                                    ),
+                                ),
+                            )
                         ),
                         "touch": (
-                            "__init__{extsep}py".format(extsep=extsep),
+                            INIT_FILENAME,
                             path.join(
                                 self.module_hierarchy[0][1],
-                                "__init__{extsep}py".format(extsep=extsep),
+                                INIT_FILENAME,
                             ),
                             path.join(
                                 self.module_hierarchy[1][1],
-                                "__init__{extsep}py".format(extsep=extsep),
+                                INIT_FILENAME,
                             ),
                             path.join(
                                 self.module_hierarchy[2][1],
-                                "__init__{extsep}py".format(extsep=extsep),
+                                INIT_FILENAME,
                             ),
                         ),
                         "write": (
@@ -431,7 +445,7 @@ class TestExMod(TestCase):
                             else write_block
                         )(
                             (
-                                "__init__{extsep}py".format(extsep=extsep),
+                                INIT_FILENAME,
                                 path.join(
                                     self.module_hierarchy[1][1],
                                     "{name}{extsep}py".format(
@@ -458,11 +472,13 @@ class TestExMod(TestCase):
                     }.items()
                 }
 
-                self.assertDictEqual(result, expect)
+                self.assertDictEqual(result, gold)
 
                 self.check_emission(new_module_dir, dry_run=True)
         finally:
             self._pip(["uninstall", "-y", self.module_name])
+
+    maxDiff = None
 
 
 unittest_main()

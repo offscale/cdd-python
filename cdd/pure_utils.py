@@ -12,14 +12,14 @@ from inspect import getmodule
 from itertools import chain, count, zip_longest
 from keyword import iskeyword
 from operator import attrgetter, eq
-from os import environ, path
+from os import environ, extsep, path
 from pprint import PrettyPrinter
 from sys import version_info
 from textwrap import fill as _fill
 from textwrap import indent
-from typing import Dict, FrozenSet, Optional, Tuple, Union
+from typing import Callable, Dict, FrozenSet, Optional, Tuple, Union
 
-pp = PrettyPrinter(indent=4, width=100).pprint
+pp: Callable[[object], None] = PrettyPrinter(indent=4, width=100).pprint
 tab: str = " " * 4
 simple_types: Dict[Optional[str], Union[int, float, complex, str, bool, None]] = {
     "int": 0,
@@ -315,26 +315,33 @@ def quote(s, mark='"'):
     """
     Quote the input string if it's not already quoted
 
-    :param s: Input string
-    :type s: ```str```
+    :param s: Input string or literal or None
+    :type s: ```Union[str, float, complex, int, None]```
 
     :param mark: Quote mark to wrap with
     :type mark: ```str```
 
-    :returns: Quoted string
-    :rtype: ```str```
+    :returns: Quoted string or input (if input is not str)
+    :rtype: ```Union[str, float, complex, int, None]```
     """
+    very_simple_types = type(None), int, float, complex
     s = (
         s
-        if isinstance(s, (str, type(None)))
+        if isinstance(s, (str, *very_simple_types))
         else s.s
         if isinstance(s, Str)
         else s.id
         if isinstance(s, Name)
-        else s.value
+        else getattr(s, "value", s)
     )
     # ^ Poor man's `get_value`
-    if s is None or len(s) == 0 or s[0] == s[-1] and s[0] in frozenset(("'", '"')):
+    if (
+        isinstance(s, very_simple_types)
+        or len(s) == 0
+        or len(s) > 1
+        and s[0] == s[-1]
+        and s[0] in frozenset(("'", '"'))
+    ):
         return s
     return "{mark}{s}{mark}".format(mark=mark, s=s)
 
@@ -495,6 +502,8 @@ BUILTIN_TYPES = (
     )
     | frozenset(("int", "float", "str", "dict", "list", "tuple"))
 )
+
+INIT_FILENAME = "__init__{extsep}py".format(extsep=extsep)
 
 
 def code_quoted(s):

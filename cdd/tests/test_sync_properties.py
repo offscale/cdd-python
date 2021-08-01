@@ -9,7 +9,7 @@ from unittest import TestCase
 
 from pkg_resources import resource_filename
 
-from cdd.pure_utils import PY_GTE_3_8, tab
+from cdd.pure_utils import INIT_FILENAME, PY_GTE_3_8, tab
 from cdd.sync_properties import sync_properties
 from cdd.tests.mocks.eval import get_modules
 from cdd.tests.utils_for_tests import run_ast_test, unittest_main
@@ -95,7 +95,7 @@ class TestSyncProperties(TestCase):
                     os.path.dirname(
                         resource_filename(
                             modules[__name__].__name__,
-                            "__init__{extsep}py".format(extsep=extsep),
+                            INIT_FILENAME,
                         )
                     )
                 ),

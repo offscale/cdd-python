@@ -5,6 +5,7 @@ Tests for the Intermediate Representation produced by the parsers
 import ast
 from ast import FunctionDef
 from collections import OrderedDict
+from copy import deepcopy
 from unittest import TestCase
 
 from cdd import emit, parse
@@ -61,13 +62,17 @@ class TestParsers(TestCase):
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     """
 
+    maxDiff = None
+
     def test_from_argparse_ast(self) -> None:
         """
         Tests whether `argparse_ast` produces `intermediate_repr_no_default_doc`
               from `argparse_func_ast`"""
         ir = parse.argparse_ast(argparse_func_ast)
         del ir["_internal"]  # Not needed for this test
-        self.assertDictEqual(ir, intermediate_repr_no_default_doc)
+        _intermediate_repr_no_default_doc = deepcopy(intermediate_repr_no_default_doc)
+        _intermediate_repr_no_default_doc["name"] = "set_cli_args"
+        self.assertDictEqual(ir, _intermediate_repr_no_default_doc)
 
     def test_from_argparse_ast_empty(self) -> None:
         """
@@ -79,6 +84,7 @@ class TestParsers(TestCase):
                     parse.argparse_ast(
                         FunctionDef(
                             body=[],
+                            name=None,
                             arguments_args=None,
                             identifier_name=None,
                             stmt=None,
@@ -438,6 +444,7 @@ class TestParsers(TestCase):
 
         del parsed_ir["_internal"]  # Not needed for this test
 
+        self.assertEqual(parsed_ir["params"]["last_epoch"]["typ"], "int")
         self.assertDictEqual(parsed_ir, class_torch_nn_one_cycle_lr_ir)
 
     def test_from_json_schema(self) -> None:

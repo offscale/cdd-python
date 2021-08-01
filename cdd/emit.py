@@ -381,7 +381,6 @@ def class_(
         else OrderedDict()
     )
 
-    param_names = frozenset(intermediate_repr["params"].keys())
     if returns:
         intermediate_repr["params"].update(returns)
         del intermediate_repr["returns"]
@@ -390,6 +389,11 @@ def class_(
     # TODO: Add correct classmethod/staticmethod to decorate function using `annotate_ancestry` and first-field checks
     # Such that the `self.` or `cls.` rewrite only applies to non-staticmethods
     # assert internal_body, "Expected `internal_body` to have contents"
+    param_names = (
+        frozenset(intermediate_repr["params"].keys())
+        if "params" in intermediate_repr
+        else None
+    )
     if param_names:
         if internal_body:
             internal_body = list(
@@ -458,11 +462,18 @@ def class_(
                             )
                         ),
                     ),
-                    map(param2ast, intermediate_repr["params"].items()),
+                    map(
+                        param2ast,
+                        (intermediate_repr.get("params") or OrderedDict()).items(),
+                    ),
                     iter(
                         (
                             (
-                                _make_call_meth(
+                                internal_body[0]
+                                if len(internal_body) == 1
+                                and isinstance(internal_body[0], FunctionDef)
+                                and internal_body[0].name == "__call__"
+                                else _make_call_meth(
                                     internal_body,
                                     returns["return_type"]["default"]
                                     if "default"
@@ -579,7 +590,9 @@ def docstring(
                                         emit_default_doc=emit_default_doc,
                                         word_wrap=word_wrap,
                                     ),
-                                    intermediate_repr["params"].items(),
+                                    (
+                                        intermediate_repr["params"] or OrderedDict()
+                                    ).items(),
                                 ),
                             )
                         )

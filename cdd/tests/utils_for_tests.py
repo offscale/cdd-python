@@ -80,6 +80,8 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
             *map(partial(ast.get_docstring, clean=False), (_gen_ast, _gold_ast))
         )
 
+    coded_gen_gold = tuple(map(source_transformer.to_code, (_gen_ast, _gold_ast)))
+    test_case_instance.assertEqual(*coded_gen_gold)
     test_case_instance.assertEqual(
         *map(
             identity
@@ -93,21 +95,19 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
                     string_normalization=False,
                 ),
             ),
-            map(source_transformer.to_code, (gen_ast, gold)),
+            coded_gen_gold,
         )
     )
 
-    # if not cmp_ast(gen_ast, gold):
-    #     from meta.asttools import print_ast
-    #
-    #     print("#gen")
-    #     print_ast(gen_ast)
-    #     print("#gold")
-    #     print_ast(gold)
+    if not cmp_ast(_gen_ast, _gold_ast):
+        pass
 
-    test_case_instance.assertTrue(
-        cmp_ast(gen_ast, gold), "Generated AST doesn't match reference AST"
-    )
+        # print("#gen")
+        # print_ast(_gen_ast)
+        # print("#gold")
+        # print_ast(_gold_ast)
+
+        raise AssertionError("Generated AST doesn't match reference AST")
 
 
 def run_cli_test(
@@ -367,6 +367,7 @@ __all__ = [
     "mock_function",
     "module_from_file",
     "remove_args_from_docstring",
+    "reindent_docstring",
     "run_ast_test",
     "run_cli_test",
     "unittest_main",

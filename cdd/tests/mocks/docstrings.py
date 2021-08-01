@@ -457,6 +457,7 @@ __all__ = [
     "docstring_google_tf_lambda_callback_str",
     "docstring_google_tf_squared_hinge_str",
     "docstring_header_str",
+    "docstring_no_default_str",
     "docstring_no_default_doc_str",
     "docstring_numpydoc_only_doc_str",
     "docstring_numpydoc_only_params_str",

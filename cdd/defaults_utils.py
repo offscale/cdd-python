@@ -366,9 +366,20 @@ def set_default_doc(param, emit_default_doc=True):
                     if _param["doc"][-1] in frozenset((".", ","))
                     else "{doc}.".format(doc=_param["doc"])
                 ),
-                default=quote(_param["default"])
-                if needs_quoting(_param.get("typ"))
-                else _param["default"],
+                default=(
+                    quote(_param["default"])
+                    if (
+                        needs_quoting(_param.get("typ"))
+                        and (
+                            len(_param["default"]) < 2
+                            or not _param["default"].startswith("`")
+                            or not _param["default"].endswith("`")
+                        )
+                        if isinstance(_param["default"], str)
+                        else True
+                    )
+                    else _param["default"]
+                ),
             )
 
     return name, _param
