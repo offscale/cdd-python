@@ -29,6 +29,7 @@ from ast import (
     keyword,
 )
 from copy import deepcopy
+from itertools import repeat
 from os import extsep, path
 from unittest import TestCase
 
@@ -38,15 +39,19 @@ from cdd.ast_utils import (
     _parse_default_from_ast,
     annotate_ancestry,
     cmp_ast,
+    del_ass_where_name,
     emit_ann_assign,
     emit_arg,
     find_ast_type,
     find_in_ast,
+    get_ass_where_name,
     get_at_root,
     get_function_type,
     get_value,
     infer_type_and_default,
     maybe_type_comment,
+    merge_assignment_lists,
+    merge_modules,
     node_to_dict,
     param2argparse_param,
     param2ast,
@@ -55,6 +60,7 @@ from cdd.ast_utils import (
     set_docstring,
     set_slice,
     set_value,
+    to_annotation,
 )
 from cdd.pure_utils import PY3_8, PY_GTE_3_8, tab
 from cdd.source_transformer import ast_parse
@@ -1090,6 +1096,77 @@ class TestAstUtils(TestCase):
         self.assertTupleEqual(
             _parse_default_from_ast(None, ast.parse("[5]").body[0], True, None),
             ("append", 5, True, "int"),
+        )
+
+    def test_get_ass_where_name(self):
+        """
+        Test `get_ass_where_name`
+        """
+        _mock = ast.parse("foo = 'bar';can = 5;haz: int = 5")
+        self.assertTupleEqual(
+            tuple(map(get_value, get_ass_where_name(_mock, "foo"))), ("bar",)
+        )
+        self.assertTupleEqual(
+            tuple(map(get_value, get_ass_where_name(_mock, "haz"))), (5,)
+        )
+
+    def test_del_ass_where_name(self):
+        """
+        Test `del_ass_where_name`
+        """
+        _mock = ast.parse("foo = 'bar';can = 5;haz: int = 5")
+        _mock.body.append(
+            Assign(
+                targets=[Name("yup", Store())],
+                value=set_value("nup"),
+                expr=None,
+                **maybe_type_comment
+            )
+        )
+        del_ass_where_name(_mock, "yup")
+        self.assertTupleEqual(tuple(get_ass_where_name(_mock, "yup")), tuple())
+
+    def test_to_annotation(self):
+        """
+        Test `to_annotation`
+        """
+        for res in "str", Name("str", Load()):
+            self.assertTrue(cmp_ast(to_annotation(res), Name("str", Load())))
+
+    def test_merge_assignment_lists(self):
+        """
+        Test `merge_assignment_lists`
+        """
+        src = "__all__ = [ 'a', 'b'];"
+        node = ast.parse("__all__ = ['alpha', 'beta']\n".join(repeat(src, 2)))
+        merge_assignment_lists(node, "__all__")
+        all__ = tuple(get_ass_where_name(node, "__all__"))
+        self.assertEqual(len(all__), 1)
+        self.assertTupleEqual(
+            tuple(map(get_value, all__[0].elts)), ("a", "alpha", "b", "beta")
+        )
+
+    def test_merge_modules(self):
+        """
+        Test `merge_modules`
+        """
+        import_line = "\nfrom string import ascii_uppercase"
+        src = """\"\"\"\nCool mod\"\"\"{import_line}""".format(import_line=import_line)
+        self.assertTrue(
+            cmp_ast(
+                ast.parse(src),
+                merge_modules(
+                    *map(ast.parse, (src, src)), remove_imports_from_second=True
+                ),
+            )
+        )
+        self.assertTrue(
+            cmp_ast(
+                ast.parse(src + import_line),
+                merge_modules(
+                    *map(ast.parse, (src, src)), remove_imports_from_second=False
+                ),
+            )
         )
 
 

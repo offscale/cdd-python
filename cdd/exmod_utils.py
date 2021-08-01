@@ -5,6 +5,7 @@ from ast import Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias
 from functools import partial
 from inspect import getfile, ismodule
 from itertools import chain
+from operator import attrgetter, eq
 from os import extsep, makedirs, path
 
 from cdd import emit
@@ -14,7 +15,7 @@ from cdd.ast_utils import (
     merge_modules,
     set_value,
 )
-from cdd.pure_utils import no_magic_dir2attr
+from cdd.pure_utils import INIT_FILENAME, no_magic_dir2attr, rpartial
 from cdd.tests.mocks import imports_header
 
 
@@ -38,7 +39,7 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
     :rtype: ```Generator[Any]```
     """
     for name, symbol in no_magic_dir2attr(obj).items():
-        fq = "{}.{}".format(current_module, name)
+        fq = "{current_module}.{name}".format(current_module=current_module, name=name)
         try:
             symbol_location = getfile(symbol)
         except TypeError:
@@ -59,7 +60,7 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
     return _result
 
 
-def mkdir_and_emit_file(
+def emit_file_on_hierarchy(
     name_orig_ir,
     emit_name,
     module_name,
@@ -97,6 +98,8 @@ def mkdir_and_emit_file(
     """
     mod_name, _, name = name_orig_ir[0].rpartition(".")
     original_relative_filename_path, ir = name_orig_ir[1], name_orig_ir[2]
+    if not name:
+        name = ir["name"]
     mod_path = path.join(
         output_directory,
         new_module_name,
@@ -108,54 +111,11 @@ def mkdir_and_emit_file(
         else:
             makedirs(mod_path)
 
-    init_filepath = path.join(
-        path.dirname(mod_path), "__init__{extsep}py".format(extsep=extsep)
-    )
+    init_filepath = path.join(path.dirname(mod_path), INIT_FILENAME)
     if dry_run:
         print("touch\t{init_filepath!r}".format(init_filepath=init_filepath))
     else:
         open(init_filepath, "a").close()
-    gen_node = getattr(emit, emit_name.replace("class", "class_"))(
-        ir,
-        **dict(
-            **{"{emit_name}_name".format(emit_name=emit_name): name},
-            **{} if emit_name == "class" else {"function_type": "static"}
-        )
-    )
-    __all___node = Assign(
-        targets=[Name("__all__", Store())],
-        value=List(
-            ctx=Load(),
-            elts=[set_value(name)],
-            expr=None,
-        ),
-        expr=None,
-        lineno=None,
-        **maybe_type_comment
-    )
-    if not isinstance(gen_node, Module):
-        gen_node = Module(
-            body=list(
-                chain.from_iterable(
-                    (
-                        (
-                            Expr(
-                                set_value(
-                                    "\nGenerated from {module_name}.{name}\n".format(
-                                        module_name=module_name,
-                                        name=name_orig_ir[0],
-                                    )
-                                )
-                            ),
-                        ),
-                        ast.parse(imports_header).body,
-                        (gen_node, __all___node),
-                    )
-                )
-            ),
-            stmt=None,
-            type_ignores=[],
-        )
 
     emit_filename, init_filepath = (
         map(
@@ -164,7 +124,7 @@ def mkdir_and_emit_file(
                 original_relative_filename_path,
                 path.join(
                     path.dirname(original_relative_filename_path),
-                    "__init__{extsep}py".format(extsep=extsep),
+                    INIT_FILENAME,
                 ),
             ),
         )
@@ -173,52 +133,124 @@ def mkdir_and_emit_file(
             partial(path.join, mod_path),
             (
                 "{name}{extsep}py".format(name=name, extsep=extsep),
-                "__init__{extsep}py".format(extsep=extsep),
+                INIT_FILENAME,
             ),
         )
     )
-
-    if path.isfile(emit_filename):
+    isfile_emit_filename = symbol_in_file = path.isfile(emit_filename)
+    existent_mod = None
+    if isfile_emit_filename:
         with open(emit_filename, "rt") as f:
-            mod = ast.parse(f.read())
-        gen_node = merge_modules(mod, gen_node)
-        merge_assignment_lists(gen_node, "__all__")
-
-    if dry_run:
-        print("write\t{emit_filename!r}".format(emit_filename=emit_filename))
+            emit_filename_contents = f.read()
+        existent_mod = ast.parse(
+            emit_filename_contents
+        )  # Also, useful as this catches syntax errors
+        symbol_in_file = any(
+            filter(
+                partial(eq, name),
+                map(
+                    attrgetter("name"),
+                    filter(rpartial(hasattr, "name"), existent_mod.body),
+                ),
+            )
+        )
     else:
-        emit.file(gen_node, filename=emit_filename, mode="wt")
-    if name != "__init__" and not path.isfile(init_filepath):
+        emit_filename_dir = path.dirname(emit_filename)
+        if not path.isdir(emit_filename_dir):
+            if dry_run:
+                print(
+                    "mkdir\t{emit_filename_dir!r}".format(
+                        emit_filename_dir=emit_filename_dir
+                    )
+                )
+            else:
+                makedirs(emit_filename_dir)
+
+    if not symbol_in_file:
+        gen_node = getattr(emit, emit_name.replace("class", "class_"))(
+            ir,
+            **dict(
+                **{"{emit_name}_name".format(emit_name=emit_name): name},
+                **{} if emit_name == "class" else {"function_type": "static"}
+            )
+        )
+        __all___node = Assign(
+            targets=[Name("__all__", Store())],
+            value=List(
+                ctx=Load(),
+                elts=[set_value(name)],
+                expr=None,
+            ),
+            expr=None,
+            lineno=None,
+            **maybe_type_comment
+        )
+        if not isinstance(gen_node, Module):
+            gen_node = Module(
+                body=list(
+                    chain.from_iterable(
+                        (
+                            (
+                                Expr(
+                                    set_value(
+                                        "\nGenerated from {module_name}.{name}\n".format(
+                                            module_name=module_name,
+                                            name=name_orig_ir[0],
+                                        )
+                                    )
+                                ),
+                            ),
+                            ast.parse(imports_header).body,
+                            (gen_node, __all___node),
+                        )
+                    )
+                ),
+                stmt=None,
+                type_ignores=[],
+            )
+
+        if isfile_emit_filename:
+            gen_node = merge_modules(existent_mod, gen_node)
+            merge_assignment_lists(gen_node, "__all__")
+
         if dry_run:
             print("write\t{emit_filename!r}".format(emit_filename=emit_filename))
         else:
-            emit.file(
-                Module(
-                    body=[
-                        Expr(
-                            set_value("\n__init__ to expose internals of this module\n")
-                        ),
-                        ImportFrom(
-                            module=name,
-                            names=[
-                                alias(
-                                    name=name,
-                                    asname=None,
-                                    identifier=None,
-                                    identifier_name=None,
-                                ),
-                            ],
-                            level=1,
-                            identifier=None,
-                        ),
-                        __all___node,
-                    ],
-                    stmt=None,
-                    type_ignores=[],
-                ),
-                filename=init_filepath,
-                mode="wt",
-            )
+            emit.file(gen_node, filename=emit_filename, mode="wt")
+
+        if name != "__init__" and not path.isfile(init_filepath):
+            if dry_run:
+                print("write\t{emit_filename!r}".format(emit_filename=emit_filename))
+            else:
+                emit.file(
+                    Module(
+                        body=[
+                            Expr(
+                                set_value(
+                                    "\n__init__ to expose internals of this module\n"
+                                )
+                            ),
+                            ImportFrom(
+                                module=name,
+                                names=[
+                                    alias(
+                                        name=name,
+                                        asname=None,
+                                        identifier=None,
+                                        identifier_name=None,
+                                    ),
+                                ],
+                                level=1,
+                                identifier=None,
+                            ),
+                            __all___node,
+                        ],
+                        stmt=None,
+                        type_ignores=[],
+                    ),
+                    filename=init_filepath,
+                    mode="wt",
+                )
 
     return (
         mod_name,
@@ -239,4 +271,4 @@ def mkdir_and_emit_file(
     )
 
 
-__all__ = ["get_module_contents", "mkdir_and_emit_file"]
+__all__ = ["get_module_contents", "emit_file_on_hierarchy"]

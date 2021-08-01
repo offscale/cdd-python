@@ -183,6 +183,11 @@ class TestMarshallDocstring(TestCase):
             ("adder", {"default": "```(5 * 5)```", "doc": "5b"}),
         )
 
+        self.assertTupleEqual(
+            _set_name_and_type(("*nums", {}), infer_type=True, word_wrap=True),
+            ("nums", {"default": tuple(), "typ": "tuple"}),
+        )
+
     def test_from_docstring_numpydoc_only_returns(self) -> None:
         """
         Tests whether `docstring` produces `intermediate_repr_no_default_doc`

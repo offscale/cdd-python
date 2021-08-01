@@ -3,24 +3,25 @@ Not a dead module
 """
 
 from ast import Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from functools import partial
 from importlib import import_module
 from inspect import getfile
 from itertools import chain, groupby
 from operator import itemgetter
-from os import extsep, makedirs, path
+from os import makedirs, path
 
 from cdd import emit, parse
 from cdd.ast_utils import maybe_type_comment, set_value
-from cdd.exmod_utils import get_module_contents, mkdir_and_emit_file
+from cdd.exmod_utils import emit_file_on_hierarchy, get_module_contents
 from cdd.pkg_utils import relative_filename
+from cdd.pure_utils import INIT_FILENAME
 from cdd.tests.utils_for_tests import module_from_file
 
 
 def exmod(
-    module,
     emit_name,
+    module,
     blacklist,
     whitelist,
     output_directory,
@@ -30,11 +31,11 @@ def exmod(
     """
     Expose module as `emit` types into `output_directory`
 
-    :param module: Module name or path
-    :type module: ```str```
-
     :param emit_name: What type(s) to generate.
     :type emit_name: ```List[Literal["argparse", "class", "function", "sqlalchemy", "sqlalchemy_table"]]```
+
+    :param module: Module name or path
+    :type module: ```str```
 
     :param blacklist: Modules/FQN to omit. If unspecified will emit all (unless whitelist).
     :type blacklist: ```List[str]```
@@ -51,7 +52,23 @@ def exmod(
     :param filesystem_layout: Hierarchy of folder and file names generated. "java" is file per package per name.
     :type filesystem_layout: ```Literal["java", "as_input"]```
     """
-    if dry_run:
+    if not isinstance(emit_name, str):
+        deque(
+            map(
+                partial(
+                    exmod,
+                    module=module,
+                    blacklist=blacklist,
+                    whitelist=whitelist,
+                    output_directory=output_directory,
+                    dry_run=dry_run,
+                    filesystem_layout=filesystem_layout,
+                ),
+                emit_name or iter(()),
+            ),
+            maxlen=0,
+        )
+    elif dry_run:
         print("mkdir\t{output_directory!r}".format(output_directory=output_directory))
     elif not path.isdir(output_directory):
         makedirs(output_directory)
@@ -69,8 +86,8 @@ def exmod(
 
     module_root_dir = path.dirname(module.__file__) + path.sep
 
-    _mkdir_and_emit_file = partial(
-        mkdir_and_emit_file,
+    _emit_file_on_hierarchy = partial(
+        emit_file_on_hierarchy,
         emit_name=emit_name,
         module_name=module_name,
         new_module_name=new_module_name,
@@ -82,7 +99,7 @@ def exmod(
     # Might need some `groupby` in case multiple files are in the one project; same for `get_module_contents`
     imports = list(
         map(
-            _mkdir_and_emit_file,
+            _emit_file_on_hierarchy,
             map(
                 lambda name_source: (
                     name_source[0],
@@ -93,9 +110,8 @@ def exmod(
                     )(relative_filename(getfile(name_source[1]))),
                     {"params": OrderedDict(), "returns": OrderedDict()}
                     if dry_run
-                    else parse.class_(name_source[1]),
+                    else parse.class_(name_source[1], merge_inner_function="__init__"),
                 ),
-                # sorted(
                 map(
                     lambda name_source: (
                         name_source[0][len(module_name) + 1 :],
@@ -105,8 +121,6 @@ def exmod(
                         module, module_root_dir=module_root_dir
                     ).items(),
                 ),
-                #    key=itemgetter(0),
-                # ),
             ),
         ),
     )
@@ -129,9 +143,7 @@ def exmod(
             ),
         )
     )
-    init_filepath = path.join(
-        output_directory, new_module_name, "__init__{extsep}py".format(extsep=extsep)
-    )
+    init_filepath = path.join(output_directory, new_module_name, INIT_FILENAME)
     if dry_run:
         print("write\t{init_filepath!r}".format(init_filepath=init_filepath))
     else:

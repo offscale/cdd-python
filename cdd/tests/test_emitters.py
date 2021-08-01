@@ -5,7 +5,9 @@ Tests for marshalling between formats
 import ast
 import os
 from ast import FunctionDef
+from collections import OrderedDict
 from copy import deepcopy
+from functools import partial
 from os.path import extsep
 from platform import system
 from sys import modules
@@ -14,7 +16,7 @@ from unittest import TestCase, skipIf
 
 from cdd import emit, parse
 from cdd.ast_utils import annotate_ancestry, cmp_ast, find_in_ast, get_function_type
-from cdd.pure_utils import rpartial
+from cdd.pure_utils import none_types, rpartial
 from cdd.tests.mocks.argparse import (
     argparse_func_action_append_ast,
     argparse_func_ast,
@@ -395,27 +397,61 @@ class TestEmitters(TestCase):
             gold=function_def,
         )
 
+    maxDiff = None
+
     def test_from_function_google_tf_squared_hinge_str_to_class(self) -> None:
         """
         Tests that `emit.function` produces correctly with:
         - __call__
         """
 
+        gold_ir = parse.class_(class_squared_hinge_config_ast)
+        gold_ir.update(
+            {
+                key: OrderedDict(
+                    (
+                        (
+                            name,
+                            {
+                                k: v
+                                for k, v in _param.items()
+                                if k != "typ"
+                                and (k != "default" or v not in none_types)
+                            },
+                        )
+                        for name, _param in gold_ir[key].items()
+                    )
+                )
+                for key in ("params", "returns")
+            }
+        )
+
+        gen_ir = parse.function(
+            ast.parse(function_google_tf_squared_hinge_str).body[0],
+            infer_type=True,
+            word_wrap=False,
+        )
+        self.assertEqual(
+            *map(lambda ir: ir["returns"]["return_type"]["doc"], (gen_ir, gold_ir))
+        )
+        # print('#gen_ir')
+        # pp(gen_ir)
+        # print('#gold_ir')
+        # pp(gold_ir)
+
         run_ast_test(
             self,
-            gen_ast=emit.class_(
-                parse.function(
-                    ast.parse(function_google_tf_squared_hinge_str).body[0],
-                    infer_type=True,
+            *map(
+                partial(
+                    emit.class_,
+                    class_name="SquaredHingeConfig",
+                    emit_call=True,
+                    emit_default_doc=True,
+                    emit_original_whitespace=True,
                     word_wrap=False,
                 ),
-                class_name="SquaredHingeConfig",
-                emit_call=True,
-                emit_default_doc=True,
-                emit_original_whitespace=True,
-                word_wrap=False,
-            ),
-            gold=class_squared_hinge_config_ast,
+                (gen_ir, gold_ir),
+            )
         )
 
     def test_from_argparse_with_extra_body_to_argparse_with_extra_body(self) -> None:

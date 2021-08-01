@@ -1381,15 +1381,15 @@ def get_ass_where_name(node, name):
     :rtype: ```Generator[Any]```
     """
     return (
-        get_value(node)
-        for node in node.body
-        if isinstance(node, Assign)
+        get_value(_node)
+        for _node in node.body
+        if isinstance(_node, Assign)
         and name
         in frozenset(
-            map(attrgetter("id"), filter(rpartial(isinstance, Name), node.targets))
+            map(attrgetter("id"), filter(rpartial(isinstance, Name), _node.targets))
         )
-        or isinstance(node, AnnAssign)
-        and node.target == name
+        or isinstance(_node, AnnAssign)
+        and get_value(_node.target) == name
     )
 
 
@@ -1447,20 +1447,23 @@ def merge_assignment_lists(node, name, unique_sort=True):
     # Could extract the `AnnAssign` stuff I suppose…
 
     del_ass_where_name(node, name)
-    elts = chain.from_iterable(
-        map(
-            attrgetter("elts"),
-            asses,
-        )
+    elts = map(
+        get_value,
+        chain.from_iterable(
+            map(
+                attrgetter("elts"),
+                asses,
+            )
+        ),
     )
     node.body.append(
         Assign(
             targets=[Name("__all__", Store())],
             value=List(
                 ctx=Load(),
-                elts=sorted(frozenset(elts), key=get_value)
-                if unique_sort
-                else list(elts),
+                elts=list(
+                    map(set_value, (sorted(frozenset(elts)) if unique_sort else elts))
+                ),
                 expr=None,
             ),
             expr=None,
@@ -1472,7 +1475,7 @@ def merge_assignment_lists(node, name, unique_sort=True):
 
 def merge_modules(mod0, mod1, remove_imports_from_second=True):
     """
-    Merge modules (removing module docstring)
+    Merge modules (removing module docstring from mod1)
 
     :param mod0: Module
     :type mod0: ```Module```
@@ -1488,9 +1491,10 @@ def merge_modules(mod0, mod1, remove_imports_from_second=True):
     """
     mod1_body = (
         mod1.body[1:]
-        if mod1.body and isinstance(mod1.body[0], (Str, Constant))
+        if mod1.body and isinstance(get_value(mod1.body[0]), (Str, Constant))
         else mod1.body
     )
+
     new_mod = deepcopy(mod0)
 
     new_mod.body += (

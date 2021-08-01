@@ -491,8 +491,15 @@ def _set_name_and_type(param, infer_type, word_wrap):
             _param["typ"] = "Optional[dict]"
         if "default" not in _param:
             _param["default"] = NoneStr
+    elif name is not None and name.startswith("*"):
+        name = name[1:]
+        if _param.get("typ") is None:
+            _param["typ"] = "tuple"
+        if "default" not in _param:
+            _param["default"] = tuple()
     elif "default" in _param:
         _infer_default(_param, infer_type)
+
     google_opt = ", optional"
     if _param.get("typ"):
         _param["typ"] = (
@@ -550,8 +557,8 @@ def _infer_default(_param, infer_type):
     elif isinstance(_param["default"], AST):
         try:
             _param["default"] = ast.literal_eval(_param["default"])
-            # if _param.get("typ") is None or _param["typ"] == "UnaryOp":
-            #    _param["typ"] = type(_param["default"]).__name__
+            if _param.get("typ") is None or _param["typ"] == "UnaryOp":
+                _param["typ"] = type(_param["default"]).__name__
         except ValueError:
             _param["default"] = "```{default}```".format(
                 default=paren_wrap_code(to_code(_param["default"]).rstrip("\n"))
