@@ -167,90 +167,18 @@ def emit_file_on_hierarchy(
                 makedirs(emit_filename_dir)
 
     if not symbol_in_file:
-        gen_node = getattr(emit, emit_name.replace("class", "class_"))(
+        _emit_symbol(
+            name_orig_ir,
+            emit_name,
+            module_name,
+            emit_filename,
+            existent_mod,
+            init_filepath,
             ir,
-            **dict(
-                **{"{emit_name}_name".format(emit_name=emit_name): name},
-                **{} if emit_name == "class" else {"function_type": "static"}
-            )
+            isfile_emit_filename,
+            name,
+            dry_run,
         )
-        __all___node = Assign(
-            targets=[Name("__all__", Store())],
-            value=List(
-                ctx=Load(),
-                elts=[set_value(name)],
-                expr=None,
-            ),
-            expr=None,
-            lineno=None,
-            **maybe_type_comment
-        )
-        if not isinstance(gen_node, Module):
-            gen_node = Module(
-                body=list(
-                    chain.from_iterable(
-                        (
-                            (
-                                Expr(
-                                    set_value(
-                                        "\nGenerated from {module_name}.{name}\n".format(
-                                            module_name=module_name,
-                                            name=name_orig_ir[0],
-                                        )
-                                    )
-                                ),
-                            ),
-                            ast.parse(imports_header).body,
-                            (gen_node, __all___node),
-                        )
-                    )
-                ),
-                stmt=None,
-                type_ignores=[],
-            )
-
-        if isfile_emit_filename:
-            gen_node = merge_modules(existent_mod, gen_node)
-            merge_assignment_lists(gen_node, "__all__")
-
-        if dry_run:
-            print("write\t{emit_filename!r}".format(emit_filename=emit_filename))
-        else:
-            emit.file(gen_node, filename=emit_filename, mode="wt")
-
-        if name != "__init__" and not path.isfile(init_filepath):
-            if dry_run:
-                print("write\t{emit_filename!r}".format(emit_filename=emit_filename))
-            else:
-                emit.file(
-                    Module(
-                        body=[
-                            Expr(
-                                set_value(
-                                    "\n__init__ to expose internals of this module\n"
-                                )
-                            ),
-                            ImportFrom(
-                                module=name,
-                                names=[
-                                    alias(
-                                        name=name,
-                                        asname=None,
-                                        identifier=None,
-                                        identifier_name=None,
-                                    ),
-                                ],
-                                level=1,
-                                identifier=None,
-                            ),
-                            __all___node,
-                        ],
-                        stmt=None,
-                        type_ignores=[],
-                    ),
-                    filename=init_filepath,
-                    mode="wt",
-                )
 
     return (
         mod_name,
@@ -269,6 +197,141 @@ def emit_file_on_hierarchy(
             identifier=None,
         ),
     )
+
+
+def _emit_symbol(
+    name_orig_ir,
+    emit_name,
+    module_name,
+    emit_filename,
+    existent_mod,
+    init_filepath,
+    intermediate_repr,
+    isfile_emit_filename,
+    name,
+    dry_run,
+):
+    """
+    Emit symbol to file (or dry-run just print)
+
+    :param name_orig_ir: FQ module name, original filename path, IR
+    :type name_orig_ir: ```Tuple[str, str, dict]```
+
+    :param emit_name: What type(s) to generate.
+    :type emit_name: ```List[Literal["argparse", "class", "function", "sqlalchemy", "sqlalchemy_table"]]```
+
+    :param module_name: Name of [original] module
+    :type module_name: ```str```
+
+    :param emit_filename: Filename to emit to
+    :type emit_filename: ```str``
+
+    :param existent_mod: The existing AST module (or None)
+    :type existent_mod: ```Optional[Module]```
+
+    :param init_filepath: The filepath of the __init__.py file
+    :type init_filepath: ```str```
+
+    :param intermediate_repr: a dictionary of form
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :type intermediate_repr: ```dict```
+
+    :param isfile_emit_filename: Whether the emit filename exists
+    :type isfile_emit_filename: ```bool```
+
+    :param name: Name of the node being generated
+    :type name: ```str```
+
+    :param dry_run: Show what would be created; don't actually write to the filesystem
+    :type dry_run: ```bool```
+
+    :returns: Import to generated module
+    :rtype: ```ImportFrom```
+    """
+    gen_node = getattr(emit, emit_name.replace("class", "class_"))(
+        intermediate_repr,
+        **dict(
+            **{"{emit_name}_name".format(emit_name=emit_name): name},
+            **{} if emit_name == "class" else {"function_type": "static"}
+        )
+    )
+    __all___node = Assign(
+        targets=[Name("__all__", Store())],
+        value=List(
+            ctx=Load(),
+            elts=[set_value(name)],
+            expr=None,
+        ),
+        expr=None,
+        lineno=None,
+        **maybe_type_comment
+    )
+    if not isinstance(gen_node, Module):
+        gen_node = Module(
+            body=list(
+                chain.from_iterable(
+                    (
+                        (
+                            Expr(
+                                set_value(
+                                    "\nGenerated from {module_name}.{name}\n".format(
+                                        module_name=module_name,
+                                        name=name_orig_ir[0],
+                                    )
+                                )
+                            ),
+                        ),
+                        ast.parse(imports_header).body,
+                        (gen_node, __all___node),
+                    )
+                )
+            ),
+            stmt=None,
+            type_ignores=[],
+        )
+    if isfile_emit_filename:
+        gen_node = merge_modules(existent_mod, gen_node)
+        merge_assignment_lists(gen_node, "__all__")
+    if dry_run:
+        print("write\t{emit_filename!r}".format(emit_filename=emit_filename))
+    else:
+        emit.file(gen_node, filename=emit_filename, mode="wt")
+    if name != "__init__" and not path.isfile(init_filepath):
+        if dry_run:
+            print("write\t{emit_filename!r}".format(emit_filename=emit_filename))
+        else:
+            emit.file(
+                Module(
+                    body=[
+                        Expr(
+                            set_value("\n__init__ to expose internals of this module\n")
+                        ),
+                        ImportFrom(
+                            module=name,
+                            names=[
+                                alias(
+                                    name=name,
+                                    asname=None,
+                                    identifier=None,
+                                    identifier_name=None,
+                                ),
+                            ],
+                            level=1,
+                            identifier=None,
+                        ),
+                        __all___node,
+                    ],
+                    stmt=None,
+                    type_ignores=[],
+                ),
+                filename=init_filepath,
+                mode="wt",
+            )
 
 
 __all__ = ["get_module_contents", "emit_file_on_hierarchy"]
