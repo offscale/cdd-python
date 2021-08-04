@@ -33,6 +33,7 @@ _class_doc_str_expr = Expr(
     )
 )
 
+_assign_type = Name("int", Load())
 assign_with_type_comment = Assign(
     targets=[Name("res", Store())],
     value=BinOp(
@@ -40,11 +41,11 @@ assign_with_type_comment = Assign(
         op=Add(),
         right=Name("b", Load()),
     ),
-    type_comment=Name("int", Load()),
+    type_comment=_assign_type.id,
     lineno=None,
 )
 ann_assign_with_annotation = AnnAssign(
-    annotation=assign_with_type_comment.type_comment,
+    annotation=_assign_type,
     value=assign_with_type_comment.value,
     simple=1,
     target=assign_with_type_comment.targets[0],
@@ -169,7 +170,7 @@ class_with_internal_type_commented_and_docstring_typed = ClassDef(
             type_comment=Name(
                 "int",
                 Load(),
-            ),
+            ).id,
             expr=None,
             lineno=None,
         ),
@@ -179,7 +180,7 @@ class_with_internal_type_commented_and_docstring_typed = ClassDef(
             type_comment=Name(
                 "float",
                 Load(),
-            ),
+            ).id,
             expr=None,
             lineno=None,
         ),
@@ -193,6 +194,7 @@ __all__ = [
     "ann_assign_with_annotation",
     "assign_with_type_comment",
     "class_with_internal_annotated",
+    "class_with_internal_type_commented_and_docstring_typed",
     "function_type_annotated",
     "function_type_in_docstring",
     "function_type_in_docstring_only",

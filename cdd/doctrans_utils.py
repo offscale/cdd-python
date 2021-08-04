@@ -1,7 +1,6 @@
 """
 Helpers to traverse the AST, extract the docstring out, parse and format to intended style
 """
-
 from ast import (
     AnnAssign,
     Assign,
@@ -16,7 +15,13 @@ from collections import OrderedDict
 from operator import attrgetter
 
 from cdd import emit, parse
-from cdd.ast_utils import find_in_ast, set_arg, set_docstring, to_annotation
+from cdd.ast_utils import (
+    find_in_ast,
+    set_arg,
+    set_docstring,
+    to_annotation,
+    to_type_comment,
+)
 from cdd.docstring_parsers import parse_docstring
 from cdd.parser_utils import ir_merge
 
@@ -104,7 +109,7 @@ class DocTrans(NodeTransformer):
         return Assign(
             targets=[node.target],
             value=node.value,
-            type_comment=node.annotation,
+            type_comment=to_type_comment(node.annotation),
             lineno=None,
         )
 
@@ -122,7 +127,7 @@ class DocTrans(NodeTransformer):
         if self.type_annotations:
             assert len(node.targets) == 1
             return AnnAssign(
-                annotation=typ,
+                annotation=to_annotation(typ),
                 value=node.value,
                 type_comment=None,
                 lineno=None,
@@ -286,4 +291,4 @@ def clear_annotation(node):
     return node
 
 
-__all__ = ["DocTrans", "has_type_annotations"]
+__all__ = ["DocTrans", "clear_annotation", "has_type_annotations"]
