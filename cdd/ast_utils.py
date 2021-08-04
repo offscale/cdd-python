@@ -1366,6 +1366,25 @@ def to_annotation(typ):
     )
 
 
+def to_type_comment(node):
+    """
+    Convert annotation to a type comment
+
+    :param node: AST node with a '.annotation' or Name or str
+    :type node: ```Union[Name, str, AnnAssign, arg, arguments]```
+
+    :returns: type_comment
+    :rtype: ```str```
+    """
+    return (
+        node.id
+        if isinstance(node, Name)
+        else node
+        if isinstance(node, str)
+        else _to_code(node.annotation).strip()
+    )
+
+
 def get_ass_where_name(node, name):
     """
     Find all `Assign`/`AnnAssign` in node body where id matches name

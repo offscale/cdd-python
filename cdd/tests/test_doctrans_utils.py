@@ -140,10 +140,9 @@ class TestDocTransUtils(TestCase):
             whole_ast=original_node,
         )
         del original_node._location
-        run_ast_test(
-            self,
-            gen_ast=doc_trans._get_ass_typ(original_node),
-            gold=Name("int", Load()),
+        self.assertEqual(
+            doc_trans._get_ass_typ(original_node),
+            Name("int", Load()).id,
         )
 
     def test_class_with_internal_converts_to_annotated(self) -> None:
