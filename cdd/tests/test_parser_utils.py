@@ -229,5 +229,8 @@ class TestParserUtils(TestCase):
         ):
             get_source(min)
 
+        with patch("inspect.getsourcefile", lambda _: None):
+            self.assertIsNone(get_source(raise_os_error))
+
 
 unittest_main()

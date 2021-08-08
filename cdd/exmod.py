@@ -16,7 +16,6 @@ from cdd.ast_utils import maybe_type_comment, set_value
 from cdd.exmod_utils import emit_file_on_hierarchy, get_module_contents
 from cdd.pkg_utils import relative_filename
 from cdd.pure_utils import INIT_FILENAME
-from cdd.tests.utils_for_tests import module_from_file
 
 
 def exmod(
@@ -79,9 +78,9 @@ def exmod(
 
     module_name, new_module_name = map(path.basename, (module, output_directory))
     module = (
-        partial(module_from_file, module_name=module_name)
-        if path.isdir(module)
-        else import_module
+        # partial(module_from_file, module_name=module_name)
+        # if path.isdir(module) else
+        import_module
     )(module)
 
     module_root_dir = path.dirname(module.__file__) + path.sep

@@ -7,6 +7,7 @@ from ast import FunctionDef
 from collections import OrderedDict
 from copy import deepcopy
 from unittest import TestCase
+from unittest.mock import patch
 
 from cdd import emit, parse
 from cdd.ast_utils import RewriteAtQuery, get_value
@@ -446,6 +447,27 @@ class TestParsers(TestCase):
 
         self.assertEqual(parsed_ir["params"]["last_epoch"]["typ"], "int")
         self.assertDictEqual(parsed_ir, class_torch_nn_one_cycle_lr_ir)
+
+    def test__class_from_memory(self) -> None:
+        """
+        Tests that the parser can combine the outer class docstring + structure
+        with the inner function parameter defaults, given a PyTorch loss LR scheduler class
+        """
+
+        class A(object):
+            """A is one boring class"""
+
+        with patch("inspect.getsourcefile", lambda _: None):
+            ir = parse._class_from_memory(A, A.__name__, False, False, False)
+        self.assertDictEqual(
+            ir,
+            {
+                "doc": "A is one boring class",
+                "name": "A",
+                "params": OrderedDict(),
+                "returns": None,
+            },
+        )
 
     def test_from_json_schema(self) -> None:
         """

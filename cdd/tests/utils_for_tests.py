@@ -7,7 +7,7 @@ from copy import deepcopy
 from functools import partial
 from importlib import import_module
 from importlib.abc import Loader
-from importlib.util import module_from_spec, spec_from_file_location, spec_from_loader
+from importlib.util import module_from_spec, spec_from_loader
 from itertools import takewhile
 from os import path
 from os.path import extsep
@@ -99,15 +99,17 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
         )
     )
 
-    if not cmp_ast(_gen_ast, _gold_ast):
-        pass
+    test_case_instance.assertTrue(cmp_ast(_gen_ast, _gold_ast))
 
-        # print("#gen")
-        # print_ast(_gen_ast)
-        # print("#gold")
-        # print_ast(_gold_ast)
+    # if not cmp_ast(_gen_ast, _gold_ast):
+    #    pass
 
-        raise AssertionError("Generated AST doesn't match reference AST")
+    # print("#gen")
+    # print_ast(_gen_ast)
+    # print("#gold")
+    # print_ast(_gold_ast)
+
+    # raise AssertionError("Generated AST doesn't match reference AST")
 
 
 def run_cli_test(
@@ -254,33 +256,33 @@ def inspectable_compile(s, modname=None):
         fh.close()  # Is auto-deleted on close
 
 
-def module_from_file(file_path, module_name):
-    """
-    Creates a module out of the file_path
+# def module_from_file(file_path, module_name):
+#     """
+#     Creates a module out of the file_path
+#
+#     :param file_path: Input source
+#     :type file_path: ```str```
+#
+#     :param module_name: Module name
+#     :type module_name: ```Optional[str]```
+#
+#     :returns: The module itself. Alternative `import` should now work from it.
+#     :rtype: ```Any```
+#     """
+# spec = spec_from_file_location(module_name, file_path)
+# assert spec is not None
+# TODO
+# print("spec:", spec, ";")
+# module = module_from_spec(spec)
+# sys.modules[module_name] = module
+# spec.loader.exec_module(module)
+# return module
 
-    :param file_path: Input source
-    :type file_path: ```str```
-
-    :param module_name: Module name
-    :type module_name: ```Optional[str]```
-
-    :returns: The module itself. Alternative `import` should now work from it.
-    :rtype: ```Any```
-    """
-    spec = spec_from_file_location(module_name, file_path)
-    assert spec is not None
-    # TODO
-    # print("spec:", spec, ";")
-    # module = module_from_spec(spec)
-    # sys.modules[module_name] = module
-    # spec.loader.exec_module(module)
-    # return module
-
-    # spec = spec_from_file_location(module_name, file_path)
-    # assert spec is not None
-    # module = module_from_spec(spec)
-    # spec.loader.exec_module(module)
-    # return module
+# spec = spec_from_file_location(module_name, file_path)
+# assert spec is not None
+# module = module_from_spec(spec)
+# spec.loader.exec_module(module)
+# return module
 
 
 def mock_function(*args, **kwargs):
@@ -365,7 +367,7 @@ def remove_args_from_docstring(doc_str):
 __all__ = [
     "inspectable_compile",
     "mock_function",
-    "module_from_file",
+    # "module_from_file",
     "remove_args_from_docstring",
     "reindent_docstring",
     "run_ast_test",

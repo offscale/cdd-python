@@ -327,10 +327,12 @@ class TestExMod(TestCase):
                                                 relative_filename,
                                                 remove_hints=(
                                                     (
-                                                        lambda directory: unquote(
-                                                            repr(directory)
+                                                        lambda directory: "{directory}{sep}".format(
+                                                            directory=unquote(
+                                                                repr(directory)
+                                                            ),
+                                                            sep=path.sep,
                                                         )
-                                                        + path.sep
                                                         if platform == "win32"
                                                         else directory
                                                     )(

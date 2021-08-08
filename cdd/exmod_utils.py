@@ -98,6 +98,7 @@ def emit_file_on_hierarchy(
     """
     mod_name, _, name = name_orig_ir[0].rpartition(".")
     original_relative_filename_path, ir = name_orig_ir[1], name_orig_ir[2]
+    assert original_relative_filename_path
     if not name:
         name = ir["name"]
     mod_path = path.join(
@@ -157,14 +158,11 @@ def emit_file_on_hierarchy(
     else:
         emit_filename_dir = path.dirname(emit_filename)
         if not path.isdir(emit_filename_dir):
-            if dry_run:
-                print(
-                    "mkdir\t{emit_filename_dir!r}".format(
-                        emit_filename_dir=emit_filename_dir
-                    )
+            print(
+                "mkdir\t{emit_filename_dir!r}".format(
+                    emit_filename_dir=emit_filename_dir
                 )
-            else:
-                makedirs(emit_filename_dir)
+            ) if dry_run else makedirs(emit_filename_dir)
 
     if not symbol_in_file:
         _emit_symbol(
@@ -253,10 +251,16 @@ def _emit_symbol(
     :returns: Import to generated module
     :rtype: ```ImportFrom```
     """
-    gen_node = getattr(emit, emit_name.replace("class", "class_"))(
+    gen_node = getattr(
+        emit, {"argparse": "argparse_function", "class": "class_"}[emit_name]
+    )(
         intermediate_repr,
         **dict(
-            **{"{emit_name}_name".format(emit_name=emit_name): name},
+            **{
+                "{emit_name}_name".format(
+                    emit_name="function" if emit_name == "argparse" else emit_name
+                ): name
+            },
             **{} if emit_name == "class" else {"function_type": "static"}
         )
     )
