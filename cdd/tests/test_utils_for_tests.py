@@ -76,6 +76,7 @@ class TestUtilsForTests(TestCase):
             assert_true,
             assert_equal,
         )
+        test_case_module.assertTrue(True)
 
         module = Module(body=[], type_ignores=[], stmt=None)
 
@@ -90,7 +91,7 @@ class TestUtilsForTests(TestCase):
                 ) = False
 
                 cdd.tests.utils_for_tests.run_ast_test(test_case_module, module, module)
-                self.assertEqual(TestUtilsForTests.increment * 2, TestUtilsForTests.i)
+                self.assertEqual(TestUtilsForTests.increment * 4, TestUtilsForTests.i)
 
             with patch("sys.version_info", (3, 8)):
                 cdd.tests.utils_for_tests.PY_GTE_3_8 = (
@@ -98,7 +99,7 @@ class TestUtilsForTests(TestCase):
                 ) = True
 
                 cdd.tests.utils_for_tests.run_ast_test(test_case_module, module, module)
-                self.assertEqual(TestUtilsForTests.increment * 4, TestUtilsForTests.i)
+                self.assertEqual(TestUtilsForTests.increment * 7, TestUtilsForTests.i)
 
             with patch("sys.version_info", (3, 9)):
                 cdd.tests.utils_for_tests.PY_GTE_3_8 = (
@@ -106,7 +107,7 @@ class TestUtilsForTests(TestCase):
                 ) = True
 
                 cdd.tests.utils_for_tests.run_ast_test(test_case_module, module, module)
-                self.assertEqual(TestUtilsForTests.increment * 6, TestUtilsForTests.i)
+                self.assertEqual(TestUtilsForTests.increment * 10, TestUtilsForTests.i)
         finally:
             cdd.tests.utils_for_tests.PY3_8 = _orig_cdd_tests_utils_for_tests_PY3_8
 
