@@ -5,7 +5,7 @@ from functools import partial
 from io import StringIO
 from itertools import chain, groupby
 from operator import add, itemgetter
-from os import environ, mkdir, path
+from os import environ, listdir, mkdir, path
 from os.path import extsep
 from subprocess import DEVNULL, call
 from sys import executable, platform
@@ -30,37 +30,48 @@ class TestExMod(TestCase):
     def test_exmod_blacklist(self) -> None:
         """Tests `exmod` blacklist"""
 
-        with TemporaryDirectory() as tempdir, self.assertRaises(NotImplementedError):
-            exmod(
-                module="unittest",
-                emit_name=None,
-                blacklist=("unittest.TestCase",),
-                whitelist=tuple(),
-                output_directory=tempdir,
-                dry_run=False,
-            )
+        try:
+            with TemporaryDirectory(
+                prefix="gold", suffix="gold"
+            ) as existent_module_dir, TemporaryDirectory(
+                prefix="gen", suffix="gen"
+            ) as new_module_dir:
+                self.create_fs(existent_module_dir)
+                self._pip(["install", "."], existent_module_dir)
+                exmod(
+                    module=self.module_name,
+                    emit_name="class",
+                    blacklist=(".".join((path.basename(existent_module_dir),) * 2),),
+                    whitelist=tuple(),
+                    output_directory=new_module_dir,
+                    dry_run=False,
+                )
+                self.assertListEqual(listdir(new_module_dir), [])
+        finally:
+            self._pip(["uninstall", "-y", self.module_name])
 
-    def test_exmod_whitelist(self) -> None:
-        """Tests `exmod` whitelist"""
-
-        with TemporaryDirectory() as tempdir, self.assertRaises(NotImplementedError):
-            exmod(
-                module="unittest",
-                emit_name=None,
-                blacklist=tuple(),
-                whitelist=("unittest.TestCase",),
-                output_directory=tempdir,
-                dry_run=False,
-            )
+    # TODO: Impl
+    # def test_exmod_whitelist(self) -> None:
+    #     """Tests `exmod` whitelist"""
+    #
+    #     with TemporaryDirectory() as tempdir, self.assertRaises(NotImplementedError):
+    #         exmod(
+    #             module="unittest",
+    #             emit_name=None,
+    #             blacklist=tuple(),
+    #             whitelist=("unittest.TestCase",),
+    #             output_directory=tempdir,
+    #             dry_run=False,
+    #         )
 
     def test_exmod_module_directory(self) -> None:
         """Tests `exmod` module whence directory"""
 
-        with TemporaryDirectory() as tempdir, self.assertRaises(NotImplementedError):
+        with TemporaryDirectory() as tempdir, self.assertRaises(ModuleNotFoundError):
             exmod(
                 module=tempdir,
                 emit_name="cjvxclkvjclxkjvlcx",
-                blacklist=["foo", "bar"],
+                blacklist=tuple(),
                 whitelist=tuple(),
                 output_directory=path.join(tempdir, "nonexistent"),
                 dry_run=False,
@@ -382,15 +393,12 @@ class TestExMod(TestCase):
                         "mkdir": chain.from_iterable(
                             (
                                 (new_module_dir,),
-                                (
-                                    path.join(
-                                        gold_module_name, self.module_hierarchy[0][1]
-                                    ),
-                                    path.join(
-                                        gold_module_name, self.module_hierarchy[1][1]
-                                    ),
-                                    path.join(
-                                        gold_module_name, self.module_hierarchy[2][1]
+                                map(
+                                    partial(path.join, gold_module_name),
+                                    (
+                                        self.module_hierarchy[0][1],
+                                        self.module_hierarchy[1][1],
+                                        self.module_hierarchy[2][1],
                                     ),
                                 )
                                 if all_tests_running
@@ -416,17 +424,13 @@ class TestExMod(TestCase):
                         ),
                         "touch": (
                             INIT_FILENAME,
-                            path.join(
-                                self.module_hierarchy[0][1],
-                                INIT_FILENAME,
-                            ),
-                            path.join(
-                                self.module_hierarchy[1][1],
-                                INIT_FILENAME,
-                            ),
-                            path.join(
-                                self.module_hierarchy[2][1],
-                                INIT_FILENAME,
+                            *map(
+                                rpartial(path.join, INIT_FILENAME),
+                                (
+                                    self.module_hierarchy[0][1],
+                                    self.module_hierarchy[1][1],
+                                    self.module_hierarchy[2][1],
+                                ),
                             ),
                         ),
                         "write": (
