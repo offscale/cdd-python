@@ -703,6 +703,7 @@ def no_magic_dir2attr(p_object):
 __all__ = [
     "BUILTIN_TYPES",
     "ENCODING",
+    "INIT_FILENAME",
     "PY3_8",
     "PY_GTE_3_8",
     "PY_GTE_3_9",

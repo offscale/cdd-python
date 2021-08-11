@@ -37,10 +37,10 @@ def exmod(
     :type module: ```str```
 
     :param blacklist: Modules/FQN to omit. If unspecified will emit all (unless whitelist).
-    :type blacklist: ```List[str]```
+    :type blacklist: ```Union[List[str],Tuple[str]]```
 
     :param whitelist: Modules/FQN to emit. If unspecified will emit all (minus blacklist).
-    :type whitelist: ```List[str]```
+    :type whitelist: ```Union[List[str],Tuple[str]]```
 
     :param output_directory: Where to place the generated exposed interfaces to the given `--module`.
     :type output_directory: ```str```
@@ -71,10 +71,6 @@ def exmod(
         print("mkdir\t{output_directory!r}".format(output_directory=output_directory))
     elif not path.isdir(output_directory):
         makedirs(output_directory)
-    if blacklist:
-        raise NotImplementedError("blacklist")
-    elif whitelist:
-        raise NotImplementedError("whitelist")
 
     module_name, new_module_name = map(path.basename, (module, output_directory))
     module = (
@@ -84,6 +80,12 @@ def exmod(
     )(module)
 
     module_root_dir = path.dirname(module.__file__) + path.sep
+
+    mod_path = ".".join((path.basename(module_root_dir[:-1]), module_name))
+    if (whitelist or blacklist) and (
+        mod_path not in whitelist or mod_path in blacklist
+    ):
+        return  # skip
 
     _emit_file_on_hierarchy = partial(
         emit_file_on_hierarchy,
@@ -142,6 +144,7 @@ def exmod(
             ),
         )
     )
+
     init_filepath = path.join(output_directory, new_module_name, INIT_FILENAME)
     if dry_run:
         print("write\t{init_filepath!r}".format(init_filepath=init_filepath))
