@@ -397,8 +397,6 @@ class TestEmitters(TestCase):
             gold=function_def,
         )
 
-    maxDiff = None
-
     def test_from_function_google_tf_squared_hinge_str_to_class(self) -> None:
         """
         Tests that `emit.function` produces correctly with:

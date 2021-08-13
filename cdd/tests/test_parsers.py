@@ -63,8 +63,6 @@ class TestParsers(TestCase):
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     """
 
-    maxDiff = None
-
     def test_from_argparse_ast(self) -> None:
         """
         Tests whether `argparse_ast` produces `intermediate_repr_no_default_doc`
