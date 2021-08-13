@@ -82,10 +82,15 @@ def exmod(
     module_root_dir = path.dirname(module.__file__) + path.sep
 
     mod_path = ".".join((path.basename(module_root_dir[:-1]), module_name))
-    if (whitelist or blacklist) and (
-        mod_path not in whitelist or mod_path in blacklist
-    ):
-        return  # skip
+    blacklist, whitelist = map(frozenset, (blacklist, whitelist))
+    proceed = any(
+        (
+            sum(map(len, (blacklist, whitelist))) == 0,
+            mod_path not in blacklist and (mod_path in whitelist or not whitelist),
+        )
+    )
+    if not proceed:
+        return
 
     _emit_file_on_hierarchy = partial(
         emit_file_on_hierarchy,
