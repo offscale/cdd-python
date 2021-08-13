@@ -1,4 +1,5 @@
 """ Tests for exmod subcommand """
+import sys
 from ast import ClassDef
 from functools import partial
 from io import StringIO
@@ -36,22 +37,29 @@ class TestExMod(TestCase):
                 prefix="gen", suffix="gen"
             ) as new_module_dir:
                 self._create_fs(existent_module_dir)
-                # mod_path = path.join(existent_module_dir, self.module_name)
-                # sys.path.insert(0, mod_path)
-                # sys.modules[self.module_name] = module
-                self._pip(["install", "."], existent_module_dir)
-                exmod(
-                    module=self.module_name,
-                    emit_name="class",
-                    blacklist=tuple(),
-                    whitelist=tuple(),
-                    output_directory=new_module_dir,
-                    dry_run=False,
-                )
+                mod_path = existent_module_dir  # path.join(existent_module_dir, self.module_name)
+                self.assertTrue(path.isdir(mod_path))
+                print(listdir(mod_path), file=sys.stderr)
+                sys.path.insert(0, mod_path)
+                print(sys.path, file=sys.stderr)
+                #sys.modules[self.module_name] = module
+                #self._pip(["install", "."], existent_module_dir)
+                try:
+                    exmod(
+                        module=self.module_name,
+                        emit_name="class",
+                        blacklist=tuple(),
+                        whitelist=tuple(),
+                        output_directory=new_module_dir,
+                        dry_run=False,
+                    )
+                except ModuleNotFoundError:
+                    print(sys.modules.keys())
+                    raise
                 self._check_emission(new_module_dir)
         finally:
-            # sys.path.remove(mod_path)
-            self._pip(["uninstall", "-y", self.module_name])
+            sys.path.remove(mod_path)
+            # self._pip(["uninstall", "-y", self.module_name])
 
     def test_exmod_blacklist(self) -> None:
         """Tests `exmod` blacklist"""
