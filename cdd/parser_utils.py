@@ -393,6 +393,7 @@ def get_source(obj):
             (
                 "could not find class definition",
                 "source code not available",
+                "could not get source code",
             )
         ):
             return None

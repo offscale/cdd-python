@@ -1,5 +1,4 @@
 """ Tests for exmod subcommand """
-import sys
 from ast import ClassDef
 from functools import partial
 from io import StringIO
@@ -37,29 +36,21 @@ class TestExMod(TestCase):
                 prefix="gen", suffix="gen"
             ) as new_module_dir:
                 self._create_fs(existent_module_dir)
-                mod_path = existent_module_dir  # path.join(existent_module_dir, self.module_name)
-                self.assertTrue(path.isdir(mod_path))
-                print(listdir(mod_path), file=sys.stderr)
-                sys.path.insert(0, mod_path)
-                print(sys.path, file=sys.stderr)
-                #sys.modules[self.module_name] = module
-                #self._pip(["install", "."], existent_module_dir)
-                try:
-                    exmod(
-                        module=self.module_name,
-                        emit_name="class",
-                        blacklist=tuple(),
-                        whitelist=tuple(),
-                        output_directory=new_module_dir,
-                        dry_run=False,
-                    )
-                except ModuleNotFoundError:
-                    print(sys.modules.keys())
-                    raise
+                # sys.path.insert(0, existent_module_dir)
+                self._pip(["install", "."], existent_module_dir)
+
+                exmod(
+                    module=self.module_name,
+                    emit_name="class",
+                    blacklist=tuple(),
+                    whitelist=tuple(),
+                    output_directory=new_module_dir,
+                    dry_run=False,
+                )
                 self._check_emission(new_module_dir)
         finally:
-            sys.path.remove(mod_path)
-            # self._pip(["uninstall", "-y", self.module_name])
+            # sys.path.remove(existent_module_dir)
+            self._pip(["uninstall", "-y", self.module_name])
 
     def test_exmod_blacklist(self) -> None:
         """Tests `exmod` blacklist"""
@@ -105,50 +96,87 @@ class TestExMod(TestCase):
                     dry_run=False,
                 )
 
-                self.assertListEqual(
-                    *map(
-                        sorted,
-                        (
-                            map(
-                                lambda p: p.partition(path.sep)[2],
-                                (
-                                    path.join(dirpath, filename)[
-                                        len(new_module_dir) + 1 :
-                                    ]
-                                    for (dirpath, dirnames, filenames) in walk(
-                                        new_module_dir
-                                    )
-                                    for filename in filenames
-                                ),
-                            ),
-                            tuple(
-                                (
-                                    INIT_FILENAME,
-                                    *chain.from_iterable(
-                                        map(
-                                            lambda i: map(
-                                                partial(
-                                                    path.join,
-                                                    self.module_hierarchy[i][1],
-                                                ),
-                                                (
-                                                    "{name}{sep}py".format(
-                                                        name=self.module_hierarchy[i][
-                                                            0
-                                                        ],
-                                                        sep=extsep,
-                                                    ),
-                                                    INIT_FILENAME,
-                                                ),
-                                            ),
-                                            range(len(self.module_hierarchy)),
-                                        ),
-                                    ),
+                gen, gold = map(
+                    sorted,
+                    (
+                        map(
+                            lambda p: (
+                                lambda _p: path.join("gold", _p.partition(path.sep)[2])
+                                if _p.startswith("gold") and _p.count("gold") == 2
+                                else _p
+                            )(p.partition(path.sep)[2]),
+                            (
+                                path.join(dirpath, filename)[
+                                    len(new_module_dir + path.sep) :
+                                ]
+                                for (dirpath, dirnames, filenames) in walk(
+                                    new_module_dir
                                 )
+                                for filename in filenames
                             ),
                         ),
-                    )
+                        (
+                            INIT_FILENAME,
+                            *chain.from_iterable(
+                                map(
+                                    lambda i: map(
+                                        partial(
+                                            path.join,
+                                            self.module_hierarchy[i][1],
+                                        ),
+                                        (
+                                            "{name}{sep}py".format(
+                                                name=self.module_hierarchy[i][0],
+                                                sep=extsep,
+                                            ),
+                                            INIT_FILENAME,
+                                        ),
+                                    ),
+                                    range(len(self.module_hierarchy)),
+                                ),
+                            ),
+                        ),
+                    ),
                 )
+                all_tests_running = len(gold) == 7
+                if all_tests_running:
+                    gold = list(
+                        chain.from_iterable(
+                            (
+                                gold[:1],
+                                chain.from_iterable(
+                                    map(
+                                        lambda p: (p, p),
+                                        map(
+                                            partial(path.join, "gold", "parent_dir"),
+                                            (
+                                                INIT_FILENAME,
+                                                *map(
+                                                    partial(path.join, "child_dir"),
+                                                    (
+                                                        INIT_FILENAME,
+                                                        "child.py",
+                                                        path.join(
+                                                            "grandchild_dir",
+                                                            INIT_FILENAME,
+                                                        ),
+                                                        path.join(
+                                                            "grandchild_dir",
+                                                            "grandchild.py",
+                                                        ),
+                                                    ),
+                                                ),
+                                                "parent.py",
+                                            ),
+                                        ),
+                                    )
+                                ),
+                                gold[1:],
+                            )
+                        )
+                    )
+
+                self.assertListEqual(gen, gold)
         finally:
             self._pip(["uninstall", "-y", self.module_name])
 
