@@ -1,3 +1,4 @@
+# Note: no dependencies are required on Python >=3.9; `black` is optional; `pyyaml` is mostly optional
 astor
 black
 pyyaml

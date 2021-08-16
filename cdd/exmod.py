@@ -72,6 +72,15 @@ def exmod(
     elif not path.isdir(output_directory):
         makedirs(output_directory)
 
+    emit_name = (
+        emit_name[0]
+        if emit_name is not None and len(emit_name) == 1 and isinstance(emit_name, list)
+        else emit_name
+    )
+    assert isinstance(
+        emit_name, (str, type(None))
+    ), "Expected str got {emit_name_type!r}".format(emit_name_type=type(emit_name))
+
     module_name, new_module_name = map(path.basename, (module, output_directory))
     module = (
         # partial(module_from_file, module_name=module_name)
@@ -82,7 +91,9 @@ def exmod(
     module_root_dir = path.dirname(module.__file__) + path.sep
 
     mod_path = ".".join((path.basename(module_root_dir[:-1]), module_name))
-    blacklist, whitelist = map(frozenset, (blacklist, whitelist))
+    blacklist, whitelist = map(
+        frozenset, (blacklist or iter(()), whitelist or iter(()))
+    )
     proceed = any(
         (
             sum(map(len, (blacklist, whitelist))) == 0,

@@ -42,7 +42,7 @@ from importlib import import_module
 from inspect import isclass, isfunction
 from itertools import chain, filterfalse
 from json import dumps
-from operator import attrgetter, inv, neg, not_, pos
+from operator import attrgetter, contains, inv, neg, not_, pos
 from sys import version_info
 
 from yaml import safe_dump_all
@@ -1061,9 +1061,10 @@ def infer_type_and_default(action, default, typ, required):
     elif hasattr(default, "__str__") and str(default) == "<required parameter>":
         # Special type that PyTorch uses & defines
         action, default, required, typ = None, None, True, default.__class__.__name__
-    elif isinstance(default, (list, tuple)):
+    elif isinstance(default, (list, tuple, set)):
+        # `set` actually won't marshall back properly as JSON/YAML doesn't support this type :(
         action, default, required, typ = _infer_type_and_default_for_list_or_tuple(
-            action, default, required
+            action, tuple(default) if isinstance(default, set) else default, required
         )
     elif isinstance(default, dict):
         typ = "loads"
@@ -1077,7 +1078,58 @@ def infer_type_and_default(action, default, typ, required):
             ("Any", "pickle.loads", "loads")
         ):
             typ = None
-    elif isinstance(default, type) or isfunction(default) or isclass(default):
+    elif any(
+        (
+            isinstance(default, type),
+            isfunction(default),
+            isclass(default),
+            contains(
+                frozenset(
+                    map(
+                        "tf.{}".format,
+                        (
+                            "qint16",
+                            "qint16_ref",
+                            "qint32",
+                            "qint32_ref",
+                            "qint8",
+                            "qint8_ref",
+                            "quint16",
+                            "quint16_ref",
+                            "quint8",
+                            "quint8_ref",
+                            "bfloat16",
+                            "bool",
+                            "complex128",
+                            "complex64",
+                            "double",
+                            "float16",
+                            "float32",
+                            "float64",
+                            "half",
+                            "int16",
+                            "int32",
+                            "int64",
+                            "int8",
+                            "qint16",
+                            "qint32",
+                            "qint8",
+                            "quint16",
+                            "quint8",
+                            "resource",
+                            "string",
+                            "uint16",
+                            "uint32",
+                            "uint64",
+                            "uint8",
+                            "variant",
+                        ),
+                    )
+                ),
+                repr(default),
+            ),
+        )
+    ):
         typ, default, required = "pickle.loads", pickle.dumps(default), False
     else:
         raise NotImplementedError(
@@ -1168,6 +1220,7 @@ def _parse_default_from_ast(action, default, required, typ):
     :returns: action, default, required, typ
     :rtype: ```Tuple[Optional[str], Optional[List[str]], bool, Optional[str]]```
     """
+
     if isinstance(default, (Constant, Expr, Str, Num)):
         default = get_value(default)
     # if type(default).__name__ in simple_types:
@@ -1191,6 +1244,7 @@ def _parse_default_from_ast(action, default, required, typ):
     #    required = "Optional" in (
     #        typ or iter(())
     #    )  # TODO: Work for `Union[None, AnyStr]` and `Any`
+
     return action, default, required, typ
 
 

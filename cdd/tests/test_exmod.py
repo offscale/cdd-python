@@ -274,10 +274,10 @@ class TestExMod(TestCase):
                     )
                 )
 
-                all_tests_running = len(result["write"]) == 7
+                all_tests_running = len(result["write"]) == 1
 
                 key_counts = (
-                    (("mkdir", 10), ("touch", 4), ("write", 7))
+                    (("mkdir", 10), ("touch", 4), ("write", 1))
                     if all_tests_running
                     else (("mkdir", 7), ("touch", 4), ("write", 4))
                 )
@@ -288,9 +288,9 @@ class TestExMod(TestCase):
                 gold_module_name = next(
                     map(
                         lambda p: p.partition(path.sep)[0],
-                        filter(rpartial(str.startswith, "gold"), result["write"]),
+                        filter(rpartial(str.startswith, "gold"), result["mkdir"]),
                     ),
-                    "",
+                    path.basename(self.gold_dir),
                 )
                 gold = {
                     k: tuple(map(unquote, map(repr, v)))
@@ -339,19 +339,7 @@ class TestExMod(TestCase):
                             ),
                         ),
                         "write": (
-                            lambda write_block: tuple(
-                                sorted(
-                                    chain.from_iterable(
-                                        (
-                                            map(
-                                                partial(path.join, gold_module_name),
-                                                write_block[1:],
-                                            ),
-                                            write_block,
-                                        )
-                                    )
-                                )
-                            )
+                            lambda write_block: tuple(write_block[:1])
                             if all_tests_running
                             else write_block
                         )(
@@ -576,6 +564,8 @@ class TestExMod(TestCase):
             0,
             "EXIT_SUCCESS not reached",
         )
+
+    maxDiff = None
 
 
 unittest_main()
