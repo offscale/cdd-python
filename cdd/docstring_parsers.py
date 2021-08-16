@@ -10,7 +10,7 @@ Translates from [Google's docstring format](https://google.github.io/styleguide/
 """
 
 import ast
-from ast import AST
+from ast import AST, Constant, NameConstant
 from collections import OrderedDict
 from copy import deepcopy
 from enum import Enum
@@ -489,7 +489,11 @@ def _set_name_and_type(param, infer_type, word_wrap):
         name = name.lstrip("*")
         if _param.get("typ", "dict") == "dict":
             _param["typ"] = "Optional[dict]"
-        if "default" not in _param:
+        if (
+            "default" not in _param
+            or isinstance(_param["default"], (NameConstant, Constant))
+            and get_value(_param["default"]) in none_types
+        ):
             _param["default"] = NoneStr
     elif name is not None and name.startswith("*"):
         name = name[1:]

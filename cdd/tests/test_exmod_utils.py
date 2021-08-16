@@ -22,6 +22,7 @@ class TestExmodUtils(TestCase):
             emit_file_on_hierarchy(
                 ("", "foo_dir", ir), "argparse", "", "", None, "", dry_run=True
             )
+        self.assertEqual(ir["name"], "YEP")
         self.assertListEqual(
             deque(map(rpartial(str.split, "\t"), f.getvalue().splitlines()), maxlen=1)[
                 0

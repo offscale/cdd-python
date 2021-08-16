@@ -99,8 +99,8 @@ def emit_file_on_hierarchy(
     mod_name, _, name = name_orig_ir[0].rpartition(".")
     original_relative_filename_path, ir = name_orig_ir[1], name_orig_ir[2]
     assert original_relative_filename_path
-    if not name:
-        name = ir["name"]
+    if not name and ir.get("name") is not None:
+        name = ir.get("name")
     mod_path = path.join(
         output_directory,
         new_module_name,
@@ -164,7 +164,7 @@ def emit_file_on_hierarchy(
                 )
             ) if dry_run else makedirs(emit_filename_dir)
 
-    if not symbol_in_file:
+    if not symbol_in_file and (ir.get("name") or ir["params"] or ir["returns"]):
         _emit_symbol(
             name_orig_ir,
             emit_name,
