@@ -14,6 +14,8 @@ from ast import (
 from collections import OrderedDict
 from operator import attrgetter
 
+# from meta.asttools import print_ast
+
 from cdd import emit, parse
 from cdd.ast_utils import (
     find_in_ast,
@@ -123,8 +125,15 @@ class DocTrans(NodeTransformer):
         :returns: `AnnAssign` if `type_annotations` and type found else `Assign`
         :rtype: ```Union[Assign, AnnAssign]```
         """
-        typ = self._get_ass_typ(node)
-        if self.type_annotations:
+        # try:
+        #    typ = self._get_ass_typ(node)
+        # except:
+        #    print_ast(node)
+        #    raise
+        annotation = (
+            to_annotation(typ) if self.type_annotations and typ is not None else None
+        )
+        if annotation:
             assert len(node.targets) == 1
             return AnnAssign(
                 annotation=to_annotation(typ),
@@ -254,6 +263,7 @@ class DocTrans(NodeTransformer):
                             annotation=to_annotation(
                                 _arg.annotation
                                 if _arg.annotation is not None
+                                or _arg.arg in frozenset(("self", "cls"))
                                 else ir["params"][_arg.arg].get("typ")
                             ),
                         ),

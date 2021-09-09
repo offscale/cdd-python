@@ -1617,4 +1617,5 @@ __all__ = [
     "set_slice",
     "set_value",
     "to_annotation",
+    "to_type_comment",
 ]

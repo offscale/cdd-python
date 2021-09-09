@@ -36,7 +36,7 @@ from textwrap import indent
 from cdd.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
 from cdd.defaults_utils import extract_default
 from cdd.pure_utils import tab
-from cdd.tests.mocks.docstrings import docstring_header_str
+from cdd.tests.mocks.docstrings import docstring_header_str, docstring_reduction_v2_str
 from cdd.tests.mocks.methods import (
     function_google_tf_squared_hinge_docstring_str,
     returns_subscript,
@@ -1237,12 +1237,31 @@ class_torch_nn_one_cycle_lr_ast = ClassDef(
     name="OneCycleLR",
 )
 
+# From `tf.keras.losses.Reduction` @ tf-nightly:2.7.0.dev20210908, minus functions and decorator
+class_reduction_v2 = ClassDef(
+    name="ReductionV2",
+    bases=[],
+    keywords=[],
+    body=[
+        Expr(value=set_value(docstring_reduction_v2_str)),
+        Assign(targets=[Name(id="AUTO", ctx=Store())], value=set_value("auto")),
+        Assign(targets=[Name(id="NONE", ctx=Store())], value=set_value("none")),
+        Assign(targets=[Name(id="SUM", ctx=Store())], value=set_value("sum")),
+        Assign(
+            targets=[Name(id="SUM_OVER_BATCH_SIZE", ctx=Store())],
+            value=set_value("sum_over_batch_size"),
+        ),
+    ],
+    decorator_list=[],
+)
+
 __all__ = [
     "class_ast",
     "class_google_tf_tensorboard_ast",
     "class_google_tf_tensorboard_str",
     "class_nargs_ast",
     "class_nargs_str",
+    "class_reduction_v2",
     "class_squared_hinge_config_ast",
     "class_str",
     "class_torch_nn_l1loss_ast",

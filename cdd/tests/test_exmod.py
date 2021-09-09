@@ -186,7 +186,19 @@ class TestExMod(TestCase):
         with TemporaryDirectory() as tempdir, self.assertRaises(ModuleNotFoundError):
             exmod(
                 module=tempdir,
-                emit_name="cjvxclkvjclxkjvlcx",
+                emit_name="cool_name",
+                blacklist=tuple(),
+                whitelist=tuple(),
+                output_directory=path.join(tempdir, "nonexistent"),
+                dry_run=False,
+            )
+
+    def test_exmod_no_module(self):
+        """Tests that ModuleNotFound error is raised when module is not installed"""
+        with TemporaryDirectory() as tempdir, self.assertRaises(ModuleNotFoundError):
+            exmod(
+                module="fubar",
+                emit_name="uncool_name",
                 blacklist=tuple(),
                 whitelist=tuple(),
                 output_directory=path.join(tempdir, "nonexistent"),
