@@ -88,6 +88,9 @@ def exmod(
         import_module
     )(module)
 
+    # if module.__file__ is None:
+    #     raise ModuleNotFoundError(module_name)
+
     module_root_dir = path.dirname(module.__file__) + path.sep
 
     mod_path = ".".join((path.basename(module_root_dir[:-1]), module_name))

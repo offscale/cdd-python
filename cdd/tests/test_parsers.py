@@ -17,11 +17,13 @@ from cdd.tests.mocks.classes import (
     class_ast,
     class_google_tf_tensorboard_ast,
     class_google_tf_tensorboard_str,
+    class_reduction_v2,
     class_torch_nn_l1loss_ast,
     class_torch_nn_l1loss_str,
     class_torch_nn_one_cycle_lr_ast,
     class_torch_nn_one_cycle_lr_str,
 )
+from cdd.tests.mocks.docstrings import docstring_reduction_v2_str
 from cdd.tests.mocks.ir import (
     class_google_tf_tensorboard_ir,
     class_torch_nn_l1loss_ir,
@@ -496,6 +498,35 @@ class TestParsers(TestCase):
             self.assertEqual(ir["name"], "config_tbl")
             ir["name"] = None
             self.assertDictEqual(ir, intermediate_repr_no_default_sql_doc)
+
+    def test_from_docstring_docstring_reduction_v2_str(self):
+        """
+        Test that the nonmatching docstring doesn't fill out params
+        """
+        ir = parse.docstring(docstring_reduction_v2_str)
+        self.assertEqual(ir["params"], OrderedDict())
+        self.assertEqual(ir["returns"], None)
+
+    def test_from_class_class_reduction_v2(self):
+        """
+        Test class_reduction_v2 produces correct IR
+        """
+        ir = parse.class_(class_reduction_v2)
+        self.assertEqual(
+            ir["params"],
+            OrderedDict(
+                (
+                    ("AUTO", {"default": "auto", "typ": "str"}),
+                    ("NONE", {"default": "none", "typ": "str"}),
+                    ("SUM", {"default": "sum", "typ": "str"}),
+                    (
+                        "SUM_OVER_BATCH_SIZE",
+                        {"default": "sum_over_batch_size", "typ": "str"},
+                    ),
+                )
+            ),
+        )
+        self.assertEqual(ir["returns"], None)
 
     def test_from_sqlalchemy(self) -> None:
         """

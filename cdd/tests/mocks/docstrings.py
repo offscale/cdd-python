@@ -449,6 +449,55 @@ docstring_repr_google_str = (
     "   String representation of instance\n"
 )
 
+docstring_reduction_v2_str = (
+    "Types of loss reduction."
+    "\n"
+    "\n"
+    "  Contains the following values:"
+    "\n"
+    "\n"
+    "  * `AUTO`: Indicates that the reduction option will be determined by the usage\n"
+    "     context. For almost all cases this defaults to `SUM_OVER_BATCH_SIZE`. When\n"
+    "     used with `tf.distribute.Strategy`, outside of built-in training loops such\n"
+    "     as `tf.keras` `compile` and `fit`, we expect reduction value to be\n"
+    "     `SUM` or `NONE`. Using `AUTO` in that case will raise an error.\n"
+    "  * `NONE`: No **additional** reduction is applied to the output of the wrapped\n"
+    "     loss function. When non-scalar losses are returned to Keras functions like\n"
+    "     `fit`/`evaluate`, the unreduced vector loss is passed to the optimizer\n"
+    "     but the reported loss will be a scalar value.\n"
+    "\n"
+    "     Caution: **Verify the shape of the outputs when using** `Reduction.NONE`.\n"
+    "     The builtin loss functions wrapped by the loss classes reduce\n"
+    "     one dimension (`axis=-1`, or `axis` if specified by loss function).\n"
+    "     `Reduction.NONE` just means that no **additional** reduction is applied by\n"
+    "     the class wrapper. For categorical losses with an example input shape of\n"
+    "     `[batch, W, H, n_classes]` the `n_classes` dimension is reduced. For\n"
+    "     pointwise losses your must include a dummy axis so that `[batch, W, H, 1]`\n"
+    "     is reduced to `[batch, W, H]`. Without the dummy axis `[batch, W, H]`\n"
+    "     will be incorrectly reduced to `[batch, W]`.\n"
+    "\n"
+    "  * `SUM`: Scalar sum of weighted losses.\n"
+    "  * `SUM_OVER_BATCH_SIZE`: Scalar `SUM` divided by number of elements in losses.\n"
+    "     This reduction type is not supported when used with\n"
+    "     `tf.distribute.Strategy` outside of built-in training loops like `tf.keras`\n"
+    "     `compile`/`fit`.\n"
+    "\n"
+    "     You can implement 'SUM_OVER_BATCH_SIZE' using global batch size like:\n"
+    "     ```\n"
+    "     with strategy.scope():\n"
+    "       loss_obj = tf.keras.losses.CategoricalCrossentropy(\n"
+    "           reduction=tf.keras.losses.Reduction.NONE)\n"
+    "       ....\n"
+    "       loss = tf.reduce_sum(loss_obj(labels, predictions)) *\n"
+    "           (1. / global_batch_size)\n"
+    "     ```\n"
+    "\n"
+    "  Please see the [custom training guide](\n"
+    "  https://www.tensorflow.org/tutorials/distribute/custom_training) for more\n"
+    "  details on this.\n"
+    "  "
+)
+
 __all__ = [
     "docstring_extra_colons_str",
     "docstring_google_str",
@@ -465,5 +514,6 @@ __all__ = [
     "docstring_numpydoc_str",
     "docstring_only_return_type_str",
     "docstring_repr_str",
+    "docstring_reduction_v2_str",
     "docstring_str",
 ]
