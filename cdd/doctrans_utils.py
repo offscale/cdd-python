@@ -126,7 +126,7 @@ class DocTrans(NodeTransformer):
         :rtype: ```Union[Assign, AnnAssign]```
         """
         # try:
-        #    typ = self._get_ass_typ(node)
+        typ = self._get_ass_typ(node)
         # except:
         #    print_ast(node)
         #    raise
