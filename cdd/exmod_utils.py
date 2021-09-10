@@ -16,7 +16,7 @@ from cdd.ast_utils import (
     set_value,
 )
 from cdd.pure_utils import INIT_FILENAME, no_magic_dir2attr, rpartial
-from cdd.tests.mocks import imports_header
+from cdd.tests.mocks import imports_header, imports_header_ast
 
 
 def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
@@ -65,6 +65,7 @@ def emit_file_on_hierarchy(
     emit_name,
     module_name,
     new_module_name,
+    mock_imports,
     filesystem_layout,
     output_directory,
     dry_run,
@@ -83,6 +84,9 @@ def emit_file_on_hierarchy(
 
     :param new_module_name: Name of [new] module
     :type new_module_name: ```str```
+
+    :param mock_imports: Whether to generate mock TensorFlow imports
+    :type mock_imports: ```bool```
 
     :param filesystem_layout: Hierarchy of folder and file names generated. "java" is file per package per name.
     :type filesystem_layout: ```Literal["java", "as_input"]```
@@ -106,6 +110,7 @@ def emit_file_on_hierarchy(
         new_module_name,
         mod_name.replace(".", path.sep),
     )
+    # print("mkdir\t{mod_path!r}".format(mod_path=mod_path))
     if not path.isdir(mod_path):
         if dry_run:
             print("mkdir\t{mod_path!r}".format(mod_path=mod_path))
@@ -175,6 +180,7 @@ def emit_file_on_hierarchy(
             ir,
             isfile_emit_filename,
             name,
+            mock_imports,
             dry_run,
         )
 
@@ -207,6 +213,7 @@ def _emit_symbol(
     intermediate_repr,
     isfile_emit_filename,
     name,
+    mock_imports,
     dry_run,
 ):
     """
@@ -244,6 +251,9 @@ def _emit_symbol(
 
     :param name: Name of the node being generated
     :type name: ```str```
+
+    :param mock_imports: Whether to generate mock TensorFlow imports
+    :type mock_imports: ```bool```
 
     :param dry_run: Show what would be created; don't actually write to the filesystem
     :type dry_run: ```bool```
@@ -290,7 +300,7 @@ def _emit_symbol(
                                 )
                             ),
                         ),
-                        ast.parse(imports_header).body,
+                        imports_header_ast if mock_imports else iter(()),
                         (gen_node, __all___node),
                     )
                 )

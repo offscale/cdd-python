@@ -3,6 +3,7 @@ Shared by the mocks. Currently unused, but has some imports mocked for later use
 """
 
 from cdd.pure_utils import PY_GTE_3_8
+from ast import parse as ast_parse
 
 imports_header = """
 from {package} import Literal
@@ -18,4 +19,6 @@ except ImportError:
     package="typing" if PY_GTE_3_8 else "typing_extensions"
 )
 
-__all__ = ["imports_header"]
+imports_header_ast = ast_parse(imports_header).body
+
+__all__ = ["imports_header", "imports_header_ast"]

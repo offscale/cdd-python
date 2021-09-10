@@ -24,6 +24,7 @@ def exmod(
     blacklist,
     whitelist,
     output_directory,
+    mock_imports,
     dry_run,
     filesystem_layout="as_input",
 ):
@@ -45,6 +46,9 @@ def exmod(
     :param output_directory: Where to place the generated exposed interfaces to the given `--module`.
     :type output_directory: ```str```
 
+    :param mock_imports: Whether to generate mock TensorFlow imports
+    :type mock_imports: ```bool```
+
     :param dry_run: Show what would be created; don't actually write to the filesystem
     :type dry_run: ```bool```
 
@@ -59,9 +63,10 @@ def exmod(
                     module=module,
                     blacklist=blacklist,
                     whitelist=whitelist,
+                    mock_imports=mock_imports,
+                    filesystem_layout=filesystem_layout,
                     output_directory=output_directory,
                     dry_run=dry_run,
-                    filesystem_layout=filesystem_layout,
                 ),
                 emit_name or iter(()),
             ),
@@ -111,6 +116,7 @@ def exmod(
         emit_name=emit_name,
         module_name=module_name,
         new_module_name=new_module_name,
+        mock_imports=mock_imports,
         filesystem_layout=filesystem_layout,
         output_directory=output_directory,
         dry_run=dry_run,

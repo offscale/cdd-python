@@ -499,6 +499,7 @@ def main(cli_argv=None, return_args=False):
             blacklist=args.blacklist,
             whitelist=args.whitelist,
             output_directory=args.output_directory,
+            mock_imports=False,  # This option is really only useful for tests IMHO
             dry_run=args.dry_run,
         )
 
