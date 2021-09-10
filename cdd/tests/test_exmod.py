@@ -44,6 +44,7 @@ class TestExMod(TestCase):
                     emit_name="class",
                     blacklist=tuple(),
                     whitelist=tuple(),
+                    mock_imports=True,
                     output_directory=new_module_dir,
                     dry_run=False,
                 )
@@ -68,6 +69,7 @@ class TestExMod(TestCase):
                     emit_name="class",
                     blacklist=(".".join((self.module_name,) * 2),),
                     whitelist=tuple(),
+                    mock_imports=True,
                     output_directory=new_module_dir,
                     dry_run=False,
                 )
@@ -92,6 +94,7 @@ class TestExMod(TestCase):
                     emit_name="class",
                     blacklist=tuple(),
                     whitelist=(".".join((existent_module_name,) * 2),),
+                    mock_imports=True,
                     output_directory=new_module_dir,
                     dry_run=False,
                 )
@@ -189,6 +192,7 @@ class TestExMod(TestCase):
                 emit_name="cool_name",
                 blacklist=tuple(),
                 whitelist=tuple(),
+                mock_imports=True,
                 output_directory=path.join(tempdir, "nonexistent"),
                 dry_run=False,
             )
@@ -201,6 +205,7 @@ class TestExMod(TestCase):
                 emit_name="uncool_name",
                 blacklist=tuple(),
                 whitelist=tuple(),
+                mock_imports=True,
                 output_directory=path.join(tempdir, "nonexistent"),
                 dry_run=False,
             )
@@ -216,6 +221,7 @@ class TestExMod(TestCase):
                 emit_name=None,
                 blacklist=tuple(),
                 whitelist=tuple(),
+                mock_imports=True,
                 output_directory=output_directory,
                 dry_run=False,
             )
@@ -238,6 +244,7 @@ class TestExMod(TestCase):
                         emit_name="class",
                         blacklist=tuple(),
                         whitelist=tuple(),
+                        mock_imports=True,
                         output_directory=new_module_dir,
                         dry_run=True,
                     )

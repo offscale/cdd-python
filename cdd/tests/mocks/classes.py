@@ -1237,7 +1237,7 @@ class_torch_nn_one_cycle_lr_ast = ClassDef(
     name="OneCycleLR",
 )
 
-# From `tf.keras.losses.Reduction` @ tf-nightly:2.7.0.dev20210908, minus functions and decorator
+# From `tf.keras.losses.Reduction` @ tf-nightly:2.7.0.dev20210908, minus methods and decorator
 class_reduction_v2 = ClassDef(
     name="ReductionV2",
     bases=[],
