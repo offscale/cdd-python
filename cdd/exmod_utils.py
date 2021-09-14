@@ -16,7 +16,7 @@ from cdd.ast_utils import (
     set_value,
 )
 from cdd.pure_utils import INIT_FILENAME, no_magic_dir2attr, rpartial
-from cdd.tests.mocks import imports_header, imports_header_ast
+from cdd.tests.mocks import imports_header_ast
 
 
 def get_module_contents(obj, module_root_dir, current_module=None, _result={}):

@@ -14,8 +14,6 @@ from ast import (
 from collections import OrderedDict
 from operator import attrgetter
 
-# from meta.asttools import print_ast
-
 from cdd import emit, parse
 from cdd.ast_utils import (
     find_in_ast,
@@ -26,6 +24,8 @@ from cdd.ast_utils import (
 )
 from cdd.docstring_parsers import parse_docstring
 from cdd.parser_utils import ir_merge
+
+# from meta.asttools import print_ast
 
 
 def has_type_annotations(node):
