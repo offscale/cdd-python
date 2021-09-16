@@ -20,6 +20,8 @@ from cdd.tests.mocks.docstrings import (
     docstring_google_tf_lambda_callback_str,
     docstring_google_tf_squared_hinge_no_args_doc_str,
     docstring_header_str,
+    docstring_keras_rmsprop_class_str,
+    docstring_keras_rmsprop_method_str,
 )
 from cdd.tests.utils_for_tests import remove_args_from_docstring
 
@@ -680,6 +682,193 @@ docstring_google_pytorch_lbfgs_ir = {
     "returns": None,
     "type": "static",
 }
+
+start_args_idx = docstring_keras_rmsprop_class_str.find("  Args:\n")
+end_args_idx = docstring_keras_rmsprop_class_str.find("\n\n", start_args_idx) + 2
+docstring_keras_rmsprop_class_ir = {
+    "doc": docstring_keras_rmsprop_class_str[:start_args_idx]
+    + docstring_keras_rmsprop_class_str[end_args_idx:],
+    "name": None,
+    "params": OrderedDict(
+        (
+            (
+                "learning_rate",
+                {
+                    "default": 0.001,
+                    "doc": "A `Tensor`, floating point value, or a schedule that "
+                    "is a "
+                    "`tf.keras.optimizers.schedules.LearningRateSchedule`, "
+                    "or a callable that takes no arguments and returns "
+                    "the actual value to use. The learning rate. Defaults "
+                    "to 0.001.",
+                    "typ": "float",
+                },
+            ),
+            (
+                "rho",
+                {
+                    "default": 0.9,
+                    "doc": "Discounting factor for the history/coming gradient. "
+                    "Defaults to 0.9.",
+                    "typ": "float",
+                },
+            ),
+            (
+                "momentum",
+                {
+                    "default": 0.0,
+                    "doc": "A scalar or a scalar `Tensor`. Defaults to 0.0.",
+                    "typ": "float",
+                },
+            ),
+            (
+                "epsilon",
+                {
+                    "default": 1e-07,
+                    "doc": "A small constant for numerical stability. This "
+                    'epsilon is "epsilon hat" in the Kingma and Ba paper '
+                    "(in the formula just before Section 2.1), not the "
+                    "epsilon in Algorithm 1 of the paper. Defaults to "
+                    "1e-7.",
+                    "typ": "float",
+                },
+            ),
+            (
+                "centered",
+                {
+                    "default": False,
+                    "doc": "Boolean. If `True`, gradients are normalized by the "
+                    "estimated variance of the gradient; if False, by the "
+                    "uncentered second moment. Setting this to `True` may "
+                    "help with training, but is slightly more expensive "
+                    "in terms of computation and memory. Defaults to "
+                    "`False`.",
+                    "typ": "bool",
+                },
+            ),
+            (
+                "name",
+                {
+                    "default": "RMSprop",
+                    "doc": "Optional name prefix for the operations created when "
+                    'applying gradients. Defaults to `"RMSprop"`.',
+                    "typ": "Optional[str]",
+                },
+            ),
+            (
+                "kwargs",
+                {
+                    "default": NoneStr,
+                    "doc": 'Keyword arguments. Allowed to be one of `"clipnorm"` '
+                    'or `"clipvalue"`. `"clipnorm"` (float) clips '
+                    'gradients by norm; `"clipvalue"` (float) clips '
+                    "gradients by value.",
+                    "typ": "Optional[dict]",
+                },
+            ),
+        )
+    ),
+    "returns": None,
+    "type": "static",
+}
+
+del start_args_idx, end_args_idx
+
+start_args_idx = docstring_keras_rmsprop_method_str.find("  Args:\n")
+end_args_idx = docstring_keras_rmsprop_method_str.find("\n\n", start_args_idx + 1) + 4
+
+docstring_keras_rmsprop_method_ir = {
+    "doc": docstring_keras_rmsprop_method_str[:start_args_idx]
+    + docstring_keras_rmsprop_method_str[end_args_idx:],
+    "name": None,
+    "params": OrderedDict(
+        (
+            (
+                "learning_rate",
+                {
+                    "default": 0.001,
+                    "doc": "A `Tensor`, floating point value, or a schedule that "
+                    "is a "
+                    "`tf.keras.optimizers.schedules.LearningRateSchedule`, "
+                    "or a callable that takes no arguments and returns "
+                    "the actual value to use. The learning rate. Defaults "
+                    "to 0.001.",
+                    "typ": "float",
+                },
+            ),
+            (
+                "rho",
+                {
+                    "default": 0.9,
+                    "doc": "Discounting factor for the history/coming gradient. "
+                    "Defaults to 0.9.",
+                    "typ": "float",
+                },
+            ),
+            (
+                "momentum",
+                {
+                    "default": 0.0,
+                    "doc": "A scalar or a scalar `Tensor`. Defaults to 0.0.",
+                    "typ": "float",
+                },
+            ),
+            (
+                "epsilon",
+                {
+                    "default": 1e-07,
+                    "doc": "A small constant for numerical stability. This "
+                    'epsilon is "epsilon hat" in the Kingma and Ba paper '
+                    "(in the formula just before Section 2.1), not the "
+                    "epsilon in Algorithm 1 of the paper. Defaults to "
+                    "1e-7.",
+                    "typ": "float",
+                },
+            ),
+            (
+                "centered",
+                {
+                    "default": False,
+                    "doc": "Boolean. If `True`, gradients are normalized by the "
+                    "estimated variance of the gradient; if False, by the "
+                    "uncentered second moment. Setting this to `True` may "
+                    "help with training, but is slightly more expensive "
+                    "in terms of computation and memory. Defaults to "
+                    "`False`.",
+                    "typ": "bool",
+                },
+            ),
+            (
+                "name",
+                {
+                    "default": "RMSprop",
+                    "doc": "Optional name prefix for the operations created when "
+                    'applying gradients. Defaults to "RMSprop".',
+                    "typ": "Optional[str]",
+                },
+            ),
+            (
+                "kwargs",
+                {
+                    "default": NoneStr,
+                    "doc": "keyword arguments. Allowed to be {`clipnorm`, "
+                    "`clipvalue`, `lr`, `decay`}. `clipnorm` is clip "
+                    "gradients by norm; `clipvalue` is clip gradients by "
+                    "value, `decay` is included for backward "
+                    "compatibility to allow time inverse decay of "
+                    "learning rate. `lr` is included for backward "
+                    "compatibility, recommended to use `learning_rate` "
+                    "instead.",
+                    "typ": "Optional[dict]",
+                },
+            ),
+        )
+    ),
+    "returns": None,
+    "type": "static",
+}
+
+del start_args_idx, end_args_idx
 
 function_adder_ir = {
     "doc": "",
