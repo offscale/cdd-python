@@ -23,12 +23,18 @@ from cdd.tests.mocks.classes import (
     class_torch_nn_one_cycle_lr_ast,
     class_torch_nn_one_cycle_lr_str,
 )
-from cdd.tests.mocks.docstrings import docstring_reduction_v2_str
+from cdd.tests.mocks.docstrings import (
+    docstring_keras_rmsprop_class_str,
+    docstring_keras_rmsprop_method_str,
+    docstring_reduction_v2_str,
+)
 from cdd.tests.mocks.ir import (
     class_google_tf_tensorboard_ir,
     class_torch_nn_l1loss_ir,
     class_torch_nn_one_cycle_lr_ir,
     docstring_google_tf_adadelta_function_ir,
+    docstring_keras_rmsprop_class_ir,
+    docstring_keras_rmsprop_method_ir,
     function_adder_ir,
     intermediate_repr_no_default_doc,
     intermediate_repr_no_default_sql_doc,
@@ -527,6 +533,22 @@ class TestParsers(TestCase):
             ),
         )
         self.assertEqual(ir["returns"], None)
+
+    def test_from_docstring_keras_rmsprop_class_str(self):
+        """Tests IR from docstring_keras_rmsprop_class_str"""
+
+        self.assertDictEqual(
+            parse.docstring(docstring_keras_rmsprop_class_str),
+            docstring_keras_rmsprop_class_ir,
+        )
+
+    def test_from_docstring_keras_rmsprop_class_method_str(self):
+        """Tests IR from docstring_keras_rmsprop_method_str"""
+
+        self.assertDictEqual(
+            parse.docstring(docstring_keras_rmsprop_method_str),
+            docstring_keras_rmsprop_method_ir,
+        )
 
     def test_from_sqlalchemy(self) -> None:
         """

@@ -498,6 +498,102 @@ docstring_reduction_v2_str = (
     "  "
 )
 
+docstring_keras_rmsprop_class_str = (
+    "Optimizer that implements the RMSprop algorithm.\n"
+    "\n"
+    "  The gist of RMSprop is to:\n"
+    "\n  - Maintain a moving (discounted) average of the square of gradients\n"
+    "  - Divide the gradient by the root of this average\n"
+    "\n"
+    "  This implementation of RMSprop uses plain momentum, not Nesterov momentum.\n"
+    "\n"
+    "  The centered version additionally maintains a moving average of the\n"
+    "  gradients, and uses that average to estimate the variance.\n"
+    "\n"
+    "  Args:\n"
+    "    learning_rate: A `Tensor`, floating point value, or a schedule that is a\n"
+    "      `tf.keras.optimizers.schedules.LearningRateSchedule`, or a callable\n"
+    "      that takes no arguments and returns the actual value to use. The\n"
+    "      learning rate. Defaults to 0.001.\n"
+    "    rho: Discounting factor for the history/coming gradient. Defaults to 0.9.\n"
+    "    momentum: A scalar or a scalar `Tensor`. Defaults to 0.0.\n"
+    "    epsilon: A small constant for numerical stability. This epsilon is\n"
+    '      "epsilon hat" in the Kingma and Ba paper (in the formula just before\n'
+    "      Section 2.1), not the epsilon in Algorithm 1 of the paper. Defaults to\n"
+    "      1e-7.\n"
+    "    centered: Boolean. If `True`, gradients are normalized by the estimated\n"
+    "      variance of the gradient; if False, by the uncentered second moment.\n"
+    "      Setting this to `True` may help with training, but is slightly more\n"
+    "      expensive in terms of computation and memory. Defaults to `False`.\n"
+    "    name: Optional name prefix for the operations created when applying\n"
+    '      gradients. Defaults to `"RMSprop"`.\n'
+    "    **kwargs: Keyword arguments. Allowed to be one of\n"
+    '      `"clipnorm"` or `"clipvalue"`.\n'
+    '      `"clipnorm"` (float) clips gradients by norm; `"clipvalue"` (float) clips\n'
+    "      gradients by value.\n"
+    "\n"
+    "  Note that in the dense implementation of this algorithm, variables and their\n"
+    "  corresponding accumulators (momentum, gradient moving average, square\n"
+    "  gradient moving average) will be updated even if the gradient is zero\n"
+    "  (i.e. accumulators will decay, momentum will be applied). The sparse\n"
+    "  implementation (used when the gradient is an `IndexedSlices` object,\n"
+    "  typically because of `tf.gather` or an embedding lookup in the forward pass)\n"
+    "  will not update variable slices or their accumulators unless those slices\n"
+    '  were used in the forward pass (nor is there an "eventual" correction to\n'
+    "  account for these omitted updates). This leads to more efficient updates for\n"
+    "  large embedding lookup tables (where most of the slices are not accessed in\n"
+    "  a particular graph execution), but differs from the published algorithm.\n"
+    "\n"
+    "  Usage:\n"
+    "\n"
+    "  >>> opt = tf.keras.optimizers.RMSprop(learning_rate=0.1)\n"
+    "  >>> var1 = tf.Variable(10.0)\n"
+    "  >>> loss = lambda: (var1 ** 2) / 2.0    # d(loss) / d(var1) = var1\n"
+    "  >>> step_count = opt.minimize(loss, [var1]).numpy()\n"
+    "  >>> var1.numpy()\n"
+    "  9.683772\n"
+    "\n"
+    "  Reference:\n"
+    "    - [Hinton, 2012](\n"
+    "      http://www.cs.toronto.edu/~tijmen/csc321/slides/lecture_slides_lec6.pdf)\n"
+    "  "
+)
+
+docstring_keras_rmsprop_method_str = (
+    "Construct a new RMSprop optimizer.\n"
+    "\n"
+    "    Args:\n"
+    "      learning_rate: A `Tensor`, floating point value, or a schedule that is a\n"
+    "        `tf.keras.optimizers.schedules.LearningRateSchedule`, or a callable\n"
+    "        that takes no arguments and returns the actual value to use. The\n"
+    "        learning rate. Defaults to 0.001.\n"
+    "      rho: Discounting factor for the history/coming gradient. Defaults to 0.9.\n"
+    "      momentum: A scalar or a scalar `Tensor`. Defaults to 0.0.\n"
+    "      epsilon: A small constant for numerical stability. This epsilon is\n"
+    '        "epsilon hat" in the Kingma and Ba paper (in the formula just before\n'
+    "        Section 2.1), not the epsilon in Algorithm 1 of the paper. Defaults to\n"
+    "        1e-7.\n"
+    "      centered: Boolean. If `True`, gradients are normalized by the estimated\n"
+    "        variance of the gradient; if False, by the uncentered second moment.\n"
+    "        Setting this to `True` may help with training, but is slightly more\n"
+    "        expensive in terms of computation and memory. Defaults to `False`.\n"
+    "      name: Optional name prefix for the operations created when applying\n"
+    '        gradients. Defaults to "RMSprop".\n'
+    "      **kwargs: keyword arguments. Allowed to be {`clipnorm`, `clipvalue`, `lr`,\n"
+    "        `decay`}. `clipnorm` is clip gradients by norm; `clipvalue` is clip\n"
+    "        gradients by value, `decay` is included for backward compatibility to\n"
+    "        allow time inverse decay of learning rate. `lr` is included for backward\n"
+    "        compatibility, recommended to use `learning_rate` instead.\n"
+    "\n"
+    "    @compatibility(eager)\n"
+    "    When eager execution is enabled, `learning_rate`, `decay`, `momentum`, and\n"
+    "    `epsilon` can each be a callable that takes no arguments and returns the\n"
+    "    actual value to use. This can be useful for changing these values across\n"
+    "    different invocations of optimizer functions.\n"
+    "    @end_compatibility\n"
+    "    "
+)
+
 __all__ = [
     "docstring_extra_colons_str",
     "docstring_google_str",
@@ -506,6 +602,8 @@ __all__ = [
     "docstring_google_tf_lambda_callback_str",
     "docstring_google_tf_squared_hinge_str",
     "docstring_header_str",
+    "docstring_keras_rmsprop_class_str",
+    "docstring_keras_rmsprop_method_str",
     "docstring_no_default_str",
     "docstring_no_default_doc_str",
     "docstring_numpydoc_only_doc_str",
