@@ -225,11 +225,12 @@ def _scan_phase_numpydoc_and_google(
     # ^ Dict[Union[Literal["doc"], arg_tokens, return_tokens], List[dict]]
 
     # First doc, if present
-    _start_idx, _end_idx, _found = location_within(docstring, arg_tokens)
+    _start_idx, _end_idx, _found = (
+        lambda _loc: location_within(docstring, return_tokens)
+        if _loc[0] == -1
+        else _loc
+    )(location_within(docstring, arg_tokens))
     # _leading_whitespace = "".join(takewhile(str.isspace, docstring[:_start_idx][::-1]))
-    if _start_idx == -1:
-        # Return type no args?
-        _start_idx, _end_idx, _found = location_within(docstring, return_tokens)
 
     if _start_idx > -1:
         namespace = _found
@@ -270,6 +271,11 @@ def _scan_phase_numpydoc_and_google(
                 scanned[return_tokens[0]] = docstring_lines[
                     line_no + 2 : line_no + 3 + next_smallest_indent
                 ]
+                if len(scanned[return_tokens[0]]) > 1 and not scanned[return_tokens[0]][
+                    0
+                ].endswith(":"):
+                    scanned[return_tokens[0]] = ["\n".join(scanned[return_tokens[0]])]
+
                 scanned_afterward = docstring_lines[
                     line_no + 3 + next_smallest_indent :
                 ]

@@ -3,6 +3,7 @@ Mocks for methods
 """
 
 from ast import (
+    Assign,
     Attribute,
     BinOp,
     Call,
@@ -16,10 +17,12 @@ from ast import (
     Name,
     Pass,
     Return,
+    Store,
     Subscript,
     Tuple,
     arguments,
     fix_missing_locations,
+    keyword,
 )
 from functools import partial
 from operator import add
@@ -847,6 +850,57 @@ function_google_tf_squared_hinge = (
 
 function_google_tf_squared_hinge_str = "\n".join(function_google_tf_squared_hinge)
 
+# `from tensorflow.python.ops.losses.losses_impl import _safe_mean` @ tf-nightly:2.7.0.dev20210908
+function_google_tf_ops_losses__safe_mean_ast = FunctionDef(
+    name="_safe_mean",
+    args=arguments(
+        posonlyargs=[],
+        args=[set_arg("losses"), set_arg("num_present")],
+        kwonlyargs=[],
+        kw_defaults=[],
+        defaults=[],
+    ),
+    body=[
+        Expr(
+            value=set_value(
+                "Computes a safe mean of the losses.\n"
+                "\n"
+                "  Args:\n"
+                "    losses: `Tensor` whose elements contain individual loss measurements.\n"
+                "    num_present: The number of measurable elements in `losses`.\n"
+                "\n"
+                "  Returns:\n"
+                "    A scalar representing the mean of `losses`. If `num_present` is zero,\n"
+                "      then zero is returned.\n"
+                "  "
+            )
+        ),
+        Assign(
+            targets=[Name(id="total_loss", ctx=Store())],
+            value=Call(
+                func=Attribute(
+                    value=Name(id="math_ops", ctx=Load()), attr="reduce_sum", ctx=Load()
+                ),
+                args=[Name(id="losses", ctx=Load())],
+                keywords=[],
+            ),
+        ),
+        Return(
+            value=Call(
+                func=Attribute(
+                    value=Name(id="math_ops", ctx=Load()), attr="div_no_nan", ctx=Load()
+                ),
+                args=[
+                    Name(id="total_loss", ctx=Load()),
+                    Name(id="num_present", ctx=Load()),
+                ],
+                keywords=[keyword(arg="name", value=set_value("value"))],
+            )
+        ),
+    ],
+    decorator_list=[],
+)
+
 docstring_google_tf_adadelta_function = (
     "",
     "class Adadelta(object):",
@@ -955,6 +1009,7 @@ __all__ = [
     "function_adder_str",
     "function_default_complex_default_arg_ast",
     "function_default_complex_default_arg_str",
+    "function_google_tf_ops_losses__safe_mean_ast",
     "function_google_tf_squared_hinge_str",
     "method_complex_args_variety_ast",
     "method_complex_args_variety_str",

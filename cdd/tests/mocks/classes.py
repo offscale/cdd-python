@@ -36,12 +36,7 @@ from textwrap import indent
 from cdd.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
 from cdd.defaults_utils import extract_default
 from cdd.pure_utils import tab
-from cdd.tests.mocks.docstrings import (
-    docstring_header_str,
-    docstring_keras_rmsprop_class_str,
-    docstring_keras_rmsprop_method_str,
-    docstring_reduction_v2_str,
-)
+from cdd.tests.mocks.docstrings import docstring_header_str, docstring_reduction_v2_str
 from cdd.tests.mocks.methods import (
     function_google_tf_squared_hinge_docstring_str,
     returns_subscript,
@@ -1255,50 +1250,6 @@ class_reduction_v2 = ClassDef(
         Assign(
             targets=[Name(id="SUM_OVER_BATCH_SIZE", ctx=Store())],
             value=set_value("sum_over_batch_size"),
-        ),
-    ],
-    decorator_list=[],
-)
-
-# From `tf.keras.optimizers.RMSprop` @ tf-nightly:2.7.0.dev20210908, minus "uninteresting" parts
-class_rmsprop_v2 = ClassDef(
-    name="RMSprop",
-    bases=[],
-    keywords=[],
-    body=[
-        Expr(value=set_value(docstring_keras_rmsprop_class_str)),
-        Assign(
-            targets=[Name(id="_HAS_AGGREGATE_GRAD", ctx=Store())], value=set_value(True)
-        ),
-        FunctionDef(
-            name="__init__",
-            args=arguments(
-                posonlyargs=[],
-                args=[
-                    set_arg("self"),
-                    set_arg("learning_rate"),
-                    set_arg("rho"),
-                    set_arg("momentum"),
-                    set_arg("epsilon"),
-                    set_arg("centered"),
-                    set_arg("name"),
-                ],
-                kwonlyargs=[],
-                kw_defaults=[],
-                kwarg=set_arg("kwargs"),
-                defaults=[
-                    set_value(0.001),
-                    set_value(0.9),
-                    set_value(0.0),
-                    set_value(1e-07),
-                    set_value(False),
-                    set_value("RMSprop"),
-                ],
-            ),
-            body=[
-                Expr(value=set_value(docstring_keras_rmsprop_method_str)),
-            ],
-            decorator_list=[],
         ),
     ],
     decorator_list=[],

@@ -46,6 +46,7 @@ from cdd.tests.mocks.methods import (
     function_adder_ast,
     function_adder_str,
     function_default_complex_default_arg_ast,
+    function_google_tf_ops_losses__safe_mean_ast,
     method_complex_args_variety_ast,
     method_complex_args_variety_str,
 )
@@ -549,6 +550,57 @@ class TestParsers(TestCase):
             parse.docstring(docstring_keras_rmsprop_method_str),
             docstring_keras_rmsprop_method_ir,
         )
+
+    def test_from_function_google_tf_ops_losses__safe_mean_ast(self):
+        """Tests IR from function_google_tf_ops_losses__safe_mean_ast"""
+        ir = parse.function(function_google_tf_ops_losses__safe_mean_ast)
+        _internal = ir.pop("_internal")
+        del _internal["body"]
+        self.assertDictEqual(
+            _internal, {"from_name": "_safe_mean", "from_type": "static"}
+        )
+        gold = {
+            "doc": "Computes a safe mean of the losses.\n",
+            "name": "_safe_mean",
+            "params": OrderedDict(
+                (
+                    (
+                        "losses",
+                        {
+                            "doc": "`Tensor` whose elements contain individual loss "
+                            "measurements."
+                        },
+                    ),
+                    (
+                        "num_present",
+                        {"doc": "The number of measurable elements in `losses`."},
+                    ),
+                )
+            ),
+            "returns": OrderedDict(
+                (
+                    (
+                        "return_type",
+                        {
+                            "default": "```math_ops.div_no_nan(total_loss, num_present, "
+                            "name='value')```",
+                            "doc": "A scalar representing the mean of `losses`. If `num_present` is "
+                            "zero, then zero is returned.",
+                        },
+                    ),
+                )
+            ),
+            "type": "static",
+        }
+        self.assertDictEqual(ir, gold)
+
+        no_body = deepcopy(function_google_tf_ops_losses__safe_mean_ast)
+        del no_body.body[1:]
+        ir = parse.function(no_body)
+        gold["returns"]["return_type"] = {
+            "doc": "A scalar representing the mean of `losses`. If `num_present` is zero, then zero is returned."
+        }
+        self.assertDictEqual(ir, gold)
 
     def test_from_sqlalchemy(self) -> None:
         """
