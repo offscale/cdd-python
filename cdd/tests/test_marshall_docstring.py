@@ -238,6 +238,8 @@ class TestMarshallDocstring(TestCase):
         _intermediate_repr_no_default_doc["doc"] = docstring_header_str
         self.assertDictEqual(ir, _intermediate_repr_no_default_doc)
 
+    maxDiff = None
+
     def test_from_docstring_google_tf_squared_hinge(self) -> None:
         """
         Tests whether `parse_docstring` produces the right IR

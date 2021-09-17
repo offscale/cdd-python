@@ -584,7 +584,5 @@ class TestExMod(TestCase):
             "EXIT_SUCCESS not reached",
         )
 
-    maxDiff = None
-
 
 unittest_main()
