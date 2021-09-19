@@ -550,15 +550,19 @@ class TestExMod(TestCase):
 
                 with _open(gen_folder) as gen, _open(gold_folder) as gold:
                     gen_ir, gold_ir = map(
-                        lambda node: parse.class_(
-                            next(
-                                filter(
-                                    rpartial(isinstance, ClassDef),
-                                    ast_parse(node.read()).body,
+                        lambda ir: ir["_internal"].__delitem__("original_doc_str")
+                        or ir,
+                        map(
+                            lambda node: parse.class_(
+                                next(
+                                    filter(
+                                        rpartial(isinstance, ClassDef),
+                                        ast_parse(node.read()).body,
+                                    )
                                 )
-                            )
+                            ),
+                            (gen, gold),
                         ),
-                        (gen, gold),
                     )
                     self.assertDictEqual(gold_ir, gen_ir)
 

@@ -95,7 +95,7 @@ class DocTrans(NodeTransformer):
     #     is_func, doc_str = isinstance(node, (AsyncFunctionDef, FunctionDef)), None
     #     if is_func or isinstance(node, ClassDef):
     #         node, doc_str = self._handle_node_with_docstring(node)
-    #         doc_str = ast.get_docstring(node)
+    #         doc_str = ast.get_docstring(node, clean=True)
     #     if is_func:
     #         node = self._handle_function(node, doc_str)
     #     return super(DocTrans, self).generic_visit(node)
@@ -185,7 +185,7 @@ class DocTrans(NodeTransformer):
         :returns: Potentially changed FunctionDef
         :rtype: ```FunctionDef```
         """
-        return self._handle_function(node, get_docstring(node))
+        return self._handle_function(node, get_docstring(node, clean=True))
 
     def _get_ass_typ(self, node):
         """
@@ -216,7 +216,7 @@ class DocTrans(NodeTransformer):
                             lambda doc_str: None
                             if doc_str is None
                             else parse.docstring(doc_str)
-                        )(get_docstring(parent))
+                        )(get_docstring(parent, clean=True))
                         if isinstance(parent, (ClassDef, AsyncFunctionDef, FunctionDef))
                         else {"params": OrderedDict()}
                     )

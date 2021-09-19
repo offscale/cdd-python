@@ -217,7 +217,7 @@ class TestDocTransUtils(TestCase):
     #     original.body[0].body[0] = Expr(
     #         set_value(
     #             "\n{tab}{docstring}\n{tab}".format(
-    #                 tab=tab, docstring=reindent(get_docstring(original.body[0]))
+    #                 tab=tab, docstring=reindent(get_docstring(original.body[0], clean=True))
     #             )
     #         )
     #     )
@@ -225,7 +225,7 @@ class TestDocTransUtils(TestCase):
     #         set_value(
     #             "\n{tab}{docstring}\n{tab}".format(
     #                 tab=tab,
-    #                 docstring=reindent(get_docstring(doc_trans.whole_ast.body[0])),
+    #                 docstring=reindent(get_docstring(doc_trans.whole_ast.body[0], clean=True)),
     #             )
     #         )
     #     )

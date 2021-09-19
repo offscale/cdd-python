@@ -48,7 +48,7 @@ def bottle(function_def):
     method: Literal["get", "post", "put", "patch", "delete"] = app_decorator.func.attr
 
     route_dict = {"route": route, "name": name, "method": method}
-    doc_str = ast.get_docstring(function_def)
+    doc_str = ast.get_docstring(function_def, clean=True)
     if doc_str is not None:
         ir = parse_docstring(doc_str)
         yml_start_str, yml_end_str = "```yml", "```"

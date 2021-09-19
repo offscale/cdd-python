@@ -209,7 +209,7 @@ def gen(
 
     parsed_ast = ast.parse(content)
     # TODO: Shebang line first, then docstring, then imports
-    doc_str = ast.get_docstring(parsed_ast)
+    doc_str = ast.get_docstring(parsed_ast, clean=True)
     whole = tuple(
         map(
             lambda node: (node, None)
