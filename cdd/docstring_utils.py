@@ -137,7 +137,7 @@ def emit_param_str(
                         else "",
                     )
                     if _param.get("typ")
-                    else None,
+                    else "  {name}: ".format(name=name),
                     "{nl}{tab}{doc}".format(
                         doc=set_default_doc(
                             (name, _param), emit_default_doc=emit_default_doc

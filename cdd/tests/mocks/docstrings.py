@@ -594,24 +594,38 @@ docstring_keras_rmsprop_method_str = (
     "    "
 )
 
+docstring_google_tf_ops_losses__safe_mean_str = (
+    "Computes a safe mean of the losses.\n"
+    "\n"
+    "  Args:\n"
+    "    losses: `Tensor` whose elements contain individual loss measurements.\n"
+    "    num_present: The number of measurable elements in `losses`.\n"
+    "\n"
+    "  Returns:\n"
+    "    A scalar representing the mean of `losses`. If `num_present` is zero,\n"
+    "      then zero is returned.\n"
+    "  "
+)
+
 __all__ = [
     "docstring_extra_colons_str",
     "docstring_google_str",
     "docstring_google_tf_adadelta_str",
     "docstring_google_tf_adam_str",
     "docstring_google_tf_lambda_callback_str",
+    "docstring_google_tf_ops_losses__safe_mean_str",
     "docstring_google_tf_squared_hinge_str",
     "docstring_header_str",
     "docstring_keras_rmsprop_class_str",
     "docstring_keras_rmsprop_method_str",
-    "docstring_no_default_str",
     "docstring_no_default_doc_str",
+    "docstring_no_default_str",
     "docstring_numpydoc_only_doc_str",
     "docstring_numpydoc_only_params_str",
     "docstring_numpydoc_only_returns_str",
     "docstring_numpydoc_str",
     "docstring_only_return_type_str",
-    "docstring_repr_str",
     "docstring_reduction_v2_str",
+    "docstring_repr_str",
     "docstring_str",
 ]

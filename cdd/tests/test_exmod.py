@@ -197,7 +197,7 @@ class TestExMod(TestCase):
                 dry_run=False,
             )
 
-    def test_exmod_no_module(self):
+    def test_exmod_no_module(self) -> None:
         """Tests that ModuleNotFound error is raised when module is not installed"""
         with TemporaryDirectory() as tempdir, self.assertRaises(ModuleNotFoundError):
             exmod(

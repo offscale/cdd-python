@@ -18,7 +18,7 @@ class TestCliExMod(TestCase):
             output="the following arguments are required: --module/-m, --emit, --output-directory/-o\n",
         )
 
-    def test_exmod_is_called(self):
+    def test_exmod_is_called(self) -> None:
         """Tests CLI interface exmod function gets called"""
         with patch("cdd.__main__.exmod", new_callable=MagicMock()):
             self.assertTrue(
