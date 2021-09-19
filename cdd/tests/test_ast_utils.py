@@ -485,15 +485,15 @@ class TestAstUtils(TestCase):
         Tests that `set_docstring` sets the docstring
         """
         with_doc_str = deepcopy(function_type_annotated)
-        doc_str = ast.get_docstring(ast.parse(function_adder_str))
+        doc_str = ast.get_docstring(ast.parse(function_adder_str), clean=True)
         set_docstring(doc_str, False, with_doc_str)
-        self.assertIsNone(ast.get_docstring(function_type_annotated))
-        self.assertEqual(ast.get_docstring(with_doc_str), doc_str)
+        self.assertIsNone(ast.get_docstring(function_type_annotated, clean=True))
+        self.assertEqual(ast.get_docstring(with_doc_str, clean=True), doc_str)
 
         without_doc_str = deepcopy(function_type_annotated)
         doc_str = "\t\n"
         set_docstring(doc_str, False, without_doc_str)
-        self.assertIsNone(ast.get_docstring(without_doc_str), doc_str)
+        self.assertIsNone(ast.get_docstring(without_doc_str, clean=True), doc_str)
 
     def test_find_ast_type(self) -> None:
         """Test that `find_ast_type` gives the wrapped class back"""

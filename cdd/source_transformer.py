@@ -62,7 +62,7 @@ def ast_parse(
     if not skip_docstring_remit and isinstance(
         parsed_ast, (Module, ClassDef, FunctionDef, AsyncFunctionDef)
     ):
-        docstring = get_docstring(parsed_ast)
+        docstring = get_docstring(parsed_ast, clean=True)
         if docstring is None:
             return parsed_ast
 

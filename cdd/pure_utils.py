@@ -700,6 +700,9 @@ def no_magic_dir2attr(p_object):
     }
 
 
+omit_whitespace = rpartial(str.translate, str.maketrans({" ": "", "\n": "", "\t": ""}))
+
+
 __all__ = [
     "BUILTIN_TYPES",
     "ENCODING",
@@ -722,6 +725,7 @@ __all__ = [
     "lstrip_namespace",
     "no_magic_dir2attr",
     "none_types",
+    "omit_whitespace",
     "paren_wrap_code",
     "pluralise",
     "pp",

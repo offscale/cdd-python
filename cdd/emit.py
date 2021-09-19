@@ -23,7 +23,7 @@ from collections import OrderedDict
 from functools import partial
 from importlib import import_module
 from itertools import chain
-from operator import add
+from operator import add, eq
 from sys import modules
 from textwrap import indent
 
@@ -52,6 +52,7 @@ from cdd.pure_utils import (
     fill,
     identity,
     none_types,
+    omit_whitespace,
     rpartial,
     simple_types,
     tab,
@@ -558,7 +559,7 @@ def docstring(
     :rtype: ```str```
     """
     _sep = tab * indent_level
-    return "\n{_sep}{_docstring}\n{_sep}".format(
+    candidate_doc_str = "\n{_sep}{_docstring}\n{_sep}".format(
         _docstring=(
             emit_separating_tabs
             if emit_separating_tab and emit_original_whitespace is False
@@ -637,6 +638,18 @@ def docstring(
             run_per_line=identity,
         ).strip(),
         _sep=_sep,
+    )
+    original_doc_str = intermediate_repr.get("_internal", {}).get(
+        "original_doc_str", ""
+    )
+    return (
+        original_doc_str
+        if (
+            emit_original_whitespace
+            and original_doc_str
+            and eq(*map(omit_whitespace, (original_doc_str, candidate_doc_str)))
+        )
+        else candidate_doc_str
     )
 
 

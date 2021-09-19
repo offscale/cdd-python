@@ -556,7 +556,8 @@ class TestParsers(TestCase):
         """Tests IR from function_google_tf_ops_losses__safe_mean_ast"""
         ir = parse.function(function_google_tf_ops_losses__safe_mean_ast)
         _internal = ir.pop("_internal")
-        del _internal["body"]
+        for key in "original_doc_str", "body":
+            del _internal[key]
         self.assertDictEqual(
             _internal, {"from_name": "_safe_mean", "from_type": "static"}
         )

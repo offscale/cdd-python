@@ -61,7 +61,7 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     gold = deepcopy(gold)
 
     # if reindent_docstring:
-    #     gen_docstring = ast.get_docstring(gen_ast)
+    #     gen_docstring = ast.get_docstring(gen_ast, clean=True)
     #     if gen_docstring is not None:
     #         gen_ast.body[0] = set_value(
     #             "\n{}".format(indent(cleandoc(gen_docstring), tab))
@@ -77,7 +77,7 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     )
     if isinstance(_gen_ast, (ast.ClassDef, ast.AsyncFunctionDef, ast.FunctionDef)):
         test_case_instance.assertEqual(
-            *map(partial(ast.get_docstring, clean=False), (_gen_ast, _gold_ast))
+            *map(partial(ast.get_docstring, clean=True), (_gen_ast, _gold_ast))
         )
 
     coded_gen_gold = tuple(map(source_transformer.to_code, (_gen_ast, _gold_ast)))
@@ -308,7 +308,7 @@ def reindent_docstring(node, indent_level=1):
     :returns: Node with reindent docstring
     :rtype: ```ast.AST```
     """
-    doc_str = ast.get_docstring(node)
+    doc_str = ast.get_docstring(node, clean=True)
     if doc_str is not None:
         node.body[0] = ast.Expr(
             set_value(

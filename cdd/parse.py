@@ -113,7 +113,7 @@ def class_(
         node_name=type(class_def).__name__
     )
     class_def = find_ast_type(class_def, class_name)
-    doc_str = get_docstring(class_def)
+    doc_str = get_docstring(class_def, clean=True)
     intermediate_repr = (
         {
             "name": class_name,
@@ -218,6 +218,7 @@ def class_(
                 )
             ),
             "_internal": {
+                "original_doc_str": doc_str,
                 "body": list(
                     filterfalse(rpartial(isinstance, (AnnAssign, Assign)), body)
                 ),
@@ -278,8 +279,9 @@ def _class_from_memory(
     if src is None:
         return ir
     parsed_body = ast.parse(src.lstrip()).body[0]
+    original_doc_str = get_docstring(parsed_body, clean=True)
     parsed_body.body = (
-        parsed_body.body if get_docstring(parsed_body) is None else parsed_body.body[1:]
+        parsed_body.body if original_doc_str is None else parsed_body.body[1:]
     )
     if merge_inner_function is not None:
         _merge_inner_function(
@@ -290,6 +292,7 @@ def _class_from_memory(
         )
         return ir
     ir["_internal"] = {
+        "original_doc_str": original_doc_str,
         "body": list(
             filterfalse(
                 rpartial(isinstance, (AnnAssign, Assign)),
@@ -499,12 +502,12 @@ def function(
         # Dynamic function, i.e., this isn't source code; and is in your memory
         ir = _inspect(function_def, function_name, word_wrap)
         parsed_source = ast.parse(getsource(function_def).lstrip()).body[0]
+        original_doc_str = ast.get_docstring(parsed_source, clean=True)
         body = (
-            parsed_source.body
-            if ast.get_docstring(parsed_source) is None
-            else parsed_source.body[1:]
+            parsed_source.body if original_doc_str is None else parsed_source.body[1:]
         )
         ir["_internal"] = {
+            "original_doc_str": original_doc_str,
             "body": list(filterfalse(rpartial(isinstance, (AnnAssign, Assign)), body)),
             "from_name": parsed_source.name,
             "from_type": "cls",
@@ -526,7 +529,9 @@ def function(
 
     # Read docstring
     doc_str = (
-        get_docstring(function_def) if isinstance(function_def, FunctionDef) else None
+        get_docstring(function_def, clean=True)
+        if isinstance(function_def, FunctionDef)
+        else None
     )
 
     function_def = deepcopy(function_def)
@@ -555,6 +560,7 @@ def function(
     function_def.body = function_def.body if doc_str is None else function_def.body[1:]
     if function_def.body:
         intermediate_repr["_internal"] = {
+            "original_doc_str": doc_str,
             "body": function_def.body,
             "from_name": function_def.name,
             "from_type": found_type,
@@ -657,7 +663,7 @@ def argparse_ast(function_def, function_type=None, function_name=None):
         node_name=type(function_def).__name__
     )
 
-    doc_string = get_docstring(function_def)
+    doc_string = get_docstring(function_def, clean=True)
     intermediate_repr = {
         "name": function_name or function_def.name,
         "type": function_type or get_function_type(function_def),
@@ -705,6 +711,7 @@ def argparse_ast(function_def, function_type=None, function_name=None):
     )
     if inner_body:
         intermediate_repr["_internal"] = {
+            "original_doc_str": doc_string,
             "body": inner_body,
             "from_name": function_def.name,
             "from_type": "static",
@@ -893,7 +900,7 @@ def sqlalchemy(class_def):
             )
         ).value
     )
-    doc_string = get_docstring(class_def)
+    doc_string = get_docstring(class_def, clean=True)
 
     def _merge_name_to_column(assign):
         """

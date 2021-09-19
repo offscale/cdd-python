@@ -4,7 +4,7 @@ Tests for marshalling between formats
 
 import ast
 import os
-from ast import FunctionDef
+from ast import Expr, FunctionDef, arguments
 from collections import OrderedDict
 from copy import deepcopy
 from functools import partial
@@ -50,6 +50,7 @@ from cdd.tests.mocks.methods import (
     class_with_method_str,
     class_with_method_types_ast,
     class_with_method_types_str,
+    function_google_tf_ops_losses__safe_mean_ast,
     function_google_tf_squared_hinge_str,
 )
 from cdd.tests.mocks.sqlalchemy import config_decl_base_ast, config_tbl_ast
@@ -195,6 +196,46 @@ class TestEmitters(TestCase):
                         emit_original_whitespace=True,
                         emit_default_doc=False,
                         word_wrap=True,
+                    ),
+                ),
+            )
+        )
+
+    def test_to_docstring_use_original_when_whitespace_only_changes(self) -> None:
+        """
+        Tests whether original docstring is used when whitespace only changes are made
+        """
+
+        self.assertEqual(
+            *map(
+                partial(ast.get_docstring, clean=True),
+                map(
+                    lambda doc_str: FunctionDef(
+                        name="_",
+                        args=arguments(
+                            posonlyargs=[],
+                            args=[],
+                            kwonlyargs=[],
+                            kw_defaults=[],
+                            defaults=[],
+                            vararg=None,
+                            kwarg=None,
+                        ),
+                        body=[Expr(doc_str)],
+                        decorator_list=[],
+                        lineno=None,
+                        returns=None,
+                    ),
+                    (
+                        emit.docstring(
+                            parse.function(
+                                function_google_tf_ops_losses__safe_mean_ast
+                            ),
+                            docstring_format="google",
+                            emit_original_whitespace=True,
+                            emit_default_doc=False,
+                        ),
+                        docstring_google_tf_ops_losses__safe_mean_str,
                     ),
                 ),
             )
