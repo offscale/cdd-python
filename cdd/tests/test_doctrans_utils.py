@@ -1,13 +1,12 @@
 """ Tests for doctrans_utils """
 
-from ast import Expr, Load, Module, Name, fix_missing_locations, get_docstring
+from ast import Expr, Load, Module, Name
 from collections import deque
 from copy import deepcopy
 from unittest import TestCase
 
 from cdd.ast_utils import annotate_ancestry, set_value
 from cdd.doctrans_utils import DocTrans, clear_annotation, has_type_annotations
-from cdd.pure_utils import reindent, tab
 from cdd.source_transformer import ast_parse
 from cdd.tests.mocks.doctrans import (
     ann_assign_with_annotation,
@@ -17,7 +16,6 @@ from cdd.tests.mocks.doctrans import (
     function_type_annotated,
     function_type_in_docstring,
 )
-from cdd.tests.mocks.methods import function_google_tf_ops_losses__safe_mean_ast
 from cdd.tests.utils_for_tests import reindent_docstring, run_ast_test, unittest_main
 
 
