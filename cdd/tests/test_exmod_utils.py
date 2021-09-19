@@ -50,7 +50,7 @@ class TestExmodUtils(TestCase):
             )
             self.assertTrue(path.isdir(tempdir))
 
-    def test__emit_symbols_isfile_emit_filename_true(self):
+    def test__emit_symbols_isfile_emit_filename_true(self) -> None:
         """Test `_emit_symbol` when `isfile_emit_filename is True`"""
         with patch("sys.stdout", new_callable=StringIO), patch(
             "cdd.exmod_utils.merge_modules", MagicMock()

@@ -12,10 +12,12 @@ from ast import (
     walk,
 )
 from collections import OrderedDict
+from copy import deepcopy
 from operator import attrgetter
 
 from cdd import emit, parse
 from cdd.ast_utils import (
+    annotate_ancestry,
     find_in_ast,
     set_arg,
     set_docstring,
@@ -69,10 +71,15 @@ class DocTrans(NodeTransformer):
         :param whole_ast: The entire input AST, useful for lookups by location
         :type whole_ast: ```AST``
         """
+
         self.docstring_format = docstring_format
         self.type_annotations = type_annotations
         self.existing_type_annotations = existing_type_annotations
-        self.whole_ast = whole_ast
+        if not hasattr(whole_ast, "_location"):
+            self.whole_ast = deepcopy(whole_ast)
+            annotate_ancestry(self.whole_ast)
+        else:
+            self.whole_ast = whole_ast
         self.memoized = {}
 
     # def generic_visit(self, node):

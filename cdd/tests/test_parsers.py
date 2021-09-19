@@ -36,6 +36,7 @@ from cdd.tests.mocks.ir import (
     docstring_keras_rmsprop_class_ir,
     docstring_keras_rmsprop_method_ir,
     function_adder_ir,
+    function_google_tf_ops_losses__safe_mean_ir,
     intermediate_repr_no_default_doc,
     intermediate_repr_no_default_sql_doc,
     method_complex_args_variety_ir,
@@ -506,7 +507,7 @@ class TestParsers(TestCase):
             ir["name"] = None
             self.assertDictEqual(ir, intermediate_repr_no_default_sql_doc)
 
-    def test_from_docstring_docstring_reduction_v2_str(self):
+    def test_from_docstring_docstring_reduction_v2_str(self) -> None:
         """
         Test that the nonmatching docstring doesn't fill out params
         """
@@ -514,7 +515,7 @@ class TestParsers(TestCase):
         self.assertEqual(ir["params"], OrderedDict())
         self.assertEqual(ir["returns"], None)
 
-    def test_from_class_class_reduction_v2(self):
+    def test_from_class_class_reduction_v2(self) -> None:
         """
         Test class_reduction_v2 produces correct IR
         """
@@ -535,7 +536,7 @@ class TestParsers(TestCase):
         )
         self.assertEqual(ir["returns"], None)
 
-    def test_from_docstring_keras_rmsprop_class_str(self):
+    def test_from_docstring_keras_rmsprop_class_str(self) -> None:
         """Tests IR from docstring_keras_rmsprop_class_str"""
 
         self.assertDictEqual(
@@ -543,7 +544,7 @@ class TestParsers(TestCase):
             docstring_keras_rmsprop_class_ir,
         )
 
-    def test_from_docstring_keras_rmsprop_class_method_str(self):
+    def test_from_docstring_keras_rmsprop_class_method_str(self) -> None:
         """Tests IR from docstring_keras_rmsprop_method_str"""
 
         self.assertDictEqual(
@@ -551,7 +552,7 @@ class TestParsers(TestCase):
             docstring_keras_rmsprop_method_ir,
         )
 
-    def test_from_function_google_tf_ops_losses__safe_mean_ast(self):
+    def test_from_function_google_tf_ops_losses__safe_mean_ast(self) -> None:
         """Tests IR from function_google_tf_ops_losses__safe_mean_ast"""
         ir = parse.function(function_google_tf_ops_losses__safe_mean_ast)
         _internal = ir.pop("_internal")
@@ -559,44 +560,12 @@ class TestParsers(TestCase):
         self.assertDictEqual(
             _internal, {"from_name": "_safe_mean", "from_type": "static"}
         )
-        gold = {
-            "doc": "Computes a safe mean of the losses.\n",
-            "name": "_safe_mean",
-            "params": OrderedDict(
-                (
-                    (
-                        "losses",
-                        {
-                            "doc": "`Tensor` whose elements contain individual loss "
-                            "measurements."
-                        },
-                    ),
-                    (
-                        "num_present",
-                        {"doc": "The number of measurable elements in `losses`."},
-                    ),
-                )
-            ),
-            "returns": OrderedDict(
-                (
-                    (
-                        "return_type",
-                        {
-                            "default": "```math_ops.div_no_nan(total_loss, num_present, "
-                            "name='value')```",
-                            "doc": "A scalar representing the mean of `losses`. If `num_present` is "
-                            "zero, then zero is returned.",
-                        },
-                    ),
-                )
-            ),
-            "type": "static",
-        }
-        self.assertDictEqual(ir, gold)
+        self.assertDictEqual(ir, function_google_tf_ops_losses__safe_mean_ir)
 
         no_body = deepcopy(function_google_tf_ops_losses__safe_mean_ast)
         del no_body.body[1:]
         ir = parse.function(no_body)
+        gold = deepcopy(function_google_tf_ops_losses__safe_mean_ir)
         gold["returns"]["return_type"] = {
             "doc": "A scalar representing the mean of `losses`. If `num_present` is zero, then zero is returned."
         }

@@ -1098,7 +1098,7 @@ class TestAstUtils(TestCase):
             ("append", 5, True, "int"),
         )
 
-    def test_get_ass_where_name(self):
+    def test_get_ass_where_name(self) -> None:
         """
         Test `get_ass_where_name`
         """
@@ -1110,7 +1110,7 @@ class TestAstUtils(TestCase):
             tuple(map(get_value, get_ass_where_name(_mock, "haz"))), (5,)
         )
 
-    def test_del_ass_where_name(self):
+    def test_del_ass_where_name(self) -> None:
         """
         Test `del_ass_where_name`
         """
@@ -1126,14 +1126,14 @@ class TestAstUtils(TestCase):
         del_ass_where_name(_mock, "yup")
         self.assertTupleEqual(tuple(get_ass_where_name(_mock, "yup")), tuple())
 
-    def test_to_annotation(self):
+    def test_to_annotation(self) -> None:
         """
         Test `to_annotation`
         """
         for res in "str", Name("str", Load()):
             self.assertTrue(cmp_ast(to_annotation(res), Name("str", Load())))
 
-    def test_merge_assignment_lists(self):
+    def test_merge_assignment_lists(self) -> None:
         """
         Test `merge_assignment_lists`
         """
@@ -1146,7 +1146,7 @@ class TestAstUtils(TestCase):
             tuple(map(get_value, all__[0].elts)), ("a", "alpha", "b", "beta")
         )
 
-    def test_merge_modules(self):
+    def test_merge_modules(self) -> None:
         """
         Test `merge_modules`
         """

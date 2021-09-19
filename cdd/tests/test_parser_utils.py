@@ -215,7 +215,7 @@ class TestParserUtils(TestCase):
         )
         self.assertEqual(infer(Config), "sqlalchemy")
 
-    def test_get_source_raises(self):
+    def test_get_source_raises(self) -> None:
         """Tests that `get_source` raises an exception"""
         with self.assertRaises(TypeError):
             get_source(None)

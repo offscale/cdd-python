@@ -32,12 +32,14 @@ from cdd.tests.mocks.classes import (
 )
 from cdd.tests.mocks.docstrings import (
     docstring_google_str,
+    docstring_google_tf_ops_losses__safe_mean_str,
     docstring_no_default_str,
     docstring_numpydoc_str,
     docstring_str,
 )
 from cdd.tests.mocks.ir import (
     class_torch_nn_l1loss_ir,
+    function_google_tf_ops_losses__safe_mean_ir,
     intermediate_repr,
     intermediate_repr_no_default_sql_doc,
 )
@@ -175,6 +177,27 @@ class TestEmitters(TestCase):
         self.assertEqual(
             "\n" + docstring_google_str,
             emit.docstring(deepcopy(intermediate_repr), docstring_format="google"),
+        )
+
+    def test_to_google_docstring_no_types(self) -> None:
+        """
+        Tests whether a Google docstring is correctly generated sans types
+        """
+
+        self.assertEqual(
+            *map(
+                rpartial(str.translate, str.maketrans({" ": "", "\n": ""})),
+                (
+                    docstring_google_tf_ops_losses__safe_mean_str,
+                    emit.docstring(
+                        deepcopy(function_google_tf_ops_losses__safe_mean_ir),
+                        docstring_format="google",
+                        emit_original_whitespace=True,
+                        emit_default_doc=False,
+                        word_wrap=True,
+                    ),
+                ),
+            )
         )
 
     def test_to_file(self) -> None:
@@ -476,7 +499,7 @@ class TestEmitters(TestCase):
             argparse_func_torch_nn_l1loss_ast,
         )
 
-    def test_to_json_schema(self):
+    def test_to_json_schema(self) -> None:
         """
         Tests that `emit.json_schema` with `intermediate_repr_no_default_doc` produces `config_schema`
         """
@@ -497,7 +520,7 @@ class TestEmitters(TestCase):
             config_schema,
         )
 
-    def test_to_sqlalchemy_table(self):
+    def test_to_sqlalchemy_table(self) -> None:
         """
         Tests that `emit.sqlalchemy_table` with `intermediate_repr_no_default_sql_doc` produces `config_tbl_ast`
         """
@@ -513,7 +536,7 @@ class TestEmitters(TestCase):
         "GITHUB_ACTIONS" in os.environ and system() in frozenset(("Darwin", "Linux")),
         "GitHub Actions fails this test on macOS & Linux (unable to replicate locally)",
     )
-    def test_to_sqlalchemy(self):
+    def test_to_sqlalchemy(self) -> None:
         """
         Tests that `emit.sqlalchemy` with `intermediate_repr_no_default_sql_doc` produces `config_tbl_ast`
         """

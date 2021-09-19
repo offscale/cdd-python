@@ -893,6 +893,40 @@ function_adder_ir = {
     "type": "static",
 }
 
+function_google_tf_ops_losses__safe_mean_ir = {
+    "doc": "Computes a safe mean of the losses.\n",
+    "name": "_safe_mean",
+    "params": OrderedDict(
+        (
+            (
+                "losses",
+                {
+                    "doc": "`Tensor` whose elements contain individual loss "
+                    "measurements."
+                },
+            ),
+            (
+                "num_present",
+                {"doc": "The number of measurable elements in `losses`."},
+            ),
+        )
+    ),
+    "returns": OrderedDict(
+        (
+            (
+                "return_type",
+                {
+                    "default": "```math_ops.div_no_nan(total_loss, num_present, "
+                    "name='value')```",
+                    "doc": "A scalar representing the mean of `losses`. If `num_present` is "
+                    "zero, then zero is returned.",
+                },
+            ),
+        )
+    ),
+    "type": "static",
+}
+
 method_complex_args_variety_ir = {
     "doc": "Call cliff",
     "name": "call_cliff",
@@ -1131,6 +1165,7 @@ __all__ = [
     "docstring_google_tf_lambda_callback_ir",
     "docstring_google_tf_squared_hinge_ir",
     "function_adder_ir",
+    "function_google_tf_ops_losses__safe_mean_ir",
     "intermediate_repr",
     "intermediate_repr_extra_colons",
     "intermediate_repr_no_default_doc",

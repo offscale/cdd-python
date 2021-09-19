@@ -32,6 +32,7 @@ from cdd.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
 from cdd.pure_utils import emit_separating_tabs, tab
 from cdd.tests.mocks.docstrings import (
     docstring_google_tf_adadelta,
+    docstring_google_tf_ops_losses__safe_mean_str,
     docstring_header_str,
     docstring_no_default_doc_wrapped_str,
     docstring_no_type_no_default_str,
@@ -861,20 +862,7 @@ function_google_tf_ops_losses__safe_mean_ast = FunctionDef(
         defaults=[],
     ),
     body=[
-        Expr(
-            value=set_value(
-                "Computes a safe mean of the losses.\n"
-                "\n"
-                "  Args:\n"
-                "    losses: `Tensor` whose elements contain individual loss measurements.\n"
-                "    num_present: The number of measurable elements in `losses`.\n"
-                "\n"
-                "  Returns:\n"
-                "    A scalar representing the mean of `losses`. If `num_present` is zero,\n"
-                "      then zero is returned.\n"
-                "  "
-            )
-        ),
+        Expr(value=set_value(docstring_google_tf_ops_losses__safe_mean_str)),
         Assign(
             targets=[Name(id="total_loss", ctx=Store())],
             value=Call(
