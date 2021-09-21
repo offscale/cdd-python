@@ -13,13 +13,12 @@ from ast import (
     Name,
     Return,
     Store,
-    arg,
     arguments,
     keyword,
 )
 from textwrap import indent
 
-from cdd.ast_utils import maybe_type_comment, set_value
+from cdd.ast_utils import maybe_type_comment, set_arg, set_value
 from cdd.pure_utils import reindent, tab
 from cdd.tests.mocks.docstrings import (
     docstring_header_and_return_str,
@@ -396,15 +395,7 @@ config_decl_base_ast = ClassDef(
             args=arguments(
                 posonlyargs=[],
                 arg=None,
-                args=[
-                    arg(
-                        arg="self",
-                        annotation=None,
-                        expr=None,
-                        identifier_arg=None,
-                        **maybe_type_comment
-                    )
-                ],
+                args=[set_arg("self")],
                 kwonlyargs=[],
                 kw_defaults=[],
                 defaults=[],

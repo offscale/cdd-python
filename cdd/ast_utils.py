@@ -633,6 +633,7 @@ def set_arg(arg, annotation=None):
     return ast.arg(
         arg=arg,
         annotation=annotation,
+        identifier_arg=None,
         **dict(expr=None, **maybe_type_comment) if PY_GTE_3_8 else {}
     )
 
@@ -1408,7 +1409,9 @@ def to_annotation(typ):
     if isinstance(typ, AST):
         return typ
     return (
-        Name(typ, Load())
+        None
+        if typ in none_types
+        else Name(typ, Load())
         if typ in simple_types
         else get_value(
             (

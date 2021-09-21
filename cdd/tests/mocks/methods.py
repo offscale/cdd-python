@@ -766,6 +766,7 @@ method_complex_args_variety_ast = FunctionDef(
         kwarg=set_arg("kwargs"),
         defaults=[],
         arg=None,
+        vararg=None,
     ),
     body=[
         Expr(
@@ -855,11 +856,14 @@ function_google_tf_squared_hinge_str = "\n".join(function_google_tf_squared_hing
 function_google_tf_ops_losses__safe_mean_ast = FunctionDef(
     name="_safe_mean",
     args=arguments(
-        posonlyargs=[],
         args=[set_arg("losses"), set_arg("num_present")],
-        kwonlyargs=[],
-        kw_defaults=[],
+        arg=None,
         defaults=[],
+        kw_defaults=[],
+        kwarg=None,
+        kwonlyargs=[],
+        posonlyargs=[],
+        vararg=None,
     ),
     body=[
         Expr(value=set_value(docstring_google_tf_ops_losses__safe_mean_str)),
@@ -872,6 +876,7 @@ function_google_tf_ops_losses__safe_mean_ast = FunctionDef(
                 args=[Name(id="losses", ctx=Load())],
                 keywords=[],
             ),
+            **maybe_type_comment
         ),
         Return(
             value=Call(

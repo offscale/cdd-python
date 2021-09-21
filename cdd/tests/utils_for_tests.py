@@ -99,17 +99,15 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
         )
     )
 
-    test_case_instance.assertTrue(cmp_ast(_gen_ast, _gold_ast))
-
     # if not cmp_ast(_gen_ast, _gold_ast):
-    #    pass
+    #     from meta.asttools import print_ast
+    #
+    #     print("#gen")
+    #     print_ast(_gen_ast)
+    #     print("#gold")
+    #     print_ast(_gold_ast)
 
-    # print("#gen")
-    # print_ast(_gen_ast)
-    # print("#gold")
-    # print_ast(_gold_ast)
-
-    # raise AssertionError("Generated AST doesn't match reference AST")
+    test_case_instance.assertTrue(cmp_ast(_gen_ast, _gold_ast))
 
 
 def run_cli_test(
