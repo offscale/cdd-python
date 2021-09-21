@@ -1,12 +1,13 @@
 """ Tests for doctrans_utils """
 
-from ast import Expr, Load, Module, Name
+from ast import Expr, Load, Module, Name, fix_missing_locations, get_docstring
 from collections import deque
 from copy import deepcopy
 from unittest import TestCase
 
 from cdd.ast_utils import annotate_ancestry, set_value
 from cdd.doctrans_utils import DocTrans, clear_annotation, has_type_annotations
+from cdd.pure_utils import omit_whitespace
 from cdd.source_transformer import ast_parse
 from cdd.tests.mocks.doctrans import (
     ann_assign_with_annotation,
@@ -16,6 +17,7 @@ from cdd.tests.mocks.doctrans import (
     function_type_annotated,
     function_type_in_docstring,
 )
+from cdd.tests.mocks.methods import function_google_tf_ops_losses__safe_mean_ast
 from cdd.tests.utils_for_tests import reindent_docstring, run_ast_test, unittest_main
 
 
@@ -192,45 +194,32 @@ class TestDocTransUtils(TestCase):
         doc_trans.visit_Module(module_node)
         run_ast_test(self, gen_ast=module_node, gold=original)
 
-    # TODO: Finish this test
-    #
-    # def test_empty_types(self) -> None:
-    #     """Tests function_google_tf_ops_losses__safe_mean_ast (which has empty arg types)"""
-    #     original = Module(
-    #         body=[
-    #             fix_missing_locations(
-    #                 deepcopy(function_google_tf_ops_losses__safe_mean_ast)
-    #             )
-    #         ],
-    #         stmt=None,
-    #         type_ignores=[],
-    #     )
-    #     doc_trans = DocTrans(
-    #         docstring_format="google",
-    #         type_annotations=True,
-    #         existing_type_annotations=False,
-    #         whole_ast=deepcopy(original),
-    #     )
-    #     doc_trans.visit_Module(doc_trans.whole_ast)
-    #
-    #     # Reindent docstrings
-    #     original.body[0].body[0] = Expr(
-    #         set_value(
-    #             "\n{tab}{docstring}\n{tab}".format(
-    #                 tab=tab, docstring=reindent(get_docstring(original.body[0], clean=True))
-    #             )
-    #         )
-    #     )
-    #     doc_trans.whole_ast.body[0].body[0] = Expr(
-    #         set_value(
-    #             "\n{tab}{docstring}\n{tab}".format(
-    #                 tab=tab,
-    #                 docstring=reindent(get_docstring(doc_trans.whole_ast.body[0], clean=True)),
-    #             )
-    #         )
-    #     )
-    #
-    #     run_ast_test(self, gen_ast=doc_trans.whole_ast, gold=original)
+    def test_empty_types(self) -> None:
+        """Tests function_google_tf_ops_losses__safe_mean_ast (which has empty arg types)"""
+        original = Module(
+            body=[
+                fix_missing_locations(
+                    deepcopy(function_google_tf_ops_losses__safe_mean_ast)
+                )
+            ],
+            stmt=None,
+            type_ignores=[],
+        )
+        doc_trans = DocTrans(
+            docstring_format="google",
+            type_annotations=True,
+            existing_type_annotations=False,
+            whole_ast=deepcopy(original),
+        )
+        doc_trans.visit_Module(doc_trans.whole_ast)
+
+        # Reindent docstrings
+        for body in original.body[0], doc_trans.whole_ast.body[0]:
+            body.body[0] = Expr(
+                set_value(omit_whitespace(get_docstring(body, clean=True)))
+            )
+
+        run_ast_test(self, gen_ast=doc_trans.whole_ast, gold=original)
 
     def test_clear_annotation(self) -> None:
         """Tests that `clear_annotation` clears correctly"""

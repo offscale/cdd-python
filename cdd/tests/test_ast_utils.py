@@ -318,6 +318,7 @@ class TestAstUtils(TestCase):
             dict(
                 annotation="int",
                 arg="a",
+                identifier_arg=None,
                 **{"expr": None, "type_comment": None} if PY_GTE_3_8 else {}
             ),
         )
@@ -390,6 +391,12 @@ class TestAstUtils(TestCase):
                     args=arguments(
                         args=[set_arg("something else")],
                         arg=None,
+                        defaults=[],
+                        kw_defaults=[],
+                        kwarg=None,
+                        kwonlyargs=[],
+                        posonlyargs=[],
+                        vararg=None,
                     ),
                     arguments_args=None,
                     identifier_name=None,
@@ -401,7 +408,16 @@ class TestAstUtils(TestCase):
         self.assertEqual(
             get_function_type(
                 FunctionDef(
-                    args=arguments(args=[], arg=None),
+                    args=arguments(
+                        args=[],
+                        arg=None,
+                        defaults=[],
+                        kw_defaults=[],
+                        kwarg=None,
+                        kwonlyargs=[],
+                        posonlyargs=[],
+                        vararg=None,
+                    ),
                     arguments_args=None,
                     identifier_name=None,
                     stmt=None,
@@ -415,6 +431,12 @@ class TestAstUtils(TestCase):
                     args=arguments(
                         args=[set_arg("self")],
                         arg=None,
+                        defaults=[],
+                        kw_defaults=[],
+                        kwarg=None,
+                        kwonlyargs=[],
+                        posonlyargs=[],
+                        vararg=None,
                     ),
                     arguments_args=None,
                     identifier_name=None,
@@ -429,6 +451,12 @@ class TestAstUtils(TestCase):
                     args=arguments(
                         args=[set_arg("cls")],
                         arg=None,
+                        defaults=[],
+                        kw_defaults=[],
+                        kwarg=None,
+                        kwonlyargs=[],
+                        posonlyargs=[],
+                        vararg=None,
                     ),
                     arguments_args=None,
                     identifier_name=None,

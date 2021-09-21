@@ -3,7 +3,7 @@ Functions which produce intermediate_repr from various different inputs
 """
 
 import ast
-from ast import Attribute, Call, Expr, FunctionDef, Load, Name, Return, arg, arguments
+from ast import Attribute, Call, Expr, FunctionDef, Load, Name, Return, arguments
 from platform import system
 from typing import Any
 
@@ -627,15 +627,7 @@ def generate_repr_method(params, cls_name, docstring_format):
         args=arguments(
             posonlyargs=[],
             arg=None,
-            args=[
-                arg(
-                    arg="self",
-                    annotation=None,
-                    expr=None,
-                    identifier_arg=None,
-                    **maybe_type_comment
-                )
-            ],
+            args=[set_arg("self")],
             kwonlyargs=[],
             kw_defaults=[],
             defaults=[],

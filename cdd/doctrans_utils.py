@@ -19,6 +19,7 @@ from cdd import emit, parse
 from cdd.ast_utils import (
     annotate_ancestry,
     find_in_ast,
+    maybe_type_comment,
     set_arg,
     set_docstring,
     to_annotation,
@@ -26,8 +27,6 @@ from cdd.ast_utils import (
 )
 from cdd.docstring_parsers import parse_docstring
 from cdd.parser_utils import ir_merge
-
-# from meta.asttools import print_ast
 
 
 def has_type_annotations(node):
@@ -112,14 +111,14 @@ class DocTrans(NodeTransformer):
         """
         if self.type_annotations:
             node.annotation = self._get_ass_typ(node)
-            node.type_comment = None
+            setattr(node, "type_comment", None)
             return node
 
         return Assign(
             targets=[node.target],
             value=node.value,
-            type_comment=to_type_comment(node.annotation),
             lineno=None,
+            type_comment=to_type_comment(node.annotation),
         )
 
     def visit_Assign(self, node):
@@ -132,29 +131,25 @@ class DocTrans(NodeTransformer):
         :returns: `AnnAssign` if `type_annotations` and type found else `Assign`
         :rtype: ```Union[Assign, AnnAssign]```
         """
-        # try:
         typ = self._get_ass_typ(node)
-        # except:
-        #    print_ast(node)
-        #    raise
         annotation = (
-            to_annotation(typ) if self.type_annotations and typ is not None else None
+            None if not self.type_annotations or typ is None else to_annotation(typ)
         )
         if annotation:
             assert len(node.targets) == 1
             return AnnAssign(
                 annotation=to_annotation(typ),
                 value=node.value,
-                type_comment=None,
                 lineno=None,
                 simple=1,
                 target=node.targets[0],
                 expr=None,
                 expr_target=None,
                 expr_annotation=None,
+                **maybe_type_comment
             )
         else:
-            node.type_comment = typ
+            setattr(node, "type_comment", typ)
         return node
 
     def visit_Module(self, node):
@@ -198,9 +193,12 @@ class DocTrans(NodeTransformer):
         :rtype: ```Optional[str]```
         """
         name, typ_dict = (
-            (node.targets[0], {"typ": node.type_comment})
+            (node.targets[0], {"typ": getattr(node, "type_comment", None)})
             if isinstance(node, Assign)
-            else (node.target, {"typ": node.annotation or node.type_comment})
+            else (
+                node.target,
+                {"typ": node.annotation or getattr(node, "type_comment", None)},
+            )
         )
         if not hasattr(node, "_location"):
             return typ_dict["typ"]
@@ -304,7 +302,7 @@ def clear_annotation(node):
     if getattr(node, "annotation", None) is not None:
         node.annotation = None
     if getattr(node, "type_comment", None) is not None:
-        node.type_comment = None
+        setattr(node, "type_comment", None)
     return node
 
 
