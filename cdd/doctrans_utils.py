@@ -53,13 +53,21 @@ class DocTrans(NodeTransformer):
     """
 
     def __init__(
-        self, docstring_format, type_annotations, existing_type_annotations, whole_ast
+        self,
+        docstring_format,
+        word_wrap,
+        type_annotations,
+        existing_type_annotations,
+        whole_ast,
     ):
         """
         Transform the docstrings found to intended docstring_format, potentially manipulating type annotations also
 
         :param docstring_format: Format of docstring
         :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
+
+        :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+        :type word_wrap: ```bool```
 
         :param type_annotations: True to have type annotations (3.6+), False to place in docstring
         :type type_annotations: ```bool```
@@ -72,6 +80,7 @@ class DocTrans(NodeTransformer):
         """
 
         self.docstring_format = docstring_format
+        self.word_wrap = word_wrap
         self.type_annotations = type_annotations
         self.existing_type_annotations = existing_type_annotations
         if not hasattr(whole_ast, "_location"):
@@ -163,7 +172,7 @@ class DocTrans(NodeTransformer):
         :rtype: ```Module```
         """
         # Clean might be wrong if the header is a license or other long-spiel documentation
-        doc_str = get_docstring(node, clean=True)
+        doc_str = get_docstring(node, clean=self.word_wrap is True)
         empty = doc_str is None
         if not empty:
             set_docstring("\n{doc_str}\n".format(doc_str=doc_str), empty, node)
@@ -252,6 +261,7 @@ class DocTrans(NodeTransformer):
             emit_default_doc=False,
             docstring_format=self.docstring_format,
             indent_level=indent_level,
+            word_wrap=self.word_wrap,
         )
         if _doc_str.isspace():
             if doc_str is not None:

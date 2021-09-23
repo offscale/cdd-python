@@ -25,6 +25,7 @@ def exmod(
     whitelist,
     output_directory,
     mock_imports,
+    no_word_wrap,
     dry_run,
     filesystem_layout="as_input",
 ):
@@ -49,6 +50,9 @@ def exmod(
     :param mock_imports: Whether to generate mock TensorFlow imports
     :type mock_imports: ```bool```
 
+    :param no_word_wrap: Whether word-wrap is disabled (on emission).
+    :type no_word_wrap: ```Optional[Literal[True]]```
+
     :param dry_run: Show what would be created; don't actually write to the filesystem
     :type dry_run: ```bool```
 
@@ -65,6 +69,7 @@ def exmod(
                     whitelist=whitelist,
                     mock_imports=mock_imports,
                     filesystem_layout=filesystem_layout,
+                    no_word_wrap=no_word_wrap,
                     output_directory=output_directory,
                     dry_run=dry_run,
                 ),
@@ -119,6 +124,7 @@ def exmod(
         mock_imports=mock_imports,
         filesystem_layout=filesystem_layout,
         output_directory=output_directory,
+        no_word_wrap=no_word_wrap,
         dry_run=dry_run,
     )
 

@@ -15,7 +15,12 @@ from cdd.ast_utils import (
     merge_modules,
     set_value,
 )
-from cdd.pure_utils import INIT_FILENAME, no_magic_dir2attr, rpartial
+from cdd.pure_utils import (
+    INIT_FILENAME,
+    no_magic_dir2attr,
+    rpartial,
+    sanitise_emit_name,
+)
 from cdd.tests.mocks import imports_header_ast
 
 
@@ -68,6 +73,7 @@ def emit_file_on_hierarchy(
     mock_imports,
     filesystem_layout,
     output_directory,
+    no_word_wrap,
     dry_run,
 ):
     """
@@ -93,6 +99,9 @@ def emit_file_on_hierarchy(
 
     :param output_directory: Where to place the generated exposed interfaces to the given `--module`.
     :type output_directory: ```str```
+
+    :param no_word_wrap: Whether word-wrap is disabled (on emission).
+    :type no_word_wrap: ```Optional[Literal[True]]```
 
     :param dry_run: Show what would be created; don't actually write to the filesystem
     :type dry_run: ```bool```
@@ -181,6 +190,7 @@ def emit_file_on_hierarchy(
             isfile_emit_filename,
             name,
             mock_imports,
+            no_word_wrap,
             dry_run,
         )
 
@@ -214,6 +224,7 @@ def _emit_symbol(
     isfile_emit_filename,
     name,
     mock_imports,
+    no_word_wrap,
     dry_run,
 ):
     """
@@ -255,16 +266,18 @@ def _emit_symbol(
     :param mock_imports: Whether to generate mock TensorFlow imports
     :type mock_imports: ```bool```
 
+    :param no_word_wrap: Whether word-wrap is disabled (on emission).
+    :type no_word_wrap: ```Optional[Literal[True]]```
+
     :param dry_run: Show what would be created; don't actually write to the filesystem
     :type dry_run: ```bool```
 
     :returns: Import to generated module
     :rtype: ```ImportFrom```
     """
-    gen_node = getattr(
-        emit, {"argparse": "argparse_function", "class": "class_"}[emit_name]
-    )(
+    gen_node = getattr(emit, sanitise_emit_name(emit_name))(
         intermediate_repr,
+        word_wrap=no_word_wrap is None,
         **dict(
             **{
                 "{emit_name}_name".format(

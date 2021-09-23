@@ -279,10 +279,10 @@ class TestMarshallDocstring(TestCase):
 
     def test_from_docstring_google_tf_lambda_callback_str(self) -> None:
         """
-        Tests whether `parse_docstring` produces the right IR
-              from `docstring_google_tf_lambda_callback_str`
+        Tests whether `parse_docstring` produces the same IR doc
+              as from a direct read
         """
-        self.assertDictEqual(
+        self.assertEqual(
             parse_docstring(
                 docstring_google_tf_lambda_callback_str,
                 emit_default_doc=True,
@@ -291,6 +291,38 @@ class TestMarshallDocstring(TestCase):
             ),
             docstring_google_tf_lambda_callback_ir,
         )
+
+    # TODO
+    #
+    # maxDiff = None
+    #
+    # def test_from_docstring_google_tf_mean_squared_error_str(self) -> None:
+    #     """
+    #     Tests whether `parse_docstring` produces the right IR
+    #           from `docstring_google_tf_mean_squared_error_str`
+    #     """
+    #     self.assertEqual(
+    #         *map(
+    #             itemgetter("doc"),
+    #             (
+    #                 cdd.emit.docstring(
+    #                     cdd.parse.function(
+    #                         function_google_tf_mean_squared_error_ast,
+    #                         # emit_default_doc=True,
+    #                         infer_type=True,
+    #                         # parse_original_whitespace=True,
+    #                     ),
+    #                     indent_level=0,
+    #                     docstring_format="google",
+    #                     emit_types=True,
+    #                     emit_default_doc=False,
+    #                     emit_separating_tab=False,
+    #                     word_wrap=False,
+    #                 ),
+    #                 docstring_google_tf_mean_squared_error_str,
+    #             ),
+    #         )
+    #     )
 
     def test_from_docstring_google_pytorch_lbfgs_str(self) -> None:
         """

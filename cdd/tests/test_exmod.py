@@ -46,6 +46,7 @@ class TestExMod(TestCase):
                     whitelist=tuple(),
                     mock_imports=True,
                     output_directory=new_module_dir,
+                    no_word_wrap=None,
                     dry_run=False,
                 )
                 self._check_emission(new_module_dir)
@@ -71,6 +72,7 @@ class TestExMod(TestCase):
                     whitelist=tuple(),
                     mock_imports=True,
                     output_directory=new_module_dir,
+                    no_word_wrap=None,
                     dry_run=False,
                 )
                 self.assertListEqual(listdir(new_module_dir), [])
@@ -96,6 +98,7 @@ class TestExMod(TestCase):
                     whitelist=(".".join((existent_module_name,) * 2),),
                     mock_imports=True,
                     output_directory=new_module_dir,
+                    no_word_wrap=None,
                     dry_run=False,
                 )
 
@@ -194,6 +197,7 @@ class TestExMod(TestCase):
                 whitelist=tuple(),
                 mock_imports=True,
                 output_directory=path.join(tempdir, "nonexistent"),
+                no_word_wrap=None,
                 dry_run=False,
             )
 
@@ -207,6 +211,7 @@ class TestExMod(TestCase):
                 whitelist=tuple(),
                 mock_imports=True,
                 output_directory=path.join(tempdir, "nonexistent"),
+                no_word_wrap=None,
                 dry_run=False,
             )
 
@@ -223,6 +228,7 @@ class TestExMod(TestCase):
                 whitelist=tuple(),
                 mock_imports=True,
                 output_directory=output_directory,
+                no_word_wrap=None,
                 dry_run=False,
             )
 
@@ -246,6 +252,7 @@ class TestExMod(TestCase):
                         whitelist=tuple(),
                         mock_imports=True,
                         output_directory=new_module_dir,
+                        no_word_wrap=None,
                         dry_run=True,
                     )
                     r = f.getvalue()

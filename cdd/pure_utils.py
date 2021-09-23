@@ -702,6 +702,11 @@ def no_magic_dir2attr(p_object):
 
 omit_whitespace = rpartial(str.translate, str.maketrans({" ": "", "\n": "", "\t": ""}))
 
+sanitise_emit_name = dict(
+    **{typ: typ for typ in ("function", "sqlalchemy", "sqlalchemy_table")},
+    **{"class": "class_", "argparse": "argparse_function"}
+).__getitem__
+
 
 __all__ = [
     "BUILTIN_TYPES",
@@ -733,6 +738,7 @@ __all__ = [
     "reindent",
     "rpartial",
     "sanitise",
+    "sanitise_emit_name",
     "set_attr",
     "set_item",
     "simple_types",

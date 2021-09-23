@@ -32,6 +32,7 @@ from cdd.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
 from cdd.pure_utils import emit_separating_tabs, tab
 from cdd.tests.mocks.docstrings import (
     docstring_google_tf_adadelta,
+    docstring_google_tf_mean_squared_error_str,
     docstring_google_tf_ops_losses__safe_mean_str,
     docstring_header_str,
     docstring_no_default_doc_wrapped_str,
@@ -856,7 +857,7 @@ function_google_tf_squared_hinge_str = "\n".join(function_google_tf_squared_hing
 function_google_tf_ops_losses__safe_mean_ast = FunctionDef(
     name="_safe_mean",
     args=arguments(
-        args=[set_arg("losses"), set_arg("num_present")],
+        args=list(map(set_arg, ("losses", "num_present"))),
         arg=None,
         defaults=[],
         kw_defaults=[],
@@ -890,6 +891,50 @@ function_google_tf_ops_losses__safe_mean_ast = FunctionDef(
                 keywords=[keyword(arg="name", value=set_value("value"))],
             )
         ),
+    ],
+    decorator_list=[],
+)
+
+# `from tensorflow.python.ops.losses.losses_impl import mean_squared_error` @ tf-nightly:2.7.0.dev20210908,
+# minus non-docstring body and `decorator_list`
+function_google_tf_mean_squared_error_ast = FunctionDef(
+    name="mean_squared_error",
+    args=arguments(
+        posonlyargs=[],
+        args=list(
+            map(
+                set_arg,
+                (
+                    "labels",
+                    "predictions",
+                    "weights",
+                    "scope",
+                    "loss_collection",
+                    "reduction",
+                ),
+            )
+        ),
+        kwonlyargs=[],
+        kw_defaults=[],
+        defaults=[
+            set_value(1.0),
+            set_value(None),
+            Attribute(
+                value=Attribute(
+                    value=Name(id="ops", ctx=Load()), attr="GraphKeys", ctx=Load()
+                ),
+                attr="LOSSES",
+                ctx=Load(),
+            ),
+            Attribute(
+                value=Name(id="Reduction", ctx=Load()),
+                attr="SUM_BY_NONZERO_WEIGHTS",
+                ctx=Load(),
+            ),
+        ],
+    ),
+    body=[
+        Expr(value=set_value(docstring_google_tf_mean_squared_error_str)),
     ],
     decorator_list=[],
 )
@@ -1002,6 +1047,7 @@ __all__ = [
     "function_adder_str",
     "function_default_complex_default_arg_ast",
     "function_default_complex_default_arg_str",
+    "function_google_tf_mean_squared_error_ast",
     "function_google_tf_ops_losses__safe_mean_ast",
     "function_google_tf_squared_hinge_str",
     "method_complex_args_variety_ast",
