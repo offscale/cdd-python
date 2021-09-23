@@ -10,7 +10,7 @@ from cdd.doctrans_utils import DocTrans, has_type_annotations
 from cdd.source_transformer import ast_parse
 
 
-def doctrans(filename, docstring_format, type_annotations):
+def doctrans(filename, docstring_format, type_annotations, no_word_wrap):
     """
     Transform the docstrings found within provided filename to intended docstring_format
 
@@ -22,6 +22,9 @@ def doctrans(filename, docstring_format, type_annotations):
 
     :param type_annotations: True to have type annotations (3.6+), False to place in docstring
     :type type_annotations: ```bool```
+
+    :param no_word_wrap: Whether word-wrap is disabled (on emission).
+    :type no_word_wrap: ```Optional[Literal[True]]```
     """
     with open(filename, "rt") as f:
         node = ast_parse(f.read(), skip_docstring_remit=False)
@@ -29,6 +32,7 @@ def doctrans(filename, docstring_format, type_annotations):
 
     node = DocTrans(
         docstring_format=docstring_format,
+        word_wrap=no_word_wrap is None,
         type_annotations=type_annotations,
         existing_type_annotations=has_type_annotations(node),
         whole_ast=orig_node,

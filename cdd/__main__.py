@@ -161,6 +161,11 @@ def _build_parser():
         dest="function_names",
     )
     sync_parser.add_argument(
+        "--no-word-wrap",
+        help="Whether word-wrap is disabled (on emission). None enables word-wrap. Defaults to None.",
+        action="store_true",
+    )
+    sync_parser.add_argument(
         "--truth",
         help=(
             "Single source of truth. Others will be generated from this. Will run with"
@@ -232,6 +237,11 @@ def _build_parser():
             "Whether to place all the previous body into a new `__call__` internal"
             " function"
         ),
+    )
+    gen_parser.add_argument(
+        "--no-word-wrap",
+        help="Whether word-wrap is disabled (on emission). None enables word-wrap. Defaults to None.",
+        action="store_true",
     )
     gen_parser.add_argument(
         "--decorator",
@@ -338,6 +348,11 @@ def _build_parser():
         dest="type_annotations",
         action="store_false",
     )
+    doctrans_parser_group.add_argument(
+        "--no-word-wrap",
+        help="Whether word-wrap is disabled (on emission). None enables word-wrap. Defaults to None.",
+        action="store_true",
+    )
 
     #########
     # exmod #
@@ -362,6 +377,11 @@ def _build_parser():
         choices=parse_emit_types,
         required=True,
         action="append",
+    )
+    exmod_parser.add_argument(
+        "--no-word-wrap",
+        help="Whether word-wrap is disabled (on emission). None enables word-wrap. Defaults to None.",
+        action="store_true",
     )
     exmod_parser.add_argument(
         "--blacklist",
@@ -408,7 +428,11 @@ def main(cli_argv=None, return_args=False):
     if command == "sync":
         args = Namespace(
             **{
-                k: v if k == "truth" or isinstance(v, list) or v is None else [v]
+                k: v
+                if k in frozenset(("truth", "no_word_wrap"))
+                or isinstance(v, list)
+                or v is None
+                else [v]
                 for k, v in args_dict.items()
             }
         )
@@ -480,27 +504,15 @@ def main(cli_argv=None, return_args=False):
             )
         )
     elif command == "openapi":
-        openapi_bulk(
-            app_name=args.app_name,
-            model_paths=args.model_paths,
-            routes_paths=args.routes_paths,
-        )
+        openapi_bulk(**args_dict)
     elif command == "doctrans":
         require_file_existent(_parser, args.filename, name="filename")
-        doctrans(
-            filename=args.filename,
-            docstring_format=args.format,
-            type_annotations=args.type_annotations,
-        )
+        args_dict["docstring_format"] = args_dict.pop("format")
+        doctrans(**args_dict)
     elif command == "exmod":
         exmod(
-            module=args.module,
-            emit_name=args.emit,
-            blacklist=args.blacklist,
-            whitelist=args.whitelist,
-            output_directory=args.output_directory,
             mock_imports=False,  # This option is really only useful for tests IMHO
-            dry_run=args.dry_run,
+            **args_dict
         )
 
 

@@ -28,6 +28,7 @@ class TestDocTrans(TestCase):
             self.assertIsNone(
                 doctrans(
                     filename=filename,
+                    no_word_wrap=None,
                     docstring_format="numpydoc",
                     type_annotations=True,
                 )

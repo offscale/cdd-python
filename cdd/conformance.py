@@ -4,6 +4,8 @@ Given the truth, show others the path
 
 from ast import ClassDef, FunctionDef, Module
 from collections import OrderedDict
+from functools import partial
+from operator import itemgetter
 from os import path
 
 from cdd import emit, parse
@@ -53,9 +55,17 @@ def _get_name_from_namespace(args, fun_name):
     :rtype: ```str```
     """
     return next(
-        getattr(args, pluralise(arg))[0]
-        for arg in vars(args).keys()
-        if arg == "_".join((fun_name, "names"))
+        map(
+            itemgetter(0),
+            filter(
+                None,
+                (
+                    getattr(args, pluralise(arg))
+                    for arg in vars(args).keys()
+                    if arg == "_".join((fun_name, "names"))
+                ),
+            ),
+        )
     )
 
 
@@ -107,7 +117,7 @@ def ground_truth(args, truth_file):
                 lambda filename: _conform_filename(
                     filename=filename,
                     search=search,
-                    emit_func=emit_func,
+                    emit_func=partial(emit_func, word_wrap=args.no_word_wrap is None),
                     replacement_node_ir=gold_ir,
                     type_wanted=type_wanted,
                 ),

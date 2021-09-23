@@ -98,6 +98,7 @@ class TestConformance(TestCase):
                     "functions": (function,),
                     "function_names": ("C.function_name",),
                     "truth": "argparse_function",
+                    "no_word_wrap": None,
                 }
             )
             with patch("sys.stdout", new_callable=StringIO), patch(
@@ -208,6 +209,7 @@ class TestConformance(TestCase):
                 "functions": (function,),
                 "function_names": ("C.function_name",),
                 "truth": "argparse_function",
+                "no_word_wrap": None,
             }
         )
 

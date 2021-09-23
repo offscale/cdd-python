@@ -12,7 +12,7 @@ from os import path
 from cdd import emit, parse
 from cdd.ast_utils import get_at_root, maybe_type_comment, set_value
 from cdd.parser_utils import infer
-from cdd.pure_utils import get_module
+from cdd.pure_utils import get_module, sanitise_emit_name
 from cdd.source_transformer import to_code
 
 
@@ -27,6 +27,7 @@ def gen(
     emit_call=False,
     emit_default_doc=True,
     decorator_list=None,
+    no_word_wrap=None,
 ):
     """
     Generate classes, functions, and/or argparse functions from the input mapping
@@ -61,6 +62,9 @@ def gen(
 
     :param decorator_list: List of decorators
     :type decorator_list: ```Optional[Union[List[Str], List[]]]```
+
+    :param no_word_wrap: Whether word-wrap is disabled (on emission).
+    :type no_word_wrap: ```Optional[Literal[True]]```
     """
     extra_symbols = {}
     if imports_from_file is None:
@@ -150,9 +154,7 @@ def gen(
     )
 
     global__all__ = []
-    emit_name = emit_name.replace("class", "class_").replace(
-        "argparse", "argparse_function"
-    )
+    emit_name = sanitise_emit_name(emit_name)
     content = "{prepend}{imports}\n{functions_and_classes}\n{__all__}".format(
         prepend="" if prepend is None else prepend,
         imports=imports,  # TODO: Optimize imports programmatically (akin to `autoflake --remove-all-unused-imports`)
@@ -166,6 +168,7 @@ def gen(
                         infer(obj) if parse_name in (None, "infer") else parse_name,
                     )(obj),
                     emit_default_doc=emit_default_doc,
+                    word_wrap=no_word_wrap is None,
                     **(
                         lambda _name: {
                             "argparse_function": {"function_name": _name},

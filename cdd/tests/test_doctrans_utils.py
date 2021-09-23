@@ -38,6 +38,7 @@ class TestDocTransUtils(TestCase):
         original_node = annotate_ancestry(deepcopy(function_type_annotated))
         doc_trans = DocTrans(
             docstring_format="rest",
+            word_wrap=True,
             type_annotations=False,
             existing_type_annotations=True,
             whole_ast=original_node,
@@ -51,6 +52,7 @@ class TestDocTransUtils(TestCase):
         original_node = annotate_ancestry(deepcopy(function_type_in_docstring))
         doc_trans = DocTrans(
             docstring_format="rest",
+            word_wrap=True,
             type_annotations=True,
             existing_type_annotations=False,
             whole_ast=original_node,
@@ -66,8 +68,9 @@ class TestDocTransUtils(TestCase):
         original_node = annotate_ancestry(deepcopy(assign_with_type_comment))
         doc_trans = DocTrans(
             docstring_format="rest",
+            word_wrap=True,
             type_annotations=True,
-            existing_type_annotations=True,
+            existing_type_annotations=False,
             whole_ast=original_node,
         )
         run_ast_test(
@@ -83,6 +86,7 @@ class TestDocTransUtils(TestCase):
         original_node = annotate_ancestry(deepcopy(ann_assign_with_annotation))
         doc_trans = DocTrans(
             docstring_format="rest",
+            word_wrap=True,
             type_annotations=False,
             existing_type_annotations=True,
             whole_ast=original_node,
@@ -99,8 +103,9 @@ class TestDocTransUtils(TestCase):
         original_node.type_comment = "NEVER SEE THIS"
         doc_trans = DocTrans(
             docstring_format="rest",
+            word_wrap=True,
             type_annotations=True,
-            existing_type_annotations=True,
+            existing_type_annotations=False,
             whole_ast=original_node,
         )
         gen_ast = doc_trans.visit(original_node)
@@ -113,6 +118,7 @@ class TestDocTransUtils(TestCase):
         original_node = annotate_ancestry(deepcopy(assign_with_type_comment))
         doc_trans = DocTrans(
             docstring_format="rest",
+            word_wrap=True,
             type_annotations=False,
             existing_type_annotations=False,
             whole_ast=original_node,
@@ -125,8 +131,9 @@ class TestDocTransUtils(TestCase):
         original_node = annotate_ancestry(deepcopy(class_with_internal_annotated))
         doc_trans = DocTrans(
             docstring_format="rest",
+            word_wrap=True,
             type_annotations=True,
-            existing_type_annotations=True,
+            existing_type_annotations=False,
             whole_ast=original_node,
         )
         gen_ast = doc_trans.visit(original_node)
@@ -137,8 +144,9 @@ class TestDocTransUtils(TestCase):
         original_node = annotate_ancestry(deepcopy(assign_with_type_comment))
         doc_trans = DocTrans(
             docstring_format="rest",
+            word_wrap=True,
             type_annotations=True,
-            existing_type_annotations=True,
+            existing_type_annotations=False,
             whole_ast=original_node,
         )
         del original_node._location
@@ -154,6 +162,7 @@ class TestDocTransUtils(TestCase):
         )
         doc_trans = DocTrans(
             docstring_format="rest",
+            word_wrap=True,
             type_annotations=True,
             existing_type_annotations=False,
             whole_ast=original_node,
@@ -168,6 +177,7 @@ class TestDocTransUtils(TestCase):
         original_node = annotate_ancestry(deepcopy(class_with_internal_annotated))
         doc_trans = DocTrans(
             docstring_format="rest",
+            word_wrap=True,
             type_annotations=False,
             existing_type_annotations=True,
             whole_ast=original_node,
@@ -187,8 +197,9 @@ class TestDocTransUtils(TestCase):
         original = deepcopy(module_node)
         doc_trans = DocTrans(
             docstring_format="rest",
+            word_wrap=True,
             type_annotations=True,
-            existing_type_annotations=True,
+            existing_type_annotations=False,
             whole_ast=module_node,
         )
         doc_trans.visit_Module(module_node)
@@ -207,6 +218,7 @@ class TestDocTransUtils(TestCase):
         )
         doc_trans = DocTrans(
             docstring_format="google",
+            word_wrap=True,
             type_annotations=True,
             existing_type_annotations=False,
             whole_ast=deepcopy(original),

@@ -20,7 +20,15 @@ class TestExmodUtils(TestCase):
         ir = {"name": "YEP", "doc": None}
         with patch("sys.stdout", new_callable=StringIO) as f:
             emit_file_on_hierarchy(
-                ("", "foo_dir", ir), "argparse", "", "", True, None, "", dry_run=True
+                ("", "foo_dir", ir),
+                "argparse",
+                "",
+                "",
+                True,
+                None,
+                "",
+                no_word_wrap=None,
+                dry_run=True,
             )
         self.assertEqual(ir["name"], "YEP")
         self.assertListEqual(
@@ -46,6 +54,7 @@ class TestExmodUtils(TestCase):
                 True,
                 filesystem_layout="as_input",
                 output_directory=tempdir,
+                no_word_wrap=None,
                 dry_run=False,
             )
             self.assertTrue(path.isdir(tempdir))
@@ -66,6 +75,7 @@ class TestExmodUtils(TestCase):
                 isfile_emit_filename=True,
                 name="",
                 mock_imports=True,
+                no_word_wrap=None,
                 dry_run=True,
             )
             f.assert_called_once()
