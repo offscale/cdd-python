@@ -56,7 +56,7 @@ from cdd.parser_utils import (
     ir_merge,
     json_schema_property_to_param,
 )
-from cdd.pure_utils import assert_equal, rpartial, simple_types
+from cdd.pure_utils import assert_equal, rpartial, simple_types, pp
 from cdd.source_transformer import to_code
 
 logger = get_logger("cdd.parse")
@@ -104,7 +104,12 @@ def class_(
     is_supported_ast_node = isinstance(class_def, (Module, ClassDef))
     if not is_supported_ast_node and isinstance(class_def, type):
         return _class_from_memory(
-            class_def, class_name, infer_type, merge_inner_function, word_wrap
+            class_def=class_def,
+            class_name=class_name,
+            infer_type=infer_type,
+            merge_inner_function=merge_inner_function,
+            parse_original_whitespace=parse_original_whitespace,
+            word_wrap=word_wrap,
         )
 
     assert (
@@ -113,7 +118,7 @@ def class_(
         node_name=type(class_def).__name__
     )
     class_def = find_ast_type(class_def, class_name)
-    doc_str = get_docstring(class_def, clean=True)
+    doc_str = get_docstring(class_def, clean=parse_original_whitespace)
     intermediate_repr = (
         {
             "name": class_name,
@@ -238,13 +243,16 @@ def class_(
             merge_inner_function=merge_inner_function,
         )
 
-    # intermediate_repr['_internal']["body"]= list(filterfalse(rpartial(isinstance,(AnnAssign,Assign)),class_def.body))
-
     return intermediate_repr
 
 
 def _class_from_memory(
-    class_def, class_name, infer_type, merge_inner_function, word_wrap
+    class_def,
+    class_name,
+    infer_type,
+    merge_inner_function,
+    parse_original_whitespace,
+    word_wrap,
 ):
     """
     Merge the inner function if found within the class, with the class IR.
@@ -262,6 +270,9 @@ def _class_from_memory(
     :param merge_inner_function: Name of inner function to merge. If None, merge nothing.
     :type merge_inner_function: ```Optional[str]```
 
+    :param parse_original_whitespace: Whether to parse original whitespace or strip it out
+    :type parse_original_whitespace: ```bool```
+
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
@@ -274,12 +285,17 @@ def _class_from_memory(
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :rtype: ```dict```
     """
-    ir = _inspect(class_def, class_name, word_wrap)
+    ir = _inspect(
+        class_def,
+        class_name,
+        parse_original_whitespace=parse_original_whitespace,
+        word_wrap=word_wrap,
+    )
     src = get_source(class_def)
     if src is None:
         return ir
     parsed_body = ast.parse(src.lstrip()).body[0]
-    original_doc_str = get_docstring(parsed_body, clean=True)
+    original_doc_str = get_docstring(parsed_body, clean=parse_original_whitespace)
     parsed_body.body = (
         parsed_body.body if original_doc_str is None else parsed_body.body[1:]
     )
@@ -370,7 +386,7 @@ def _merge_inner_function(
     return intermediate_repr
 
 
-def _inspect(obj, name, word_wrap):
+def _inspect(obj, name, parse_original_whitespace, word_wrap):
     """
     Uses the `inspect` module to figure out the IR from the input
 
@@ -379,6 +395,9 @@ def _inspect(obj, name, word_wrap):
 
     :param name: Name of the object being inspected
     :type name: ```str```
+
+    :param parse_original_whitespace: Whether to parse original whitespace or strip it out
+    :type parse_original_whitespace: ```bool```
 
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
@@ -406,7 +425,15 @@ def _inspect(obj, name, word_wrap):
     #     )
 
     is_function = isfunction(obj)
-    ir = docstring(doc, emit_default_doc=is_function) if doc else {}
+    ir = (
+        docstring(
+            doc,
+            emit_default_doc=is_function,
+            parse_original_whitespace=parse_original_whitespace,
+        )
+        if doc
+        else {}
+    )
     if not is_function and "type" in ir:
         del ir["type"]
 
@@ -467,6 +494,7 @@ def _inspect(obj, name, word_wrap):
 def function(
     function_def,
     infer_type=False,
+    parse_original_whitespace=False,
     word_wrap=True,
     function_type=None,
     function_name=None,
@@ -479,6 +507,9 @@ def function(
 
     :param infer_type: Whether to try inferring the typ (from the default)
     :type infer_type: ```bool```
+
+    :param parse_original_whitespace: Whether to parse original whitespace or strip it out
+    :type parse_original_whitespace: ```bool```
 
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
@@ -500,9 +531,16 @@ def function(
     """
     if isinstance(function_def, FunctionType):
         # Dynamic function, i.e., this isn't source code; and is in your memory
-        ir = _inspect(function_def, function_name, word_wrap)
+        ir = _inspect(
+            function_def,
+            function_name,
+            parse_original_whitespace=parse_original_whitespace,
+            word_wrap=word_wrap,
+        )
         parsed_source = ast.parse(getsource(function_def).lstrip()).body[0]
-        original_doc_str = ast.get_docstring(parsed_source, clean=True)
+        original_doc_str = ast.get_docstring(
+            parsed_source, clean=parse_original_whitespace
+        )
         body = (
             parsed_source.body if original_doc_str is None else parsed_source.body[1:]
         )
@@ -529,7 +567,7 @@ def function(
 
     # Read docstring
     doc_str = (
-        get_docstring(function_def, clean=True)
+        get_docstring(function_def, clean=parse_original_whitespace)
         if isinstance(function_def, FunctionDef)
         else None
     )
@@ -547,7 +585,9 @@ def function(
         }
     else:
         intermediate_repr = docstring(
-            doc_str.replace(":cvar", ":param"), infer_type=infer_type
+            doc_str.replace(":cvar", ":param"),
+            parse_original_whitespace=parse_original_whitespace,
+            infer_type=infer_type,
         )
 
     intermediate_repr.update(
@@ -635,7 +675,13 @@ def function(
     return intermediate_repr
 
 
-def argparse_ast(function_def, function_type=None, function_name=None):
+def argparse_ast(
+    function_def,
+    function_type=None,
+    function_name=None,
+    parse_original_whitespace=False,
+    word_wrap=False,
+):
     """
     Converts an argparse AST to our IR
 
@@ -647,6 +693,12 @@ def argparse_ast(function_def, function_type=None, function_name=None):
 
     :param function_name: name of function_def
     :type function_name: ```str```
+
+    :param parse_original_whitespace: Whether to parse original whitespace or strip it out
+    :type parse_original_whitespace: ```bool```
+
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
 
     :returns: a dictionary of form
         {  "name": Optional[str],
@@ -670,7 +722,12 @@ def argparse_ast(function_def, function_type=None, function_name=None):
         "doc": "",
         "params": OrderedDict(),
     }
-    ir = parse_docstring(doc_string, emit_default_doc=True)
+    ir = parse_docstring(
+        doc_string,
+        word_wrap=word_wrap,
+        emit_default_doc=True,
+        parse_original_whitespace=parse_original_whitespace,
+    )
 
     # Whether a default is required, if not found in doc, infer the proper default from type
     require_default = False
@@ -777,12 +834,15 @@ def docstring(
     return parsed
 
 
-def json_schema(json_schema_dict):
+def json_schema(json_schema_dict, parse_original_whitespace=False):
     """
     Parse a JSON schema into the IR
 
     :param json_schema_dict: A valid JSON schema as a Python dict
     :type json_schema_dict: ```dict```
+
+    :param parse_original_whitespace: Whether to parse original whitespace or strip it out
+    :type parse_original_whitespace: ```bool```
 
     :returns: IR representation of the given JSON schema
     :rtype: ```dict```
@@ -795,19 +855,26 @@ def json_schema(json_schema_dict):
         json_schema_property_to_param, required=required
     )
 
-    ir = docstring(json_schema_dict["description"], emit_default_doc=False)
+    ir = docstring(
+        json_schema_dict["description"],
+        emit_default_doc=False,
+        parse_original_whitespace=parse_original_whitespace,
+    )
     ir["params"] = OrderedDict(
         map(_json_schema_property_to_param, schema["properties"].items())
     )
     return ir
 
 
-def sqlalchemy_table(call_or_name):
+def sqlalchemy_table(call_or_name, parse_original_whitespace=False):
     """
     Parse out a `sqlalchemy.Table`, or a `name = sqlalchemy.Table`, into the IR
 
     :param call_or_name: The call to `sqlalchemy.Table` or an assignment followed by the call
     :type call_or_name: ```Union[AnnAssign, Assign, Call]```
+
+    :param parse_original_whitespace: Whether to parse original whitespace or strip it out
+    :type parse_original_whitespace: ```bool```
 
     :returns: a dictionary of form
         {  "name": Optional[str],
@@ -842,7 +909,7 @@ def sqlalchemy_table(call_or_name):
     intermediate_repr = (
         {"type": None, "doc": "", "params": OrderedDict()}
         if comment is None
-        else docstring(comment)
+        else docstring(comment, parse_original_whitespace=parse_original_whitespace)
     )
     intermediate_repr["name"] = name
     assert isinstance(call_or_name, Call)
@@ -864,13 +931,16 @@ def sqlalchemy_table(call_or_name):
     return intermediate_repr
 
 
-def sqlalchemy(class_def):
+def sqlalchemy(class_def, parse_original_whitespace=False):
     """
     Parse out a `class C(Base): __tablename__=  'tbl'; dataset_name = Column(String, doc="p", primary_key=True)`,
         as constructed on an SQLalchemy declarative `Base`.
 
     :param class_def: A class inheriting from declarative `Base`, where `Base = sqlalchemy.orm.declarative_base()`
     :type class_def: ```Union[ClassDef]```
+
+    :param parse_original_whitespace: Whether to parse original whitespace or strip it out
+    :type parse_original_whitespace: ```bool```
 
     :returns: a dictionary of form
         {  "name": Optional[str],
@@ -900,7 +970,7 @@ def sqlalchemy(class_def):
             )
         ).value
     )
-    doc_string = get_docstring(class_def, clean=True)
+    doc_string = get_docstring(class_def, clean=parse_original_whitespace)
 
     def _merge_name_to_column(assign):
         """

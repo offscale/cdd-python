@@ -349,14 +349,37 @@ def _return_parse_phase_numpydoc_and_google(return_tokens, scanned, stacker, sty
     :returns: Whatever is left of `stacker`. This function may also set the return key of the `scanned`
     :rtype: ```List[List[str]]```
     """
-    rev_return_token = return_tokens[0].splitlines()[::-1]
+    _return_tokens = return_tokens[0].splitlines()
+    rev_return_token = _return_tokens[::-1]
     rng = range(len(stacker) - 1, -1, -1)
-    if style is Style.numpydoc:
+    if style is Style.numpydoc or style is Style.google:
         for i in rng:
             if i - 1 > 0 and stacker[i] + stacker[i - 1] == rev_return_token:
                 scanned[return_tokens[0]] = stacker[i + 1 :]
                 stacker = stacker[: i - 1]
                 break
+
+    if not scanned.get(return_tokens[0], False) and all(
+        (
+            style is Style.numpydoc or style is Style.google,
+            len(scanned.get("scanned_afterward", "")),
+        )
+    ):
+        found, fst_idx, snd_idx = False, None, None
+        for idx, line in enumerate(scanned["scanned_afterward"]):
+            if line.lstrip().startswith(_return_tokens[0]):
+                found, fst_idx = True, idx
+            elif found is True:
+                if line.isspace():
+                    snd_idx = idx
+                    break
+                else:
+                    scanned[_return_tokens[0]].append(line)
+        if fst_idx is not None:
+            del scanned["scanned_afterward"][fst_idx:snd_idx]
+            scanned[_return_tokens[0]] = ["\n".join(scanned[_return_tokens[0]])]
+            if sum(map(len, map(str.strip, scanned["scanned_afterward"]))) == 0:
+                del scanned["scanned_afterward"]
 
     return stacker
 
