@@ -18,7 +18,7 @@ from cdd.ast_utils import (
     typ2json_type,
 )
 from cdd.defaults_utils import extract_default, set_default_doc
-from cdd.docstring_utils import emit_param_str
+from cdd.docstring_utils import emit_param_str, ensure_doc_args_whence_original
 from cdd.pure_utils import (
     identity,
     indent_all_but_first,
@@ -686,6 +686,39 @@ def generate_repr_method(params, cls_name, docstring_format):
         returns=None,
         **maybe_type_comment
     )
+
+
+def normalise_intermediate_representation(intermediate_repr):
+    """
+    Normalise the intermediate representation. Performs:
+    - Move header and footer of docstring to same place—and with same whitespace—as original docstring
+
+    :param intermediate_repr: a dictionary of form
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :type intermediate_repr: ```dict```
+
+    :returns: a dictionary of form
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :rtype: ```dict```
+    """
+    current_doc_str = intermediate_repr["doc"]
+    original_doc_str = intermediate_repr.get("_internal", {"original_doc_str": None})[
+        "original_doc_str"
+    ]
+    intermediate_repr["doc"] = ensure_doc_args_whence_original(
+        current_doc_str=current_doc_str, original_doc_str=original_doc_str
+    )
+    return intermediate_repr
 
 
 __all__ = [

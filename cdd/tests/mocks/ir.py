@@ -26,7 +26,7 @@ from cdd.tests.mocks.docstrings import (
 from cdd.tests.utils_for_tests import remove_args_from_docstring
 
 class_google_tf_tensorboard_ir = {
-    "doc": deindent(tensorboard_doc_str_no_args_str, sep="  ", level=1).rstrip("\n"),
+    "doc": tensorboard_doc_str_no_args_str,
     "name": None,
     "params": OrderedDict(
         (
@@ -183,9 +183,7 @@ class_torch_nn_l1loss_ir = {
 }
 
 class_torch_nn_one_cycle_lr_ir = {
-    "doc": deindent(
-        remove_args_from_docstring(class_torch_nn_one_cycle_lr_docstring_str), 1
-    ),
+    "doc": remove_args_from_docstring(class_torch_nn_one_cycle_lr_docstring_str),
     "name": None,
     "params": OrderedDict(
         (
@@ -894,7 +892,7 @@ function_adder_ir = {
 }
 
 function_google_tf_ops_losses__safe_mean_ir = {
-    "doc": "Computes a safe mean of the losses.\n",
+    "doc": "Computes a safe mean of the losses.",
     "name": "_safe_mean",
     "params": OrderedDict(
         (

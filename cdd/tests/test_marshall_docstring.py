@@ -19,6 +19,7 @@ from cdd.tests.mocks.docstrings import (
     docstring_google_tf_adadelta_str,
     docstring_google_tf_adam_str,
     docstring_google_tf_lambda_callback_str,
+    docstring_google_tf_mean_squared_error_str,
     docstring_google_tf_squared_hinge_str,
     docstring_header_and_return_str,
     docstring_header_str,
@@ -42,7 +43,8 @@ from cdd.tests.mocks.ir import (
     intermediate_repr_no_default_doc_or_prop,
     intermediate_repr_only_return_type,
 )
-from cdd.tests.utils_for_tests import unittest_main
+from cdd.tests.mocks.methods import function_google_tf_mean_squared_error_ast
+from cdd.tests.utils_for_tests import unittest_main, remove_args_from_docstring
 
 
 class TestMarshallDocstring(TestCase):
@@ -292,37 +294,45 @@ class TestMarshallDocstring(TestCase):
             docstring_google_tf_lambda_callback_ir,
         )
 
-    # TODO
-    #
-    # maxDiff = None
-    #
-    # def test_from_docstring_google_tf_mean_squared_error_str(self) -> None:
-    #     """
-    #     Tests whether `parse_docstring` produces the right IR
-    #           from `docstring_google_tf_mean_squared_error_str`
-    #     """
-    #     self.assertEqual(
-    #         *map(
-    #             itemgetter("doc"),
-    #             (
-    #                 cdd.emit.docstring(
-    #                     cdd.parse.function(
-    #                         function_google_tf_mean_squared_error_ast,
-    #                         # emit_default_doc=True,
-    #                         infer_type=True,
-    #                         # parse_original_whitespace=True,
-    #                     ),
-    #                     indent_level=0,
-    #                     docstring_format="google",
-    #                     emit_types=True,
-    #                     emit_default_doc=False,
-    #                     emit_separating_tab=False,
-    #                     word_wrap=False,
-    #                 ),
-    #                 docstring_google_tf_mean_squared_error_str,
-    #             ),
-    #         )
-    #     )
+    maxDiff = None
+
+    def test_from_docstring_google_tf_mean_squared_error_str(self) -> None:
+        """
+        Tests whether `parse_docstring` produces the right IR
+              from `docstring_google_tf_mean_squared_error_str`
+        """
+        gen = cdd.emit.docstring(
+            cdd.parse.function(
+                function_google_tf_mean_squared_error_ast,
+                # emit_default_doc=True,
+                infer_type=True,
+                parse_original_whitespace=True,
+            ),
+            indent_level=0,
+            docstring_format="google",
+            emit_types=True,
+            emit_default_doc=False,
+            emit_separating_tab=False,
+            word_wrap=False,
+        )
+        print("gen", gen, ";")
+        gen_no_args = remove_args_from_docstring
+        gold = docstring_google_tf_mean_squared_error_str
+
+        self.assertEqual(
+            gen,
+            docstring_google_tf_mean_squared_error_str,
+        )
+
+    def test_(self):
+        gold_google_doc_str = """
+        foo
+
+        Args:
+          a (int):
+
+        can haz
+        """
 
     def test_from_docstring_google_pytorch_lbfgs_str(self) -> None:
         """

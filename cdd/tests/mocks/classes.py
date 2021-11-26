@@ -35,7 +35,7 @@ from textwrap import indent
 
 from cdd.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
 from cdd.defaults_utils import extract_default
-from cdd.pure_utils import tab
+from cdd.pure_utils import tab, strip_starting
 from cdd.tests.mocks.docstrings import docstring_header_str, docstring_reduction_v2_str
 from cdd.tests.mocks.methods import (
     function_google_tf_squared_hinge_docstring_str,
@@ -650,7 +650,12 @@ tensorboard_doc_str_no_args = (
     "  ```",
 )
 
-tensorboard_doc_str_no_args_str = "\n".join(tensorboard_doc_str_no_args) + "\n"
+tensorboard_doc_str_no_args_str = "\n".join(
+    map(
+        partial(strip_starting, str_to_strip="  "),
+        tensorboard_doc_str_no_args,
+    )
+)
 
 tensorboard_doc_str_no_args_examples_idx = tensorboard_doc_str_no_args.index(
     "  Examples:"
@@ -690,15 +695,17 @@ tensorboard_doc_str_args = (
 )
 
 tensorboard_doc_str = "\n".join(
-    chain.from_iterable(
-        (
-            tensorboard_doc_str_no_args[:tensorboard_doc_str_no_args_examples_idx],
-            "",
-            tensorboard_doc_str_args,
-            ("\n",),
-            tensorboard_doc_str_no_args[tensorboard_doc_str_no_args_examples_idx:],
-            ("\n",),
-        )
+    map(
+        partial(strip_starting, str_to_strip="  "),
+        chain.from_iterable(
+            (
+                tensorboard_doc_str_no_args[:tensorboard_doc_str_no_args_examples_idx],
+                "",
+                tensorboard_doc_str_args,
+                ("\n",),
+                tensorboard_doc_str_no_args[tensorboard_doc_str_no_args_examples_idx:],
+            )
+        ),
     )
 )
 del tensorboard_doc_str_no_args_examples_idx
@@ -1136,7 +1143,7 @@ class_torch_nn_one_cycle_lr_docstring = (
 )
 class_torch_nn_one_cycle_lr_docstring_str = "\n".join(
     class_torch_nn_one_cycle_lr_docstring
-)
+)[: -len(tab)]
 
 class_torch_nn_one_cycle_lr = (
     "class OneCycleLR(_LRScheduler):",

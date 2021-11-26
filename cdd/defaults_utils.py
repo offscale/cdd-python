@@ -300,10 +300,8 @@ def remove_defaults_from_intermediate_repr(intermediate_repr, emit_default_prop=
     )
     ir.update(
         {
-            "params": OrderedDict(map(remove_default_from_param, ir["params"].items())),
-            "returns": OrderedDict(
-                (remove_default_from_param(next(iter(ir["returns"].items()))),)
-            ),
+            key: OrderedDict(map(remove_default_from_param, ir[key].items()))
+            for key in ("params", "returns")
         }
     )
     return ir

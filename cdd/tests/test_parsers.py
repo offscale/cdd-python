@@ -6,6 +6,7 @@ import ast
 from ast import FunctionDef
 from collections import OrderedDict
 from copy import deepcopy
+from operator import itemgetter
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -353,12 +354,19 @@ class TestParsers(TestCase):
         parsed_ir = parse.class_(
             class_google_tf_tensorboard_ast,
             merge_inner_function="__init__",
+            parse_original_whitespace=True,
+            word_wrap=False,
             infer_type=True,
         )
 
         del parsed_ir["_internal"]  # Not needed for this test
 
+        self.assertEqual(
+            *map(itemgetter("doc"), (parsed_ir, class_google_tf_tensorboard_ir))
+        )
         self.assertDictEqual(parsed_ir, class_google_tf_tensorboard_ir)
+
+    maxDiff = None
 
     def test_from_class_and_function_in_memory(self) -> None:
         """
@@ -449,11 +457,13 @@ class TestParsers(TestCase):
             class_torch_nn_one_cycle_lr_ast,
             merge_inner_function="__init__",
             infer_type=True,
+            word_wrap=False,
         )
 
         del parsed_ir["_internal"]  # Not needed for this test
 
         self.assertEqual(parsed_ir["params"]["last_epoch"]["typ"], "int")
+        self.assertEqual(parsed_ir["doc"], class_torch_nn_one_cycle_lr_ir["doc"])
         self.assertDictEqual(parsed_ir, class_torch_nn_one_cycle_lr_ir)
 
     def test__class_from_memory(self) -> None:
@@ -466,7 +476,7 @@ class TestParsers(TestCase):
             """A is one boring class"""
 
         with patch("inspect.getsourcefile", lambda _: None):
-            ir = parse._class_from_memory(A, A.__name__, False, False, False)
+            ir = parse._class_from_memory(A, A.__name__, False, False, False, False)
         self.assertDictEqual(
             ir,
             {
@@ -561,6 +571,12 @@ class TestParsers(TestCase):
         self.assertDictEqual(
             _internal, {"from_name": "_safe_mean", "from_type": "static"}
         )
+        self.assertEqual(
+            ir["returns"]["return_type"]["doc"],
+            function_google_tf_ops_losses__safe_mean_ir["returns"]["return_type"][
+                "doc"
+            ],
+        )
         self.assertDictEqual(ir, function_google_tf_ops_losses__safe_mean_ir)
 
         no_body = deepcopy(function_google_tf_ops_losses__safe_mean_ast)
@@ -568,7 +584,9 @@ class TestParsers(TestCase):
         ir = parse.function(no_body)
         gold = deepcopy(function_google_tf_ops_losses__safe_mean_ir)
         gold["returns"]["return_type"] = {
-            "doc": "A scalar representing the mean of `losses`. If `num_present` is zero, then zero is returned."
+            "doc": function_google_tf_ops_losses__safe_mean_ir["returns"][
+                "return_type"
+            ]["doc"]
         }
         self.assertDictEqual(ir, gold)
 

@@ -200,6 +200,17 @@ def reindent(s, indent_level=1, join_on="\n"):
     ).replace(tab, "", 1)
 
 
+def strip_starting(line, str_to_strip=tab):
+    """
+    :param line: Input string
+    :type line: ```AnyStr```
+
+    :param str_to_strip: Removes only this (once… so not `str.lstrip`) from the start
+    :type str_to_strip: ```str```
+    """
+    return line[len(str_to_strip) :] if line.startswith(str_to_strip) else line
+
+
 def indent_all_but_first(s, indent_level=1, wipe_indents=False, sep=tab):
     """
     Indent all lines except the first one
@@ -743,6 +754,7 @@ __all__ = [
     "set_item",
     "simple_types",
     "strip_split",
+    "strip_starting",
     "tab",
     "unquote",
     "update_d",
