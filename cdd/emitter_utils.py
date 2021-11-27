@@ -728,4 +728,9 @@ __all__ = [
     "interpolate_defaults",
     "parse_out_param",
     "param_to_sqlalchemy_column_call",
+    "normalise_intermediate_representation",
+    "RewriteName",
+    "_make_call_meth",
+    "generate_repr_method",
+    "param2json_schema_property",
 ]
