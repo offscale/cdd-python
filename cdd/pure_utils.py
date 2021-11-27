@@ -730,6 +730,7 @@ __all__ = [
     "blockwise",
     "code_quoted",
     "count_iter_items",
+    "deindent",
     "diff",
     "emit_separating_tabs",
     "filename_from_mod_or_filename",
