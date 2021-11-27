@@ -4,8 +4,9 @@ Functions which produce docstring portions from various inputs
 
 from collections import namedtuple
 from copy import deepcopy
-from itertools import chain, takewhile
-from operator import itemgetter, eq
+from functools import partial
+from itertools import chain, islice, takewhile
+from operator import methodcaller, itemgetter
 from textwrap import indent
 
 from cdd.defaults_utils import set_default_doc
@@ -15,8 +16,8 @@ from cdd.pure_utils import (
     indent_all_but_first,
     tab,
     rpartial,
+    assert_equal,
     count_iter_items,
-    omit_whitespace,
 )
 
 
@@ -172,19 +173,17 @@ def ensure_doc_args_whence_original(current_doc_str, original_doc_str):
     :type current_doc_str: ```str```
 
     :param original_doc_str: The original doc_str
-    :type original_doc_str: ```Optional[str]```
+    :type original_doc_str: ```str```
 
     :returns: reshuffled doc_str with args/returns in same place as original (same header, footer, and whitespace)
     :rtype: ```str```
     """
-    if eq(*map(omit_whitespace, (original_doc_str or "", original_doc_str or ""))):
-        return original_doc_str
-    elif not original_doc_str:
+    if original_doc_str == current_doc_str:
         return current_doc_str
 
     def get_token_start_idx(doc_str):
         """
-        Get the start index of the token
+        Get the start index of the token, minus starting whitespace for that line
 
         :param doc_str: The docstring
         :type doc_str: ```str```
@@ -197,7 +196,10 @@ def ensure_doc_args_whence_original(current_doc_str, original_doc_str):
             if ch.isspace():
                 if stack:
                     if "".join(stack) in TOKENS_SET:
-                        return idx - len(stack)
+                        token_start_idx = idx - len(stack)
+                        for i in range(token_start_idx, 0, -1):
+                            if doc_str[i] == "\n":
+                                return i + 1
                     stack.clear()
             else:
                 stack.append(ch)
@@ -231,13 +233,21 @@ def ensure_doc_args_whence_original(current_doc_str, original_doc_str):
         penultimate_stack.clear()
         stack.clear()
 
-        afterward_idx, idx, last_indent, ante_penultimate_stack = -1, None, None, []
+        afterward_idx, within_args_returns, idx, last_indent, ante_penultimate_stack = (
+            -1,
+            False,
+            None,
+            None,
+            [],
+        )
         for idx, ch in enumerate(doc_str[last_found:]):
             if ch == "\n":
                 if (
-                    "".join(stack) not in TOKENS_SET
-                    and "".join(penultimate_stack + stack) not in TOKENS_SET
+                    "".join(stack) in TOKENS_SET
+                    or "".join(penultimate_stack + stack) in TOKENS_SET
                 ):
+                    within_args_returns = True
+                else:
                     last_indent = count_iter_items(takewhile(str.isspace, stack))
                 afterward_idx = last_found + idx - len(stack)
                 ante_penultimate_stack = deepcopy(penultimate_stack)
@@ -245,6 +255,8 @@ def ensure_doc_args_whence_original(current_doc_str, original_doc_str):
                 stack.clear()
             else:
                 stack.append(ch)
+
+        # afterward_idx = last_found + idx - len(stack)
 
         startswith_token = any(map(doc_str[afterward_idx:].startswith, TOKENS_SET))
         if startswith_token and stack:
@@ -286,16 +298,38 @@ def ensure_doc_args_whence_original(current_doc_str, original_doc_str):
     original_header = (
         original_doc_str[:start_idx_original] if start_idx_original > -1 else ""
     )
+    original_args_returns = original_doc_str[
+        slice(
+            (start_idx_original if start_idx_original > -1 else None),
+            (len(afterward_current) if afterward_current else None),
+        )
+    ]
     original_footer = afterward_original
     current_args_returns = current_doc_str[
         slice(start_idx_current, len(afterward_current) if afterward_current else None)
     ]
 
-    return "{original_header}{current_args_returns}{original_footer}".format(
+    (
+        original_header_indent,
+        current_args_returns_indent,
+        original_args_returns_indent,
+        original_footer_indent,
+    ) = map(
+        lambda s: count_iter_items(takewhile(str.isspace, s or iter(()))),
+        (original_header, current_args_returns, original_args_returns, original_footer),
+    )
+    if original_args_returns_indent > 1 and current_args_returns:
+        current_args_returns = indent(
+            current_args_returns,
+            prefix=" " * original_args_returns_indent,
+            predicate=lambda _: _,
+        )
+    ret = "{original_header}{current_args_returns}{original_footer}".format(
         original_header=original_header or "",
         current_args_returns=current_args_returns or "",
         original_footer=original_footer or "",
     )
+    return ret
 
 
 Tokens = namedtuple("Tokens", ("rest", "google", "numpydoc"))
