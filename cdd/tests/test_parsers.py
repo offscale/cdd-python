@@ -111,7 +111,7 @@ class TestParsers(TestCase):
                         "Set CLI arguments\n\n",
                         ":param argument_parser: argument parser\n",
                         ":type argument_parser: ```ArgumentParser```\n\n",
-                        ":returns: argument_parser\n",
+                        ":return: argument_parser\n",
                         ":rtype: ```ArgumentParser```\n",
                         '"""\n',
                         "argument_parser.description = ''\n",

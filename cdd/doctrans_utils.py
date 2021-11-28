@@ -97,7 +97,7 @@ class DocTrans(NodeTransformer):
     #     :param node: The AST node
     #     :type node: ```AST```
     #
-    #     :returns: Potentially changed AST node
+    #     :return: Potentially changed AST node
     #     :rtype: ```AST```
     #     """
     #     is_func, doc_str = isinstance(node, (AsyncFunctionDef, FunctionDef)), None
@@ -115,7 +115,7 @@ class DocTrans(NodeTransformer):
         :param node: AnnAssign
         :type node: ```AnnAssign```
 
-        :returns: `AnnAssign` if `type_annotations` and type found else `Assign`
+        :return: `AnnAssign` if `type_annotations` and type found else `Assign`
         :rtype: ```Union[AnnAssign, Assign]```
         """
         if self.type_annotations:
@@ -137,7 +137,7 @@ class DocTrans(NodeTransformer):
         :param node: Assign
         :type node: ```Assign```
 
-        :returns: `AnnAssign` if `type_annotations` and type found else `Assign`
+        :return: `AnnAssign` if `type_annotations` and type found else `Assign`
         :rtype: ```Union[Assign, AnnAssign]```
         """
         typ = self._get_ass_typ(node)
@@ -168,7 +168,7 @@ class DocTrans(NodeTransformer):
         :param node: Module
         :type node: ```Module```
 
-        :returns: Potentially changed Module
+        :return: Potentially changed Module
         :rtype: ```Module```
         """
         # Clean might be wrong if the header is a license or other long-spiel documentation
@@ -186,7 +186,7 @@ class DocTrans(NodeTransformer):
         :param node: FunctionDef
         :type node: ```FunctionDef```
 
-        :returns: Potentially changed FunctionDef
+        :return: Potentially changed FunctionDef
         :rtype: ```FunctionDef```
         """
         return self._handle_function(node, get_docstring(node, clean=True))
@@ -198,7 +198,7 @@ class DocTrans(NodeTransformer):
         :param node: Assignment
         :type node: ```Union[Assign, AnnAssign]```
 
-        :returns: The type of the assignment, e.g., `int`
+        :return: The type of the assignment, e.g., `int`
         :rtype: ```Optional[str]```
         """
         name, typ_dict = (
@@ -246,7 +246,7 @@ class DocTrans(NodeTransformer):
         :param doc_str: The docstring
         :type doc_str: ```Optional[str]```
 
-        :returns: Same type as input with args, returns, and docstring potentially modified
+        :return: Same type as input with args, returns, and docstring potentially modified
         :rtype: ```Union[AsyncFunctionDef, FunctionDef]```
         """
         ir = parse_docstring(doc_str)
@@ -306,7 +306,7 @@ def clear_annotation(node):
     :param node: AST node
     :type node: ```AST```
 
-    :returns: AST node with annotations and type_comments set to `None`
+    :return: AST node with annotations and type_comments set to `None`
     :rtype: ```AST```
     """
     if getattr(node, "annotation", None) is not None:

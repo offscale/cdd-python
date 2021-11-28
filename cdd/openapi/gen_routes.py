@@ -46,7 +46,7 @@ def gen_routes(app, model_path, model_name, crud, route):
     :param route: The path of the resource
     :type route: ```str```
 
-    :returns: Iterator of functions representing relevant CRUD operations
+    :return: Iterator of functions representing relevant CRUD operations
     :rtype: ```Iterator[FunctionDef]```
     """
     model_path = filename_from_mod_or_filename(model_path)
@@ -139,7 +139,7 @@ def upsert_routes(app, routes, routes_path, route, primary_key):
         :param functions: Routing functions
         :type functions: ```Iterator[FunctionDef]```
 
-        :returns: Dict of `method_name` to `FunctionDef`
+        :return: Dict of `method_name` to `FunctionDef`
         :rtype: ```Dict[str, FunctionDef]```
         """
         return dict(

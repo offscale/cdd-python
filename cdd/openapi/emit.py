@@ -15,7 +15,7 @@ def openapi(name_model_route_id_cruds):
     :param name_model_route_id_cruds: Collection of (name, model, route, id, crud)
     :type name_model_route_id_cruds: ```Iterable[NameModelRouteIdCrud]```
 
-    :returns: OpenAPI dict
+    :return: OpenAPI dict
     :rtype: ```dict```
     """
     paths, components = {}, {

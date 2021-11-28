@@ -25,7 +25,7 @@ responses:
           $ref: ```ServerError```
 ```
 
-:returns: Created ```{name}``` instance (as a dict), or an error
+:return: Created ```{name}``` instance (as a dict), or an error
 :rtype: ```dict```
 """'''
 )
@@ -85,7 +85,7 @@ create_helper_variants = tuple(
     :param res: Bottle response
     :type res: ```bottle.response```
 
-    :returns: A function which actually does the work
+    :return: A function which actually does the work
     :rtype: ```Callable[[Base], dict]```
     """
     def _create_helper(orm_class):
@@ -95,7 +95,7 @@ create_helper_variants = tuple(
         :param orm_class: An ORM class inheriting SQLalchemy declarative base class
         :type orm_class: ```Base```
 
-        :returns: Created (as a dict) or error dict
+        :return: Created (as a dict) or error dict
         :rtype: ```dict```
         """
         try:
@@ -127,7 +127,7 @@ create_helper_variants = tuple(
     :param body: Body of the instance to create
     :type body: ```dict```
 
-    :returns: Status code, created (as a dict) or error dict
+    :return: Status code, created (as a dict) or error dict
     :rtype: ```Tuple[int, dict]```
     """
     try:
@@ -176,7 +176,7 @@ def read({id}):
     :param {id}: The primary key of `{name}`
     :type {id}: ```str```
 
-    :returns: Found `{name}` (as a dict) or error dict
+    :return: Found `{name}` (as a dict) or error dict
     :rtype: ```dict```
     """
     with Session(engine) as session:
@@ -205,7 +205,7 @@ def destroy({id}):
     :param {id}: The primary key of `{name}`
     :type {id}: ```str```
 
-    :returns: Found `{name}` (as a dict) or error dict
+    :return: Found `{name}` (as a dict) or error dict
     :rtype: ```dict```
     """
     with Session(engine) as session:

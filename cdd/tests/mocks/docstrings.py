@@ -15,7 +15,7 @@ docstring_header_str = (
 docstring_header_and_return_str = "\n".join(
     (
         docstring_header_str,
-        ":returns: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))",
+        ":return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))",
         ":rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```",
     )
 )
@@ -215,136 +215,146 @@ docstring_google_tf_lambda_callback = (
 )
 docstring_google_tf_lambda_callback_str = "\n".join(docstring_google_tf_lambda_callback)
 
-docstring_google_tf_mean_squared_error_str = (
-    "\nAdds a Sum-of-Squares loss to the training procedure.\n"
-    "\n"
-    "`weights` acts as a coefficient for the loss. If a scalar is provided, then\n"
-    "the loss is simply scaled by the given value. If `weights` is a tensor of size\n"
-    "`[batch_size]`, then the total loss for each sample of the batch is rescaled\n"
-    "by the corresponding element in the `weights` vector. If the shape of\n"
-    "`weights` matches the shape of `predictions`, then the loss of each\n"
-    "measurable element of `predictions` is scaled by the corresponding value of\n"
-    "`weights`.\n"
-    "\n"
-    "Args:\n"
-    "  labels: The ground truth output tensor, same dimensions as 'predictions'.\n"
-    "  predictions: The predicted outputs.\n"
-    "  weights: Optional `Tensor` whose rank is either 0, or the same rank as\n"
-    "    `labels`, and must be broadcastable to `labels` (i.e., all dimensions must\n"
-    "    be either `1`, or the same as the corresponding `losses` dimension).\n"
-    "  scope: The scope for the operations performed in computing the loss.\n"
-    "  loss_collection: collection to which the loss will be added.\n"
-    "  reduction: Type of reduction to apply to loss.\n"
-    "\n"
-    "Returns:\n"
-    "  Weighted loss float `Tensor`. If `reduction` is `NONE`, this has the same\n"
-    "  shape as `labels`; otherwise, it is scalar.\n"
-    "\n"
-    "Raises:\n"
-    "  ValueError: If the shape of `predictions` doesn't match that of `labels` or\n"
-    "    if the shape of `weights` is invalid.  Also if `labels` or `predictions`\n"
-    "    is None.\n"
-    "\n"
-    "@compatibility(TF2)\n"
-    "\n"
-    "`tf.compat.v1.losses.mean_squared_error` is mostly compatible with eager\n"
-    "execution and `tf.function`. But, the `loss_collection` argument is\n"
-    "ignored when executing eagerly and no loss will be written to the loss\n"
-    "collections. You will need to either hold on to the return value manually\n"
-    "or rely on `tf.keras.Model` loss tracking.\n"
-    "\n"
-    "\n"
-    "To switch to native TF2 style, instantiate the\n"
-    " `tf.keras.losses.MeanSquaredError` class and call the object instead.\n"
-    "\n"
-    "\n"
-    "#### Structural Mapping to Native TF2\n"
-    "\n"
-    "Before:\n"
-    "\n"
-    "```python\n"
-    "loss = tf.compat.v1.losses.mean_squared_error(\n"
-    "  labels=labels,\n"
-    "  predictions=predictions,\n"
-    "  weights=weights,\n"
-    "  reduction=reduction)\n"
-    "```\n"
-    "\n"
-    "After:\n"
-    "\n"
-    "```python\n"
-    "loss_fn = tf.keras.losses.MeanSquaredError(\n"
-    "  reduction=reduction)\n"
-    "loss = loss_fn(\n"
-    "  y_true=labels,\n"
-    "  y_pred=predictions,\n"
-    "  sample_weight=weights)\n"
-    "```\n"
-    "\n"
-    "#### How to Map Arguments\n"
-    "\n"
-    "| TF1 Arg Name          | TF2 Arg Name     | Note                       |\n"
-    "| :-------------------- | :--------------- | :------------------------- |\n"
-    "| `labels`              | `y_true`         | In `__call__()` method     |\n"
-    "| `predictions`         | `y_pred`         | In `__call__()` method     |\n"
-    "| `weights`             | `sample_weight`  | In `__call__()` method.    |\n"
-    ": : : The shape requirements for `sample_weight` is different from      :\n"
-    ": : : `weights`. Please check the [argument definition][api_docs] for   :\n"
-    ": : : details.                                                          :\n"
-    "| `scope`               | Not supported    | -                          |\n"
-    "| `loss_collection`     | Not supported    | Losses should be tracked   |\n"
-    ": : : explicitly or with Keras APIs, for example, [add_loss][add_loss], :\n"
-    ": : : instead of via collections                                        :\n"
-    "| `reduction`           | `reduction`      | In constructor. Value of   |\n"
-    ": : : `tf.compat.v1.losses.Reduction.SUM_OVER_BATCH_SIZE`,              :\n"
-    ": : : `tf.compat.v1.losses.Reduction.SUM`,                              :\n"
-    ": : : `tf.compat.v1.losses.Reduction.NONE` in                           :\n"
-    ": : : `tf.compat.v1.losses.softmax_cross_entropy` correspond to         :\n"
-    ": : : `tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE`,                  :\n"
-    ": : : `tf.keras.losses.Reduction.SUM`,                                  :\n"
-    ": : : `tf.keras.losses.Reduction.NONE`, respectively. If you            :\n"
-    ": : : used other value for `reduction`, including the default value     :\n"
-    ": : :  `tf.compat.v1.losses.Reduction.SUM_BY_NONZERO_WEIGHTS`, there is :\n"
-    ": : : no directly corresponding value. Please modify the loss           :\n"
-    ": : : implementation manually.                                          :\n"
-    "\n"
-    "[add_loss]:https://www.tensorflow.org/api_docs/python/tf/keras/layers/Layer#add_loss\n"
-    "[api_docs]:https://www.tensorflow.org/api_docs/python/tf/keras/losses/MeanSquaredError#__call__\n"
-    "\n"
-    "\n"
-    "#### Before & After Usage Example\n"
-    "\n"
-    "Before:\n"
-    "\n"
-    ">>> y_true = [1, 2, 3]\n"
-    ">>> y_pred = [1, 3, 5]\n"
-    ">>> weights = [0, 1, 0.25]\n"
-    ">>> # samples with zero-weight are excluded from calculation when `reduction`\n"
-    ">>> # argument is set to default value `Reduction.SUM_BY_NONZERO_WEIGHTS`\n"
-    ">>> tf.compat.v1.losses.mean_squared_error(\n"
-    "...    labels=y_true,\n"
-    "...    predictions=y_pred,\n"
-    "...    weights=weights).numpy()\n"
-    "1.0\n"
-    "\n"
-    ">>> tf.compat.v1.losses.mean_squared_error(\n"
-    "...    labels=y_true,\n"
-    "...    predictions=y_pred,\n"
-    "...    weights=weights,\n"
-    "...    reduction=tf.compat.v1.losses.Reduction.SUM_OVER_BATCH_SIZE).numpy()\n"
-    "0.66667\n"
-    "\n"
-    "After:\n"
-    "\n"
-    ">>> y_true = [[1.0], [2.0], [3.0]]\n"
-    ">>> y_pred = [[1.0], [3.0], [5.0]]\n"
-    ">>> weights = [1, 1, 0.25]\n"
-    ">>> mse = tf.keras.losses.MeanSquaredError(\n"
-    "...    reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE)\n"
-    ">>> mse(y_true=y_true, y_pred=y_pred, sample_weight=weights).numpy()\n"
-    "0.66667\n"
-    "\n"
-    "@end_compatibility\n"
+# ```python
+# import ast
+# import inspect
+# from tensorflow.python.ops.losses.losses_impl import mean_squared_error
+#
+# ast.get_docstring(ast.parse(inspect.getsource(mean_squared_error)).body[0]).splitlines()
+# ```
+# https://github.com/tensorflow/tensorflow/blob/v2.7.0/tensorflow/python/ops/losses/losses_impl.py#L624-L771
+docstring_google_tf_mean_squared_error_str = "\n".join(
+    (
+        "Adds a Sum-of-Squares loss to the training procedure.",
+        "",
+        "`weights` acts as a coefficient for the loss. If a scalar is provided, then",
+        "the loss is simply scaled by the given value. If `weights` is a tensor of size",
+        "`[batch_size]`, then the total loss for each sample of the batch is rescaled",
+        "by the corresponding element in the `weights` vector. If the shape of",
+        "`weights` matches the shape of `predictions`, then the loss of each",
+        "measurable element of `predictions` is scaled by the corresponding value of",
+        "`weights`.",
+        "",
+        "Args:",
+        "  labels: The ground truth output tensor, same dimensions as 'predictions'.",
+        "  predictions: The predicted outputs.",
+        "  weights: Optional `Tensor` whose rank is either 0, or the same rank as",
+        "    `labels`, and must be broadcastable to `labels` (i.e., all dimensions must",
+        "    be either `1`, or the same as the corresponding `losses` dimension).",
+        "  scope: The scope for the operations performed in computing the loss.",
+        "  loss_collection: collection to which the loss will be added.",
+        "  reduction: Type of reduction to apply to loss.",
+        "",
+        "Returns:",
+        "  Weighted loss float `Tensor`. If `reduction` is `NONE`, this has the same",
+        "  shape as `labels`; otherwise, it is scalar.",
+        "",
+        "Raises:",
+        "  ValueError: If the shape of `predictions` doesn't match that of `labels` or",
+        "    if the shape of `weights` is invalid.  Also if `labels` or `predictions`",
+        "    is None.",
+        "",
+        "@compatibility(TF2)",
+        "",
+        "`tf.compat.v1.losses.mean_squared_error` is mostly compatible with eager",
+        "execution and `tf.function`. But, the `loss_collection` argument is",
+        "ignored when executing eagerly and no loss will be written to the loss",
+        "collections. You will need to either hold on to the return value manually",
+        "or rely on `tf.keras.Model` loss tracking.",
+        "",
+        "",
+        "To switch to native TF2 style, instantiate the",
+        " `tf.keras.losses.MeanSquaredError` class and call the object instead.",
+        "",
+        "",
+        "#### Structural Mapping to Native TF2",
+        "",
+        "Before:",
+        "",
+        "```python",
+        "loss = tf.compat.v1.losses.mean_squared_error(",
+        "  labels=labels,",
+        "  predictions=predictions,",
+        "  weights=weights,",
+        "  reduction=reduction)",
+        "```",
+        "",
+        "After:",
+        "",
+        "```python",
+        "loss_fn = tf.keras.losses.MeanSquaredError(",
+        "  reduction=reduction)",
+        "loss = loss_fn(",
+        "  y_true=labels,",
+        "  y_pred=predictions,",
+        "  sample_weight=weights)",
+        "```",
+        "",
+        "#### How to Map Arguments",
+        "",
+        "| TF1 Arg Name          | TF2 Arg Name     | Note                       |",
+        "| :-------------------- | :--------------- | :------------------------- |",
+        "| `labels`              | `y_true`         | In `__call__()` method     |",
+        "| `predictions`         | `y_pred`         | In `__call__()` method     |",
+        "| `weights`             | `sample_weight`  | In `__call__()` method.    |",
+        ": : : The shape requirements for `sample_weight` is different from      :",
+        ": : : `weights`. Please check the [argument definition][api_docs] for   :",
+        ": : : details.                                                          :",
+        "| `scope`               | Not supported    | -                          |",
+        "| `loss_collection`     | Not supported    | Losses should be tracked   |",
+        ": : : explicitly or with Keras APIs, for example, [add_loss][add_loss], :",
+        ": : : instead of via collections                                        :",
+        "| `reduction`           | `reduction`      | In constructor. Value of   |",
+        ": : : `tf.compat.v1.losses.Reduction.SUM_OVER_BATCH_SIZE`,              :",
+        ": : : `tf.compat.v1.losses.Reduction.SUM`,                              :",
+        ": : : `tf.compat.v1.losses.Reduction.NONE` in                           :",
+        ": : : `tf.compat.v1.losses.softmax_cross_entropy` correspond to         :",
+        ": : : `tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE`,                  :",
+        ": : : `tf.keras.losses.Reduction.SUM`,                                  :",
+        ": : : `tf.keras.losses.Reduction.NONE`, respectively. If you            :",
+        ": : : used other value for `reduction`, including the default value     :",
+        ": : :  `tf.compat.v1.losses.Reduction.SUM_BY_NONZERO_WEIGHTS`, there is :",
+        ": : : no directly corresponding value. Please modify the loss           :",
+        ": : : implementation manually.                                          :",
+        "",
+        "[add_loss]:https://www.tensorflow.org/api_docs/python/tf/keras/layers/Layer#add_loss",
+        "[api_docs]:https://www.tensorflow.org/api_docs/python/tf/keras/losses/MeanSquaredError#__call__",
+        "",
+        "",
+        "#### Before & After Usage Example",
+        "",
+        "Before:",
+        "",
+        ">>> y_true = [1, 2, 3]",
+        ">>> y_pred = [1, 3, 5]",
+        ">>> weights = [0, 1, 0.25]",
+        ">>> # samples with zero-weight are excluded from calculation when `reduction`",
+        ">>> # argument is set to default value `Reduction.SUM_BY_NONZERO_WEIGHTS`",
+        ">>> tf.compat.v1.losses.mean_squared_error(",
+        "...    labels=y_true,",
+        "...    predictions=y_pred,",
+        "...    weights=weights).numpy()",
+        "1.0",
+        "",
+        ">>> tf.compat.v1.losses.mean_squared_error(",
+        "...    labels=y_true,",
+        "...    predictions=y_pred,",
+        "...    weights=weights,",
+        "...    reduction=tf.compat.v1.losses.Reduction.SUM_OVER_BATCH_SIZE).numpy()",
+        "0.66667",
+        "",
+        "After:",
+        "",
+        ">>> y_true = [[1.0], [2.0], [3.0]]",
+        ">>> y_pred = [[1.0], [3.0], [5.0]]",
+        ">>> weights = [1, 1, 0.25]",
+        ">>> mse = tf.keras.losses.MeanSquaredError(",
+        "...    reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE)",
+        ">>> mse(y_true=y_true, y_pred=y_pred, sample_weight=weights).numpy()",
+        "0.66667",
+        "",
+        "@end_compatibility",
+    )
 )
 
 docstring_google_pytorch_lbfgs = (
@@ -400,7 +410,7 @@ docstring_no_default_doc_str = """
 :param data_loader_kwargs: pass this as arguments to data_loader function
 :type data_loader_kwargs: ```Optional[dict]```
 
-:returns: Train and tests dataset splits.
+:return: Train and tests dataset splits.
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """.format(
     header_doc_str=docstring_header_str
@@ -427,7 +437,7 @@ docstring_no_default_str = """
 :param data_loader_kwargs: pass this as arguments to data_loader function
 :type data_loader_kwargs: ```Optional[dict]```
 
-:returns: Train and tests dataset splits.
+:return: Train and tests dataset splits.
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """.format(
     header_doc_str=docstring_header_str
@@ -489,7 +499,7 @@ Some comment
 
 :param dataset_name: Example: foo
 
-:returns: Train and tests dataset splits.
+:return: Train and tests dataset splits.
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """
 
@@ -510,7 +520,7 @@ docstring_str = """
 :param data_loader_kwargs: pass this as arguments to data_loader function
 :type data_loader_kwargs: ```Optional[dict]```
 
-:returns: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
+:return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """.format(
     header_doc_str=docstring_header_str
@@ -533,7 +543,7 @@ docstring_no_type_str = """
 
 :param data_loader_kwargs: pass this as arguments to data_loader function
 
-:returns: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
+:return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 """.format(
     header_doc_str=docstring_header_str
 )
@@ -550,7 +560,7 @@ docstring_no_type_no_default_str = """
 
 :param data_loader_kwargs: pass this as arguments to data_loader function
 
-:returns: Train and tests dataset splits.
+:return: Train and tests dataset splits.
 """.format(
     header_doc_str=docstring_header_str
 )
@@ -562,7 +572,7 @@ docstring_repr_str = (
                 "",
                 "Emit a string representation of the current instance",
                 "",
-                ":returns: String representation of instance",
+                ":return: String representation of instance",
                 ":rtype: ```str```",
                 "",
             )

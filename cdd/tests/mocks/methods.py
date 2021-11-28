@@ -91,7 +91,7 @@ class C(object):
         :param data_loader_kwargs: pass this as arguments to data_loader function
         :type data_loader_kwargs: ```Optional[dict]```
 {sep}
-        :returns: Train and tests dataset splits.
+        :return: Train and tests dataset splits.
         :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray,
 {indent}np.ndarray]]```
         """
@@ -126,7 +126,7 @@ class C(object):
 
         :param data_loader_kwargs: pass this as arguments to data_loader function
 
-        :returns: Train and tests dataset splits.
+        :return: Train and tests dataset splits.
         """
         return np.empty(0), np.empty(0)
 '''.format(
@@ -158,7 +158,7 @@ class C(object):
 
         :param data_loader_kwargs: pass this as arguments to data_loader function
 
-        :returns: Train and tests dataset splits.
+        :return: Train and tests dataset splits.
         """
         # some comment
         print(5 * 5)
@@ -186,7 +186,7 @@ class C(object):
 
         :param K: backend engine, e.g., `np` or `tf`.
 
-        :returns: Train and tests dataset splits.
+        :return: Train and tests dataset splits.
         """
         return np.empty(0), np.empty(0)
 '''.format(
@@ -615,7 +615,7 @@ def add_6_5(*, a=6, b=5):
     :param b: second param
     :type b: ```int```
 
-    :returns: Aggregated summation of `a` and `b`.
+    :return: Aggregated summation of `a` and `b`.
     :rtype: ```int```
     """
     return operator.add(a, b)
@@ -640,7 +640,7 @@ function_adder_ast = FunctionDef(
                 ":type a: ```int```\n\n    "
                 ":param b: second param\n    "
                 ":type b: ```int```\n\n    "
-                ":returns: Aggregated summation of `a` and `b`.\n    "
+                ":return: Aggregated summation of `a` and `b`.\n    "
                 ":rtype: ```int```\n    ",
             )
         ),
@@ -723,7 +723,7 @@ def call_cliff(
 
     :param **kwargs: additional keyword arguments
 
-    :returns: backend engine
+    :return: backend engine
     """
     return K
 '''
@@ -779,7 +779,7 @@ method_complex_args_variety_ast = FunctionDef(
                 ":param tfds_dir: directory to look for models in.\n\n    "
                 ":param writer: IO object to write out to\n\n    "
                 ":param **kwargs: additional keyword arguments\n\n    "
-                ":returns: backend engine\n    ",
+                ":return: backend engine\n    ",
             )
         ),
         Return(value=Name("K", Load()), expr=None),
@@ -895,7 +895,15 @@ function_google_tf_ops_losses__safe_mean_ast = FunctionDef(
     decorator_list=[],
 )
 
-# `from tensorflow.python.ops.losses.losses_impl import mean_squared_error` @ tf-nightly:2.7.0.dev20210908,
+# ```python
+# import ast
+# import inspect
+# from tensorflow.python.ops.losses.losses_impl import mean_squared_error
+#
+# print(ast.dump(ast.parse(inspect.getsource(mean_squared_error)).body[0], indent=4)
+# ```
+# https://github.com/tensorflow/tensorflow/blob/v2.7.0/tensorflow/python/ops/losses/losses_impl.py#L624-L771
+#
 # minus non-docstring body and `decorator_list`
 function_google_tf_mean_squared_error_ast = FunctionDef(
     name="mean_squared_error",
@@ -933,9 +941,7 @@ function_google_tf_mean_squared_error_ast = FunctionDef(
             ),
         ],
     ),
-    body=[
-        Expr(value=set_value(docstring_google_tf_mean_squared_error_str)),
-    ],
+    body=[Expr(value=set_value(docstring_google_tf_mean_squared_error_str))],
     decorator_list=[],
 )
 

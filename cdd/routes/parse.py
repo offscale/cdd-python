@@ -27,7 +27,7 @@ def bottle(function_def):
     :param function_def: Function definition of a bottle route, like `@api.get("/api") def root(): return "/"`
     :type function_def: ```Union[FunctionDef, FunctionType]```
 
-    :returns: OpenAPI representation of the given route
+    :return: OpenAPI representation of the given route
     :rtype: ```dict```
     """
     if isinstance(function_def, FunctionType):

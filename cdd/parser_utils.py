@@ -51,7 +51,7 @@ def ir_merge(target, other):
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type other: ```dict```
 
-    :returns: IR of updated target. `target` is also updated in-place, and the memory of `other` is used.
+    :return: IR of updated target. `target` is also updated in-place, and the memory of `other` is used.
     :rtype: ```dict```
     """
     if not target["params"]:
@@ -112,7 +112,7 @@ def _join_non_none(primacy, other):
     :param other: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :type other: ```dict```
 
-    :returns: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+    :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
     :rtype: ```dict```
     """
     if not primacy:
@@ -136,7 +136,7 @@ def _inspect_process_ir_param(param, sig):
     :param sig: The Signature
     :type sig: ```inspect.Signature```
 
-    :returns: dict with keys: 'typ', 'doc', 'default'
+    :return: dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
     """
     name, _param = param
@@ -175,7 +175,7 @@ def _interpolate_return(function_def, intermediate_repr):
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
-    :returns: a dictionary of form
+    :return: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
@@ -226,7 +226,7 @@ def column_call_to_param(call):
     :param call: Column call from SQLAlchemy `Table` construction
     :type call: ```Call```
 
-    :returns: Name, dict with keys: 'typ', 'doc', 'default'
+    :return: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
     """
     assert call.func.id == "Column"
@@ -287,7 +287,7 @@ def json_schema_property_to_param(param, required):
     :param required: Names of all required parameters
     :type required: ```FrozenSet[str]```
 
-    :returns: Name, dict with keys: 'typ', 'doc', 'default'
+    :return: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
     """
     name, _param = param
@@ -321,7 +321,7 @@ def infer(*args, **kwargs):
     :param kwargs: Keyword arguments
     :type kwargs: ```dict```
 
-    :returns: Name of inferred parser
+    :return: Name of inferred parser
     :rtype: ```str```
     """
     node = (
@@ -383,7 +383,7 @@ def get_source(obj):
     :param obj: object to inspect
     :type obj: ```Any```
 
-    :returns: The source
+    :return: The source
     :rtype: ```str```
     """
     try:

@@ -16,7 +16,7 @@ def get_route_meta(mod):
     :param mod: Parsed AST containing routes
     :type mod: ```Module```
 
-    :returns: Iterator of tuples of (func_name, app_name, route_path, http_method)
+    :return: Iterator of tuples of (func_name, app_name, route_path, http_method)
     :rtype: ```Iterator[Tuple[str, str, str, str]]```
     """
     return map(
