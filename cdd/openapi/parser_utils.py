@@ -10,7 +10,7 @@ def extract_entities(openapi_str):
     :param openapi_str: The OpenAPI str
     :type openapi_str: ```str```
 
-    :returns: Entities
+    :return: Entities
     :rtype: ```List[str]```
     """
     entities, ticks, space, stack = [], 0, 0, []

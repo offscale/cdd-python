@@ -26,7 +26,7 @@ def create(app, name, route, variant=2):
     :param variant: Number of variant
     :type variant: ```int```
 
-    :returns: Create route variant with interpolated values
+    :return: Create route variant with interpolated values
     :rtype: ```str```
     """
     return create_route_variants[variant].format(app=app, name=name, route=route)
@@ -45,7 +45,7 @@ def create_util(name, route, variant=1):
     :param variant: Number of variant
     :type variant: ```int```
 
-    :returns: Create route variant with interpolated values
+    :return: Create route variant with interpolated values
     :rtype: ```str```
     """
     return create_helper_variants[variant].format(name=name, route=route)
@@ -70,7 +70,7 @@ def read(app, name, route, primary_key, variant=0):
     :param variant: Number of variant
     :type variant: ```int```
 
-    :returns: Create route variant with interpolated values
+    :return: Create route variant with interpolated values
     :rtype: ```str```
     """
     return read_route_variants[variant].format(
@@ -97,7 +97,7 @@ def destroy(app, name, route, primary_key, variant=0):
     :param variant: Number of variant
     :type variant: ```int```
 
-    :returns: Create route variant with interpolated values
+    :return: Create route variant with interpolated values
     :rtype: ```str```
     """
     return delete_route_variants[variant].format(

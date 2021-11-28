@@ -80,7 +80,7 @@ def param2ast(param):
     :param param: Name, dict with keys: 'typ', 'doc', 'default'
     :type param: ```Tuple[str, dict]```
 
-    :returns: AST node for assignment
+    :return: AST node for assignment
     :rtype: ```Union[AnnAssign, Assign]```
     """
     name, _param = param
@@ -168,7 +168,7 @@ def _generic_param2ast(param):
     :param param: Name, dict with keys: 'typ', 'doc', 'default'
     :type param: ```Tuple[str, dict]```
 
-    :returns: AST node for assignment
+    :return: AST node for assignment
     :rtype: ```AnnAssign```
     """
     name, _param = param
@@ -236,7 +236,7 @@ def find_ast_type(node, node_name=None, of_type=ClassDef):
     :param of_type: Of which type to find
     :type of_type: ```AST```
 
-    :returns: Found AST node
+    :return: Found AST node
     :rtype: ```AST```
     """
     if isinstance(node, Module):
@@ -277,7 +277,7 @@ def param2argparse_param(param, word_wrap=True, emit_default_doc=True):
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :returns: `argparse.add_argument` call—with arguments—as an AST node
+    :return: `argparse.add_argument` call—with arguments—as an AST node
     :rtype: ```Expr```
     """
     name, _param = param
@@ -402,7 +402,7 @@ def _resolve_arg(action, choices, param, required, typ):
     :param typ: The type of the argument
     :type typ: ```Optional[str]```
 
-    :returns: action, choices, required, typ, (Name, dict with keys: 'typ', 'doc', 'default')
+    :return: action, choices, required, typ, (Name, dict with keys: 'typ', 'doc', 'default')
     :rtype: ```Tuple[Optional[str], Optional[List[str]], bool, Optional[str], Tuple[str, dict]]```
     """
     (name, _param), _required = param, None
@@ -453,7 +453,7 @@ def _parse_node_for_arg(_required, action, choices, node, typ):
     :param typ: The type of the argument
     :type typ: ```Optional[str]```
 
-    :returns: _required, action, choices, typ
+    :return: _required, action, choices, typ
     :rtype: ```Tuple[bool, Optional[str], Optional[List[str]], Optional[str]]```
     """
     if isinstance(node, Tuple):
@@ -484,7 +484,7 @@ def func_arg2param(func_arg, default=None):
     :param default: The default value, if None isn't added to returned dict
     :type default: ```Optional[Any]```
 
-    :returns: Name, dict with keys: 'typ', 'doc', 'default'
+    :return: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
     """
     return func_arg.arg, dict(
@@ -505,7 +505,7 @@ def get_function_type(function_def):
     :param function_def: AST node for function definition
     :type function_def: ```FunctionDef```
 
-    :returns: Type of target, static is static or global method, others just become first arg
+    :return: Type of target, static is static or global method, others just become first arg
     :rtype: ```Literal['self', 'cls', 'static']```
     """
     assert isinstance(function_def, FunctionDef), "{typ} != FunctionDef".format(
@@ -529,7 +529,7 @@ def get_value(node):
     :param node: AST node
     :type node: ```Union[Constant, Str]```
 
-    :returns: Probably a string, but could be any constant value
+    :return: Probably a string, but could be any constant value
     :rtype: ```Optional[Union[str, int, float, bool]]```
     """
     if isinstance(node, Str):
@@ -562,7 +562,7 @@ def get_at_root(node, types):
     :param types: The types to search for (uses in an `isinstance` check)
     :type types: ```Tuple[str,...]````
 
-    :returns: List of imports. Doesn't handle those within a try/except, condition, or not in root scope
+    :return: List of imports. Doesn't handle those within a try/except, condition, or not in root scope
     :rtype: ```List[Union[]]```
     """
     assert hasattr(node, "body") and isinstance(node.body, (list, tuple))
@@ -579,7 +579,7 @@ def set_value(value, kind=None):
     :param kind: AST node
     :type kind: ```Optional[Any]```
 
-    :returns: Probably a string, but could be any constant value
+    :return: Probably a string, but could be any constant value
     :rtype: ```Union[Constant, Num, Str, NameConstant]```
     """
     if (
@@ -610,7 +610,7 @@ def set_slice(node):
     :param node: An AST node
     :type node: ```ast.AST```
 
-    :returns: Original node, possibly wrapped in an ```Index```
+    :return: Original node, possibly wrapped in an ```Index```
     :rtype: ```Union[ast.AST, Index]```
     """
     return node if PY_GTE_3_9 else Index(node)
@@ -627,7 +627,7 @@ def set_arg(arg, annotation=None):
     :param annotation: The argument's annotation
     :type annotation: ```Optional[ast.AST]```
 
-    :returns: The constructed ```ast.arg```
+    :return: The constructed ```ast.arg```
     :rtype: ```ast.arg```
     """
     return ast.arg(
@@ -675,7 +675,7 @@ def is_argparse_add_argument(node):
     :param node: AST node
     :type node: ```AST```
 
-    :returns: Whether the input is the call to `argument_parser.add_argument`
+    :return: Whether the input is the call to `argument_parser.add_argument`
     :rtype: ```bool```
     """
     return (
@@ -695,7 +695,7 @@ def is_argparse_description(node):
     :param node: AST node
     :type node: ```AST```
 
-    :returns: Whether the input is the call to `argument_parser.description`
+    :return: Whether the input is the call to `argument_parser.description`
     :rtype: ```bool```
     """
     return (
@@ -720,7 +720,7 @@ def find_in_ast(search, node):
     :param node: AST node (must have a `body`)
     :type node: ```AST```
 
-    :returns: AST node that was found, or None if nothing was found
+    :return: AST node that was found, or None if nothing was found
     :rtype: ```Optional[AST]```
     """
     if not search or hasattr(node, "_location") and node._location == search:
@@ -777,7 +777,7 @@ def annotate_ancestry(node):
     :param node: AST node. Will be annotated in-place.
     :type node: ```AST```
 
-    :returns: Annotated AST node; also `node` arg will be annotated in-place.
+    :return: Annotated AST node; also `node` arg will be annotated in-place.
     :rtype: ```AST```
     """
     # print("annotating", getattr(node, "name", None))
@@ -808,7 +808,7 @@ def annotate_ancestry(node):
                     :param idx_arg: Index and Any; probably out of `enumerate`
                     :type idx_arg: ```Tuple[int, Any]```
 
-                    :returns: Second element, with _idx set with value of first
+                    :return: Second element, with _idx set with value of first
                     :rtype: ```Any```
                     """
                     idx_arg[1]._idx = idx_arg[0]
@@ -869,7 +869,7 @@ class RewriteAtQuery(NodeTransformer):
         :param node: The AST node
         :type node: ```AST```
 
-        :returns: Potentially changed AST node
+        :return: Potentially changed AST node
         :rtype: ```AST```
         """
         if (
@@ -889,7 +889,7 @@ class RewriteAtQuery(NodeTransformer):
         :param node: FunctionDef
         :type node: ```FunctionDef```
 
-        :returns: Potentially changed FunctionDef
+        :return: Potentially changed FunctionDef
         :rtype: ```FunctionDef```
         """
 
@@ -961,7 +961,7 @@ def emit_ann_assign(node):
     :param node: AST node
     :type node: ```AST```
 
-    :returns: Something which parses to the form of `a=5`
+    :return: Something which parses to the form of `a=5`
     :rtype: ```AnnAssign```
     """
     if isinstance(node, AnnAssign):
@@ -991,7 +991,7 @@ def emit_arg(node):
     :param node: AST node
     :type node: ```AST```
 
-    :returns: Something which parses to the form of `a=5`
+    :return: Something which parses to the form of `a=5`
     :rtype: ```ast.arg```
     """
     if isinstance(node, ast.arg):
@@ -1018,7 +1018,7 @@ def it2literal(it):
     :param it: collection of constants
     :type it: ```Union[Tuple[Union[str, int, float], ...], List[Union[str, int, float], ...]]```
 
-    :returns: Subscript Literal for annotation
+    :return: Subscript Literal for annotation
     :rtype: ```Subscript```
     """
     return Subscript(
@@ -1048,7 +1048,7 @@ def infer_type_and_default(action, default, typ, required):
     :param required: Whether to require the argument
     :type required: ```bool```
 
-    :returns: action (e.g., for `argparse.Action`), default, whether its required, inferred type str
+    :return: action (e.g., for `argparse.Action`), default, whether its required, inferred type str
     :rtype: ```Tuple[str, Any, bool, str]```
     """
     if code_quoted(default):
@@ -1155,7 +1155,7 @@ def _infer_type_and_default_for_list_or_tuple(action, default, required):
     :param required: Whether to require the argument
     :type required: ```bool```
 
-    :returns: action (e.g., for `argparse.Action`), default, whether its required, inferred type str
+    :return: action (e.g., for `argparse.Action`), default, whether its required, inferred type str
     :rtype: ```Tuple[Union[Literal["append"], Literal["loads"]], Any, bool, str]```
     """
     if len(default) == 0:
@@ -1188,7 +1188,7 @@ def _infer_type_and_default_from_quoted(action, default, required, typ):
     :param typ: The type of the argument
     :type typ: ```Optional[str]```
 
-    :returns: action, default, required, typ
+    :return: action, default, required, typ
     :rtype: ```Tuple[Optional[str], Optional[List[str]], bool, Optional[str]]```
     """
     default = get_value(get_value(ast.parse(default.strip("`")).body[0]))
@@ -1218,7 +1218,7 @@ def _parse_default_from_ast(action, default, required, typ):
     :param typ: The type of the argument
     :type typ: ```Optional[str]```
 
-    :returns: action, default, required, typ
+    :return: action, default, required, typ
     :rtype: ```Tuple[Optional[str], Optional[List[str]], bool, Optional[str]]```
     """
 
@@ -1256,7 +1256,7 @@ def parse_to_scalar(node):
     :param node: Any value
     :type node: ```Any```
 
-    :returns: Scalar
+    :return: Scalar
     :rtype: ```Union[str, int, float, complex, None]```
     """
     if isinstance(node, (int, float, complex, str, type(None))):
@@ -1320,7 +1320,7 @@ def _to_code(node):
     :param node: AST node
     :type node: ```AST```
 
-    :returns: Python source
+    :return: Python source
     :rtype: ```str```
     """
 
@@ -1342,7 +1342,7 @@ def node_to_dict(node):
     :param node: AST node
     :type node: ```AST```
 
-    :returns: Dict representation
+    :return: Dict representation
     :rtype: ```dict```
     """
     return {
@@ -1368,7 +1368,7 @@ def cmp_ast(node0, node1):
     :param node1: Second node
     :type node1: ```Union[AST, List[AST], Tuple[AST]]```
 
-    :returns: Whether they are equal (recursive)
+    :return: Whether they are equal (recursive)
     :rtype: ```bool```
     """
 
@@ -1403,7 +1403,7 @@ def to_annotation(typ):
     :param typ: A string representation of the type to annotate with. Else return give identity.
     :type typ: ```Union[str, AST]```
 
-    :returns: The annotation as a `Name` (usually) or else some more complex type
+    :return: The annotation as a `Name` (usually) or else some more complex type
     :rtype: ```AST```
     """
     if isinstance(typ, AST):
@@ -1430,7 +1430,7 @@ def to_type_comment(node):
     :param node: AST node with a '.annotation' or Name or str
     :type node: ```Union[Name, str, AnnAssign, arg, arguments]```
 
-    :returns: type_comment
+    :return: type_comment
     :rtype: ```str```
     """
     return (
@@ -1453,7 +1453,7 @@ def get_ass_where_name(node, name):
     :param name: Name to match (matches against `id` field of `Name`)
     :type name: ```str```
 
-    :returns: Generator of all matches names (.value)
+    :return: Generator of all matches names (.value)
     :rtype: ```Generator[Any]```
     """
     return (
@@ -1562,7 +1562,7 @@ def merge_modules(mod0, mod1, remove_imports_from_second=True):
     :param remove_imports_from_second: Whether to remove global imports from second module
     :type remove_imports_from_second: ```bool```
 
-    :returns: Merged module (copy)
+    :return: Merged module (copy)
     :rtype: ```Module```
     """
     mod1_body = (

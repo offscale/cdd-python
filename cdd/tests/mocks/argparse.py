@@ -60,7 +60,7 @@ argparse_doc_str = (
 _cli_doc_str = "\n{tab}".format(tab=tab).join(
     argparse_doc_str
     + (
-        ":returns: argument_parser, Train and tests dataset splits.",
+        ":return: argument_parser, Train and tests dataset splits.",
         ":rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset],"
         " Tuple[np.ndarray,\n{tab}np.ndarray]]]```".format(tab=tab),
     )
@@ -70,7 +70,7 @@ _cli_doc_expr = Expr(set_value("\n{tab}{}\n{tab}".format(_cli_doc_str, tab=tab))
 _cli_doc_nosplit_str = "\n{tab}".format(tab=tab).join(
     argparse_doc_str
     + (
-        ":returns: argument_parser",
+        ":return: argument_parser",
         ":rtype: ```ArgumentParser```",
     )
 )

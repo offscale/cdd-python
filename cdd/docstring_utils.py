@@ -3,10 +3,8 @@ Functions which produce docstring portions from various inputs
 """
 
 from collections import namedtuple
-from copy import deepcopy
-from functools import partial
-from itertools import chain, islice, takewhile
-from operator import methodcaller, itemgetter
+from itertools import chain, takewhile
+from operator import itemgetter
 from textwrap import indent
 
 from cdd.defaults_utils import set_default_doc
@@ -16,8 +14,8 @@ from cdd.pure_utils import (
     indent_all_but_first,
     tab,
     rpartial,
-    assert_equal,
     count_iter_items,
+    pp,
 )
 
 
@@ -54,7 +52,7 @@ def emit_param_str(
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :returns: Newline joined pair of param, type
+    :return: Newline joined pair of param, type
     :rtype: ```str```
     """
     name, _param = param
@@ -165,6 +163,326 @@ def emit_param_str(
         )
 
 
+####################################################################
+# internal functions for `parse_docstring_into_header_args_footer` #
+####################################################################
+
+
+def _get_token_start_idx(doc_str):
+    """
+    Get the start index of the token, minus starting whitespace for that line
+
+    :param doc_str: The docstring
+    :type doc_str: ```str```
+
+    :return: index of token start or -1 if not found
+    :rtype: ```int```
+    """
+    stack = []
+    for idx, ch in enumerate(doc_str):
+        if ch.isspace():
+            if stack:
+                if "".join(stack) in TOKENS_SET:
+                    token_start_idx = idx - len(stack)
+                    for i in range(token_start_idx, 0, -1):
+                        if doc_str[i] == "\n":
+                            return i + 1
+                stack.clear()
+        else:
+            stack.append(ch)
+    return -1
+
+
+def _last_doc_str_token(doc_str):
+    """
+    Get start index of last docstring token (e.g., ':rtype')
+
+    :param doc_str: The docstring
+    :type doc_str: ```str```
+
+    :return: _last_found index
+    :rtype: ```Optional[int]```
+    """
+    _last_found, penultimate_stack, stack = None, [], []
+    for i, ch in enumerate(doc_str):
+        if ch.isspace():
+            if stack:
+                if stack.count("-") == len(stack):
+                    if "".join(penultimate_stack) in NUMPYDOC_TOKENS_SET:
+                        _last_found = i - len(stack) + len(penultimate_stack)
+                else:
+                    full_stack = penultimate_stack + stack
+                    if "".join(full_stack) in TOKENS_SET:
+                        _last_found = i - len(stack)
+                    elif "".join(stack) in TOKENS_SET:
+                        _last_found = i - len(stack)
+                penultimate_stack = stack.copy()
+                stack.clear()
+        else:
+            stack.append(ch)
+
+    return _last_found
+
+
+def _get_start_of_last_found(last_found, doc_str):
+    """
+    '  :params foo' returns index to first space ' '
+
+    :param last_found: index of token start or None if not found
+    :type last_found: ```Optional[int]```
+
+    :param doc_str: The docstring
+    :type doc_str: ```str```
+
+    :return: _last_found index
+    :rtype: ```Optional[int]```
+    """
+    _last_found_starts = None
+    for _last_found_starts in range(last_found - 1, 0, -1):
+        if doc_str[_last_found_starts] == "\n":
+            _last_found_starts += 1
+            break
+    return _last_found_starts
+
+
+def _get_end_of_last_found(last_found, last_found_starts, doc_str):
+    """
+    '  :params foo' returns index to second 'o' + nl
+
+    :param last_found: index of token start or None if not found
+    :type last_found: ```Optional[int]```
+
+    :param last_found_starts: index of start of line containing token start
+    :type last_found_starts: ```int```
+
+    :param doc_str: The docstring
+    :type doc_str: ```str```
+
+    :return: _last_found index
+    :rtype: ```Optional[int]```
+    """
+    _last_found_ends, _previous_line = None, None
+    for _last_found_ends in range(last_found, len(doc_str) - 1, 1):
+        if doc_str[_last_found_ends] == "\n":
+            break
+    _last_found_ends += 1
+
+    num_nls = 0
+    for _previous_line in range(last_found-1, 0, - 1):
+        if doc_str[_previous_line] == "\n":
+            num_nls += 1
+            if num_nls > 1:
+                break
+
+    previous_line = doc_str[_previous_line+1:last_found_starts -1]
+
+    pp({"doc_str": doc_str,
+        "previous_line": previous_line,
+        "doc_str[_last_found_ends:]": doc_str[_last_found_ends:],
+        "_last_found_ends": _last_found_ends})
+    return _last_found_ends
+
+
+def _find_end_of_args_returns(last_found, last_found_starts, last_found_ends, doc_str):
+    """
+    Handle multiline indented after keyword, e.g.,
+      Returns:
+         Foo
+           more foo
+
+    :param last_found: index of token start
+    :type last_found: ```int```
+
+    :param last_found_starts: index of start of line containing token start
+    :type last_found_starts: ```int```
+
+    :param last_found_ends: index of end of line containing token start
+    :type last_found_ends: ```int```
+
+    :param doc_str: The docstring
+    :type doc_str: ```str```
+
+    :return: end of args_returns index
+    :rtype: ```int```
+    """
+    zeroth_indent = last_found - last_found_starts
+    smallest_indent = zeroth_indent
+    last_nl, nls, i = 0, 0, None
+    for i in range(last_found_ends, len(doc_str) - 1, 1):
+        if doc_str[i] == "\n":
+            # Two nl in a row
+            if last_nl - 1 == i:
+                break
+
+            last_nl = i
+            nls += 1
+
+            # munch whitespace
+            indent_size = 0
+            while i < len(doc_str) - 1 and doc_str[i].isspace() and doc_str[i] != "\n":
+                i += 1
+                indent_size += 1
+
+            if indent_size > smallest_indent:
+                if smallest_indent == 0:
+                    smallest_indent = indent_size
+                else:
+                    break
+            elif indent_size == smallest_indent == 0:
+                i -= 1
+                break
+    return i
+
+
+def _get_token_last_idx(doc_str):
+    """
+    Get the last index of the token (to end of line including newline)
+
+    :param doc_str: The docstring
+    :type doc_str: ```str```
+
+    :return: index of token last or `len(doc_str) - 1` if not found
+    :rtype: ```int```
+    """
+
+    last_found = _last_doc_str_token(doc_str)
+    if last_found is None:
+        return -1
+
+    last_found_starts = _get_start_of_last_found(last_found, doc_str)
+    last_found_ends = _get_end_of_last_found(last_found, last_found_starts, doc_str)
+
+    idx = _find_end_of_args_returns(
+        last_found, last_found_starts, last_found_ends, doc_str
+    )
+
+    # Munch until nl
+    while idx < len(doc_str) and doc_str[idx] != "\n":
+        idx += 1
+
+    return idx + 1
+
+    # afterward_idx, within_args_returns, idx = -1, False, None
+    # last_indent, ante_penultimate_stack, nls = None, [], 0
+    # for idx in range(last_found, len(doc_str) - 1, 1):
+    #     if doc_str[idx] == "\n":
+    #         nls += 1
+    #         if (
+    #             "".join(stack) in TOKENS_SET
+    #             or "".join(penultimate_stack + stack) in TOKENS_SET
+    #         ):
+    #             print("#found: {!r} ;".format("".join(stack)))
+    #             within_args_returns = True
+    #         else:
+    #             last_indent = count_iter_items(takewhile(str.isspace, stack))
+    #         afterward_idx = last_found + idx - len(stack)
+    #         ante_penultimate_stack = deepcopy(penultimate_stack)
+    #         penultimate_stack = deepcopy(stack)
+    #         stack.clear()
+    #     else:
+    #         stack.append(doc_str[idx])
+
+    # afterward_idx = last_found + idx - len(stack)
+
+    # startswith_token = any(map(doc_str[afterward_idx:].startswith, TOKENS_SET))
+    # if startswith_token and stack:
+    #     last_line = "".join(stack)
+    #     startswith_token = any(map(last_line.startswith, TOKENS_SET))
+    #     afterward_idx = -len(last_line) - 1
+    #
+    # ante_penultimate_indent, penultimate_indent, stack_indent = map(
+    #     lambda arr: count_iter_items(takewhile(str.isspace, arr)),
+    #     (ante_penultimate_stack, penultimate_stack, stack),
+    # )
+    #
+    # return (
+    #     -1
+    #     if stack_indent != 0
+    #     and (stack_indent == last_indent or penultimate_indent == stack_indent)
+    #     or penultimate_indent > ante_penultimate_indent
+    #     or startswith_token
+    #     else afterward_idx
+    # )
+
+
+########################################################################
+# end internal functions for `parse_docstring_into_header_args_footer` #
+########################################################################
+
+
+def parse_docstring_into_header_args_footer(current_doc_str, original_doc_str):
+    """
+    Parse docstring into three parts: header; args|returns; footer
+
+    :param current_doc_str: The current doc_str
+    :type current_doc_str: ```str```
+
+    :param original_doc_str: The original doc_str
+    :type original_doc_str: ```str```
+
+    :return: Header, args|returns, footer
+    :rtype: ```Tuple[Optional[str], Optional[str], Optional[str]]```
+    """
+    if original_doc_str == current_doc_str:
+        return current_doc_str
+
+    start_idx_current, start_idx_original = map(
+        _get_token_start_idx, (current_doc_str, original_doc_str)
+    )
+    last_idx_current, last_idx_original = map(
+        _get_token_last_idx, (current_doc_str, original_doc_str)
+    )
+
+    footer_current, footer_original = map(
+        lambda doc_idx: doc_idx[0][doc_idx[1] :] if doc_idx[1] != -1 else None,
+        ((current_doc_str, last_idx_current), (original_doc_str, last_idx_original)),
+    )
+    pp(
+        {
+            "current_doc_str[{}:{}]".format(
+                start_idx_current, last_idx_current
+            ): current_doc_str[start_idx_current:last_idx_current],
+            "current_doc_str[{}:]".format(last_idx_current): current_doc_str[
+                last_idx_current:
+            ],
+            "original_doc_str[{}:{}]".format(
+                start_idx_original, last_idx_original
+            ): original_doc_str[start_idx_original:last_idx_original],
+            "original_doc_str[{}:]".format(last_idx_original): original_doc_str[
+                last_idx_original:
+            ]
+        }
+    )
+
+    # Now we know where the args/returns were, and where they are now
+    # To avoid whitespace issues, only copy across the args/returns portion, keep rest as original
+
+    header_original = (
+        original_doc_str[:start_idx_original] if start_idx_original > -1 else ""
+    )
+    args_returns_original = original_doc_str[
+        slice(
+            (start_idx_original if start_idx_original > -1 else None),
+            (len(footer_current) if footer_current else None),
+        )
+    ]
+    args_returns_current = current_doc_str[
+        slice(start_idx_current, len(footer_current) if footer_current else None)
+    ]
+
+    args_returns_indent_original = count_iter_items(
+        takewhile(str.isspace, args_returns_original or iter(()))
+    )
+    if args_returns_indent_original > 1 and args_returns_current:
+        args_returns_current = indent(
+            args_returns_current,
+            prefix=" " * args_returns_indent_original,
+            predicate=lambda _: _,
+        )
+
+    return header_original, args_returns_current, footer_original
+
+
 def ensure_doc_args_whence_original(current_doc_str, original_doc_str):
     """
     Ensure doc args appear where they appeared originally
@@ -175,166 +493,24 @@ def ensure_doc_args_whence_original(current_doc_str, original_doc_str):
     :param original_doc_str: The original doc_str
     :type original_doc_str: ```str```
 
-    :returns: reshuffled doc_str with args/returns in same place as original (same header, footer, and whitespace)
+    :return: reshuffled doc_str with args/returns in same place as original (same header, footer, and whitespace)
     :rtype: ```str```
     """
-    if original_doc_str == current_doc_str:
-        return current_doc_str
-
-    def get_token_start_idx(doc_str):
-        """
-        Get the start index of the token, minus starting whitespace for that line
-
-        :param doc_str: The docstring
-        :type doc_str: ```str```
-
-        :returns: index of token start or -1 if not found
-        :rtype: ```int```
-        """
-        stack = []
-        for idx, ch in enumerate(doc_str):
-            if ch.isspace():
-                if stack:
-                    if "".join(stack) in TOKENS_SET:
-                        token_start_idx = idx - len(stack)
-                        for i in range(token_start_idx, 0, -1):
-                            if doc_str[i] == "\n":
-                                return i + 1
-                    stack.clear()
-            else:
-                stack.append(ch)
-        return -1
-
-    def get_token_last_idx(doc_str):
-        """
-        Get the last index of the token
-
-        :param doc_str: The docstring
-        :type doc_str: ```str```
-
-        :returns: index of token last or `len(doc_str) - 1` if not found
-        :rtype: ```int```
-        """
-        last_found, penultimate_stack, stack = None, [], []
-        for idx, ch in enumerate(doc_str):
-            if ch.isspace():
-                if stack:
-                    if (
-                        "".join(stack) in TOKENS_SET
-                        or "".join(penultimate_stack + stack) in TOKENS_SET
-                    ):
-                        last_found = idx - len(stack)
-                    penultimate_stack = stack.copy()
-                    stack.clear()
-            else:
-                stack.append(ch)
-        if last_found is None:
-            return -1
-        penultimate_stack.clear()
-        stack.clear()
-
-        afterward_idx, within_args_returns, idx, last_indent, ante_penultimate_stack = (
-            -1,
-            False,
-            None,
-            None,
-            [],
-        )
-        for idx, ch in enumerate(doc_str[last_found:]):
-            if ch == "\n":
-                if (
-                    "".join(stack) in TOKENS_SET
-                    or "".join(penultimate_stack + stack) in TOKENS_SET
-                ):
-                    within_args_returns = True
-                else:
-                    last_indent = count_iter_items(takewhile(str.isspace, stack))
-                afterward_idx = last_found + idx - len(stack)
-                ante_penultimate_stack = deepcopy(penultimate_stack)
-                penultimate_stack = deepcopy(stack)
-                stack.clear()
-            else:
-                stack.append(ch)
-
-        # afterward_idx = last_found + idx - len(stack)
-
-        startswith_token = any(map(doc_str[afterward_idx:].startswith, TOKENS_SET))
-        if startswith_token and stack:
-            last_line = "".join(stack)
-            startswith_token = any(map(last_line.startswith, TOKENS_SET))
-            afterward_idx = -len(last_line) - 1
-
-        ante_penultimate_indent, penultimate_indent, stack_indent = map(
-            lambda arr: count_iter_items(takewhile(str.isspace, arr)),
-            (ante_penultimate_stack, penultimate_stack, stack),
-        )
-
-        return (
-            -1
-            if stack_indent != 0
-            and (stack_indent == last_indent or penultimate_indent == stack_indent)
-            or penultimate_indent > ante_penultimate_indent
-            or startswith_token
-            else afterward_idx
-        )
-
-    start_idx_current, start_idx_original = map(
-        get_token_start_idx, (current_doc_str, original_doc_str)
-    )
-    last_idx_current, last_idx_original = map(
-        get_token_last_idx, (current_doc_str, original_doc_str)
-    )
-
-    afterward_current, afterward_original = map(
-        lambda doc_idx: doc_idx[0][slice(doc_idx[1], None)]
-        if doc_idx[1] != -1
-        else None,
-        ((current_doc_str, last_idx_current), (original_doc_str, last_idx_original)),
-    )
-
-    # Now we know where the args/returns were, and where they are now
-    # To avoid whitespace issues, only copy across the args/returns portion, keep rest as original
-
-    original_header = (
-        original_doc_str[:start_idx_original] if start_idx_original > -1 else ""
-    )
-    original_args_returns = original_doc_str[
-        slice(
-            (start_idx_original if start_idx_original > -1 else None),
-            (len(afterward_current) if afterward_current else None),
-        )
-    ]
-    original_footer = afterward_original
-    current_args_returns = current_doc_str[
-        slice(start_idx_current, len(afterward_current) if afterward_current else None)
-    ]
-
     (
-        original_header_indent,
-        current_args_returns_indent,
-        original_args_returns_indent,
-        original_footer_indent,
-    ) = map(
-        lambda s: count_iter_items(takewhile(str.isspace, s or iter(()))),
-        (original_header, current_args_returns, original_args_returns, original_footer),
-    )
-    if original_args_returns_indent > 1 and current_args_returns:
-        current_args_returns = indent(
-            current_args_returns,
-            prefix=" " * original_args_returns_indent,
-            predicate=lambda _: _,
-        )
-    ret = "{original_header}{current_args_returns}{original_footer}".format(
+        original_header,
+        current_args_returns,
+        original_footer,
+    ) = parse_docstring_into_header_args_footer(current_doc_str, original_doc_str)
+    return "{original_header}{current_args_returns}{original_footer}".format(
         original_header=original_header or "",
         current_args_returns=current_args_returns or "",
         original_footer=original_footer or "",
     )
-    return ret
 
 
 Tokens = namedtuple("Tokens", ("rest", "google", "numpydoc"))
 TOKENS = Tokens(
-    (":param", ":cvar", ":ivar", ":var", ":type", ":return", ":rtype"),
+    (":param", ":cvar", ":ivar", ":var", ":type", ":raises", ":return", ":rtype"),
     ("Args:", "Kwargs:", "Raises:", "Returns:"),
     ("Parameters\n" "----------", "Returns\n" "-------"),
 )
@@ -345,6 +521,15 @@ TOKENS_SET = frozenset(
         map(
             rpartial(str.partition, "\n"),
             chain.from_iterable(TOKENS._asdict().values()),
+        ),
+    )
+)
+NUMPYDOC_TOKENS_SET = frozenset(
+    map(
+        itemgetter(0),
+        map(
+            rpartial(str.partition, "\n"),
+            TOKENS.numpydoc,
         ),
     )
 )

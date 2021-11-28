@@ -82,7 +82,7 @@ def gen(
             #     :param node: import node
             #     :type node: ```Union[Import, ImportFrom]```
             #
-            #     :returns: The import potentially rewritten or None
+            #     :return: The import potentially rewritten or None
             #     :rtype: ```Optional[Union[Import, ImportFrom]]```
             #     """
             #     if isinstance(node, ImportFrom) and node.module == "typing":

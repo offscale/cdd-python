@@ -36,7 +36,7 @@ def openapi_bulk(app_name, model_paths, routes_paths):
         :param filename: The filename to open and parse AST out of
         :type filename: ```str```
 
-        :returns: Iterable of tuples of the found kind
+        :return: Iterable of tuples of the found kind
         :rtype: ```Iterable[Tuple[AST, ...], ...]```
         """
         with open(filename, "rb") as f:
@@ -52,7 +52,7 @@ def openapi_bulk(app_name, model_paths, routes_paths):
         :param filename: The filename to open and parse AST out of
         :type filename: ```str```
 
-        :returns: Iterable of tuples of the found kind
+        :return: Iterable of tuples of the found kind
         :rtype: ```Iterable[Tuple[AST, ...], ...]```
         """
         with open(filename, "rb") as f:
@@ -76,7 +76,7 @@ def openapi_bulk(app_name, model_paths, routes_paths):
         :param path_dict: OpenAPI paths key
         :type path_dict: ```dict```
 
-        :returns: (route, path_dict) with `"parameters"` key potentially set
+        :return: (route, path_dict) with `"parameters"` key potentially set
         :rtype: ```Tuple[str, dict]```
         """
         if ":" in route:

@@ -40,7 +40,7 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
     :param _result: The result var (used internally as accumulator)
     :type _result: ```dict```
 
-    :returns: Values (could be modules, classes, and whatever other symbols are exposed)
+    :return: Values (could be modules, classes, and whatever other symbols are exposed)
     :rtype: ```Generator[Any]```
     """
     for name, symbol in no_magic_dir2attr(obj).items():
@@ -106,7 +106,7 @@ def emit_file_on_hierarchy(
     :param dry_run: Show what would be created; don't actually write to the filesystem
     :type dry_run: ```bool```
 
-    :returns: Import to generated module
+    :return: Import to generated module
     :rtype: ```ImportFrom```
     """
     mod_name, _, name = name_orig_ir[0].rpartition(".")
@@ -272,7 +272,7 @@ def _emit_symbol(
     :param dry_run: Show what would be created; don't actually write to the filesystem
     :type dry_run: ```bool```
 
-    :returns: Import to generated module
+    :return: Import to generated module
     :rtype: ```ImportFrom```
     """
     gen_node = getattr(emit, sanitise_emit_name(emit_name))(

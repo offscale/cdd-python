@@ -56,7 +56,7 @@ from cdd.parser_utils import (
     ir_merge,
     json_schema_property_to_param,
 )
-from cdd.pure_utils import assert_equal, rpartial, simple_types, pp
+from cdd.pure_utils import assert_equal, rpartial, simple_types
 from cdd.source_transformer import to_code
 
 logger = get_logger("cdd.parse")
@@ -91,7 +91,7 @@ def class_(
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
-    :returns: a dictionary of form
+    :return: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
@@ -276,7 +276,7 @@ def _class_from_memory(
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
-    :returns: a dictionary of form
+    :return: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
@@ -354,7 +354,7 @@ def _merge_inner_function(
     :param merge_inner_function: Name of inner function to merge. If None, merge nothing.
     :type merge_inner_function: ```Optional[str]```
 
-    :returns: a dictionary of form
+    :return: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
@@ -402,7 +402,7 @@ def _inspect(obj, name, parse_original_whitespace, word_wrap):
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
-    :returns: a dictionary of form
+    :return: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
@@ -520,7 +520,7 @@ def function(
     :param function_name: name of function_def
     :type function_name: ```str```
 
-    :returns: a dictionary of form
+    :return: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
@@ -582,6 +582,7 @@ def function(
             "name": function_name or function_def.name,
             "params": OrderedDict(),
             "returns": None,
+            "_internal": {},
         }
     else:
         intermediate_repr = docstring(
@@ -589,6 +590,7 @@ def function(
             parse_original_whitespace=parse_original_whitespace,
             infer_type=infer_type,
         )
+        intermediate_repr["_internal"] = {"original_doc_str": doc_str}
 
     intermediate_repr.update(
         {
@@ -597,14 +599,15 @@ def function(
         }
     )
 
-    function_def.body = function_def.body if doc_str is None else function_def.body[1:]
-    if function_def.body:
-        intermediate_repr["_internal"] = {
-            "original_doc_str": doc_str,
-            "body": function_def.body,
+    intermediate_repr["_internal"].update(
+        {
             "from_name": function_def.name,
             "from_type": found_type,
         }
+    )
+    function_def.body = function_def.body if doc_str is None else function_def.body[1:]
+    if function_def.body:
+        intermediate_repr["_internal"]["body"] = function_def.body
 
     params_to_append = OrderedDict()
     if (
@@ -700,7 +703,7 @@ def argparse_ast(
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
-    :returns: a dictionary of form
+    :return: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
@@ -806,7 +809,7 @@ def docstring(
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :returns: intermediate_repr, whether it returns or not
+    :return: intermediate_repr, whether it returns or not
     :rtype: ```Optional[Union[dict, Tuple[dict, bool]]]```
     """
     assert isinstance(doc_string, str), "Expected 'str' got {doc_string_type!r}".format(
@@ -844,7 +847,7 @@ def json_schema(json_schema_dict, parse_original_whitespace=False):
     :param parse_original_whitespace: Whether to parse original whitespace or strip it out
     :type parse_original_whitespace: ```bool```
 
-    :returns: IR representation of the given JSON schema
+    :return: IR representation of the given JSON schema
     :rtype: ```dict```
     """
     # I suppose a JSON-schema validation routine could be executed here
@@ -876,7 +879,7 @@ def sqlalchemy_table(call_or_name, parse_original_whitespace=False):
     :param parse_original_whitespace: Whether to parse original whitespace or strip it out
     :type parse_original_whitespace: ```bool```
 
-    :returns: a dictionary of form
+    :return: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
@@ -942,7 +945,7 @@ def sqlalchemy(class_def, parse_original_whitespace=False):
     :param parse_original_whitespace: Whether to parse original whitespace or strip it out
     :type parse_original_whitespace: ```bool```
 
-    :returns: a dictionary of form
+    :return: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
@@ -979,7 +982,7 @@ def sqlalchemy(class_def, parse_original_whitespace=False):
         :param assign: Of form `a = Column()`
         :type assign: ```Assign```
 
-        :returns: Unwrapped Call with name prepended
+        :return: Unwrapped Call with name prepended
         :rtype: ```Call```
         """
         assign.value.args.insert(0, set_value(assign.targets[0].id))

@@ -44,7 +44,7 @@ from cdd.tests.mocks.ir import (
     intermediate_repr_only_return_type,
 )
 from cdd.tests.mocks.methods import function_google_tf_mean_squared_error_ast
-from cdd.tests.utils_for_tests import unittest_main, remove_args_from_docstring
+from cdd.tests.utils_for_tests import unittest_main
 
 
 class TestMarshallDocstring(TestCase):
@@ -298,8 +298,8 @@ class TestMarshallDocstring(TestCase):
 
     def test_from_docstring_google_tf_mean_squared_error_str(self) -> None:
         """
-        Tests whether `parse_docstring` produces the right IR
-              from `docstring_google_tf_mean_squared_error_str`
+        Tests whether `cdd.parse.function` emits the right docstring
+              from `function_google_tf_mean_squared_error_ast`
         """
         gen = cdd.emit.docstring(
             cdd.parse.function(
@@ -308,31 +308,35 @@ class TestMarshallDocstring(TestCase):
                 infer_type=True,
                 parse_original_whitespace=True,
             ),
-            indent_level=0,
+            # indent_level=0,
             docstring_format="google",
             emit_types=True,
             emit_default_doc=False,
-            emit_separating_tab=False,
+            # emit_separating_tab=False,
             word_wrap=False,
         )
-        print("gen", gen, ";")
-        gen_no_args = remove_args_from_docstring
-        gold = docstring_google_tf_mean_squared_error_str
+        # print("gen", gen, ";")
+        # gen_no_args = remove_args_from_docstring
+        # gold = docstring_google_tf_mean_squared_error_str
+
+        # print("#" * 100)
+        # pp(gen.splitlines())
+        # print("#"*100)
 
         self.assertEqual(
             gen,
             docstring_google_tf_mean_squared_error_str,
         )
 
-    def test_(self):
-        gold_google_doc_str = """
-        foo
-
-        Args:
-          a (int):
-
-        can haz
-        """
+    # def test_(self):
+    #     gold_google_doc_str = """
+    #     foo
+    #
+    #     Args:
+    #       a (int):
+    #
+    #     can haz
+    #     """
 
     def test_from_docstring_google_pytorch_lbfgs_str(self) -> None:
         """

@@ -47,7 +47,7 @@ def identity(*args, **kwargs):
     :param args: Any values
     :type args: ```Tuple[Any]```
 
-    :returns: the input value
+    :return: the input value
     :rtype: ```Any```
     """
     return args[0] if len(args) == 1 else args
@@ -107,7 +107,7 @@ def pluralise(singular):
     :param singular: Non plural
     :type singular: ```str```
 
-    :returns: Plural version
+    :return: Plural version
     :rtype: ```str```
     """
     if not singular:
@@ -153,7 +153,7 @@ def deindent(s, level=None, sep=tab):
     :param sep: Separator (usually `tab`)
     :type sep: ```str```
 
-    :returns: Deindented string
+    :return: Deindented string
     :rtype: ```AnyStr```
     """
     if level is None:
@@ -166,7 +166,7 @@ def deindent(s, level=None, sep=tab):
             :param line: The line to dedent
             :type line: ```AnyStr```
 
-            :returns: Dedented line
+            :return: Dedented line
             :rtype: ```AnyStr```
             """
             return line[len(sep) :] if line.startswith(sep) else line
@@ -187,7 +187,7 @@ def reindent(s, indent_level=1, join_on="\n"):
     :param join_on: What to join on, e.g., '\n'
     :type join_on: ```str```
 
-    :returns: Reindented string
+    :return: Reindented string
     :rtype: ```AnyStr```
     """
     return join_on.join(
@@ -227,7 +227,7 @@ def indent_all_but_first(s, indent_level=1, wipe_indents=False, sep=tab):
     :param sep: Separator (usually `tab`)
     :type sep: ```str```
 
-    :returns: input string indented (except first line)
+    :return: input string indented (except first line)
     :rtype: ```str```
     """
     lines = indent(deindent(s) if wipe_indents else s, sep * abs(indent_level)).split(
@@ -253,7 +253,7 @@ def multiline(s, quote_with=("'", "'")):
     :param quote_with: What to quote with
     :type quote_with: ```Tuple[str, str]```
 
-    :returns: multine input string
+    :return: multine input string
     :rtype: ```str```
     """
     return "{}{}".format(
@@ -276,7 +276,7 @@ def sanitise(s):
     :param s: Input string
     :type s: ```str```
 
-    :returns: input string with '_' append if it's a keyword else input string
+    :return: input string with '_' append if it's a keyword else input string
     :rtype: ```str```
     """
     return "{}_".format(s) if iskeyword(s) else s
@@ -292,7 +292,7 @@ def strip_split(param, sep):
     :param sep: Separator
     :type sep: ```str```
 
-    :returns: Iterator of each element of the hierarchy
+    :return: Iterator of each element of the hierarchy
     :rtype: ```Iterator[str, ...]```
     """
     return map(str.strip, param.split(sep))
@@ -305,7 +305,7 @@ def unquote(input_str):
     :param input_str: Input string
     :type input_str: ```Optional[str]```
 
-    :returns: Unquoted string
+    :return: Unquoted string
     :rtype: ```Optional[str]```
     """
     if (
@@ -332,7 +332,7 @@ def quote(s, mark='"'):
     :param mark: Quote mark to wrap with
     :type mark: ```str```
 
-    :returns: Quoted string or input (if input is not str)
+    :return: Quoted string or input (if input is not str)
     :rtype: ```Union[str, float, complex, int, None]```
     """
     very_simple_types = type(None), int, float, complex
@@ -370,7 +370,7 @@ def assert_equal(a, b, cmp=eq):
     :param cmp: comparator function
     :type cmp: ```Callable[[a, b], bool]```
 
-    :returns: True if equal, otherwise raises `AssertionError`
+    :return: True if equal, otherwise raises `AssertionError`
     :rtype: ```Literal[True]```
     """
     if not cmp(a, b):
@@ -391,7 +391,7 @@ def update_d(d, arg=None, **kwargs):
     :param kwargs: keyword args to update with
     :type kwargs: ```**kwargs```
 
-    :returns: Updated dict
+    :return: Updated dict
     :rtype: ```dict```
     """
     if arg:
@@ -411,7 +411,7 @@ def lstrip_namespace(s, namespaces):
     :param namespaces: namespaces to strip
     :type namespaces: ```Union[List[str], Tuple[str], Generator[str], Iterator[str]]```
 
-    :returns: `.lstrip`ped input (potentially just the original!)
+    :return: `.lstrip`ped input (potentially just the original!)
     :rtype: ```AnyStr```
     """
     for namespace in namespaces:
@@ -430,7 +430,7 @@ def diff(input_obj, op):
     :param op: The operation to run
     :type op: ```Callable[[Any], Any]```
 
-    :returns: length of difference, response of operated input
+    :return: length of difference, response of operated input
     :rtype: ```Tuple[int, Any]```
     """
     input_len = len(
@@ -459,7 +459,7 @@ def blockwise(t, size=2, fillvalue=None):
     :param fillvalue: What to use to "pair" with if uneven
     :type fillvalue: ```Any```
 
-    :returns: iterator with iterators inside of block size
+    :return: iterator with iterators inside of block size
     :rtype: ```Iterator```
     """
     return zip_longest(*[iter(t)] * abs(size), fillvalue=fillvalue)
@@ -479,7 +479,7 @@ def location_within(container, iterable, cmp=eq):
     :param cmp: Comparator to check input against
     :type cmp: ```Callable[[str, str], bool]```
 
-    :returns: (Start index iff found else -1, End index iff found else -1, subset iff found else None)
+    :return: (Start index iff found else -1, End index iff found else -1, subset iff found else None)
     :rtype: ```Tuple[int, int, Optional[Any]]```
     """
     if not hasattr(container, "__len__"):
@@ -526,7 +526,7 @@ def code_quoted(s):
     :param s: The input
     :type s: ```Any```
 
-    :returns: Whether the input is code quoted
+    :return: Whether the input is code quoted
     :rtype: ```bool```
     """
     return (
@@ -542,7 +542,7 @@ def count_iter_items(iterable):
     :param iterable: An iterable
     :type iterable: ```Iterable```
 
-    :returns: Number of items in iterable
+    :return: Number of items in iterable
     :rtype: ```int```
     """
     counter = count()
@@ -569,7 +569,7 @@ def get_module(name, package=None, extra_symbols=None):
     :param extra_symbols: Dictionary of extra symbols to use if `importlib.import_module` fails
     :type extra_symbols: ```Optional[dict]```
 
-    :returns: Module
+    :return: Module
     :rtype: ```Module```
     """
     try:
@@ -595,7 +595,7 @@ def paren_wrap_code(code):
     :param code: Source code string
     :type code: ```str```
 
-    :returns: Potentially parenthetically wrapped input
+    :return: Potentially parenthetically wrapped input
     :rtype: ```str```
     """
     return (
@@ -612,7 +612,7 @@ def filename_from_mod_or_filename(mod_or_filename):
     :param mod_or_filename: Module name or filename
     :type mod_or_filename: ```str```
 
-    :returns: Filename
+    :return: Filename
     :rtype: ```str```
     """
     filename = type("", tuple(), {"origin": mod_or_filename})
@@ -636,7 +636,7 @@ def emit_separating_tabs(s, indent_level=1, run_per_line=str.lstrip):
     :param run_per_line: Run this function per line
     :type run_per_line: ```Callable[[str], str]```
 
-    :returns: Original string with a separating tab between paragraphs, & possibly addition indentation on other lines
+    :return: Original string with a separating tab between paragraphs, & possibly addition indentation on other lines
     :rtype: ```str```
     """
     sep = tab * indent_level
@@ -663,7 +663,7 @@ def set_attr(obj, key, val):
     :param val: A value
     :type val: ```Any```
 
-    :returns: The modified `obj`
+    :return: The modified `obj`
     :rtype: ```Any```
     """
     setattr(obj, key, val)
@@ -685,7 +685,7 @@ def set_item(obj, key, val):
     :param val: A value
     :type val: ```Any```
 
-    :returns: The modified `obj`
+    :return: The modified `obj`
     :rtype: ```Any```
     """
     obj[key] = val
@@ -701,7 +701,7 @@ def no_magic_dir2attr(p_object):
     :param p_object: Object
     :type p_object: ```Any```
 
-    :returns: Dict of name to attribute value
+    :return: Dict of name to attribute value
     :rtype: ```dict```
     """
     return {

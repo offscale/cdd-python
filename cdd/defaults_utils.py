@@ -31,7 +31,7 @@ def ast_parse_fix(s):
     :param s: String to parse
     :type s: ```str```
 
-    :returns: Value
+    :return: Value
     """
     # return ast.parse(s).body[0].value
     balanced = (s.count("[") + s.count("]")) & 1 == 0
@@ -45,7 +45,7 @@ def needs_quoting(typ):
     :param typ: The type
     :type typ: ```Optional[str]```
 
-    :returns: Whether the type needs quoting
+    :return: Whether the type needs quoting
     :rtype: ```bool```
     """
     if typ is None or typ.startswith("*"):
@@ -97,7 +97,7 @@ def extract_default(
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :returns: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
+    :return: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
     :rtype: Tuple[str, Optional[str]]
     """
     if line is None:
@@ -206,7 +206,7 @@ def _parse_out_default_and_doc(
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :returns: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
+    :return: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
     :rtype: Tuple[str, Optional[str]]
     """
     if typ is not None and typ in simple_types and default not in none_types:
@@ -284,7 +284,7 @@ def remove_defaults_from_intermediate_repr(intermediate_repr, emit_default_prop=
     :param emit_default_prop: Whether to emit default property
     :type emit_default_prop: ```bool```
 
-    :returns: a dictionary of form
+    :return: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
@@ -317,7 +317,7 @@ def _remove_default_from_param(param, emit_default_prop=True):
     :param emit_default_prop: Whether to emit default property
     :type emit_default_prop: ```bool```
 
-    :returns: Name, dict with keys: 'typ', 'doc', 'default'
+    :return: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
     """
     name, _param = param
@@ -339,7 +339,7 @@ def set_default_doc(param, emit_default_doc=True):
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :returns: Same shape as input but with Default append to doc.
+    :return: Same shape as input but with Default append to doc.
     :rtype: ```dict```
     """
     name, _param = param

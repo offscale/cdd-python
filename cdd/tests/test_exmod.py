@@ -410,7 +410,7 @@ class TestExMod(TestCase):
         :param tempdir: Temporary directory
         :type tempdir: ```str```
 
-        :returns: tempdir
+        :return: tempdir
         :rtype: ```str```
         """
         self.module_name, self.gold_dir = path.basename(tempdir), tempdir
@@ -537,7 +537,7 @@ class TestExMod(TestCase):
                 :param _folder: Folder to join on
                 :type _folder: ```str``
 
-                :returns: Open IO
+                :return: Open IO
                 :rtype: ```open```
                 """
                 return open(

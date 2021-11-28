@@ -22,7 +22,7 @@ def openapi(openapi_str, routes_dict, summary):
     :param summary: summary string (used as fallback)
     :type summary: ```str```
 
-    :returns: OpenAPI dictionary
+    :return: OpenAPI dictionary
     """
     entities = extract_entities(openapi_str)
 

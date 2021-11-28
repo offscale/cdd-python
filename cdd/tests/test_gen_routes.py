@@ -42,7 +42,7 @@ def populate_files(tempdir, init_with_crud):
                      Literal['D', 'C', 'R'], Literal['D', 'C', 'U'], Literal['D', 'R', 'C'],
                      Literal['D', 'R', 'U'], Literal['D', 'U', 'C'], Literal['D', 'U', 'R']]```
 
-    :returns: model_path, routes_path
+    :return: model_path, routes_path
     :rtype: ```Tuple[str, str]```
     """
     model_path = path.join(tempdir, "model{extsep}py".format(extsep=extsep))

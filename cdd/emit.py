@@ -23,7 +23,7 @@ from collections import OrderedDict
 from functools import partial
 from importlib import import_module
 from itertools import chain
-from operator import add, eq
+from operator import add
 from sys import modules
 from textwrap import indent
 
@@ -35,7 +35,12 @@ from cdd.ast_utils import (
     set_arg,
     set_value,
 )
-from cdd.docstring_utils import ARG_TOKENS, RETURN_TOKENS, emit_param_str
+from cdd.docstring_utils import (
+    ARG_TOKENS,
+    RETURN_TOKENS,
+    emit_param_str,
+    parse_docstring_into_header_args_footer,
+)
 from cdd.emitter_utils import (
     RewriteName,
     _make_call_meth,
@@ -43,16 +48,15 @@ from cdd.emitter_utils import (
     get_internal_body,
     param2json_schema_property,
     param_to_sqlalchemy_column_call,
+    normalise_intermediate_representation,
 )
 from cdd.pure_utils import (
     PY3_8,
     code_quoted,
     deindent,
-    emit_separating_tabs,
     fill,
     identity,
     none_types,
-    omit_whitespace,
     rpartial,
     simple_types,
     tab,
@@ -112,7 +116,7 @@ def argparse_function(
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
 
-    :returns:  AST node for function definition which constructs argparse
+    :return:  AST node for function definition which constructs argparse
     :rtype: ```FunctionDef```
     """
     function_name = function_name or intermediate_repr["name"]
@@ -122,6 +126,7 @@ def argparse_function(
         target_type=function_type,
         intermediate_repr=intermediate_repr,
     )
+    normalise_intermediate_representation(intermediate_repr)
 
     return FunctionDef(
         args=arguments(
@@ -368,7 +373,7 @@ def class_(
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :returns: Class AST
+    :return: Class AST
     :rtype: ```ClassDef```
     """
     assert isinstance(
@@ -376,12 +381,12 @@ def class_(
     ), "{intermediate_repr_type_name} != dict".format(
         intermediate_repr_type_name=type(intermediate_repr).__name__
     )
+
     returns = (
         intermediate_repr["returns"]
         if "return_type" in ((intermediate_repr or {}).get("returns") or iter(()))
         else OrderedDict()
     )
-
     if returns:
         intermediate_repr["params"].update(returns)
         del intermediate_repr["returns"]
@@ -453,7 +458,7 @@ def class_(
                                             ":cvar ",
                                         )
                                         .replace(
-                                            "\n{sep}:returns:".format(sep=sep),
+                                            "\n{sep}:return:".format(sep=sep),
                                             ":cvar return_type:",
                                             1,
                                         )
@@ -555,102 +560,111 @@ def docstring(
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :returns: docstring
+    :return: docstring
     :rtype: ```str```
     """
-    _sep = tab * indent_level
-    candidate_doc_str = "\n{_sep}{_docstring}\n{_sep}".format(
-        _docstring=(
-            emit_separating_tabs
-            if emit_separating_tab and emit_original_whitespace is False
-            else identity
-        )(
-            indent(
-                "\n{doc}\n\n{nl0}{params}\n{returns}\n{nl1}".format(
-                    doc=(fill if word_wrap else identity)(intermediate_repr["doc"]),
-                    nl0="" if docstring_format == "rest" else "\n",
-                    nl1="\n" if docstring_format == "numpydoc" else "",
-                    params="\n{maybe_nl}".format(
-                        maybe_nl="\n" if docstring_format == "rest" else ""
-                    ).join(
-                        (
-                            lambda param_lines: [
-                                getattr(ARG_TOKENS, docstring_format)[0]
-                            ]
-                            + param_lines
-                            if param_lines and docstring_format != "rest"
-                            else param_lines
-                        )(
-                            list(
-                                map(
-                                    partial(
-                                        emit_param_str,
-                                        style=docstring_format,
-                                        purpose=purpose,
-                                        emit_type=emit_types,
-                                        emit_default_doc=emit_default_doc,
-                                        word_wrap=word_wrap,
-                                    ),
-                                    (
-                                        intermediate_repr["params"] or OrderedDict()
-                                    ).items(),
-                                ),
-                            )
-                        )
+    # _sep = tab * indent_level
+
+    candidate_args_returns = "{params}\n{returns}\n".format(
+        params="\n{maybe_nl}".format(
+            maybe_nl="\n" if docstring_format == "rest" else ""
+        ).join(
+            (
+                lambda param_lines: [getattr(ARG_TOKENS, docstring_format)[0]]
+                + param_lines
+                if param_lines and docstring_format != "rest"
+                else param_lines
+            )(
+                list(
+                    map(
+                        partial(
+                            emit_param_str,
+                            style=docstring_format,
+                            purpose=purpose,
+                            emit_type=emit_types,
+                            emit_default_doc=emit_default_doc,
+                            word_wrap=word_wrap,
+                        ),
+                        (intermediate_repr["params"] or OrderedDict()).items(),
                     ),
-                    returns="".join(
-                        (
-                            lambda l: l
-                            if l is None
-                            else "{maybe_nl}\n{returns_doc}".format(
-                                maybe_nl=""
-                                if docstring_format == "rest"
-                                else "\n{return_token}".format(
-                                    return_token=getattr(
-                                        RETURN_TOKENS, docstring_format
-                                    )[0]
-                                ),
-                                returns_doc=l,
-                            )
-                        )(
-                            next(
-                                map(
-                                    partial(
-                                        emit_param_str,
-                                        style=docstring_format,
-                                        purpose=purpose,
-                                        emit_type=emit_types,
-                                        emit_default_doc=emit_default_doc,
-                                        word_wrap=word_wrap,
-                                    ),
-                                    intermediate_repr["returns"].items(),
-                                ),
-                                None,
-                            )
-                        )
-                    )
-                    if "return_type" in (intermediate_repr.get("returns") or iter(()))
-                    else "",
-                ),
-                _sep,
-            ),
-            indent_level=indent_level,
-            run_per_line=identity,
-        ).strip(),
-        _sep=_sep,
+                )
+            )
+        ),
+        returns="".join(
+            (
+                lambda l: l
+                if l is None
+                else "{maybe_nl}\n{returns_doc}".format(
+                    maybe_nl=""
+                    if docstring_format == "rest"
+                    else "\n{return_token}".format(
+                        return_token=getattr(RETURN_TOKENS, docstring_format)[0]
+                    ),
+                    returns_doc=l,
+                )
+            )(
+                next(
+                    map(
+                        partial(
+                            emit_param_str,
+                            style=docstring_format,
+                            purpose=purpose,
+                            emit_type=emit_types,
+                            emit_default_doc=emit_default_doc,
+                            word_wrap=word_wrap,
+                        ),
+                        intermediate_repr["returns"].items(),
+                    ),
+                    None,
+                )
+            )
+        )
+        if "return_type" in (intermediate_repr.get("returns") or iter(()))
+        else "",
     )
+
     original_doc_str = intermediate_repr.get("_internal", {}).get(
         "original_doc_str", ""
     )
-    return (
-        original_doc_str
-        if (
-            emit_original_whitespace
-            and original_doc_str
-            and eq(*map(omit_whitespace, (original_doc_str, candidate_doc_str)))
+    if original_doc_str:
+        header, _, footer = parse_docstring_into_header_args_footer(
+            candidate_args_returns, original_doc_str
         )
-        else candidate_doc_str
+        if not header and not footer:
+            header = intermediate_repr.get("doc", "")
+    else:
+        header, footer = intermediate_repr.get("doc", ""), ""
+
+    return "{header}{args_returns}{footer}".format(
+        header=header, args_returns=candidate_args_returns, footer=footer
     )
+
+    # pp({"a": original_doc_str, "b": candidate_doc_str})
+    # print("a =", (original_doc_str).splitlines())
+    # print("b =", (candidate_doc_str).splitlines())
+
+    # if (
+    #    emit_original_whitespace
+    #    and original_doc_str
+    #    and eq(*map(omit_whitespace, (original_doc_str, candidate_doc_str)))
+    # ):
+    #    return original_doc_str
+    # else:
+    #    return ensure_doc_args_whence_original(
+    #        current_doc_str=candidate_doc_str, original_doc_str=original_doc_str
+    #    )
+
+    # return (
+    #     original_doc_str
+    #     if (
+    #         emit_original_whitespace
+    #         and original_doc_str
+    #         and eq(*map(omit_whitespace, (original_doc_str, candidate_doc_str)))
+    #     )
+    #     else ensure_doc_args_whence_original(
+    #         current_doc_str=candidate_doc_str, original_doc_str=original_doc_str
+    #     )
+    # )
 
 
 def file(node, filename, mode="a", skip_black=False):
@@ -669,7 +683,7 @@ def file(node, filename, mode="a", skip_black=False):
     :param skip_black: Whether to skip formatting with black
     :type skip_black: ```bool```
 
-    :returns: None
+    :return: None
     :rtype: ```NoneType```
     """
     if not isinstance(node, Module):
@@ -744,7 +758,7 @@ def function(
     :param emit_original_whitespace: Whether to emit an original whitespace (in docstring) or strip it out
     :type emit_original_whitespace: ```bool```
 
-    :returns: AST node for function definition
+    :return: AST node for function definition
     :rtype: ```FunctionDef```
     """
     params_no_kwargs = tuple(
@@ -901,7 +915,7 @@ def json_schema(
     :param emit_original_whitespace: Whether to emit original whitespace (in top-level `description`) or strip it out
     :type emit_original_whitespace: ```bool```
 
-    :returns: JSON Schema dict
+    :return: JSON Schema dict
     :rtype: ```dict```
     """
     required = []
@@ -984,7 +998,7 @@ def sqlalchemy_table(
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :returns: AST of the Table expression + assignment
+    :return: AST of the Table expression + assignment
     :rtype: ```ClassDef```
     """
     return Assign(
@@ -1109,7 +1123,7 @@ def sqlalchemy(
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :returns: SQLalchemy declarative class AST
+    :return: SQLalchemy declarative class AST
     :rtype: ```ClassDef```
     """
     return ClassDef(

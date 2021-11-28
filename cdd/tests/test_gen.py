@@ -49,7 +49,7 @@ def populate_files(tempdir, input_module_str=None):
     :param input_module_str: Input string to write to the input_filename. If None, uses preset mock module.
     :type input_module_str: ```Optional[str]```
 
-    :returns: input filename, input str, expected_output
+    :return: input filename, input str, expected_output
     :rtype: ```Tuple[str, str, str, Module]```
     """
     input_filename = os.path.join(tempdir, "input{extsep}py".format(extsep=extsep))
@@ -343,7 +343,7 @@ class TestGen(TestCase):
 #                 ":type a: ```int```\n\n    "
 #                 ":param b: second param\n    "
 #                 ":type b: ```int```\n\n    "
-#                 ":returns: Aggregated summation of `a` and `b`.\n    "
+#                 ":return: Aggregated summation of `a` and `b`.\n    "
 #                 ":rtype: ```int```\n    ",
 #             )
 #         ),

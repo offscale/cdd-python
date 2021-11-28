@@ -145,7 +145,7 @@ def run_cli_test(
     :param return_args: Primarily use is for tests. Returns the args rather than executing anything.
     :type return_args: ```bool```
 
-    :returns: input_str
+    :return: input_str
     :rtype: ```Tuple[str, Optional[Namespace]]```
     """
     argparse_mock, args = MagicMock(), None
@@ -214,7 +214,7 @@ class ShowSourceLoader(Loader):
         :param modname: Name of module
         :type modname: ```str```
 
-        :returns: Source string
+        :return: Source string
         :rtype: ```str```
         """
         assert modname == self.modname, ImportError(modname)
@@ -231,7 +231,7 @@ def inspectable_compile(s, modname=None):
     :param modname: Module name, generates a random one if None
     :type modname: ```Optional[str]```
 
-    :returns: The compiled and executed input source module, such that `inspect.getsource` works
+    :return: The compiled and executed input source module, such that `inspect.getsource` works
     :rtype: ```Any```
     """
     fh = NamedTemporaryFile(suffix="{extsep}py".format(extsep=extsep))
@@ -264,7 +264,7 @@ def inspectable_compile(s, modname=None):
 #     :param module_name: Module name
 #     :type module_name: ```Optional[str]```
 #
-#     :returns: The module itself. Alternative `import` should now work from it.
+#     :return: The module itself. Alternative `import` should now work from it.
 #     :rtype: ```Any```
 #     """
 # spec = spec_from_file_location(module_name, file_path)
@@ -287,7 +287,7 @@ def mock_function(*args, **kwargs):
     """
     Mock function to check if it is called
 
-    :returns: True
+    :return: True
     :rtype: ```Literal[True]```
     """
     return True
@@ -303,7 +303,7 @@ def reindent_docstring(node, indent_level=1):
     :param indent_level: docstring indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
     :type indent_level: ```int```
 
-    :returns: Node with reindent docstring
+    :return: Node with reindent docstring
     :rtype: ```ast.AST```
     """
     doc_str = ast.get_docstring(node, clean=True)
@@ -340,7 +340,7 @@ def remove_args_from_docstring(doc_str):
     :param doc_str: The doc str (any style)
     :type doc_str: ```str```
 
-    :returns: Docstring excluding args
+    :return: Docstring excluding args
     :rtype: ```str```
     """
     stack, in_args = [], False

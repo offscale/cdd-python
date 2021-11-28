@@ -1,8 +1,9 @@
 """ Tests for docstring_utils """
-
+from textwrap import indent
 from unittest import TestCase
 
 from cdd.docstring_utils import ensure_doc_args_whence_original
+from cdd.pure_utils import tab, emit_separating_tabs
 from cdd.tests.mocks.docstrings import docstring_str
 from cdd.tests.utils_for_tests import unittest_main
 
@@ -213,7 +214,7 @@ class TestDocstringUtils(TestCase):
             ":param data_loader_kwargs: pass this as arguments to data_loader function\n"
             ":type data_loader_kwargs: ```Optional[dict]```\n"
             "\n"
-            ":returns: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))\n"
+            ":return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))\n"
             ":rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, "
             "np.ndarray]]```\n"
         )
@@ -222,7 +223,7 @@ class TestDocstringUtils(TestCase):
             ensure_doc_args_whence_original(
                 current_doc_str=current_doc_str, original_doc_str=original_doc_str
             ),
-            docstring_str,
+            emit_separating_tabs(indent(docstring_str, tab))[: -len(tab)],
         )
 
 

@@ -15,7 +15,7 @@ def relative_filename(filename, remove_hints=tuple()):
     :param remove_hints: Hints as to what can be removed
     :type remove_hints: ```Tuple[str]```
 
-    :returns: Relative path (if derived) else original
+    :return: Relative path (if derived) else original
     :rtype: ```str```
     """
     _filename = filename.casefold()

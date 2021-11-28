@@ -39,7 +39,7 @@ def _handle_value(node):
     :param node: AST node from keyword.value
     :type node: ```Name```
 
-    :returns: `str` or `Any`, representing the type for argparse
+    :return: `str` or `Any`, representing the type for argparse
     :rtype: ```Union[str, Any]```
     """
     # if isinstance(node, Attribute): return Any
@@ -58,7 +58,7 @@ def _handle_keyword(keyword, typ):
     :param typ: string representation of type
     :type typ: ```str```
 
-    :returns: string representation of type
+    :return: string representation of type
     :rtype: ```str```
     """
     quote_f = identity
@@ -74,7 +74,7 @@ def _handle_keyword(keyword, typ):
                 :param s: Any value
                 :type s: ```Any```
 
-                :returns: the input value
+                :return: the input value
                 :rtype: ```Any```
                 """
                 return "'{}'".format(s)
@@ -103,7 +103,7 @@ def parse_out_param(expr, require_default=False, emit_default_doc=True):
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :returns: Name, dict with keys: 'typ', 'doc', 'default'
+    :return: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
     """
     required = get_value(
@@ -219,7 +219,7 @@ def interpolate_defaults(
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :returns: Name, dict with keys: 'typ', 'doc', 'default'
+    :return: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
     """
     name, _param = param
@@ -272,7 +272,7 @@ def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
-    :returns: Name, dict with keys: 'typ', 'doc', 'default'
+    :return: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
     """
     assert isinstance(e, Return)
@@ -324,7 +324,7 @@ def get_internal_body(target_name, target_type, intermediate_repr):
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
-    :returns: Internal body or an empty tuple
+    :return: Internal body or an empty tuple
     :rtype: ```Union[list, tuple]```
     """
     return (
@@ -358,7 +358,7 @@ class RewriteName(ast.NodeTransformer):
         :param node: The AST node
         :type node: ```Name```
 
-        :returns: `Name` iff `Name` is not a parameter else `Attribute`
+        :return: `Name` iff `Name` is not a parameter else `Attribute`
         :rtype: ```Union[Name, Attribute]```
         """
         return (
@@ -387,7 +387,7 @@ def _make_call_meth(body, return_type, param_names, docstring_format, word_wrap)
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
-    :returns: Internal function for `__call__`
+    :return: Internal function for `__call__`
     :rtype: ```FunctionDef```
     """
     body_len = len(body)
@@ -464,7 +464,7 @@ def ast_parse_fix(s):
     :param s: String to parse
     :type s: ```str```
 
-    :returns: Value
+    :return: Value
     """
     balanced = (s.count("[") + s.count("]")) & 1 == 0
     return ast.parse(s if balanced else "{}]".format(s)).body[0].value
@@ -480,7 +480,7 @@ def param2json_schema_property(param, required):
     :param required: Required parameters. This function may push to the list.
     :type required: ```List[str]```
 
-    :returns: JSON schema property. Also may push to `required`.
+    :return: JSON schema property. Also may push to `required`.
     :rtype: ```dict```
     """
     name, _param = param
@@ -521,7 +521,7 @@ def param_to_sqlalchemy_column_call(param, include_name):
     :param include_name: Whether to include the name (exclude in declarative base)
     :type include_name: ```bool```
 
-    :returns: Form of: `Column(…)`
+    :return: Form of: `Column(…)`
     :rtype: ```Call```
     """
     if system() == "Darwin":
@@ -618,7 +618,7 @@ def generate_repr_method(params, cls_name, docstring_format):
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
 
-    :returns: `__repr__` method
+    :return: `__repr__` method
     :rtype: ```FunctionDef```
     """
     keys = tuple(params.keys())
@@ -702,7 +702,7 @@ def normalise_intermediate_representation(intermediate_repr):
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
 
-    :returns: a dictionary of form
+    :return: a dictionary of form
         {  "name": Optional[str],
            "type": Optional[str],
            "doc": Optional[str],
