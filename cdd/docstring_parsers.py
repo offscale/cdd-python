@@ -16,13 +16,13 @@ from copy import deepcopy
 from enum import Enum
 from functools import partial
 from itertools import chain, takewhile
-from operator import attrgetter, contains, eq, le
+from operator import attrgetter, eq, le
 from typing import Dict, List, Tuple
 
 from cdd.ast_utils import NoneStr, get_value
 from cdd.defaults_utils import _remove_default_from_param, needs_quoting
-from cdd.docstring_utils import ARG_TOKENS, RETURN_TOKENS, TOKENS
-from cdd.emit import to_code
+from cdd.docstring_utils import ARG_TOKENS, RETURN_TOKENS, derive_docstring_format, Style
+from cdd.source_transformer import to_code
 from cdd.emitter_utils import interpolate_defaults
 from cdd.pure_utils import (
     code_quoted,
@@ -35,17 +35,6 @@ from cdd.pure_utils import (
     unquote,
     update_d,
 )
-
-
-class Style(Enum):
-    """
-    Simple enum taken from the docstring_parser codebase
-    """
-
-    rest = 1
-    google = 2
-    numpydoc = 3
-    auto = 255
 
 
 def parse_docstring(
@@ -138,25 +127,6 @@ def parse_docstring(
             }
         )
     return ir
-
-
-def derive_docstring_format(docstring):
-    """
-    Infer the docstring format of the provided docstring
-
-    :param docstring: the docstring
-    :type docstring: ```Optional[str]```
-
-    :return: the style of docstring
-    :rtype: ```Literal['rest', 'numpydoc', 'google']```
-    """
-    if docstring is None or any(map(partial(contains, docstring), TOKENS.rest)):
-        style = Style.rest
-    elif any(map(partial(contains, docstring), TOKENS.google)):
-        style = Style.google
-    else:
-        style = Style.numpydoc
-    return style
 
 
 def _scan_phase(docstring, parse_original_whitespace=False, style=Style.rest):
@@ -1010,4 +980,4 @@ def _set_param_values(input_str, val, sw=":type"):
     )
 
 
-__all__ = ["derive_docstring_format", "parse_docstring"]
+__all__ = ["parse_docstring"]
