@@ -172,7 +172,7 @@ class TestDocstringUtils(TestCase):
                     "Parameters",
                     "----------",
                     "as_numpy : Optional[bool]",
-                    "  Convert to numpy ndarrays. Defaults to None\n",
+                    "  Convert to numpy ndarrays. Defaults to None",
                     "Footer",
                 )
             ),

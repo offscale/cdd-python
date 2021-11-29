@@ -3,8 +3,10 @@ Functions which produce docstring portions from various inputs
 """
 
 from collections import namedtuple
+from enum import Enum
+from functools import partial
 from itertools import chain, takewhile
-from operator import itemgetter
+from operator import itemgetter, contains
 from textwrap import indent
 
 from cdd.defaults_utils import set_default_doc
@@ -16,6 +18,7 @@ from cdd.pure_utils import (
     rpartial,
     count_iter_items,
     pp,
+    previous_line_range,
 )
 
 
@@ -195,37 +198,34 @@ def _get_token_start_idx(doc_str):
 
 def _last_doc_str_token(doc_str):
     """
-    Get start index of last docstring token (e.g., ':rtype')
+    Get start index of last docstring token (e.g., the index of ':' in ':rtype')
 
     :param doc_str: The docstring
     :type doc_str: ```str```
 
-    :return: _last_found index
+    :return: last_found index
     :rtype: ```Optional[int]```
     """
-    _last_found, penultimate_stack, stack = None, [], []
+    last_found, penultimate_stack, stack, line0, line1 = None, [], [], None, None
     for i, ch in enumerate(doc_str):
         if ch.isspace():
             if stack:
                 if stack.count("-") == len(stack):
                     if "".join(penultimate_stack) in NUMPYDOC_TOKENS_SET:
-                        _last_found = i - len(stack) + len(penultimate_stack)
-                else:
-                    full_stack = penultimate_stack + stack
-                    if "".join(full_stack) in TOKENS_SET:
-                        _last_found = i - len(stack)
-                    elif "".join(stack) in TOKENS_SET:
-                        _last_found = i - len(stack)
+                        last_found = i - len(stack) + len(penultimate_stack)
+                elif "".join(stack) in TOKENS_SET:
+                    last_found = i - len(stack)
                 penultimate_stack = stack.copy()
                 stack.clear()
         else:
             stack.append(ch)
 
-    return _last_found
+    return last_found
 
 
 def _get_start_of_last_found(last_found, doc_str):
     """
+    Get last token found in doc_str…
     '  :params foo' returns index to first space ' '
 
     :param last_found: index of token start or None if not found
@@ -237,15 +237,17 @@ def _get_start_of_last_found(last_found, doc_str):
     :return: _last_found index
     :rtype: ```Optional[int]```
     """
-    _last_found_starts = None
-    for _last_found_starts in range(last_found - 1, 0, -1):
-        if doc_str[_last_found_starts] == "\n":
-            _last_found_starts += 1
+    last_found_starts = None
+
+    for last_found_starts in range(last_found - 1, 0, -1):
+        if doc_str[last_found_starts] == "\n":
+            last_found_starts += 1
             break
-    return _last_found_starts
+
+    return last_found_starts
 
 
-def _get_end_of_last_found(last_found, last_found_starts, doc_str):
+def _get_end_of_last_found(last_found, last_found_starts, doc_str, docstring_format):
     """
     '  :params foo' returns index to second 'o' + nl
 
@@ -258,29 +260,54 @@ def _get_end_of_last_found(last_found, last_found_starts, doc_str):
     :param doc_str: The docstring
     :type doc_str: ```str```
 
+    :param docstring_format: Docstring format
+    :type docstring_format: ```Style```
+
     :return: _last_found index
     :rtype: ```Optional[int]```
     """
-    _last_found_ends, _previous_line = None, None
-    for _last_found_ends in range(last_found, len(doc_str) - 1, 1):
-        if doc_str[_last_found_ends] == "\n":
+    last_found_ends, previous_line = None, None
+    for last_found_ends in range(last_found, len(doc_str), 1):
+        if doc_str[last_found_ends] == "\n":
             break
-    _last_found_ends += 1
+    last_found_ends += 1
 
-    num_nls = 0
-    for _previous_line in range(last_found-1, 0, - 1):
-        if doc_str[_previous_line] == "\n":
-            num_nls += 1
-            if num_nls > 1:
+    if docstring_format is Style.numpydoc and doc_str[
+        last_found_starts:last_found
+    ].count("-") == len(doc_str[last_found_starts:last_found]):
+        countdown_from = last_found_starts - 1
+        new_last_found_starts = None
+        for new_last_found_starts in range(countdown_from - 1, 0, -1):
+            if doc_str[new_last_found_starts] == "\n":
+                new_last_found_starts += 1
                 break
 
-    previous_line = doc_str[_previous_line+1:last_found_starts -1]
+        if doc_str[new_last_found_starts:countdown_from] in NUMPYDOC_TOKENS_SET:
+            # Find index of 'a' from last string in this format:
+            # "arg_name : single/multi line desc"
+            last_token_appearance = None
+            stack = []
+            for idx in range(last_found, len(doc_str)):
+                if doc_str[idx] == "\n":
+                    for ch in stack:
+                        if ch.isalpha() or ch.isspace() or ch.isnumeric():
+                            pass
+                        elif ch == ":":
+                            last_token_appearance = idx
+                            break
+                    stack.clear()
+                else:
+                    stack.append(doc_str[idx])
+            if last_token_appearance is not None:
+                last_found_starts = last_token_appearance
+                for i in range(last_token_appearance, 0, -1):
+                    if doc_str[i] == "\n":
+                        last_found_starts = i + 1
+                        break
 
-    pp({"doc_str": doc_str,
-        "previous_line": previous_line,
-        "doc_str[_last_found_ends:]": doc_str[_last_found_ends:],
-        "_last_found_ends": _last_found_ends})
-    return _last_found_ends
+                return last_found_starts
+
+    return last_found_ends
 
 
 def _find_end_of_args_returns(last_found, last_found_starts, last_found_ends, doc_str):
@@ -305,10 +332,16 @@ def _find_end_of_args_returns(last_found, last_found_starts, last_found_ends, do
     :return: end of args_returns index
     :rtype: ```int```
     """
-    zeroth_indent = last_found - last_found_starts
-    smallest_indent = zeroth_indent
+    # prev_line = doc_str[slice(*previous_line_range(doc_str, last_found_ends - 1))]
+    # zeroth_indent = count_iter_items(takewhile(str.isspace, prev_line))
+    smallest_indent = count_iter_items(takewhile(str.isspace, doc_str[last_found_ends:]))
     last_nl, nls, i = 0, 0, None
-    for i in range(last_found_ends, len(doc_str) - 1, 1):
+
+    # Early exit… if current line isn't indented then it can't be a multiline arg/return descriptor
+    if smallest_indent == 0:
+        return last_found_ends - 1
+
+    for i in range(last_found_ends, len(doc_str), 1):
         if doc_str[i] == "\n":
             # Two nl in a row
             if last_nl - 1 == i:
@@ -329,8 +362,9 @@ def _find_end_of_args_returns(last_found, last_found_starts, last_found_ends, do
                 else:
                     break
             elif indent_size == smallest_indent == 0:
-                i -= 1
-                break
+                start_previous_line, end_previous_line = previous_line_range(doc_str, i)
+                # immediate_previous_line = doc_str[start_previous_line:end_previous_line]
+                return start_previous_line - 1
     return i
 
 
@@ -349,8 +383,12 @@ def _get_token_last_idx(doc_str):
     if last_found is None:
         return -1
 
+    dostring_format = derive_docstring_format(doc_str)
+
     last_found_starts = _get_start_of_last_found(last_found, doc_str)
-    last_found_ends = _get_end_of_last_found(last_found, last_found_starts, doc_str)
+    last_found_ends = _get_end_of_last_found(
+        last_found, last_found_starts, doc_str, dostring_format
+    )
 
     idx = _find_end_of_args_returns(
         last_found, last_found_starts, last_found_ends, doc_str
@@ -429,54 +467,39 @@ def parse_docstring_into_header_args_footer(current_doc_str, original_doc_str):
     start_idx_current, start_idx_original = map(
         _get_token_start_idx, (current_doc_str, original_doc_str)
     )
+
     last_idx_current, last_idx_original = map(
         _get_token_last_idx, (current_doc_str, original_doc_str)
+    )
+
+    header_original = (
+        original_doc_str[:start_idx_original] if start_idx_original > -1 else ""
     )
 
     footer_current, footer_original = map(
         lambda doc_idx: doc_idx[0][doc_idx[1] :] if doc_idx[1] != -1 else None,
         ((current_doc_str, last_idx_current), (original_doc_str, last_idx_original)),
     )
-    pp(
-        {
-            "current_doc_str[{}:{}]".format(
-                start_idx_current, last_idx_current
-            ): current_doc_str[start_idx_current:last_idx_current],
-            "current_doc_str[{}:]".format(last_idx_current): current_doc_str[
-                last_idx_current:
-            ],
-            "original_doc_str[{}:{}]".format(
-                start_idx_original, last_idx_original
-            ): original_doc_str[start_idx_original:last_idx_original],
-            "original_doc_str[{}:]".format(last_idx_original): original_doc_str[
-                last_idx_original:
-            ]
-        }
-    )
 
     # Now we know where the args/returns were, and where they are now
     # To avoid whitespace issues, only copy across the args/returns portion, keep rest as original
 
-    header_original = (
-        original_doc_str[:start_idx_original] if start_idx_original > -1 else ""
-    )
     args_returns_original = original_doc_str[
         slice(
             (start_idx_original if start_idx_original > -1 else None),
-            (len(footer_current) if footer_current else None),
+            (last_idx_original if last_idx_original > -1 else None),
         )
     ]
     args_returns_current = current_doc_str[
         slice(start_idx_current, len(footer_current) if footer_current else None)
     ]
-
-    args_returns_indent_original = count_iter_items(
+    indent_args_returns_original = count_iter_items(
         takewhile(str.isspace, args_returns_original or iter(()))
     )
-    if args_returns_indent_original > 1 and args_returns_current:
+    if indent_args_returns_original > 1 and args_returns_current:
         args_returns_current = indent(
             args_returns_current,
-            prefix=" " * args_returns_indent_original,
+            prefix=" " * indent_args_returns_original,
             predicate=lambda _: _,
         )
 
@@ -508,7 +531,38 @@ def ensure_doc_args_whence_original(current_doc_str, original_doc_str):
     )
 
 
-Tokens = namedtuple("Tokens", ("rest", "google", "numpydoc"))
+class Style(Enum):
+    """
+    Simple enum taken from the docstring_parser codebase
+    """
+
+    rest = 1
+    google = 2
+    numpydoc = 3
+    auto = 255
+
+
+def derive_docstring_format(docstring):
+    """
+    Infer the docstring format of the provided docstring
+
+    :param docstring: the docstring
+    :type docstring: ```Optional[str]```
+
+    :return: the style of docstring
+    :rtype: ```Literal['rest', 'numpydoc', 'google']```
+    """
+    if docstring is None or any(map(partial(contains, docstring), TOKENS.rest)):
+        style = Style.rest
+    elif any(map(partial(contains, docstring), TOKENS.google)):
+        style = Style.google
+    else:
+        style = Style.numpydoc
+    return style
+
+
+DOCSTRING_FORMATS = "rest", "google", "numpydoc"
+Tokens = namedtuple("Tokens", DOCSTRING_FORMATS)
 TOKENS = Tokens(
     (":param", ":cvar", ":ivar", ":var", ":type", ":raises", ":return", ":rtype"),
     ("Args:", "Kwargs:", "Raises:", "Returns:"),
@@ -540,4 +594,13 @@ ARG_TOKENS = Tokens(
 )
 RETURN_TOKENS = Tokens(TOKENS.rest[-2:], (TOKENS.google[-1],), (TOKENS.numpydoc[-1],))
 
-__all__ = ["ensure_doc_args_whence_original", "emit_param_str", "ARG_TOKENS", "TOKENS"]
+
+__all__ = [
+    "derive_docstring_format",
+    "ensure_doc_args_whence_original",
+    "emit_param_str",
+    "Style",
+    "ARG_TOKENS",
+    "RETURN_TOKENS",
+    "TOKENS",
+]
