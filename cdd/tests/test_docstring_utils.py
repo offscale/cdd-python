@@ -2,7 +2,10 @@
 from textwrap import indent
 from unittest import TestCase
 
-from cdd.docstring_utils import ensure_doc_args_whence_original
+from cdd.docstring_utils import (
+    ensure_doc_args_whence_original,
+    parse_docstring_into_header_args_footer,
+)
 from cdd.pure_utils import tab, emit_separating_tabs
 from cdd.tests.mocks.docstrings import docstring_str
 from cdd.tests.utils_for_tests import unittest_main
@@ -11,21 +14,24 @@ from cdd.tests.utils_for_tests import unittest_main
 class TestDocstringUtils(TestCase):
     """Test class for emitter_utils"""
 
+    header = "Header\n\n"
+    footer = "Footer"
+
     def test_ensure_doc_args_whence_original(self) -> None:
         """Test that ensure_doc_args_whence_original moves the doc to the right place"""
         original_doc_str = "\n".join(
             (
-                "\nfoo\n\n",
+                "\n{header}".format(header=self.header),
                 ":param a:",
                 ":type a: ```int```\n",
-                "can haz",
+                self.footer,
             )
         )
 
         current_doc_str = "\n".join(
             (
-                "\nfoo\n\n",
-                "can haz\n",
+                "\n{header}\n\n".format(header=self.header),
+                self.footer,
                 ":param a:",
                 ":type a: ```int```\n",
             )
@@ -44,13 +50,13 @@ class TestDocstringUtils(TestCase):
             (
                 ":param a:",
                 ":type a: ```int```\n",
-                "can haz",
+                self.footer,
             )
         )
 
         current_doc_str = "\n".join(
             (
-                "can haz\n",
+                "{footer}\n".format(footer=self.footer),
                 ":param a:",
                 ":type a: ```int```\n",
             )
@@ -65,11 +71,17 @@ class TestDocstringUtils(TestCase):
 
     def test_ensure_doc_args_whence_original_no_footer(self) -> None:
         """Test that ensure_doc_args_whence_original moves the doc to the right place when no footer exists"""
-        original_doc_str = "\n".join(("\nfoo\n\n", ":param a:", ":type a: ```int```\n"))
+        original_doc_str = "\n".join(
+            (
+                "\n{header}".format(header=self.header),
+                ":param a:",
+                ":type a: ```int```\n",
+            )
+        )
 
         current_doc_str = "\n".join(
             (
-                "\nfoo\n\n",
+                "\n{header}".format(header=self.header),
                 ":param a:",
                 ":type a: ```int```\n",
             )
@@ -106,19 +118,19 @@ class TestDocstringUtils(TestCase):
         """Test that ensure_doc_args_whence_original moves the doc to the right place when no header|footer exists"""
         original_doc_str = "\n".join(
             (
-                "Header\n",
+                "{header}\n".format(header=self.header.rstrip("\n")),
                 "Parameters",
                 "----------",
                 "as_numpy : Optional[bool]",
                 "  Convert to numpy ndarrays. Defaults to None\n",
-                "Footer",
+                self.footer,
             )
         )
 
         current_doc_str = "\n".join(
             (
-                "Header\n",
-                "Footer",
+                "{header}\n".format(header=self.header.rstrip("\n")),
+                self.footer,
                 ":param as_numpy: Convert to numpy ndarrays. Defaults to None",
                 ":type as_numpy: ```Optional[bool]```",
             )
@@ -130,10 +142,10 @@ class TestDocstringUtils(TestCase):
             ),
             "\n".join(
                 (
-                    "Header\n",
+                    "{header}\n".format(header=self.header.rstrip("\n")),
                     ":param as_numpy: Convert to numpy ndarrays. Defaults to None",
                     ":type as_numpy: ```Optional[bool]```",
-                    "Footer",
+                    self.footer,
                 )
             ),
         )
@@ -144,17 +156,17 @@ class TestDocstringUtils(TestCase):
         """Test that ensure_doc_args_whence_original moves the doc to the right place when no header|footer exists"""
         original_doc_str = "\n".join(
             (
-                "Header\n",
+                "{header}\n".format(header=self.header.rstrip("\n")),
                 ":param as_numpy: Convert to numpy ndarrays. Defaults to None",
                 ":type as_numpy: ```Optional[bool]```",
-                "Footer",
+                self.footer,
             )
         )
 
         current_doc_str = "\n".join(
             (
                 "Header\n",
-                "Footer",
+                self.footer,
                 "Parameters",
                 "----------",
                 "as_numpy : Optional[bool]",
@@ -162,24 +174,41 @@ class TestDocstringUtils(TestCase):
             )
         )
 
+        header, args_returns, footer = parse_docstring_into_header_args_footer(
+            current_doc_str=current_doc_str, original_doc_str=original_doc_str
+        )
+        self.assertEqual(header, self.header)
+        self.assertEqual(
+            args_returns,
+            "\n".join(
+                (
+                    "Parameters",
+                    "----------",
+                    "as_numpy : Optional[bool]",
+                    "  Convert to numpy ndarrays. Defaults to None\n",
+                )
+            ),
+        )
+        self.assertEqual(footer, self.footer)
+
         self.assertEqual(
             ensure_doc_args_whence_original(
                 current_doc_str=current_doc_str, original_doc_str=original_doc_str
             ),
             "\n".join(
                 (
-                    "Header\n",
+                    "{header}\n".format(header=self.header.rstrip("\n")),
                     "Parameters",
                     "----------",
                     "as_numpy : Optional[bool]",
-                    "  Convert to numpy ndarrays. Defaults to None",
-                    "Footer",
+                    "  Convert to numpy ndarrays. Defaults to None\n",
+                    self.footer,
                 )
             ),
         )
 
     def test_ensure_doc_args_whence_original_to_docstring_str(self) -> None:
-        """Test that ensure_doc_args_whence_original reworks the header and footer whence indent"""
+        """Test that ensure_doc_args_whence_original reworks the header and args_returns whence indent"""
         original_doc_str = (
             "\n"
             "    Acquire from the official tensorflow_datasets model zoo, or the ophthalmology "
@@ -192,7 +221,7 @@ class TestDocstringUtils(TestCase):
             "    :cvar as_numpy: Convert to numpy ndarrays. Defaults to None\n"
             "    :cvar data_loader_kwargs: pass this as arguments to data_loader function\n"
             "    :cvar return_type: Train and tests dataset splits. Defaults to (np.empty(0), "
-            "np.empty(0))"
+            "np.empty(0))\n"
         )
         current_doc_str = (
             "\n"
@@ -215,15 +244,14 @@ class TestDocstringUtils(TestCase):
             ":type data_loader_kwargs: ```Optional[dict]```\n"
             "\n"
             ":return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))\n"
-            ":rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, "
-            "np.ndarray]]```\n"
+            ":rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```"
         )
 
         self.assertEqual(
             ensure_doc_args_whence_original(
                 current_doc_str=current_doc_str, original_doc_str=original_doc_str
             ),
-            emit_separating_tabs(indent(docstring_str, tab))[: -len(tab)],
+            emit_separating_tabs(indent(docstring_str, tab))[: -len(tab)-1],
         )
 
 

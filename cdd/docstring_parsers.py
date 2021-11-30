@@ -21,7 +21,12 @@ from typing import Dict, List, Tuple
 
 from cdd.ast_utils import NoneStr, get_value
 from cdd.defaults_utils import _remove_default_from_param, needs_quoting
-from cdd.docstring_utils import ARG_TOKENS, RETURN_TOKENS, derive_docstring_format, Style
+from cdd.docstring_utils import (
+    ARG_TOKENS,
+    RETURN_TOKENS,
+    derive_docstring_format,
+    Style,
+)
 from cdd.source_transformer import to_code
 from cdd.emitter_utils import interpolate_defaults
 from cdd.pure_utils import (
