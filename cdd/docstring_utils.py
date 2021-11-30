@@ -6,7 +6,7 @@ from collections import namedtuple
 from enum import Enum
 from functools import partial
 from itertools import chain, takewhile
-from operator import itemgetter, contains
+from operator import itemgetter, contains, eq
 from textwrap import indent
 
 from cdd.defaults_utils import set_default_doc
@@ -17,8 +17,8 @@ from cdd.pure_utils import (
     tab,
     rpartial,
     count_iter_items,
-    pp,
     previous_line_range,
+    omit_whitespace,
 )
 
 
@@ -183,14 +183,17 @@ def _get_token_start_idx(doc_str):
     """
     stack = []
     for idx, ch in enumerate(doc_str):
-        if ch.isspace():
-            if stack:
-                if "".join(stack) in TOKENS_SET:
-                    token_start_idx = idx - len(stack)
-                    for i in range(token_start_idx, 0, -1):
-                        if doc_str[i] == "\n":
-                            return i + 1
-                stack.clear()
+        if ch == "\n":
+            indent_amount = count_iter_items(takewhile(str.isspace, stack))
+            line = "".join(stack[indent_amount:])
+            if line in NUMPYDOC_TOKENS_SET:
+                i = indent_amount + idx + 1
+                next_line = doc_str[i : doc_str.find("\n", i)]
+                if next_line.count("-") == len(next_line):
+                    return idx - len(stack)
+            elif any(filter(line.startswith, TOKENS_SET)):
+                return idx - len(stack)
+            stack.clear()
         else:
             stack.append(ch)
     return -1
@@ -332,9 +335,9 @@ def _find_end_of_args_returns(last_found, last_found_starts, last_found_ends, do
     :return: end of args_returns index
     :rtype: ```int```
     """
-    # prev_line = doc_str[slice(*previous_line_range(doc_str, last_found_ends - 1))]
-    # zeroth_indent = count_iter_items(takewhile(str.isspace, prev_line))
-    smallest_indent = count_iter_items(takewhile(str.isspace, doc_str[last_found_ends:]))
+    smallest_indent = count_iter_items(
+        takewhile(str.isspace, doc_str[last_found_ends:])
+    )
     last_nl, nls, i = 0, 0, None
 
     # Early exit… if current line isn't indented then it can't be a multiline arg/return descriptor
@@ -365,6 +368,7 @@ def _find_end_of_args_returns(last_found, last_found_starts, last_found_ends, do
                 start_previous_line, end_previous_line = previous_line_range(doc_str, i)
                 # immediate_previous_line = doc_str[start_previous_line:end_previous_line]
                 return start_previous_line - 1
+
     return i
 
 
@@ -383,64 +387,30 @@ def _get_token_last_idx(doc_str):
     if last_found is None:
         return -1
 
-    dostring_format = derive_docstring_format(doc_str)
+    docstring_format = derive_docstring_format(doc_str)
 
     last_found_starts = _get_start_of_last_found(last_found, doc_str)
     last_found_ends = _get_end_of_last_found(
-        last_found, last_found_starts, doc_str, dostring_format
+        last_found, last_found_starts, doc_str, docstring_format
     )
 
     idx = _find_end_of_args_returns(
         last_found, last_found_starts, last_found_ends, doc_str
     )
 
-    # Munch until nl
-    while idx < len(doc_str) and doc_str[idx] != "\n":
-        idx += 1
+    # Munch until previous nl
+    while idx != 0 and doc_str[idx] != "\n":
+        idx -= 1
 
-    return idx + 1
+    indent_amount = count_iter_items(takewhile(str.isspace, doc_str[idx + 1 :]))
+    i = indent_amount + idx + 1
+    if any(filter(doc_str[i:].startswith, TOKENS_SET)):
+        # Munch until nl
+        i += 1
+        while i < len(doc_str) and doc_str[i] != "\n":
+            i += 1
 
-    # afterward_idx, within_args_returns, idx = -1, False, None
-    # last_indent, ante_penultimate_stack, nls = None, [], 0
-    # for idx in range(last_found, len(doc_str) - 1, 1):
-    #     if doc_str[idx] == "\n":
-    #         nls += 1
-    #         if (
-    #             "".join(stack) in TOKENS_SET
-    #             or "".join(penultimate_stack + stack) in TOKENS_SET
-    #         ):
-    #             print("#found: {!r} ;".format("".join(stack)))
-    #             within_args_returns = True
-    #         else:
-    #             last_indent = count_iter_items(takewhile(str.isspace, stack))
-    #         afterward_idx = last_found + idx - len(stack)
-    #         ante_penultimate_stack = deepcopy(penultimate_stack)
-    #         penultimate_stack = deepcopy(stack)
-    #         stack.clear()
-    #     else:
-    #         stack.append(doc_str[idx])
-
-    # afterward_idx = last_found + idx - len(stack)
-
-    # startswith_token = any(map(doc_str[afterward_idx:].startswith, TOKENS_SET))
-    # if startswith_token and stack:
-    #     last_line = "".join(stack)
-    #     startswith_token = any(map(last_line.startswith, TOKENS_SET))
-    #     afterward_idx = -len(last_line) - 1
-    #
-    # ante_penultimate_indent, penultimate_indent, stack_indent = map(
-    #     lambda arr: count_iter_items(takewhile(str.isspace, arr)),
-    #     (ante_penultimate_stack, penultimate_stack, stack),
-    # )
-    #
-    # return (
-    #     -1
-    #     if stack_indent != 0
-    #     and (stack_indent == last_indent or penultimate_indent == stack_indent)
-    #     or penultimate_indent > ante_penultimate_indent
-    #     or startswith_token
-    #     else afterward_idx
-    # )
+    return i
 
 
 ########################################################################
@@ -461,9 +431,6 @@ def parse_docstring_into_header_args_footer(current_doc_str, original_doc_str):
     :return: Header, args|returns, footer
     :rtype: ```Tuple[Optional[str], Optional[str], Optional[str]]```
     """
-    if original_doc_str == current_doc_str:
-        return current_doc_str
-
     start_idx_current, start_idx_original = map(
         _get_token_start_idx, (current_doc_str, original_doc_str)
     )
@@ -476,6 +443,10 @@ def parse_docstring_into_header_args_footer(current_doc_str, original_doc_str):
         original_doc_str[:start_idx_original] if start_idx_original > -1 else ""
     )
 
+    footer_origin = (
+        original_doc_str[last_idx_original:] if last_idx_original > -1 else ""
+    )
+
     footer_current, footer_original = map(
         lambda doc_idx: doc_idx[0][doc_idx[1] :] if doc_idx[1] != -1 else None,
         ((current_doc_str, last_idx_current), (original_doc_str, last_idx_original)),
@@ -484,15 +455,19 @@ def parse_docstring_into_header_args_footer(current_doc_str, original_doc_str):
     # Now we know where the args/returns were, and where they are now
     # To avoid whitespace issues, only copy across the args/returns portion, keep rest as original
 
-    args_returns_original = original_doc_str[
-        slice(
-            (start_idx_original if start_idx_original > -1 else None),
-            (last_idx_original if last_idx_original > -1 else None),
-        )
-    ]
-    args_returns_current = current_doc_str[
-        slice(start_idx_current, len(footer_current) if footer_current else None)
-    ]
+    args_returns_current, args_returns_original = map(
+        lambda doc_start_end: doc_start_end[0][
+            slice(
+                doc_start_end[1] if doc_start_end[1] > -1 else None,
+                doc_start_end[2] if doc_start_end[2] > -1 else None,
+            )
+        ],
+        (
+            (current_doc_str, start_idx_current, last_idx_current),
+            (original_doc_str, start_idx_original, last_idx_original),
+        ),
+    )
+
     indent_args_returns_original = count_iter_items(
         takewhile(str.isspace, args_returns_original or iter(()))
     )
@@ -519,15 +494,58 @@ def ensure_doc_args_whence_original(current_doc_str, original_doc_str):
     :return: reshuffled doc_str with args/returns in same place as original (same header, footer, and whitespace)
     :rtype: ```str```
     """
+    if original_doc_str and eq(
+        *map(omit_whitespace, (original_doc_str, current_doc_str))
+    ):
+        return original_doc_str
     (
         original_header,
         current_args_returns,
         original_footer,
     ) = parse_docstring_into_header_args_footer(current_doc_str, original_doc_str)
+
+    original_header = original_header or ""
+    current_args_returns = current_args_returns or ""
+    original_footer = original_footer or ""
+
+    # Ensure there is always a newline between each of: header; args_returns; and footer
+    if current_args_returns:
+        current_args_returns_startswith_nl = current_args_returns[0] == "\n"
+        current_args_returns_endswith_nl = current_args_returns[-1] == "\n"
+        current_args_returns = "{nl0}{current_args_returns}{nl1}".format(
+            nl0="\n" if current_args_returns_startswith_nl else "",
+            current_args_returns=current_args_returns,
+            nl1="\n" if current_args_returns_endswith_nl else "",
+        )
+    else:
+        current_args_returns_startswith_nl = current_args_returns_endswith_nl = True
+    if original_footer:
+        original_footer_startswith_nl = (
+            original_footer[0] == "\n" or current_args_returns_endswith_nl
+        )
+        # original_footer_endswith_nl = original_footer[-1] == "\n"
+    else:
+        original_footer_startswith_nl = True  # original_footer_endswith_nl
+    header_endswith_nl = (
+        not original_header
+        or original_header[-1] == "\n"
+        or current_args_returns_startswith_nl
+    )
+
     return "{original_header}{current_args_returns}{original_footer}".format(
-        original_header=original_header or "",
-        current_args_returns=current_args_returns or "",
-        original_footer=original_footer or "",
+        original_header=(
+            original_header
+            if header_endswith_nl
+            else "{original_header}\n".format(original_header=original_header)
+        ),
+        current_args_returns=current_args_returns,
+        original_footer=(
+            "{nl0}{original_footer}{nl1}".format(
+                nl0="" if original_footer_startswith_nl else "\n",
+                original_footer=original_footer,
+                nl1="",  # nl1="" if original_footer_endswith_nl else "\n"
+            )
+        ),
     )
 
 
@@ -596,11 +614,12 @@ RETURN_TOKENS = Tokens(TOKENS.rest[-2:], (TOKENS.google[-1],), (TOKENS.numpydoc[
 
 
 __all__ = [
-    "derive_docstring_format",
-    "ensure_doc_args_whence_original",
-    "emit_param_str",
-    "Style",
     "ARG_TOKENS",
     "RETURN_TOKENS",
+    "Style",
     "TOKENS",
+    "derive_docstring_format",
+    "emit_param_str",
+    "ensure_doc_args_whence_original",
+    "parse_docstring_into_header_args_footer",
 ]
