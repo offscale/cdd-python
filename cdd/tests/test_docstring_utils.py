@@ -251,7 +251,7 @@ class TestDocstringUtils(TestCase):
             ensure_doc_args_whence_original(
                 current_doc_str=current_doc_str, original_doc_str=original_doc_str
             ),
-            emit_separating_tabs(indent(docstring_str, tab))[: -len(tab)-1],
+            emit_separating_tabs(indent(docstring_str, tab))[: -len(tab) - 1],
         )
 
 

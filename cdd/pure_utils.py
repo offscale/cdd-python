@@ -609,6 +609,23 @@ def get_module(name, package=None, extra_symbols=None):
             raise
 
 
+def has_nl(s, func):
+    """
+    Check if str endswith a newline (possibly separated by other whitespace)
+
+    :param s: Input string
+    :type s: ```str```
+
+    :param func: `str.partition` or `str.rpartition` function (or something similar)
+    :type func: ```Callable[[str], Tuple[str,str,str]]```
+
+    :return: Whether s endswith a newline (possibly separated by other whitespace)
+    :rtype: ```bool```
+    """
+    start, maybe_nl, end = partial(func, "\n")(s)
+    return maybe_nl == "\n" and start.isspace()
+
+
 def paren_wrap_code(code):
     """
     The new builtin AST unparser adds extra parentheses, so match that behaviour on older versions

@@ -19,6 +19,7 @@ from cdd.pure_utils import (
     count_iter_items,
     previous_line_range,
     omit_whitespace,
+    has_nl,
 )
 
 
@@ -66,7 +67,7 @@ def emit_param_str(
     if style == "rest":
         emit_type &= purpose == "function"
         key, key_typ = (
-            ("returns", "rtype")
+            ("return", "rtype")
             if name == "return_type"
             else (
                 "{var} {name}".format(
@@ -209,7 +210,7 @@ def _last_doc_str_token(doc_str):
     :return: last_found index
     :rtype: ```Optional[int]```
     """
-    last_found, penultimate_stack, stack, line0, line1 = None, [], [], None, None
+    last_found, penultimate_stack, stack = None, [], []
     for i, ch in enumerate(doc_str):
         if ch.isspace():
             if stack:
@@ -250,6 +251,55 @@ def _get_start_of_last_found(last_found, doc_str):
     return last_found_starts
 
 
+def _get_end_of_last_found_numpydoc(last_found, last_found_starts, doc_str):
+    """
+    Numpydoc specialisation of `_get_end_of_last_found` function
+
+    :param last_found: index of token start or None if not found
+    :type last_found: ```Optional[int]```
+
+    :param last_found_starts: index of start of line containing token start
+    :type last_found_starts: ```int```
+
+    :param doc_str: The docstring
+    :type doc_str: ```str```
+
+    :return: _last_found index
+    :rtype: ```Optional[int]```
+    """
+    countdown_from = last_found_starts - 1
+    new_last_found_starts = None
+    for new_last_found_starts in range(countdown_from - 1, 0, -1):
+        if doc_str[new_last_found_starts] == "\n":
+            new_last_found_starts += 1
+            break
+
+    if doc_str[new_last_found_starts:countdown_from] in NUMPYDOC_TOKENS_SET:
+        # Find index of 'a' from last string in this format:
+        # "arg_name : single/multi line desc"
+        last_token_appearance = None
+        stack = []
+        for idx in range(last_found, len(doc_str)):
+            if doc_str[idx] == "\n":
+                for ch in stack:
+                    if ch.isalpha() or ch.isspace() or ch.isnumeric():
+                        pass
+                    elif ch == ":":
+                        last_token_appearance = idx
+                        break
+                stack.clear()
+            else:
+                stack.append(doc_str[idx])
+        if last_token_appearance is not None:
+            last_found_starts = last_token_appearance
+            for i in range(last_token_appearance, 0, -1):
+                if doc_str[i] == "\n":
+                    last_found_starts = i + 1
+                    break
+
+            return last_found_starts
+
+
 def _get_end_of_last_found(last_found, last_found_starts, doc_str, docstring_format):
     """
     '  :params foo' returns index to second 'o' + nl
@@ -269,7 +319,7 @@ def _get_end_of_last_found(last_found, last_found_starts, doc_str, docstring_for
     :return: _last_found index
     :rtype: ```Optional[int]```
     """
-    last_found_ends, previous_line = None, None
+    last_found_ends = None
     for last_found_ends in range(last_found, len(doc_str), 1):
         if doc_str[last_found_ends] == "\n":
             break
@@ -278,37 +328,7 @@ def _get_end_of_last_found(last_found, last_found_starts, doc_str, docstring_for
     if docstring_format is Style.numpydoc and doc_str[
         last_found_starts:last_found
     ].count("-") == len(doc_str[last_found_starts:last_found]):
-        countdown_from = last_found_starts - 1
-        new_last_found_starts = None
-        for new_last_found_starts in range(countdown_from - 1, 0, -1):
-            if doc_str[new_last_found_starts] == "\n":
-                new_last_found_starts += 1
-                break
-
-        if doc_str[new_last_found_starts:countdown_from] in NUMPYDOC_TOKENS_SET:
-            # Find index of 'a' from last string in this format:
-            # "arg_name : single/multi line desc"
-            last_token_appearance = None
-            stack = []
-            for idx in range(last_found, len(doc_str)):
-                if doc_str[idx] == "\n":
-                    for ch in stack:
-                        if ch.isalpha() or ch.isspace() or ch.isnumeric():
-                            pass
-                        elif ch == ":":
-                            last_token_appearance = idx
-                            break
-                    stack.clear()
-                else:
-                    stack.append(doc_str[idx])
-            if last_token_appearance is not None:
-                last_found_starts = last_token_appearance
-                for i in range(last_token_appearance, 0, -1):
-                    if doc_str[i] == "\n":
-                        last_found_starts = i + 1
-                        break
-
-                return last_found_starts
+        return _get_end_of_last_found_numpydoc(last_found, last_found_starts, doc_str)
 
     return last_found_ends
 
@@ -431,26 +451,56 @@ def parse_docstring_into_header_args_footer(current_doc_str, original_doc_str):
     :return: Header, args|returns, footer
     :rtype: ```Tuple[Optional[str], Optional[str], Optional[str]]```
     """
-    start_idx_current, start_idx_original = map(
-        _get_token_start_idx, (current_doc_str, original_doc_str)
-    )
+    if not current_doc_str and not original_doc_str:
+        return None, None, None
 
-    last_idx_current, last_idx_original = map(
-        _get_token_last_idx, (current_doc_str, original_doc_str)
-    )
+    # To quieten linter
+    header_original = footer_original = None
+    start_idx_current = last_idx_current = start_idx_original = last_idx_original = None
 
-    header_original = (
-        original_doc_str[:start_idx_original] if start_idx_original > -1 else ""
-    )
+    if current_doc_str:
+        start_idx_current = _get_token_start_idx(current_doc_str)
+        last_idx_current = _get_token_last_idx(current_doc_str)
+        footer_current = (
+            current_doc_str[last_idx_current:] if last_idx_current != -1 else None
+        )
+        header_current = (
+            original_doc_str[:start_idx_current] if start_idx_current > -1 else None
+        )
 
-    footer_origin = (
-        original_doc_str[last_idx_original:] if last_idx_original > -1 else ""
-    )
+        args_returns_current = current_doc_str[
+            slice(
+                start_idx_current if start_idx_current > -1 else None,
+                last_idx_current if last_idx_current > -1 else None,
+            )
+        ]
 
-    footer_current, footer_original = map(
-        lambda doc_idx: doc_idx[0][doc_idx[1] :] if doc_idx[1] != -1 else None,
-        ((current_doc_str, last_idx_current), (original_doc_str, last_idx_original)),
-    )
+        if not original_doc_str:
+            return (
+                header_current,
+                args_returns_current,
+                footer_current,
+            )
+
+    if original_doc_str:
+        start_idx_original = _get_token_start_idx(original_doc_str)
+        last_idx_original = _get_token_last_idx(original_doc_str)
+        footer_original = (
+            original_doc_str[last_idx_original:] if last_idx_original != -1 else None
+        )
+        header_original = (
+            original_doc_str[:start_idx_original] if start_idx_original > -1 else None
+        )
+
+        args_returns_original = original_doc_str[
+            slice(
+                start_idx_original if start_idx_original > -1 else None,
+                last_idx_original if last_idx_original > -1 else None,
+            )
+        ]
+
+        if not current_doc_str:
+            return header_original, args_returns_original, footer_original
 
     # Now we know where the args/returns were, and where they are now
     # To avoid whitespace issues, only copy across the args/returns portion, keep rest as original
@@ -504,46 +554,70 @@ def ensure_doc_args_whence_original(current_doc_str, original_doc_str):
         original_footer,
     ) = parse_docstring_into_header_args_footer(current_doc_str, original_doc_str)
 
-    original_header = original_header or ""
-    current_args_returns = current_args_returns or ""
-    original_footer = original_footer or ""
-
-    # Ensure there is always a newline between each of: header; args_returns; and footer
-    if current_args_returns:
-        current_args_returns_startswith_nl = current_args_returns[0] == "\n"
-        current_args_returns_endswith_nl = current_args_returns[-1] == "\n"
-        current_args_returns = "{nl0}{current_args_returns}{nl1}".format(
-            nl0="\n" if current_args_returns_startswith_nl else "",
-            current_args_returns=current_args_returns,
-            nl1="\n" if current_args_returns_endswith_nl else "",
-        )
-    else:
-        current_args_returns_startswith_nl = current_args_returns_endswith_nl = True
-    if original_footer:
-        original_footer_startswith_nl = (
-            original_footer[0] == "\n" or current_args_returns_endswith_nl
-        )
-        # original_footer_endswith_nl = original_footer[-1] == "\n"
-    else:
-        original_footer_startswith_nl = True  # original_footer_endswith_nl
-    header_endswith_nl = (
-        not original_header
-        or original_header[-1] == "\n"
-        or current_args_returns_startswith_nl
+    return header_args_footer_to_str(
+        header=original_header or "",
+        args_returns=current_args_returns or "",
+        footer=original_footer or "",
     )
 
-    return "{original_header}{current_args_returns}{original_footer}".format(
-        original_header=(
-            original_header
-            if header_endswith_nl
-            else "{original_header}\n".format(original_header=original_header)
-        ),
-        current_args_returns=current_args_returns,
-        original_footer=(
-            "{nl0}{original_footer}{nl1}".format(
-                nl0="" if original_footer_startswith_nl else "\n",
-                original_footer=original_footer,
-                nl1="",  # nl1="" if original_footer_endswith_nl else "\n"
+
+def header_args_footer_to_str(header, args_returns, footer):
+    """
+    Ensure there is always a newline between each of: header; args_returns; and footer
+
+    :param header: Header section
+    :type header: ```str```
+
+    :param args_returns: args|returns section
+    :type args_returns: ```str```
+
+    :param footer: Footer section
+    :type footer: ```str```
+
+    :return: One string with these three section combined with a minimum of one nl betwixt each
+    :rtype: ```str```
+    """
+    if args_returns:
+        args_returns_startswith_nl = has_nl(args_returns, str.partition)
+        args_returns_endswith_nl = has_nl(args_returns, str.rpartition)
+        args_returns = "{nl0}{args_returns}{nl1}".format(
+            nl0="\n" if args_returns_startswith_nl else "",
+            args_returns=args_returns,
+            nl1="\n" if args_returns_endswith_nl else "",
+        )
+    else:
+        args_returns_startswith_nl = args_returns_endswith_nl = True
+    if footer:
+        footer_startswith_nl = (
+            has_nl(footer, str.partition) == "\n" or args_returns_endswith_nl
+        )
+        # footer_endswith_nl = footer[-1] == "\n"
+    else:
+        footer_startswith_nl = True  # footer_endswith_nl
+    header_endswith_nl = not header or header[-1] == "\n" or args_returns_startswith_nl
+
+    # Match indent of args_returns to header or footer
+    if args_returns:
+        header_or_footer = header if header else footer
+        indent_amount = count_iter_items(takewhile(str.isspace, header_or_footer))
+        newlines = (
+            header_or_footer[:indent_amount].count("\n") if header_or_footer else 0
+        )
+        indent_amount = indent_amount - newlines
+        current_indent_amount = count_iter_items(takewhile(str.isspace, args_returns))
+        if current_indent_amount != indent_amount:
+            args_returns = indent(
+                args_returns, indent_amount * " ", predicate=lambda _: _
+            )
+
+    return "{header}{args_returns}{footer}".format(
+        header=(header if header_endswith_nl else "{header}\n".format(header=header)),
+        args_returns=args_returns,
+        footer=(
+            "{nl0}{footer}{nl1}".format(
+                nl0="" if footer_startswith_nl else "\n",
+                footer=footer,
+                nl1="",  # nl1="" if footer_endswith_nl else "\n"
             )
         ),
     )

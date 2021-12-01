@@ -103,7 +103,8 @@ class TestParsers(TestCase):
                     emit_default_doc=True,
                 )
             ).rstrip("\n"),
-            "def set_cli_args(argument_parser):\n{tab}{body}".format(
+            "def set_cli_args(argument_parser):\n"
+            "{tab}{body}".format(
                 tab=tab,
                 body=tab.join(
                     (
@@ -582,6 +583,7 @@ class TestParsers(TestCase):
         no_body = deepcopy(function_google_tf_ops_losses__safe_mean_ast)
         del no_body.body[1:]
         ir = parse.function(no_body)
+        del ir["_internal"]
         gold = deepcopy(function_google_tf_ops_losses__safe_mean_ir)
         gold["returns"]["return_type"] = {
             "doc": function_google_tf_ops_losses__safe_mean_ir["returns"][
