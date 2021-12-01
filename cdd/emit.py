@@ -40,6 +40,7 @@ from cdd.docstring_utils import (
     RETURN_TOKENS,
     emit_param_str,
     parse_docstring_into_header_args_footer,
+    header_args_footer_to_str,
 )
 from cdd.emitter_utils import (
     RewriteName,
@@ -564,42 +565,43 @@ def docstring(
     :rtype: ```str```
     """
     # _sep = tab * indent_level
+    params = "\n{maybe_nl}".format(
+        maybe_nl="\n" if docstring_format == "rest" else ""
+    ).join(
+        (
+            lambda param_lines: [getattr(ARG_TOKENS, docstring_format)[0]] + param_lines
+            if param_lines and docstring_format != "rest"
+            else param_lines
+        )(
+            list(
+                map(
+                    partial(
+                        emit_param_str,
+                        style=docstring_format,
+                        purpose=purpose,
+                        emit_type=emit_types,
+                        emit_default_doc=emit_default_doc,
+                        word_wrap=word_wrap,
+                    ),
+                    (intermediate_repr["params"] or OrderedDict()).items(),
+                ),
+            )
+        )
+    )
 
     candidate_args_returns = "{params}\n{returns}\n".format(
-        params="\n{maybe_nl}".format(
-            maybe_nl="\n" if docstring_format == "rest" else ""
-        ).join(
-            (
-                lambda param_lines: [getattr(ARG_TOKENS, docstring_format)[0]]
-                + param_lines
-                if param_lines and docstring_format != "rest"
-                else param_lines
-            )(
-                list(
-                    map(
-                        partial(
-                            emit_param_str,
-                            style=docstring_format,
-                            purpose=purpose,
-                            emit_type=emit_types,
-                            emit_default_doc=emit_default_doc,
-                            word_wrap=word_wrap,
-                        ),
-                        (intermediate_repr["params"] or OrderedDict()).items(),
-                    ),
-                )
-            )
-        ),
+        params=params,
         returns="".join(
             (
                 lambda l: l
                 if l is None
-                else "{maybe_nl}\n{returns_doc}".format(
-                    maybe_nl=""
+                else "{maybe_nl0_and_token}{maybe_nl1}{returns_doc}".format(
+                    maybe_nl0_and_token=""
                     if docstring_format == "rest"
                     else "\n{return_token}".format(
                         return_token=getattr(RETURN_TOKENS, docstring_format)[0]
                     ),
+                    maybe_nl1="" if not params or params[-1] == "\n" else "\n",
                     returns_doc=l,
                 )
             )(
@@ -635,8 +637,10 @@ def docstring(
     else:
         header, footer = intermediate_repr.get("doc", ""), ""
 
-    return "{header}{args_returns}{footer}".format(
-        header=header, args_returns=candidate_args_returns, footer=footer
+    return header_args_footer_to_str(
+        header=header,
+        args_returns="" if candidate_args_returns.isspace() else candidate_args_returns,
+        footer=footer,
     )
 
     # pp({"a": original_doc_str, "b": candidate_doc_str})

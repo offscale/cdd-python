@@ -13,7 +13,6 @@ import ast
 from ast import AST, Constant, NameConstant
 from collections import OrderedDict
 from copy import deepcopy
-from enum import Enum
 from functools import partial
 from itertools import chain, takewhile
 from operator import attrgetter, eq, le

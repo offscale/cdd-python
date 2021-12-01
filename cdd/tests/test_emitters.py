@@ -16,7 +16,7 @@ from unittest import TestCase, skipIf
 
 from cdd import emit, parse
 from cdd.ast_utils import annotate_ancestry, cmp_ast, find_in_ast, get_function_type
-from cdd.pure_utils import none_types, rpartial
+from cdd.pure_utils import none_types, rpartial, reindent, tab
 from cdd.tests.mocks.argparse import (
     argparse_func_action_append_ast,
     argparse_func_ast,
@@ -149,7 +149,7 @@ class TestEmitters(TestCase):
         """
         self.assertEqual(
             emit.docstring(parse.class_(class_ast), emit_default_doc=True),
-            docstring_str,
+            reindent(docstring_str, 1).rstrip(" "),
         )
 
     def test_to_docstring_emit_default_doc_false(self) -> None:
@@ -159,7 +159,7 @@ class TestEmitters(TestCase):
         ir = parse.class_(class_ast)
         self.assertEqual(
             emit.docstring(ir, emit_default_doc=False),
-            docstring_no_default_str,
+            reindent(docstring_no_default_str, 1).rstrip(" "),
         )
 
     def test_to_numpy_docstring(self) -> None:
@@ -582,6 +582,7 @@ class TestEmitters(TestCase):
         Tests that `emit.sqlalchemy` with `intermediate_repr_no_default_sql_doc` produces `config_tbl_ast`
         """
         system() in frozenset(("Darwin", "Linux")) and print("test_to_sqlalchemy")
+
         run_ast_test(
             self,
             emit.sqlalchemy(
