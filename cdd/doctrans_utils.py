@@ -263,7 +263,7 @@ class DocTrans(NodeTransformer):
             indent_level=indent_level,
             word_wrap=self.word_wrap,
         )
-        if _doc_str.isspace():
+        if not _doc_str or _doc_str.isspace():
             if doc_str is not None:
                 del node.body[0]
         else:

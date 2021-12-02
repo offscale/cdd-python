@@ -10,13 +10,25 @@ docstring_header_str = (
     "Acquire from the official tensorflow_datasets model zoo,"
     " or the ophthalmology focussed ml-prepare\n"
 )
+docstring_header_no_nl_str = docstring_header_str.rstrip("\n")
 # "library".strip()
+
+_docstring_header_and_return_str = (
+    ":return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))",
+    ":rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```",
+)
 
 docstring_header_and_return_str = "\n".join(
     (
         docstring_header_str,
-        ":return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))",
-        ":rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```",
+        *_docstring_header_and_return_str
+    )
+)
+
+docstring_header_and_return_no_nl_str = "\n".join(
+    (
+        docstring_header_no_nl_str,
+        *_docstring_header_and_return_str
     )
 )
 
@@ -503,7 +515,7 @@ Some comment
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """
 
-docstring_str = """
+_docstring_str = """
 {header_doc_str}
 :param dataset_name: name of dataset. Defaults to "mnist"
 :type dataset_name: ```str```
@@ -522,8 +534,14 @@ docstring_str = """
 
 :return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
-""".format(
+"""
+
+docstring_str = _docstring_str.format(
     header_doc_str=docstring_header_str
+)
+
+docstring_no_nl_str = _docstring_str.format(
+    header_doc_str=docstring_header_no_nl_str
 )
 
 docstring_wrapped_str = docstring_str.replace(
@@ -758,11 +776,13 @@ __all__ = [
     "docstring_google_tf_mean_squared_error_str",
     "docstring_google_tf_ops_losses__safe_mean_str",
     "docstring_google_tf_squared_hinge_str",
+    "docstring_header_and_return_no_nl_str",
     "docstring_header_str",
     "docstring_keras_rmsprop_class_str",
     "docstring_keras_rmsprop_method_str",
     "docstring_no_default_doc_str",
     "docstring_no_default_str",
+    "docstring_no_nl_str",
     "docstring_numpydoc_only_doc_str",
     "docstring_numpydoc_only_params_str",
     "docstring_numpydoc_only_returns_str",

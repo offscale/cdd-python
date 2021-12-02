@@ -145,11 +145,11 @@ class TestEmitters(TestCase):
 
     def test_to_docstring(self) -> None:
         """
-        Tests whether `docstring` produces `docstring_str` given `class_ast`
+        Tests whether `docstring` produces indented `docstring_str` given `class_ast`
         """
         self.assertEqual(
             emit.docstring(parse.class_(class_ast), emit_default_doc=True),
-            reindent(docstring_str, 1).rstrip(" "),
+            reindent(docstring_str, 1),
         )
 
     def test_to_docstring_emit_default_doc_false(self) -> None:
@@ -159,7 +159,7 @@ class TestEmitters(TestCase):
         ir = parse.class_(class_ast)
         self.assertEqual(
             emit.docstring(ir, emit_default_doc=False),
-            reindent(docstring_no_default_str, 1).rstrip(" "),
+            reindent(docstring_no_default_str, 1),
         )
 
     def test_to_numpy_docstring(self) -> None:
@@ -453,7 +453,7 @@ class TestEmitters(TestCase):
         )
 
         # emit.file(gen_ast, os.path.join(os.path.dirname(__file__),
-        #           "delme{extsep}py".format(extsep=extsep), mode="wt")
+        #           "delme{extsep}py".format(extsep=extsep)), mode="wt")
 
         run_ast_test(
             self,

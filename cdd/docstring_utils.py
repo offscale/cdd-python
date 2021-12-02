@@ -578,23 +578,23 @@ def header_args_footer_to_str(header, args_returns, footer):
     :rtype: ```str```
     """
     if args_returns:
-        args_returns_startswith_nl = has_nl(args_returns, str.partition)
-        args_returns_endswith_nl = has_nl(args_returns, str.rpartition)
+        args_returns_start_has_nl = has_nl(args_returns, str.partition)
+        args_returns_ends_has_nl = has_nl(args_returns, str.rpartition)
         args_returns = "{nl0}{args_returns}{nl1}".format(
-            nl0="\n" if args_returns_startswith_nl else "",
+            nl0="\n" if args_returns_start_has_nl else "",
             args_returns=args_returns,
-            nl1="\n" if args_returns_endswith_nl else "",
+            nl1="\n" if args_returns_ends_has_nl else "",
         )
     else:
-        args_returns_startswith_nl = args_returns_endswith_nl = True
+        args_returns_start_has_nl = args_returns_ends_has_nl = True
     if footer:
-        footer_startswith_nl = (
-            has_nl(footer, str.partition) == "\n" or args_returns_endswith_nl
+        footer_start_has_nl = (
+            has_nl(footer, str.partition) or args_returns_ends_has_nl
         )
-        # footer_endswith_nl = footer[-1] == "\n"
+        # foot_end_has_nl = footer[-1] == "\n"
     else:
-        footer_startswith_nl = True  # footer_endswith_nl
-    header_endswith_nl = not header or header[-1] == "\n" or args_returns_startswith_nl
+        footer_start_has_nl = True  # foot_end_has_nl
+    header_end_has_nl = not header or header[-1] == "\n" or args_returns_start_has_nl
 
     # Match indent of args_returns to header or footer
     if args_returns:
@@ -606,18 +606,22 @@ def header_args_footer_to_str(header, args_returns, footer):
         indent_amount = indent_amount - newlines
         current_indent_amount = count_iter_items(takewhile(str.isspace, args_returns))
         if current_indent_amount != indent_amount:
+            _indent = indent_amount * " "
+            len_args_returns = len(args_returns)
             args_returns = indent(
-                args_returns, indent_amount * " ", predicate=lambda _: _
+                args_returns, _indent, predicate=lambda _: _
             )
+            if args_returns[-1] == '\n' and len_args_returns > 1:
+                args_returns += _indent
 
     return "{header}{args_returns}{footer}".format(
-        header=(header if header_endswith_nl else "{header}\n".format(header=header)),
+        header=(header if header_end_has_nl else "{header}\n".format(header=header)),
         args_returns=args_returns,
         footer=(
             "{nl0}{footer}{nl1}".format(
-                nl0="" if footer_startswith_nl else "\n",
+                nl0="" if footer_start_has_nl else "\n",
                 footer=footer,
-                nl1="",  # nl1="" if footer_endswith_nl else "\n"
+                nl1="",  # nl1="" if foot_end_has_nl else "\n"
             )
         ),
     )

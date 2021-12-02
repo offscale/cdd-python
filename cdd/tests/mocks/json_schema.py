@@ -2,12 +2,12 @@
 Mocks for JSON Schema
 """
 
-from cdd.tests.mocks.docstrings import docstring_header_and_return_str
+from cdd.tests.mocks.docstrings import docstring_header_and_return_no_nl_str
 
 config_schema = {
     "$id": "https://offscale.io/config.schema.json",
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "description": docstring_header_and_return_str,
+    "description": docstring_header_and_return_no_nl_str,
     "type": "object",
     "properties": {
         "dataset_name": {

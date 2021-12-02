@@ -376,6 +376,7 @@ def _build_parser():
         help="What type to generate.",
         choices=parse_emit_types,
         required=True,
+        dest="emit_name",
         action="append",
     )
     exmod_parser.add_argument(

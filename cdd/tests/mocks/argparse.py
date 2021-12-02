@@ -20,6 +20,7 @@ from ast import (
     fix_missing_locations,
     keyword,
 )
+from itertools import chain
 
 from cdd.ast_utils import FALLBACK_TYP, maybe_type_comment, set_arg, set_value
 from cdd.pure_utils import deindent, tab
@@ -51,24 +52,46 @@ argparse_add_argument_ast = Expr(
     )
 )
 
-argparse_doc_str = (
+_argparse_doc_str_tuple = (
     "Set CLI arguments\n",
     ":param argument_parser: argument parser",
     ":type argument_parser: ```ArgumentParser```\n",
 )
 
 _cli_doc_str = "\n{tab}".format(tab=tab).join(
-    argparse_doc_str
+    _argparse_doc_str_tuple
     + (
         ":return: argument_parser, Train and tests dataset splits.",
         ":rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset],"
         " Tuple[np.ndarray,\n{tab}np.ndarray]]]```".format(tab=tab),
     )
 )
-_cli_doc_expr = Expr(set_value("\n{tab}{}\n{tab}".format(_cli_doc_str, tab=tab)))
+
+a = "\n{tab}{_cli_doc_str}\n{tab}".format(_cli_doc_str=_cli_doc_str, tab=tab)
+
+_cli_doc_expr = Expr(
+    set_value(
+        "\n{tab}{_cli_doc_str}\n{tab}".format(
+            _cli_doc_str="\n{tab}".format(tab=tab).join(
+                chain.from_iterable(
+                    (
+                        (_argparse_doc_str_tuple[0].rstrip("\n"),),
+                        _argparse_doc_str_tuple[1:],
+                        (
+                            ":return: argument_parser, Train and tests dataset splits.",
+                            ":rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset],"
+                            " Tuple[np.ndarray,\n{tab}np.ndarray]]]```".format(tab=tab),
+                        ),
+                    )
+                )
+            ),
+            tab=tab,
+        )
+    )
+)
 
 _cli_doc_nosplit_str = "\n{tab}".format(tab=tab).join(
-    argparse_doc_str
+    _argparse_doc_str_tuple
     + (
         ":return: argument_parser",
         ":rtype: ```ArgumentParser```",
@@ -1004,7 +1027,7 @@ argparse_add_argument_expr = Expr(
 __all__ = [
     "argparse_add_argument_ast",
     "argparse_add_argument_expr",
-    "argparse_doc_str",
+    "_argparse_doc_str_tuple",
     "argparse_func_action_append_ast",
     "argparse_func_action_append_str",
     "argparse_func_ast",
