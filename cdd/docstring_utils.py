@@ -588,9 +588,7 @@ def header_args_footer_to_str(header, args_returns, footer):
     else:
         args_returns_start_has_nl = args_returns_ends_has_nl = True
     if footer:
-        footer_start_has_nl = (
-            has_nl(footer, str.partition) or args_returns_ends_has_nl
-        )
+        footer_start_has_nl = has_nl(footer, str.partition) or args_returns_ends_has_nl
         # foot_end_has_nl = footer[-1] == "\n"
     else:
         footer_start_has_nl = True  # foot_end_has_nl
@@ -608,10 +606,8 @@ def header_args_footer_to_str(header, args_returns, footer):
         if current_indent_amount != indent_amount:
             _indent = indent_amount * " "
             len_args_returns = len(args_returns)
-            args_returns = indent(
-                args_returns, _indent, predicate=lambda _: _
-            )
-            if args_returns[-1] == '\n' and len_args_returns > 1:
+            args_returns = indent(args_returns, _indent, predicate=lambda _: _)
+            if args_returns[-1] == "\n" and len_args_returns > 1:
                 args_returns += _indent
 
     return "{header}{args_returns}{footer}".format(

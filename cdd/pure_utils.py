@@ -842,6 +842,7 @@ __all__ = [
     "filename_from_mod_or_filename",
     "fill",
     "get_module",
+    "has_nl",
     "identity",
     "indent_all_but_first",
     "location_within",

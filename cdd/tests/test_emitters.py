@@ -16,7 +16,7 @@ from unittest import TestCase, skipIf
 
 from cdd import emit, parse
 from cdd.ast_utils import annotate_ancestry, cmp_ast, find_in_ast, get_function_type
-from cdd.pure_utils import none_types, rpartial, reindent, tab
+from cdd.pure_utils import none_types, rpartial, reindent
 from cdd.tests.mocks.argparse import (
     argparse_func_action_append_ast,
     argparse_func_ast,
@@ -36,6 +36,7 @@ from cdd.tests.mocks.docstrings import (
     docstring_no_default_str,
     docstring_numpydoc_str,
     docstring_str,
+    docstring_no_nl_str,
 )
 from cdd.tests.mocks.ir import (
     class_torch_nn_l1loss_ir,
@@ -91,7 +92,7 @@ class TestEmitters(TestCase):
         run_ast_test(
             self,
             emit.class_(
-                parse.docstring(docstring_str, emit_default_doc=True),
+                parse.docstring(docstring_no_nl_str, emit_default_doc=True),
                 emit_default_doc=True,
             ),
             gold=class_ast,
@@ -176,7 +177,7 @@ class TestEmitters(TestCase):
         Tests whether `docstring` produces `docstring_google_str` when `docstring_format` is 'google'
         """
         self.assertEqual(
-            "\n" + docstring_google_str,
+            docstring_google_str,
             emit.docstring(deepcopy(intermediate_repr), docstring_format="google"),
         )
 

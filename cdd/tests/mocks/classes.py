@@ -1272,7 +1272,9 @@ __all__ = [
     "class_squared_hinge_config_ast",
     "class_str",
     "class_torch_nn_l1loss_ast",
+    "class_torch_nn_l1loss_docstring_str",
     "class_torch_nn_l1loss_str",
-    "class_torch_nn_one_cycle_lr_str",
     "class_torch_nn_one_cycle_lr_ast",
+    "class_torch_nn_one_cycle_lr_str",
+    "tensorboard_doc_str_no_args_str",
 ]
