@@ -523,16 +523,83 @@ def location_within(container, iterable, cmp=eq):
     return -1, -1, None
 
 
-BUILTIN_TYPES = (
-    frozenset(
-        chain.from_iterable(
-            map(
-                lambda s: (s, "typing.{}".format(s), "_extensions.{}".format(s)),
-                filter(lambda s: s[0].isupper() and not s.isupper(), dir(typing)),
-            )
+BUILTIN_TYPES = frozenset(
+    chain.from_iterable(
+        (
+            chain.from_iterable(
+                map(
+                    lambda s: (s, "typing.{}".format(s), "_extensions.{}".format(s)),
+                    filter(lambda s: s[0].isupper() and not s.isupper(), dir(typing)),
+                )
+            ),
+            (
+                "int",
+                "float",
+                "complex",
+                "list",
+                "tuple",
+                "str",
+                "bytes",
+                "bytearray",
+                "memoryview",
+                "set",
+                "frozenset",
+                "dict",
+            ),
         )
     )
-    | frozenset(("int", "float", "str", "dict", "list", "tuple"))
+)
+
+DUNDERS = frozenset(
+    filter(
+        rpartial(str.startswith, "__"),
+        frozenset(
+            chain.from_iterable(
+                (
+                    # https://docs.python.org/3/library/stdtypes.html
+                    chain.from_iterable(
+                        map(
+                            dir,
+                            (
+                                int,
+                                float,
+                                complex,
+                                list,
+                                tuple,
+                                range,
+                                str,
+                                bytes,
+                                bytearray,
+                                memoryview,
+                                set,
+                                frozenset,
+                                dict,
+                                type,
+                                None,
+                                Ellipsis,
+                                NotImplemented,
+                                object,
+                            ),
+                        )
+                    ),
+                    # https://docs.python.org/3/library/functions.html#dir
+                    dir(),
+                    # https://docs.python.org/3/library/stdtypes.html#special-attributes
+                    (
+                        "__dict__",
+                        "__class__",
+                        "__bases__",
+                        "__name__",
+                        "__qualname__",
+                        "__mro__",
+                        "__subclasses__",
+                        # https://docs.python.org/3/reference/datamodel.html#slots
+                        "__slots__",
+                    ),
+                )
+            )
+        ),
+    )
 )
 
 INIT_FILENAME = "__init__{extsep}py".format(extsep=extsep)
@@ -759,6 +826,7 @@ sanitise_emit_name = dict(
 
 __all__ = [
     "BUILTIN_TYPES",
+    "DUNDERS",
     "ENCODING",
     "INIT_FILENAME",
     "PY3_8",

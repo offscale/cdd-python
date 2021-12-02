@@ -29,7 +29,7 @@ from cdd.tests.mocks.docstrings import (
     docstring_numpydoc_only_returns_str,
     docstring_numpydoc_str,
     docstring_only_return_type_str,
-    docstring_str,
+    docstring_str, docstring_no_nl_str,
 )
 from cdd.tests.mocks.ir import (
     docstring_google_pytorch_lbfgs_ir,
@@ -97,7 +97,7 @@ class TestMarshallDocstring(TestCase):
     def test_ir2docstring(self) -> None:
         """Tests whether `emit.docstring` produces `docstring_str` from `intermediate_repr`"""
         self.assertEqual(
-            docstring_str.strip(),
+            docstring_no_nl_str.strip("\n"),
             cdd.emit.docstring(
                 deepcopy(intermediate_repr),
                 indent_level=0,
@@ -105,7 +105,7 @@ class TestMarshallDocstring(TestCase):
                 emit_default_doc=True,
                 emit_separating_tab=False,
                 word_wrap=False,
-            ).strip(),
+            ).rstrip("\n"),
         )
 
     def test_from_docstring(self) -> None:
