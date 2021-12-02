@@ -29,7 +29,8 @@ from cdd.tests.mocks.docstrings import (
     docstring_numpydoc_only_returns_str,
     docstring_numpydoc_str,
     docstring_only_return_type_str,
-    docstring_str, docstring_no_nl_str,
+    docstring_str,
+    docstring_no_nl_str,
 )
 from cdd.tests.mocks.ir import (
     docstring_google_pytorch_lbfgs_ir,

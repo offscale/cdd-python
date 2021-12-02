@@ -6,12 +6,14 @@ from textwrap import indent
 
 from cdd.pure_utils import identity, tab
 
-docstring_header_str = (
+
+docstring_header_no_nl_str = (
     "Acquire from the official tensorflow_datasets model zoo,"
-    " or the ophthalmology focussed ml-prepare\n"
+    " or the ophthalmology focussed ml-prepare"
 )
-docstring_header_no_nl_str = docstring_header_str.rstrip("\n")
-# "library".strip()
+docstring_header_str = "{docstring_header_no_nl_str}\n".format(
+    docstring_header_no_nl_str=docstring_header_no_nl_str
+)
 
 _docstring_header_and_return_str = (
     ":return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))",
@@ -19,17 +21,11 @@ _docstring_header_and_return_str = (
 )
 
 docstring_header_and_return_str = "\n".join(
-    (
-        docstring_header_str,
-        *_docstring_header_and_return_str
-    )
+    (docstring_header_str, *_docstring_header_and_return_str)
 )
 
 docstring_header_and_return_no_nl_str = "\n".join(
-    (
-        docstring_header_no_nl_str,
-        *_docstring_header_and_return_str
-    )
+    (docstring_header_no_nl_str, *_docstring_header_and_return_str)
 )
 
 docstring_extra_colons_str = """
@@ -389,8 +385,7 @@ docstring_google_pytorch_lbfgs = (
 )
 docstring_google_pytorch_lbfgs_str = "\n".join(docstring_google_pytorch_lbfgs)
 
-docstring_google_str = """{header_doc_str}
-
+docstring_google_str = """{docstring_header_no_nl_str}
 Args:
   dataset_name (str): name of dataset. Defaults to "mnist"
   tfds_dir (str): directory to look for models in. Defaults to "~/tensorflow_datasets"
@@ -402,7 +397,7 @@ Returns:
   Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
    Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 """.format(
-    header_doc_str=docstring_header_str
+    docstring_header_no_nl_str=docstring_header_no_nl_str
 )
 
 docstring_no_default_doc_str = """
@@ -483,9 +478,7 @@ Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]
     Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 """
 
-docstring_numpydoc_str = """
-{header_doc_str}
-
+docstring_numpydoc_str = """{docstring_header_no_nl_str}
 Parameters
 ----------
 dataset_name : str
@@ -500,7 +493,7 @@ data_loader_kwargs : Optional[dict]
     pass this as arguments to data_loader function
 
 {docstring_numpydoc_only_returns_str}""".format(
-    header_doc_str=docstring_header_str,
+    docstring_header_no_nl_str=docstring_header_no_nl_str,
     docstring_numpydoc_only_returns_str=docstring_numpydoc_only_returns_str.lstrip(
         "\n"
     ),
@@ -536,13 +529,9 @@ _docstring_str = """
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """
 
-docstring_str = _docstring_str.format(
-    header_doc_str=docstring_header_str
-)
+docstring_str = _docstring_str.format(header_doc_str=docstring_header_str)
 
-docstring_no_nl_str = _docstring_str.format(
-    header_doc_str=docstring_header_no_nl_str
-)
+docstring_no_nl_str = _docstring_str.format(header_doc_str=docstring_header_no_nl_str)
 
 docstring_wrapped_str = docstring_str.replace(
     " np.ndarray]]```", "\n{tab}np.ndarray]]```".format(tab=tab)
@@ -777,6 +766,7 @@ __all__ = [
     "docstring_google_tf_ops_losses__safe_mean_str",
     "docstring_google_tf_squared_hinge_str",
     "docstring_header_and_return_no_nl_str",
+    "docstring_header_no_nl_str",
     "docstring_header_str",
     "docstring_keras_rmsprop_class_str",
     "docstring_keras_rmsprop_method_str",

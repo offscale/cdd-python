@@ -22,6 +22,7 @@ from cdd.tests.mocks.docstrings import (
     docstring_header_str,
     docstring_keras_rmsprop_class_str,
     docstring_keras_rmsprop_method_str,
+    docstring_header_no_nl_str,
 )
 from cdd.tests.utils_for_tests import remove_args_from_docstring
 
@@ -1082,7 +1083,7 @@ intermediate_repr_only_return_type = {
 intermediate_repr = {
     "name": None,
     "type": "static",
-    "doc": docstring_header_str.replace("\n", ""),
+    "doc": docstring_header_no_nl_str,
     "params": OrderedDict(
         (
             (

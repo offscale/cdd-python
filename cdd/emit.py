@@ -22,10 +22,9 @@ from ast import (
 from collections import OrderedDict
 from functools import partial
 from importlib import import_module
-from itertools import chain
+from itertools import chain, takewhile
 from operator import add
 from sys import modules
-from textwrap import indent
 
 from cdd.ast_utils import (
     get_value,
@@ -61,6 +60,8 @@ from cdd.pure_utils import (
     rpartial,
     simple_types,
     tab,
+    count_iter_items,
+    indent_all_but_first,
 )
 from cdd.source_transformer import to_code
 
@@ -149,77 +150,67 @@ def argparse_function(
                         (
                             Expr(
                                 set_value(
-                                    indent(
-                                        docstring(
-                                            {
-                                                "doc": "Set CLI arguments",
-                                                "params": OrderedDict(
+                                    docstring(
+                                        {
+                                            "doc": "Set CLI arguments",
+                                            "params": OrderedDict(
+                                                (
                                                     (
-                                                        (
-                                                            "argument_parser",
-                                                            {
-                                                                "doc": "argument parser",
-                                                                "typ": "ArgumentParser",
-                                                            },
-                                                        ),
-                                                    )
-                                                ),
-                                                "returns": OrderedDict(
+                                                        "argument_parser",
+                                                        {
+                                                            "doc": "argument parser",
+                                                            "typ": "ArgumentParser",
+                                                        },
+                                                    ),
+                                                )
+                                            ),
+                                            "returns": OrderedDict(
+                                                (
                                                     (
-                                                        (
-                                                            "return_type",
-                                                            {
-                                                                "doc": "argument_parser, {returns_doc}".format(
-                                                                    returns_doc=intermediate_repr[
-                                                                        "returns"
-                                                                    ][
-                                                                        "return_type"
-                                                                    ][
-                                                                        "doc"
-                                                                    ]
-                                                                )
-                                                                if intermediate_repr[
+                                                        "return_type",
+                                                        {
+                                                            "doc": "argument_parser, {returns_doc}".format(
+                                                                returns_doc=intermediate_repr[
                                                                     "returns"
-                                                                ]["return_type"].get(
+                                                                ][
+                                                                    "return_type"
+                                                                ][
                                                                     "doc"
-                                                                )
-                                                                else "argument_parser",
-                                                                "typ": "Tuple[ArgumentParser, {typ}]".format(
-                                                                    typ=intermediate_repr[
-                                                                        "returns"
-                                                                    ][
-                                                                        "return_type"
-                                                                    ][
-                                                                        "typ"
-                                                                    ]
-                                                                ),
-                                                            }
-                                                            if "return_type"
-                                                            in (
-                                                                (
-                                                                    intermediate_repr
-                                                                    or {}
-                                                                ).get("returns")
-                                                                or iter(())
+                                                                ]
                                                             )
-                                                            and intermediate_repr[
+                                                            if intermediate_repr[
                                                                 "returns"
-                                                            ]["return_type"].get("typ")
-                                                            not in none_types
-                                                            else {
-                                                                "doc": "argument_parser",
-                                                                "typ": "ArgumentParser",
-                                                            },
-                                                        ),
+                                                            ]["return_type"].get("doc")
+                                                            else "argument_parser",
+                                                            "typ": "Tuple[ArgumentParser, {typ}]".format(
+                                                                typ=intermediate_repr[
+                                                                    "returns"
+                                                                ]["return_type"]["typ"]
+                                                            ),
+                                                        }
+                                                        if "return_type"
+                                                        in (
+                                                            (
+                                                                intermediate_repr or {}
+                                                            ).get("returns")
+                                                            or iter(())
+                                                        )
+                                                        and intermediate_repr[
+                                                            "returns"
+                                                        ]["return_type"].get("typ")
+                                                        not in none_types
+                                                        else {
+                                                            "doc": "argument_parser",
+                                                            "typ": "ArgumentParser",
+                                                        },
                                                     ),
                                                 ),
-                                            },
-                                            docstring_format=docstring_format,
-                                            word_wrap=word_wrap,
-                                        ),
-                                        tab,
+                                            ),
+                                        },
+                                        docstring_format=docstring_format,
+                                        word_wrap=word_wrap,
+                                        indent_level=1,
                                     )
-                                    + tab
                                 )
                             ),
                             Assign(
@@ -434,14 +425,33 @@ def class_(
                             set_value(
                                 "\n{sep}".format(sep=sep).join(
                                     (
-                                        _emit_docstring(
-                                            {
-                                                "doc": intermediate_repr.get("doc", ""),
-                                                "params": OrderedDict(),
-                                                "returns": None,
-                                            },
-                                            emit_original_whitespace=emit_original_whitespace,
-                                        ),
+                                        (
+                                            lambda doc_str: (
+                                                indent_all_but_first
+                                                if word_wrap
+                                                else identity
+                                            )(
+                                                "{nl0}{doc_str}{nl1}{tab}".format(
+                                                    nl0=(
+                                                        ""
+                                                        if not doc_str
+                                                        or doc_str[0] == "\n"
+                                                        else "\n"
+                                                    ),
+                                                    doc_str=doc_str,
+                                                    nl1=(
+                                                        ""
+                                                        if not doc_str
+                                                        or doc_str[-1] == "\n"
+                                                        else "\n"
+                                                    ),
+                                                    tab=""
+                                                    if emit_original_whitespace
+                                                    else tab,
+                                                ),
+                                                indent_level=indent_level,
+                                            )
+                                        )(intermediate_repr.get("doc", "")),
                                         _emit_docstring(
                                             {
                                                 "doc": "",
@@ -453,6 +463,12 @@ def class_(
                                                 ),
                                             },
                                             emit_original_whitespace=False,
+                                        )
+                                        .replace(
+                                            "\n{sep}\n{sep}\n{sep}:param".format(
+                                                sep=sep
+                                            ),
+                                            "\n{sep}:cvar".format(sep=sep),
                                         )
                                         .replace(
                                             "\n{sep}:param ".format(sep=sep),
@@ -637,11 +653,52 @@ def docstring(
     else:
         header, footer = intermediate_repr.get("doc", ""), ""
 
-    return header_args_footer_to_str(
+    candidate_doc_str = header_args_footer_to_str(
         header=header,
         args_returns="" if candidate_args_returns.isspace() else candidate_args_returns,
         footer=footer,
     )
+
+    if candidate_doc_str and not candidate_doc_str.isspace():
+        prev_nl, next_nl, current_indent, line = (
+            0,
+            candidate_doc_str.find("\n"),
+            0,
+            None,
+        )
+
+        # Ignore starting newlines/whitespace only lines, keep munching until last line
+        while next_nl > -1:
+            line = candidate_doc_str[prev_nl:next_nl]
+            if not line.isspace():
+                break
+            prev_nl = next_nl
+            current_indent = count_iter_items(takewhile(str.isspace, line))
+
+        if indent_level > current_indent:
+            _tab = (indent_level - current_indent) * tab
+            lines = ([line] if line else []) + candidate_doc_str[next_nl:].splitlines()
+            candidate_doc_str = "\n".join(
+                map(
+                    lambda _line: "{_tab}{_line}".format(_tab=_tab, _line=_line)
+                    if _line or emit_separating_tab
+                    # and not _line.startswith(_tab)
+                    else _line,
+                    lines,
+                )
+            )
+            if len(lines) > 1:
+                candidate_doc_str = "{nl0}{candidate_doc_str}{nl1}".format(
+                    nl0="\n" if candidate_doc_str.startswith(_tab) else "",
+                    candidate_doc_str=candidate_doc_str,
+                    nl1=""
+                    if candidate_doc_str[-1] == "\n"
+                    else "\n{_tab}".format(_tab=_tab),
+                )
+
+    return "" if candidate_doc_str.isspace() else candidate_doc_str
+    # and "\n" in candidate_doc_str:
+    # indent = count_iter_items(takewhile(str.isspace, line))
 
     # pp({"a": original_doc_str, "b": candidate_doc_str})
     # print("a =", (original_doc_str).splitlines())

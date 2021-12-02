@@ -109,9 +109,11 @@ class TestParsers(TestCase):
                 body=tab.join(
                     (
                         '"""\n',
-                        "Set CLI arguments\n\n",
+                        "Set CLI arguments\n",
+                        "\n",
                         ":param argument_parser: argument parser\n",
-                        ":type argument_parser: ```ArgumentParser```\n\n",
+                        ":type argument_parser: ```ArgumentParser```\n",
+                        "\n",
                         ":return: argument_parser\n",
                         ":rtype: ```ArgumentParser```\n",
                         '"""\n',

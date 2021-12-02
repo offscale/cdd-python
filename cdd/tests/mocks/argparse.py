@@ -28,7 +28,7 @@ from cdd.tests.mocks.classes import (
     class_torch_nn_l1loss_docstring_str,
     tensorboard_doc_str_no_args_str,
 )
-from cdd.tests.mocks.docstrings import docstring_header_str
+from cdd.tests.mocks.docstrings import docstring_header_str, docstring_header_no_nl_str
 from cdd.tests.utils_for_tests import remove_args_from_docstring
 
 argparse_add_argument_ast = Expr(
@@ -75,6 +75,7 @@ _cli_doc_expr = Expr(
             _cli_doc_str="\n{tab}".format(tab=tab).join(
                 chain.from_iterable(
                     (
+                        # _argparse_doc_str_tuple,
                         (_argparse_doc_str_tuple[0].rstrip("\n"),),
                         _argparse_doc_str_tuple[1:],
                         (
@@ -412,7 +413,7 @@ argparse_func_ast = fix_missing_locations(
                         Store(),
                     )
                 ],
-                value=set_value(docstring_header_str.replace("\n", "")),
+                value=set_value(docstring_header_no_nl_str),
                 expr=None,
                 **maybe_type_comment
             ),
@@ -451,7 +452,7 @@ argparse_func_with_body_ast = fix_missing_locations(
                         Store(),
                     )
                 ],
-                value=set_value(docstring_header_str),
+                value=set_value(docstring_header_no_nl_str),
                 expr=None,
                 **maybe_type_comment
             ),
