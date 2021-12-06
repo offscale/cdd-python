@@ -48,7 +48,6 @@ from cdd.emitter_utils import (
     get_internal_body,
     param2json_schema_property,
     param_to_sqlalchemy_column_call,
-    normalise_intermediate_representation,
 )
 from cdd.pure_utils import (
     PY3_8,
@@ -128,7 +127,6 @@ def argparse_function(
         target_type=function_type,
         intermediate_repr=intermediate_repr,
     )
-    normalise_intermediate_representation(intermediate_repr)
 
     return FunctionDef(
         args=arguments(
@@ -659,44 +657,46 @@ def docstring(
         footer=footer,
     )
 
-    if candidate_doc_str and not candidate_doc_str.isspace():
-        prev_nl, next_nl, current_indent, line = (
-            0,
-            candidate_doc_str.find("\n"),
-            0,
-            None,
-        )
+    if not candidate_doc_str or candidate_doc_str.isspace():
+        return ""
 
-        # Ignore starting newlines/whitespace only lines, keep munching until last line
-        while next_nl > -1:
-            line = candidate_doc_str[prev_nl:next_nl]
-            if not line.isspace():
-                break
-            prev_nl = next_nl
-            current_indent = count_iter_items(takewhile(str.isspace, line))
+    prev_nl, next_nl, current_indent, line = (
+        0,
+        candidate_doc_str.find("\n"),
+        0,
+        None,
+    )
 
-        if indent_level > current_indent:
-            _tab = (indent_level - current_indent) * tab
-            lines = ([line] if line else []) + candidate_doc_str[next_nl:].splitlines()
-            candidate_doc_str = "\n".join(
-                map(
-                    lambda _line: "{_tab}{_line}".format(_tab=_tab, _line=_line)
-                    if _line or emit_separating_tab
-                    # and not _line.startswith(_tab)
-                    else _line,
-                    lines,
-                )
+    # Ignore starting newlines/whitespace only lines, keep munching until last line
+    while next_nl > -1:
+        line = candidate_doc_str[prev_nl:next_nl]
+        if not line.isspace():
+            break
+        prev_nl = next_nl
+        current_indent = count_iter_items(takewhile(str.isspace, line))
+
+    if indent_level > current_indent:
+        _tab = (indent_level - current_indent) * tab
+        lines = ([line] if line else []) + candidate_doc_str[next_nl:].splitlines()
+        candidate_doc_str = "\n".join(
+            map(
+                lambda _line: "{_tab}{_line}".format(_tab=_tab, _line=_line)
+                if _line or emit_separating_tab
+                # and not _line.startswith(_tab)
+                else _line,
+                lines,
             )
-            if len(lines) > 1:
-                candidate_doc_str = "{nl0}{candidate_doc_str}{nl1}".format(
-                    nl0="\n" if candidate_doc_str.startswith(_tab) else "",
-                    candidate_doc_str=candidate_doc_str,
-                    nl1=""
-                    if candidate_doc_str[-1] == "\n"
-                    else "\n{_tab}".format(_tab=_tab),
-                )
+        )
+        if len(lines) > 1:
+            candidate_doc_str = "{nl0}{candidate_doc_str}{nl1}".format(
+                nl0="\n" if candidate_doc_str.startswith(_tab) else "",
+                candidate_doc_str=candidate_doc_str,
+                nl1=""
+                if candidate_doc_str[-1] == "\n"
+                else "\n{_tab}".format(_tab=_tab),
+            )
 
-    return "" if candidate_doc_str.isspace() else candidate_doc_str
+    return candidate_doc_str
     # and "\n" in candidate_doc_str:
     # indent = count_iter_items(takewhile(str.isspace, line))
 

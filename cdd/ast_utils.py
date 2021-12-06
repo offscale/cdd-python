@@ -1621,4 +1621,6 @@ __all__ = [
     "set_value",
     "to_annotation",
     "to_type_comment",
+    "typ2column_type",
+    "typ2json_type",
 ]

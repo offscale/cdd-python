@@ -16,7 +16,7 @@ from unittest import TestCase, skipIf
 
 from cdd import emit, parse
 from cdd.ast_utils import annotate_ancestry, cmp_ast, find_in_ast, get_function_type
-from cdd.pure_utils import none_types, rpartial, reindent
+from cdd.pure_utils import none_types, rpartial, reindent, omit_whitespace
 from cdd.tests.mocks.argparse import (
     argparse_func_action_append_ast,
     argparse_func_ast,
@@ -104,13 +104,11 @@ class TestEmitters(TestCase):
         """
         run_ast_test(
             self,
-            reindent_docstring(
-                emit.argparse_function(
-                    parse.class_(class_ast),
-                    emit_default_doc=False,
-                )
+            gen_ast=emit.argparse_function(
+                parse.class_(class_ast),
+                emit_default_doc=False,
             ),
-            gold=reindent_docstring(argparse_func_ast),
+            gold=argparse_func_ast,
         )
 
     def test_to_argparse_func_nargs(self) -> None:
@@ -188,7 +186,7 @@ class TestEmitters(TestCase):
 
         self.assertEqual(
             *map(
-                rpartial(str.translate, str.maketrans({" ": "", "\n": ""})),
+                omit_whitespace,
                 (
                     docstring_google_tf_ops_losses__safe_mean_str,
                     emit.docstring(
