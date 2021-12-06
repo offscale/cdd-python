@@ -20,10 +20,14 @@ from ast import (
     fix_missing_locations,
     keyword,
 )
-from itertools import chain
 
-from cdd.ast_utils import FALLBACK_TYP, maybe_type_comment, set_arg, set_value
-from cdd.pure_utils import deindent, tab
+from cdd.ast_utils import (
+    FALLBACK_TYP,
+    maybe_type_comment,
+    set_arg,
+    set_value,
+)
+from cdd.pure_utils import deindent, tab, emit_separating_tabs
 from cdd.tests.mocks.classes import (
     class_torch_nn_l1loss_docstring_str,
     tensorboard_doc_str_no_args_str,
@@ -69,27 +73,33 @@ _cli_doc_str = "\n{tab}".format(tab=tab).join(
 
 a = "\n{tab}{_cli_doc_str}\n{tab}".format(_cli_doc_str=_cli_doc_str, tab=tab)
 
-_cli_doc_expr = Expr(
-    set_value(
-        "\n{tab}{_cli_doc_str}\n{tab}".format(
-            _cli_doc_str="\n{tab}".format(tab=tab).join(
-                chain.from_iterable(
-                    (
-                        # _argparse_doc_str_tuple,
-                        (_argparse_doc_str_tuple[0].rstrip("\n"),),
-                        _argparse_doc_str_tuple[1:],
-                        (
-                            ":return: argument_parser, Train and tests dataset splits.",
-                            ":rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset],"
-                            " Tuple[np.ndarray,\n{tab}np.ndarray]]]```".format(tab=tab),
-                        ),
-                    )
-                )
+_argparse_doc_tuple = (
+    _argparse_doc_str_tuple[0].rstrip("\n"),
+    "",
+    _argparse_doc_str_tuple[1],
+    _argparse_doc_str_tuple[2],
+    ":return: argument_parser, Train and tests dataset splits.",
+    ":rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray,",
+    "np.ndarray]]]```",
+)
+
+_argparse_doc_str = "\n".join(_argparse_doc_tuple)
+
+_argparse_description_str = emit_separating_tabs(
+    "\n{tab}".format(tab=tab).join(
+        _argparse_doc_tuple[:-1]
+        + (
+            "{tab}{last_line_of_doc_str}".format(
+                tab=tab, last_line_of_doc_str=_argparse_doc_tuple[-1]
             ),
-            tab=tab,
         )
     )
 )
+_argparse_doc_stripped_str = _argparse_doc_str.replace(
+    "{tab}\n{tab}".format(tab=tab), ""
+)
+
+_cli_doc_expr = Expr(set_value(_argparse_description_str))
 
 _cli_doc_nosplit_str = "\n{tab}".format(tab=tab).join(
     _argparse_doc_str_tuple
@@ -98,8 +108,13 @@ _cli_doc_nosplit_str = "\n{tab}".format(tab=tab).join(
         ":rtype: ```ArgumentParser```",
     )
 )
+
 _cli_doc_nosplit_expr = Expr(
-    set_value("\n{tab}{}\n{tab}".format(_cli_doc_nosplit_str, tab=tab))
+    set_value(
+        "\n{tab}{_cli_doc_nosplit_str}\n{tab}".format(
+            _cli_doc_nosplit_str=_cli_doc_nosplit_str, tab=tab
+        )
+    )
 )
 
 _argparse_add_arguments = (
@@ -452,7 +467,7 @@ argparse_func_with_body_ast = fix_missing_locations(
                         Store(),
                     )
                 ],
-                value=set_value(docstring_header_no_nl_str),
+                value=set_value(_argparse_description_str),
                 expr=None,
                 **maybe_type_comment
             ),
@@ -519,12 +534,13 @@ argparse_func_action_append_ast = fix_missing_locations(
             kwarg=None,
         ),
         body=[
-            _cli_doc_nosplit_expr,
+            Expr(set_value("$$$$")),
+            _cli_doc_expr,
             Assign(
                 targets=[
                     Attribute(Name("argument_parser", Load()), "description", Store())
                 ],
-                value=set_value(docstring_header_str.rstrip()),
+                value=set_value("$$$$" + _argparse_description_str),
                 expr=None,
                 **maybe_type_comment
             ),

@@ -316,13 +316,6 @@ class TestMarshallDocstring(TestCase):
             # emit_separating_tab=False,
             word_wrap=False,
         )
-        # print("gen", gen, ";")
-        # gen_no_args = remove_args_from_docstring
-        # gold = docstring_google_tf_mean_squared_error_str
-
-        # print("#" * 100)
-        # pp(gen.splitlines())
-        # print("#"*100)
 
         self.assertEqual(
             gen,

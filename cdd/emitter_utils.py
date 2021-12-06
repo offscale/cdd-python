@@ -277,6 +277,12 @@ def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
     """
     assert isinstance(e, Return)
 
+    typ = intermediate_repr["returns"]["return_type"]["typ"]
+    if "[" in intermediate_repr["returns"]["return_type"]["typ"]:
+        typ = to_code(get_value(ast.parse(typ).body[0].value.slice).elts[1]).rstrip(
+            "\n"
+        )
+
     return set_default_doc(
         (
             "return_type",
@@ -290,13 +296,7 @@ def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
                     emit_default_doc=emit_default_doc,
                 )[0],
                 "default": to_code(e.value.elts[1]).rstrip("\n"),
-                "typ": to_code(
-                    get_value(
-                        ast.parse(intermediate_repr["returns"]["return_type"]["typ"])
-                        .body[0]
-                        .value.slice
-                    ).elts[1]
-                ).rstrip()
+                "typ": typ
                 # 'Tuple[ArgumentParser, {typ}]'.format(typ=intermediate_repr['returns']['typ'])
             },
         ),
