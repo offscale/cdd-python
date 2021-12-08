@@ -71,8 +71,6 @@ _cli_doc_str = "\n{tab}".format(tab=tab).join(
     )
 )
 
-a = "\n{tab}{_cli_doc_str}\n{tab}".format(_cli_doc_str=_cli_doc_str, tab=tab)
-
 _argparse_doc_tuple = (
     _argparse_doc_str_tuple[0].rstrip("\n"),
     "",
@@ -101,13 +99,15 @@ _argparse_doc_stripped_str = _argparse_doc_str.replace(
 
 _cli_doc_expr = Expr(set_value(_argparse_description_str))
 
-_cli_doc_nosplit_str = "\n{tab}".format(tab=tab).join(
-    _argparse_doc_str_tuple
-    + (
-        ":return: argument_parser",
-        ":rtype: ```ArgumentParser```",
+_cli_doc_nosplit_str = emit_separating_tabs(
+    "\n{tab}".format(tab=tab).join(
+        _argparse_doc_str_tuple
+        + (
+            ":return: argument_parser",
+            ":rtype: ```ArgumentParser```",
+        )
     )
-)
+).strip(" \n")
 
 _cli_doc_nosplit_expr = Expr(
     set_value(
@@ -534,13 +534,12 @@ argparse_func_action_append_ast = fix_missing_locations(
             kwarg=None,
         ),
         body=[
-            Expr(set_value("$$$$")),
-            _cli_doc_expr,
+            _cli_doc_nosplit_expr,
             Assign(
                 targets=[
                     Attribute(Name("argument_parser", Load()), "description", Store())
                 ],
-                value=set_value("$$$$" + _argparse_description_str),
+                value=set_value(docstring_header_no_nl_str),
                 expr=None,
                 **maybe_type_comment
             ),

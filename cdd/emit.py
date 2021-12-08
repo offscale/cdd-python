@@ -667,13 +667,25 @@ def docstring(
         None,
     )
 
-    # Ignore starting newlines/whitespace only lines, keep munching until last line
-    while next_nl > -1:
-        line = candidate_doc_str[prev_nl:next_nl]
-        if not line.isspace():
-            break
-        prev_nl = next_nl
-        current_indent = count_iter_items(takewhile(str.isspace, line))
+    # One line only
+    if next_nl == -1:
+        # current_indent = count_iter_items(takewhile(str.isspace, candidate_doc_str))
+        # _sep = (indent_level - current_indent) * tab
+        return (
+            candidate_doc_str
+            if candidate_doc_str[0] == "\n"
+            else "\n{_sep}{candidate_doc_str}".format(
+                _sep="", candidate_doc_str=candidate_doc_str
+            )
+        )
+    else:
+        # Ignore starting newlines/whitespace only lines, keep munching until last line
+        while next_nl > -1:
+            line = candidate_doc_str[prev_nl:next_nl]
+            if not line.isspace():
+                break
+            prev_nl = next_nl
+            current_indent = count_iter_items(takewhile(str.isspace, line))
 
     if indent_level > current_indent:
         _tab = (indent_level - current_indent) * tab
@@ -1187,6 +1199,26 @@ def sqlalchemy(
     :return: SQLalchemy declarative class AST
     :rtype: ```ClassDef```
     """
+
+    def _add(a, b):
+        """
+        Concatenate a with b with correct whitespace around and within each
+
+        :param a: first string
+        :type a: ```str```
+
+        :param b: second string
+        :type b: ```str```
+
+        :return: combined strings with correct whitespace around and within
+        :rtype: ```str```
+        """
+        b_splits = b.split("\n{tab}".format(tab=tab))
+        res = "{a}{snd}\n{tab}{end}{tab}".format(
+            a=a, tab=tab, snd=b_splits[0], end="\n".join(b_splits[1:])
+        )
+        return indent_all_but_first(res, indent_level=1, sep=tab)
+
     return ClassDef(
         name=class_name,
         bases=list(map(lambda class_base: Name(class_base, Load()), class_bases)),
@@ -1198,7 +1230,7 @@ def sqlalchemy(
                 (
                     Expr(
                         set_value(
-                            add(
+                            _add(
                                 *map(
                                     partial(
                                         docstring,

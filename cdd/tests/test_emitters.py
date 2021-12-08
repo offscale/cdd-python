@@ -125,6 +125,8 @@ class TestEmitters(TestCase):
             gold=argparse_func_action_append_ast,
         )
 
+    maxDiff = None
+
     def test_to_argparse_google_tf_tensorboard(self) -> None:
         """
         Tests whether `to_argparse` produces `argparse_function_google_tf_tensorboard_ast`
@@ -446,7 +448,7 @@ class TestEmitters(TestCase):
             emit_default_doc=False,
             function_name="function_name",
             function_type="self",
-            indent_level=1,
+            indent_level=0,
             emit_separating_tab=True,
             emit_as_kwonlyargs=False,
         )

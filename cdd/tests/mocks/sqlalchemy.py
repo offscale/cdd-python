@@ -23,6 +23,7 @@ from cdd.pure_utils import reindent, tab
 from cdd.tests.mocks.docstrings import (
     docstring_header_and_return_str,
     docstring_repr_str,
+    docstring_header_and_return_two_nl_str,
 )
 
 _docstring_header_and_return_str = "\n{docstring}\n{tab}".format(
@@ -190,7 +191,7 @@ config_tbl_ast = Assign(
         keywords=[
             keyword(
                 arg="comment",
-                value=set_value(docstring_header_and_return_str),
+                value=set_value(docstring_header_and_return_two_nl_str),
                 identifier=None,
             )
         ],
