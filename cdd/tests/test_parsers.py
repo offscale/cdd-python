@@ -11,7 +11,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from cdd import emit, parse
-from cdd.ast_utils import RewriteAtQuery, get_value
+from cdd.ast_utils import RewriteAtQuery, get_value, set_value
 from cdd.pure_utils import PY_GTE_3_8, paren_wrap_code, tab
 from cdd.tests.mocks.argparse import argparse_func_ast
 from cdd.tests.mocks.classes import (
@@ -28,6 +28,7 @@ from cdd.tests.mocks.docstrings import (
     docstring_keras_rmsprop_class_str,
     docstring_keras_rmsprop_method_str,
     docstring_reduction_v2_str,
+    docstring_header_and_return_str,
 )
 from cdd.tests.mocks.ir import (
     class_google_tf_tensorboard_ir,
@@ -503,10 +504,15 @@ class TestParsers(TestCase):
         Tests that `parse.sqlalchemy_table` produces `intermediate_repr_no_default_sql_doc` properly
         """
 
+        _config_tbl_ast = deepcopy(config_tbl_ast)
+        _config_tbl_ast.value.keywords[0].value = set_value(
+            docstring_header_and_return_str
+        )
+
         # Sanity check
         run_ast_test(
             self,
-            config_tbl_ast,
+            _config_tbl_ast,
             gold=ast.parse(config_tbl_str).body[0],
         )
 

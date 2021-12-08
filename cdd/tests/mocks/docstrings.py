@@ -28,6 +28,10 @@ docstring_header_and_return_no_nl_str = "\n".join(
     (docstring_header_no_nl_str, *_docstring_header_and_return_str)
 )
 
+docstring_header_and_return_two_nl_str = "\n".join(
+    (docstring_header_no_nl_str, "\n", *_docstring_header_and_return_str)
+)
+
 docstring_extra_colons_str = """
 Some comment
 
@@ -766,6 +770,7 @@ __all__ = [
     "docstring_google_tf_ops_losses__safe_mean_str",
     "docstring_google_tf_squared_hinge_str",
     "docstring_header_and_return_no_nl_str",
+    "docstring_header_and_return_str",
     "docstring_header_no_nl_str",
     "docstring_header_str",
     "docstring_keras_rmsprop_class_str",
