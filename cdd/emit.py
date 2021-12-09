@@ -38,8 +38,8 @@ from cdd.docstring_utils import (
     ARG_TOKENS,
     RETURN_TOKENS,
     emit_param_str,
-    parse_docstring_into_header_args_footer,
     header_args_footer_to_str,
+    parse_docstring_into_header_args_footer,
 )
 from cdd.emitter_utils import (
     RewriteName,
@@ -52,15 +52,15 @@ from cdd.emitter_utils import (
 from cdd.pure_utils import (
     PY3_8,
     code_quoted,
+    count_iter_items,
     deindent,
     fill,
     identity,
+    indent_all_but_first,
     none_types,
     rpartial,
     simple_types,
     tab,
-    count_iter_items,
-    indent_all_but_first,
 )
 from cdd.source_transformer import to_code
 

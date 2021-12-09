@@ -21,18 +21,13 @@ from ast import (
     keyword,
 )
 
-from cdd.ast_utils import (
-    FALLBACK_TYP,
-    maybe_type_comment,
-    set_arg,
-    set_value,
-)
-from cdd.pure_utils import deindent, tab, emit_separating_tabs
+from cdd.ast_utils import FALLBACK_TYP, maybe_type_comment, set_arg, set_value
+from cdd.pure_utils import deindent, emit_separating_tabs, tab
 from cdd.tests.mocks.classes import (
     class_torch_nn_l1loss_docstring_str,
     tensorboard_doc_str_no_args_str,
 )
-from cdd.tests.mocks.docstrings import docstring_header_str, docstring_header_no_nl_str
+from cdd.tests.mocks.docstrings import docstring_header_no_nl_str, docstring_header_str
 from cdd.tests.utils_for_tests import remove_args_from_docstring
 
 argparse_add_argument_ast = Expr(
@@ -635,9 +630,7 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
             ],
             lineno=None,
             type_comment=None,
-            value=set_value(
-                deindent(tensorboard_doc_str_no_args_str, sep="  ", level=1)
-            ),
+            value=set_value(tensorboard_doc_str_no_args_str),
             expr=None,
         ),
         Expr(

@@ -12,11 +12,18 @@ from os.path import extsep
 from platform import system
 from sys import modules
 from tempfile import TemporaryDirectory
+from textwrap import indent
 from unittest import TestCase, skipIf
 
 from cdd import emit, parse
-from cdd.ast_utils import annotate_ancestry, cmp_ast, find_in_ast, get_function_type
-from cdd.pure_utils import none_types, rpartial, reindent, omit_whitespace
+from cdd.ast_utils import (
+    annotate_ancestry,
+    cmp_ast,
+    find_in_ast,
+    get_function_type,
+    set_value,
+)
+from cdd.pure_utils import none_types, omit_whitespace, reindent, rpartial, tab
 from cdd.tests.mocks.argparse import (
     argparse_func_action_append_ast,
     argparse_func_ast,
@@ -33,10 +40,12 @@ from cdd.tests.mocks.classes import (
 from cdd.tests.mocks.docstrings import (
     docstring_google_str,
     docstring_google_tf_ops_losses__safe_mean_str,
+    docstring_header_str,
     docstring_no_default_str,
+    docstring_no_nl_str,
+    docstring_no_type_no_default_tpl_str,
     docstring_numpydoc_str,
     docstring_str,
-    docstring_no_nl_str,
 )
 from cdd.tests.mocks.ir import (
     class_torch_nn_l1loss_ir,
@@ -363,7 +372,18 @@ class TestEmitters(TestCase):
         )
         function_name = function_def.name
         function_type = get_function_type(function_def)
-        reindent_docstring(function_def)
+        function_def.body[0].value = set_value(
+            "\n{tab}{ds}{tab}".format(
+                tab=tab,
+                ds=indent(
+                    docstring_no_type_no_default_tpl_str.format(
+                        header_doc_str=docstring_header_str
+                    ),
+                    prefix=tab,
+                    predicate=lambda _: _,
+                ).lstrip(),
+            )
+        )
 
         gen_ast = emit.function(
             parse.function(
@@ -376,10 +396,11 @@ class TestEmitters(TestCase):
             emit_default_doc=False,
             type_annotations=True,
             emit_separating_tab=True,
-            indent_level=1,
+            indent_level=0,
             emit_as_kwonlyargs=False,
         )
         # emit.file(gen_ast, os.path.join(os.path.dirname(__file__), 'delme.py'), mode='wt')
+
         run_ast_test(
             self,
             gen_ast=gen_ast,

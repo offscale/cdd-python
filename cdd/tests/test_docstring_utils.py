@@ -6,7 +6,7 @@ from cdd.docstring_utils import (
     ensure_doc_args_whence_original,
     parse_docstring_into_header_args_footer,
 )
-from cdd.pure_utils import tab, emit_separating_tabs
+from cdd.pure_utils import emit_separating_tabs, tab
 from cdd.tests.mocks.docstrings import docstring_str
 from cdd.tests.utils_for_tests import unittest_main
 
