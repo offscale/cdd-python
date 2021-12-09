@@ -23,10 +23,9 @@ from cdd.defaults_utils import _remove_default_from_param, needs_quoting
 from cdd.docstring_utils import (
     ARG_TOKENS,
     RETURN_TOKENS,
-    derive_docstring_format,
     Style,
+    derive_docstring_format,
 )
-from cdd.source_transformer import to_code
 from cdd.emitter_utils import interpolate_defaults
 from cdd.pure_utils import (
     code_quoted,
@@ -39,6 +38,7 @@ from cdd.pure_utils import (
     unquote,
     update_d,
 )
+from cdd.source_transformer import to_code
 
 
 def parse_docstring(

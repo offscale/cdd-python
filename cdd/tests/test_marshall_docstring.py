@@ -24,13 +24,13 @@ from cdd.tests.mocks.docstrings import (
     docstring_header_and_return_str,
     docstring_header_str,
     docstring_no_default_doc_str,
+    docstring_no_nl_str,
     docstring_numpydoc_only_doc_str,
     docstring_numpydoc_only_params_str,
     docstring_numpydoc_only_returns_str,
     docstring_numpydoc_str,
     docstring_only_return_type_str,
     docstring_str,
-    docstring_no_nl_str,
 )
 from cdd.tests.mocks.ir import (
     docstring_google_pytorch_lbfgs_ir,

@@ -25,10 +25,10 @@ from cdd.tests.mocks.classes import (
     class_torch_nn_one_cycle_lr_str,
 )
 from cdd.tests.mocks.docstrings import (
+    docstring_header_and_return_str,
     docstring_keras_rmsprop_class_str,
     docstring_keras_rmsprop_method_str,
     docstring_reduction_v2_str,
-    docstring_header_and_return_str,
 )
 from cdd.tests.mocks.ir import (
     class_google_tf_tensorboard_ir,

@@ -6,7 +6,6 @@ from textwrap import indent
 
 from cdd.pure_utils import identity, tab
 
-
 docstring_header_no_nl_str = (
     "Acquire from the official tensorflow_datasets model zoo,"
     " or the ophthalmology focussed ml-prepare"
@@ -559,7 +558,7 @@ docstring_no_type_str = """
     header_doc_str=docstring_header_str
 )
 
-docstring_no_type_no_default_str = """
+docstring_no_type_no_default_tpl_str = """
 {header_doc_str}
 :param dataset_name: name of dataset.
 
@@ -572,7 +571,9 @@ docstring_no_type_no_default_str = """
 :param data_loader_kwargs: pass this as arguments to data_loader function
 
 :return: Train and tests dataset splits.
-""".format(
+"""
+
+docstring_no_type_no_default_str = docstring_no_type_no_default_tpl_str.format(
     header_doc_str=docstring_header_str
 )
 

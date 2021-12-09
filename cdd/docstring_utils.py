@@ -6,20 +6,20 @@ from collections import namedtuple
 from enum import Enum
 from functools import partial
 from itertools import chain, takewhile
-from operator import itemgetter, contains, eq
+from operator import contains, eq, itemgetter
 from textwrap import indent
 
 from cdd.defaults_utils import set_default_doc
 from cdd.pure_utils import (
+    count_iter_items,
     fill,
+    has_nl,
     identity,
     indent_all_but_first,
-    tab,
-    rpartial,
-    count_iter_items,
-    previous_line_range,
     omit_whitespace,
-    has_nl,
+    previous_line_range,
+    rpartial,
+    tab,
 )
 
 
