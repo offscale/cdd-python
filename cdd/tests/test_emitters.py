@@ -134,8 +134,6 @@ class TestEmitters(TestCase):
             gold=argparse_func_action_append_ast,
         )
 
-    maxDiff = None
-
     def test_to_argparse_google_tf_tensorboard(self) -> None:
         """
         Tests whether `to_argparse` produces `argparse_function_google_tf_tensorboard_ast`

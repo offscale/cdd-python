@@ -1,4 +1,5 @@
 """ Tests for docstring_utils """
+
 from textwrap import indent
 from unittest import TestCase
 
@@ -7,7 +8,13 @@ from cdd.docstring_utils import (
     parse_docstring_into_header_args_footer,
 )
 from cdd.pure_utils import emit_separating_tabs, tab
-from cdd.tests.mocks.docstrings import docstring_str
+from cdd.tests.mocks.docstrings import (
+    docstring_google_tf_mean_squared_error_args_tuple,
+    docstring_google_tf_mean_squared_error_footer_tuple,
+    docstring_google_tf_mean_squared_error_header_tuple,
+    docstring_google_tf_mean_squared_error_str,
+    docstring_str,
+)
 from cdd.tests.utils_for_tests import unittest_main
 
 
@@ -252,6 +259,34 @@ class TestDocstringUtils(TestCase):
                 current_doc_str=current_doc_str, original_doc_str=original_doc_str
             ),
             emit_separating_tabs(indent(docstring_str, tab))[: -len(tab) - 1],
+        )
+
+    def test_from_docstring_google_tf_mean_squared_error_str_to_three_parts(
+        self,
+    ) -> None:
+        """
+        Tests whether `docstring_google_tf_mean_squared_error_str` is correctly parsed into 3 parts:
+        0. header
+        1. args|return
+        2. footer
+        """
+        header, args_returns, footer = parse_docstring_into_header_args_footer(
+            current_doc_str=docstring_google_tf_mean_squared_error_str,
+            # current_doc_str=docstring_google_tf_mean_squared_error_str.replace(
+            #     "Args:", "Parameters\n----------", 1
+            # ).replace("Returns:", "Returns\n-------", 1),
+            original_doc_str=docstring_google_tf_mean_squared_error_str,
+        )
+        self.assertEqual(
+            header,
+            "\n".join(docstring_google_tf_mean_squared_error_header_tuple) + "\n",
+        )
+        self.assertEqual(
+            args_returns, "\n".join(docstring_google_tf_mean_squared_error_args_tuple)
+        )
+        self.assertEqual(
+            footer,
+            "\n" + "\n".join(docstring_google_tf_mean_squared_error_footer_tuple),
         )
 
 

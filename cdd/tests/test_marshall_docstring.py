@@ -302,6 +302,7 @@ class TestMarshallDocstring(TestCase):
         Tests whether `cdd.parse.function` emits the right docstring
               from `function_google_tf_mean_squared_error_ast`
         """
+
         gen = cdd.emit.docstring(
             cdd.parse.function(
                 function_google_tf_mean_squared_error_ast,
