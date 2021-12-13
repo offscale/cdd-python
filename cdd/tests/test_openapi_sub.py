@@ -23,8 +23,6 @@ from cdd.tests.utils_for_tests import unittest_main
 class TestOpenApiBulk(TestCase):
     """Tests whether `openapi` can construct a `dict`"""
 
-    maxDiff = None
-
     def test_openapi_bulk(self) -> None:
         """
         Tests whether `openapi_bulk` produces `openapi_dict` given `model_paths` and `routes_paths`

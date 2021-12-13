@@ -6,7 +6,7 @@ from collections import namedtuple
 from enum import Enum
 from functools import partial
 from itertools import chain, takewhile
-from operator import contains, eq, itemgetter
+from operator import contains, eq, itemgetter, ne
 from textwrap import indent
 
 from cdd.defaults_utils import set_default_doc
@@ -423,12 +423,72 @@ def _get_token_last_idx(doc_str):
         idx -= 1
 
     indent_amount = count_iter_items(takewhile(str.isspace, doc_str[idx + 1 :]))
-    i = indent_amount + idx + 1
+
+    i_started_at = i = indent_amount + idx + 1
     if any(filter(doc_str[i:].startswith, TOKENS_SET)):
         # Munch until nl
         i += 1
         while i < len(doc_str) and doc_str[i] != "\n":
             i += 1
+
+    if i_started_at == i:
+        next_nl = last_found_starts + count_iter_items(
+            takewhile(partial(ne, "\n"), doc_str[last_found_starts:])
+        )
+
+        next_line = doc_str[last_found_starts:next_nl]
+        if frozenset(next_line) == frozenset(("-",)):
+            line_start = line_end = next_nl + 1
+            line_no = 0
+            last_space = line_no, line_start, line_end
+            PrevParam = namedtuple(
+                "PrevParam", ("line_no", "indent", "line_start", "line_end")
+            )
+            prev_param = PrevParam(
+                line_no=None, indent=None, line_start=line_start, line_end=i
+            )
+
+            while line_end < len(doc_str):
+                line_end += count_iter_items(
+                    takewhile(partial(ne, "\n"), doc_str[line_start:])
+                )
+                line = doc_str[line_start:line_end]
+                line_no += 1
+
+                if line.isspace():
+                    # Two newlines in a row means end of block
+                    if line_no == last_space[0] - 1:
+                        return last_space[1] - 1
+                    else:
+                        last_space = line_no, line_start, line_end
+                elif line_no - 2 == prev_param[0]:
+                    starting_whitespace = count_iter_items(takewhile(str.isspace, line))
+                    if starting_whitespace >= prev_param[1]:
+                        # Handle multiline description of param
+                        prev_param = PrevParam(
+                            line_no=line_no,
+                            indent=starting_whitespace,
+                            line_start=line_start,
+                            line_end=line_end,
+                        )
+                elif ":" in line:
+                    # This is a param
+                    prev_param = PrevParam(
+                        line_no=line_no,
+                        indent=count_iter_items(takewhile(str.isspace, line)),
+                        line_start=line_start,
+                        line_end=line_end,
+                    )
+
+                line_start = line_end
+                line_end += 1
+            return prev_param.line_end + 1
+
+            # if i_started_at == line_end:
+
+        if doc_str[last_found_starts:next_nl] == "Raises:":
+            # Don't treat this as anything special… short circuit
+            return last_found_starts - 1
 
     return i
 
