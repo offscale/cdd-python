@@ -392,6 +392,79 @@ def _find_end_of_args_returns(last_found, last_found_starts, last_found_ends, do
     return i
 
 
+def _get_token_last_idx_if_no_next_token(doc_str, last_found_starts):
+    """
+    Get the last index of the token (to end of line including newline)
+    if no next token is detected (internal, only use is in `_get_token_last_idx`)
+
+    :param doc_str: The docstring
+    :type doc_str: ```str```
+
+    :param last_found_starts: Index of where the last found token starts in `doc_str`
+    :type last_found_starts: ```int```
+
+    :return: index of token last or `None` if not found
+    :rtype: ```int```
+    """
+    next_nl = last_found_starts + count_iter_items(
+        takewhile(partial(ne, "\n"), doc_str[last_found_starts:])
+    )
+
+    next_line = doc_str[last_found_starts:next_nl]
+    if frozenset(next_line) == frozenset(("-",)):
+        line_start = line_end = next_nl + 1
+        line_no = 0
+        last_space = line_no, line_start, line_end
+        PrevParam = namedtuple(
+            "PrevParam", ("line_no", "indent", "line_start", "line_end")
+        )
+        prev_param = PrevParam(
+            line_no=None, indent=None, line_start=line_start, line_end=line_end
+        )
+
+        while line_end < len(doc_str):
+            line_end += count_iter_items(
+                takewhile(partial(ne, "\n"), doc_str[line_start:])
+            )
+            line = doc_str[line_start:line_end]
+            line_no += 1
+
+            if line.isspace():
+                # Two newlines in a row means end of block
+                if line_no == last_space[0] - 1:
+                    return last_space[1] - 1
+                else:
+                    last_space = line_no, line_start, line_end
+            elif line_no - 2 == prev_param[0]:
+                starting_whitespace = count_iter_items(takewhile(str.isspace, line))
+                if starting_whitespace >= prev_param[1]:
+                    # Handle multiline description of param
+                    prev_param = PrevParam(
+                        line_no=line_no,
+                        indent=starting_whitespace,
+                        line_start=line_start,
+                        line_end=line_end,
+                    )
+            elif ":" in line:
+                # This is a param
+                prev_param = PrevParam(
+                    line_no=line_no,
+                    indent=count_iter_items(takewhile(str.isspace, line)),
+                    line_start=line_start,
+                    line_end=line_end,
+                )
+
+            line_start = line_end
+            line_end += 1
+        return prev_param.line_end + 1
+
+        # if i_started_at == line_end:
+
+    if doc_str[last_found_starts:next_nl] == "Raises:":
+        # Don't treat this as anything special… short circuit
+        return last_found_starts - 1
+
+
 def _get_token_last_idx(doc_str):
     """
     Get the last index of the token (to end of line including newline)
@@ -432,63 +505,9 @@ def _get_token_last_idx(doc_str):
             i += 1
 
     if i_started_at == i:
-        next_nl = last_found_starts + count_iter_items(
-            takewhile(partial(ne, "\n"), doc_str[last_found_starts:])
-        )
-
-        next_line = doc_str[last_found_starts:next_nl]
-        if frozenset(next_line) == frozenset(("-",)):
-            line_start = line_end = next_nl + 1
-            line_no = 0
-            last_space = line_no, line_start, line_end
-            PrevParam = namedtuple(
-                "PrevParam", ("line_no", "indent", "line_start", "line_end")
-            )
-            prev_param = PrevParam(
-                line_no=None, indent=None, line_start=line_start, line_end=i
-            )
-
-            while line_end < len(doc_str):
-                line_end += count_iter_items(
-                    takewhile(partial(ne, "\n"), doc_str[line_start:])
-                )
-                line = doc_str[line_start:line_end]
-                line_no += 1
-
-                if line.isspace():
-                    # Two newlines in a row means end of block
-                    if line_no == last_space[0] - 1:
-                        return last_space[1] - 1
-                    else:
-                        last_space = line_no, line_start, line_end
-                elif line_no - 2 == prev_param[0]:
-                    starting_whitespace = count_iter_items(takewhile(str.isspace, line))
-                    if starting_whitespace >= prev_param[1]:
-                        # Handle multiline description of param
-                        prev_param = PrevParam(
-                            line_no=line_no,
-                            indent=starting_whitespace,
-                            line_start=line_start,
-                            line_end=line_end,
-                        )
-                elif ":" in line:
-                    # This is a param
-                    prev_param = PrevParam(
-                        line_no=line_no,
-                        indent=count_iter_items(takewhile(str.isspace, line)),
-                        line_start=line_start,
-                        line_end=line_end,
-                    )
-
-                line_start = line_end
-                line_end += 1
-            return prev_param.line_end + 1
-
-            # if i_started_at == line_end:
-
-        if doc_str[last_found_starts:next_nl] == "Raises:":
-            # Don't treat this as anything special… short circuit
-            return last_found_starts - 1
+        last_idx = _get_token_last_idx_if_no_next_token(doc_str, last_found_starts)
+        if last_idx is not None:
+            return last_idx
 
     return i
 
