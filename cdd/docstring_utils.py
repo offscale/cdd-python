@@ -17,7 +17,6 @@ from cdd.pure_utils import (
     identity,
     indent_all_but_first,
     omit_whitespace,
-    previous_line_range,
     rpartial,
     tab,
 )
@@ -282,9 +281,7 @@ def _get_end_of_last_found_numpydoc(last_found, last_found_starts, doc_str):
         for idx in range(last_found, len(doc_str)):
             if doc_str[idx] == "\n":
                 for ch in stack:
-                    if ch.isalpha() or ch.isspace() or ch.isnumeric():
-                        pass
-                    elif ch == ":":
+                    if ch == ":":
                         last_token_appearance = idx
                         break
                 stack.clear()
@@ -333,18 +330,12 @@ def _get_end_of_last_found(last_found, last_found_starts, doc_str, docstring_for
     return last_found_ends
 
 
-def _find_end_of_args_returns(last_found, last_found_starts, last_found_ends, doc_str):
+def _find_end_of_args_returns(last_found_ends, doc_str):
     """
     Handle multiline indented after keyword, e.g.,
       Returns:
          Foo
            more foo
-
-    :param last_found: index of token start
-    :type last_found: ```int```
-
-    :param last_found_starts: index of start of line containing token start
-    :type last_found_starts: ```int```
 
     :param last_found_ends: index of end of line containing token start
     :type last_found_ends: ```int```
@@ -358,38 +349,12 @@ def _find_end_of_args_returns(last_found, last_found_starts, last_found_ends, do
     smallest_indent = count_iter_items(
         takewhile(str.isspace, doc_str[last_found_ends:])
     )
-    last_nl, nls, i = 0, 0, None
 
     # Early exit… if current line isn't indented then it can't be a multiline arg/return descriptor
     if smallest_indent == 0:
         return last_found_ends - 1
 
-    for i in range(last_found_ends, len(doc_str), 1):
-        if doc_str[i] == "\n":
-            # Two nl in a row
-            if last_nl - 1 == i:
-                break
-
-            last_nl = i
-            nls += 1
-
-            # munch whitespace
-            indent_size = 0
-            while i < len(doc_str) - 1 and doc_str[i].isspace() and doc_str[i] != "\n":
-                i += 1
-                indent_size += 1
-
-            if indent_size > smallest_indent:
-                if smallest_indent == 0:
-                    smallest_indent = indent_size
-                else:
-                    break
-            elif indent_size == smallest_indent == 0:
-                start_previous_line, end_previous_line = previous_line_range(doc_str, i)
-                # immediate_previous_line = doc_str[start_previous_line:end_previous_line]
-                return start_previous_line - 1
-
-    return i
+    return len(doc_str) - 1
 
 
 def _get_token_last_idx_if_no_next_token(doc_str, last_found_starts):
@@ -414,7 +379,7 @@ def _get_token_last_idx_if_no_next_token(doc_str, last_found_starts):
     if frozenset(next_line) == frozenset(("-",)):
         line_start = line_end = next_nl + 1
         line_no = 0
-        last_space = line_no, line_start, line_end
+        # last_space = line_no, line_start, line_end
         PrevParam = namedtuple(
             "PrevParam", ("line_no", "indent", "line_start", "line_end")
         )
@@ -430,11 +395,7 @@ def _get_token_last_idx_if_no_next_token(doc_str, last_found_starts):
             line_no += 1
 
             if line.isspace():
-                # Two newlines in a row means end of block
-                if line_no == last_space[0] - 1:
-                    return last_space[1] - 1
-                else:
-                    last_space = line_no, line_start, line_end
+                pass
             elif line_no - 2 == prev_param[0]:
                 starting_whitespace = count_iter_items(takewhile(str.isspace, line))
                 if starting_whitespace >= prev_param[1]:
@@ -487,9 +448,7 @@ def _get_token_last_idx(doc_str):
         last_found, last_found_starts, doc_str, docstring_format
     )
 
-    idx = _find_end_of_args_returns(
-        last_found, last_found_starts, last_found_ends, doc_str
-    )
+    idx = _find_end_of_args_returns(last_found_ends, doc_str)
 
     # Munch until previous nl
     while idx != 0 and doc_str[idx] != "\n":
@@ -530,8 +489,7 @@ def parse_docstring_into_header_args_footer(current_doc_str, original_doc_str):
     :return: Header, args|returns, footer
     :rtype: ```Tuple[Optional[str], Optional[str], Optional[str]]```
     """
-    if not current_doc_str and not original_doc_str:
-        return None, None, None
+    # if not current_doc_str and not original_doc_str: return None, None, None
 
     # To quieten linter
     header_original = footer_original = None
@@ -540,26 +498,19 @@ def parse_docstring_into_header_args_footer(current_doc_str, original_doc_str):
     if current_doc_str:
         start_idx_current = _get_token_start_idx(current_doc_str)
         last_idx_current = _get_token_last_idx(current_doc_str)
-        footer_current = (
-            current_doc_str[last_idx_current:] if last_idx_current != -1 else None
-        )
-        header_current = (
-            original_doc_str[:start_idx_current] if start_idx_current > -1 else None
-        )
-
-        args_returns_current = current_doc_str[
-            slice(
-                start_idx_current if start_idx_current > -1 else None,
-                last_idx_current if last_idx_current > -1 else None,
-            )
-        ]
-
-        if not original_doc_str:
-            return (
-                header_current,
-                args_returns_current,
-                footer_current,
-            )
+        # footer_current = (
+        #     current_doc_str[last_idx_current:] if last_idx_current != -1 else None
+        # )
+        # header_current = (
+        #     original_doc_str[:start_idx_current] if start_idx_current > -1 else None
+        # )
+        #
+        # args_returns_current = current_doc_str[
+        #     slice(
+        #         start_idx_current if start_idx_current > -1 else None,
+        #         last_idx_current if last_idx_current > -1 else None,
+        #     )
+        # ]
 
     if original_doc_str:
         start_idx_original = _get_token_start_idx(original_doc_str)
@@ -577,9 +528,6 @@ def parse_docstring_into_header_args_footer(current_doc_str, original_doc_str):
                 last_idx_original if last_idx_original > -1 else None,
             )
         ]
-
-        if not current_doc_str:
-            return header_original, args_returns_original, footer_original
 
     # Now we know where the args/returns were, and where they are now
     # To avoid whitespace issues, only copy across the args/returns portion, keep rest as original

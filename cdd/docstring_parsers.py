@@ -255,30 +255,30 @@ def _scan_phase_numpydoc_and_google(
                 ]
             else:
                 scanned_afterward = docstring_lines[line_no + 1 :]
-                if (
-                    len(scanned_afterward) > 1
-                    and scanned_afterward[0] == return_tokens[0]
-                ):
-                    return_indent = count_iter_items(
-                        takewhile(str.isspace, scanned_afterward[1])
-                    )
-                    next_smallest_indent = count_iter_items(
-                        takewhile(
-                            partial(le, return_indent),
-                            map(
-                                lambda l: count_iter_items(takewhile(str.isspace, l)),
-                                scanned_afterward[2:],
-                            ),
-                        )
-                    )
-                    scanned[return_tokens[0]] = scanned_afterward[
-                        1 : next_smallest_indent + 2
-                    ]
-                    scanned_afterward = (
-                        None
-                        if next_smallest_indent == 0
-                        else scanned_afterward[next_smallest_indent + 2 :]
-                    )
+                # if (
+                #     len(scanned_afterward) > 1
+                #     and scanned_afterward[0] == return_tokens[0]
+                # ):
+                #     return_indent = count_iter_items(
+                #         takewhile(str.isspace, scanned_afterward[1])
+                #     )
+                #     next_smallest_indent = count_iter_items(
+                #         takewhile(
+                #             partial(le, return_indent),
+                #             map(
+                #                 lambda l: count_iter_items(takewhile(str.isspace, l)),
+                #                 scanned_afterward[2:],
+                #             ),
+                #         )
+                #     )
+                #     scanned[return_tokens[0]] = scanned_afterward[
+                #         1 : next_smallest_indent + 2
+                #     ]
+                #     scanned_afterward = (
+                #         None
+                #         if next_smallest_indent == 0
+                #         else scanned_afterward[next_smallest_indent + 2 :]
+                #     )
 
             if scanned_afterward:
                 scanned["scanned_afterward"] = scanned_afterward
