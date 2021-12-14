@@ -253,7 +253,7 @@ class DocTrans(NodeTransformer):
         ir_merge(ir, parse.function(node))
         ir["name"] = node.name
         indent_level = max(
-            len(node._location) - 1, 1
+            len(node._location), 1
         )  # function docstrings always have at least 1 indent level
         _doc_str = emit.docstring(
             ir,

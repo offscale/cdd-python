@@ -646,8 +646,7 @@ def docstring(
         header, _, footer = parse_docstring_into_header_args_footer(
             candidate_args_returns, original_doc_str
         )
-        if not header and not footer:
-            header = intermediate_repr.get("doc", "")
+        header = intermediate_repr.get("doc", "") if not header and not footer else header
     else:
         header, footer = intermediate_repr.get("doc", ""), ""
 
@@ -689,7 +688,12 @@ def docstring(
 
     if indent_level > current_indent:
         _tab = (indent_level - current_indent) * tab
-        lines = ([line] if line else []) + candidate_doc_str[next_nl:].splitlines()
+        lines = ([line] if line else []) + candidate_doc_str[
+            next_nl
+            if len(candidate_doc_str) == next_nl
+            or candidate_doc_str[next_nl + 1] != "\n"
+            else next_nl + 1 :
+        ].splitlines()
         candidate_doc_str = "\n".join(
             map(
                 lambda _line: "{_tab}{_line}".format(_tab=_tab, _line=_line)
@@ -709,35 +713,6 @@ def docstring(
             )
 
     return candidate_doc_str
-    # and "\n" in candidate_doc_str:
-    # indent = count_iter_items(takewhile(str.isspace, line))
-
-    # pp({"a": original_doc_str, "b": candidate_doc_str})
-    # print("a =", (original_doc_str).splitlines())
-    # print("b =", (candidate_doc_str).splitlines())
-
-    # if (
-    #    emit_original_whitespace
-    #    and original_doc_str
-    #    and eq(*map(omit_whitespace, (original_doc_str, candidate_doc_str)))
-    # ):
-    #    return original_doc_str
-    # else:
-    #    return ensure_doc_args_whence_original(
-    #        current_doc_str=candidate_doc_str, original_doc_str=original_doc_str
-    #    )
-
-    # return (
-    #     original_doc_str
-    #     if (
-    #         emit_original_whitespace
-    #         and original_doc_str
-    #         and eq(*map(omit_whitespace, (original_doc_str, candidate_doc_str)))
-    #     )
-    #     else ensure_doc_args_whence_original(
-    #         current_doc_str=candidate_doc_str, original_doc_str=original_doc_str
-    #     )
-    # )
 
 
 def file(node, filename, mode="a", skip_black=False):

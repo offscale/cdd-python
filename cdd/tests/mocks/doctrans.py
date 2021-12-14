@@ -20,16 +20,23 @@ from copy import deepcopy
 
 from cdd.ast_utils import set_arg, set_value
 from cdd.pure_utils import tab
+from cdd.tests.mocks.docstrings import docstring_sum_tuple
+from cdd.tests.utils_for_tests import reindent_docstring, replace_docstring
 
 _class_doc_str_expr = Expr(
     set_value(
-        "\n"
-        "Class mock"
-        "\n\n"
-        ":cvar a: One swell num"
-        "\n\n"
-        ":cvar b: Unlucky num"
-        "\n"
+        tab.join(
+            (
+                "\n",
+                "Class mock",
+                "\n\n",
+                ":cvar a: One swell num",
+                "\n\n",
+                ":cvar b: Unlucky num",
+                "\n",
+            )
+        )
+        + tab
     )
 )
 
@@ -95,16 +102,7 @@ function_type_in_docstring = FunctionDef(
             value=set_value(
                 "\n{tab}{body}".format(
                     tab=tab,
-                    body="\n{tab}".format(tab=tab).join(
-                        (
-                            ":type a: ```int```",
-                            "",
-                            ":type b: ```int```",
-                            "",
-                            ":rtype: ```int```",
-                            "",
-                        )
-                    ),
+                    body="\n{tab}".format(tab=tab).join(docstring_sum_tuple),
                 )
             )
         ),
@@ -151,7 +149,7 @@ class_with_internal_annotated = ClassDef(
             expr_annotation=None,
             lineno=None,
         ),
-        function_type_annotated,
+        reindent_docstring(function_type_annotated, indent_level=3, smart=False),
     ],
     expr=None,
     identifier_name=None,
@@ -184,7 +182,13 @@ class_with_internal_type_commented_and_docstring_typed = ClassDef(
             expr=None,
             lineno=None,
         ),
-        function_type_in_docstring,
+        replace_docstring(
+            deepcopy(function_type_in_docstring),
+            "\n{sep}{body}".format(
+                sep=tab * 2,
+                body="\n{sep}".format(sep=tab * 2).join(docstring_sum_tuple),
+            ),
+        ),
     ],
     expr=None,
     identifier_name=None,

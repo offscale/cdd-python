@@ -3,6 +3,7 @@ Shared utility functions used by many tests
 """
 
 import ast
+from _ast import Expr
 from copy import deepcopy
 from functools import partial
 from importlib import import_module
@@ -16,8 +17,10 @@ from tempfile import NamedTemporaryFile
 from unittest import main
 from unittest.mock import MagicMock, patch
 
+from _operator import add
+
 from cdd import source_transformer
-from cdd.ast_utils import cmp_ast, set_value
+from cdd.ast_utils import cmp_ast, get_value, set_value
 from cdd.docstring_utils import TOKENS
 from cdd.pure_utils import PY3_8, count_iter_items, identity, reindent, tab
 
@@ -81,6 +84,7 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
         )
 
     coded_gen_gold = tuple(map(source_transformer.to_code, (_gen_ast, _gold_ast)))
+    # test_case_instance.assertEqual(*map("\n".join, zip(("#gen", "#gold"), coded_gen_gold)))
     test_case_instance.assertEqual(*coded_gen_gold)
     test_case_instance.assertEqual(
         *map(
@@ -293,7 +297,7 @@ def mock_function(*args, **kwargs):
     return True
 
 
-def reindent_docstring(node, indent_level=1):
+def reindent_docstring(node, indent_level=1, smart=True):
     """
     Reindent the docstring
 
@@ -303,15 +307,19 @@ def reindent_docstring(node, indent_level=1):
     :param indent_level: docstring indentation level whence: 0=no_tabs, 1=one tab; 2=two tabs
     :type indent_level: ```int```
 
+    :param smart: Smart indent mode, if False `lstrip`s each line of the input and adds the indent
+    :type smart: ```bool```
+
     :return: Node with reindent docstring
     :rtype: ```ast.AST```
     """
     doc_str = ast.get_docstring(node, clean=True)
     if doc_str is not None:
+        _sep = tab * abs(indent_level)
         node.body[0] = ast.Expr(
             set_value(
-                "\n{tab}{s}\n{tab}".format(
-                    tab=tab * abs(indent_level),
+                "\n{_sep}{s}\n{_sep}".format(
+                    _sep=_sep,
                     s="\n".join(
                         map(
                             lambda line: "{sep}{line}".format(
@@ -326,10 +334,38 @@ def reindent_docstring(node, indent_level=1):
                             else line,
                             reindent(doc_str).splitlines(),
                         )
+                    )
+                    if smart
+                    else "\n".join(
+                        map(partial(add, _sep), map(str.lstrip, doc_str.splitlines()))
                     ),
                 )
             )
         )
+    return node
+
+
+def replace_docstring(node, new_docstring):
+    """
+    Replace the docstring. If no docstring assertion error.
+
+    :param node: AST node
+    :type node: ```ast.AST```
+
+    :param new_docstring: Replace docstring
+    :type new_docstring: ```str```
+
+    :return: Node with reindent docstring
+    :rtype: ```ast.AST```
+    """
+    assert (
+        node
+        and hasattr(node, "body")
+        and node.body
+        and isinstance(node.body[0], Expr)
+        and isinstance(get_value(get_value(node.body[0])), str)
+    )
+    node.body[0] = Expr(value=set_value(new_docstring))
     return node
 
 
