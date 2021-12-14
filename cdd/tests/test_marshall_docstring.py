@@ -320,7 +320,23 @@ class TestMarshallDocstring(TestCase):
 
         self.assertEqual(
             gen,
-            docstring_google_tf_mean_squared_error_str,
+            docstring_google_tf_mean_squared_error_str.replace(
+                # Infer the type
+                "  weights: Optional `Tensor` whose rank is either 0, or the same rank as\n"
+                "    `labels`, and must be broadcastable to `labels` (i.e., all dimensions must\n"
+                "    be either `1`, or the same as the corresponding `losses` dimension).\n",
+                "  weights (Optional[float]): Optional `Tensor` whose rank is either 0, or the same rank as "
+                "`labels`, and must be broadcastable to `labels` (i.e., all dimensions must be either `1`, or the "
+                "same as the corresponding `losses` dimension).\n",
+                1,
+            ).replace(
+                # Word wrap everything, even if text is unchanged
+                "  Weighted loss float `Tensor`. If `reduction` is `NONE`, this has the same\n"
+                "  shape as `labels`; otherwise, it is scalar.\n",
+                "\n   Weighted loss float `Tensor`. If `reduction` is `NONE`, this has the same shape as `labels`; "
+                "otherwise, it is scalar.\n\n",
+                1,
+            ),
         )
 
     # def test_(self):

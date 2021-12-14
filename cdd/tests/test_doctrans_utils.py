@@ -18,7 +18,7 @@ from cdd.tests.mocks.doctrans import (
     function_type_in_docstring,
 )
 from cdd.tests.mocks.methods import function_google_tf_ops_losses__safe_mean_ast
-from cdd.tests.utils_for_tests import reindent_docstring, run_ast_test, unittest_main
+from cdd.tests.utils_for_tests import run_ast_test, unittest_main
 
 
 class TestDocTransUtils(TestCase):
@@ -45,7 +45,7 @@ class TestDocTransUtils(TestCase):
         )
         gen_ast = doc_trans.visit(original_node)
 
-        run_ast_test(self, reindent_docstring(gen_ast), gold=function_type_in_docstring)
+        run_ast_test(self, gen_ast, gold=function_type_in_docstring)
 
     def test_doctrans_function_from_docstring_to_annotated(self) -> None:
         """Tests `DocTrans` converts docstring function to type annotated function"""

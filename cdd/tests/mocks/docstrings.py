@@ -773,6 +773,15 @@ docstring_google_tf_ops_losses__safe_mean_str = (
     "  "
 )
 
+docstring_sum_tuple = (
+    ":type a: ```int```",
+    "",
+    ":type b: ```int```",
+    "",
+    ":rtype: ```int```",
+    "",
+)
+
 __all__ = [
     "docstring_extra_colons_str",
     "docstring_google_str",
@@ -801,5 +810,6 @@ __all__ = [
     "docstring_reduction_v2_str",
     "docstring_repr_str",
     "docstring_str",
+    "docstring_sum_tuple",
     "docstring_google_tf_mean_squared_error_args_tuple",
 ]
