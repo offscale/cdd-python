@@ -140,25 +140,25 @@ def pluralise(singular):
     return root + suffix
 
 
-def previous_line_range(s, countdown_from=None):
-    """
-    Get previous line from a multiline string
-
-    :param s: Multiline string
-    :type s: ```str```
-
-    :param countdown_from: Index to start looking down from; len(s) otherwise
-    :type countdown_from: ```Optional[int]```
-
-    :return: Previous line range if found else None
-    :rtype: ```Optional[Tuple[int, int]]```
-    """
-    if countdown_from is None:
-        countdown_from = len(s)
-    for i in range(countdown_from - 1, 0, -1):
-        if s[i] == "\n":
-            return i + 1, countdown_from
-    return None
+# def previous_line_range(s, countdown_from=None):
+#     """
+#     Get previous line from a multiline string
+#
+#     :param s: Multiline string
+#     :type s: ```str```
+#
+#     :param countdown_from: Index to start looking down from; len(s) otherwise
+#     :type countdown_from: ```Optional[int]```
+#
+#     :return: Previous line range if found else None
+#     :rtype: ```Optional[Tuple[int, int]]```
+#     """
+#     if countdown_from is None:
+#         countdown_from = len(s)
+#     for i in range(countdown_from - 1, 0, -1):
+#         if s[i] == "\n":
+#             return i + 1, countdown_from
+#     return None
 
 
 def deindent(s, level=None, sep=tab):
@@ -854,7 +854,7 @@ __all__ = [
     "paren_wrap_code",
     "pluralise",
     "pp",
-    "previous_line_range",
+    # "previous_line_range",
     "quote",
     "reindent",
     "rpartial",

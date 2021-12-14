@@ -22,7 +22,7 @@ from ast import (
 from collections import OrderedDict
 from functools import partial
 from importlib import import_module
-from itertools import chain, takewhile
+from itertools import chain
 from operator import add
 from sys import modules
 
@@ -52,7 +52,6 @@ from cdd.emitter_utils import (
 from cdd.pure_utils import (
     PY3_8,
     code_quoted,
-    count_iter_items,
     deindent,
     fill,
     identity,
@@ -646,7 +645,9 @@ def docstring(
         header, _, footer = parse_docstring_into_header_args_footer(
             candidate_args_returns, original_doc_str
         )
-        header = intermediate_repr.get("doc", "") if not header and not footer else header
+        header = (
+            intermediate_repr.get("doc", "") if not header and not footer else header
+        )
     else:
         header, footer = intermediate_repr.get("doc", ""), ""
 
@@ -683,8 +684,8 @@ def docstring(
             line = candidate_doc_str[prev_nl:next_nl]
             if not line.isspace():
                 break
-            prev_nl = next_nl
-            current_indent = count_iter_items(takewhile(str.isspace, line))
+            # prev_nl = next_nl
+            # current_indent = count_iter_items(takewhile(str.isspace, line))
 
     if indent_level > current_indent:
         _tab = (indent_level - current_indent) * tab
