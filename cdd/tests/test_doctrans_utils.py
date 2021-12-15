@@ -195,14 +195,13 @@ class TestDocTransUtils(TestCase):
             body=[Expr(set_value("\nModule\n"))], stmt=None, type_ignores=[]
         )
         original = deepcopy(module_node)
-        doc_trans = DocTrans(
+        DocTrans(
             docstring_format="rest",
             word_wrap=True,
             type_annotations=True,
             existing_type_annotations=False,
             whole_ast=module_node,
         )
-        doc_trans.visit_Module(module_node)
         run_ast_test(self, gen_ast=module_node, gold=original)
 
     def test_empty_types(self) -> None:
@@ -223,7 +222,6 @@ class TestDocTransUtils(TestCase):
             existing_type_annotations=False,
             whole_ast=deepcopy(original),
         )
-        doc_trans.visit_Module(doc_trans.whole_ast)
 
         # Reindent docstrings
         for body in original.body[0], doc_trans.whole_ast.body[0]:

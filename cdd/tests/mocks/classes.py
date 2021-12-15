@@ -310,7 +310,6 @@ class_nargs_ast = ClassDef(
             ),
             simple=1,
             target=Name("callbacks", Store()),
-            value=set_value(None),
             expr=None,
             expr_annotation=None,
             expr_target=None,

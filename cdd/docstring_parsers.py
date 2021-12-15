@@ -216,7 +216,11 @@ def _scan_phase_numpydoc_and_google(
 
     # Scan all lines so that that each element in `stacker` refers to one 'unit'
     stacker, docstring_lines, line = [], docstring.splitlines(), None
-    first_indent = count_iter_items(takewhile(str.isspace, docstring_lines[0]))
+    first_indent = (
+        count_iter_items(takewhile(str.isspace, docstring_lines[0]))
+        if docstring_lines
+        else 0
+    )
     for line_no, line in enumerate(docstring_lines):
         indent = count_iter_items(takewhile(str.isspace, line))
 

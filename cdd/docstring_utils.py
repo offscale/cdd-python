@@ -325,7 +325,9 @@ def _get_end_of_last_found(last_found, last_found_starts, doc_str, docstring_for
     if docstring_format is Style.numpydoc and doc_str[
         last_found_starts:last_found
     ].count("-") == len(doc_str[last_found_starts:last_found]):
-        return _get_end_of_last_found_numpydoc(last_found, last_found_starts, doc_str)
+        return _get_end_of_last_found_numpydoc(
+            last_found, 0 if last_found_starts is None else last_found_starts, doc_str
+        )
 
     return last_found_ends
 
@@ -351,7 +353,7 @@ def _find_end_of_args_returns(last_found_ends, doc_str):
     )
 
     # Early exit… if current line isn't indented then it can't be a multiline arg/return descriptor
-    if smallest_indent == 0:
+    if smallest_indent == 0 and last_found_ends is not None:
         return last_found_ends - 1
 
     return len(doc_str) - 1
@@ -464,7 +466,9 @@ def _get_token_last_idx(doc_str):
             i += 1
 
     if i_started_at == i:
-        last_idx = _get_token_last_idx_if_no_next_token(doc_str, last_found_starts)
+        last_idx = _get_token_last_idx_if_no_next_token(
+            doc_str, 0 if last_found_starts is None else last_found_starts
+        )
         if last_idx is not None:
             return last_idx
 
