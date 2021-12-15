@@ -158,7 +158,7 @@ def class_(
                         }.get(value, parse_to_scalar(value))
                     )(to_code(v).rstrip("\n"))
                 }
-            )(get_value(get_value(e)))
+            )(get_value(get_value(e))) if hasattr(e, "value") else {}
 
             # if 'str' in typ and val: val["default"] = val["default"].strip("'")  # Unquote?
             typ_default = dict(typ=typ, **val)
