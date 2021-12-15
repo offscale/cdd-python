@@ -609,7 +609,6 @@ class TestAstUtils(TestCase):
                 annotation=Name("object", Load()),
                 simple=1,
                 target=Name("zion", Store()),
-                value=set_value(None),
                 expr=None,
                 expr_target=None,
                 expr_annotation=None,

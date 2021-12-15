@@ -13,7 +13,7 @@ from ast import (
 )
 from collections import OrderedDict
 from copy import deepcopy
-from operator import attrgetter
+from operator import attrgetter, eq
 
 from cdd import emit, parse
 from cdd.ast_utils import (
@@ -22,11 +22,13 @@ from cdd.ast_utils import (
     maybe_type_comment,
     set_arg,
     set_docstring,
+    set_value,
     to_annotation,
     to_type_comment,
 )
 from cdd.docstring_parsers import parse_docstring
 from cdd.parser_utils import ir_merge
+from cdd.pure_utils import none_types, omit_whitespace
 
 
 def has_type_annotations(node):
@@ -125,9 +127,11 @@ class DocTrans(NodeTransformer):
 
         return Assign(
             targets=[node.target],
-            value=node.value,
             lineno=None,
             type_comment=to_type_comment(node.annotation),
+            # `var: int` is valid and turning it to `var = None  # type_comment int` would
+            # be wrong, as the upcoming smarter type tracer will reverse this to `var: Optional[int] = None`
+            value=set_value(none_types[-1]) if node.value is None else node.value,
         )
 
     def visit_Assign(self, node):
@@ -148,35 +152,17 @@ class DocTrans(NodeTransformer):
             assert len(node.targets) == 1
             return AnnAssign(
                 annotation=to_annotation(typ),
-                value=node.value,
                 lineno=None,
                 simple=1,
                 target=node.targets[0],
                 expr=None,
                 expr_target=None,
                 expr_annotation=None,
+                **{} if node.value is None else {"value": node.value},
                 **maybe_type_comment
             )
         else:
             setattr(node, "type_comment", typ)
-        return node
-
-    def visit_Module(self, node):
-        """
-        visits the `Module`, potentially augmenting its docstring indentation
-
-        :param node: Module
-        :type node: ```Module```
-
-        :return: Potentially changed Module
-        :rtype: ```Module```
-        """
-        # Clean might be wrong if the header is a license or other long-spiel documentation
-        doc_str = get_docstring(node, clean=self.word_wrap is True)
-        empty = doc_str is None
-        if not empty:
-            set_docstring("\n{doc_str}\n".format(doc_str=doc_str), empty, node)
-        node.body = list(map(self.visit, node.body))
         return node
 
     def visit_FunctionDef(self, node):
@@ -189,7 +175,7 @@ class DocTrans(NodeTransformer):
         :return: Potentially changed FunctionDef
         :rtype: ```FunctionDef```
         """
-        return self._handle_function(node, get_docstring(node, clean=True))
+        return self._handle_function(node, get_docstring(node, clean=False))
 
     def _get_ass_typ(self, node):
         """
@@ -212,6 +198,8 @@ class DocTrans(NodeTransformer):
         if not hasattr(node, "_location"):
             return typ_dict["typ"]
         search = node._location[:-1]
+        # if search == [None]:
+        #     return None
         search_str = ".".join(search)
 
         self.memoized[search_str] = ir = (
@@ -223,7 +211,7 @@ class DocTrans(NodeTransformer):
                             lambda doc_str: None
                             if doc_str is None
                             else parse.docstring(doc_str)
-                        )(get_docstring(parent, clean=True))
+                        )(get_docstring(parent, clean=False))
                         if isinstance(parent, (ClassDef, AsyncFunctionDef, FunctionDef))
                         else {"params": OrderedDict()}
                     )
@@ -236,26 +224,26 @@ class DocTrans(NodeTransformer):
             "typ"
         ]  # if ir is not None and ir.get("params") else None
 
-    def _handle_function(self, node, doc_str):
+    def _handle_function(self, node, original_doc_str):
         """
         Handle functions
 
         :param node: AsyncFunctionDef | FunctionDef
         :type node: ```Union[AsyncFunctionDef, FunctionDef]```
 
-        :param doc_str: The docstring
-        :type doc_str: ```Optional[str]```
+        :param original_doc_str: The docstring
+        :type original_doc_str: ```Optional[str]```
 
         :return: Same type as input with args, returns, and docstring potentially modified
         :rtype: ```Union[AsyncFunctionDef, FunctionDef]```
         """
-        ir = parse_docstring(doc_str)
+        ir = parse_docstring(original_doc_str)
         ir_merge(ir, parse.function(node))
         ir["name"] = node.name
         indent_level = max(
             len(node._location), 1
         )  # function docstrings always have at least 1 indent level
-        _doc_str = emit.docstring(
+        doc_str = emit.docstring(
             ir,
             emit_types=not self.type_annotations,
             emit_default_doc=False,
@@ -263,11 +251,18 @@ class DocTrans(NodeTransformer):
             indent_level=indent_level,
             word_wrap=self.word_wrap,
         )
-        if not _doc_str or _doc_str.isspace():
-            if doc_str is not None:
+        if not doc_str or doc_str.isspace():
+            if original_doc_str is not None:
                 del node.body[0]
         else:
-            set_docstring(_doc_str, False, node)
+            set_docstring(
+                original_doc_str
+                if original_doc_str
+                and eq(*map(omit_whitespace, (original_doc_str, doc_str)))
+                else doc_str,
+                False,
+                node,
+            )
         if self.type_annotations:
             # Add annotations
             if ir["params"]:

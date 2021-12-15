@@ -101,10 +101,12 @@ def param2ast(param):
             annotation=Name("object", Load()),
             simple=1,
             target=Name(name, Store()),
-            value=set_value(_param.get("default")),
             expr=None,
             expr_target=None,
             expr_annotation=None,
+            **{}
+            if _param.get("default") is None
+            else {"value": set_value(_param.get("default"))},
         )
         # return Assign(
         #     annotation=None,
@@ -117,20 +119,21 @@ def param2ast(param):
         #     **maybe_type_comment
         # )
     elif needs_quoting(_param["typ"]):
+        val = (
+            quote(_param["default"])
+            if _param.get("default")
+            else simple_types.get(_param["typ"])
+        )
         return AnnAssign(
             annotation=Name(_param["typ"], Load())
             if _param["typ"] in simple_types
             else get_value(ast.parse(_param["typ"]).body[0]),
             simple=1,
             target=Name(name, Store()),
-            value=set_value(
-                quote(_param["default"])
-                if _param.get("default")
-                else simple_types.get(_param["typ"])
-            ),
             expr=None,
             expr_target=None,
             expr_annotation=None,
+            **{} if val is None else {"value": set_value(val)},
         )
     elif _param["typ"] in simple_types:
         return AnnAssign(
@@ -216,10 +219,10 @@ def _generic_param2ast(param):
         annotation=annotation,
         simple=1,
         target=Name(name, Store()),
-        value=value,
         expr=None,
         expr_target=None,
         expr_annotation=None,
+        **{} if value is None else {"value": value},
     )
 
 
@@ -493,8 +496,8 @@ def func_arg2param(func_arg, default=None):
             typ=None
             if func_arg.annotation is None
             else _to_code(func_arg.annotation).rstrip("\n"),
-            **({} if default is None else {"default": default})
-        )
+            **({} if default is None else {"default": default}),
+        ),
     )
 
 
@@ -634,7 +637,7 @@ def set_arg(arg, annotation=None):
         arg=arg,
         annotation=annotation,
         identifier_arg=None,
-        **dict(expr=None, **maybe_type_comment) if PY_GTE_3_8 else {}
+        **dict(expr=None, **maybe_type_comment) if PY_GTE_3_8 else {},
     )
 
 
@@ -971,7 +974,6 @@ def emit_ann_assign(node):
             annotation=node.annotation,
             simple=1,
             target=Name(node.arg, Store()),
-            value=node.default if hasattr(node, "default") else None,
             lineno=None,
             col_offset=None,
             end_lineno=None,
@@ -979,6 +981,9 @@ def emit_ann_assign(node):
             expr=None,
             expr_target=None,
             expr_annotation=None,
+            **{"value": node.default}
+            if hasattr(node, "default") and node.default is not None
+            else {},
         )
     else:
         raise NotImplementedError(type(node).__name__)
@@ -1437,7 +1442,7 @@ def to_type_comment(node):
         node.id
         if isinstance(node, Name)
         else node
-        if isinstance(node, str)
+        if isinstance(node, str) or not hasattr(node, "annotation")
         else _to_code(node.annotation).strip()
     )
 
@@ -1544,7 +1549,7 @@ def merge_assignment_lists(node, name, unique_sort=True):
             ),
             expr=None,
             lineno=None,
-            **maybe_type_comment
+            **maybe_type_comment,
         )
     )
 
