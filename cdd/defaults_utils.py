@@ -243,9 +243,8 @@ def _parse_out_default_and_doc(
         return line, default
     else:
         stop_tokens = frozenset((" ", "\t", "\n", "\n", "."))
-        extra_offset = int(
-            line[: _start_idx - 1][-1] in frozenset((" ", "\t", "\n", "\n"))
-        )
+        end = line[: _start_idx - 1]
+        extra_offset = int(end[-1] in frozenset((" ", "\t", "\n", "\n")) if end else 0)
 
         if rstrip_default:
             offset = count_iter_items(

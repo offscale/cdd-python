@@ -145,20 +145,24 @@ def class_(
         if isinstance(e, AnnAssign):
             typ = to_code(e.annotation).rstrip("\n")
             val = (
-                lambda v: {"default": NoneStr}
-                if v is None
-                else {
-                    "default": v
-                    if type(v).__name__ in simple_types
-                    else (
-                        lambda value: {
-                            "{}": {} if isinstance(v, Dict) else set(),
-                            "[]": [],
-                            "()": (),
-                        }.get(value, parse_to_scalar(value))
-                    )(to_code(v).rstrip("\n"))
-                }
-            )(get_value(get_value(e))) if hasattr(e, "value") else {}
+                (
+                    lambda v: {"default": NoneStr}
+                    if v is None
+                    else {
+                        "default": v
+                        if type(v).__name__ in simple_types
+                        else (
+                            lambda value: {
+                                "{}": {} if isinstance(v, Dict) else set(),
+                                "[]": [],
+                                "()": (),
+                            }.get(value, parse_to_scalar(value))
+                        )(to_code(v).rstrip("\n"))
+                    }
+                )(get_value(get_value(e)))
+                if hasattr(e, "value")
+                else {}
+            )
 
             # if 'str' in typ and val: val["default"] = val["default"].strip("'")  # Unquote?
             typ_default = dict(typ=typ, **val)
@@ -223,7 +227,9 @@ def class_(
                 )
             ),
             "_internal": {
-                "original_doc_str": doc_str,
+                "original_doc_str": doc_str
+                if parse_original_whitespace
+                else get_docstring(class_def, clean=False),
                 "body": list(
                     filterfalse(rpartial(isinstance, (AnnAssign, Assign)), body)
                 ),
@@ -308,7 +314,9 @@ def _class_from_memory(
         )
         return ir
     ir["_internal"] = {
-        "original_doc_str": original_doc_str,
+        "original_doc_str": original_doc_str
+        if parse_original_whitespace
+        else get_docstring(parsed_body, clean=False),
         "body": list(
             filterfalse(
                 rpartial(isinstance, (AnnAssign, Assign)),
@@ -545,7 +553,9 @@ def function(
             parsed_source.body if original_doc_str is None else parsed_source.body[1:]
         )
         ir["_internal"] = {
-            "original_doc_str": original_doc_str,
+            "original_doc_str": original_doc_str
+            if parse_original_whitespace
+            else ast.get_docstring(parsed_source, clean=False),
             "body": list(filterfalse(rpartial(isinstance, (AnnAssign, Assign)), body)),
             "from_name": parsed_source.name,
             "from_type": "cls",
@@ -590,7 +600,15 @@ def function(
             parse_original_whitespace=parse_original_whitespace,
             infer_type=infer_type,
         )
-        intermediate_repr["_internal"] = {"original_doc_str": doc_str}
+        intermediate_repr["_internal"] = {
+            "original_doc_str": (
+                doc_str
+                if parse_original_whitespace
+                else get_docstring(function_def, clean=False)
+                if isinstance(function_def, FunctionDef)
+                else None
+            )
+        }
 
     intermediate_repr.update(
         {
@@ -632,6 +650,8 @@ def function(
             getattr(function_def.args, defaults)
         )
         if diff:
+            if diff < 0:
+                print("diff:", diff, ";")
             setattr(
                 function_def.args,
                 defaults,
@@ -718,7 +738,7 @@ def argparse_ast(
         node_name=type(function_def).__name__
     )
 
-    doc_string = get_docstring(function_def, clean=True)
+    doc_string = get_docstring(function_def, clean=parse_original_whitespace)
     intermediate_repr = {
         "name": function_name or function_def.name,
         "type": function_type or get_function_type(function_def),
@@ -771,7 +791,9 @@ def argparse_ast(
     )
     if inner_body:
         intermediate_repr["_internal"] = {
-            "original_doc_str": doc_string,
+            "original_doc_str": doc_string
+            if parse_original_whitespace
+            else get_docstring(function_def, clean=False),
             "body": inner_body,
             "from_name": function_def.name,
             "from_type": "static",

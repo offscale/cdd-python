@@ -20,7 +20,7 @@ from textwrap import indent
 from typing import Callable, Dict, FrozenSet, Optional, Tuple, Union
 
 pp: Callable[[object], None] = PrettyPrinter(indent=4, width=100).pprint
-tab: str = " " * 4
+tab: str = environ.get("DOCTRANS_TAB", " " * 4)
 simple_types: Dict[Optional[str], Union[int, float, complex, str, bool, None]] = {
     "int": 0,
     "float": 0.0,
