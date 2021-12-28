@@ -646,12 +646,11 @@ def function(
         ("args", "defaults"),
         ("kwonlyargs", "kw_defaults"),
     ):
-        diff = len(getattr(function_def.args, args)) - len(
-            getattr(function_def.args, defaults)
+        diff = abs(
+            len(getattr(function_def.args, args))
+            - len(getattr(function_def.args, defaults))
         )
         if diff:
-            if diff < 0:
-                print("diff:", diff, ";")
             setattr(
                 function_def.args,
                 defaults,

@@ -510,6 +510,9 @@ def main(cli_argv=None, return_args=False):
         require_file_existent(_parser, args.filename, name="filename")
         args_dict["docstring_format"] = args_dict.pop("format")
         doctrans(**args_dict)
+        # except:
+        #     print("#", args_dict["filename"], file=sys.stderr)
+        #     raise
     elif command == "exmod":
         exmod(
             mock_imports=False,  # This option is really only useful for tests IMHO

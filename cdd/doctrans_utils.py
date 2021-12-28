@@ -195,11 +195,9 @@ class DocTrans(NodeTransformer):
                 {"typ": node.annotation or getattr(node, "type_comment", None)},
             )
         )
-        if not hasattr(node, "_location"):
+        if not hasattr(node, "_location") or node._location[:-1] == [None]:
             return typ_dict["typ"]
         search = node._location[:-1]
-        # if search == [None]:
-        #     return None
         search_str = ".".join(search)
 
         self.memoized[search_str] = ir = (
