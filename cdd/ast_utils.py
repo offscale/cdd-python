@@ -975,14 +975,14 @@ def emit_ann_assign(node):
             simple=1,
             target=Name(node.arg, Store()),
             lineno=None,
-            col_offset=None,
-            end_lineno=None,
-            end_col_offset=None,
+            col_offset=getattr(node, "col_offset", None),
+            end_lineno=getattr(node, "end_lineno", None),
+            end_col_offset=getattr(node, "end_col_offset", None),
             expr=None,
             expr_target=None,
             expr_annotation=None,
             **{"value": node.default}
-            if hasattr(node, "default") and node.default is not None
+            if getattr(node, "default", None) is not None
             else {},
         )
     else:

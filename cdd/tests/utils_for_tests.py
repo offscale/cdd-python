@@ -3,21 +3,20 @@ Shared utility functions used by many tests
 """
 
 import ast
-from _ast import Expr
+from ast import Expr
 from copy import deepcopy
 from functools import partial
 from importlib import import_module
 from importlib.abc import Loader
 from importlib.util import module_from_spec, spec_from_loader
 from itertools import takewhile
+from operator import add
 from os import path
 from os.path import extsep
 from sys import modules
 from tempfile import NamedTemporaryFile
 from unittest import main
 from unittest.mock import MagicMock, patch
-
-from _operator import add
 
 from cdd import source_transformer
 from cdd.ast_utils import cmp_ast, get_value, set_value

@@ -1,4 +1,5 @@
 """ Tests for exmod subcommand """
+
 from ast import ClassDef
 from functools import partial
 from io import StringIO
