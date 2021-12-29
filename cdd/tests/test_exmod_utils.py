@@ -1,4 +1,5 @@
 """ Tests for exmod_utils """
+
 from collections import deque
 from io import StringIO
 from os import path

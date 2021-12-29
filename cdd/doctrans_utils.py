@@ -1,6 +1,7 @@
 """
 Helpers to traverse the AST, extract the docstring out, parse and format to intended style
 """
+
 from ast import (
     AnnAssign,
     Assign,
@@ -8,6 +9,7 @@ from ast import (
     ClassDef,
     FunctionDef,
     NodeTransformer,
+    arg,
     get_docstring,
     walk,
 )
@@ -28,7 +30,7 @@ from cdd.ast_utils import (
 )
 from cdd.docstring_parsers import parse_docstring
 from cdd.parser_utils import ir_merge
-from cdd.pure_utils import none_types, omit_whitespace
+from cdd.pure_utils import PY_GTE_3_8, none_types, omit_whitespace
 
 
 def has_type_annotations(node):
@@ -127,7 +129,10 @@ class DocTrans(NodeTransformer):
 
         return Assign(
             targets=[node.target],
-            lineno=None,
+            lineno=node.lineno,
+            col_offset=getattr(node, "col_offset", None),
+            end_lineno=getattr(node, "end_lineno", None),
+            end_col_offset=getattr(node, "end_col_offset", None),
             type_comment=to_type_comment(node.annotation),
             # `var: int` is valid and turning it to `var = None  # type_comment int` would
             # be wrong, as the upcoming smarter type tracer will reverse this to `var: Optional[int] = None`
@@ -152,14 +157,17 @@ class DocTrans(NodeTransformer):
             assert len(node.targets) == 1
             return AnnAssign(
                 annotation=to_annotation(typ),
-                lineno=None,
+                lineno=node.lineno,
+                col_offset=getattr(node, "col_offset", None),
+                end_lineno=getattr(node, "end_lineno", None),
+                end_col_offset=getattr(node, "end_col_offset", None),
                 simple=1,
                 target=node.targets[0],
                 expr=None,
                 expr_target=None,
                 expr_annotation=None,
                 **{} if node.value is None else {"value": node.value},
-                **maybe_type_comment
+                **maybe_type_comment,
             )
         else:
             setattr(node, "type_comment", typ)
@@ -266,14 +274,19 @@ class DocTrans(NodeTransformer):
             if ir["params"]:
                 node.args.args = list(
                     map(
-                        lambda _arg: set_arg(
-                            _arg.arg,
+                        lambda _arg: arg(
+                            arg=_arg.arg,
                             annotation=to_annotation(
                                 _arg.annotation
                                 if _arg.annotation is not None
                                 or _arg.arg in frozenset(("self", "cls"))
                                 else ir["params"][_arg.arg].get("typ")
                             ),
+                            identifier_arg=None,
+                            end_col_offset=getattr(_arg, "end_col_offset", None),
+                            **dict(expr=None, **maybe_type_comment)
+                            if PY_GTE_3_8
+                            else {},
                         ),
                         node.args.args,
                     )

@@ -511,6 +511,7 @@ def main(cli_argv=None, return_args=False):
         args_dict["docstring_format"] = args_dict.pop("format")
         doctrans(**args_dict)
         # except:
+        #     import sys
         #     print("#", args_dict["filename"], file=sys.stderr)
         #     raise
     elif command == "exmod":
