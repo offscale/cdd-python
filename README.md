@@ -339,7 +339,7 @@ config_tbl = Table(
     ),
     comment='Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare\n'
             '\n'
-            ':returns: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))\n'
+            ':return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))\n'
             ':rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```',
 )
 
@@ -356,7 +356,7 @@ class Config(Base):
     """
     Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare
     
-    :returns: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
+    :return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
     :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
     """
     __tablename__ = "config_tbl"
@@ -400,7 +400,7 @@ class Config(Base):
         """
         Emit a string representation of the current instance
         
-        :returns: String representation of instance
+        :return: String representation of instance
         :rtype: ```str```
         """
     
