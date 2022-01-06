@@ -4,7 +4,7 @@ Pure utils for pure functions. For the same input will always produce the same i
 
 import typing
 from ast import Name, Str
-from collections import deque
+from collections import Counter, deque
 from functools import partial
 from importlib import import_module
 from importlib.util import find_spec
@@ -465,6 +465,22 @@ strip_diff = partial(diff, op=str.strip)
 lstrip_diff = partial(diff, op=str.lstrip)
 rstrip_diff = partial(diff, op=str.rstrip)
 
+def balanced_parentheses(s):
+    """
+    Checks if parentheses are balanced
+
+    :param s: Input string
+    :type s: ```str```
+
+    :return: Whether the parens are balanced
+    :rtype: ```bool```
+    """
+    open_parens, closed_parens = "([{", ")]}"
+    counter = Counter(s)
+    return all(
+        counter[open_parens[i]] == counter[closed_parens[i]]
+        for i in range(len(open_parens))
+    )
 
 def blockwise(t, size=2, fillvalue=None):
     """
@@ -823,7 +839,6 @@ sanitise_emit_name = dict(
     **{"class": "class_", "argparse": "argparse_function"}
 ).__getitem__
 
-
 __all__ = [
     "BUILTIN_TYPES",
     "DUNDERS",
@@ -833,6 +848,7 @@ __all__ = [
     "PY_GTE_3_8",
     "PY_GTE_3_9",
     "assert_equal",
+    "balanced_parentheses",
     "blockwise",
     "code_quoted",
     "count_iter_items",
