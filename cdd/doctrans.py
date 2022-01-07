@@ -3,12 +3,12 @@ Helper to traverse the AST of the input file, extract the docstring out, parse a
 """
 from ast import AsyncFunctionDef, ClassDef, FunctionDef, fix_missing_locations, walk
 from copy import deepcopy
+from operator import attrgetter
 
 from cdd.ast_utils import cmp_ast
 from cdd.cst import cst_parse
-from cdd.cst_utils import find_cst_at_ast
+from cdd.cst_utils import find_cst_at_ast, maybe_replace_doc_str_in_function_or_class
 from cdd.doctrans_utils import DocTrans, has_type_annotations
-from cdd.pure_utils import pp
 from cdd.source_transformer import ast_parse
 
 
@@ -44,7 +44,7 @@ def doctrans(filename, docstring_format, type_annotations, no_word_wrap):
     )
 
     if not cmp_ast(node, original_module):
-        cst_list = cst_parse(original_source)
+        cst_list = list(cst_parse(original_source))
 
         # Carefully replace only docstrings, function return annotations, assignment and annotation assignments.
         # Maintaining all other existing whitespace, comments, &etc.
@@ -55,16 +55,18 @@ def doctrans(filename, docstring_format, type_annotations, no_word_wrap):
                 if isinstance(_node, (ClassDef, AsyncFunctionDef, FunctionDef)):
                     cst_idx, cst_node = find_cst_at_ast(cst_list, _node)
                     if cst_node is not None:
-                        doc_str = cst_list[cst_idx+1]
-                        # TODO: finish
+                        maybe_replace_doc_str_in_function_or_class(
+                            _node, cst_idx, cst_list
+                        )
+
+                        # TODO: Maybe replace function return type
                 # TODO:
                 # elif isinstance(_node, (AnnAssign, Assign)):
                 #     print("(AnnAssign | Assign)._location:", _node._location, ";")
                 #     print_ast(_node)
 
-        pp(cst_list)
-        # with open(filename, "wt") as f:
-        #    f.write("".join(map(attrgetter("value"), cst_lines)))
+        with open(filename, "wt") as f:
+            f.write("".join(map(attrgetter("value"), cst_list)))
 
 
 __all__ = ["doctrans"]
