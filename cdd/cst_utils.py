@@ -1,13 +1,13 @@
 """
 Concrete Syntax Tree utility functions
 """
-from collections import OrderedDict, namedtuple, deque
-from copy import deepcopy
+from collections import OrderedDict, deque, namedtuple
 from dataclasses import make_dataclass
-from functools import partial, wraps, reduce
-from itertools import takewhile, accumulate
+from functools import partial, wraps
+from itertools import takewhile
 from keyword import kwlist
 from operator import ne
+from sys import stderr
 from typing import List, Optional
 
 from cdd.ast_utils import get_value
@@ -18,6 +18,7 @@ _basic_cst_attributes = "line_no_start", "line_no_end", "scope", "value"
 UnchangingLine = namedtuple("UnchangingLine", _basic_cst_attributes)
 Assignment = namedtuple("Assignment", _basic_cst_attributes)
 AnnAssignment = namedtuple("AnnAssignment", _basic_cst_attributes)
+AugAssignment = namedtuple("AugAssignment", _basic_cst_attributes)
 # Same for `AsyncFunctionDefinition`
 FunctionDefinitionStart = namedtuple(
     "FunctionDefinitionStart", (*_basic_cst_attributes, "name")
@@ -60,6 +61,13 @@ ExceptStatement = namedtuple("ExceptStatement", _basic_cst_attributes)
 FinallyStatement = namedtuple("FinallyStatement", _basic_cst_attributes)
 FromStatement = namedtuple("FromStatement", _basic_cst_attributes)
 ImportStatement = namedtuple("ImportStatement", _basic_cst_attributes)
+TrueStatement = namedtuple("TrueStatement", _basic_cst_attributes)
+FalseStatement = namedtuple("FalseStatement", _basic_cst_attributes)
+NoneStatement = namedtuple("NoneStatement", _basic_cst_attributes)
+ExprStatement = namedtuple("ExprStatement", _basic_cst_attributes)
+GenExprStatement = namedtuple("GenExprStatement", _basic_cst_attributes)
+ListCompStatement = namedtuple("ListCompStatement", _basic_cst_attributes)
+CallStatement = namedtuple("CallStatement", _basic_cst_attributes)
 
 contains2statement = OrderedDict(
     (
@@ -86,13 +94,55 @@ contains2statement = OrderedDict(
         ("while", WhileStatement),
         ("match", MatchStatement),
         ("case", CaseStatement),
+        ("True", TrueStatement),
+        ("False", FalseStatement),
+        ("None", NoneStatement),
+    )
+)
+math_operators = frozenset(
+    (
+        "@",
+        "/",
+        "//",
+        "*",
+        "**",
+        "+",
+        "-",
+        "%",
+        "&",
+        "|",
+        "<<",
+        ">>",
+        "<",
+        ">",
+        "==",
+        ">=",
+        "<=",
+        "^",
     )
 )
 
+augassign = frozenset(
+    ("+=" "-=", "*=", "@=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>=", "**=", "//=")
+)
+# ':=' could be an augassign I guess
 multicontains2statement = (
     (frozenset((":", "=")), AnnAssignment),  # TODO: support `class F: foo: int` also…
     (frozenset(("=",)), Assignment),
 )
+
+ast2cst = {
+    "Expr": ExprStatement,
+    "AnnAssign": AnnAssignment,
+    "Assign": Assignment,
+    "Constant": ExprStatement,
+    "Str": ExprStatement,
+    "Num": ExprStatement,
+    "ClassDef": ClassDefinitionStart,
+    "FunctionDef": FunctionDefinitionStart,
+    "AsyncFunctionDef": FunctionDefinitionStart,
+    # TODO: Full spec
+}
 
 MultiComment = make_dataclass(
     "MultiComment",
@@ -133,28 +183,28 @@ def get_construct_name(words):
             return words[idx + 1][:end_idx]
 
 
-def maybe_replace_doc_str_in_function_or_class(node, concrete_lines, cst_node_no):
+def maybe_replace_doc_str_in_function_or_class(node, cst_list, cst_node_no):
     """
     Maybe replace the doc_str of a function or class
 
     :param node: AST node
     :type node: ```Union[ClassDef, AsyncFunctionDef, FunctionDef]```
 
-    :param concrete_lines: List of `namedtuple`s with at least ("line_no", "scope", "value") attributes
-    :type concrete_lines: ```List[NamedTuple]```
+    :param cst_list: List of `namedtuple`s with at least ("line_no", "scope", "value") attributes
+    :type cst_list: ```List[NamedTuple]```
 
-    :param cst_node_no: Index of start of function in concrete_lines
+    :param cst_node_no: Index of start of function in cst_list
     :type cst_node_no: ```int```
     """
     # Ignore `arg` its `Assign | AnnAssign` are handled later
     if (
-        isinstance(concrete_lines[cst_node_no + 1], MultiComment)
-        and concrete_lines[cst_node_no + 1].is_docstr
+        isinstance(cst_list[cst_node_no + 1], MultiComment)
+        and cst_list[cst_node_no + 1].is_docstr
     ):
         # Considering this is looping in forward direction `is_docstr` is either redundant
         # …or this should be refactored to look at `MultiComment`s
         new_doc_str = get_value(get_value(node.body[0]))
-        cur_doc_str = concrete_lines[cst_node_no + 1].value.strip()[3:-3]
+        cur_doc_str = cst_list[cst_node_no + 1].value.strip()[3:-3]
         if ne(
             *map(
                 omit_whitespace,
@@ -164,39 +214,41 @@ def maybe_replace_doc_str_in_function_or_class(node, concrete_lines, cst_node_no
                 ),
             )
         ):
-            _indent_idx = count_iter_items(takewhile(str.isspace, cur_doc_str))
-            pre, _, post = concrete_lines[cst_node_no + 1].value.partition(cur_doc_str)
-            concrete_lines[cst_node_no + 1].value = "{pre}{new_doc_str}{post}".format(
+            pre, _, post = cst_list[cst_node_no + 1].value.partition(cur_doc_str)
+            cst_list[cst_node_no + 1].value = "{pre}{new_doc_str}{post}".format(
                 pre=pre, new_doc_str=new_doc_str, post=post
             )
             print("replaced doc_str at:", node._location, ";")
 
 
-def find_cst_at_ast(concrete_lines, node):
+def find_cst_at_ast(cst_list, node):
     """
     Find (first) CST node matching AST node
 
     (uses `_location` from `annotate_ancestry`)
 
-    :param concrete_lines: List of `namedtuple`s with at least ("line_no", "scope", "value") attributes
-    :type concrete_lines: ```List[NamedTuple]```
+    :param cst_list: List of `namedtuple`s with at least ("line_no", "scope", "value") attributes
+    :type cst_list: ```List[NamedTuple]```
 
     :param node: AST node
     :type node: ```AST```
 
-    :return: Matching idx and element from concrete_lines if found else (None, None)
+    :return: Matching idx and element from cst_list if found else (None, None)
     :rtype: ```Tuple[Optional[int], Optional[NamedTuple]]````
     """
     cst_node_found, cst_node_no = None, None
-    for cst_node_no, cst_node in enumerate(concrete_lines):
+    node_type = type(node).__name__
+    if node_type not in ast2cst:
+        print("{node_type} not implemented".format(node_type=node_type), file=stderr)
+        return None, None
+    cst_type = (ast2cst[node_type]).__name__
+    for cst_node_no, cst_node in enumerate(cst_list):
         if (
-            cst_node.scope == node._location[:-1]
-            and isinstance(
-                cst_node,
-                (ClassDefinitionStart, FunctionDefinitionStart),
-            )
+            type(cst_node).__name__ == cst_type
+            and cst_node.scope == node._location[:-1]  # `isinstance` doesn't work
             and cst_node.name == getattr(node, "name", None)
         ):
+            cst_node_found = cst_node
             break
     return cst_node_no, cst_node_found
 
@@ -236,32 +288,32 @@ def cst_scan(scanned, stack):
     """
     statement = "".join(stack)
     statement_stripped = statement.strip()
-    if not statement.endswith("\\") and any(
-        (
-            statement_stripped.startswith("#"),
-            # not statement_stripped,
-            len(statement_stripped) > 5
-            and (
-                statement_stripped.startswith("'''")
-                and statement.endswith("'''")
-                or statement_stripped.startswith('"""')
-                and statement.endswith('"""')
-            ),
-            balanced_parentheses(statement_stripped)
-            and any(
-                (
-                    statement_stripped.endswith(":"),
-                    len(
-                        frozenset(contains2statement.keys())
-                        & frozenset(
-                            filter(None, map(str.strip, statement_stripped.split(" ")))
-                        )
+
+    if (
+        statement_stripped.startswith("#")
+        or not statement_stripped.endswith("\\")
+        and any(
+            (
+                all(
+                    (
+                        len(statement_stripped) > 5,
+                        statement_stripped.startswith("'''")
+                        and statement.endswith("'''")
+                        or statement_stripped.startswith('"""')
+                        and statement.endswith('"""'),
                     )
-                    > 0,
-                    "=" in statement_stripped,
-                )
+                ),
+                all(
+                    (
+                        statement_stripped,
+                        balanced_parentheses(statement_stripped),
+                        not statement_stripped.startswith("@")
+                        or statement_stripped.endswith(":"),
+                        not statement_stripped.startswith("'''"),
+                        not statement_stripped.startswith('"""'),
+                    )
+                ),
             )
-            # statement_stripped.startswith("")
         )
     ):
         scanned.append(statement)
@@ -296,11 +348,15 @@ def get_last_node_scope(cst_nodes):
     """
     Gets the current scope of the last CST node in the list
 
+    TODO: Refactor this by adding `within_types` to every CST node so that the scope-resolution becomes an O(n) op
+
     :param cst_nodes: Iterable NamedTuple with at least ("line_no", "scope", "value") attributes
     :type cst_nodes: ```Iterable[NamedTuple]```
     """
-    scope, within_types, last_indent = [], [], 0
+    scope, within_types = [], []
     for node in cst_nodes:
+        indent = count_iter_items(takewhile(str.isspace, node.value.lstrip("\n")))
+
         # These create indents AND new scopes
         if isinstance(node, (ClassDefinitionStart, FunctionDefinitionStart)):
             scope.append(node.name)
@@ -323,9 +379,63 @@ def get_last_node_scope(cst_nodes):
             ),
         ):
             within_types.append(type(node).__name__)
-    else:
-        raise NotImplementedError("Count the number of indents and number of `name`d statements to handle reduction of scope")
+        elif isinstance(node, MultiComment):
+            pass  # Could do weird things with multiline indents so ignore
+        else:
+            indent_size = len(tab)
+            assert indent % indent_size == 0, "Indent must be a multiple of tab size"
+            depth = indent // indent_size
+
+            if depth != len(within_types):
+                del within_types[depth:]
+            expected_scope_size = sum(
+                map(
+                    within_types.count,
+                    ("ClassDefinitionStart", "FunctionDefinitionStart"),
+                )
+            )
+            if expected_scope_size != len(scope):
+                del scope[expected_scope_size:]
     return scope
+
+
+def infer_cst_type(statement_stripped, words):
+    """
+    Infer the CST type. This is the most important function of the CST parser!
+
+    :param statement_stripped: Original scanned statement minus both ends of whitespace
+    :type statement_stripped: ```str```
+
+    :param words: List of whitespace stripped and empty-str removed words from original statement
+    :type words: ```List[str]```
+
+    :return: CST type… a NamedTuple with at least ("line_no", "scope", "value") attributes
+    :rtype: ```NamedTuple```
+    """
+    for word in words:
+        if word in contains2statement:
+            return contains2statement[word]
+
+    if any(aug_assign in statement_stripped for aug_assign in augassign):
+        return AugAssignment
+
+    statement_frozenset = frozenset(statement_stripped)
+    for (key, constructor) in multicontains2statement:
+        if statement_frozenset & key == key:
+            return constructor
+
+    if any(math_operator in statement_stripped for math_operator in math_operators):
+        return ExprStatement
+
+    elif statement_stripped.startswith("["):
+        return ListCompStatement
+
+    elif "(" in statement_frozenset:
+        if statement_stripped.startswith("("):
+            return GenExprStatement
+        return CallStatement
+
+    return UnchangingLine  # or: raise NotImplementedError(repr(statement_stripped))
 
 
 def set_prev_node(function):
@@ -368,7 +478,7 @@ def cst_parse_one_node(statement, state):
     :param statement: Statement that was scanned from Python source code
     :type statement: ```str```
 
-    :param state: Number of lines between runs in `acc` key; `prev_node`; `scope`
+    :param state: Number of lines between runs in `acc` key; `prev_node`; `scope`; `parsed`
     :type state: ```dict```
 
     :return: NamedTuple with at least ("line_no", "scope", "value") attributes
@@ -376,40 +486,16 @@ def cst_parse_one_node(statement, state):
     """
     prev_acc = state["acc"]
     state["acc"] += statement.count("\n")
-    if state["acc"] - 1 == prev_acc:
-        prev_acc += 1
 
     statement_stripped = statement.strip()
 
     words = tuple(filter(None, map(str.strip, statement_stripped.split(" "))))
-    indent = max(count_iter_items(takewhile(str.isspace, statement[1:])), 0)
-    prev_indent = max(
-        count_iter_items(takewhile(str.isspace, state["prev_node"].value[1:])), 0
-    )
-    indent_size = len(tab)
-
-    # if prev_indent > indent and  state["prev_node"]
-
-    # if prev_indent < indent and indent % indent_size == 0:
-    #    current_depth = indent // indent_size
-    # print("\ncurrent_depth:", current_depth, ';',
-    #       '\nlen(state["scope"]):', len(state["scope"]), ';',
-    #       '\nstate["scope"]:', state["scope"], ';')
-    # while len(state["scope"]) > current_depth and state["scope"]:
-    # print("removing:", state["scope"][-1], "@", repr(statement[1:]), ";\n")
-    #    del state["scope"][-1]
-    # else:
-    #    print("indent:", indent, ";", "\nstatement:", repr(statement), ";")
-
-    # Useful during dev tests, in practice you can have nested non `class_def` | `function_def` `compound_stmt`s…
-    # assert indent % 4 != 0 or indent / 4 == len(
-    #    state["scope"]
-    # ), "scope implied by indent is missing @ {!r}".format(statement)
+    scope = get_last_node_scope(state["parsed"])
 
     common_kwargs = dict(
         line_no_start=prev_acc,
         line_no_end=state["acc"],
-        scope=deepcopy(state["scope"]),
+        scope=scope,
         value=statement,
     )
 
@@ -434,23 +520,18 @@ def cst_parse_one_node(statement, state):
                 ),
             )
 
-    if len(words) > 1:
-        name = get_construct_name(words)
-        if name is not None:
-            state["scope"].append(name)
-            return (
-                ClassDefinitionStart if words[0] == "class" else FunctionDefinitionStart
-            )(**common_kwargs, name=name)
-
     if words:
-        statement_frozenset = frozenset(statement_stripped)
-        for word in words:
-            if word in contains2statement:
-                return contains2statement[word](**common_kwargs)
-        for multistatement in multicontains2statement:
-            key, constructor = multistatement
-            if statement_frozenset & key == key:
-                return constructor(**common_kwargs)
+        if len(words) > 1:
+            name = get_construct_name(words)
+            if name is not None:
+                state["scope"].append(name)
+                return (
+                    ClassDefinitionStart
+                    if words[0] == "class"
+                    else FunctionDefinitionStart
+                )(**common_kwargs, name=name)
+
+        return infer_cst_type(statement_stripped, words)(**common_kwargs)
 
     return UnchangingLine(**common_kwargs)
 
@@ -469,6 +550,13 @@ __all__ = [
     "PassStatement",
     "ReturnStatement",
     "UnchangingLine",
+    "CallStatement",
+    "ElseStatement",
+    "AugAssignment",
+    "ExprStatement",
+    "FalseStatement",
+    "TrueStatement",
+    "NoneStatement",
     "cst_parser",
     "cst_scanner",
     "kwset",

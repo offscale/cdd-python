@@ -40,9 +40,15 @@ class C(object):
             adder(foo, 1)
         )
         if r:
-            pass
+            None
         elif r:
-            pass
+            True
+            False
+            # ([5,5] @ [5,5]) *\
+            -5 / 7 ** 6 + \
+            6.0 - 6e1 & 1+2.34j
+            r <<= 5
+            print(r)
         else:
             pass
         # fmt: on

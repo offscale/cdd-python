@@ -1507,6 +1507,22 @@ def del_ass_where_name(node, name):
     )
 
 
+def get_doc_str(node):
+    """
+    Similar to `ast.get_docstring` except never `clean`s and returns `None` on failure rather than raising
+
+    :param node: AST node
+    :type node: ```AST```
+
+    :return: Docstring if found else None
+    :rtype: ```Optional[str]```
+    """
+    if isinstance(node, (ClassDef, FunctionDef)) and isinstance(node.body[0], Expr):
+        val = get_value(node.body[0])
+        if isinstance(val, (Constant, Str)):
+            return get_value(val)
+
+
 def merge_assignment_lists(node, name, unique_sort=True):
     """
     Merge multiple same-name lists within the body of a node into one, e.g., if you have multiple ```__all__```

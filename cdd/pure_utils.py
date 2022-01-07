@@ -465,6 +465,7 @@ strip_diff = partial(diff, op=str.strip)
 lstrip_diff = partial(diff, op=str.lstrip)
 rstrip_diff = partial(diff, op=str.rstrip)
 
+
 def balanced_parentheses(s):
     """
     Checks if parentheses are balanced
@@ -481,6 +482,7 @@ def balanced_parentheses(s):
         counter[open_parens[i]] == counter[closed_parens[i]]
         for i in range(len(open_parens))
     )
+
 
 def blockwise(t, size=2, fillvalue=None):
     """

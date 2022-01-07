@@ -11,7 +11,7 @@ class TestCstUtils(TestCase):
     #     """Tests that `handle_multiline_comment` can do its namesake"""
     #
     #     multi_line_comment = MultiComment(None, None, None, None, None, None)
-    #     concrete_lines = []
+    #     cst_list = []
     #     lines = "\n".join(("def f():", '    """', "foo", 'bar"""'))
     #     deque(
     #         map(
@@ -21,16 +21,16 @@ class TestCstUtils(TestCase):
     #                 line_lstripped=line.lstrip(),
     #                 is_double_q=True,
     #                 multi_line_comment=multi_line_comment,
-    #                 concrete_lines=concrete_lines,
+    #                 cst_list=cst_list,
     #                 scope=[],
     #             ),
     #             lines.splitlines(True),
     #         ),
     #         maxlen=0,
     #     )
-    #     pp(concrete_lines)
+    #     pp(cst_list)
     #     self.assertListEqual(
-    #         concrete_lines,
+    #         cst_list,
     #         [
     #             MultiComment(
     #                 is_double_q=True,
