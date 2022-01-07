@@ -14,10 +14,10 @@ from cdd.cst_utils import (
     FromStatement,
     FunctionDefinitionStart,
     IfStatement,
-    MultiComment,
     NoneStatement,
     PassStatement,
     ReturnStatement,
+    TripleQuoted,
     TrueStatement,
     UnchangingLine,
 )
@@ -35,7 +35,7 @@ cstify_cst = (
         scope=[],
         value="\n# ==============================================================================",
     ),
-    MultiComment(
+    TripleQuoted(
         is_double_q=True,
         is_docstr=False,
         scope=[],
@@ -53,7 +53,7 @@ cstify_cst = (
         value="\n\n\nclass C(object):",
         name="C",
     ),
-    MultiComment(
+    TripleQuoted(
         is_double_q=True,
         is_docstr=True,
         scope=["C"],
@@ -68,7 +68,7 @@ cstify_cst = (
         value="\n\n    @staticmethod\n" "    def add1(foo):",
         name="add1",
     ),
-    MultiComment(
+    TripleQuoted(
         is_double_q=True,
         is_docstr=True,
         scope=["C", "add1"],
@@ -88,7 +88,7 @@ cstify_cst = (
         value="\n\n        def adder(a: int,\n" "                  b: int) -> int:",
         name="adder",
     ),
-    MultiComment(
+    TripleQuoted(
         is_double_q=True,
         is_docstr=True,
         scope=["C", "add1", "adder"],

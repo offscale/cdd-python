@@ -10,7 +10,7 @@ from operator import ne
 from sys import stderr
 from typing import List, Optional
 
-from cdd.ast_utils import get_value
+from cdd.ast_utils import get_doc_str
 from cdd.pure_utils import balanced_parentheses, count_iter_items, omit_whitespace, tab
 
 kwset = frozenset(kwlist)
@@ -144,8 +144,8 @@ ast2cst = {
     # TODO: Full spec
 }
 
-MultiComment = make_dataclass(
-    "MultiComment",
+TripleQuoted = make_dataclass(
+    "TripleQuoted",
     [
         ("is_double_q", Optional[bool]),
         ("is_docstr", Optional[bool]),
@@ -183,42 +183,51 @@ def get_construct_name(words):
             return words[idx + 1][:end_idx]
 
 
-def maybe_replace_doc_str_in_function_or_class(node, cst_list, cst_node_no):
+def maybe_replace_doc_str_in_function_or_class(node, cst_idx, cst_list):
     """
     Maybe replace the doc_str of a function or class
 
     :param node: AST node
     :type node: ```Union[ClassDef, AsyncFunctionDef, FunctionDef]```
 
+    :param cst_idx: Index of start of function/class in cst_list
+    :type cst_idx: ```int```
+
     :param cst_list: List of `namedtuple`s with at least ("line_no", "scope", "value") attributes
     :type cst_list: ```List[NamedTuple]```
-
-    :param cst_node_no: Index of start of function in cst_list
-    :type cst_node_no: ```int```
     """
-    # Ignore `arg` its `Assign | AnnAssign` are handled later
-    if (
-        isinstance(cst_list[cst_node_no + 1], MultiComment)
-        and cst_list[cst_node_no + 1].is_docstr
-    ):
-        # Considering this is looping in forward direction `is_docstr` is either redundant
-        # …or this should be refactored to look at `MultiComment`s
-        new_doc_str = get_value(get_value(node.body[0]))
-        cur_doc_str = cst_list[cst_node_no + 1].value.strip()[3:-3]
-        if ne(
-            *map(
-                omit_whitespace,
-                (
-                    cur_doc_str,
-                    new_doc_str,
-                ),
-            )
-        ):
-            pre, _, post = cst_list[cst_node_no + 1].value.partition(cur_doc_str)
-            cst_list[cst_node_no + 1].value = "{pre}{new_doc_str}{post}".format(
+    # Maybe replace docstring
+    new_doc_str = get_doc_str(node)
+    cur_doc_str = cst_list[cst_idx + 1]
+    triple_quoted = isinstance(cur_doc_str, TripleQuoted)
+    changed = False
+    if new_doc_str and not triple_quoted:
+        cst_list.insert(
+            cst_idx + 1,
+            TripleQuoted(
+                is_double_q=True,
+                is_docstr=True,
+                scope=cur_doc_str.scope,
+                value=new_doc_str,
+                line_no_start=cur_doc_str.line_no_start,
+                line_no_end=cur_doc_str.line_no_end,
+            ),
+        )
+        changed = "added"
+    elif not new_doc_str and triple_quoted:
+        del cst_list[cst_idx + 1]
+        changed = "removed"
+    else:
+        cur_doc_str_only = cur_doc_str.value.strip()[3:-3]
+        if ne(*map(omit_whitespace, (cur_doc_str_only, new_doc_str))):
+            pre, _, post = cur_doc_str.value.partition(cur_doc_str_only)
+            cur_doc_str.value = "{pre}{new_doc_str}{post}".format(
                 pre=pre, new_doc_str=new_doc_str, post=post
             )
-            print("replaced doc_str at:", node._location, ";")
+            changed = "replaced"
+    if changed:
+        print(changed, " docstr of the `", node.name, "` ", type(node).__name__, sep="")
+        # TODO: Redo all subsequent `line_no` `start,end` lines as they're all invalidated now
 
 
 def find_cst_at_ast(cst_list, node):
@@ -379,7 +388,7 @@ def get_last_node_scope(cst_nodes):
             ),
         ):
             within_types.append(type(node).__name__)
-        elif isinstance(node, MultiComment):
+        elif isinstance(node, TripleQuoted):
             pass  # Could do weird things with multiline indents so ignore
         else:
             indent_size = len(tab)
@@ -512,7 +521,7 @@ def cst_parse_one_node(statement, state):
             '"""',
         )
         if is_single_quote or is_double_quote:
-            return MultiComment(
+            return TripleQuoted(
                 **common_kwargs,
                 is_double_q=is_double_quote,
                 is_docstr=isinstance(
@@ -545,8 +554,8 @@ __all__ = [
     "FromStatement",
     "FunctionDefinitionStart",
     "IfStatement",
-    "MultiComment",
-    "MultiComment",
+    "TripleQuoted",
+    "TripleQuoted",
     "PassStatement",
     "ReturnStatement",
     "UnchangingLine",
