@@ -65,7 +65,7 @@ cstify_cst = (
         line_no_start=9,
         line_no_end=12,
         scope=["C"],
-        value="\n\n    @staticmethod\n" "    def add1(foo):",
+        value="\n\n    @staticmethod\n    def add1(foo):",
         name="add1",
     ),
     TripleQuoted(
@@ -74,149 +74,189 @@ cstify_cst = (
         scope=["C", "add1"],
         line_no_start=12,
         line_no_end=19,
-        value='\n        """\n'
-        "        :param foo: a foo\n"
-        "        :type foo: ```int```\n\n"
-        "        :return: foo + 1\n"
-        "        :rtype: ```int```\n"
-        '        """',
+        value='\n'
+              '        """\n'
+              '        :param foo: a foo\n'
+              '        :type foo: ```int```\n'
+              '\n'
+              '        :return: foo + 1\n'
+              '        :rtype: ```int```\n'
+              '        """',
+    ),
+    TripleQuoted(
+        is_double_q=True,
+        is_docstr=False,
+        scope=["C", "add1"],
+        line_no_start=19,
+        line_no_end=21,
+        value='\n\n        """foo"""',
     ),
     FunctionDefinitionStart(
-        line_no_start=19,
+        line_no_start=21,
         line_no_end=22,
         scope=["C", "add1"],
-        value="\n\n        def adder(a: int,\n" "                  b: int) -> int:",
+        value="\n        def g():",
+        name="g",
+    ),
+    TripleQuoted(
+        is_double_q=True,
+        is_docstr=True,
+        scope=["C", "add1", "g"],
+        line_no_start=22,
+        line_no_end=22,
+        value=' """foo : bar ; can"""',
+    ),
+    PassStatement(
+        line_no_start=22, line_no_end=22, scope=["C", "add1", "g"], value="; pass"
+    ),
+    FunctionDefinitionStart(
+        line_no_start=22,
+        line_no_end=24,
+        scope=[],
+        value="\n\n        def h():",
+        name="h",
+    ),
+    CommentStatement(line_no_start=24, line_no_end=24, scope=["h"], value=" # stuff"),
+    PassStatement(
+        line_no_start=24, line_no_end=25, scope=["h"], value="\n            pass"
+    ),
+    FunctionDefinitionStart(
+        line_no_start=25,
+        line_no_end=28,
+        scope=["h"],
+        value="\n\n        def adder(a: int,\n                  b: int) -> int:",
         name="adder",
     ),
     TripleQuoted(
         is_double_q=True,
         is_docstr=True,
-        scope=["C", "add1", "adder"],
-        line_no_start=22,
-        line_no_end=29,
-        value='\n            """\n'
-        "            :param a: First arg\n\n"
-        "            :param b: Second arg\n\n"
-        "            :return: first + second arg\n"
-        '            """',
+        scope=["h", "adder"],
+        line_no_start=28,
+        line_no_end=35,
+        value='\n            """\n            :param a: First arg\n\n            :param b: Second arg\n\n            :return: first + second arg\n            """',
     ),
     CommentStatement(
-        line_no_start=29,
-        line_no_end=30,
-        scope=["C", "add1", "adder"],
+        line_no_start=35,
+        line_no_end=36,
+        scope=["h", "adder"],
         value="\n            # fmt: off",
     ),
     AnnAssignment(
-        line_no_start=30,
-        line_no_end=33,
-        scope=["C", "add1", "adder"],
+        line_no_start=36,
+        line_no_end=39,
+        scope=["h", "adder"],
         value="\n            res: \\\n                int \\\n                = a + b",
     ),
     ReturnStatement(
-        line_no_start=33,
-        line_no_end=34,
-        scope=["C", "add1", "adder"],
+        line_no_start=39,
+        line_no_end=40,
+        scope=["h", "adder"],
         value="\n            return res",
     ),
     Assignment(
-        line_no_start=34,
-        line_no_end=40,
-        scope=["C", "add1", "adder"],
+        line_no_start=40,
+        line_no_end=46,
+        scope=["h", "adder"],
         value="\n\n        r = (\n            add(foo, 1)\n            or\n            adder(foo, 1)\n        )",
     ),
     IfStatement(
-        line_no_start=40, line_no_end=41, scope=["C", "add1"], value="\n        if r:"
+        line_no_start=46, line_no_end=47, scope=["h", "adder"], value="\n        if r:"
     ),
     NoneStatement(
-        line_no_start=41,
-        line_no_end=42,
-        scope=["C", "add1"],
+        line_no_start=47,
+        line_no_end=48,
+        scope=["h", "adder"],
         value="\n            None",
     ),
     ElifStatement(
-        line_no_start=42, line_no_end=43, scope=["C", "add1"], value="\n        elif r:"
+        line_no_start=48,
+        line_no_end=49,
+        scope=["h", "adder"],
+        value="\n        elif r:",
     ),
     TrueStatement(
-        line_no_start=43,
-        line_no_end=44,
-        scope=["C", "add1"],
+        line_no_start=49,
+        line_no_end=50,
+        scope=["h", "adder"],
         value="\n            True",
     ),
     FalseStatement(
-        line_no_start=44,
-        line_no_end=45,
-        scope=["C", "add1"],
+        line_no_start=50,
+        line_no_end=51,
+        scope=["h", "adder"],
         value="\n            False",
     ),
     CommentStatement(
-        line_no_start=45,
-        line_no_end=46,
-        scope=["C", "add1"],
+        line_no_start=51,
+        line_no_end=52,
+        scope=["h", "adder"],
         value="\n            # ([5,5] @ [5,5]) *\\",
     ),
     ExprStatement(
-        line_no_start=46,
-        line_no_end=48,
-        scope=["C", "add1"],
+        line_no_start=52,
+        line_no_end=54,
+        scope=["h", "adder"],
         value="\n            -5 / 7 ** 6 + \\\n            6.0 - 6e1 & 1+2.34j",
     ),
     AugAssignment(
-        line_no_start=48,
-        line_no_end=49,
-        scope=["C", "add1"],
+        line_no_start=54,
+        line_no_end=55,
+        scope=["h", "adder"],
         value="\n            r <<= 5",
     ),
     CallStatement(
-        line_no_start=49,
-        line_no_end=50,
-        scope=["C", "add1"],
+        line_no_start=55,
+        line_no_end=56,
+        scope=["h", "adder"],
         value="\n            print(r)",
     ),
     ElseStatement(
-        line_no_start=50, line_no_end=51, scope=["C", "add1"], value="\n        else:"
+        line_no_start=56, line_no_end=57, scope=["h", "adder"], value="\n        else:"
     ),
     PassStatement(
-        line_no_start=51,
-        line_no_end=52,
-        scope=["C", "add1"],
+        line_no_start=57,
+        line_no_end=58,
+        scope=["h", "adder"],
         value="\n            pass",
     ),
     CommentStatement(
-        line_no_start=52,
-        line_no_end=53,
-        scope=["C", "add1"],
+        line_no_start=58,
+        line_no_end=59,
+        scope=["h", "adder"],
         value="\n        # fmt: on",
     ),
     CommentStatement(
-        line_no_start=53,
-        line_no_end=54,
-        scope=["C", "add1"],
+        line_no_start=59,
+        line_no_end=60,
+        scope=["h", "adder"],
         value="\n        # That^ incremented `foo` by 1",
     ),
     ReturnStatement(
-        line_no_start=54,
-        line_no_end=55,
-        scope=["C", "add1"],
+        line_no_start=60,
+        line_no_end=61,
+        scope=["h", "adder"],
         value="\n        return r",
     ),
     CommentStatement(
-        line_no_start=55,
-        line_no_end=58,
-        scope=["C", "add1"],
+        line_no_start=61,
+        line_no_end=64,
+        scope=["h", "adder"],
         value="\n\n\n# from contextlib import ContextDecorator",
     ),
     CommentStatement(
-        line_no_start=58,
-        line_no_end=60,
+        line_no_start=64,
+        line_no_end=66,
         scope=[],
         value="\n\n# with ContextDecorator():",
     ),
-    CommentStatement(line_no_start=60, line_no_end=61, scope=[], value="\n#    pass"),
+    CommentStatement(line_no_start=66, line_no_end=67, scope=[], value="\n#    pass"),
     FunctionDefinitionStart(
-        line_no_start=61, line_no_end=64, scope=[], value="\n\n\ndef f():", name="f"
+        line_no_start=67, line_no_end=70, scope=[], value="\n\n\ndef f():", name="f"
     ),
     ReturnStatement(
-        line_no_start=64, line_no_end=65, scope=["f"], value="\n    return 1"
+        line_no_start=70, line_no_end=71, scope=["f"], value="\n    return 1"
     ),
-    UnchangingLine(line_no_start=65, line_no_end=66, scope=["f"], value="\n"),
+    UnchangingLine(line_no_start=71, line_no_end=72, scope=["f"], value="\n"),
 )
+
+__all__ = ["cstify_cst"]

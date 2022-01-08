@@ -3,6 +3,7 @@ Concrete Syntax Tree for Python 3.6+ source code
 """
 
 from cdd.cst_utils import cst_parser, cst_scanner
+from cdd.pure_utils import pp
 
 
 def cst_parse(source):
@@ -17,6 +18,7 @@ def cst_parse(source):
     """
     scanned = cst_scanner(source)
     parsed = cst_parser(scanned)
+    pp(parsed)
     return parsed
 
 

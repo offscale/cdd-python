@@ -711,6 +711,24 @@ def has_nl(s, func):
     return maybe_nl == "\n" and start.isspace()
 
 
+def is_triple_quoted(s):
+    """
+    Whether the str is triple quoted
+
+    :param s: Input string
+    :type s: ```str```
+
+    :return: Whether it has balanced triple quotes (either variety)
+    :rtype: ```bool```
+    """
+    return len(s) > 5 and (
+        s.startswith("'''")
+        and s.endswith("'''")
+        or s.startswith('"""')
+        and s.endswith('"""')
+    )
+
+
 def paren_wrap_code(code):
     """
     The new builtin AST unparser adds extra parentheses, so match that behaviour on older versions
@@ -861,6 +879,7 @@ __all__ = [
     "fill",
     "get_module",
     "has_nl",
+    "is_triple_quoted",
     "identity",
     "indent_all_but_first",
     "location_within",

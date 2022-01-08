@@ -19,6 +19,12 @@ class C(object):
         :rtype: ```int```
         """
 
+        """foo"""
+        def g(): """foo : bar ; can"""; pass
+
+        def h(): # stuff
+            pass
+
         def adder(a: int,
                   b: int) -> int:
             """
