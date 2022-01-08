@@ -1,14 +1,14 @@
 """
 Concrete Syntax Tree utility functions
 """
+
 from collections import OrderedDict, deque, namedtuple
 from copy import deepcopy
-
 from dataclasses import make_dataclass
 from functools import partial, wraps
 from itertools import takewhile
 from keyword import kwlist
-from operator import ne, eq
+from operator import ne
 from sys import stderr
 from typing import List, Optional
 
@@ -22,7 +22,7 @@ from cdd.pure_utils import (
 )
 
 kwset = frozenset(kwlist)
-_basic_cst_attributes = "line_no_start", "line_no_end", "scope", "value"
+_basic_cst_attributes = "line_no_start", "line_no_end", "clauses", "scope", "value"
 UnchangingLine = namedtuple("UnchangingLine", _basic_cst_attributes)
 Assignment = namedtuple("Assignment", _basic_cst_attributes)
 AnnAssignment = namedtuple("AnnAssignment", _basic_cst_attributes)
@@ -158,6 +158,7 @@ TripleQuoted = make_dataclass(
         ("is_double_q", Optional[bool]),
         ("is_docstr", Optional[bool]),
         ("scope", List[str]),
+        ("clauses", List[str]),
         ("line_no_start", int),
         ("line_no_end", int),
         ("value", str),
@@ -420,7 +421,7 @@ def cst_parser(scanned):
     state = {
         "acc": 0,
         "prev_node": UnchangingLine(
-            line_no_start=None, line_no_end=None, value="", scope=[]
+            line_no_start=None, line_no_end=None, value="", clauses=[], scope=[]
         ),
         "scope": [],
         "parsed": [],
@@ -430,16 +431,106 @@ def cst_parser(scanned):
     return tuple(state["parsed"])
 
 
+def get_scope_clauses(prev_node, statement):
+    """
+    Get the `scope` and `clauses` of the current `statement` given the `prev_node`
+
+    TODO: Finish this and remove `get_last_node_scope`
+
+    Where `scope` includes the names of any `class` and `def` the `statement` is within; and
+      `clauses` is all the types which can create an indent, including: `class`, `def`, `with`, `if`, &etc.
+
+    :param prev_node: NamedTuple with at least ("line_no", "clauses", "scope", "value") attributes
+    :type prev_node: ```NamedTuple```
+
+    :param statement: Statement that was scanned from Python source code
+    :type statement: ```str```
+
+    :return: scope, clauses
+    :rtype: ```Tuple[str,str]```
+    """
+    scope, clauses = map(
+        deepcopy, map(prev_node.__getattribute__, ("scope", "clauses"))
+    )
+
+    # These create indents AND new scopes
+    if isinstance(prev_node, (ClassDefinitionStart, FunctionDefinitionStart)):
+        scope.append(prev_node.name)
+        clauses.append(type(prev_node).__name__)
+    # These create indents but NOT new scopes
+    elif isinstance(
+        prev_node,
+        (
+            IfStatement,
+            ElifStatement,
+            ElseStatement,
+            MatchStatement,
+            CaseStatement,
+            TryStatement,
+            CatchStatement,
+            FinallyStatement,
+            WithStatement,
+            ForStatement,
+            WhileStatement,
+        ),
+    ):
+        clauses.append(type(prev_node).__name__)
+    else:
+        # Scope is reduced by:
+        # - Lowering the indent
+        # - Having same indent as previous indent-creating node
+
+        prev_indent = count_iter_items(
+            takewhile(str.isspace, prev_node.value.lstrip("\n"))
+        )
+        indent = count_iter_items(takewhile(str.isspace, statement.lstrip("\n")))
+
+        if any(
+            (
+                # Indent is the same, so same `clauses` and `scope`
+                prev_indent == indent,
+                # Creating a new scope, don't do anything (yet)
+                indent > prev_indent,
+                # Attached to previous scope, so don't do anything
+                statement.startswith(";"),
+            )
+        ):
+            pass
+        else:  # TODO: Remove `clauses` and `scope`
+
+            just = 11
+            print(
+                "statement:".ljust(just),
+                repr(statement),
+                " ;\n",
+                "prev_node:".ljust(just),
+                prev_node,
+                " ;\n",
+                sep="",
+            )
+
+            expected_scope_size = sum(
+                map(
+                    clauses.count,
+                    ("ClassDefinitionStart", "FunctionDefinitionStart"),
+                )
+            )
+    return scope, clauses
+
+
 def get_last_node_scope(cst_nodes):
     """
+    TODO: Remove this and use, in its stead, get_scope_clauses
+
     Gets the current scope of the last CST node in the list
 
     TODO: Refactor this by adding `within_types` to every CST node so that the scope-resolution becomes an O(n) op
 
-    :param cst_nodes: Iterable NamedTuple with at least ("line_no", "scope", "value") attributes
+    :param cst_nodes: Iterable NamedTuple with at least ("line_no", "clauses", "scope", "value") attributes
     :type cst_nodes: ```Iterable[NamedTuple]```
     """
     scope, within_types = [], []
+    a = False
     for idx, node in enumerate(cst_nodes):
         indent = count_iter_items(takewhile(str.isspace, node.value.lstrip("\n")))
 
@@ -467,36 +558,71 @@ def get_last_node_scope(cst_nodes):
             within_types.append(type(node).__name__)
         elif isinstance(node, TripleQuoted):
             pass  # Could do weird things with multiline indents so ignore
+        elif True:
+            print(
+                "within_types:",
+                within_types,
+                ";\n",
+                "node.value =:",
+                repr(node.value),
+                ";\n",
+                sep="",
+            )
+            expected_scope_size = sum(
+                map(
+                    within_types.count,
+                    ("ClassDefinitionStart", "FunctionDefinitionStart"),
+                )
+            )
+
         else:
             indent_size = len(tab)
             # subtract the unexpected indent size as it's probably a one liner: `def f(): # pass
             #                                                                        """docstr"""`
-            indent -= indent % indent_size
+            # indent -= indent % indent_size
             depth = indent // indent_size
 
             # Sanity check: if indent is >= start of line don't delete from `within_type` or `scope`
             previous = []
             for i in range(idx - 1, 0, -1):
                 previous.append(cst_nodes[i].value)
-                if "\n" in cst_nodes[i].value:
+                if "\n" in cst_nodes[i].value and cst_nodes[i].value.strip():
                     break
             previous_line = "".join(previous[::-1])
-            previous_indent = count_iter_items(takewhile(str.isspace, previous_line.lstrip("\n")))
+            previous_indent = count_iter_items(
+                takewhile(str.isspace, previous_line.lstrip("\n"))
+            )
 
-            if indent > previous_indent:
-                if len(cst_nodes[idx - 1].scope) > len(scope):
-                    scope = deepcopy(cst_nodes[idx - 1].scope)
-            else:
-                if depth != len(within_types):
-                    del within_types[depth:]
-                expected_scope_size = sum(
-                    map(
-                        within_types.count,
-                        ("ClassDefinitionStart", "FunctionDefinitionStart"),
-                    )
+            # if indent > previous_indent:
+            #     just = 27
+            #     if len(cst_nodes[idx - 1].scope) > len(scope):
+            #         # print("previous:".ljust(just), repr(previous_line), ' ;\n',
+            #         #       "current:".ljust(just), repr(node.value), ' ;\n',
+            #         #       "node:".ljust(just), node, ' ;\n',
+            #         #       "cst_nodes[idx - 1].scope:".ljust(just), cst_nodes[idx - 1].scope, ' ;\n',
+            #         #       'scope:'.ljust(just), scope, ' ;', sep='')
+            #         scope = deepcopy(cst_nodes[idx - 1].scope)
+            # else:
+            just = 27
+            print(
+                "previous:".ljust(just),
+                repr(previous_line),
+                " ;\n",
+                "current:".ljust(just),
+                repr(node.value),
+                " ;\n",
+                sep="",
+            )
+            if depth != len(within_types):
+                del within_types[depth:]
+            expected_scope_size = sum(
+                map(
+                    within_types.count,
+                    ("ClassDefinitionStart", "FunctionDefinitionStart"),
                 )
-                if expected_scope_size != len(scope):
-                    del scope[expected_scope_size:]
+            )
+            if expected_scope_size != len(scope):
+                del scope[expected_scope_size:]
     return scope
 
 
@@ -510,7 +636,7 @@ def infer_cst_type(statement_stripped, words):
     :param words: List of whitespace stripped and empty-str removed words from original statement
     :type words: ```List[str]```
 
-    :return: CST type… a NamedTuple with at least ("line_no", "scope", "value") attributes
+    :return: CST type… a NamedTuple with at least ("line_no", "clauses", "scope", "value") attributes
     :rtype: ```NamedTuple```
     """
     for word in words:
@@ -561,7 +687,7 @@ def set_prev_node(function):
         :param state: Number of lines between runs in `acc` key; `prev_node`; `scope`
         :type state: ```dict```
 
-        :return: NamedTuple with at least ("line_no", "scope", "value") attributes
+        :return: NamedTuple with at least ("line_no", "clauses", "scope", "value") attributes
         :rtype: ```NamedTuple```
         """
         state["prev_node"] = function(statement, state)
@@ -582,7 +708,7 @@ def cst_parse_one_node(statement, state):
     :param state: Number of lines between runs in `acc` key; `prev_node`; `scope`; `parsed`
     :type state: ```dict```
 
-    :return: NamedTuple with at least ("line_no", "scope", "value") attributes
+    :return: NamedTuple with at least ("line_no", "clauses", "scope", "value") attributes
     :rtype: ```NamedTuple```
     """
     prev_acc = state["acc"]
@@ -591,12 +717,13 @@ def cst_parse_one_node(statement, state):
     statement_stripped = statement.strip()
 
     words = tuple(filter(None, map(str.strip, statement_stripped.split(" "))))
-    scope = get_last_node_scope(state["parsed"])
+    scope, clauses = get_scope_clauses(state["prev_node"], statement)
 
     common_kwargs = dict(
         line_no_start=prev_acc,
         line_no_end=state["acc"],
         scope=scope,
+        clauses=clauses,
         value=statement,
     )
 

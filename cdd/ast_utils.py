@@ -1624,6 +1624,7 @@ __all__ = [
     "find_in_ast",
     "func_arg2param",
     "get_at_root",
+    "get_doc_str",
     "get_function_type",
     "get_value",
     "is_argparse_add_argument",
