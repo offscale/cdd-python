@@ -4,7 +4,6 @@ from os import extsep, path
 from unittest import TestCase
 
 from cdd.cst import cst_parse
-from cdd.pure_utils import pp
 from cdd.tests.mocks.cst import cstify_cst
 from cdd.tests.utils_for_tests import unittest_main
 
@@ -24,7 +23,6 @@ class TestCst(TestCase):
         ) as f:
             cst = cst_parse(f.read())
 
-        pp(cst)
         self.assertTupleEqual(cst, cstify_cst)
 
 

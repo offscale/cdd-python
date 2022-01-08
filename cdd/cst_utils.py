@@ -2,16 +2,24 @@
 Concrete Syntax Tree utility functions
 """
 from collections import OrderedDict, deque, namedtuple
+from copy import deepcopy
+
 from dataclasses import make_dataclass
 from functools import partial, wraps
 from itertools import takewhile
 from keyword import kwlist
-from operator import ne
+from operator import ne, eq
 from sys import stderr
 from typing import List, Optional
 
 from cdd.ast_utils import get_doc_str
-from cdd.pure_utils import balanced_parentheses, count_iter_items, omit_whitespace, tab
+from cdd.pure_utils import (
+    balanced_parentheses,
+    count_iter_items,
+    is_triple_quoted,
+    omit_whitespace,
+    tab,
+)
 
 kwset = frozenset(kwlist)
 _basic_cst_attributes = "line_no_start", "line_no_end", "scope", "value"
@@ -253,8 +261,8 @@ def find_cst_at_ast(cst_list, node):
     cst_type = (ast2cst[node_type]).__name__
     for cst_node_no, cst_node in enumerate(cst_list):
         if (
-            type(cst_node).__name__ == cst_type
-            and cst_node.scope == node._location[:-1]  # `isinstance` doesn't work
+            type(cst_node).__name__ == cst_type  # `isinstance` doesn't work
+            and cst_node.scope == node._location[:-1]
             and cst_node.name == getattr(node, "name", None)
         ):
             cst_node_found = cst_node
@@ -275,16 +283,16 @@ def cst_scanner(source):
     """
     scanned, stack = [], []
     for idx, ch in enumerate(source):
-        if ch == "\n":
-            cst_scan(scanned, stack)
+        if ch == "\n":  # in frozenset(("\n", ":", ";", '"""', "'''", '#')):
+            cst_scan(scanned, stack, source[idx + 1] if len(source) > idx + 1 else "")
         stack.append(ch)
-    cst_scan(scanned, stack)
+    cst_scan(scanned, stack, "")
     if stack:
         scanned.append("".join(stack))
     return scanned
 
 
-def cst_scan(scanned, stack):
+def cst_scan(scanned, stack, peek):
     """
     Checks if what has been scanned (stack) is ready for the `scanned` array
     Add then clear stack if ready else do nothing with both
@@ -294,39 +302,108 @@ def cst_scan(scanned, stack):
 
     :param stack: List of characters observed
     :type stack: ```List[str]```
+
+    :param peek: One character ahead of stack
+    :type peek: ```str```
     """
     statement = "".join(stack)
     statement_stripped = statement.strip()
 
-    if (
-        statement_stripped.startswith("#")
-        or not statement_stripped.endswith("\\")
-        and any(
+    is_comment = statement_stripped.startswith("#")
+    if statement_stripped.endswith("\\"):
+        has_triple_quotes = is_other_statement = False
+    else:
+        has_triple_quotes = is_triple_quoted(statement_stripped)
+        is_other_statement = all(
             (
-                all(
-                    (
-                        len(statement_stripped) > 5,
-                        statement_stripped.startswith("'''")
-                        and statement.endswith("'''")
-                        or statement_stripped.startswith('"""')
-                        and statement.endswith('"""'),
-                    )
-                ),
-                all(
-                    (
-                        statement_stripped,
-                        balanced_parentheses(statement_stripped),
-                        not statement_stripped.startswith("@")
-                        or statement_stripped.endswith(":"),
-                        not statement_stripped.startswith("'''"),
-                        not statement_stripped.startswith('"""'),
-                    )
-                ),
+                statement_stripped,
+                balanced_parentheses(statement_stripped),
+                not statement_stripped.startswith("@")
+                or statement_stripped.endswith(":"),
+                not statement_stripped.startswith("'''"),
+                not statement_stripped.startswith('"""'),
             )
         )
-    ):
-        scanned.append(statement)
-        stack.clear()
+
+    statement_found = is_comment or has_triple_quotes or is_other_statement
+    if statement_found:
+        if is_comment:
+            scanned.append(statement)
+            stack.clear()
+        elif is_other_statement:
+            expression, statement_stripped_n = [], len(statement_stripped)
+
+            def add_and_clear(the_expression_str, expr, scanned_tokens, the_stack):
+                """
+                Add the found statement and clear the stacks
+
+                :param the_expression_str: Expression string
+                :type the_expression_str: ```str```
+
+                :param expr: The expression
+                :type expr: ```List[str]```
+
+                :param scanned_tokens: Scanned tokens
+                :type scanned_tokens: ```List[str]```
+
+                :param the_stack: The current stack
+                :type the_stack: ```List[str]```
+
+                """
+                scanned_tokens.append(the_expression_str)
+                expr.clear()
+                the_stack.clear()
+
+            expression_str = ""
+            for idx, ch in enumerate(statement):
+                expression.append(ch)
+                expression_str = "".join(expression)
+                expression_stripped = expression_str.strip()
+                # Even with PEG Python is still basically LL(1)
+                expression_peek = (
+                    statement_stripped[idx + 1]
+                    if idx + 1 < statement_stripped_n
+                    else ""
+                )
+
+                if (
+                    is_triple_quoted(expression_stripped)
+                    or expression_stripped.startswith("#")
+                    and expression_str.endswith("\n")
+                ):
+                    add_and_clear(expression_str, expression, scanned, stack)
+                    # Single comment should be picked up
+                elif balanced_parentheses(expression_stripped):
+                    if (
+                        expression_str.endswith("\n")
+                        and not expression_stripped.endswith("\\")
+                        and (
+                            not expression_stripped.endswith(":")
+                            or "class" not in expression_stripped
+                            and "def" not in expression_stripped
+                        )
+                        and not expression_str.isspace()
+                        and not expression_stripped.startswith("@")
+                    ):
+                        add_and_clear(expression_str, expression, scanned, stack)
+                    else:
+                        words = tuple(
+                            filter(None, map(str.strip, expression_stripped.split(" ")))
+                        )
+                        if "def" in words or "class" in words:
+                            if words[-1].endswith(":") and balanced_parentheses(
+                                expression_stripped
+                            ):
+                                add_and_clear(
+                                    expression_str, expression, scanned, stack
+                                )
+                        # elif ";"
+            if expression:
+                add_and_clear(expression_str, expression, scanned, stack)
+            # Longest matching pattern should be parsed out but this does shortest^
+        else:
+            scanned.append(statement)
+            stack.clear()
 
 
 def cst_parser(scanned):
@@ -363,7 +440,7 @@ def get_last_node_scope(cst_nodes):
     :type cst_nodes: ```Iterable[NamedTuple]```
     """
     scope, within_types = [], []
-    for node in cst_nodes:
+    for idx, node in enumerate(cst_nodes):
         indent = count_iter_items(takewhile(str.isspace, node.value.lstrip("\n")))
 
         # These create indents AND new scopes
@@ -392,19 +469,34 @@ def get_last_node_scope(cst_nodes):
             pass  # Could do weird things with multiline indents so ignore
         else:
             indent_size = len(tab)
-            assert indent % indent_size == 0, "Indent must be a multiple of tab size"
+            # subtract the unexpected indent size as it's probably a one liner: `def f(): # pass
+            #                                                                        """docstr"""`
+            indent -= indent % indent_size
             depth = indent // indent_size
 
-            if depth != len(within_types):
-                del within_types[depth:]
-            expected_scope_size = sum(
-                map(
-                    within_types.count,
-                    ("ClassDefinitionStart", "FunctionDefinitionStart"),
+            # Sanity check: if indent is >= start of line don't delete from `within_type` or `scope`
+            previous = []
+            for i in range(idx - 1, 0, -1):
+                previous.append(cst_nodes[i].value)
+                if "\n" in cst_nodes[i].value:
+                    break
+            previous_line = "".join(previous[::-1])
+            previous_indent = count_iter_items(takewhile(str.isspace, previous_line.lstrip("\n")))
+
+            if indent > previous_indent:
+                if len(cst_nodes[idx - 1].scope) > len(scope):
+                    scope = deepcopy(cst_nodes[idx - 1].scope)
+            else:
+                if depth != len(within_types):
+                    del within_types[depth:]
+                expected_scope_size = sum(
+                    map(
+                        within_types.count,
+                        ("ClassDefinitionStart", "FunctionDefinitionStart"),
+                    )
                 )
-            )
-            if expected_scope_size != len(scope):
-                del scope[expected_scope_size:]
+                if expected_scope_size != len(scope):
+                    del scope[expected_scope_size:]
     return scope
 
 
