@@ -24,9 +24,7 @@ from cdd.cst_utils import (
 
 cstify_cst = (
     CommentStatement(line_no_start=1, line_no_end=1, value="# pragma: no cover"),
-    CommentStatement(
-        line_no_start=1, line_no_end=2, value="\n# flake8: noqa"
-    ),
+    CommentStatement(line_no_start=1, line_no_end=2, value="\n# flake8: noqa"),
     CommentStatement(
         line_no_start=2,
         line_no_end=3,

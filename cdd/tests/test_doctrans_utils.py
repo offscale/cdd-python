@@ -6,14 +6,14 @@ from copy import deepcopy
 from os import path
 from os.path import extsep
 from unittest import TestCase
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from cdd.ast_utils import annotate_ancestry, set_value
 from cdd.doctrans_utils import (
     DocTrans,
     clear_annotation,
-    has_type_annotations,
     doctransify_cst,
+    has_type_annotations,
 )
 from cdd.pure_utils import omit_whitespace
 from cdd.source_transformer import ast_parse
