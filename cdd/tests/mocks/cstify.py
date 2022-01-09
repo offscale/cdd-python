@@ -1,6 +1,6 @@
-# Lint as: python2, python3
-# Copyright 2022 under CC0
-# ==============================================================================
+# pragma: no cover
+# flake8: noqa
+# === Copyright 2022 under CC0
 """Module docstring goes here"""
 
 from operator import add

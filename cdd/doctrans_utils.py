@@ -18,6 +18,10 @@ from copy import deepcopy
 from operator import attrgetter, eq
 
 from cdd import emit, parse
+from cdd.ast_cst_utils import (
+    find_cst_at_ast,
+    maybe_replace_doc_str_in_function_or_class,
+)
 from cdd.ast_utils import (
     annotate_ancestry,
     find_in_ast,
@@ -322,4 +326,29 @@ def clear_annotation(node):
     return node
 
 
-__all__ = ["DocTrans", "clear_annotation", "has_type_annotations"]
+def doctransify_cst(cst_list, node):
+    """
+    Carefully replace only docstrings, function return annotations, assignment and annotation assignments.
+    (maintaining all other existing whitespace, comments, &etc.); and only when cdd has changed them
+
+    :param cst_list: List of `namedtuple`s with at least ("line_no_start", "line_no_end", "value") attributes
+    :type cst_list: ```List[NamedTuple]```
+
+    :param node: AST node with a `.body`, probably the `ast.Module`
+    :type node: ```AST```
+    """
+    for _node in walk(node):
+        if hasattr(_node, "_location"):
+            if isinstance(_node, (ClassDef, AsyncFunctionDef, FunctionDef)):
+                cst_idx, cst_node = find_cst_at_ast(cst_list, _node)
+                if cst_node is not None:
+                    maybe_replace_doc_str_in_function_or_class(_node, cst_idx, cst_list)
+
+                    # TODO: Maybe replace function return type
+            # TODO: AnnAssign|Assign
+            # elif isinstance(_node, (AnnAssign, Assign)):
+            #     print("(AnnAssign | Assign)._location:", _node._location, ";")
+            #     print_ast(_node)
+
+
+__all__ = ["DocTrans", "clear_annotation", "doctransify_cst", "has_type_annotations"]

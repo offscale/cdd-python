@@ -10,6 +10,7 @@ from ast import (
     Assign,
     AsyncFunctionDef,
     Attribute,
+    Bytes,
     Call,
     ClassDef,
     Constant,
@@ -535,7 +536,7 @@ def get_value(node):
     :return: Probably a string, but could be any constant value
     :rtype: ```Optional[Union[str, int, float, bool]]```
     """
-    if isinstance(node, Str):
+    if isinstance(node, (Bytes, Str)):
         return node.s
     elif isinstance(node, Num):
         return node.n
@@ -544,7 +545,7 @@ def get_value(node):
         return NoneStr if value is None else value
     # elif isinstance(node, (Tuple, Name)):  # It used to be Index in Python < 3.9
     elif isinstance(node, UnaryOp) and isinstance(
-        node.operand, (Str, Num, Constant, NameConstant)
+        node.operand, (Str, Bytes, Num, Constant, NameConstant)
     ):
         return {"USub": neg, "UAdd": pos, "not_": not_, "Invert": inv}[
             type(node.op).__name__

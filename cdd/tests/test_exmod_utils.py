@@ -3,6 +3,7 @@
 from collections import deque
 from io import StringIO
 from os import path
+from os.path import extsep
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
@@ -36,7 +37,7 @@ class TestExmodUtils(TestCase):
             deque(map(rpartial(str.split, "\t"), f.getvalue().splitlines()), maxlen=1)[
                 0
             ],
-            ["write", quote("{name}.py".format(name=ir["name"]), "'")],
+            ["write", quote("{name}{sep}py".format(name=ir["name"], sep=extsep), "'")],
         )
 
     def test_emit_file_on_hierarchy(self) -> None:

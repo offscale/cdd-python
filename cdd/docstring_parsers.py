@@ -556,7 +556,7 @@ def _infer_default(_param, infer_type):
     :type infer_type: ```bool```
     """
     if isinstance(
-        _param["default"], (ast.Str, ast.Num, ast.Constant, ast.NameConstant)
+        _param["default"], (ast.Str, ast.Bytes, ast.Num, ast.Constant, ast.NameConstant)
     ):
         _param["default"] = get_value(_param["default"])
     if _param.get("default", False) in none_types:

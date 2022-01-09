@@ -3,12 +3,21 @@
 from ast import Expr, Load, Module, Name, fix_missing_locations, get_docstring
 from collections import deque
 from copy import deepcopy
+from os import path
+from os.path import extsep
 from unittest import TestCase
+from unittest.mock import patch, MagicMock
 
 from cdd.ast_utils import annotate_ancestry, set_value
-from cdd.doctrans_utils import DocTrans, clear_annotation, has_type_annotations
+from cdd.doctrans_utils import (
+    DocTrans,
+    clear_annotation,
+    has_type_annotations,
+    doctransify_cst,
+)
 from cdd.pure_utils import omit_whitespace
 from cdd.source_transformer import ast_parse
+from cdd.tests.mocks.cst import cstify_cst
 from cdd.tests.mocks.doctrans import (
     ann_assign_with_annotation,
     assign_with_type_comment,
@@ -246,6 +255,30 @@ class TestDocTransUtils(TestCase):
             ),
             maxlen=0,
         )
+
+    def test_doctransify_cst(self) -> None:
+        """
+        Tests that `doctransify_cst` calls the node potentially-augmenting functions right number of times
+        """
+        cst_list = list(deepcopy(cstify_cst))
+        with open(
+            path.join(
+                path.dirname(__file__),
+                "mocks",
+                "cstify{extsep}py".format(extsep=extsep),
+            ),
+            "rt",
+        ) as f:
+            ast_mod = ast_parse(f.read(), skip_docstring_remit=True)
+
+        fake_maybe_replace_doc_str_in_function_or_class = MagicMock()
+        with patch(
+            "cdd.doctrans_utils.maybe_replace_doc_str_in_function_or_class",
+            fake_maybe_replace_doc_str_in_function_or_class,
+        ):
+            doctransify_cst(cst_list, ast_mod)
+        self.assertTrue(fake_maybe_replace_doc_str_in_function_or_class.called)
+        self.assertEqual(fake_maybe_replace_doc_str_in_function_or_class.call_count, 6)
 
 
 unittest_main()
