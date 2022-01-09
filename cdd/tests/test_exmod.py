@@ -162,18 +162,22 @@ class TestExMod(TestCase):
                                                     partial(path.join, "child_dir"),
                                                     (
                                                         INIT_FILENAME,
-                                                        "child.py",
+                                                        "child{sep}py".format(
+                                                            sep=extsep
+                                                        ),
                                                         path.join(
                                                             "grandchild_dir",
                                                             INIT_FILENAME,
                                                         ),
                                                         path.join(
                                                             "grandchild_dir",
-                                                            "grandchild.py",
+                                                            "grandchild{sep}py".format(
+                                                                sep=extsep
+                                                            ),
                                                         ),
                                                     ),
                                                 ),
-                                                "parent.py",
+                                                "parent{sep}py".format(sep=extsep),
                                             ),
                                         ),
                                     )

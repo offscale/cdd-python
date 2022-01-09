@@ -26,7 +26,7 @@ from ast import (
     Tuple,
     arg,
     arguments,
-    keyword,
+    keyword, Bytes,
 )
 from copy import deepcopy
 from itertools import repeat
