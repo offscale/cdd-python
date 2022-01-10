@@ -49,10 +49,14 @@ jobs:
                     pip install flake8
                     flake8 . --count --select=$(printf '%s,' {A..Z}) --ignore='W503,E203' --show-source --max-complexity=13 --max-line-length=119 --statistics
                 if: matrix.python-version == '3.8' && matrix.os.name == 'Linux' && github.ref == 'refs/heads/master'
+            -   name: Check formatted with black
+                run: |
+                    pip install black
+                    python -m black . --check --extend-exclude 'cdd/tests/mocks/cstify.py'
             -   name: Doc coverage
                 run: |
                     pip install interrogate codecov coverage
-                    interrogate --generate-badge '.github/doccoverage.svg'
+                    interrogate -e 'cdd/tests/mocks/cstify.py' --generate-badge '.github/doccoverage.svg'
                     sed -i 's/interrogate/doc coverage/g; s/data-doc c/data-doc-c/g' .github/doccoverage.svg
                     # Setup git config
                     email_author="$(git log -1 --pretty=format:'%an <%ce>')"

@@ -1,8 +1,9 @@
 """ Tests for ast_cst_utils """
 
-from ast import ClassDef, Expr, FunctionDef, walk
+from ast import ClassDef, Expr, FunctionDef, Load, Name, walk
 from copy import deepcopy
 from io import StringIO
+from operator import attrgetter
 from os import path
 from os.path import extsep
 from unittest import TestCase
@@ -12,6 +13,7 @@ from cdd.ast_cst_utils import (
     Delta,
     find_cst_at_ast,
     maybe_replace_doc_str_in_function_or_class,
+    maybe_replace_function_return_type,
 )
 from cdd.ast_utils import set_value
 from cdd.cst_utils import ClassDefinitionStart, FunctionDefinitionStart
@@ -137,6 +139,82 @@ class TestAstCstUtils(TestCase):
                 Delta.removed,
             )
         self.assertFalse(cst_list[cst_idx + 1].is_docstr)
+
+    def test_maybe_replace_function_return_type_adds(self):
+        """
+        Tests that `maybe_replace_function_return_type` adds return type
+        """
+
+        before = "\n\n    @staticmethod\n    def add1(foo):"
+        after = "\n\n    @staticmethod\n    def add1(foo) -> int:"
+
+        cst_list = list(deepcopy(cstify_cst))
+        cst_idx, cst_node = find_cst_at_ast(cst_list, self.func_node)
+        self.assertIsNotNone(cst_node)
+        self.assertEqual(
+            "".join(map(attrgetter("value"), cst_list[cst_idx : cst_idx + 1])), before
+        )
+        func_node = deepcopy(self.func_node)
+        func_node.returns = Name("int", Load())
+        self.assertEqual(
+            maybe_replace_function_return_type(func_node, cst_idx, cst_list),
+            Delta.added,
+        )
+        self.assertEqual(
+            "".join(map(attrgetter("value"), cst_list[cst_idx : cst_idx + 1])), after
+        )
+
+    def test_maybe_replace_function_return_type_removes(self):
+        """
+        Tests that `maybe_replace_function_return_type` removes return type
+        """
+
+        before = "\n\n    @staticmethod\n    def add1(foo) -> int:"
+        after = "\n\n    @staticmethod\n    def add1(foo):"
+
+        cst_list = list(deepcopy(cstify_cst))
+        cst_idx, cst_node = find_cst_at_ast(cst_list, self.func_node)
+        self.assertIsNotNone(cst_node)
+        cst_list[cst_idx] = FunctionDefinitionStart(
+            line_no_start=cst_list[cst_idx].line_no_start,
+            line_no_end=cst_list[cst_idx].line_no_end,
+            name=cst_list[cst_idx].name,
+            value=before,
+        )
+        self.assertEqual(
+            maybe_replace_function_return_type(self.func_node, cst_idx, cst_list),
+            Delta.removed,
+        )
+        self.assertEqual(
+            "".join(map(attrgetter("value"), cst_list[cst_idx : cst_idx + 1])), after
+        )
+
+    def test_maybe_replace_function_return_type_replaces(self):
+        """
+        Tests that `maybe_replace_function_return_type` replaces return type
+        """
+
+        before = "\n\n    @staticmethod\n    def add1(foo) -> int:"
+        after = "\n\n    @staticmethod\n    def add1(foo) -> float:"
+
+        cst_list = list(deepcopy(cstify_cst))
+        cst_idx, cst_node = find_cst_at_ast(cst_list, self.func_node)
+        self.assertIsNotNone(cst_node)
+        cst_list[cst_idx] = FunctionDefinitionStart(
+            line_no_start=cst_list[cst_idx].line_no_start,
+            line_no_end=cst_list[cst_idx].line_no_end,
+            name=cst_list[cst_idx].name,
+            value=before,
+        )
+        func_node = deepcopy(self.func_node)
+        func_node.returns = Name("float", Load())
+        self.assertEqual(
+            maybe_replace_function_return_type(func_node, cst_idx, cst_list),
+            Delta.replaced,
+        )
+        self.assertEqual(
+            "".join(map(attrgetter("value"), cst_list[cst_idx : cst_idx + 1])), after
+        )
 
 
 unittest_main()
