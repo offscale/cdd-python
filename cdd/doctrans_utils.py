@@ -21,6 +21,7 @@ from cdd import emit, parse
 from cdd.ast_cst_utils import (
     find_cst_at_ast,
     maybe_replace_doc_str_in_function_or_class,
+    maybe_replace_function_return_type,
 )
 from cdd.ast_utils import (
     annotate_ancestry,
@@ -339,12 +340,14 @@ def doctransify_cst(cst_list, node):
     """
     for _node in walk(node):
         if hasattr(_node, "_location"):
-            if isinstance(_node, (ClassDef, AsyncFunctionDef, FunctionDef)):
+            is_func = isinstance(_node, (AsyncFunctionDef, FunctionDef))
+            if isinstance(_node, ClassDef) or is_func:
                 cst_idx, cst_node = find_cst_at_ast(cst_list, _node)
                 if cst_node is not None:
                     maybe_replace_doc_str_in_function_or_class(_node, cst_idx, cst_list)
 
-                    # TODO: Maybe replace function return type
+                    if is_func:
+                        maybe_replace_function_return_type(_node, cst_idx, cst_list)
             # TODO: AnnAssign|Assign
             # elif isinstance(_node, (AnnAssign, Assign)):
             #     print("(AnnAssign | Assign)._location:", _node._location, ";")
