@@ -1,15 +1,17 @@
 """
 Utils for working with AST (builtin) and cdd's CST
 """
+
+from collections import namedtuple
 from copy import deepcopy
 from enum import Enum
-from operator import ne
+from operator import attrgetter, ne
 from sys import stderr
 
 from cdd.ast_utils import cmp_ast, get_doc_str
 from cdd.cst_utils import FunctionDefinitionStart, TripleQuoted, ast2cst
 from cdd.pure_utils import omit_whitespace, tab
-from cdd.source_transformer import ast_parse, to_code
+from cdd.source_transformer import to_code
 
 
 def find_cst_at_ast(cst_list, node):
@@ -36,7 +38,7 @@ def find_cst_at_ast(cst_list, node):
     for cst_node_no, cst_node in enumerate(cst_list):
         if (
             cst_node.line_no_start <= node.lineno <= cst_node.line_no_end
-            # Extra precautions to ensure the wrong node is never replaced:
+            # Extra precautions to ensure the wrong new_node is never replaced:
             and type(cst_node).__name__ == cst_type  # `isinstance` doesn't work
             and getattr(cst_node, "name", None) == getattr(node, "name", None)
         ):
@@ -112,12 +114,15 @@ def maybe_replace_doc_str_in_function_or_class(node, cst_idx, cst_list):
     return changed
 
 
-def maybe_replace_function_return_type(node, cst_idx, cst_list):
+def maybe_replace_function_return_type(new_node, cur_ast_node, cst_idx, cst_list):
     """
-    Maybe replace the doc_str of a function or class
+    Maybe replace the function's return type
 
-    :param node: AST function node
-    :type node: ```Union[AsyncFunctionDef, FunctionDef]```
+    :param new_node: AST function node
+    :type new_node: ```Union[AsyncFunctionDef, FunctionDef]```
+
+    :param cur_ast_node: AST function node of CST (with fake body)
+    :type cur_ast_node: ```AST```
 
     :param cst_idx: Index of start of function/class in cst_list
     :type cst_idx: ```int```
@@ -128,15 +133,8 @@ def maybe_replace_function_return_type(node, cst_idx, cst_list):
     :return: Delta value indicating what changed (if anything)
     :rtype: ```Delta```
     """
-    existing_ast_node = ast_parse(
-        "{func_start} pass".format(
-            func_start=cst_list[cst_idx].value.strip().replace("  ", "")
-        ),
-        skip_annotate=True,
-        skip_docstring_remit=True,
-    ).body[0]
-    new_node = deepcopy(node)
-    new_node.body = existing_ast_node.body
+    new_node = deepcopy(new_node)
+    new_node.body = cur_ast_node.body
     value = None
 
     def remove_return_typ(statement):
@@ -171,15 +169,15 @@ def maybe_replace_function_return_type(node, cst_idx, cst_list):
             post=post,
         )
 
-    if cmp_ast(existing_ast_node.returns, new_node.returns):
+    if cmp_ast(cur_ast_node.returns, new_node.returns):
         changed = Delta.nop
-    elif existing_ast_node.returns and new_node.returns:
+    elif cur_ast_node.returns and new_node.returns:
         changed = Delta.replaced
         value = add_return_typ(remove_return_typ(cst_list[cst_idx].value))
-    elif existing_ast_node.returns and not new_node.returns:
+    elif cur_ast_node.returns and not new_node.returns:
         changed = Delta.removed
         value = remove_return_typ(cst_list[cst_idx].value)
-    else:  # not existing_ast_node.returns and new_node.returns:
+    else:  # not cur_ast_node.returns and new_node.returns:
         changed = Delta.added
         value = add_return_typ(cst_list[cst_idx].value)
     if value is not None:
@@ -192,9 +190,91 @@ def maybe_replace_function_return_type(node, cst_idx, cst_list):
     return changed
 
 
+def maybe_replace_function_args(new_node, cur_ast_node, cst_idx, cst_list):
+    """
+    Maybe replace the doc_str of a function or class
+
+    :param new_node: AST function node
+    :type new_node: ```Union[AsyncFunctionDef, FunctionDef]```
+
+    :param cur_ast_node: AST function node of CST (with fake body)
+    :type cur_ast_node: ```AST```
+
+    :param cst_idx: Index of start of function/class in cst_list
+    :type cst_idx: ```int```
+
+    :param cst_list: List of `namedtuple`s with at least ("line_no_start", "line_no_end", "value") attributes
+    :type cst_list: ```List[NamedTuple]```
+
+    :return: Delta value indicating what changed (if anything)
+    :rtype: ```Delta```
+    """
+    new_node = deepcopy(new_node)
+    new_node.body = cur_ast_node.body
+    Arg = namedtuple("Arg", ("annotation", "arg"))
+    if cmp_ast(cur_ast_node.args, new_node.args):
+        changed = Delta.nop
+    else:
+        new_args, cur_args = map(
+            lambda args: tuple(map(lambda arg: Arg(arg.annotation, arg.arg), args)),
+            map(attrgetter("args.args"), (new_node, cur_ast_node)),
+        )
+
+        changed = Delta.nop  # Never nop in this branch
+        for i in range(len(cur_args)):
+            if cur_args[i].annotation != new_args[i].annotation:
+                # Approximation, obviously you could have intermixed annotation and to-be (un)annotated
+                if cur_args[i].annotation is None:
+                    changed = Delta.added
+                elif new_args[i].annotation is None:
+                    changed = Delta.removed
+                else:
+                    changed = Delta.replaced
+                break
+
+        pre, returning, post = cst_list[cst_idx].value.rpartition("->")
+        left_parens, right_parens = 0, 0
+        start_idx, end_idx = None, pre.rfind(")")
+        for start_idx in range(end_idx, 0, -1):
+            if pre[start_idx] == ")":
+                right_parens += 1
+            elif pre[start_idx] == "(":
+                left_parens += 1
+
+            if right_parens == left_parens and right_parens > 0:
+                break
+
+        cst_list[cst_idx] = FunctionDefinitionStart(
+            line_no_start=cst_list[cst_idx].line_no_start,
+            line_no_end=cst_list[cst_idx].line_no_end,
+            name=cst_list[cst_idx].name,
+            value="{start}{args}{end}{returning}{post}".format(
+                start=pre[: start_idx + 1],
+                args=", ".join(
+                    "{arg}{annotation}".format(
+                        annotation=""
+                        if annotation is None
+                        else ": {annotation_unparsed}".format(
+                            annotation_unparsed=to_code(annotation).rstrip("\n")
+                        ),
+                        arg=arg,
+                    )
+                    for annotation, arg in new_args
+                ),
+                end=pre[end_idx:],
+                returning=returning,
+                post=post,
+            ),
+        )
+        # TODO: Handle comments in the middle of args, and match whitespace, and maybe even limit line length
+
+    return changed
+
+
 __all__ = [
     "Delta",
     "find_cst_at_ast",
     "maybe_replace_doc_str_in_function_or_class",
+    "maybe_replace_function_args",
     "maybe_replace_function_return_type",
 ]
