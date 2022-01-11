@@ -9,9 +9,33 @@ from operator import attrgetter, ne
 from sys import stderr
 
 from cdd.ast_utils import cmp_ast, get_doc_str
-from cdd.cst_utils import FunctionDefinitionStart, TripleQuoted, ast2cst
+from cdd.cst_utils import FunctionDefinitionStart, TripleQuoted, UnchangingLine, ast2cst
 from cdd.pure_utils import omit_whitespace, tab
 from cdd.source_transformer import to_code
+
+
+def debug_doctrans(changed, affector, name, typ):
+    """
+    Print debug statement if changed is not nop
+
+    :param changed: Delta value indicating what changed (if anything)
+    :type changed: ```Delta```
+
+    :param affector: What is being changed
+    :type affector: ```str```
+
+    :param name: Name of what is being changed
+    :type name: ```str```
+
+    :param typ: AST type name of what is being changed
+    :type typ: ```str```
+    """
+    if changed is not Delta.nop:
+        print(
+            "{changed!s}\t{affector}\t".format(changed=changed, affector=affector),
+            "`{name}`\t{typ}".format(name=name, typ=typ),
+            sep="",
+        )
 
 
 def find_cst_at_ast(cst_list, node):
@@ -74,9 +98,15 @@ def maybe_replace_doc_str_in_function_or_class(node, cst_idx, cst_list):
     :return: Delta value indicating what changed (if anything)
     :rtype: ```Delta```
     """
-    new_doc_str = get_doc_str(node)
-    cur_doc_str = cst_list[cst_idx + 1]
-    existing_doc_str = isinstance(cur_doc_str, TripleQuoted) and cur_doc_str.is_docstr
+    new_doc_str = get_doc_str(node) or ""
+    cur_node_after_func = (
+        cst_list[cst_idx + 1]
+        if cst_idx + 1 < len(cst_list)
+        else UnchangingLine(0, 0, "")
+    )
+    existing_doc_str = (
+        isinstance(cur_node_after_func, TripleQuoted) and cur_node_after_func.is_docstr
+    )
     changed = Delta.nop
     if new_doc_str and not existing_doc_str:
         cst_list.insert(
@@ -87,28 +117,31 @@ def maybe_replace_doc_str_in_function_or_class(node, cst_idx, cst_list):
                 value='\n{tab}"""{new_doc_str}"""'.format(
                     tab=tab, new_doc_str=new_doc_str
                 ),
-                line_no_start=cur_doc_str.line_no_start,
-                line_no_end=cur_doc_str.line_no_end,
+                line_no_start=cur_node_after_func.line_no_start,
+                line_no_end=cur_node_after_func.line_no_end,
             ),
         )
         changed = Delta.added
     elif not new_doc_str and existing_doc_str:
         del cst_list[cst_idx + 1]
         changed = Delta.removed
-    else:
-        cur_doc_str_only = cur_doc_str.value.strip()[3:-3]
+    # elif not new_doc_str and not existing_doc_str: changed = Delta.nop
+    elif new_doc_str and existing_doc_str:
+        cur_doc_str_only = cur_node_after_func.value.strip()[3:-3]
         if ne(*map(omit_whitespace, (cur_doc_str_only, new_doc_str))):
-            pre, _, post = cur_doc_str.value.partition(cur_doc_str_only)
-            cur_doc_str.value = "{pre}{new_doc_str}{post}".format(
-                pre=pre, new_doc_str=new_doc_str, post=post
+            pre, _, post = cur_node_after_func.value.partition(cur_doc_str_only)
+            cst_list[cst_idx + 1] = TripleQuoted(
+                is_double_q=cst_list[cst_idx + 1].is_double_q,
+                is_docstr=cst_list[cst_idx + 1].is_docstr,
+                value="{pre}{new_doc_str}{post}".format(
+                    pre=pre, new_doc_str=new_doc_str, post=post
+                ),
+                line_no_start=cur_node_after_func.line_no_start,
+                line_no_end=cur_node_after_func.line_no_end,
             )
             changed = Delta.replaced
-    if changed:
-        print(
-            "{changed!s} docstr of the `{name}` {typ}".format(
-                changed=changed, name=node.name, typ=type(node).__name__
-            )
-        )
+    if changed is not Delta.nop:
+        debug_doctrans(changed, "docstr", node.name, type(node).__name__)
         # Subsequent `line_no` `start,end` lines are invalidated. It's necessary to link the CST and AST together.
 
     return changed
@@ -187,6 +220,10 @@ def maybe_replace_function_return_type(new_node, cur_ast_node, cst_idx, cst_list
             name=cst_list[cst_idx].name,
             value=value,
         )
+
+    if changed is not Delta.nop:
+        debug_doctrans(changed, "return_type", new_node.name, type(new_node).__name__)
+
     return changed
 
 
@@ -234,7 +271,7 @@ def maybe_replace_function_args(new_node, cur_ast_node, cst_idx, cst_list):
 
         pre, returning, post = cst_list[cst_idx].value.rpartition("->")
         left_parens, right_parens = 0, 0
-        start_idx, end_idx = None, pre.rfind(")")
+        start_idx, end_idx = pre.rfind("("), pre.rfind(")")
         for start_idx in range(end_idx, 0, -1):
             if pre[start_idx] == ")":
                 right_parens += 1
@@ -248,6 +285,7 @@ def maybe_replace_function_args(new_node, cur_ast_node, cst_idx, cst_list):
             line_no_start=cst_list[cst_idx].line_no_start,
             line_no_end=cst_list[cst_idx].line_no_end,
             name=cst_list[cst_idx].name,
+            # TODO: Handle comments in the middle of args, and match whitespace, and maybe even limit line length
             value="{start}{args}{end}{returning}{post}".format(
                 start=pre[: start_idx + 1],
                 args=", ".join(
@@ -266,7 +304,9 @@ def maybe_replace_function_args(new_node, cur_ast_node, cst_idx, cst_list):
                 post=post,
             ),
         )
-        # TODO: Handle comments in the middle of args, and match whitespace, and maybe even limit line length
+
+    if changed is not Delta.nop:
+        debug_doctrans(changed, "args", new_node.name, type(new_node).__name__)
 
     return changed
 

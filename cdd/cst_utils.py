@@ -170,7 +170,7 @@ def get_construct_name(words):
     :rtype: ```Optional[str]```
     """
     for idx, word in enumerate(words):
-        if word == "def":
+        if word == "def" and len(words) > idx + 1:
             return words[idx + 1][: words[idx + 1].find("(")]
         elif word == "class":
             end_idx = (
