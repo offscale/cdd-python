@@ -51,7 +51,6 @@ jobs:
                 if: matrix.python-version == '3.8' && matrix.os.name == 'Linux' && github.ref == 'refs/heads/master'
             -   name: Check formatted with black
                 run: |
-                    pip install black
                     python -m black . --check --extend-exclude 'cdd/tests/mocks/cstify.py'
             -   name: Doc coverage
                 run: |

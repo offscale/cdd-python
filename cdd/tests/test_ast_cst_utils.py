@@ -13,6 +13,7 @@ from cdd.ast_cst_utils import (
     Delta,
     find_cst_at_ast,
     maybe_replace_doc_str_in_function_or_class,
+    maybe_replace_function_args,
     maybe_replace_function_return_type,
 )
 from cdd.ast_utils import set_value
@@ -157,7 +158,18 @@ class TestAstCstUtils(TestCase):
         func_node = deepcopy(self.func_node)
         func_node.returns = Name("int", Load())
         self.assertEqual(
-            maybe_replace_function_return_type(func_node, cst_idx, cst_list),
+            maybe_replace_function_return_type(
+                new_node=func_node,
+                cst_idx=cst_idx,
+                cst_list=cst_list,
+                cur_ast_node=ast_parse(
+                    "{func_start} pass".format(
+                        func_start=cst_list[cst_idx].value.strip().replace("  ", "")
+                    ),
+                    skip_annotate=True,
+                    skip_docstring_remit=True,
+                ).body[0],
+            ),
             Delta.added,
         )
         self.assertEqual(
@@ -182,7 +194,18 @@ class TestAstCstUtils(TestCase):
             value=before,
         )
         self.assertEqual(
-            maybe_replace_function_return_type(self.func_node, cst_idx, cst_list),
+            maybe_replace_function_return_type(
+                new_node=self.func_node,
+                cst_idx=cst_idx,
+                cst_list=cst_list,
+                cur_ast_node=ast_parse(
+                    "{func_start} pass".format(
+                        func_start=cst_list[cst_idx].value.strip().replace("  ", "")
+                    ),
+                    skip_annotate=True,
+                    skip_docstring_remit=True,
+                ).body[0],
+            ),
             Delta.removed,
         )
         self.assertEqual(
@@ -209,11 +232,136 @@ class TestAstCstUtils(TestCase):
         func_node = deepcopy(self.func_node)
         func_node.returns = Name("float", Load())
         self.assertEqual(
-            maybe_replace_function_return_type(func_node, cst_idx, cst_list),
+            maybe_replace_function_return_type(
+                new_node=func_node,
+                cur_ast_node=ast_parse(
+                    "{func_start} pass".format(
+                        func_start=cst_list[cst_idx].value.strip().replace("  ", "")
+                    ),
+                    skip_annotate=True,
+                    skip_docstring_remit=True,
+                ).body[0],
+                cst_idx=cst_idx,
+                cst_list=cst_list,
+            ),
             Delta.replaced,
         )
         self.assertEqual(
             "".join(map(attrgetter("value"), cst_list[cst_idx : cst_idx + 1])), after
+        )
+
+    def test_maybe_replace_function_args_nop(self):
+        """
+        Tests that `maybe_replace_function_args` does nothing on equal args
+        """
+
+        func_src = "\n\n    @staticmethod\n    def add1(foo: int) -> int:"
+
+        func_node = ast_parse(
+            "{func_start} pass".format(func_start=func_src.strip().replace("  ", "")),
+            skip_annotate=True,
+            skip_docstring_remit=True,
+        ).body[0]
+
+        cst_list = list(deepcopy(cstify_cst))
+        cst_idx, cst_node = find_cst_at_ast(cst_list, self.func_node)
+        self.assertIsNotNone(cst_node)
+        cst_list[cst_idx] = FunctionDefinitionStart(
+            line_no_start=cst_list[cst_idx].line_no_start,
+            line_no_end=cst_list[cst_idx].line_no_end,
+            name=cst_list[cst_idx].name,
+            value=func_src,
+        )
+        self.assertEqual(
+            maybe_replace_function_args(
+                new_node=func_node,
+                cur_ast_node=func_node,
+                cst_idx=cst_idx,
+                cst_list=cst_list,
+            ),
+            Delta.nop,
+        )
+        self.assertEqual(
+            "".join(map(attrgetter("value"), cst_list[cst_idx : cst_idx + 1])), func_src
+        )
+
+    def maybe_replace_function_args_test(self, before, after, delta):
+        """
+        :param before: Function prototype before function is run
+        :type before: ```str```
+
+        :param after: Function prototype after function is run
+        :type after: ```str```
+
+        :param delta: Delta value indicating what changed (if anything)
+        :type delta: ```Delta```
+        """
+
+        new_node = ast_parse(
+            "{func_start} pass".format(func_start=after.strip().replace("  ", "")),
+            skip_annotate=True,
+            skip_docstring_remit=True,
+        ).body[0]
+
+        cur_ast_node = ast_parse(
+            "{func_start} pass".format(func_start=before.strip().replace("  ", "")),
+            skip_annotate=True,
+            skip_docstring_remit=True,
+        ).body[0]
+
+        cst_list = list(deepcopy(cstify_cst))
+        cst_idx, cst_node = find_cst_at_ast(cst_list, self.func_node)
+        self.assertIsNotNone(cst_node)
+        cst_list[cst_idx] = FunctionDefinitionStart(
+            line_no_start=cst_list[cst_idx].line_no_start,
+            line_no_end=cst_list[cst_idx].line_no_end,
+            name=cst_list[cst_idx].name,
+            value=before,
+        )
+        self.assertEqual(
+            maybe_replace_function_args(
+                new_node=new_node,
+                cur_ast_node=cur_ast_node,
+                cst_idx=cst_idx,
+                cst_list=cst_list,
+            ),
+            delta,
+        )
+        self.assertEqual(
+            after, "".join(map(attrgetter("value"), cst_list[cst_idx : cst_idx + 1]))
+        )
+
+    def test_maybe_replace_function_args_added(self):
+        """
+        Tests that `maybe_replace_function_args` adds to args (adds type annotations)
+        """
+
+        self.maybe_replace_function_args_test(
+            before="\n\n    @staticmethod\n    def add1(foo) -> int:",
+            after="\n\n    @staticmethod\n    def add1(foo: int) -> int:",
+            delta=Delta.added,
+        )
+
+    def test_maybe_replace_function_args_removed(self):
+        """
+        Tests that `maybe_replace_function_args` removes from args (removes type annotations)
+        """
+
+        self.maybe_replace_function_args_test(
+            before="\n\n    @staticmethod\n    def add1(foo: int) -> int:",
+            after="\n\n    @staticmethod\n    def add1(foo) -> int:",
+            delta=Delta.removed,
+        )
+
+    def test_maybe_replace_function_args_replaced(self):
+        """
+        Tests that `maybe_replace_function_args` replaces to args (replaces type annotations)
+        """
+
+        self.maybe_replace_function_args_test(
+            before="\n\n    @staticmethod\n    def add1(foo: int) -> int:",
+            after="\n\n    @staticmethod\n    def add1(foo: float) -> int:",
+            delta=Delta.replaced,
         )
 
 

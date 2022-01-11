@@ -21,6 +21,7 @@ from cdd import emit, parse
 from cdd.ast_cst_utils import (
     find_cst_at_ast,
     maybe_replace_doc_str_in_function_or_class,
+    maybe_replace_function_args,
     maybe_replace_function_return_type,
 )
 from cdd.ast_utils import (
@@ -36,6 +37,7 @@ from cdd.ast_utils import (
 from cdd.docstring_parsers import parse_docstring
 from cdd.parser_utils import ir_merge
 from cdd.pure_utils import PY_GTE_3_8, none_types, omit_whitespace
+from cdd.source_transformer import ast_parse
 
 
 def has_type_annotations(node):
@@ -343,12 +345,30 @@ def doctransify_cst(cst_list, node):
             is_func = isinstance(_node, (AsyncFunctionDef, FunctionDef))
             if isinstance(_node, ClassDef) or is_func:
                 cst_idx, cst_node = find_cst_at_ast(cst_list, _node)
+
                 if cst_node is not None:
                     maybe_replace_doc_str_in_function_or_class(_node, cst_idx, cst_list)
 
                     if is_func:
-                        maybe_replace_function_return_type(_node, cst_idx, cst_list)
+                        cur_ast_node = ast_parse(
+                            "{func_start} pass".format(
+                                func_start=cst_list[cst_idx]
+                                .value.strip()
+                                .replace("  ", "")
+                            ),
+                            skip_annotate=True,
+                            skip_docstring_remit=True,
+                        ).body[0]
+
+                        maybe_replace_function_return_type(
+                            _node, cur_ast_node, cst_idx, cst_list
+                        )
+                        maybe_replace_function_args(
+                            _node, cur_ast_node, cst_idx, cst_list
+                        )
             # TODO: AnnAssign|Assign
+            # AnnAssign|Assign is separate task than the `maybe_replace_function_args` as inferring types is done
+            #   better with knowledge of function return types and function arguments (`default` being the only issue)
             # elif isinstance(_node, (AnnAssign, Assign)):
             #     print("(AnnAssign | Assign)._location:", _node._location, ";")
             #     print_ast(_node)
