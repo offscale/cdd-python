@@ -32,8 +32,8 @@ def debug_doctrans(changed, affector, name, typ):
     """
     if changed is not Delta.nop:
         print(
-            "{changed!s}\t{affector}\t".format(changed=changed, affector=affector),
-            "`{name}`\t{typ}".format(name=name, typ=typ),
+            "{changed!s}".format(changed=changed).ljust(20),
+            "{affector}\t{typ}\t`{name}`".format(affector=affector, typ=typ, name=name),
             sep="",
         )
 
