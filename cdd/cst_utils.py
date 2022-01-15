@@ -8,7 +8,7 @@ from functools import partial, wraps
 from keyword import kwlist
 from typing import Optional
 
-from cdd.pure_utils import balanced_parentheses, is_triple_quoted
+from cdd.pure_utils import balanced_parentheses, is_triple_quoted, tab
 
 kwset = frozenset(kwlist)
 _basic_cst_attributes = "line_no_start", "line_no_end", "value"
@@ -170,15 +170,16 @@ def get_construct_name(words):
     :rtype: ```Optional[str]```
     """
     for idx, word in enumerate(words):
-        if word == "def" and len(words) > idx + 1:
-            return words[idx + 1][: words[idx + 1].find("(")]
-        elif word == "class":
-            end_idx = (
-                lambda _end_idx: words[idx + 1].find(":")
-                if _end_idx == -1
-                else _end_idx
-            )(words[idx + 1].find("("))
-            return words[idx + 1][:end_idx]
+        if len(words) > idx + 1:
+            if word == "def":
+                return words[idx + 1][: words[idx + 1].find("(")]
+            elif word == "class":
+                end_idx = (
+                    lambda _end_idx: words[idx + 1].find(":")
+                    if _end_idx == -1
+                    else _end_idx
+                )(words[idx + 1].find("("))
+                return words[idx + 1][:end_idx]
 
 
 def cst_scanner(source):
@@ -466,6 +467,26 @@ def cst_parse_one_node(statement, state):
         return infer_cst_type(statement_stripped, words)(**common_kwargs)
 
     return UnchangingLine(**common_kwargs)
+
+
+def reindent_block_with_pass_body(s):
+    """
+    Reindent block (e.g., function definition) and give it a `pass` body
+
+    :param s: Block defining string
+    :type s: ```str```
+
+    :return: Reindented string with `pass` body
+    :rtype: ```str```
+    """
+    return "{block_def} pass".format(
+        block_def="\n".join(
+            map(
+                str.lstrip,
+                s.split("\n"),
+            )
+        ).replace(tab, "", 1)
+    )
 
 
 __all__ = [

@@ -34,6 +34,7 @@ from cdd.ast_utils import (
     to_annotation,
     to_type_comment,
 )
+from cdd.cst_utils import reindent_block_with_pass_body
 from cdd.docstring_parsers import parse_docstring
 from cdd.parser_utils import ir_merge
 from cdd.pure_utils import PY_GTE_3_8, none_types, omit_whitespace
@@ -351,11 +352,7 @@ def doctransify_cst(cst_list, node):
 
                     if is_func:
                         cur_ast_node = ast_parse(
-                            "{func_start} pass".format(
-                                func_start=cst_list[cst_idx]
-                                .value.strip()
-                                .replace("  ", "")
-                            ),
+                            reindent_block_with_pass_body(cst_list[cst_idx].value),
                             skip_annotate=True,
                             skip_docstring_remit=True,
                         ).body[0]

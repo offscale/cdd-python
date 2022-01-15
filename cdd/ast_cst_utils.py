@@ -2,12 +2,12 @@
 Utils for working with AST (builtin) and cdd's CST
 """
 
-from collections import namedtuple
 from copy import deepcopy
 from enum import Enum
 from operator import attrgetter, ne
 from sys import stderr
 
+from cdd import parse
 from cdd.ast_utils import cmp_ast, get_doc_str
 from cdd.cst_utils import FunctionDefinitionStart, TripleQuoted, UnchangingLine, ast2cst
 from cdd.pure_utils import omit_whitespace, tab
@@ -108,6 +108,16 @@ def maybe_replace_doc_str_in_function_or_class(node, cst_idx, cst_list):
         isinstance(cur_node_after_func, TripleQuoted) and cur_node_after_func.is_docstr
     )
     changed = Delta.nop
+
+    if new_doc_str:
+        ir = parse.docstring(new_doc_str)
+        empty_doc_str = not ir.get("doc") and not any(
+            d.get("typ") or d.get("doc")
+            for key in ("params", "returns")
+            for d in ir.get("params", {}).get(key, {}).values()
+        )
+        new_doc_str = None if empty_doc_str else new_doc_str
+
     if new_doc_str and not existing_doc_str:
         cst_list.insert(
             cst_idx + 1,
@@ -248,16 +258,10 @@ def maybe_replace_function_args(new_node, cur_ast_node, cst_idx, cst_list):
     """
     new_node = deepcopy(new_node)
     new_node.body = cur_ast_node.body
-    Arg = namedtuple("Arg", ("annotation", "arg"))
-    if cmp_ast(cur_ast_node.args, new_node.args):
-        changed = Delta.nop
-    else:
-        new_args, cur_args = map(
-            lambda args: tuple(map(lambda arg: Arg(arg.annotation, arg.arg), args)),
-            map(attrgetter("args.args"), (new_node, cur_ast_node)),
-        )
+    changed = Delta.nop
+    if not cmp_ast(cur_ast_node.args, new_node.args):
+        new_args, cur_args = map(attrgetter("args.args"), (new_node, cur_ast_node))
 
-        changed = Delta.nop  # Never nop in this branch
         for i in range(len(cur_args)):
             if cur_args[i].annotation != new_args[i].annotation:
                 # Approximation, obviously you could have intermixed annotation and to-be (un)annotated
@@ -289,15 +293,15 @@ def maybe_replace_function_args(new_node, cur_ast_node, cst_idx, cst_list):
             value="{start}{args}{end}{returning}{post}".format(
                 start=pre[: start_idx + 1],
                 args=", ".join(
-                    "{arg}{annotation}".format(
+                    "{arg_name}{annotation}".format(
                         annotation=""
-                        if annotation is None
+                        if arg.annotation is None
                         else ": {annotation_unparsed}".format(
-                            annotation_unparsed=to_code(annotation).rstrip("\n")
+                            annotation_unparsed=to_code(arg.annotation).rstrip("\n")
                         ),
-                        arg=arg,
+                        arg_name=arg.arg,
                     )
-                    for annotation, arg in new_args
+                    for arg in new_args
                 ),
                 end=pre[end_idx:],
                 returning=returning,
