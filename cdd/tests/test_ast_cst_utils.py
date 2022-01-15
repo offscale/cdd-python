@@ -18,7 +18,12 @@ from cdd.ast_cst_utils import (
     maybe_replace_function_return_type,
 )
 from cdd.ast_utils import set_value
-from cdd.cst_utils import ClassDefinitionStart, FunctionDefinitionStart, TripleQuoted
+from cdd.cst_utils import (
+    ClassDefinitionStart,
+    FunctionDefinitionStart,
+    TripleQuoted,
+    reindent_block_with_pass_body,
+)
 from cdd.pure_utils import identity, rpartial
 from cdd.source_transformer import ast_parse
 from cdd.tests.mocks.cst import cstify_cst
@@ -354,13 +359,13 @@ class TestAstCstUtils(TestCase):
         """
 
         new_node = ast_parse(
-            "{func_start} pass".format(func_start=after.strip().replace("  ", "")),
+            reindent_block_with_pass_body(after),
             skip_annotate=True,
             skip_docstring_remit=True,
         ).body[0]
 
         cur_ast_node = ast_parse(
-            "{func_start} pass".format(func_start=before.strip().replace("  ", "")),
+            reindent_block_with_pass_body(before),
             skip_annotate=True,
             skip_docstring_remit=True,
         ).body[0]
