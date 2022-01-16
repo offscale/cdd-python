@@ -137,7 +137,9 @@ class TestAstCstUtils(TestCase):
             isinstance(cst_list[cst_idx + 1], TripleQuoted)
             and cst_list[cst_idx + 1].is_docstr
         ):
-            self.assertEqual(cst_list[cst_idx + 1].value.strip()[3:-3], new_doc_str)
+            self.assertEqual(
+                cst_list[cst_idx + 1].value.strip()[3:-3].strip(), new_doc_str
+            )
 
     def test_maybe_replace_doc_str_in_function_or_class_replaced(self) -> None:
         """tests test_maybe_replace_doc_str_in_function_or_class succeeds in replacing"""

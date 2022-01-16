@@ -37,7 +37,7 @@ from cdd.ast_utils import (
 from cdd.cst_utils import reindent_block_with_pass_body
 from cdd.docstring_parsers import parse_docstring
 from cdd.parser_utils import ir_merge
-from cdd.pure_utils import PY_GTE_3_8, none_types, omit_whitespace
+from cdd.pure_utils import PY_GTE_3_8, is_ir_empty, none_types, omit_whitespace
 from cdd.source_transformer import ast_parse
 
 
@@ -257,13 +257,17 @@ class DocTrans(NodeTransformer):
         indent_level = max(
             len(node._location), 1
         )  # function docstrings always have at least 1 indent level
-        doc_str = emit.docstring(
-            ir,
-            emit_types=not self.type_annotations,
-            emit_default_doc=False,
-            docstring_format=self.docstring_format,
-            indent_level=indent_level,
-            word_wrap=self.word_wrap,
+        doc_str = (
+            None
+            if is_ir_empty(ir)
+            else emit.docstring(
+                ir,
+                emit_types=not self.type_annotations,
+                emit_default_doc=False,
+                docstring_format=self.docstring_format,
+                indent_level=indent_level,
+                word_wrap=self.word_wrap,
+            )
         )
         if not doc_str or doc_str.isspace():
             if original_doc_str is not None:

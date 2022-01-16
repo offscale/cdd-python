@@ -7,6 +7,7 @@ from unittest import TestCase
 
 from cdd.pure_utils import (
     assert_equal,
+    balanced_parentheses,
     blockwise,
     deindent,
     diff,
@@ -32,6 +33,16 @@ from cdd.tests.utils_for_tests import unittest_main
 
 class TestPureUtils(TestCase):
     """Test class for pure utils"""
+
+    def test_balanced_parentheses(self) -> None:
+        """Tests that balanced_parentheses handles edge cases"""
+        self.assertTrue(balanced_parentheses("foo()"))
+        self.assertTrue(balanced_parentheses("[]()"))
+        self.assertFalse(balanced_parentheses("[()"))
+        self.assertFalse(balanced_parentheses("()]"))
+        self.assertTrue(balanced_parentheses("foo='[])'"))
+        self.assertTrue(balanced_parentheses('foo="[])"'))
+        self.assertTrue(balanced_parentheses('foo="[])\'"'))
 
     def test_blockwise(self) -> None:
         """Tests that blockwise produces the expected output"""

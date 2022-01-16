@@ -4,13 +4,13 @@ Utils for working with AST (builtin) and cdd's CST
 
 from copy import deepcopy
 from enum import Enum
+from itertools import takewhile
 from operator import attrgetter, ne
 from sys import stderr
 
-from cdd import parse
 from cdd.ast_utils import cmp_ast, get_doc_str
 from cdd.cst_utils import FunctionDefinitionStart, TripleQuoted, UnchangingLine, ast2cst
-from cdd.pure_utils import omit_whitespace, tab
+from cdd.pure_utils import count_iter_items, omit_whitespace, tab
 from cdd.source_transformer import to_code
 
 
@@ -109,27 +109,49 @@ def maybe_replace_doc_str_in_function_or_class(node, cst_idx, cst_list):
     )
     changed = Delta.nop
 
-    if new_doc_str:
-        ir = parse.docstring(new_doc_str)
-        empty_doc_str = not ir.get("doc") and not any(
-            d.get("typ") or d.get("doc")
-            for key in ("params", "returns")
-            for d in ir.get("params", {}).get(key, {}).values()
+    def formatted_doc_str(doc_str, is_double_q=True):
+        """
+        Correctly indent, pre and post space the doc_str
+
+        :param doc_str: Input doc string
+        :type doc_str: ```str```
+
+        :param is_double_q: Whether the doc_str should be double quoted
+        :type is_double_q: ```bool```
+
+        :return: Correctly formatted `doc_str`
+        :rtype: ```str```
+        """
+        str_after_func_no_nl = cur_node_after_func.value.lstrip("\n")
+        indent_after_func_no_nl = count_iter_items(
+            takewhile(str.isspace, str_after_func_no_nl)
         )
-        new_doc_str = None if empty_doc_str else new_doc_str
+        space = str_after_func_no_nl[:indent_after_func_no_nl]
+        return TripleQuoted(
+            is_double_q=is_double_q,
+            is_docstr=True,
+            value='\n{space}"""{replacement_doc_str}\n{space}"""'.format(
+                space=space,
+                replacement_doc_str="\n".join(
+                    map(
+                        lambda line: "{space}{line}".format(
+                            space=str_after_func_no_nl[
+                                : indent_after_func_no_nl - len(tab)
+                            ],
+                            line=line,
+                        ),
+                        doc_str.split("\n"),
+                    )
+                ).rstrip(),
+            ),
+            line_no_start=cur_node_after_func.line_no_start,
+            line_no_end=cur_node_after_func.line_no_end,
+        )
 
     if new_doc_str and not existing_doc_str:
         cst_list.insert(
             cst_idx + 1,
-            TripleQuoted(
-                is_double_q=True,
-                is_docstr=True,
-                value='\n{tab}"""{new_doc_str}"""'.format(
-                    tab=tab, new_doc_str=new_doc_str
-                ),
-                line_no_start=cur_node_after_func.line_no_start,
-                line_no_end=cur_node_after_func.line_no_end,
-            ),
+            formatted_doc_str(new_doc_str),
         )
         changed = Delta.added
     elif not new_doc_str and existing_doc_str:
@@ -140,14 +162,8 @@ def maybe_replace_doc_str_in_function_or_class(node, cst_idx, cst_list):
         cur_doc_str_only = cur_node_after_func.value.strip()[3:-3]
         if ne(*map(omit_whitespace, (cur_doc_str_only, new_doc_str))):
             pre, _, post = cur_node_after_func.value.partition(cur_doc_str_only)
-            cst_list[cst_idx + 1] = TripleQuoted(
-                is_double_q=cst_list[cst_idx + 1].is_double_q,
-                is_docstr=cst_list[cst_idx + 1].is_docstr,
-                value="{pre}{new_doc_str}{post}".format(
-                    pre=pre, new_doc_str=new_doc_str, post=post
-                ),
-                line_no_start=cur_node_after_func.line_no_start,
-                line_no_end=cur_node_after_func.line_no_end,
+            cst_list[cst_idx + 1] = formatted_doc_str(
+                new_doc_str, is_double_q=cst_list[cst_idx + 1].is_double_q
             )
             changed = Delta.replaced
     if changed is not Delta.nop:

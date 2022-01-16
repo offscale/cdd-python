@@ -4,7 +4,7 @@ Pure utils for pure functions. For the same input will always produce the same i
 
 import typing
 from ast import Name, Str
-from collections import Counter, deque
+from collections import deque
 from functools import partial
 from importlib import import_module
 from importlib.util import find_spec
@@ -468,7 +468,7 @@ rstrip_diff = partial(diff, op=str.rstrip)
 
 def balanced_parentheses(s):
     """
-    Checks if parentheses are balanced
+    Checks if parentheses are balanced, ignoring whatever is inside quotes
 
     :param s: Input string
     :type s: ```str```
@@ -477,7 +477,22 @@ def balanced_parentheses(s):
     :rtype: ```bool```
     """
     open_parens, closed_parens = "([{", ")]}"
-    counter = Counter(s)
+    counter = {paren: 0 for paren in open_parens + closed_parens}
+    quote_mark = None
+    for idx, ch in enumerate(s):
+        if (
+            quote_mark is not None
+            and ch == quote_mark
+            and (idx == 0 or s[idx - 1] != "\\")
+        ):
+            quote_mark = None
+        elif ch in frozenset(("'", '"')):
+            if quote_mark is None:
+                quote_mark = ch
+            elif quote_mark == ch:
+                quote_mark = None
+        elif quote_mark is None and ch in counter:
+            counter[ch] += 1
     return all(
         counter[open_parens[i]] == counter[closed_parens[i]]
         for i in range(len(open_parens))
@@ -726,6 +741,29 @@ def is_triple_quoted(s):
         and s.endswith("'''")
         or s.startswith('"""')
         and s.endswith('"""')
+    )
+
+
+def is_ir_empty(intermediate_repr):
+    """
+    Checks whether the IR is empty, i.e., might have name and params but will generate a docstr without types or argdoc
+
+    :param intermediate_repr: a dictionary of form
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :type intermediate_repr: ```dict```
+
+    :return: Whether IR is empty
+    :rtype: ```bool```
+    """
+    return not intermediate_repr.get("doc") and not any(
+        param_d is not None and (param_d.get("typ") or param_d.get("doc"))
+        for key in ("params", "returns")
+        for param_d in (intermediate_repr.get(key) or {}).values()
     )
 
 
