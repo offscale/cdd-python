@@ -57,6 +57,7 @@ from cdd.pure_utils import (
     identity,
     indent_all_but_first,
     none_types,
+    num_of_nls,
     rpartial,
     simple_types,
     tab,
@@ -401,7 +402,6 @@ def class_(
             internal_body = returns["return_type"]
 
     indent_level = 1
-    sep = indent_level * tab
 
     _emit_docstring = partial(
         docstring,
@@ -416,107 +416,59 @@ def class_(
         bases=list(map(rpartial(Name, Load()), class_bases)),
         body=list(
             chain.from_iterable(
-                (
+                filter(
+                    None,
                     (
-                        Expr(
-                            set_value(
-                                "\n{sep}".format(sep=sep).join(
-                                    (
-                                        (
-                                            lambda doc_str: (
-                                                indent_all_but_first
-                                                if word_wrap
-                                                else identity
-                                            )(
-                                                "{nl0}{doc_str}{nl1}{tab}".format(
-                                                    nl0=(
-                                                        ""
-                                                        if not doc_str
-                                                        or doc_str[0] == "\n"
-                                                        else "\n"
-                                                    ),
-                                                    doc_str=doc_str,
-                                                    nl1=(
-                                                        ""
-                                                        if not doc_str
-                                                        or doc_str[-1] == "\n"
-                                                        else "\n"
-                                                    ),
-                                                    tab=""
-                                                    if emit_original_whitespace
-                                                    else tab,
-                                                ),
-                                                indent_level=indent_level,
-                                            )
-                                        )(intermediate_repr.get("doc", "")),
-                                        _emit_docstring(
-                                            {
-                                                "doc": "",
-                                                "params": intermediate_repr.get(
-                                                    "params"
-                                                ),
-                                                "returns": intermediate_repr.get(
-                                                    "returns"
-                                                ),
-                                            },
-                                            emit_original_whitespace=False,
-                                        )
-                                        .replace(
-                                            "\n{sep}\n{sep}\n{sep}:param".format(
-                                                sep=sep
-                                            ),
-                                            "\n{sep}:cvar".format(sep=sep),
-                                        )
-                                        .replace(
-                                            "\n{sep}:param ".format(sep=sep),
-                                            ":cvar ",
-                                        )
-                                        .replace(
-                                            "\n{sep}:return:".format(sep=sep),
-                                            ":cvar return_type:",
-                                            1,
-                                        )
-                                        .rstrip(),
-                                    )
-                                ),
-                            )
-                        ),
-                    ),
-                    map(
-                        param2ast,
-                        (intermediate_repr.get("params") or OrderedDict()).items(),
-                    ),
-                    iter(
                         (
+                            (lambda ds: Expr(set_value(ds.rstrip())))(
+                                _emit_docstring(
+                                    {
+                                        k: intermediate_repr[k]
+                                        for k in intermediate_repr
+                                        if k != "_internal"
+                                    },
+                                    emit_original_whitespace=emit_original_whitespace,
+                                    purpose="class",
+                                )
+                            ),
+                        ),
+                        map(
+                            param2ast,
+                            (intermediate_repr.get("params") or OrderedDict()).items(),
+                        ),
+                        iter(
                             (
-                                internal_body[0]
-                                if len(internal_body) == 1
-                                and isinstance(internal_body[0], FunctionDef)
-                                and internal_body[0].name == "__call__"
-                                else _make_call_meth(
-                                    internal_body,
-                                    returns["return_type"]["default"]
-                                    if "default"
-                                    in (
-                                        (returns or {"return_type": iter(())}).get(
-                                            "return_type"
+                                (
+                                    internal_body[0]
+                                    if len(internal_body) == 1
+                                    and isinstance(internal_body[0], FunctionDef)
+                                    and internal_body[0].name == "__call__"
+                                    else _make_call_meth(
+                                        internal_body,
+                                        returns["return_type"]["default"]
+                                        if "default"
+                                        in (
+                                            (returns or {"return_type": iter(())}).get(
+                                                "return_type"
+                                            )
+                                            or iter(())
                                         )
-                                        or iter(())
-                                    )
-                                    else None,
-                                    param_names,
-                                    docstring_format=docstring_format,
-                                    word_wrap=word_wrap,
-                                ),
+                                        else None,
+                                        param_names,
+                                        docstring_format=docstring_format,
+                                        word_wrap=word_wrap,
+                                    ),
+                                )
+                                or iter(())
                             )
-                            or iter(())
-                        )
-                        if emit_call and internal_body
-                        else iter(())
+                            if emit_call and internal_body
+                            else iter(())
+                        ),
                     ),
                 )
             )
-        ),
+        )
+        or Expr(set_value("")),  # empty body will cause syntax error
         decorator_list=list(map(rpartial(Name, Load()), decorator_list))
         if decorator_list
         else [],
@@ -579,7 +531,7 @@ def docstring(
     """
     # _sep = tab * indent_level
     params = "\n{maybe_nl}".format(
-        maybe_nl="\n" if docstring_format == "rest" else ""
+        maybe_nl="\n" if docstring_format == "rest" and purpose != "class" else ""
     ).join(
         (
             lambda param_lines: [getattr(ARG_TOKENS, docstring_format)[0]] + param_lines
@@ -602,13 +554,10 @@ def docstring(
         )
     )
 
-    candidate_args_returns = "{params}\n{returns}\n".format(
-        params=params,
-        returns="".join(
-            (
-                lambda l: l
-                if l is None
-                else "{maybe_nl0_and_token}{maybe_nl1}{returns_doc}".format(
+    returns = (
+        (
+            lambda l: "".join(
+                "{maybe_nl0_and_token}{maybe_nl1}{returns_doc}".format(
                     maybe_nl0_and_token=""
                     if docstring_format == "rest"
                     else "\n{return_token}".format(
@@ -617,24 +566,38 @@ def docstring(
                     maybe_nl1="" if not params or params[-1] == "\n" else "\n",
                     returns_doc=l,
                 )
-            )(
-                next(
-                    map(
-                        partial(
-                            emit_param_str,
-                            style=docstring_format,
-                            purpose=purpose,
-                            emit_type=emit_types,
-                            emit_default_doc=emit_default_doc,
-                            word_wrap=word_wrap,
-                        ),
-                        intermediate_repr["returns"].items(),
+            )
+            if l
+            else ""
+        )(
+            next(
+                map(
+                    partial(
+                        emit_param_str,
+                        style=docstring_format,
+                        purpose=purpose,
+                        emit_type=emit_types,
+                        emit_default_doc=emit_default_doc,
+                        word_wrap=word_wrap,
                     ),
-                    None,
-                )
+                    intermediate_repr["returns"].items(),
+                ),
+                None,
             )
         )
         if "return_type" in (intermediate_repr.get("returns") or iter(()))
+        else ""
+    )
+
+    params_end_nls = num_of_nls(params, end=True)
+    returns_end_nls = num_of_nls(returns, end=True)
+
+    candidate_args_returns = "{params}{maybe_nl0}{returns}{maybe_nl1}".format(
+        params=params,
+        maybe_nl0="\n" if params_end_nls < 2 and returns else "",
+        returns=returns,
+        maybe_nl1="\n"
+        if not returns and params_end_nls > 0 or returns and returns_end_nls == 0
         else "",
     )
 
@@ -660,12 +623,8 @@ def docstring(
     if not candidate_doc_str or candidate_doc_str.isspace():
         return ""
 
-    prev_nl, next_nl, current_indent, line = (
-        0,
-        candidate_doc_str.find("\n"),
-        0,
-        None,
-    )
+    prev_nl, next_nl = 0, candidate_doc_str.find("\n")
+    current_indent, line = 0, None
 
     # One line only
     if next_nl == -1:
@@ -692,7 +651,8 @@ def docstring(
         lines = ([line] if line else []) + candidate_doc_str[
             next_nl
             if len(candidate_doc_str) == next_nl
-            or candidate_doc_str[next_nl + 1] != "\n"
+            or next_nl + 1 < len(candidate_doc_str)
+            and candidate_doc_str[next_nl + 1] != "\n"
             else next_nl + 1 :
         ].splitlines()
         candidate_doc_str = "\n".join(
@@ -705,10 +665,10 @@ def docstring(
             )
         )
         if len(lines) > 1:
-            candidate_doc_str = "{nl0}{candidate_doc_str}{nl1}".format(
-                nl0="\n" if candidate_doc_str.startswith(_tab) else "",
+            candidate_doc_str = "{maybe_nl}{candidate_doc_str}{maybe_nl_tab}".format(
+                maybe_nl="\n" if candidate_doc_str.startswith(_tab) else "",
                 candidate_doc_str=candidate_doc_str,
-                nl1=""
+                maybe_nl_tab=""
                 if candidate_doc_str[-1] == "\n"
                 else "\n{_tab}".format(_tab=_tab),
             )

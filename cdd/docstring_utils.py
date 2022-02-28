@@ -11,11 +11,12 @@ from textwrap import indent
 
 from cdd.defaults_utils import set_default_doc
 from cdd.pure_utils import (
+    count_chars_from,
     count_iter_items,
     fill,
-    has_nl,
     identity,
     indent_all_but_first,
+    num_of_nls,
     omit_whitespace,
     rpartial,
     tab,
@@ -67,7 +68,7 @@ def emit_param_str(
         emit_type &= purpose == "function"
         key, key_typ = (
             ("return", "rtype")
-            if name == "return_type"
+            if name == "return_type" and purpose != "class"
             else (
                 "{var} {name}".format(
                     var="param" if purpose == "function" else "cvar", name=name
@@ -594,7 +595,7 @@ def ensure_doc_args_whence_original(current_doc_str, original_doc_str):
 
 def header_args_footer_to_str(header, args_returns, footer):
     """
-    Ensure there is always a newline between each of: header; args_returns; and footer
+    Ensure there is always two newlines between header and next, and one between non-empty: args_returns and footer
 
     :param header: Header section
     :type header: ```str```
@@ -605,25 +606,32 @@ def header_args_footer_to_str(header, args_returns, footer):
     :param footer: Footer section
     :type footer: ```str```
 
-    :return: One string with these three section combined with a minimum of one nl betwixt each
+    :return: One string with these three section combined with a minimum of one nl betwixt each and two at first
     :rtype: ```str```
     """
+    header_end_nls = num_of_nls(header, end=True)
     if args_returns:
-        args_returns_start_has_nl = has_nl(args_returns, str.partition)
-        args_returns_ends_has_nl = has_nl(args_returns, str.rpartition)
-        args_returns = "{nl0}{args_returns}{nl1}".format(
-            nl0="\n" if args_returns_start_has_nl else "",
+        args_returns_start_nls = num_of_nls(args_returns, end=False)
+        args_returns_ends_nls = num_of_nls(args_returns, end=True)
+        args_returns = "{maybe_nls0}{args_returns}{maybe_nl1}".format(
+            maybe_nls0="\n" * (args_returns_start_nls or 2)
+            if args_returns_start_nls < 2 and header and not header_end_nls
+            else "",
             args_returns=args_returns,
-            nl1="\n" if args_returns_ends_has_nl else "",
+            maybe_nl1="\n" if not args_returns_ends_nls else "",
         )
+        args_returns_start_nls = num_of_nls(args_returns, end=False)
+        args_returns_ends_nls = num_of_nls(args_returns, end=True)
     else:
-        args_returns_start_has_nl = args_returns_ends_has_nl = True
+        args_returns_start_nls = args_returns_ends_nls = 0
     if footer:
-        footer_start_has_nl = has_nl(footer, str.partition) or args_returns_ends_has_nl
+        footer_start_nls = (
+            count_chars_from(footer, str.isspace, "\n", end=False)
+            or args_returns_ends_nls
+        )
         # foot_end_has_nl = footer[-1] == "\n"
     else:
-        footer_start_has_nl = True  # foot_end_has_nl
-    header_end_has_nl = not header or header[-1] == "\n" or args_returns_start_has_nl
+        footer_start_nls = 0  # foot_end_has_nl
 
     # Match indent of args_returns to header or footer
     if args_returns:
@@ -641,16 +649,31 @@ def header_args_footer_to_str(header, args_returns, footer):
             if args_returns[-1] == "\n" and len_args_returns > 1:
                 args_returns += _indent
 
-    return "{header}{args_returns}{footer}".format(
-        header=(header if header_end_has_nl else "{header}\n".format(header=header)),
+    nls_after_header = header_end_nls + args_returns_start_nls
+    nls_needed_after_header = (
+        0
+        if (nls_after_header > 1 or not header or not args_returns)
+        else 1
+        if nls_after_header == 1
+        else 2
+        if nls_after_header == 0
+        else 0
+    )
+
+    return "{header}{maybe_nl0}{args_returns}{maybe_nl1}{footer}{maybe_nl2}".format(
+        header=header,
+        maybe_nl0="\n" * nls_needed_after_header,
         args_returns=args_returns,
-        footer=(
-            "{nl0}{footer}{nl1}".format(
-                nl0="" if footer_start_has_nl else "\n",
-                footer=footer,
-                nl1="",  # nl1="" if foot_end_has_nl else "\n"
-            )
+        maybe_nl1=(
+            "\n"
+            if args_returns
+            and footer
+            and not footer_start_nls
+            and not args_returns_ends_nls
+            else ""
         ),
+        footer=footer,
+        maybe_nl2="",  # if foot_end_has_nl else "\n",
     )
 
 

@@ -216,23 +216,20 @@ class DocTrans(NodeTransformer):
         search = node._location[:-1]
         search_str = ".".join(search)
 
-        self.memoized[search_str] = ir = (
-            self.memoized.get(
-                search_str,
-                (
-                    lambda parent: (
-                        (
-                            lambda doc_str: None
-                            if doc_str is None
-                            else parse.docstring(doc_str)
-                        )(get_docstring(parent, clean=False))
-                        if isinstance(parent, (ClassDef, AsyncFunctionDef, FunctionDef))
-                        else {"params": OrderedDict()}
-                    )
-                )(find_in_ast(search, self.whole_ast)),
-            )
-            or {"params": OrderedDict()}
-        )
+        self.memoized[search_str] = ir = self.memoized.get(
+            search_str,
+            (
+                lambda parent: (
+                    (
+                        lambda doc_str: None
+                        if doc_str is None
+                        else parse.docstring(doc_str)
+                    )(get_docstring(parent, clean=False))
+                    if isinstance(parent, (ClassDef, AsyncFunctionDef, FunctionDef))
+                    else {"params": OrderedDict()}
+                )
+            )(find_in_ast(search, self.whole_ast)),
+        ) or {"params": OrderedDict()}
 
         return ir["params"].get(name, typ_dict)[
             "typ"

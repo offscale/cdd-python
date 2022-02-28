@@ -35,7 +35,7 @@ class TestPureUtils(TestCase):
     """Test class for pure utils"""
 
     def test_balanced_parentheses(self) -> None:
-        """Tests that balanced_parentheses handles edge cases"""
+        """Tests that `balanced_parentheses` handles edge cases"""
         self.assertTrue(balanced_parentheses("foo()"))
         self.assertTrue(balanced_parentheses("[]()"))
         self.assertFalse(balanced_parentheses("[()"))
@@ -43,6 +43,9 @@ class TestPureUtils(TestCase):
         self.assertTrue(balanced_parentheses("foo='[])'"))
         self.assertTrue(balanced_parentheses('foo="[])"'))
         self.assertTrue(balanced_parentheses('foo="[])\'"'))
+        self.assertTrue(balanced_parentheses('foo="[])\'"()'))
+        self.assertFalse(balanced_parentheses('foo="[])\'"('))
+        self.assertFalse(balanced_parentheses('foo="[])\'"]'))
 
     def test_blockwise(self) -> None:
         """Tests that blockwise produces the expected output"""

@@ -9,6 +9,12 @@ from sys import version_info
 from cdd.ast_utils import annotate_ancestry
 from cdd.pure_utils import reindent, tab
 
+unparse = (
+    getattr(import_module("astor"), "to_source")
+    if version_info[:2] < (3, 9)
+    else getattr(import_module("ast"), "unparse")
+)
+
 
 def to_code(node):
     """
@@ -20,11 +26,8 @@ def to_code(node):
     :return: Python source
     :rtype: ```str```
     """
-    return (
-        getattr(import_module("astor"), "to_source")
-        if version_info[:2] < (3, 9)
-        else getattr(import_module("ast"), "unparse")
-    )(node)
+    # ^Not `to_code = getattr…` so docstring can be included^
+    return unparse(node)
 
 
 def ast_parse(

@@ -8,6 +8,7 @@ from ast import Expr, FunctionDef, arguments
 from collections import OrderedDict
 from copy import deepcopy
 from functools import partial
+from operator import itemgetter
 from os.path import extsep
 from platform import system
 from sys import modules
@@ -41,7 +42,7 @@ from cdd.tests.mocks.docstrings import (
     docstring_google_str,
     docstring_google_tf_ops_losses__safe_mean_str,
     docstring_header_str,
-    docstring_no_default_str,
+    docstring_no_default_no_nl_str,
     docstring_no_nl_str,
     docstring_no_type_no_default_tpl_str,
     docstring_numpydoc_str,
@@ -157,7 +158,7 @@ class TestEmitters(TestCase):
         """
         self.assertEqual(
             emit.docstring(parse.class_(class_ast), emit_default_doc=True),
-            reindent(docstring_str, 1),
+            reindent(docstring_no_nl_str, 1),
         )
 
     def test_to_docstring_emit_default_doc_false(self) -> None:
@@ -167,7 +168,7 @@ class TestEmitters(TestCase):
         ir = parse.class_(class_ast)
         self.assertEqual(
             emit.docstring(ir, emit_default_doc=False),
-            reindent(docstring_no_default_str, 1),
+            reindent(docstring_no_default_no_nl_str, 1),
         )
 
     def test_to_numpy_docstring(self) -> None:
@@ -564,20 +565,16 @@ class TestEmitters(TestCase):
         """
         Tests that `emit.json_schema` with `intermediate_repr_no_default_doc` produces `config_schema`
         """
+        gen_config_schema = emit.json_schema(
+            deepcopy(intermediate_repr_no_default_sql_doc),
+            "https://offscale.io/config.schema.json",
+            emit_original_whitespace=True,
+        )
         self.assertEqual(
-            emit.json_schema(
-                deepcopy(intermediate_repr_no_default_sql_doc),
-                "https://offscale.io/config.schema.json",
-                emit_original_whitespace=True,
-            )["description"],
-            config_schema["description"],
+            *map(itemgetter("description"), (gen_config_schema, config_schema))
         )
         self.assertDictEqual(
-            emit.json_schema(
-                deepcopy(intermediate_repr_no_default_sql_doc),
-                "https://offscale.io/config.schema.json",
-                emit_original_whitespace=True,
-            ),
+            gen_config_schema,
             config_schema,
         )
 
