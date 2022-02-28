@@ -848,11 +848,12 @@ def _fill_doc_with_afterward(scanned):
     ):
         del scanned["scanned_afterward"]
     else:
-        scanned["doc"] += (
-            "\n"
+        scanned["doc"] += "{maybe_nl}{scanned_afterward_str}".format(
+            maybe_nl="\n"
             if scanned["scanned_afterward"] and scanned["scanned_afterward"][0] == ""
-            else ""
-        ) + "\n".join(scanned["scanned_afterward"])
+            else "",
+            scanned_afterward_str="\n".join(scanned["scanned_afterward"]),
+        )
 
 
 def _parse_phase_rest(

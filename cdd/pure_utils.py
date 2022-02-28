@@ -486,13 +486,11 @@ def balanced_parentheses(s):
             and (idx == 0 or s[idx - 1] != "\\")
         ):
             quote_mark = None
-        elif ch in frozenset(("'", '"')):
-            if quote_mark is None:
+        elif quote_mark is None:
+            if ch in frozenset(("'", '"')):
                 quote_mark = ch
-            elif quote_mark == ch:
-                quote_mark = None
-        elif quote_mark is None and ch in counter:
-            counter[ch] += 1
+            elif ch in counter:
+                counter[ch] += 1
     return all(
         counter[open_parens[i]] == counter[closed_parens[i]]
         for i in range(len(open_parens))
@@ -722,8 +720,43 @@ def has_nl(s, func):
     :return: Whether s endswith a newline (possibly separated by other whitespace)
     :rtype: ```bool```
     """
-    start, maybe_nl, end = partial(func, "\n")(s)
-    return maybe_nl == "\n" and start.isspace()
+    start, maybe_nl, end = func(s, "\n")
+    return (
+        maybe_nl == "\n" and (not end or end.isspace())
+        if func.__name__ == "r"
+        else (not start or start.isspace())
+    )
+
+
+def count_chars_from(s, ignore, char, end):
+    """
+    Count number of chars in string from one or other end, until `ignore` is no longer True (or entire `s` is covered)
+
+    :param s: Input string
+    :type s: ```str``
+
+    :param ignore: Function that takes one char and decided whether to ignore it or not
+    :type ignore: ```Callable[[str], bool]```
+
+    :param char: Single character for counting occurrences of
+    :type char: ```str```
+
+    :param end: True to look from the end; False to look from start
+    :type end: ```bool```
+
+    :return: Number of chars count (until `ignore`)
+    :rtype: ```int```
+    """
+    char_count = 0
+    for i in range(*((len(s) - 1, 0, -1) if end else (0, len(s)))):
+        if not ignore(s[i]):
+            break
+        elif s[i] == char:
+            char_count += 1
+    return char_count
+
+
+num_of_nls = partial(count_chars_from, ignore=str.isspace, char="\n")
 
 
 def is_triple_quoted(s):
@@ -909,6 +942,7 @@ __all__ = [
     "balanced_parentheses",
     "blockwise",
     "code_quoted",
+    "count_chars_from",
     "count_iter_items",
     "deindent",
     "diff",
@@ -925,6 +959,7 @@ __all__ = [
     "multiline",
     "no_magic_dir2attr",
     "none_types",
+    "num_of_nls",
     "omit_whitespace",
     "paren_wrap_code",
     "pluralise",

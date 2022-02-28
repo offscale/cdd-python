@@ -333,8 +333,9 @@ class TestMarshallDocstring(TestCase):
                 # Word wrap everything, even if text is unchanged
                 "  Weighted loss float `Tensor`. If `reduction` is `NONE`, this has the same\n"
                 "  shape as `labels`; otherwise, it is scalar.\n",
-                "\n   Weighted loss float `Tensor`. If `reduction` is `NONE`, this has the same shape as `labels`; "
-                "otherwise, it is scalar.\n\n",
+                "\n"
+                "   Weighted loss float `Tensor`. If `reduction` is `NONE`, this has the same shape as `labels`; "
+                "otherwise, it is scalar.\n",
                 1,
             ),
         )

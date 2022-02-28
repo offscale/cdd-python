@@ -73,18 +73,18 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     #     )
 
     _gen_ast, _gold_ast = (
-        (gen_ast.body[0], gold.body[0])
+        (gold.body[0], gen_ast.body[0])
         if isinstance(gen_ast, ast.Module) and gen_ast.body
-        else (gen_ast, gold)
+        else (gold, gen_ast)
     )
     if isinstance(_gen_ast, (ast.ClassDef, ast.AsyncFunctionDef, ast.FunctionDef)):
         test_case_instance.assertEqual(
-            *map(partial(ast.get_docstring, clean=True), (_gen_ast, _gold_ast))
+            *map(partial(ast.get_docstring, clean=True), (_gold_ast, _gen_ast))
         )
 
-    coded_gen_gold = tuple(map(source_transformer.to_code, (_gen_ast, _gold_ast)))
-    # test_case_instance.assertEqual(*map("\n".join, zip(("#gen", "#gold"), coded_gen_gold)))
-    test_case_instance.assertEqual(*coded_gen_gold)
+    coded_gold_gen = tuple(map(source_transformer.to_code, (_gold_ast, _gen_ast)))
+    # test_case_instance.assertEqual(*map("\n".join, zip(("#gen", "#gold"), coded_gold_gen)))
+    test_case_instance.assertEqual(*coded_gold_gen)
     test_case_instance.assertEqual(
         *map(
             identity
@@ -98,7 +98,7 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
                     string_normalization=False,
                 ),
             ),
-            coded_gen_gold,
+            coded_gold_gen,
         )
     )
 

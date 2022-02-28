@@ -2,11 +2,11 @@
 Tests for source_transformer
 """
 
-from ast import ClassDef
+from ast import FunctionDef, Pass, arguments
 from unittest import TestCase
-from unittest.mock import patch
 
-from cdd.pure_utils import PY_GTE_3_9
+from cdd.pure_utils import tab
+from cdd.source_transformer import to_code
 from cdd.tests.utils_for_tests import unittest_main
 
 
@@ -19,35 +19,27 @@ class TestSourceTransformer(TestCase):
         """
         Tests to_source in Python 3.9 and < 3.9
         """
-        class_def = ClassDef(
-            name="Classy",
-            bases=tuple(),
+        func_def = FunctionDef(
+            name="funcy",
+            args=arguments(
+                posonlyargs=[],
+                args=[],
+                kwonlyargs=[],
+                kw_defaults=[],
+                defaults=[],
+                vararg=None,
+                kwarg=None,
+            ),
+            body=[Pass()],
             decorator_list=[],
-            body=[],
-            keywords=tuple(),
-            identifier_name=None,
-            expr=None,
+            lineno=None,
+            returns=None,
         )
 
-        with patch("cdd.source_transformer.version_info", (3, 9, 0)):
-            import cdd.source_transformer
-
-            self.assertEqual(
-                cdd.source_transformer.to_code(class_def).rstrip("\n"),
-                "class Classy:",
-            ) if PY_GTE_3_9 else self.assertRaises(
-                AttributeError, lambda: cdd.source_transformer.to_code(class_def)
-            )
-
-        with patch("cdd.source_transformer.version_info", (3, 8, 0)):
-            import cdd.source_transformer
-
-            self.assertEqual(
-                "class Classy:"
-                if PY_GTE_3_9
-                else cdd.source_transformer.to_code(class_def).rstrip("\n"),
-                "class Classy:",
-            )
+        self.assertEqual(
+            to_code(func_def).rstrip("\n"),
+            "def funcy():\n" "{tab}pass".format(tab=tab),
+        )
 
 
 unittest_main()

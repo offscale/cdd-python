@@ -44,7 +44,7 @@ class TestOpenApiBulk(TestCase):
                     )
                 )
 
-            self.assertDictEqual(
+            gen, gold = (
                 openapi_bulk(
                     app_name="rest_api",
                     model_paths=(models_filename,),
@@ -52,6 +52,17 @@ class TestOpenApiBulk(TestCase):
                 ),
                 openapi_dict,
             )
+
+            self.assertEqual(
+                *map(
+                    lambda d: d["components"]["schemas"]["Config"]["description"],
+                    (gen, gold),
+                )
+            )
+
+            self.assertDictEqual(gen, gold)
+
+    maxDiff = None
 
 
 unittest_main()

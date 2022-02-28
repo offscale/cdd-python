@@ -20,7 +20,6 @@ from cdd.tests.mocks.docstrings import (
     docstring_google_tf_lambda_callback_str,
     docstring_google_tf_squared_hinge_no_args_doc_str,
     docstring_header_no_nl_str,
-    docstring_header_str,
     docstring_keras_rmsprop_class_str,
     docstring_keras_rmsprop_method_str,
 )
@@ -994,7 +993,7 @@ intermediate_repr_extra_colons = {
 intermediate_repr_no_default_doc = {
     "name": None,
     "type": "static",
-    "doc": docstring_header_str.rstrip("\n"),
+    "doc": docstring_header_no_nl_str,
     "params": OrderedDict(
         (
             (

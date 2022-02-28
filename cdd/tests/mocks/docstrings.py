@@ -400,7 +400,7 @@ docstring_google_pytorch_lbfgs = (
 )
 docstring_google_pytorch_lbfgs_str = "\n".join(docstring_google_pytorch_lbfgs)
 
-docstring_google_str = """{docstring_header_no_nl_str}
+docstring_google_str = """{docstring_header_str}
 Args:
   dataset_name (str): name of dataset. Defaults to "mnist"
   tfds_dir (str): directory to look for models in. Defaults to "~/tensorflow_datasets"
@@ -412,7 +412,7 @@ Returns:
   Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
    Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 """.format(
-    docstring_header_no_nl_str=docstring_header_no_nl_str
+    docstring_header_str=docstring_header_str
 )
 
 docstring_no_default_doc_str = """
@@ -442,8 +442,8 @@ docstring_no_default_doc_wrapped_str = docstring_no_default_doc_str.replace(
     " np.ndarray]]```", "\n{tab}np.ndarray]]```".format(tab=tab)
 )
 
-docstring_no_default_str = """
-{header_doc_str}
+_docstring_no_default_str = """
+{header_doc_str}\n
 :param dataset_name: name of dataset.
 :type dataset_name: ```str```
 
@@ -461,8 +461,14 @@ docstring_no_default_str = """
 
 :return: Train and tests dataset splits.
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
-""".format(
+"""
+
+docstring_no_default_str = _docstring_no_default_str.format(
     header_doc_str=docstring_header_str
+)
+
+docstring_no_default_no_nl_str = _docstring_no_default_str.format(
+    header_doc_str=docstring_header_no_nl_str
 )
 
 docstring_numpydoc_only_doc_str = """
@@ -493,7 +499,7 @@ Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]
     Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 """
 
-docstring_numpydoc_str = """{docstring_header_no_nl_str}
+docstring_numpydoc_str = """{docstring_header_str}
 Parameters
 ----------
 dataset_name : str
@@ -508,7 +514,7 @@ data_loader_kwargs : Optional[dict]
     pass this as arguments to data_loader function
 
 {docstring_numpydoc_only_returns_str}""".format(
-    docstring_header_no_nl_str=docstring_header_no_nl_str,
+    docstring_header_str=docstring_header_str,
     docstring_numpydoc_only_returns_str=docstring_numpydoc_only_returns_str.lstrip(
         "\n"
     ),
@@ -524,7 +530,7 @@ Some comment
 """
 
 _docstring_str = """
-{header_doc_str}
+{header_doc_str}\n
 :param dataset_name: name of dataset. Defaults to "mnist"
 :type dataset_name: ```str```
 
@@ -788,6 +794,7 @@ __all__ = [
     "docstring_google_tf_adadelta_str",
     "docstring_google_tf_adam_str",
     "docstring_google_tf_lambda_callback_str",
+    "docstring_google_tf_mean_squared_error_args_tuple",
     "docstring_google_tf_mean_squared_error_footer_tuple",
     "docstring_google_tf_mean_squared_error_header_tuple",
     "docstring_google_tf_mean_squared_error_str",
@@ -800,6 +807,7 @@ __all__ = [
     "docstring_keras_rmsprop_class_str",
     "docstring_keras_rmsprop_method_str",
     "docstring_no_default_doc_str",
+    "docstring_no_default_no_nl_str",
     "docstring_no_default_str",
     "docstring_no_nl_str",
     "docstring_numpydoc_only_doc_str",
@@ -811,5 +819,4 @@ __all__ = [
     "docstring_repr_str",
     "docstring_str",
     "docstring_sum_tuple",
-    "docstring_google_tf_mean_squared_error_args_tuple",
 ]
