@@ -26,7 +26,7 @@ from cdd.pure_utils import (
     simple_types,
     strip_split,
     tab,
-    update_d,
+    update_d
 )
 from cdd.tests.utils_for_tests import unittest_main
 
