@@ -540,8 +540,8 @@ def parse_docstring_into_header_args_footer(current_doc_str, original_doc_str):
     args_returns_current, args_returns_original = map(
         lambda doc_start_end: doc_start_end[0][
             slice(
-                doc_start_end[1] if doc_start_end[1] > -1 else None,
-                doc_start_end[2] if doc_start_end[2] > -1 else None,
+                doc_start_end[1] if doc_start_end[1] is not None and doc_start_end[1] > -1 else None,
+                doc_start_end[2] if doc_start_end[2] is not None and doc_start_end[2] > -1 else None,
             )
         ],
         (
@@ -609,7 +609,7 @@ def header_args_footer_to_str(header, args_returns, footer):
     :return: One string with these three section combined with a minimum of one nl betwixt each and two at first
     :rtype: ```str```
     """
-    header_end_nls = num_of_nls(header, end=True)
+    header_end_nls = num_of_nls(header, end=True) if header else 0
     if args_returns:
         args_returns_start_nls = num_of_nls(args_returns, end=False)
         args_returns_ends_nls = num_of_nls(args_returns, end=True)

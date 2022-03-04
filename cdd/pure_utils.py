@@ -707,27 +707,6 @@ def get_module(name, package=None, extra_symbols=None):
             raise
 
 
-def has_nl(s, func):
-    """
-    Check if str endswith a newline (possibly separated by other whitespace)
-
-    :param s: Input string
-    :type s: ```str```
-
-    :param func: `str.partition` or `str.rpartition` function (or something similar)
-    :type func: ```Callable[[str], Tuple[str,str,str]]```
-
-    :return: Whether s endswith a newline (possibly separated by other whitespace)
-    :rtype: ```bool```
-    """
-    start, maybe_nl, end = func(s, "\n")
-    return (
-        maybe_nl == "\n" and (not end or end.isspace())
-        if func.__name__ == "r"
-        else (not start or start.isspace())
-    )
-
-
 def count_chars_from(s, ignore, char, end):
     """
     Count number of chars in string from one or other end, until `ignore` is no longer True (or entire `s` is covered)
@@ -950,7 +929,6 @@ __all__ = [
     "filename_from_mod_or_filename",
     "fill",
     "get_module",
-    "has_nl",
     "is_triple_quoted",
     "identity",
     "indent_all_but_first",
