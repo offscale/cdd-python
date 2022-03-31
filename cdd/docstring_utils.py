@@ -540,8 +540,12 @@ def parse_docstring_into_header_args_footer(current_doc_str, original_doc_str):
     args_returns_current, args_returns_original = map(
         lambda doc_start_end: doc_start_end[0][
             slice(
-                doc_start_end[1] if doc_start_end[1] is not None and doc_start_end[1] > -1 else None,
-                doc_start_end[2] if doc_start_end[2] is not None and doc_start_end[2] > -1 else None,
+                doc_start_end[1]
+                if doc_start_end[1] is not None and doc_start_end[1] > -1
+                else None,
+                doc_start_end[2]
+                if doc_start_end[2] is not None and doc_start_end[2] > -1
+                else None,
             )
         ],
         (
