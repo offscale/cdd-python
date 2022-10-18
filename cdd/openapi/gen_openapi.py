@@ -28,6 +28,9 @@ def openapi_bulk(app_name, model_paths, routes_paths):
 
     :param routes_paths: The path/module-resolution(s) whence the route(s) can be found
     :type routes_paths: ```List[str]```
+
+    :return: OpenAPI dictionary
+    :rtype: ```dict```
     """
     request_bodies = {}
 
