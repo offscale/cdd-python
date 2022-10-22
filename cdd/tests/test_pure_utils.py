@@ -27,6 +27,8 @@ from cdd.pure_utils import (
     strip_split,
     tab,
     update_d,
+    parse_comment_from_line,
+    remove_whitespace_comments,
 )
 from cdd.tests.utils_for_tests import unittest_main
 
@@ -135,6 +137,17 @@ class TestPureUtils(TestCase):
             ),
         )
 
+    def test_parse_comment_from_line(self) -> None:
+        """Tests that parse_comment_from_line parses the comment out of the line"""
+        self.assertEqual("foo", parse_comment_from_line("foo#bar"))
+        self.assertEqual("foo", parse_comment_from_line("foo #bar"))
+        self.assertEqual("foo", parse_comment_from_line("foo  #bar"))
+        self.assertEqual("foobar", parse_comment_from_line("foobar"))
+        self.assertEqual("", parse_comment_from_line(""))
+        self.assertEqual('foo = "ba#r"', parse_comment_from_line('foo = "ba#r"'))
+        self.assertEqual("foo = 'ba#r'", parse_comment_from_line("foo = 'ba#r'"))
+        # self.assertEqual("foo =", parse_comment_from_line("foo = #'foo'"))
+
     def test_pluralises(self) -> None:
         """Tests that pluralises pluralises"""
         self.assertEqual(pluralise(""), "")
@@ -152,6 +165,13 @@ class TestPureUtils(TestCase):
         self.assertEqual(pluralise("wish"), "wishes")
         self.assertEqual(pluralise("morphosis"), "morphosises")
         self.assertEqual(pluralise("s"), "ss")
+
+    def test_remove_whitespace_comments(self) -> None:
+        """Tests `remove_whitespace_comments` actually removes whitespace and comments from Python source"""
+        self.assertEqual(
+            remove_whitespace_comments("\n".join(("foo", "", "bar # can", "", ""))),
+            "foo\nbar",
+        )
 
     def test_sanitise(self) -> None:
         """Tests sanity"""

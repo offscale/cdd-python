@@ -9,9 +9,9 @@ from functools import partial
 from importlib import import_module
 from importlib.util import find_spec
 from inspect import getmodule
-from itertools import chain, count, zip_longest
+from itertools import chain, count, zip_longest, filterfalse
 from keyword import iskeyword
-from operator import attrgetter, eq
+from operator import attrgetter, eq, not_
 from os import environ, extsep, path
 from pprint import PrettyPrinter
 from sys import version_info
@@ -38,6 +38,59 @@ fill = partial(_fill, width=line_length)
 def rpartial(func, *args):
     """Partially applies last arguments."""
     return lambda *a: func(*(a + args))
+
+
+def remove_whitespace_comments(source):
+    """
+    Remove all nonsignficant whitespace and comments from source
+
+    :param source: Python source string
+    :type source: ```str```
+
+    :return: `source` without signficant whitespace and comments
+    :rtype: ```str```
+    """
+    return "\n".join(
+        filter(
+            None,
+            filterfalse(str.isspace, map(parse_comment_from_line, source.splitlines())),
+        )
+    )
+
+
+def parse_comment_from_line(line):
+    """
+    Remove from comment onwards in line
+
+    :param line: Python source line
+    :type line: ```str```
+
+    :return: `line` without comments
+    :rtype: ```str```
+    """
+    double = 0
+    single = 0
+    for col, ch in enumerate(line):
+        if ch == '"' and (col <= 0 or line[col - 1] != "\\"):
+            double += 1
+        elif ch == "'" and (col <= 0 or line[col - 1] != "\\"):
+            single += 1
+        elif (
+            ch == "#"
+            and (col <= 0 or line[col - 1] != "\\")
+            and single & 1 == 0
+            and double & 1 == 0
+        ):
+            chars_count = count_chars_from(
+                line,
+                char="",
+                sentinel_char_unseen=lambda s: not s.isspace(),
+                s_len=lambda _: col,
+                end=True,
+                char_f=str.isspace,
+            )
+            return "".join(line[: col - chars_count])
+    return line
 
 
 def identity(*args, **kwargs):
@@ -707,15 +760,17 @@ def get_module(name, package=None, extra_symbols=None):
             raise
 
 
-def count_chars_from(s, ignore, char, end):
+def count_chars_from(
+    s, sentinel_char_unseen, char, end, s_len=len, start_idx=0, char_f=None
+):
     """
     Count number of chars in string from one or other end, until `ignore` is no longer True (or entire `s` is covered)
 
     :param s: Input string
     :type s: ```str``
 
-    :param ignore: Function that takes one char and decided whether to ignore it or not
-    :type ignore: ```Callable[[str], bool]```
+    :param sentinel_char_unseen: Function that takes one char and decided whether to ignore it or not
+    :type sentinel_char_unseen: ```Callable[[str], bool]```
 
     :param char: Single character for counting occurrences of
     :type char: ```str```
@@ -723,19 +778,32 @@ def count_chars_from(s, ignore, char, end):
     :param end: True to look from the end; False to look from start
     :type end: ```bool```
 
-    :return: Number of chars count (until `ignore`)
+    :param s_len: String len function to use, override to work at a shorter substr, e.g., `lambda _: 5`
+    :type s_len: ```Callable[str, [int]]```
+
+    :param start_idx: Index to start looking at string from, override to work at a shorter substr, e.g., `3`
+    :type start_idx: ```int```
+
+    :param char_f: char function, if `True` adds 1 to count. Overrides `char` if provided.
+    :type char_f: ```Optional[Callable[str, [bool]]```
+
+    :return: Number of chars counted (until `ignore`)
     :rtype: ```int```
     """
     char_count = 0
-    for i in range(*((len(s) - 1, 0, -1) if end else (0, len(s)))):
-        if not ignore(s[i]):
-            break
-        elif s[i] == char:
+
+    if char_f is None:
+        char_f = rpartial(eq, char)
+
+    for i in range(*((s_len(s) - 1, start_idx, -1) if end else (start_idx, s_len(s)))):
+        if char_f(s[i]):
             char_count += 1
+        elif not sentinel_char_unseen(s[i]):
+            break
     return char_count
 
 
-num_of_nls = partial(count_chars_from, ignore=str.isspace, char="\n")
+num_of_nls = partial(count_chars_from, sentinel_char_unseen=str.isspace, char="\n")
 
 
 def is_triple_quoted(s):
@@ -940,11 +1008,13 @@ __all__ = [
     "num_of_nls",
     "omit_whitespace",
     "paren_wrap_code",
+    "parse_comment_from_line",
     "pluralise",
     "pp",
     # "previous_line_range",
     "quote",
     "reindent",
+    "remove_whitespace_comments",
     "rpartial",
     "sanitise",
     "sanitise_emit_name",
