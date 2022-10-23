@@ -27,8 +27,8 @@ from cdd.pure_utils import (
     strip_split,
     tab,
     update_d,
-    parse_comment_from_line,
     remove_whitespace_comments,
+    parse_comment_from_line,
 )
 from cdd.tests.utils_for_tests import unittest_main
 
@@ -137,16 +137,20 @@ class TestPureUtils(TestCase):
             ),
         )
 
-    def test_parse_comment_from_line(self) -> None:
-        """Tests that parse_comment_from_line parses the comment out of the line"""
-        self.assertEqual("foo", parse_comment_from_line("foo#bar"))
-        self.assertEqual("foo", parse_comment_from_line("foo #bar"))
-        self.assertEqual("foo", parse_comment_from_line("foo  #bar"))
-        self.assertEqual("foobar", parse_comment_from_line("foobar"))
-        self.assertEqual("", parse_comment_from_line(""))
-        self.assertEqual('foo = "ba#r"', parse_comment_from_line('foo = "ba#r"'))
-        self.assertEqual("foo = 'ba#r'", parse_comment_from_line("foo = 'ba#r'"))
-        # self.assertEqual("foo =", parse_comment_from_line("foo = #'foo'"))
+    def test_(self) -> None:
+        """Tests that  parses the comment out of the line"""
+        for output_val, input_val in (
+            ("foo", "foo#bar"),
+            ("foo", "foo #bar"),
+            ("foo", "foo  #bar"),
+            ("foobar", "foobar"),
+            ("", ""),
+            ('foo = "ba#r"', 'foo = "ba#r"'),
+            ("foo = 'ba#r'", "foo = 'ba#r'"),
+            ("foo =", "foo = #'foo'"),
+            ("source = ndb.TextProperty()", "source = ndb.TextProperty()"),
+        ):
+            self.assertEqual(output_val, parse_comment_from_line(input_val))
 
     def test_pluralises(self) -> None:
         """Tests that pluralises pluralises"""
