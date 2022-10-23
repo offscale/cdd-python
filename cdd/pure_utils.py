@@ -9,9 +9,9 @@ from functools import partial
 from importlib import import_module
 from importlib.util import find_spec
 from inspect import getmodule
-from itertools import chain, count, zip_longest, filterfalse
+from itertools import chain, count, zip_longest, filterfalse, islice, takewhile
 from keyword import iskeyword
-from operator import attrgetter, eq, not_
+from operator import attrgetter, eq
 from os import environ, extsep, path
 from pprint import PrettyPrinter
 from sys import version_info
@@ -71,25 +71,19 @@ def parse_comment_from_line(line):
     double = 0
     single = 0
     for col, ch in enumerate(line):
-        if ch == '"' and (col <= 0 or line[col - 1] != "\\"):
+        if col > 3 and line[col - 1] == "\\" and ch in frozenset(('"', "'", "#")):
+            pass  # Ignore the char
+        elif ch == '"':
             double += 1
-        elif ch == "'" and (col <= 0 or line[col - 1] != "\\"):
+        elif ch == "'":
             single += 1
-        elif (
-            ch == "#"
-            and (col <= 0 or line[col - 1] != "\\")
-            and single & 1 == 0
-            and double & 1 == 0
-        ):
-            chars_count = count_chars_from(
-                line,
-                char="",
-                sentinel_char_unseen=lambda s: not s.isspace(),
-                s_len=lambda _: col,
-                end=True,
-                char_f=str.isspace,
+        elif ch == "#" and single & 1 == 0 and double & 1 == 0:
+            col_offset = (
+                col
+                if col == 0
+                else (col - count_iter_items(takewhile(str.isspace, line[:col][::-1])))
             )
-            return "".join(line[: col - chars_count])
+            return "".join(islice(line, 0, col_offset))
     return line
 
 
