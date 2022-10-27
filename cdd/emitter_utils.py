@@ -567,11 +567,17 @@ def param_to_sqlalchemy_column_call(param, include_name):
     elif has_default and _param["default"] not in none_types:
         nullable = False
 
-    keywords.append(
-        ast.keyword(
-            arg="doc", value=set_value(_param["doc"].rstrip(".")), identifier=None
+    rstripped_dot_doc = _param["doc"].rstrip(".")
+    if rstripped_dot_doc:
+        keywords.append(
+            ast.keyword(arg="doc", value=set_value(rstripped_dot_doc), identifier=None)
         )
-    )
+
+    if _param.get("x_typ", {}).get("sql", {}).get("constraints"):
+        keywords += [
+            ast.keyword(arg=k, value=set_value(v), identifier=None)
+            for k, v in _param["x_typ"]["sql"]["constraints"].items()
+        ]
 
     if has_default:
         if _param["default"] == NoneStr:

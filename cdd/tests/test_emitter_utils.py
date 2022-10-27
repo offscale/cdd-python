@@ -5,15 +5,41 @@ from copy import deepcopy
 from unittest import TestCase
 
 from cdd.ast_utils import set_value
-from cdd.emitter_utils import interpolate_defaults, parse_out_param
+from cdd.emitter_utils import (
+    interpolate_defaults,
+    parse_out_param,
+    param_to_sqlalchemy_column_call,
+)
 from cdd.pure_utils import rpartial
 from cdd.tests.mocks.argparse import argparse_add_argument_ast, argparse_func_ast
 from cdd.tests.mocks.ir import intermediate_repr
-from cdd.tests.utils_for_tests import unittest_main
+from cdd.tests.utils_for_tests import unittest_main, run_ast_test
 
 
 class TestEmitterUtils(TestCase):
     """Test class for emitter_utils"""
+
+    def test_param_to_sqlalchemy_column_call_when_sql_constraints(self) -> None:
+        """Tests that with SQL constraints the SQLalchemy column is correctly generated"""
+        run_ast_test(
+            self,
+            param_to_sqlalchemy_column_call(
+                (
+                    "foo",
+                    {
+                        "doc": "",
+                        "typ": "str",
+                        "x_typ": {"sql": {"constraints": {"indexed": True}}},
+                    },
+                ),
+                include_name=False,
+            ),
+            gold=Call(
+                func=Name(id="Column", ctx=Load()),
+                args=[Name(id="String", ctx=Load())],
+                keywords=[keyword(arg="indexed", value=set_value(True))],
+            ),
+        )
 
     def test_parse_out_param(self) -> None:
         """Test that parse_out_param parses out the right dict"""
