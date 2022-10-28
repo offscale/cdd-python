@@ -600,11 +600,13 @@ class TestEmitters(TestCase):
         """
         system() in frozenset(("Darwin", "Linux")) and print("test_to_sqlalchemy")
 
+        ir = deepcopy(intermediate_repr_no_default_sql_doc)
+        ir["name"] = "Config"
         run_ast_test(
             self,
             emit.sqlalchemy(
-                deepcopy(intermediate_repr_no_default_sql_doc),
-                class_name="Config",
+                ir,
+                # class_name="Config",
                 table_name="config_tbl",
             ),
             gold=config_decl_base_ast,

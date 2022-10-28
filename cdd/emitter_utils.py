@@ -3,7 +3,7 @@ Functions which produce intermediate_repr from various different inputs
 """
 
 import ast
-from ast import Attribute, Call, Expr, FunctionDef, Load, Name, Return, arguments
+from ast import Attribute, Call, Expr, FunctionDef, Load, Name, Return, arguments, AST
 from platform import system
 from typing import Any
 
@@ -538,6 +538,8 @@ def param_to_sqlalchemy_column_call(param, include_name):
     if include_name:
         args.append(set_value(name))
 
+    x_typ_sql = _param.get("x_typ", {}).get("sql", {})
+
     if "Literal[" in _param["typ"]:
         parsed_typ = get_value(ast.parse(_param["typ"]).body[0])
         assert (
@@ -558,7 +560,14 @@ def param_to_sqlalchemy_column_call(param, include_name):
         )
 
     else:
-        args.append(Name(typ2column_type[_param["typ"]], Load()))
+        args.append(
+            Name(
+                x_typ_sql["type"]
+                if "type" in x_typ_sql
+                else typ2column_type[_param["typ"]],
+                Load(),
+            )
+        )
 
     has_default = _param.get("default", ast) is not ast
     pk = _param.get("doc", "").startswith("[PK]")
@@ -573,9 +582,11 @@ def param_to_sqlalchemy_column_call(param, include_name):
             ast.keyword(arg="doc", value=set_value(rstripped_dot_doc), identifier=None)
         )
 
-    if _param.get("x_typ", {}).get("sql", {}).get("constraints"):
+    if x_typ_sql.get("constraints"):
         keywords += [
-            ast.keyword(arg=k, value=set_value(v), identifier=None)
+            ast.keyword(
+                arg=k, value=v if isinstance(v, AST) else set_value(v), identifier=None
+            )
             for k, v in _param["x_typ"]["sql"]["constraints"].items()
         ]
 
@@ -585,7 +596,9 @@ def param_to_sqlalchemy_column_call(param, include_name):
         keywords.append(
             ast.keyword(
                 arg="default",
-                value=set_value(_param["default"]),
+                value=_param["default"]
+                if isinstance(_param["default"], AST)
+                else set_value(_param["default"]),
                 identifier=None,
             )
         )

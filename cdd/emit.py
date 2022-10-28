@@ -1081,7 +1081,7 @@ def sqlalchemy_table(
 def sqlalchemy(
     intermediate_repr,
     emit_repr=True,
-    class_name="Config",
+    class_name=None,
     class_bases=("Base",),
     decorator_list=None,
     table_name=None,
@@ -1155,6 +1155,10 @@ def sqlalchemy(
         )
         return indent_all_but_first(res, indent_level=1, sep=tab)
 
+    if class_name is None and intermediate_repr["name"]:
+        class_name = intermediate_repr["name"]
+    assert class_name is not None
+
     return ClassDef(
         name=class_name,
         bases=list(map(lambda class_base: Name(class_base, Load()), class_bases)),
@@ -1195,7 +1199,9 @@ def sqlalchemy(
                         )
                     )
                     if intermediate_repr["doc"]
-                    or intermediate_repr["returns"].get("return_type", {}).get("doc")
+                    or (intermediate_repr["returns"] or {})
+                    .get("return_type", {})
+                    .get("doc")
                     else None,
                     Assign(
                         targets=[Name("__tablename__", Store())],
