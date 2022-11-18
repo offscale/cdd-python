@@ -13,7 +13,7 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch
 
-from cdd import parse
+import cdd.parse.class_
 from cdd.exmod import exmod
 from cdd.pkg_utils import relative_filename
 from cdd.pure_utils import ENCODING, INIT_FILENAME, rpartial, unquote
@@ -565,7 +565,7 @@ class TestExMod(TestCase):
                         lambda ir: ir["_internal"].__delitem__("original_doc_str")
                         or ir,
                         map(
-                            lambda node: parse.class_(
+                            lambda node: cdd.parse.class_.class_(
                                 next(
                                     filter(
                                         rpartial(isinstance, ClassDef),

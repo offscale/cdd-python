@@ -8,7 +8,7 @@ from itertools import chain
 from operator import attrgetter, itemgetter
 from os import path
 
-from cdd import parse
+import cdd.parse.sqlalchemy
 from cdd.ast_utils import get_value
 from cdd.pure_utils import filename_from_mod_or_filename, rpartial
 from cdd.routes import emit as routes_emit
@@ -65,7 +65,7 @@ def gen_routes(app, model_path, model_name, crud, route):
         ),
         None,
     )
-    sqlalchemy_ir = parse.sqlalchemy(sqlalchemy_node)
+    sqlalchemy_ir = cdd.parse.sqlalchemy.sqlalchemy(sqlalchemy_node)
     primary_key = next(
         map(
             itemgetter(0),

@@ -3,7 +3,7 @@ Functions which produce intermediate_repr from various different inputs
 """
 
 import ast
-from ast import Attribute, Call, Expr, FunctionDef, Load, Name, Return, arguments, AST
+from ast import AST, Attribute, Call, Expr, FunctionDef, Load, Name, Return, arguments
 from platform import system
 from typing import Any
 

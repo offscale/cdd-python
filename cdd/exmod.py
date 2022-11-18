@@ -11,7 +11,7 @@ from itertools import chain, groupby
 from operator import itemgetter
 from os import makedirs, path
 
-from cdd import emit, parse
+import cdd.emit.file
 from cdd.ast_utils import maybe_type_comment, set_value
 from cdd.exmod_utils import emit_file_on_hierarchy, get_module_contents
 from cdd.pkg_utils import relative_filename
@@ -142,7 +142,9 @@ def exmod(
                     )(relative_filename(getfile(name_source[1]))),
                     {"params": OrderedDict(), "returns": OrderedDict()}
                     if dry_run
-                    else parse.class_(name_source[1], merge_inner_function="__init__"),
+                    else cdd.parse.class_.class_(
+                        name_source[1], merge_inner_function="__init__"
+                    ),
                 ),
                 map(
                     lambda name_source: (
@@ -180,7 +182,7 @@ def exmod(
     if dry_run:
         print("write\t{init_filepath!r}".format(init_filepath=init_filepath))
     else:
-        emit.file(
+        cdd.emit.file.file(
             Module(
                 body=list(
                     chain.from_iterable(

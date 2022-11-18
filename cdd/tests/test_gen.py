@@ -25,7 +25,8 @@ from tempfile import mkdtemp
 from unittest import TestCase
 from unittest.mock import patch
 
-from cdd import emit, parse
+import cdd.emit.class_
+import cdd.parse.function
 from cdd.ast_utils import maybe_type_comment, set_value
 from cdd.gen import gen
 from cdd.pure_utils import rpartial
@@ -54,8 +55,8 @@ def populate_files(tempdir, input_module_str=None):
     """
     input_filename = os.path.join(tempdir, "input{extsep}py".format(extsep=extsep))
     input_class_name = "Foo"
-    input_class_ast = emit.class_(
-        parse.function(deepcopy(method_adder_ast)),
+    input_class_ast = cdd.emit.class_.class_(
+        cdd.parse.function.function(deepcopy(method_adder_ast)),
         emit_call=False,
         class_name=input_class_name,
     )
@@ -103,8 +104,8 @@ def populate_files(tempdir, input_module_str=None):
     #     "        self.a = 5\n"
     #     "        self.b = 16\n"
     # )
-    expected_class_ast = emit.class_(
-        parse.function(deepcopy(method_adder_ast)),
+    expected_class_ast = cdd.emit.class_.class_(
+        cdd.parse.function.function(deepcopy(method_adder_ast)),
         emit_call=True,
         class_name="{input_class_name}Config".format(input_class_name=input_class_name),
     )

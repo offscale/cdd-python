@@ -8,7 +8,10 @@ from functools import partial
 from operator import itemgetter
 from os import path
 
-from cdd import emit, parse
+import cdd.emit.argparse_function
+import cdd.emit.class_
+import cdd.emit.file
+import cdd.emit.function
 from cdd.ast_utils import RewriteAtQuery, cmp_ast, find_in_ast, get_function_type
 from cdd.pure_utils import pluralise, strip_split
 from cdd.source_transformer import ast_parse
@@ -83,9 +86,17 @@ def ground_truth(args, truth_file):
     :rtype: ```OrderedDict```
     """
     arg2parse_emit_type = {
-        "argparse_function": (parse.argparse_ast, emit.argparse_function, FunctionDef),
-        "class": (parse.class_, emit.class_, ClassDef),
-        "function": (parse.function, emit.function, FunctionDef),
+        "argparse_function": (
+            cdd.parse.argparse_function.argparse_ast,
+            cdd.emit.argparse_function.argparse_function,
+            FunctionDef,
+        ),
+        "class": (cdd.parse.class_.class_, cdd.emit.class_.class_, ClassDef),
+        "function": (
+            cdd.parse.function.function,
+            cdd.emit.function.function,
+            FunctionDef,
+        ),
     }
 
     parse_func, emit_func, type_wanted = arg2parse_emit_type[args.truth]
@@ -156,7 +167,7 @@ def _conform_filename(
     filename = path.realpath(path.expanduser(filename))
 
     if not path.isfile(filename):
-        emit.file(
+        cdd.emit.file.file(
             emit_func(
                 replacement_node_ir,
                 emit_default_doc=False,  # emit_func.__name__ == "class_"
@@ -177,7 +188,9 @@ def _conform_filename(
         **_default_options(node=original_node, search=search, type_wanted=type_wanted)()
     )
     if original_node is None:
-        emit.file(replacement_node, filename=filename, mode="a", skip_black=False)
+        cdd.emit.file.file(
+            replacement_node, filename=filename, mode="a", skip_black=False
+        )
         return filename, True
     assert len(search) > 0
 
@@ -199,7 +212,7 @@ def _conform_filename(
             "modified" if rewrite_at_query.replaced else "unchanged", filename, sep="\t"
         )
         if rewrite_at_query.replaced:
-            emit.file(parsed_ast, filename, mode="wt", skip_black=False)
+            cdd.emit.file.file(parsed_ast, filename, mode="wt", skip_black=False)
 
         replaced = rewrite_at_query.replaced
 
