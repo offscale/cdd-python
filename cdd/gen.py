@@ -4,14 +4,14 @@ Functionality to generate classes, functions, and/or argparse functions from the
 
 import ast
 from ast import Assign, Import, ImportFrom, Module, Name, Store
+from importlib import import_module
 from inspect import getfile
 from itertools import chain
 from operator import itemgetter
 from os import path
 
-from cdd import emit, parse
 from cdd.ast_utils import get_at_root, maybe_type_comment, set_value
-from cdd.parser_utils import infer
+from cdd.parse.parser_utils import infer
 from cdd.pure_utils import get_module, sanitise_emit_name
 from cdd.source_transformer import to_code
 
@@ -162,10 +162,14 @@ def gen(
             print("\nGenerating: {name!r}".format(name=name))
             or global__all__.append(name_tpl.format(name=name))
             or to_code(
-                getattr(emit, emit_name)(
-                    getattr(
-                        parse,
-                        infer(obj) if parse_name in (None, "infer") else parse_name,
+                getattr(import_module(".".join(("cdd", "emit", emit_name))), emit_name)(
+                    (
+                        (
+                            lambda parser_name: getattr(
+                                import_module(".".join(("cdd", "parse", parser_name))),
+                                parser_name,
+                            )
+                        )(infer(obj) if parse_name in (None, "infer") else parse_name)
                     )(obj),
                     emit_default_doc=emit_default_doc,
                     word_wrap=no_word_wrap is None,

@@ -177,7 +177,7 @@ def _generic_param2ast(param):
     """
     name, _param = param
     del param
-    from cdd.emitter_utils import ast_parse_fix
+    from cdd.emit.emitter_utils import ast_parse_fix
 
     annotation = ast_parse_fix(_param["typ"])
     value = set_value(None)
@@ -418,7 +418,7 @@ def _resolve_arg(action, choices, param, required, typ):
     elif _param["typ"] == "dict" or name.endswith("kwargs"):
         typ, required = "loads", not name.endswith("kwargs")
     elif _param["typ"]:
-        from cdd.emitter_utils import ast_parse_fix
+        from cdd.emit.emitter_utils import ast_parse_fix
 
         parsed_type = ast_parse_fix(_param["typ"])
         for node in walk(parsed_type):

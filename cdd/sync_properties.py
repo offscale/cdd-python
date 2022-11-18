@@ -5,7 +5,7 @@ Functionality to synchronise properties
 import ast
 from os import path
 
-from cdd import emit
+import cdd.emit.file
 from cdd.ast_utils import RewriteAtQuery, annotate_ancestry, find_in_ast, it2literal
 from cdd.pure_utils import strip_split
 from cdd.source_transformer import ast_parse, to_code
@@ -60,7 +60,7 @@ def sync_properties(
             output_ast,
         )
 
-    emit.file(output_ast, output_filename, mode="wt", skip_black=False)
+    cdd.emit.file.file(output_ast, output_filename, mode="wt", skip_black=False)
 
 
 def sync_property(

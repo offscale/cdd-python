@@ -8,7 +8,7 @@ from itertools import chain
 from operator import attrgetter, eq
 from os import extsep, makedirs, path
 
-from cdd import emit
+import cdd.emit.file
 from cdd.ast_utils import (
     maybe_type_comment,
     merge_assignment_lists,
@@ -275,18 +275,22 @@ def _emit_symbol(
     :return: Import to generated module
     :rtype: ```ImportFrom```
     """
-    gen_node = getattr(emit, sanitise_emit_name(emit_name))(
-        intermediate_repr,
-        word_wrap=no_word_wrap is None,
-        **dict(
-            **{
-                "{emit_name}_name".format(
-                    emit_name="function" if emit_name == "argparse" else emit_name
-                ): name
-            },
-            **{} if emit_name == "class" else {"function_type": "static"}
+    gen_node = (
+        lambda sanitised_emit_name: getattr(
+            getattr(cdd.emit, sanitised_emit_name), sanitised_emit_name
+        )(
+            intermediate_repr,
+            word_wrap=no_word_wrap is None,
+            **dict(
+                **{
+                    "{emit_name}_name".format(
+                        emit_name="function" if emit_name == "argparse" else emit_name
+                    ): name
+                },
+                **{} if emit_name == "class" else {"function_type": "static"}
+            )
         )
-    )
+    )(sanitise_emit_name(emit_name))
     __all___node = Assign(
         targets=[Name("__all__", Store())],
         value=List(
@@ -327,12 +331,12 @@ def _emit_symbol(
     if dry_run:
         print("write\t{emit_filename!r}".format(emit_filename=emit_filename))
     else:
-        emit.file(gen_node, filename=emit_filename, mode="wt")
+        cdd.emit.file.file(gen_node, filename=emit_filename, mode="wt")
     if name != "__init__" and not path.isfile(init_filepath):
         if dry_run:
             print("write\t{emit_filename!r}".format(emit_filename=emit_filename))
         else:
-            emit.file(
+            cdd.emit.file.file(
                 Module(
                     body=[
                         Expr(

@@ -8,7 +8,8 @@ from ast import Expr, FunctionDef, arguments
 from collections import OrderedDict
 from copy import deepcopy
 from functools import partial
-from operator import itemgetter
+from itertools import chain, filterfalse
+from operator import itemgetter, ne
 from os.path import extsep
 from platform import system
 from sys import modules
@@ -16,7 +17,14 @@ from tempfile import TemporaryDirectory
 from textwrap import indent
 from unittest import TestCase, skipIf
 
-from cdd import emit, parse
+import cdd.emit.argparse_function
+import cdd.emit.class_
+import cdd.emit.docstring
+import cdd.emit.file
+import cdd.emit.function
+import cdd.emit.json_schema
+import cdd.emit.sqlalchemy
+import cdd.parse.argparse_function
 from cdd.ast_utils import (
     annotate_ancestry,
     cmp_ast,
@@ -24,6 +32,7 @@ from cdd.ast_utils import (
     get_function_type,
     set_value,
 )
+from cdd.emit import EMITTERS
 from cdd.pure_utils import none_types, omit_whitespace, reindent, rpartial, tab
 from cdd.tests.mocks.argparse import (
     argparse_func_action_append_ast,
@@ -77,8 +86,9 @@ class TestEmitters(TestCase):
         """
         run_ast_test(
             self,
-            gen_ast=emit.class_(
-                parse.argparse_ast(argparse_func_ast), emit_default_doc=True
+            gen_ast=cdd.emit.class_.class_(
+                cdd.parse.argparse_function.argparse_ast(argparse_func_ast),
+                emit_default_doc=True,
             ),
             gold=class_ast,
         )
@@ -89,8 +99,10 @@ class TestEmitters(TestCase):
         """
         run_ast_test(
             self,
-            emit.class_(
-                parse.argparse_ast(argparse_func_action_append_ast),
+            cdd.emit.class_.class_(
+                cdd.parse.argparse_function.argparse_ast(
+                    argparse_func_action_append_ast
+                ),
             ),
             gold=class_nargs_ast,
         )
@@ -101,8 +113,10 @@ class TestEmitters(TestCase):
         """
         run_ast_test(
             self,
-            emit.class_(
-                parse.docstring(docstring_no_nl_str, emit_default_doc=True),
+            cdd.emit.class_.class_(
+                cdd.parse.docstring.docstring(
+                    docstring_no_nl_str, emit_default_doc=True
+                ),
                 emit_default_doc=True,
             ),
             gold=class_ast,
@@ -114,8 +128,8 @@ class TestEmitters(TestCase):
         """
         run_ast_test(
             self,
-            gen_ast=emit.argparse_function(
-                parse.class_(class_ast),
+            gen_ast=cdd.emit.argparse_function.argparse_function(
+                cdd.parse.class_.class_(class_ast),
                 emit_default_doc=False,
             ),
             gold=argparse_func_ast,
@@ -127,8 +141,8 @@ class TestEmitters(TestCase):
         """
         run_ast_test(
             self,
-            gen_ast=emit.argparse_function(
-                parse.class_(class_nargs_ast),
+            gen_ast=cdd.emit.argparse_function.argparse_function(
+                cdd.parse.class_.class_(class_nargs_ast),
                 emit_default_doc=False,
                 function_name="set_cli_action_append",
             ),
@@ -142,8 +156,8 @@ class TestEmitters(TestCase):
         """
         run_ast_test(
             self,
-            gen_ast=emit.argparse_function(
-                parse.class_(
+            gen_ast=cdd.emit.argparse_function.argparse_function(
+                cdd.parse.class_.class_(
                     class_google_tf_tensorboard_ast, merge_inner_function="__init__"
                 ),
                 emit_default_doc=False,
@@ -157,7 +171,9 @@ class TestEmitters(TestCase):
         Tests whether `docstring` produces indented `docstring_str` given `class_ast`
         """
         self.assertEqual(
-            emit.docstring(parse.class_(class_ast), emit_default_doc=True),
+            cdd.emit.docstring.docstring(
+                cdd.parse.class_.class_(class_ast), emit_default_doc=True
+            ),
             reindent(docstring_no_nl_str, 1),
         )
 
@@ -165,9 +181,9 @@ class TestEmitters(TestCase):
         """
         Tests whether `docstring` produces `docstring_str` given `class_ast`
         """
-        ir = parse.class_(class_ast)
+        ir = cdd.parse.class_.class_(class_ast)
         self.assertEqual(
-            emit.docstring(ir, emit_default_doc=False),
+            cdd.emit.docstring.docstring(ir, emit_default_doc=False),
             reindent(docstring_no_default_no_nl_str, 1),
         )
 
@@ -177,7 +193,9 @@ class TestEmitters(TestCase):
         """
         self.assertEqual(
             docstring_numpydoc_str,
-            emit.docstring(deepcopy(intermediate_repr), docstring_format="numpydoc"),
+            cdd.emit.docstring.docstring(
+                deepcopy(intermediate_repr), docstring_format="numpydoc"
+            ),
         )
 
     def test_to_google_docstring(self) -> None:
@@ -186,7 +204,9 @@ class TestEmitters(TestCase):
         """
         self.assertEqual(
             docstring_google_str,
-            emit.docstring(deepcopy(intermediate_repr), docstring_format="google"),
+            cdd.emit.docstring.docstring(
+                deepcopy(intermediate_repr), docstring_format="google"
+            ),
         )
 
     def test_to_google_docstring_no_types(self) -> None:
@@ -199,7 +219,7 @@ class TestEmitters(TestCase):
                 omit_whitespace,
                 (
                     docstring_google_tf_ops_losses__safe_mean_str,
-                    emit.docstring(
+                    cdd.emit.docstring.docstring(
                         deepcopy(function_google_tf_ops_losses__safe_mean_ir),
                         docstring_format="google",
                         emit_original_whitespace=True,
@@ -236,8 +256,8 @@ class TestEmitters(TestCase):
                         returns=None,
                     ),
                     (
-                        emit.docstring(
-                            parse.function(
+                        cdd.emit.docstring.docstring(
+                            cdd.parse.function.function(
                                 function_google_tf_ops_losses__safe_mean_ast
                             ),
                             docstring_format="google",
@@ -250,6 +270,39 @@ class TestEmitters(TestCase):
             )
         )
 
+    def test_emitters_root(self) -> None:
+        """Confirm that emitter names are up-to-date"""
+        self.assertListEqual(
+            EMITTERS,
+            sorted(
+                chain.from_iterable(
+                    (
+                        ("sqlalchemy_table",),
+                        filter(
+                            rpartial(ne, "emitter_utils"),
+                            map(
+                                itemgetter(0),
+                                map(
+                                    os.path.splitext,
+                                    filterfalse(
+                                        rpartial(str.startswith, "_"),
+                                        os.listdir(
+                                            os.path.join(
+                                                os.path.dirname(
+                                                    os.path.dirname(__file__)
+                                                ),
+                                                "emit",
+                                            )
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    )
+                )
+            ),
+        )
+
     def test_to_file(self) -> None:
         """
         Tests whether `file` constructs a file, and fills it with the right content
@@ -260,14 +313,14 @@ class TestEmitters(TestCase):
                 tempdir, "delete_me{extsep}py".format(extsep=extsep)
             )
             try:
-                emit.file(class_ast, filename, skip_black=True)
+                cdd.emit.file.file(class_ast, filename, skip_black=True)
 
                 with open(filename, "rt") as f:
                     ugly = f.read()
 
                 os.remove(filename)
 
-                emit.file(class_ast, filename, skip_black=False)
+                cdd.emit.file.file(class_ast, filename, skip_black=False)
 
                 with open(filename, "rt") as f:
                     blacked = f.read()
@@ -302,8 +355,8 @@ class TestEmitters(TestCase):
         function_name = function_def.name
         function_type = get_function_type(function_def)
 
-        gen_ast = emit.function(
-            parse.docstring(docstring_str),
+        gen_ast = cdd.emit.function.function(
+            cdd.parse.docstring.docstring(docstring_str),
             function_name=function_name,
             function_type=function_type,
             emit_default_doc=False,
@@ -341,9 +394,9 @@ class TestEmitters(TestCase):
             )
         )
 
-        ir = parse.function(function_def)
+        ir = cdd.parse.function.function(function_def)
         gen_ast = reindent_docstring(
-            emit.function(
+            cdd.emit.function.function(
                 ir,
                 function_name=function_def.name,
                 function_type=get_function_type(function_def),
@@ -384,8 +437,8 @@ class TestEmitters(TestCase):
             )
         )
 
-        gen_ast = emit.function(
-            parse.function(
+        gen_ast = cdd.emit.function.function(
+            cdd.parse.function.function(
                 function_def,
                 function_name=function_name,
                 function_type=function_type,
@@ -427,8 +480,8 @@ class TestEmitters(TestCase):
         function_name = function_def.name
         function_type = get_function_type(function_def)
 
-        gen_ast = emit.function(
-            parse.docstring(docstring_str),
+        gen_ast = cdd.emit.function.function(
+            cdd.parse.docstring.docstring(docstring_str),
             function_name=function_name,
             function_type=function_type,
             emit_default_doc=False,
@@ -457,13 +510,13 @@ class TestEmitters(TestCase):
             )
         )
 
-        ir = parse.function(
+        ir = cdd.parse.function.function(
             find_in_ast(
                 "C.function_name".split("."),
                 class_with_method_and_body_types_ast,
             ),
         )
-        gen_ast = emit.function(
+        gen_ast = cdd.emit.function.function(
             ir,
             emit_default_doc=False,
             function_name="function_name",
@@ -488,7 +541,7 @@ class TestEmitters(TestCase):
         - __call__
         """
 
-        gold_ir = parse.class_(class_squared_hinge_config_ast)
+        gold_ir = cdd.parse.class_.class_(class_squared_hinge_config_ast)
         gold_ir.update(
             {
                 key: OrderedDict(
@@ -509,7 +562,7 @@ class TestEmitters(TestCase):
             }
         )
 
-        gen_ir = parse.function(
+        gen_ir = cdd.parse.function.function(
             ast.parse(function_google_tf_squared_hinge_str).body[0],
             infer_type=True,
             word_wrap=False,
@@ -526,7 +579,7 @@ class TestEmitters(TestCase):
             self,
             *map(
                 partial(
-                    emit.class_,
+                    cdd.emit.class_.class_,
                     class_name="SquaredHingeConfig",
                     emit_call=True,
                     emit_default_doc=True,
@@ -540,8 +593,10 @@ class TestEmitters(TestCase):
     def test_from_argparse_with_extra_body_to_argparse_with_extra_body(self) -> None:
         """Tests if this can make the roundtrip from a full argparse function to a argparse full function"""
 
-        ir = parse.argparse_ast(argparse_func_with_body_ast)
-        func = emit.argparse_function(ir, emit_default_doc=False, word_wrap=True)
+        ir = cdd.parse.argparse_function.argparse_ast(argparse_func_with_body_ast)
+        func = cdd.emit.argparse_function.argparse_function(
+            ir, emit_default_doc=False, word_wrap=True
+        )
         run_ast_test(
             self, *map(reindent_docstring, (func, argparse_func_with_body_ast))
         )
@@ -549,7 +604,7 @@ class TestEmitters(TestCase):
     def test_from_torch_ir_to_argparse(self) -> None:
         """Tests if emission of class from torch IR is as expected"""
 
-        func = emit.argparse_function(
+        func = cdd.emit.argparse_function.argparse_function(
             deepcopy(class_torch_nn_l1loss_ir),
             emit_default_doc=False,
             wrap_description=False,
@@ -565,7 +620,7 @@ class TestEmitters(TestCase):
         """
         Tests that `emit.json_schema` with `intermediate_repr_no_default_doc` produces `config_schema`
         """
-        gen_config_schema = emit.json_schema(
+        gen_config_schema = cdd.emit.json_schema.json_schema(
             deepcopy(intermediate_repr_no_default_sql_doc),
             "https://offscale.io/config.schema.json",
             emit_original_whitespace=True,
@@ -584,7 +639,7 @@ class TestEmitters(TestCase):
         """
         run_ast_test(
             self,
-            emit.sqlalchemy_table(
+            cdd.emit.sqlalchemy.sqlalchemy_table(
                 deepcopy(intermediate_repr_no_default_sql_doc), name="config_tbl"
             ),
             gold=config_tbl_ast,
@@ -604,7 +659,7 @@ class TestEmitters(TestCase):
         ir["name"] = "Config"
         run_ast_test(
             self,
-            emit.sqlalchemy(
+            cdd.emit.sqlalchemy.sqlalchemy(
                 ir,
                 # class_name="Config",
                 table_name="config_tbl",

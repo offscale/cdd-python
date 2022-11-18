@@ -7,9 +7,14 @@ from ast import Call, ClassDef, FunctionDef, Module
 from itertools import chain, groupby
 from operator import itemgetter
 
-from cdd import emit, parse
+import cdd.emit.json_schema
+import cdd.parse.argparse_function
+import cdd.parse.class_
+import cdd.parse.docstring
+import cdd.parse.function
+import cdd.parse.sqlalchemy
 from cdd.ast_utils import get_value
-from cdd.parser_utils import infer
+from cdd.parse.parser_utils import infer
 from cdd.pure_utils import rpartial, update_d
 from cdd.routes import parse as routes_parse
 from cdd.routes.parser_utils import get_route_meta
@@ -166,12 +171,12 @@ def openapi_bulk(app_name, model_paths, routes_paths):
                     map(
                         lambda table: (
                             table["name"].replace("_tbl", "", 1).title(),
-                            emit.json_schema(table),
+                            cdd.emit.json_schema.json_schema(table),
                         ),
                         map(
-                            lambda node: parse.sqlalchemy_table(node)
+                            lambda node: cdd.parse.sqlalchemy.sqlalchemy_table(node)
                             if isinstance(node, Call)
-                            else parse.sqlalchemy(node),
+                            else cdd.parse.sqlalchemy.sqlalchemy(node),
                             chain.from_iterable(map(parse_model, model_paths)),
                         ),
                     ),

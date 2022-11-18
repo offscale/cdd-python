@@ -9,7 +9,7 @@ from functools import partial
 from importlib import import_module
 from importlib.util import find_spec
 from inspect import getmodule
-from itertools import chain, count, zip_longest, filterfalse, islice, takewhile
+from itertools import chain, count, filterfalse, islice, takewhile, zip_longest
 from keyword import iskeyword
 from operator import attrgetter, eq
 from os import environ, extsep, path

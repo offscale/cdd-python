@@ -5,15 +5,15 @@ from copy import deepcopy
 from unittest import TestCase
 
 from cdd.ast_utils import set_value
-from cdd.emitter_utils import (
+from cdd.emit.emitter_utils import (
     interpolate_defaults,
-    parse_out_param,
     param_to_sqlalchemy_column_call,
+    parse_out_param,
 )
 from cdd.pure_utils import rpartial
 from cdd.tests.mocks.argparse import argparse_add_argument_ast, argparse_func_ast
 from cdd.tests.mocks.ir import intermediate_repr
-from cdd.tests.utils_for_tests import unittest_main, run_ast_test
+from cdd.tests.utils_for_tests import run_ast_test, unittest_main
 
 
 class TestEmitterUtils(TestCase):

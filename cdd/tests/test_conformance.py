@@ -14,7 +14,9 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch
 
-from cdd import emit
+import cdd.emit.argparse_function
+import cdd.emit.class_
+import cdd.emit.file
 from cdd.conformance import _conform_filename, _get_name_from_namespace, ground_truth
 from cdd.tests.mocks.argparse import argparse_func_ast
 from cdd.tests.mocks.classes import class_ast_no_default_doc
@@ -65,7 +67,7 @@ class TestConformance(TestCase):
             argparse_functions = list(
                 map(
                     lambda i: (
-                        lambda argparse_function: emit.file(
+                        lambda argparse_function: cdd.emit.file.file(
                             argparse_func_ast, argparse_function, mode="wt"
                         )
                         or argparse_function
@@ -84,10 +86,10 @@ class TestConformance(TestCase):
             )
 
             class_ = tempdir_join("classes{extsep}py".format(extsep=extsep))
-            emit.file(class_ast_no_default_doc, class_, mode="wt")
+            cdd.emit.file.file(class_ast_no_default_doc, class_, mode="wt")
 
             function = tempdir_join("methods{extsep}py".format(extsep=extsep))
-            emit.file(class_with_method_ast, function, mode="wt")
+            cdd.emit.file.file(class_with_method_ast, function, mode="wt")
 
             args = Namespace(
                 **{
@@ -153,7 +155,9 @@ class TestConformance(TestCase):
                         ),
                         self.ground_truth_tester(
                             tempdir=tempdir,
-                            _class_ast=emit.class_(ir, emit_default_doc=False),
+                            _class_ast=cdd.emit.class_.class_(
+                                ir, emit_default_doc=False
+                            ),
                         )[0].items(),
                     )
                 ),
@@ -192,13 +196,13 @@ class TestConformance(TestCase):
         argparse_function = os.path.join(
             tempdir, "argparse{extsep}py".format(extsep=extsep)
         )
-        emit.file(_argparse_func_ast, argparse_function, mode="wt")
+        cdd.emit.file.file(_argparse_func_ast, argparse_function, mode="wt")
 
         class_ = os.path.join(tempdir, "classes{extsep}py".format(extsep=extsep))
-        emit.file(_class_ast, class_, mode="wt")
+        cdd.emit.file.file(_class_ast, class_, mode="wt")
 
         function = os.path.join(tempdir, "methods{extsep}py".format(extsep=extsep))
-        emit.file(_class_with_method_ast, function, mode="wt")
+        cdd.emit.file.file(_class_with_method_ast, function, mode="wt")
 
         args = Namespace(
             **{
@@ -241,7 +245,7 @@ class TestConformance(TestCase):
                 _conform_filename(
                     filename=argparse_function_filename,
                     search=["set_cli_args"],
-                    emit_func=emit.argparse_function,
+                    emit_func=cdd.emit.argparse_function.argparse_function,
                     replacement_node_ir=deepcopy(intermediate_repr),
                     type_wanted=FunctionDef,
                 ),
@@ -258,7 +262,7 @@ class TestConformance(TestCase):
                 )
             )
 
-            emit.file(
+            cdd.emit.file.file(
                 argparse_func_ast,
                 argparse_function_filename,
                 mode="wt",
@@ -268,7 +272,7 @@ class TestConformance(TestCase):
                 _conform_filename(
                     filename=argparse_function_filename,
                     search=["impossibru"],
-                    emit_func=emit.argparse_function,
+                    emit_func=cdd.emit.argparse_function.argparse_function,
                     replacement_node_ir=deepcopy(intermediate_repr),
                     type_wanted=FunctionDef,
                 ),
@@ -285,13 +289,13 @@ class TestConformance(TestCase):
                 )
             )
 
-            emit.file(argparse_func_ast, argparse_function_filename, mode="wt")
+            cdd.emit.file.file(argparse_func_ast, argparse_function_filename, mode="wt")
             with patch("sys.stdout", new_callable=StringIO):
                 self.assertTupleEqual(
                     _conform_filename(
                         filename=argparse_function_filename,
                         search=["set_cli_args"],
-                        emit_func=emit.argparse_function,
+                        emit_func=cdd.emit.argparse_function.argparse_function,
                         replacement_node_ir=deepcopy(intermediate_repr),
                         type_wanted=FunctionDef,
                     ),

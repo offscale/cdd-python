@@ -17,7 +17,9 @@ from collections import OrderedDict
 from copy import deepcopy
 from operator import attrgetter, eq
 
-from cdd import emit, parse
+import cdd.emit.docstring
+import cdd.parse.docstring
+import cdd.parse.function
 from cdd.ast_cst_utils import (
     find_cst_at_ast,
     maybe_replace_doc_str_in_function_or_class,
@@ -36,7 +38,7 @@ from cdd.ast_utils import (
 )
 from cdd.cst_utils import reindent_block_with_pass_body
 from cdd.docstring_parsers import parse_docstring
-from cdd.parser_utils import ir_merge
+from cdd.parse.parser_utils import ir_merge
 from cdd.pure_utils import PY_GTE_3_8, is_ir_empty, none_types, omit_whitespace
 from cdd.source_transformer import ast_parse
 
@@ -223,7 +225,7 @@ class DocTrans(NodeTransformer):
                     (
                         lambda doc_str: None
                         if doc_str is None
-                        else parse.docstring(doc_str)
+                        else cdd.parse.docstring.docstring(doc_str)
                     )(get_docstring(parent, clean=False))
                     if isinstance(parent, (ClassDef, AsyncFunctionDef, FunctionDef))
                     else {"params": OrderedDict()}
@@ -249,7 +251,7 @@ class DocTrans(NodeTransformer):
         :rtype: ```Union[AsyncFunctionDef, FunctionDef]```
         """
         ir = parse_docstring(original_doc_str)
-        ir_merge(ir, parse.function(node))
+        ir_merge(ir, cdd.parse.function.function(node))
         ir["name"] = node.name
         indent_level = max(
             len(node._location), 1
@@ -257,7 +259,7 @@ class DocTrans(NodeTransformer):
         doc_str = (
             None
             if is_ir_empty(ir)
-            else emit.docstring(
+            else cdd.emit.docstring.docstring(
                 ir,
                 emit_types=not self.type_annotations,
                 emit_default_doc=False,

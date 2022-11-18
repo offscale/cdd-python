@@ -6,13 +6,19 @@ import ast
 from ast import FunctionDef
 from collections import OrderedDict
 from copy import deepcopy
-from operator import itemgetter
+from itertools import chain, filterfalse
+from operator import itemgetter, ne
+from os import listdir, path
 from unittest import TestCase
 from unittest.mock import patch
 
-from cdd import emit, parse
+import cdd.emit.argparse_function
+import cdd.parse.class_
+import cdd.parse.json_schema
 from cdd.ast_utils import RewriteAtQuery, get_value, set_value
-from cdd.pure_utils import PY_GTE_3_8, paren_wrap_code, tab
+from cdd.parse import PARSERS
+from cdd.pure_utils import PY_GTE_3_8, paren_wrap_code, rpartial, tab
+from cdd.source_transformer import to_code
 from cdd.tests.mocks.argparse import argparse_func_ast
 from cdd.tests.mocks.classes import (
     class_ast,
@@ -79,7 +85,7 @@ class TestParsers(TestCase):
         """
         Tests whether `argparse_ast` produces `intermediate_repr_no_default_doc`
               from `argparse_func_ast`"""
-        ir = parse.argparse_ast(argparse_func_ast)
+        ir = cdd.parse.argparse_function.argparse_ast(argparse_func_ast)
         del ir["_internal"]  # Not needed for this test
         _intermediate_repr_no_default_doc = deepcopy(intermediate_repr_no_default_doc)
         _intermediate_repr_no_default_doc["name"] = "set_cli_args"
@@ -90,9 +96,9 @@ class TestParsers(TestCase):
         Tests `argparse_ast` empty condition
         """
         self.assertEqual(
-            emit.to_code(
-                emit.argparse_function(
-                    parse.argparse_ast(
+            to_code(
+                cdd.emit.argparse_function.argparse_function(
+                    cdd.parse.argparse_function.argparse_ast(
                         FunctionDef(
                             body=[],
                             name=None,
@@ -130,15 +136,15 @@ class TestParsers(TestCase):
         Tests whether `class_` produces `intermediate_repr_no_default_doc`
               from `class_ast`
         """
-        ir = parse.class_(class_ast)
+        ir = cdd.parse.class_.class_(class_ast)
         del ir["_internal"]  # Not needed for this test
         self.assertDictEqual(ir, intermediate_repr_no_default_doc)
 
     def test_from_function(self) -> None:
         """
-        Tests that parse.function produces properly
+        Tests that cdd.parse.function.function produces properly
         """
-        gen_ir = parse.function(function_default_complex_default_arg_ast)
+        gen_ir = cdd.parse.function.function(function_default_complex_default_arg_ast)
         gold_ir = {
             "name": "call_peril",
             "params": OrderedDict(
@@ -175,9 +181,9 @@ class TestParsers(TestCase):
 
     def test_from_function_kw_only(self) -> None:
         """
-        Tests that parse.function produces properly from function with only keyword arguments
+        Tests that cdd.parse.function.function produces properly from function with only keyword arguments
         """
-        gen_ir = parse.function(function_adder_ast, function_type="static")
+        gen_ir = cdd.parse.function.function(function_adder_ast, function_type="static")
         del gen_ir["_internal"]  # Not needed for this test
         self.assertDictEqual(
             gen_ir,
@@ -186,7 +192,7 @@ class TestParsers(TestCase):
 
     def test_from_function_in_memory(self) -> None:
         """
-        Tests that parse.function produces properly from a function in memory of current interpreter
+        Tests that cdd.parse.function.function produces properly from a function in memory of current interpreter
         """
 
         def foo(a=5, b=6):
@@ -200,7 +206,7 @@ class TestParsers(TestCase):
 
         self.assertIsNone(foo(5, 6))
 
-        ir = parse.function(foo)
+        ir = cdd.parse.function.function(foo)
         del ir["_internal"]  # Not needed for this test
         self.assertDictEqual(
             ir,
@@ -242,7 +248,7 @@ class TestParsers(TestCase):
             "call_cliff",
         )
 
-        ir = parse.function(call_cliff)
+        ir = cdd.parse.function.function(call_cliff)
         del ir["_internal"]  # Not needed for this test
 
         # This is a hack because JetBrains wraps stdout
@@ -281,7 +287,7 @@ class TestParsers(TestCase):
             "add_6_5",
         )
 
-        ir = parse.function(add_6_5)
+        ir = cdd.parse.function.function(add_6_5)
         del ir["_internal"]  # Not needed for this test
 
         self.assertDictEqual(
@@ -299,7 +305,7 @@ class TestParsers(TestCase):
         - unannotated;
         - splat
         """
-        gen_ir = parse.function(method_complex_args_variety_ast)
+        gen_ir = cdd.parse.function.function(method_complex_args_variety_ast)
         del gen_ir["_internal"]  # Not needed for this test
         self.assertDictEqual(
             gen_ir,
@@ -314,7 +320,7 @@ class TestParsers(TestCase):
         class A(object):
             """A is one boring class"""
 
-        ir = parse.class_(A)
+        ir = cdd.parse.class_.class_(A)
         del ir["_internal"]  # Not needed for this test
         self.assertDictEqual(
             ir,
@@ -334,7 +340,7 @@ class TestParsers(TestCase):
             inspectable_compile(docstring_google_tf_adadelta_function_str),
             "Adadelta",
         )
-        ir = parse.class_(Adadelta)
+        ir = cdd.parse.class_.class_(Adadelta)
         del ir["_internal"]
         # self.assertDictEqual(ir, docstring_google_tf_adadelta_ir)
         self.assertDictEqual(
@@ -355,7 +361,7 @@ class TestParsers(TestCase):
             gold=ast.parse(class_google_tf_tensorboard_str).body[0],
         )
 
-        parsed_ir = parse.class_(
+        parsed_ir = cdd.parse.class_.class_(
             class_google_tf_tensorboard_ast,
             merge_inner_function="__init__",
             parse_original_whitespace=True,
@@ -376,7 +382,7 @@ class TestParsers(TestCase):
         with the inner function parameter defaults
         """
 
-        parsed_ir = parse.class_(
+        parsed_ir = cdd.parse.class_.class_(
             RewriteAtQuery,
             merge_inner_function="__init__",
             infer_type=True,
@@ -431,7 +437,7 @@ class TestParsers(TestCase):
             gold=ast.parse(class_torch_nn_l1loss_str).body[0],
         )
 
-        parsed_ir = parse.class_(
+        parsed_ir = cdd.parse.class_.class_(
             class_torch_nn_l1loss_ast,
             merge_inner_function="__init__",
             infer_type=True,
@@ -455,7 +461,7 @@ class TestParsers(TestCase):
             gold=ast.parse(class_torch_nn_one_cycle_lr_str).body[0],
         )
 
-        parsed_ir = parse.class_(
+        parsed_ir = cdd.parse.class_.class_(
             class_torch_nn_one_cycle_lr_ast,
             merge_inner_function="__init__",
             infer_type=True,
@@ -478,7 +484,9 @@ class TestParsers(TestCase):
             """A is one boring class"""
 
         with patch("inspect.getsourcefile", lambda _: None):
-            ir = parse._class_from_memory(A, A.__name__, False, False, False, False)
+            ir = cdd.parse.class_._class_from_memory(
+                A, A.__name__, False, False, False, False
+            )
         self.assertDictEqual(
             ir,
             {
@@ -494,7 +502,8 @@ class TestParsers(TestCase):
         Tests that `parse.json_schema` produces `intermediate_repr_no_default_sql_doc` properly
         """
         self.assertDictEqual(
-            parse.json_schema(config_schema), intermediate_repr_no_default_sql_doc
+            cdd.parse.json_schema.json_schema(config_schema),
+            intermediate_repr_no_default_sql_doc,
         )
 
     def test_from_sqlalchemy_table(self) -> None:
@@ -519,7 +528,7 @@ class TestParsers(TestCase):
             config_tbl_str.replace("config_tbl =", "config_tbl: Table =", 1),
             config_tbl_str.replace("config_tbl =", "", 1).lstrip(),
         ):
-            ir = parse.sqlalchemy_table(ast.parse(variant).body[0])
+            ir = cdd.parse.sqlalchemy.sqlalchemy_table(ast.parse(variant).body[0])
             self.assertEqual(ir["name"], "config_tbl")
             ir["name"] = None
             self.assertDictEqual(ir, intermediate_repr_no_default_sql_doc)
@@ -528,7 +537,7 @@ class TestParsers(TestCase):
         """
         Test that the nonmatching docstring doesn't fill out params
         """
-        ir = parse.docstring(docstring_reduction_v2_str)
+        ir = cdd.parse.docstring.docstring(docstring_reduction_v2_str)
         self.assertEqual(ir["params"], OrderedDict())
         self.assertEqual(ir["returns"], None)
 
@@ -536,7 +545,7 @@ class TestParsers(TestCase):
         """
         Test class_reduction_v2 produces correct IR
         """
-        ir = parse.class_(class_reduction_v2)
+        ir = cdd.parse.class_.class_(class_reduction_v2)
         self.assertEqual(
             ir["params"],
             OrderedDict(
@@ -557,7 +566,7 @@ class TestParsers(TestCase):
         """Tests IR from docstring_keras_rmsprop_class_str"""
 
         self.assertDictEqual(
-            parse.docstring(docstring_keras_rmsprop_class_str),
+            cdd.parse.docstring.docstring(docstring_keras_rmsprop_class_str),
             docstring_keras_rmsprop_class_ir,
         )
 
@@ -565,13 +574,13 @@ class TestParsers(TestCase):
         """Tests IR from docstring_keras_rmsprop_method_str"""
 
         self.assertDictEqual(
-            parse.docstring(docstring_keras_rmsprop_method_str),
+            cdd.parse.docstring.docstring(docstring_keras_rmsprop_method_str),
             docstring_keras_rmsprop_method_ir,
         )
 
     def test_from_function_google_tf_ops_losses__safe_mean_ast(self) -> None:
         """Tests IR from function_google_tf_ops_losses__safe_mean_ast"""
-        ir = parse.function(function_google_tf_ops_losses__safe_mean_ast)
+        ir = cdd.parse.function.function(function_google_tf_ops_losses__safe_mean_ast)
         _internal = ir.pop("_internal")
         for key in "original_doc_str", "body":
             del _internal[key]
@@ -588,7 +597,7 @@ class TestParsers(TestCase):
 
         no_body = deepcopy(function_google_tf_ops_losses__safe_mean_ast)
         del no_body.body[1:]
-        ir = parse.function(no_body)
+        ir = cdd.parse.function.function(no_body)
         del ir["_internal"]
         gold = deepcopy(function_google_tf_ops_losses__safe_mean_ir)
         gold["returns"]["return_type"] = {
@@ -610,10 +619,41 @@ class TestParsers(TestCase):
             gold=ast.parse(config_decl_base_str).body[0],
         )
 
-        ir = parse.sqlalchemy(config_decl_base_ast)
+        ir = cdd.parse.sqlalchemy.sqlalchemy(config_decl_base_ast)
         self.assertEqual(ir["name"], "config_tbl")
         ir["name"] = None
         self.assertDictEqual(ir, intermediate_repr_no_default_sql_doc)
+
+    def test_parsers_root(self) -> None:
+        """Confirm that emitter names are up-to-date"""
+        self.assertListEqual(
+            PARSERS,
+            sorted(
+                chain.from_iterable(
+                    (
+                        ("sqlalchemy_table",),
+                        filter(
+                            rpartial(ne, "parser_utils"),
+                            map(
+                                itemgetter(0),
+                                map(
+                                    path.splitext,
+                                    filterfalse(
+                                        rpartial(str.startswith, "_"),
+                                        listdir(
+                                            path.join(
+                                                path.dirname(path.dirname(__file__)),
+                                                "parse",
+                                            )
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    )
+                )
+            ),
+        )
 
 
 unittest_main()

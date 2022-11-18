@@ -16,9 +16,11 @@ from cdd.pure_utils import (
     location_within,
     lstrip_namespace,
     multiline,
+    parse_comment_from_line,
     pluralise,
     pp,
     quote,
+    remove_whitespace_comments,
     rpartial,
     sanitise,
     set_attr,
@@ -27,8 +29,6 @@ from cdd.pure_utils import (
     strip_split,
     tab,
     update_d,
-    remove_whitespace_comments,
-    parse_comment_from_line,
 )
 from cdd.tests.utils_for_tests import unittest_main
 
