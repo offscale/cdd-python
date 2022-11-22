@@ -59,15 +59,19 @@ To create a `class` from [`tf.keras.optimizers.Adam`](https://www.tensorflow.org
 ```python
 >>> from cdd.source_transformer import to_code
 
->>> from cdd import emit, parse
+>>> import cdd.emit.class_
+
+>>> import cdd.parse.class_
 
 >>> import tensorflow as tf
 
 >>> from typing import Optional
 
->>> print(to_code(emit.class_(parse.class_(tf.keras.optimizers.Adam,
-                                           merge_inner_function="__init__"),
-                              class_name="AdamConfig")))
+>>> print(to_code(cdd.emit.class_.class_(cdd.parse.class_.class_(
+                                             tf.keras.optimizers.Adam,
+                                             merge_inner_function="__init__"
+                                         ),
+                                         class_name="AdamConfig")))
 
 
 class AdamConfig(object):
