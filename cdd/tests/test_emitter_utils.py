@@ -5,11 +5,9 @@ from copy import deepcopy
 from unittest import TestCase
 
 from cdd.ast_utils import set_value
-from cdd.emit.emitter_utils import (
-    interpolate_defaults,
-    param_to_sqlalchemy_column_call,
-    parse_out_param,
-)
+from cdd.emit.argparse_function_utils import parse_out_param
+from cdd.emit.docstring_utils import interpolate_defaults
+from cdd.emit.sqlalchemy_utils import param_to_sqlalchemy_column_call
 from cdd.pure_utils import rpartial
 from cdd.tests.mocks.argparse import argparse_add_argument_ast, argparse_func_ast
 from cdd.tests.mocks.ir import intermediate_repr

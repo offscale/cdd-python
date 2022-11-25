@@ -1,5 +1,5 @@
 """
-OpenAPI emitter util(s)
+Utility functions for `cdd.emit.openapi`
 """
 
 from collections import namedtuple

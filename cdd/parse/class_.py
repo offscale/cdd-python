@@ -17,12 +17,13 @@ from functools import partial
 from itertools import filterfalse
 from operator import setitem
 
-import cdd.parse._inspect
 import cdd.parse.docstring
 import cdd.parse.function
+import cdd.parse.parser_utils
 from cdd.ast_utils import NoneStr, find_ast_type, get_value, parse_to_scalar
 from cdd.docstring_parsers import _set_name_and_type
-from cdd.parse.parser_utils import get_source, ir_merge
+from cdd.parse.class_utils import get_source
+from cdd.parse.parser_utils import ir_merge
 from cdd.pure_utils import rpartial, simple_types
 from cdd.source_transformer import to_code
 
@@ -256,7 +257,7 @@ def _class_from_memory(
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :rtype: ```dict```
     """
-    ir = cdd.parse._inspect._inspect(
+    ir = cdd.parse.parser_utils._inspect(
         class_def,
         class_name,
         parse_original_whitespace=parse_original_whitespace,

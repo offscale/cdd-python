@@ -6,7 +6,7 @@ from copy import deepcopy
 from functools import partial
 
 from cdd.parse.docstring import docstring
-from cdd.parse.parser_utils import json_schema_property_to_param
+from cdd.parse.json_schema_utils import json_schema_property_to_param
 
 
 def json_schema(json_schema_dict, parse_original_whitespace=False):

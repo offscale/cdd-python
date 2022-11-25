@@ -14,7 +14,7 @@ from cdd.ast_utils import (
     is_argparse_description,
 )
 from cdd.docstring_parsers import parse_docstring
-from cdd.emit.emitter_utils import _parse_return, parse_out_param
+from cdd.emit.argparse_function_utils import _parse_return, parse_out_param
 
 
 def argparse_ast(
