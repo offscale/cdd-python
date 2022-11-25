@@ -14,6 +14,7 @@ PARSERS = [
     "docstring",
     "function",
     "json_schema",
+    "openapi",
     "sqlalchemy",
     "sqlalchemy_table",
 ]

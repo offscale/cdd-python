@@ -4,8 +4,8 @@ Tests OpenAPI
 
 from unittest import TestCase
 
-from cdd.openapi.emit import openapi
-from cdd.openapi.emitter_utils import NameModelRouteIdCrud
+from cdd.emit.openapi import openapi
+from cdd.emit.openapi_utils import NameModelRouteIdCrud
 from cdd.tests.mocks.json_schema import config_schema
 from cdd.tests.mocks.openapi import openapi_dict
 from cdd.tests.mocks.routes import route_config

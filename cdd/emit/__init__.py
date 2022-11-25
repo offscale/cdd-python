@@ -17,6 +17,7 @@ EMITTERS = [
     "file",
     "function",
     "json_schema",
+    "openapi",
     "sqlalchemy",
     "sqlalchemy_table",
 ]

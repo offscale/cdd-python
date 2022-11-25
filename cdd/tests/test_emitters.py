@@ -9,7 +9,7 @@ from collections import OrderedDict
 from copy import deepcopy
 from functools import partial
 from itertools import chain, filterfalse
-from operator import itemgetter, ne
+from operator import itemgetter
 from os.path import extsep
 from platform import system
 from sys import modules
@@ -278,8 +278,8 @@ class TestEmitters(TestCase):
                 chain.from_iterable(
                     (
                         ("sqlalchemy_table",),
-                        filter(
-                            rpartial(ne, "emitter_utils"),
+                        filterfalse(
+                            rpartial(str.endswith, "_utils"),
                             map(
                                 itemgetter(0),
                                 map(
