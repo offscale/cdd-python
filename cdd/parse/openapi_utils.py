@@ -1,5 +1,5 @@
 """
-OpenAPI parser utility functions
+Utility functions for `cdd.parse.openapi`
 """
 
 

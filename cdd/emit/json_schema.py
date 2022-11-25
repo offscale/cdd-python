@@ -6,7 +6,7 @@ from functools import partial
 from operator import add
 
 from cdd.emit.docstring import docstring
-from cdd.emit.emitter_utils import param2json_schema_property
+from cdd.emit.json_schema_utils import param2json_schema_property
 from cdd.pure_utils import deindent
 
 

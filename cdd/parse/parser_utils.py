@@ -3,27 +3,20 @@ Functions which help the functions within the parser module
 """
 
 import ast
-from ast import (
-    AnnAssign,
-    Assign,
-    Call,
-    ClassDef,
-    FunctionDef,
-    Module,
-    Name,
-    Return,
-    Tuple,
-)
+from ast import AnnAssign, Assign, Call, ClassDef, FunctionDef, Module
 from collections import OrderedDict
+from contextlib import suppress
 from functools import partial
-from inspect import _empty, getsource
+from inspect import _empty, getdoc, getsource, isfunction, signature
 from itertools import chain
 from operator import attrgetter, eq, itemgetter
 from types import FunctionType
 
-from cdd.ast_utils import NoneStr, column_type2typ, get_value, json_type2typ
+import cdd.parse
+from cdd.ast_utils import get_value
+from cdd.docstring_parsers import _set_name_and_type
+from cdd.parse.class_utils import get_source
 from cdd.pure_utils import lstrip_namespace, none_types, rpartial, simple_types
-from cdd.source_transformer import to_code
 
 lstrip_typings = partial(lstrip_namespace, namespaces=("typings.", "_extensions."))
 
@@ -159,158 +152,6 @@ def _inspect_process_ir_param(param, sig):
     return name, _param
 
 
-def _interpolate_return(function_def, intermediate_repr):
-    """
-    Interpolate the return value into the IR.
-
-    :param function_def: function definition
-    :type function_def: ```FunctionDef```
-
-    :param intermediate_repr: a dictionary of form
-        {  "name": Optional[str],
-           "type": Optional[str],
-           "doc": Optional[str],
-           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
-           "returns": Optional[OrderedDict[Literal['return_type'],
-                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
-    :type intermediate_repr: ```dict```
-
-    :return: a dictionary of form
-        {  "name": Optional[str],
-           "type": Optional[str],
-           "doc": Optional[str],
-           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
-           "returns": Optional[OrderedDict[Literal['return_type'],
-                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
-    :rtype: ```dict```
-    """
-    return_ast = next(
-        filter(rpartial(isinstance, Return), function_def.body[::-1]), None
-    )
-    if return_ast is not None and return_ast.value is not None:
-        if intermediate_repr.get("returns") is None:
-            intermediate_repr["returns"] = OrderedDict((("return_type", {}),))
-
-        if (
-            "typ" in intermediate_repr["returns"]["return_type"]
-            and "[" not in intermediate_repr["returns"]["return_type"]["typ"]
-        ):
-            del intermediate_repr["returns"]["return_type"]["typ"]
-        intermediate_repr["returns"]["return_type"]["default"] = (
-            lambda default: "({})".format(default)
-            if isinstance(return_ast.value, Tuple)
-            and (not default.startswith("(") or not default.endswith(")"))
-            else (
-                lambda default_: default_
-                if isinstance(
-                    default_, (str, int, float, complex, ast.Num, ast.Str, ast.Constant)
-                )
-                else "```{}```".format(default)
-            )(get_value(get_value(return_ast)))
-        )(to_code(return_ast.value).rstrip("\n"))
-    if hasattr(function_def, "returns") and function_def.returns is not None:
-        intermediate_repr["returns"] = intermediate_repr.get("returns") or OrderedDict(
-            (("return_type", {}),)
-        )
-        intermediate_repr["returns"]["return_type"]["typ"] = to_code(
-            function_def.returns
-        ).rstrip("\n")
-
-    return intermediate_repr
-
-
-def column_call_to_param(call):
-    """
-    Parse column call `Call(func=Name("Column", Load(), …)` into param
-
-    :param call: Column call from SQLAlchemy `Table` construction
-    :type call: ```Call```
-
-    :return: Name, dict with keys: 'typ', 'doc', 'default'
-    :rtype: ```Tuple[str, dict]```
-    """
-    assert call.func.id == "Column"
-    assert len(call.args) == 2
-
-    _param = dict(
-        chain.from_iterable(
-            filter(
-                None,
-                (
-                    map(
-                        lambda key_word: (key_word.arg, get_value(key_word.value)),
-                        call.keywords,
-                    ),
-                    (("typ", column_type2typ[call.args[1].id]),)
-                    if isinstance(call.args[1], Name)
-                    else None,
-                ),
-            )
-        )
-    )
-
-    if (
-        isinstance(call.args[1], Call)
-        and call.args[1].func.id.rpartition(".")[2] == "Enum"
-    ):
-        _param["typ"] = "Literal{}".format(list(map(get_value, call.args[1].args)))
-
-    pk = "primary_key" in _param
-    if pk:
-        _param["doc"] = "[PK] {}".format(_param["doc"])
-        del _param["primary_key"]
-
-    def _handle_null():
-        """
-        Properly handle null condition
-        """
-        if not _param["typ"].startswith("Optional["):
-            _param["typ"] = "Optional[{}]".format(_param["typ"])
-
-    if "nullable" in _param:
-        not _param["nullable"] or _handle_null()
-        del _param["nullable"]
-
-    if "default" in _param and not get_value(call.args[0]).endswith("kwargs"):
-        _param["doc"] += "."
-
-    return get_value(call.args[0]), _param
-
-
-def json_schema_property_to_param(param, required):
-    """
-    Convert a JSON schema property to a param
-
-    :param param: Name, dict with keys: 'typ', 'doc', 'default'
-    :type param: ```Tuple[str, dict]```
-
-    :param required: Names of all required parameters
-    :type required: ```FrozenSet[str]```
-
-    :return: Name, dict with keys: 'typ', 'doc', 'default'
-    :rtype: ```Tuple[str, dict]```
-    """
-    name, _param = param
-    del param
-    if name.endswith("kwargs"):
-        _param["typ"] = "Optional[dict]"
-    elif "enum" in _param:
-        _param["typ"] = "Literal{}".format(_param.pop("enum"))
-        del _param["type"]
-    if "description" in _param:
-        _param["doc"] = _param.pop("description")
-
-    if _param.get("type"):
-        _param["typ"] = json_type2typ[_param.pop("type")]
-
-    if name not in required and _param.get("typ") and "Optional[" not in _param["typ"]:
-        _param["typ"] = "Optional[{}]".format(_param["typ"])
-        if _param.get("default") in none_types:
-            _param["default"] = NoneStr
-
-    return name, _param
-
-
 def infer(*args, **kwargs):
     """
     Infer the `parse` type
@@ -376,35 +217,109 @@ def infer(*args, **kwargs):
             return "sqlalchemy_table"
 
 
-def get_source(obj):
+def _inspect(obj, name, parse_original_whitespace, word_wrap):
     """
-    Call inspect.getsource and raise an error unless class definition could not be found
+    Uses the `inspect` module to figure out the IR from the input
 
-    :param obj: object to inspect
+    :param obj: Something in memory, like a class, function, variable
     :type obj: ```Any```
 
-    :return: The source
-    :rtype: ```str```
+    :param name: Name of the object being inspected
+    :type name: ```str```
+
+    :param parse_original_whitespace: Whether to parse original whitespace or strip it out
+    :type parse_original_whitespace: ```bool```
+
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
+
+    :return: a dictionary of form
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :rtype: ```dict```
     """
-    try:
-        return getsource(obj)
-    except OSError as e:
-        if e.args and e.args[0] in frozenset(
-            (
-                "could not find class definition",
-                "source code not available",
-                "could not get source code",
+
+    doc = getdoc(obj) or ""
+
+    # def is_builtin_class_instance(obj):
+    #     builtin_types = tuple(
+    #         getattr(builtins, t)
+    #         for t in dir(builtins)
+    #         if isinstance(getattr(builtins, t), type)
+    #     )
+    #     return obj.__class__.__module__ == "__builtin__" or isinstance(
+    #         obj, builtin_types
+    #     )
+
+    is_function = isfunction(obj)
+    ir = (
+        cdd.parse.docstring.docstring(
+            doc,
+            emit_default_doc=is_function,
+            parse_original_whitespace=parse_original_whitespace,
+        )
+        if doc
+        else {}
+    )
+    if not is_function and "type" in ir:
+        del ir["type"]
+
+    ir["name"] = (
+        name or obj.__qualname__ if hasattr(obj, "__qualname__") else obj.__name__
+    )
+    assert ir["name"], "IR name is empty"
+
+    # if is_builtin_class_instance(obj):
+    #    return ir
+
+    sig = None
+    with suppress(ValueError):
+        sig = signature(obj)
+    if sig is not None:
+        ir["params"] = OrderedDict(
+            filter(
+                None,
+                map(
+                    partial(_inspect_process_ir_param, sig=sig),
+                    ir.get("params", {}).items(),
+                )
+                # if ir.get("params")
+                # else map(_inspect_process_sig, sig.parameters.items()),
             )
-        ):
-            return None
-        raise
+        )
+
+    src = get_source(obj)
+    if src is None:
+        return ir
+    parsed_body = ast.parse(src.lstrip()).body[0]
+
+    if is_function:
+        ir["type"] = (
+            "static"
+            if sig is None
+            else {"self": "self", "cls": "cls"}.get(
+                next(iter(sig.parameters.values())).name, "static"
+            )
+        )
+        parser = cdd.parse.function.function
+    else:
+        parser = cdd.parse.class_.class_
+
+    other = parser(parsed_body)
+    ir_merge(ir, other)
+    if "return_type" in (ir.get("returns") or iter(())):
+        ir["returns"] = OrderedDict(
+            map(
+                partial(_set_name_and_type, infer_type=False, word_wrap=word_wrap),
+                ir["returns"].items(),
+            )
+        )
+
+    return ir
 
 
-__all__ = [
-    "column_call_to_param",
-    "get_source",
-    "ir_merge",
-    "infer",
-    "json_schema_property_to_param",
-    "lstrip_typings",
-]
+__all__ = ["ir_merge", "infer", "lstrip_typings", "_inspect"]

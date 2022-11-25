@@ -10,7 +10,8 @@ from operator import attrgetter, eq
 from cdd.ast_utils import get_value, set_value
 from cdd.defaults_utils import extract_default
 from cdd.parse.docstring import docstring
-from cdd.parse.parser_utils import column_call_to_param, ir_merge
+from cdd.parse.parser_utils import ir_merge
+from cdd.parse.sqlalchemy_utils import column_call_to_param
 from cdd.pure_utils import assert_equal, rpartial
 
 

@@ -6,7 +6,8 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from cdd.ast_utils import set_value
-from cdd.parse.parser_utils import _join_non_none, get_source, infer, ir_merge
+from cdd.parse.class_utils import get_source
+from cdd.parse.parser_utils import _join_non_none, infer, ir_merge
 from cdd.tests.mocks import imports_header
 from cdd.tests.mocks.argparse import argparse_func_ast, argparse_func_str
 from cdd.tests.mocks.classes import class_ast, class_str
