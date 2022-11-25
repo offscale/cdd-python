@@ -7,7 +7,7 @@ from ast import FunctionDef
 from collections import OrderedDict
 from copy import deepcopy
 from itertools import chain, filterfalse
-from operator import itemgetter, ne
+from operator import itemgetter
 from os import listdir, path
 from unittest import TestCase
 from unittest.mock import patch
@@ -632,8 +632,8 @@ class TestParsers(TestCase):
                 chain.from_iterable(
                     (
                         ("sqlalchemy_table",),
-                        filter(
-                            rpartial(ne, "parser_utils"),
+                        filterfalse(
+                            rpartial(str.endswith, "_utils"),
                             map(
                                 itemgetter(0),
                                 map(

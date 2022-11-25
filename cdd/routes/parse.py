@@ -8,9 +8,9 @@ from importlib import import_module
 from inspect import getsource
 from types import FunctionType
 
+import cdd.parse.openapi
 from cdd.ast_utils import get_value
 from cdd.docstring_parsers import parse_docstring
-from cdd.openapi.parse import openapi
 from cdd.pure_utils import PY_GTE_3_8
 
 Literal = getattr(
@@ -61,7 +61,9 @@ def bottle(function_def):
             - len(yml_end_str)
             + 2
         ]
-        return openapi(openapi_str, route_dict, ir["doc"][:yml_start].rstrip())
+        return cdd.parse.openapi.openapi(
+            openapi_str, route_dict, ir["doc"][:yml_start].rstrip()
+        )
     # return route_dict
 
 
