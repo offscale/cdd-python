@@ -241,7 +241,9 @@ def _scan_phase_numpydoc_and_google(
                     takewhile(
                         partial(le, return_indent),
                         map(
-                            lambda l: count_iter_items(takewhile(str.isspace, l)),
+                            lambda line_: count_iter_items(
+                                takewhile(str.isspace, line_)
+                            ),
                             docstring_lines[line_no + 3 :],
                         ),
                     )

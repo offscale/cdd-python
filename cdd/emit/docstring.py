@@ -91,7 +91,7 @@ def docstring(
 
     returns = (
         (
-            lambda l: "".join(
+            lambda line_: "".join(
                 "{maybe_nl0_and_token}{maybe_nl1}{returns_doc}".format(
                     maybe_nl0_and_token=""
                     if docstring_format == "rest"
@@ -99,10 +99,10 @@ def docstring(
                         return_token=getattr(RETURN_TOKENS, docstring_format)[0]
                     ),
                     maybe_nl1="" if not params or params[-1] == "\n" else "\n",
-                    returns_doc=l,
+                    returns_doc=line_,
                 )
             )
-            if l
+            if line_
             else ""
         )(
             next(
