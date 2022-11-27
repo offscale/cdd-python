@@ -12,6 +12,9 @@ import cdd.emit.argparse_function
 import cdd.emit.class_
 import cdd.emit.file
 import cdd.emit.function
+import cdd.parse.argparse_function
+import cdd.parse.class_
+import cdd.parse.function
 from cdd.ast_utils import RewriteAtQuery, cmp_ast, find_in_ast, get_function_type
 from cdd.pure_utils import pluralise, strip_split
 from cdd.source_transformer import ast_parse

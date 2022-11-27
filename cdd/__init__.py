@@ -8,7 +8,7 @@ import logging
 from logging import getLogger as get_logger
 
 __author__ = "Samuel Marks"
-__version__ = "0.0.87"
+__version__ = "0.0.88"
 __description__ = (
     "Open API to/fro routes, models, and tests. "
     "Convert between docstrings, classes, methods, argparse, and SQLalchemy."
@@ -18,4 +18,4 @@ __description__ = (
 root_logger = get_logger()
 logging.getLogger("blib2to3").setLevel(logging.WARNING)
 
-__all__ = ["get_logger", "root_logger", "__version__"]
+__all__ = ["get_logger", "root_logger", "__description__", "__version__"]

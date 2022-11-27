@@ -13,6 +13,9 @@ from operator import attrgetter, eq, itemgetter
 from types import FunctionType
 
 import cdd.parse
+import cdd.parse.class_
+import cdd.parse.docstring
+import cdd.parse.function
 from cdd.ast_utils import get_value
 from cdd.docstring_parsers import _set_name_and_type
 from cdd.parse.utils.class_utils import get_source

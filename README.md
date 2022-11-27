@@ -30,7 +30,7 @@ Public SDK works with filenames, source code, and even in memory constructs (e.g
 
 ### [OpenAPI](https://openapis.org) composite
 
-The [OpenAPI](https://swagger.io/specification/) parser and the [OpenAPI](https://swagger.io/specification/) emitter
+The [OpenAPI](https://swagger.io/specification/) parser and emitter
 utilises:
 
 | Type                                                                                                      | Parse | Emit |

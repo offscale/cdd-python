@@ -12,6 +12,7 @@ from operator import itemgetter
 from os import makedirs, path
 
 import cdd.emit.file
+import cdd.parse.class_
 from cdd.ast_utils import maybe_type_comment, set_value
 from cdd.exmod_utils import emit_file_on_hierarchy, get_module_contents
 from cdd.pkg_utils import relative_filename
