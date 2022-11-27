@@ -23,7 +23,6 @@ import cdd.parse.utils.parser_utils
 from cdd.ast_utils import NoneStr, find_ast_type, get_value, parse_to_scalar
 from cdd.docstring_parsers import _set_name_and_type
 from cdd.parse.utils.class_utils import get_source
-from cdd.parse.utils.parser_utils import ir_merge
 from cdd.pure_utils import rpartial, simple_types
 from cdd.source_transformer import to_code
 
@@ -300,7 +299,7 @@ def _class_from_memory(
         merge_inner_function=merge_inner_function,
     )
 
-    ir_merge(ir, body_ir)
+    cdd.parse.utils.parser_utils.ir_merge(ir, body_ir)
     return ir
 
 
@@ -355,7 +354,7 @@ def _merge_inner_function(
             function_type=function_type,
             infer_type=infer_type,
         )
-        ir_merge(other=inner_ir, target=intermediate_repr)
+        cdd.parse.utils.parser_utils.ir_merge(other=inner_ir, target=intermediate_repr)
 
     return intermediate_repr
 
