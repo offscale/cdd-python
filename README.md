@@ -11,9 +11,35 @@ cdd-python
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort)
 [![PyPi: release](https://img.shields.io/pypi/v/python-cdd.svg?maxAge=3600)](https://pypi.org/project/python-cdd)
 
-Open API to/fro routes, models, and tests. Convert between docstrings, classes, methods, argparse, and SQLalchemy.
+[OpenAPI](https://openapis.org) to/fro routes, models, and tests. Convert between docstrings, `class`es,
+methods, [argparse](https://docs.python.org/3/library/argparse.html), and [SQLalchemy](https://sqlalchemy.org).
 
 Public SDK works with filenames, source code, and even in memory constructs (e.g., as imported into your REPL).
+
+## Features
+
+| Type                                                                                                          | Parse | Emit | Convert to all other Types |
+|---------------------------------------------------------------------------------------------------------------|-------|------|----------------------------|
+| docstrings                                                                                                    | ✅     | ✅    | ✅                          |
+| `class`es                                                                                                     | ✅     | ✅    | ✅                          |
+| functions                                                                                                     | ✅     | ✅    | ✅                          |
+| [`argparse` CLI generating](https://docs.python.org/3/library/argparse.html#argumentparser-objects) functions | ✅     | ✅    | ✅                          |
+| [SQLalchemy `class`es](https://docs.sqlalchemy.org/en/14/orm/mapping_styles.html#orm-declarative-mapping)     | ✅     | ✅    | ✅                          |
+| [SQLalchemy `Table`s](https://docs.sqlalchemy.org/en/14/core/metadata.html#sqlalchemy.schema.Table)           | ✅     | ✅    | ✅                          |
+| [pydantic `class`es](https://pydantic-docs.helpmanual.io/usage/schema/)                                       | ❌     | ❌    | ❌                          |
+
+### [OpenAPI](https://openapis.org) composite
+
+The [OpenAPI](https://swagger.io/specification/) parser and the [OpenAPI](https://swagger.io/specification/) emitter
+utilises:
+
+| Type                                                                                                      | Parse | Emit |
+|-----------------------------------------------------------------------------------------------------------|-------|------|
+| [Bottle route functions](https://bottlepy.org/docs/dev/api.html#routing)                                  | WiP   | WiP  |
+| [FastAPI route functions](https://fastapi.tiangolo.com/tutorial/body/#request-body-path-query-parameters) | ❌     | ❌    |
+| [SQLalchemy `class`es](https://docs.sqlalchemy.org/en/14/orm/mapping_styles.html#orm-declarative-mapping) | ✅     | ✅    |
+| [SQLalchemy `Table`s](https://docs.sqlalchemy.org/en/14/core/metadata.html#sqlalchemy.schema.Table)       | ✅     | ✅    |
+| [pydantic `class`es](https://pydantic-docs.helpmanual.io/usage/schema/)                                   | ❌     | ❌    |
 
 ## Install package
 
@@ -34,27 +60,31 @@ For example, this can be used to expose TensorFlow in a REST API and store its p
 
 ## Relation to other projects
 
-This was created to aid in the `ml_params` project. It exposes an `@abstractclass` which is implemented [officially] by more than 8 projects.
+This was created to aid in the `ml_params` project. It exposes an `@abstractclass` which is implemented [officially] by
+more than 8 projects.
 
 Due to the nature of ML frameworks, `ml_params`' `def train(self, <these>)` has a potentially large number of arguments.
-Accumulate the complexity of maintaining interfaces as the underlying release changes (e.g, new version of PyTorch), 
-add in the extra interfaces folks find useful (CLIs, REST APIs, SQL models, &etc.); and you end up needing a team to maintain it.
+Accumulate the complexity of maintaining interfaces as the underlying release changes (e.g, new version of PyTorch),
+add in the extra interfaces folks find useful (CLIs, REST APIs, SQL models, &etc.); and you end up needing a team to
+maintain it.
 
-That's unacceptable. The only existing solutions maintainable by one engineer involve dynamic generation, 
-with no static, editable interfaces available. This means developer tooling becomes useless for debugging, introspection, and documentation.
+That's unacceptable. The only existing solutions maintainable by one engineer involve dynamic generation,
+with no static, editable interfaces available. This means developer tooling becomes useless for debugging,
+introspection, and documentation.
 
 To break it down, with current tooling there is no way to know:
 
-  - What arguments can be provided to `train`
-  - What CLI arguments are available
-  - What 'shape' the `Config` takes
+- What arguments can be provided to `train`
+- What CLI arguments are available
+- What 'shape' the `Config` takes
 
 Some of these problems can be solved dynamically, however in doing so one loses developer-tool insights.
 There is no code-completion, and likely the CLI parser won't provide you with the enumeration of possibilities.
 
 ## SDK example (REPL)
 
-To create a `class` from [`tf.keras.optimizers.Adam`](https://www.tensorflow.org/api_docs/python/tf/keras/optimizers/Adam):
+To create a `class`
+from [`tf.keras.optimizers.Adam`](https://tensorflow.org/api_docs/python/tf/keras/optimizers/Adam):
 
 ```python
 >>> from cdd.source_transformer import to_code
@@ -68,10 +98,10 @@ To create a `class` from [`tf.keras.optimizers.Adam`](https://www.tensorflow.org
 >>> from typing import Optional
 
 >>> print(to_code(cdd.emit.class_.class_(cdd.parse.class_.class_(
-                                             tf.keras.optimizers.Adam,
-                                             merge_inner_function="__init__"
-                                         ),
-                                         class_name="AdamConfig")))
+    tf.keras.optimizers.Adam,
+    merge_inner_function="__init__"
+),
+    class_name="AdamConfig")))
 
 
 class AdamConfig(object):
@@ -150,7 +180,7 @@ class AdamConfig(object):
 ### Approach
 
 Traverse the AST, and emit the modifications, such that each "format" can convert to each other.
-Type asymmetries are added to the docstrings, e.g., "primary_key" has no equivalent in a regular python func argument, 
+Type asymmetries are added to the docstrings, e.g., "primary_key" has no equivalent in a regular python func argument,
 so is added as `":param my_id: [PK] The unique identifier"`.
 
 The following are the different formats supported, all of which can convert betwixt eachother:
@@ -217,6 +247,7 @@ from typing import Optional, Union, Tuple, Literal
 
 import numpy as np
 import tensorflow as tf
+
 
 class C(object):
     """ C class (mocked!) """
@@ -295,6 +326,7 @@ def set_cli_args(argument_parser):
 ```
 
 ##### SQLalchemy
+
 There are two variants in the latest SQLalchemy, both are supported:
 
 ```py
@@ -356,6 +388,7 @@ from sqlalchemy import JSON, Boolean, Column, Enum, String
 
 Base = declarative_base()
 
+
 class Config(Base):
     """
     Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare
@@ -407,7 +440,7 @@ class Config(Base):
         :return: String representation of instance
         :rtype: ```str```
         """
-    
+
         return ("Config(dataset_name={dataset_name!r}, tfds_dir={tfds_dir!r}, "
                 "K={K!r}, as_numpy={as_numpy!r}, data_loader_kwargs={data_loader_kwargs!r})").format(
             dataset_name=self.dataset_name, tfds_dir=self.tfds_dir, K=self.K,
@@ -417,29 +450,32 @@ class Config(Base):
 
 ## Advantages
 
-  - CLI gives proper `--help` messages
-  - IDE and console gives proper insights to function, and arguments, including on type
-  - `class`–based interface opens this up to clean object passing
-  - Rather than passing around odd ORM class entities, you can use POPO (Plain Old Python Objects) and serialise easily
-  - `@abstractmethod` can add—remove, and change—as many arguments as it wants; including required arguments; without worry
-  - Verbosity of output removes the magic. It's always clear what's going on.
-  - Outputting regular code means things can be composed and extended as normally.
+- CLI gives proper `--help` messages
+- IDE and console gives proper insights to function, and arguments, including on type
+- `class`–based interface opens this up to clean object passing
+- Rather than passing around odd ORM class entities, you can use POPO (Plain Old Python Objects) and serialise easily
+- `@abstractmethod` can add—remove, and change—as many arguments as it wants; including required arguments; without
+  worry
+- Verbosity of output removes the magic. It's always clear what's going on.
+- Outputting regular code means things can be composed and extended as normally.
 
 ## Disadvantages
 
-  - You have to run a tool to synchronise your various formats.
-  - Duplication (but the tool handles this)
+- You have to run a tool to synchronise your various formats.
+- Duplication (but the tool handles this)
 
 ## Alternatives
 
-  - Slow, manual duplication; or
-  - Dynamic code generation, e.g., with a singular interface for everything; so everything is in one place without duplication
+- Slow, manual duplication; or
+- Dynamic code generation, e.g., with a singular interface for everything; so everything is in one place without
+  duplication
 
 ## Minor other use-cases this facilitates
 
-  - Switch between having types in the docstring and having the types inline ([PEP484](https://python.org/dev/peps/pep-0484)–style))
-  - Switch between docstring formats (to/from {numpy, ReST, google})
-  - Desktop GUI with wxWidgets, from the argparse layer through [Gooey](https://github.com/chriskiehl/Gooey) [one liner]
+- Switch between having types in the docstring and having the types
+  inline ([PEP484](https://python.org/dev/peps/pep-0484)–style))
+- Switch between docstring formats (to/from {numpy, ReST, google})
+- Desktop GUI with wxWidgets, from the argparse layer through [Gooey](https://github.com/chriskiehl/Gooey) [one liner]
 
 ## CLI for this project
 
@@ -663,7 +699,7 @@ class Config(Base):
 
 Licensed under either of
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <https://www.apache.org/licenses/LICENSE-2.0>)
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <https://apache.org/licenses/LICENSE-2.0>)
 - MIT license ([LICENSE-MIT](LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
 
 at your option.

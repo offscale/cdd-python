@@ -11,8 +11,8 @@ from importlib.util import find_spec
 from inspect import getmodule
 from itertools import chain, count, filterfalse, islice, takewhile, zip_longest
 from keyword import iskeyword
-from operator import attrgetter, eq
-from os import environ, extsep, path
+from operator import attrgetter, eq, itemgetter
+from os import environ, extsep, listdir, path
 from pprint import PrettyPrinter
 from sys import version_info
 from textwrap import fill as _fill
@@ -423,6 +423,46 @@ def quote(s, mark='"'):
     ):
         return s
     return "{mark}{s}{mark}".format(mark=mark, s=s)
+
+
+def all_dunder_for_module(name, exclude):
+    """
+    Generate `__all__` for a given module using single-level filename hierarchy exclusively
+
+    :param name: Module name
+    :type name: ```str```
+
+    :param exclude: Strings to exclude
+    :type exclude: ```Iterable[str]```
+
+    :return: list of strings matching the expected `__all__`
+    :rtype: ```List[str]```
+    """
+    return sorted(
+        chain.from_iterable(
+            (
+                exclude,
+                filterfalse(
+                    rpartial(str.endswith, "utils"),
+                    map(
+                        itemgetter(0),
+                        map(
+                            path.splitext,
+                            filterfalse(
+                                rpartial(str.startswith, "_"),
+                                listdir(
+                                    path.join(
+                                        path.dirname(__file__),
+                                        name,
+                                    )
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+        )
+    )
 
 
 def assert_equal(a, b, cmp=eq):
@@ -979,6 +1019,7 @@ __all__ = [
     "PY3_8",
     "PY_GTE_3_8",
     "PY_GTE_3_9",
+    "all_dunder_for_module",
     "assert_equal",
     "balanced_parentheses",
     "blockwise",

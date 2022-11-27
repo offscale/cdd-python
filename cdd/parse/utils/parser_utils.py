@@ -15,7 +15,7 @@ from types import FunctionType
 import cdd.parse
 from cdd.ast_utils import get_value
 from cdd.docstring_parsers import _set_name_and_type
-from cdd.parse.class_utils import get_source
+from cdd.parse.utils.class_utils import get_source
 from cdd.pure_utils import lstrip_namespace, none_types, rpartial, simple_types
 
 lstrip_typings = partial(lstrip_namespace, namespaces=("typings.", "_extensions."))

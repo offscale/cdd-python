@@ -8,7 +8,6 @@ from ast import Expr, FunctionDef, arguments
 from collections import OrderedDict
 from copy import deepcopy
 from functools import partial
-from itertools import chain, filterfalse
 from operator import itemgetter
 from os.path import extsep
 from platform import system
@@ -33,7 +32,14 @@ from cdd.ast_utils import (
     set_value,
 )
 from cdd.emit import EMITTERS
-from cdd.pure_utils import none_types, omit_whitespace, reindent, rpartial, tab
+from cdd.pure_utils import (
+    all_dunder_for_module,
+    none_types,
+    omit_whitespace,
+    reindent,
+    rpartial,
+    tab,
+)
 from cdd.tests.mocks.argparse import (
     argparse_func_action_append_ast,
     argparse_func_ast,
@@ -274,33 +280,7 @@ class TestEmitters(TestCase):
         """Confirm that emitter names are up-to-date"""
         self.assertListEqual(
             EMITTERS,
-            sorted(
-                chain.from_iterable(
-                    (
-                        ("sqlalchemy_table",),
-                        filterfalse(
-                            rpartial(str.endswith, "_utils"),
-                            map(
-                                itemgetter(0),
-                                map(
-                                    os.path.splitext,
-                                    filterfalse(
-                                        rpartial(str.startswith, "_"),
-                                        os.listdir(
-                                            os.path.join(
-                                                os.path.dirname(
-                                                    os.path.dirname(__file__)
-                                                ),
-                                                "emit",
-                                            )
-                                        ),
-                                    ),
-                                ),
-                            ),
-                        ),
-                    )
-                )
-            ),
+            all_dunder_for_module("emit", ("sqlalchemy_table",)),
         )
 
     def test_to_file(self) -> None:

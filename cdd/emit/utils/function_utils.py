@@ -6,7 +6,7 @@ from ast import Expr, FunctionDef, Return, arguments
 
 from cdd.ast_utils import get_value, maybe_type_comment, set_arg, set_value
 from cdd.docstring_utils import emit_param_str
-from cdd.emit.class_utils import RewriteName
+from cdd.emit.utils.class_utils import RewriteName
 from cdd.pure_utils import code_quoted, indent_all_but_first, multiline, none_types
 
 

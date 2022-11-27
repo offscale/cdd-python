@@ -26,7 +26,7 @@ from cdd.ast_utils import (
     set_value,
 )
 from cdd.emit.docstring import docstring
-from cdd.emit.emitter_utils import get_internal_body
+from cdd.emit.utils.emitter_utils import get_internal_body
 from cdd.pure_utils import code_quoted, fill, identity, none_types
 
 
