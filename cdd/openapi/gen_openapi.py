@@ -14,7 +14,7 @@ import cdd.parse.docstring
 import cdd.parse.function
 import cdd.parse.sqlalchemy
 from cdd.ast_utils import get_value
-from cdd.parse.parser_utils import infer
+from cdd.parse.utils.parser_utils import infer
 from cdd.pure_utils import rpartial, update_d
 from cdd.routes import parse as routes_parse
 from cdd.routes.parser_utils import get_route_meta

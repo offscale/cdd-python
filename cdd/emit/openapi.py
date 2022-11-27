@@ -4,7 +4,7 @@ OpenAPI emitter function(s)
 
 from collections import deque
 
-from cdd.emit.openapi_utils import components_paths_from_name_model_route_id_crud
+from cdd.emit.utils.openapi_utils import components_paths_from_name_model_route_id_crud
 from cdd.tests.mocks.json_schema import server_error_schema
 
 

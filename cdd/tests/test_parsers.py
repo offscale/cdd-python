@@ -6,9 +6,7 @@ import ast
 from ast import FunctionDef
 from collections import OrderedDict
 from copy import deepcopy
-from itertools import chain, filterfalse
 from operator import itemgetter
-from os import listdir, path
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -17,7 +15,7 @@ import cdd.parse.class_
 import cdd.parse.json_schema
 from cdd.ast_utils import RewriteAtQuery, get_value, set_value
 from cdd.parse import PARSERS
-from cdd.pure_utils import PY_GTE_3_8, paren_wrap_code, rpartial, tab
+from cdd.pure_utils import PY_GTE_3_8, all_dunder_for_module, paren_wrap_code, tab
 from cdd.source_transformer import to_code
 from cdd.tests.mocks.argparse import argparse_func_ast
 from cdd.tests.mocks.classes import (
@@ -627,32 +625,7 @@ class TestParsers(TestCase):
     def test_parsers_root(self) -> None:
         """Confirm that emitter names are up-to-date"""
         self.assertListEqual(
-            PARSERS,
-            sorted(
-                chain.from_iterable(
-                    (
-                        ("sqlalchemy_table",),
-                        filterfalse(
-                            rpartial(str.endswith, "_utils"),
-                            map(
-                                itemgetter(0),
-                                map(
-                                    path.splitext,
-                                    filterfalse(
-                                        rpartial(str.startswith, "_"),
-                                        listdir(
-                                            path.join(
-                                                path.dirname(path.dirname(__file__)),
-                                                "parse",
-                                            )
-                                        ),
-                                    ),
-                                ),
-                            ),
-                        ),
-                    )
-                )
-            ),
+            PARSERS, all_dunder_for_module("parse", ("sqlalchemy_table",))
         )
 
 

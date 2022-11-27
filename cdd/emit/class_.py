@@ -8,9 +8,9 @@ from functools import partial
 from itertools import chain
 
 from cdd.ast_utils import param2ast, set_value
-from cdd.emit.class_utils import RewriteName
 from cdd.emit.docstring import docstring
-from cdd.emit.function_utils import _make_call_meth
+from cdd.emit.utils.class_utils import RewriteName
+from cdd.emit.utils.function_utils import _make_call_meth
 from cdd.pure_utils import rpartial
 
 

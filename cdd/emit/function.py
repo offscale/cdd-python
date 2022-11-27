@@ -6,7 +6,7 @@ from ast import Expr, FunctionDef, Load, Name, Return, arguments
 
 from cdd.ast_utils import maybe_type_comment, set_arg, set_value
 from cdd.emit.docstring import docstring
-from cdd.emit.emitter_utils import get_internal_body
+from cdd.emit.utils.emitter_utils import get_internal_body
 from cdd.pure_utils import PY3_8, none_types, simple_types
 
 
@@ -81,7 +81,7 @@ def function(
     args = (
         [] if function_type in frozenset((None, "static")) else [set_arg(function_type)]
     )
-    from cdd.emit.emitter_utils import ast_parse_fix
+    from cdd.emit.utils.emitter_utils import ast_parse_fix
 
     args_from_params = list(
         map(

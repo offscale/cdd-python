@@ -6,7 +6,7 @@ from json import loads
 
 from yaml import safe_load
 
-from cdd.parse.openapi_utils import extract_entities
+from cdd.parse.utils.openapi_utils import extract_entities
 
 
 def openapi(openapi_str, routes_dict, summary):

@@ -26,7 +26,7 @@ from cdd.docstring_utils import (
     Style,
     derive_docstring_format,
 )
-from cdd.emit.docstring_utils import interpolate_defaults
+from cdd.emit.utils.docstring_utils import interpolate_defaults
 from cdd.pure_utils import (
     code_quoted,
     count_iter_items,

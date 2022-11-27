@@ -19,11 +19,11 @@ from operator import setitem
 
 import cdd.parse.docstring
 import cdd.parse.function
-import cdd.parse.parser_utils
+import cdd.parse.utils.parser_utils
 from cdd.ast_utils import NoneStr, find_ast_type, get_value, parse_to_scalar
 from cdd.docstring_parsers import _set_name_and_type
-from cdd.parse.class_utils import get_source
-from cdd.parse.parser_utils import ir_merge
+from cdd.parse.utils.class_utils import get_source
+from cdd.parse.utils.parser_utils import ir_merge
 from cdd.pure_utils import rpartial, simple_types
 from cdd.source_transformer import to_code
 
@@ -257,7 +257,7 @@ def _class_from_memory(
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :rtype: ```dict```
     """
-    ir = cdd.parse.parser_utils._inspect(
+    ir = cdd.parse.utils.parser_utils._inspect(
         class_def,
         class_name,
         parse_original_whitespace=parse_original_whitespace,

@@ -38,7 +38,7 @@ from cdd.ast_utils import (
 )
 from cdd.cst_utils import reindent_block_with_pass_body
 from cdd.docstring_parsers import parse_docstring
-from cdd.parse.parser_utils import ir_merge
+from cdd.parse.utils.parser_utils import ir_merge
 from cdd.pure_utils import PY_GTE_3_8, is_ir_empty, none_types, omit_whitespace
 from cdd.source_transformer import ast_parse
 

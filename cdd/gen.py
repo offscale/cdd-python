@@ -11,7 +11,7 @@ from operator import itemgetter
 from os import path
 
 from cdd.ast_utils import get_at_root, maybe_type_comment, set_value
-from cdd.parse.parser_utils import infer
+from cdd.parse.utils.parser_utils import infer
 from cdd.pure_utils import get_module, sanitise_emit_name
 from cdd.source_transformer import to_code
 
