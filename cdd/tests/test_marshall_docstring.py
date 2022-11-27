@@ -10,6 +10,8 @@ from unittest import TestCase
 import cdd.emit
 import cdd.emit.docstring
 import cdd.emit.utils.emitter_utils
+import cdd.parse.docstring
+import cdd.parse.function
 from cdd.ast_utils import set_value
 from cdd.docstring_parsers import _set_name_and_type, parse_docstring
 from cdd.tests.mocks.docstrings import (

@@ -41,7 +41,7 @@ class TestCli(TestCase):
         loader = SourceFileLoader(
             "__main__",
             os.path.join(
-                os.path.dirname(os.path.dirname(__file__)),
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
                 "__main__{extsep}py".format(extsep=extsep),
             ),
         )
