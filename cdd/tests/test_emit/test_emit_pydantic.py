@@ -16,7 +16,6 @@ class TestEmitPyDantic(TestCase):
         """
         Tests whether `pydantic` produces `pydantic_class_cls_def` given `pydantic_ir`
         """
-
         run_ast_test(
             self,
             gen_ast=cdd.emit.pydantic.pydantic(pydantic_ir),

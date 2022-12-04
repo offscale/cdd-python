@@ -116,7 +116,7 @@ def sync_property(
                 search[-1],
                 ast.Store(),
             ),
-            # value=None,
+            value=None,
             expr=None,
             expr_annotation=None,
             expr_target=None,
