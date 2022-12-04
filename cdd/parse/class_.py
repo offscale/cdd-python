@@ -109,6 +109,7 @@ def class_(
     for e in body:
         if isinstance(e, AnnAssign):
             typ = to_code(e.annotation).rstrip("\n")
+            # print(ast.dump(e, indent=4))
             val = (
                 (
                     lambda v: {"default": NoneStr}
@@ -125,12 +126,12 @@ def class_(
                         )(to_code(v).rstrip("\n"))
                     }
                 )(get_value(get_value(e)))
-                if hasattr(e, "value")
+                if hasattr(e, "value") and e.value is not None
                 else {}
             )
 
             # if 'str' in typ and val: val["default"] = val["default"].strip("'")  # Unquote?
-            typ_default = dict(typ=typ, **val)
+            typ_default = {"typ": typ} if val is None else dict(typ=typ, **val)
 
             target_id = e.target.id.lstrip("*")
 
@@ -183,6 +184,7 @@ def class_(
 
     intermediate_repr.update(
         {
+            "name": class_name or class_def.name,
             "params": OrderedDict(
                 map(
                     partial(

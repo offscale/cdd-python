@@ -37,6 +37,8 @@ class TestParseArgparse(TestCase):
         _intermediate_repr_no_default_doc["name"] = "set_cli_args"
         self.assertDictEqual(ir, _intermediate_repr_no_default_doc)
 
+    maxDiff = None
+
     def test_from_argparse_ast_empty(self) -> None:
         """
         Tests `argparse_ast` empty condition

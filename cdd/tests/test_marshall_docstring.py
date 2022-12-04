@@ -26,7 +26,7 @@ from cdd.tests.mocks.docstrings import (
     docstring_header_and_return_str,
     docstring_header_str,
     docstring_no_default_doc_str,
-    docstring_no_nl_str,
+    docstring_no_nl_no_none_str,
     docstring_numpydoc_only_doc_str,
     docstring_numpydoc_only_params_str,
     docstring_numpydoc_only_returns_str,
@@ -44,6 +44,7 @@ from cdd.tests.mocks.ir import (
     intermediate_repr_extra_colons,
     intermediate_repr_no_default_doc,
     intermediate_repr_no_default_doc_or_prop,
+    intermediate_repr_no_default_with_nones_doc,
     intermediate_repr_only_return_type,
 )
 from cdd.tests.mocks.methods import function_google_tf_mean_squared_error_ast
@@ -54,6 +55,8 @@ class TestMarshallDocstring(TestCase):
     """
     Tests whether docstrings are parsed out—and emitted—correctly
     """
+
+    maxDiff = None
 
     def test_ir_equality(self) -> None:
         """
@@ -100,7 +103,7 @@ class TestMarshallDocstring(TestCase):
     def test_ir2docstring(self) -> None:
         """Tests whether `emit.docstring` produces `docstring_str` from `intermediate_repr`"""
         self.assertEqual(
-            docstring_no_nl_str.strip("\n"),
+            docstring_no_nl_no_none_str.strip("\n"),
             cdd.emit.docstring.docstring(
                 deepcopy(intermediate_repr),
                 indent_level=0,
@@ -129,7 +132,7 @@ class TestMarshallDocstring(TestCase):
             docstring_numpydoc_str, return_tuple=True, emit_default_doc=False
         )
         self.assertTrue(returns)
-        self.assertDictEqual(ir, intermediate_repr_no_default_doc)
+        self.assertDictEqual(ir, intermediate_repr_no_default_with_nones_doc)
 
     def test_from_docstring_numpydoc_only_params(self) -> None:
         """
@@ -141,7 +144,7 @@ class TestMarshallDocstring(TestCase):
             emit_default_doc=False,
         )
         self.assertFalse(returns)
-        gold = deepcopy(intermediate_repr_no_default_doc)
+        gold = deepcopy(intermediate_repr_no_default_with_nones_doc)
         del gold["returns"]
         gold.update({"doc": "", "returns": None})
         self.assertDictEqual(ir, gold)
@@ -239,7 +242,9 @@ class TestMarshallDocstring(TestCase):
               from `docstring_google_str`
         """
         ir = parse_docstring(docstring_google_str)
-        _intermediate_repr_no_default_doc = deepcopy(intermediate_repr_no_default_doc)
+        _intermediate_repr_no_default_doc = deepcopy(
+            intermediate_repr_no_default_with_nones_doc
+        )
         _intermediate_repr_no_default_doc["doc"] = docstring_header_str
         self.assertDictEqual(ir, _intermediate_repr_no_default_doc)
 
@@ -296,8 +301,6 @@ class TestMarshallDocstring(TestCase):
             ),
             docstring_google_tf_lambda_callback_ir,
         )
-
-    maxDiff = None
 
     def test_from_docstring_google_tf_mean_squared_error_str(self) -> None:
         """

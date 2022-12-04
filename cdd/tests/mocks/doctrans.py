@@ -18,7 +18,7 @@ from ast import (
 )
 from copy import deepcopy
 
-from cdd.ast_utils import set_arg, set_value
+from cdd.ast_utils import maybe_type_comment, set_arg, set_value
 from cdd.pure_utils import tab
 from cdd.tests.mocks.docstrings import docstring_sum_tuple
 from cdd.tests.utils_for_tests import reindent_docstring, replace_docstring
@@ -56,11 +56,11 @@ ann_assign_with_annotation = AnnAssign(
     value=assign_with_type_comment.value,
     simple=1,
     target=assign_with_type_comment.targets[0],
-    type_comment=None,
     expr=None,
     expr_target=None,
     expr_annotation=None,
     lineno=None,
+    **maybe_type_comment
 )
 
 function_type_annotated = FunctionDef(

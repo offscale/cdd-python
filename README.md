@@ -26,7 +26,7 @@ Public SDK works with filenames, source code, and even in memory constructs (e.g
 | [`argparse` CLI generating](https://docs.python.org/3/library/argparse.html#argumentparser-objects) functions | ✅     | ✅    | ✅                          |
 | [SQLalchemy `class`es](https://docs.sqlalchemy.org/en/14/orm/mapping_styles.html#orm-declarative-mapping)     | ✅     | ✅    | ✅                          |
 | [SQLalchemy `Table`s](https://docs.sqlalchemy.org/en/14/core/metadata.html#sqlalchemy.schema.Table)           | ✅     | ✅    | ✅                          |
-| [pydantic `class`es](https://pydantic-docs.helpmanual.io/usage/schema/)                                       | ❌     | ❌    | ❌                          |
+| [pydantic `class`es](https://pydantic-docs.helpmanual.io/usage/schema/)                                       | ✅     | ✅    | ✅                          |
 
 ### [OpenAPI](https://openapis.org) composite
 
@@ -39,7 +39,7 @@ utilises:
 | [FastAPI route functions](https://fastapi.tiangolo.com/tutorial/body/#request-body-path-query-parameters) | ❌     | ❌    |
 | [SQLalchemy `class`es](https://docs.sqlalchemy.org/en/14/orm/mapping_styles.html#orm-declarative-mapping) | ✅     | ✅    |
 | [SQLalchemy `Table`s](https://docs.sqlalchemy.org/en/14/core/metadata.html#sqlalchemy.schema.Table)       | ✅     | ✅    |
-| [pydantic `class`es](https://pydantic-docs.helpmanual.io/usage/schema/)                                   | ❌     | ❌    |
+| [pydantic `class`es](https://pydantic-docs.helpmanual.io/usage/schema/)                                   | ✅     | ✅    |
 
 ## Install package
 

@@ -75,5 +75,7 @@ class TestParseSqlAlchemy(TestCase):
         ir["name"] = None
         self.assertDictEqual(ir, intermediate_repr_no_default_sql_doc)
 
+    maxDiff = None
+
 
 unittest_main()

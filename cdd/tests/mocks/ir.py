@@ -27,7 +27,7 @@ from cdd.tests.utils_for_tests import remove_args_from_docstring
 
 class_google_tf_tensorboard_ir = {
     "doc": tensorboard_doc_str_no_args_str,
-    "name": None,
+    "name": "TensorBoard",
     "params": OrderedDict(
         (
             (
@@ -129,7 +129,7 @@ class_google_tf_tensorboard_ir = {
 
 class_torch_nn_l1loss_ir = {
     "doc": deindent(remove_args_from_docstring(class_torch_nn_l1loss_docstring_str), 1),
-    "name": None,
+    "name": "L1Loss",
     "params": OrderedDict(
         (
             (
@@ -184,7 +184,7 @@ class_torch_nn_l1loss_ir = {
 
 class_torch_nn_one_cycle_lr_ir = {
     "doc": remove_args_from_docstring(class_torch_nn_one_cycle_lr_docstring_str),
-    "name": None,
+    "name": "OneCycleLR",
     "params": OrderedDict(
         (
             ("optimizer", {"doc": "Wrapped optimizer.", "typ": "Optimizer"}),
@@ -931,7 +931,7 @@ method_complex_args_variety_ir = {
     "params": OrderedDict(
         (
             ("dataset_name", {"doc": "name of dataset."}),
-            ("as_numpy", {"doc": "Convert to numpy ndarrays."}),
+            ("as_numpy", {"doc": "Convert to numpy ndarrays"}),
             (
                 "K",
                 {
@@ -973,6 +973,19 @@ method_complex_args_variety_ir = {
         )
     ),
     "type": "self",
+}
+
+pydantic_ir = {
+    "doc": "",
+    "name": "Cat",
+    "params": OrderedDict(
+        (
+            ("pet_type", {"typ": "Literal['cat']"}),
+            ("cat_name", {"typ": "str"}),
+        )
+    ),
+    "returns": None,
+    "type": "static",
 }
 
 intermediate_repr_extra_colons = {
@@ -1019,15 +1032,13 @@ intermediate_repr_no_default_doc = {
             (
                 "as_numpy",
                 {
-                    "default": NoneStr,
-                    "doc": "Convert to numpy ndarrays.",
+                    "doc": "Convert to numpy ndarrays",
                     "typ": "Optional[bool]",
                 },
             ),
             (
                 "data_loader_kwargs",
                 {
-                    "default": NoneStr,
                     "doc": "pass this as arguments to " "data_loader function",
                     "typ": "Optional[dict]",
                 },
@@ -1051,12 +1062,25 @@ intermediate_repr_no_default_doc = {
     ),
 }
 
+intermediate_repr_no_default_with_nones_doc = deepcopy(intermediate_repr_no_default_doc)
+for param in "data_loader_kwargs", "as_numpy":
+    intermediate_repr_no_default_with_nones_doc["params"][param]["default"] = NoneStr
+
 intermediate_repr_no_default_sql_doc = deepcopy(intermediate_repr_no_default_doc)
 intermediate_repr_no_default_sql_doc["params"]["dataset_name"][
     "doc"
 ] = "[PK] {}".format(
     intermediate_repr_no_default_sql_doc["params"]["dataset_name"]["doc"]
 )
+
+intermediate_repr_no_default_sql_with_nones_doc = deepcopy(
+    intermediate_repr_no_default_sql_doc
+)
+for param in "data_loader_kwargs", "as_numpy":
+    intermediate_repr_no_default_sql_with_nones_doc["params"][param][
+        "default"
+    ] = NoneStr
+
 
 intermediate_repr_only_return_type = {
     "name": None,
@@ -1114,15 +1138,13 @@ intermediate_repr = {
             (
                 "as_numpy",
                 {
-                    "default": NoneStr,
-                    "doc": "Convert to numpy ndarrays.",
+                    "doc": "Convert to numpy ndarrays",
                     "typ": "Optional[bool]",
                 },
             ),
             (
                 "data_loader_kwargs",
                 {
-                    "default": NoneStr,
                     "doc": "pass this as arguments to " "data_loader function",
                     "typ": "Optional[dict]",
                 },
@@ -1169,6 +1191,9 @@ __all__ = [
     "intermediate_repr_no_default_doc",
     "intermediate_repr_no_default_doc_or_prop",
     "intermediate_repr_no_default_sql_doc",
+    "intermediate_repr_no_default_sql_with_nones_doc",
+    "intermediate_repr_no_default_with_nones_doc",
     "intermediate_repr_only_return_type",
     "method_complex_args_variety_ir",
+    "pydantic_ir",
 ]

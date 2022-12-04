@@ -17,12 +17,12 @@ from cdd.pure_utils import none_types, tab
 from cdd.tests.mocks.docstrings import docstring_repr_google_str, docstring_repr_str
 
 
-def param_to_sqlalchemy_column_call(param, include_name):
+def param_to_sqlalchemy_column_call(name_param, include_name):
     """
     Turn a param into a `Column(…)`
 
-    :param param: Name, dict with keys: 'typ', 'doc', 'default'
-    :type param: ```Tuple[str, dict]```
+    :param name_param: Name, dict with keys: 'typ', 'doc', 'default'
+    :type name_param: ```Tuple[str, dict]```
 
     :param include_name: Whether to include the name (exclude in declarative base)
     :type include_name: ```bool```
@@ -32,8 +32,8 @@ def param_to_sqlalchemy_column_call(param, include_name):
     """
     if system() == "Darwin":
         print("param_to_sqlalchemy_column_call::include_name:", include_name, ";")
-    name, _param = param
-    del param
+    name, _param = name_param
+    del name_param
 
     args, keywords, nullable = [], [], None
 

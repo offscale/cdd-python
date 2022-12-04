@@ -15,6 +15,9 @@ PARSERS = [
     "function",
     "json_schema",
     "openapi",
+    "pydantic",
     "sqlalchemy",
     "sqlalchemy_table",
 ]
+
+__all__ = ["PARSERS"]

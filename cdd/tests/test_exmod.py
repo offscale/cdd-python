@@ -569,7 +569,11 @@ class TestExMod(TestCase):
                                 next(
                                     filter(
                                         rpartial(isinstance, ClassDef),
-                                        ast_parse(node.read()).body,
+                                        (
+                                            lambda node_read: ast_parse(  # print("%%%%%\n", node_read, ';') or
+                                                node_read
+                                            ).body
+                                        )(node.read()),
                                     )
                                 )
                             ),
@@ -577,6 +581,8 @@ class TestExMod(TestCase):
                         ),
                     )
                     self.assertDictEqual(gold_ir, gen_ir)
+
+    maxDiff = None
 
     def _pip(self, pip_args, cwd=None):
         """

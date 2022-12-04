@@ -84,6 +84,7 @@ def parse_out_param(expr, require_default=False, emit_default_doc=True):
     :return: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
     """
+    # print("require_default:", require_default, ";")
     required = get_value(
         get_value(
             next(
@@ -148,7 +149,7 @@ def parse_out_param(expr, require_default=False, emit_default_doc=True):
             # else:
             default = simple_types[typ] if typ in simple_types else NoneStr
 
-        elif require_default or typ.startswith("Optional"):
+        elif require_default:  # or typ.startswith("Optional"):
             default = NoneStr
 
     action = next(

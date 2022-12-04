@@ -27,7 +27,7 @@ config_schema = {
             "default": "np",
         },
         "as_numpy": {
-            "description": "Convert to numpy ndarrays.",
+            "description": "Convert to numpy ndarrays",
             "type": "boolean",
         },
         "data_loader_kwargs": {

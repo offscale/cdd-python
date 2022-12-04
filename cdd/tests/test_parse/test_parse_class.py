@@ -53,6 +53,7 @@ class TestParseClass(TestCase):
         """
         ir = cdd.parse.class_.class_(class_ast)
         del ir["_internal"]  # Not needed for this test
+        ir["name"] = None
         self.assertDictEqual(ir, intermediate_repr_no_default_doc)
 
     def test_from_class_in_memory(self) -> None:
@@ -260,6 +261,8 @@ class TestParseClass(TestCase):
             ),
         )
         self.assertEqual(ir["returns"], None)
+
+    maxDiff = None
 
 
 unittest_main()

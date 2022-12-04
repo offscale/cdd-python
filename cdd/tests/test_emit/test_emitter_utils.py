@@ -1,14 +1,15 @@
 """ Tests for emitter_utils """
 
 from ast import Attribute, Call, Expr, Load, Name, Subscript, keyword
+from collections import OrderedDict
 from copy import deepcopy
+from operator import itemgetter
 from unittest import TestCase
 
 from cdd.ast_utils import set_value
 from cdd.emit.utils.argparse_function_utils import parse_out_param
 from cdd.emit.utils.docstring_utils import interpolate_defaults
 from cdd.emit.utils.sqlalchemy_utils import param_to_sqlalchemy_column_call
-from cdd.pure_utils import rpartial
 from cdd.tests.mocks.argparse import argparse_add_argument_ast, argparse_func_ast
 from cdd.tests.mocks.ir import intermediate_repr
 from cdd.tests.utils_for_tests import run_ast_test, unittest_main
@@ -41,12 +42,17 @@ class TestEmitterUtils(TestCase):
 
     def test_parse_out_param(self) -> None:
         """Test that parse_out_param parses out the right dict"""
+        # Sanity check
+        self.assertEqual(argparse_func_ast.body[5].value.args[0].value, "--as_numpy")
+
         self.assertDictEqual(
-            parse_out_param(
-                next(filter(rpartial(isinstance, Expr), argparse_func_ast.body[::-1]))
-            )[1],
-            # Last element:
-            intermediate_repr["params"]["data_loader_kwargs"],
+            *map(
+                itemgetter("as_numpy"),
+                (
+                    OrderedDict((parse_out_param(argparse_func_ast.body[5]),)),
+                    intermediate_repr["params"],
+                ),
+            )
         )
 
     def test_parse_out_param_default(self) -> None:

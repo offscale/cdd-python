@@ -79,7 +79,8 @@ def argparse_ast(
     for node in body:
         if is_argparse_add_argument(node):
             name, _param = parse_out_param(
-                node, emit_default_doc=False, require_default=require_default
+                node,
+                emit_default_doc=False,  # require_default=require_default
             )
             (
                 intermediate_repr["params"][name].update

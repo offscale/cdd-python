@@ -31,12 +31,17 @@ class TestEmitClass(TestCase):
         """
         Tests whether `class_` produces `class_ast` given `argparse_func_ast`
         """
+
+        ir = cdd.parse.argparse_function.argparse_ast(argparse_func_ast)
+        gen_ast = cdd.emit.class_.class_(
+            ir,
+            emit_default_doc=True,
+            class_name="ConfigClass",
+        )
+
         run_ast_test(
             self,
-            gen_ast=cdd.emit.class_.class_(
-                cdd.parse.argparse_function.argparse_ast(argparse_func_ast),
-                emit_default_doc=True,
-            ),
+            gen_ast=gen_ast,
             gold=class_ast,
         )
 
@@ -50,6 +55,7 @@ class TestEmitClass(TestCase):
                 cdd.parse.argparse_function.argparse_ast(
                     argparse_func_action_append_ast
                 ),
+                class_name="ConfigClass",
             ),
             gold=class_nargs_ast,
         )
@@ -65,6 +71,7 @@ class TestEmitClass(TestCase):
                     docstring_no_nl_str, emit_default_doc=True
                 ),
                 emit_default_doc=True,
+                class_name="ConfigClass",
             ),
             gold=class_ast,
         )
