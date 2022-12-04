@@ -105,9 +105,9 @@ def param2ast(param):
             expr=None,
             expr_target=None,
             expr_annotation=None,
-            **{}
+            value=None
             if _param.get("default") is None
-            else {"value": set_value(_param.get("default"))},
+            else set_value(_param["default"]),
         )
         # return Assign(
         #     annotation=None,
@@ -130,7 +130,7 @@ def param2ast(param):
             expr=None,
             expr_target=None,
             expr_annotation=None,
-            **{} if val is None else {"value": set_value(val)},
+            value=None if val is None else set_value(val),
         )
     elif _param["typ"] in simple_types:
         return AnnAssign(
@@ -978,9 +978,7 @@ def emit_ann_assign(node):
             expr=None,
             expr_target=None,
             expr_annotation=None,
-            **{"value": node.default}
-            if getattr(node, "default", None) is not None
-            else {},
+            value=node.default if getattr(node, "default", None) is not None else None,
         )
     else:
         raise NotImplementedError(type(node).__name__)

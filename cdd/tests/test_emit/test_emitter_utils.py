@@ -6,7 +6,7 @@ from copy import deepcopy
 from operator import itemgetter
 from unittest import TestCase
 
-from cdd.ast_utils import set_value
+from cdd.ast_utils import get_value, set_value
 from cdd.emit.utils.argparse_function_utils import parse_out_param
 from cdd.emit.utils.docstring_utils import interpolate_defaults
 from cdd.emit.utils.sqlalchemy_utils import param_to_sqlalchemy_column_call
@@ -43,7 +43,9 @@ class TestEmitterUtils(TestCase):
     def test_parse_out_param(self) -> None:
         """Test that parse_out_param parses out the right dict"""
         # Sanity check
-        self.assertEqual(argparse_func_ast.body[5].value.args[0].value, "--as_numpy")
+        self.assertEqual(
+            get_value(argparse_func_ast.body[5].value.args[0]), "--as_numpy"
+        )
 
         self.assertDictEqual(
             *map(

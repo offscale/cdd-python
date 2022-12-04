@@ -612,6 +612,7 @@ class TestAstUtils(TestCase):
                 expr=None,
                 expr_target=None,
                 expr_annotation=None,
+                value=None,
             ),
         )
 

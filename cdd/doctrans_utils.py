@@ -176,7 +176,7 @@ class DocTrans(NodeTransformer):
                 expr=None,
                 expr_target=None,
                 expr_annotation=None,
-                **{} if node.value is None else {"value": node.value},
+                value=node.value,
                 **maybe_type_comment,
             )
         else:
