@@ -224,7 +224,7 @@ _argparse_add_arguments = (
                 keyword(
                     arg="help",
                     value=set_value(
-                        "Convert to numpy ndarrays.",
+                        "Convert to numpy ndarrays",
                     ),
                     identifier=None,
                 ),
@@ -314,7 +314,7 @@ def set_cli_args(argument_parser):
         default="np",
     )
     argument_parser.add_argument(
-        "--as_numpy", type=bool, help="Convert to numpy ndarrays.",
+        "--as_numpy", type=bool, help="Convert to numpy ndarrays",
     )
     argument_parser.add_argument(
         "--data_loader_kwargs",
@@ -352,7 +352,7 @@ def set_cli_args(argument_parser):
         required=True,
         default='np',
     )
-    argument_parser.add_argument('--as_numpy', type=bool, help='Convert to numpy ndarrays.')
+    argument_parser.add_argument('--as_numpy', type=bool, help='Convert to numpy ndarrays')
     argument_parser.add_argument(
         '--data_loader_kwargs', type=loads, help='pass this as arguments to data_loader function'
     )
@@ -629,9 +629,9 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
                 )
             ],
             lineno=None,
-            type_comment=None,
             value=set_value(tensorboard_doc_str_no_args_str),
             expr=None,
+            **maybe_type_comment
         ),
         Expr(
             Call(
@@ -840,11 +840,11 @@ argparse_function_google_tf_tensorboard_ast = FunctionDef(
     decorator_list=[],
     name="set_cli_args",
     returns=None,
-    type_comment=None,
     arguments_args=None,
     identifier_name=None,
     stmt=None,
     lineno=None,
+    **maybe_type_comment
 )
 
 argparse_func_torch_nn_l1loss_ast = FunctionDef(
@@ -869,13 +869,13 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
                 )
             ],
             lineno=None,
-            type_comment=None,
             value=set_value(
                 deindent(
                     remove_args_from_docstring(class_torch_nn_l1loss_docstring_str), 1
                 )
             ),
             expr=None,
+            **maybe_type_comment
         ),
         Expr(
             Call(
@@ -1008,11 +1008,11 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
     decorator_list=[],
     name="set_cli_args",
     returns=None,
-    type_comment=None,
     arguments_args=None,
     identifier_name=None,
     stmt=None,
     lineno=None,
+    **maybe_type_comment
 )
 
 argparse_add_argument_expr = Expr(

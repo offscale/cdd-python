@@ -20,6 +20,7 @@ from operator import attrgetter, eq
 import cdd.emit.docstring
 import cdd.parse.docstring
 import cdd.parse.function
+import cdd.parse.utils.parser_utils
 from cdd.ast_cst_utils import (
     find_cst_at_ast,
     maybe_replace_doc_str_in_function_or_class,
@@ -38,7 +39,6 @@ from cdd.ast_utils import (
 )
 from cdd.cst_utils import reindent_block_with_pass_body
 from cdd.docstring_parsers import parse_docstring
-from cdd.parse.utils.parser_utils import ir_merge
 from cdd.pure_utils import PY_GTE_3_8, is_ir_empty, none_types, omit_whitespace
 from cdd.source_transformer import ast_parse
 
@@ -251,7 +251,7 @@ class DocTrans(NodeTransformer):
         :rtype: ```Union[AsyncFunctionDef, FunctionDef]```
         """
         ir = parse_docstring(original_doc_str)
-        ir_merge(ir, cdd.parse.function.function(node))
+        cdd.parse.utils.parser_utils.ir_merge(ir, cdd.parse.function.function(node))
         ir["name"] = node.name
         indent_level = max(
             len(node._location), 1

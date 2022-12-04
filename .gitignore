@@ -148,3 +148,6 @@ dmypy.json
 
 # macOS
 .DS_Store
+
+# Docs
+_docs

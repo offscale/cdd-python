@@ -354,8 +354,7 @@ def set_default_doc(param, emit_default_doc=True):
             _param["doc"], emit_default_doc=emit_default_doc
         )[0]
     elif "default" in _param and not has_defaults and emit_default_doc:
-        if _param["default"] == NoneStr:
-            _param["default"] = None
+        # if _param["default"] == NoneStr: _param["default"] = None
         if _param["default"] is not None or not name.endswith("kwargs"):
             _param["doc"] = "{doc} Defaults to {default}".format(
                 doc=(

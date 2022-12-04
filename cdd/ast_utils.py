@@ -95,8 +95,8 @@ def param2ast(param):
                 _param["default"] = None
             if _param["typ"] in frozenset(("Constant", "Str", "NamedConstant")):
                 _param["typ"] = "object"
-        elif _param["default"] == NoneStr:
-            _param["default"] = None
+        # elif _param["default"] == NoneStr: _param["default"] = None
+
     if _param.get("typ") is None:
         return AnnAssign(
             annotation=Name("object", Load()),
@@ -120,11 +120,7 @@ def param2ast(param):
         #     **maybe_type_comment
         # )
     elif needs_quoting(_param["typ"]):
-        val = (
-            quote(_param["default"])
-            if _param.get("default")
-            else simple_types.get(_param["typ"])
-        )
+        val = quote(_param["default"]) if _param.get("default") else None
         return AnnAssign(
             annotation=Name(_param["typ"], Load())
             if _param["typ"] in simple_types
@@ -180,7 +176,7 @@ def _generic_param2ast(param):
     from cdd.emit.utils.emitter_utils import ast_parse_fix
 
     annotation = ast_parse_fix(_param["typ"])
-    value = set_value(None)
+    value = None
     if "default" in _param:
         if not code_quoted(_param["default"]) or _param["default"][
             3:-3
@@ -212,7 +208,7 @@ def _generic_param2ast(param):
                 if hasattr(parsed_default, "body")
                 else parsed_default
                 if "default" in _param
-                else set_value(None)
+                else None
             )
         # else:
         #     value = set_value(None)
@@ -223,7 +219,7 @@ def _generic_param2ast(param):
         expr=None,
         expr_target=None,
         expr_annotation=None,
-        **{} if value is None else {"value": value},
+        value=value,
     )
 
 
@@ -1619,6 +1615,7 @@ __all__ = [
     "annotate_ancestry",
     "cmp_ast",
     "code_quoted",
+    "column_type2typ",
     "emit_ann_assign",
     "emit_arg",
     "find_ast_type",

@@ -405,7 +405,7 @@ Args:
   dataset_name (str): name of dataset. Defaults to "mnist"
   tfds_dir (str): directory to look for models in. Defaults to "~/tensorflow_datasets"
   K (Literal['np', 'tf']): backend engine, e.g., `np` or `tf`. Defaults to "np"
-  as_numpy (Optional[bool]): Convert to numpy ndarrays. Defaults to None
+  as_numpy (Optional[bool]): Convert to numpy ndarrays
   data_loader_kwargs (Optional[dict]): pass this as arguments to data_loader function
 
 Returns:
@@ -426,7 +426,7 @@ docstring_no_default_doc_str = """
 :param K: backend engine, e.g., `np` or `tf`.
 :type K: ```Literal['np', 'tf']```
 
-:param as_numpy: Convert to numpy ndarrays.
+:param as_numpy: Convert to numpy ndarrays
 :type as_numpy: ```Optional[bool]```
 
 :param data_loader_kwargs: pass this as arguments to data_loader function
@@ -453,7 +453,7 @@ _docstring_no_default_str = """
 :param K: backend engine, e.g., `np` or `tf`.
 :type K: ```Literal['np', 'tf']```
 
-:param as_numpy: Convert to numpy ndarrays.
+:param as_numpy: Convert to numpy ndarrays
 :type as_numpy: ```Optional[bool]```
 
 :param data_loader_kwargs: pass this as arguments to data_loader function
@@ -487,7 +487,7 @@ tfds_dir : str
 K : Literal['np', 'tf']
     backend engine, e.g., `np` or `tf`. Defaults to "np"
 as_numpy : Optional[bool]
-    Convert to numpy ndarrays.
+    Convert to numpy ndarrays
 data_loader_kwargs : Optional[dict]
     pass this as arguments to data_loader function
 """
@@ -509,7 +509,7 @@ tfds_dir : str
 K : Literal['np', 'tf']
     backend engine, e.g., `np` or `tf`. Defaults to "np"
 as_numpy : Optional[bool]
-    Convert to numpy ndarrays. Defaults to None
+    Convert to numpy ndarrays
 data_loader_kwargs : Optional[dict]
     pass this as arguments to data_loader function
 
@@ -540,7 +540,7 @@ _docstring_str = """
 :param K: backend engine, e.g., `np` or `tf`. Defaults to "np"
 :type K: ```Literal['np', 'tf']```
 
-:param as_numpy: Convert to numpy ndarrays. Defaults to None
+:param as_numpy: Convert to numpy ndarrays
 :type as_numpy: ```Optional[bool]```
 
 :param data_loader_kwargs: pass this as arguments to data_loader function
@@ -553,6 +553,8 @@ _docstring_str = """
 docstring_str = _docstring_str.format(header_doc_str=docstring_header_str)
 
 docstring_no_nl_str = _docstring_str.format(header_doc_str=docstring_header_no_nl_str)
+
+docstring_no_nl_no_none_str = docstring_no_nl_str.replace(" Defaults to None", "")
 
 docstring_wrapped_str = docstring_str.replace(
     " np.ndarray]]```", "\n{tab}np.ndarray]]```".format(tab=tab)
@@ -567,7 +569,7 @@ docstring_no_type_str = """
 
 :param K: backend engine, e.g., `np` or `tf`. Defaults to "np"
 
-:param as_numpy: Convert to numpy ndarrays. Defaults to None
+:param as_numpy: Convert to numpy ndarrays
 
 :param data_loader_kwargs: pass this as arguments to data_loader function
 
@@ -584,7 +586,7 @@ docstring_no_type_no_default_tpl_str = """
 
 :param K: backend engine, e.g., `np` or `tf`.
 
-:param as_numpy: Convert to numpy ndarrays.
+:param as_numpy: Convert to numpy ndarrays
 
 :param data_loader_kwargs: pass this as arguments to data_loader function
 
@@ -811,6 +813,7 @@ __all__ = [
     "docstring_no_default_no_nl_str",
     "docstring_no_default_str",
     "docstring_no_nl_str",
+    "docstring_no_nl_no_none_str",
     "docstring_numpydoc_only_doc_str",
     "docstring_numpydoc_only_params_str",
     "docstring_numpydoc_only_returns_str",

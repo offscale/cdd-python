@@ -156,7 +156,9 @@ class TestConformance(TestCase):
                         self.ground_truth_tester(
                             tempdir=tempdir,
                             _class_ast=cdd.emit.class_.class_(
-                                ir, emit_default_doc=False
+                                ir,
+                                emit_default_doc=False,
+                                class_name=ir["name"] or "ConfigClass",
                             ),
                         )[0].items(),
                     )

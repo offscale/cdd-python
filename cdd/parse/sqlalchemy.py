@@ -7,10 +7,10 @@ from functools import partial
 from itertools import chain, filterfalse
 from operator import attrgetter, eq
 
+import cdd.parse.utils.parser_utils
 from cdd.ast_utils import get_value, set_value
 from cdd.defaults_utils import extract_default
 from cdd.parse.docstring import docstring
-from cdd.parse.utils.parser_utils import ir_merge
 from cdd.parse.utils.sqlalchemy_utils import column_call_to_param
 from cdd.pure_utils import assert_equal, rpartial
 
@@ -69,7 +69,7 @@ def sqlalchemy_table(call_or_name, parse_original_whitespace=False):
         "params": OrderedDict(map(column_call_to_param, call_or_name.args[2:])),
         "returns": None,
     }
-    ir_merge(target=intermediate_repr, other=merge_ir)
+    cdd.parse.utils.parser_utils.ir_merge(target=intermediate_repr, other=merge_ir)
     if intermediate_repr["returns"] and intermediate_repr["returns"].get(
         "return_type", {}
     ).get("doc"):

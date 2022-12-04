@@ -15,7 +15,6 @@ import cdd.parse.utils.parser_utils
 from cdd.ast_utils import NoneStr, func_arg2param, get_function_type
 from cdd.docstring_parsers import _set_name_and_type
 from cdd.parse.utils.function_utils import _interpolate_return
-from cdd.parse.utils.parser_utils import ir_merge
 from cdd.pure_utils import rpartial
 
 
@@ -177,7 +176,7 @@ def function(
                 list(islice(cycle((None,)), diff))
                 + getattr(function_def.args, defaults),
             )
-    ir_merge(
+    cdd.parse.utils.parser_utils.ir_merge(
         intermediate_repr,
         {
             "params": OrderedDict(

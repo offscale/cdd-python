@@ -135,7 +135,7 @@ class TestDocstringUtils(TestCase):
                 "Parameters",
                 "----------",
                 "as_numpy : Optional[bool]",
-                "  Convert to numpy ndarrays. Defaults to None",
+                "  Convert to numpy ndarrays",
                 "",
                 "",
                 self.footer,
@@ -146,7 +146,7 @@ class TestDocstringUtils(TestCase):
             (
                 "{header}\n".format(header=self.header.rstrip("\n")),
                 self.footer,
-                ":param as_numpy: Convert to numpy ndarrays. Defaults to None",
+                ":param as_numpy: Convert to numpy ndarrays",
                 ":type as_numpy: ```Optional[bool]```",
             )
         )
@@ -158,7 +158,7 @@ class TestDocstringUtils(TestCase):
             "\n".join(
                 (
                     "{header}\n".format(header=self.header.rstrip("\n")),
-                    ":param as_numpy: Convert to numpy ndarrays. Defaults to None",
+                    ":param as_numpy: Convert to numpy ndarrays",
                     ":type as_numpy: ```Optional[bool]```\n",
                     self.footer,
                 )
@@ -172,7 +172,7 @@ class TestDocstringUtils(TestCase):
         original_doc_str = "\n".join(
             (
                 "{header}\n".format(header=self.header.rstrip("\n")),
-                ":param as_numpy: Convert to numpy ndarrays. Defaults to None",
+                ":param as_numpy: Convert to numpy ndarrays",
                 ":type as_numpy: ```Optional[bool]```",
                 self.footer,
             )
@@ -185,7 +185,7 @@ class TestDocstringUtils(TestCase):
                 "Parameters",
                 "----------",
                 "as_numpy : Optional[bool]",
-                "  Convert to numpy ndarrays. Defaults to None\n",
+                "  Convert to numpy ndarrays\n",
             )
         )
 
@@ -200,7 +200,7 @@ class TestDocstringUtils(TestCase):
                     "Parameters",
                     "----------",
                     "as_numpy : Optional[bool]",
-                    "  Convert to numpy ndarrays. Defaults to None\n",
+                    "  Convert to numpy ndarrays\n",
                 )
             ),
         )
@@ -216,7 +216,7 @@ class TestDocstringUtils(TestCase):
                     "Parameters",
                     "----------",
                     "as_numpy : Optional[bool]",
-                    "  Convert to numpy ndarrays. Defaults to None",
+                    "  Convert to numpy ndarrays",
                     self.footer,
                 )
             ),

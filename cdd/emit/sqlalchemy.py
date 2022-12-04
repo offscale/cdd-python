@@ -261,10 +261,10 @@ def sqlalchemy(
                         **maybe_type_comment
                     ),
                     *map(
-                        lambda param: Assign(
-                            targets=[Name(param[0], Store())],
+                        lambda name_param: Assign(
+                            targets=[Name(name_param[0], Store())],
                             value=param_to_sqlalchemy_column_call(
-                                param, include_name=False
+                                name_param, include_name=False
                             ),
                             expr=None,
                             lineno=None,

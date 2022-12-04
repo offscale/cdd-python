@@ -5,7 +5,7 @@ Tests for the Intermediate Representation produced by the JSON schema parser
 from unittest import TestCase
 
 import cdd.parse.json_schema
-from cdd.tests.mocks.ir import intermediate_repr_no_default_sql_doc
+from cdd.tests.mocks.ir import intermediate_repr_no_default_sql_with_nones_doc
 from cdd.tests.mocks.json_schema import config_schema
 from cdd.tests.utils_for_tests import unittest_main
 
@@ -29,8 +29,10 @@ class TestParseJsonSchema(TestCase):
         """
         self.assertDictEqual(
             cdd.parse.json_schema.json_schema(config_schema),
-            intermediate_repr_no_default_sql_doc,
+            intermediate_repr_no_default_sql_with_nones_doc,
         )
+
+    maxDiff = None
 
 
 unittest_main()

@@ -17,7 +17,7 @@ from cdd.pure_utils import rpartial
 def class_(
     intermediate_repr,
     emit_call=False,
-    class_name="ConfigClass",
+    class_name=None,
     class_bases=("object",),
     decorator_list=None,
     word_wrap=True,
@@ -69,6 +69,7 @@ def class_(
     ), "{intermediate_repr_type_name} != dict".format(
         intermediate_repr_type_name=type(intermediate_repr).__name__
     )
+    assert class_name or intermediate_repr["name"], "Class has no name"
 
     returns = (
         intermediate_repr["returns"]
@@ -113,12 +114,12 @@ def class_(
     return ClassDef(
         bases=list(map(rpartial(Name, Load()), class_bases)),
         body=list(
-            chain.from_iterable(
-                filter(
-                    None,
+            filter(
+                None,
+                chain.from_iterable(
                     (
                         (
-                            (lambda ds: Expr(set_value(ds.rstrip())))(
+                            (lambda ds: None if ds is None else Expr(set_value(ds)))(
                                 _emit_docstring(
                                     {
                                         k: intermediate_repr[k]
@@ -127,7 +128,8 @@ def class_(
                                     },
                                     emit_original_whitespace=emit_original_whitespace,
                                     purpose="class",
-                                )
+                                ).rstrip()
+                                or None
                             ),
                         ),
                         map(
@@ -163,15 +165,15 @@ def class_(
                             else iter(())
                         ),
                     ),
-                )
+                ),
             )
         )
-        or Expr(set_value("")),  # empty body will cause syntax error
+        or [Expr(set_value(""))],  # empty body will cause syntax error
         decorator_list=list(map(rpartial(Name, Load()), decorator_list))
         if decorator_list
         else [],
         keywords=[],
-        name=class_name,
+        name=class_name or intermediate_repr["name"],
         expr=None,
         identifier_name=None,
     )

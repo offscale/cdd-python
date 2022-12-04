@@ -50,7 +50,7 @@ class_doc_str = tab.join(
         ':cvar dataset_name: name of dataset. Defaults to "mnist"\n',
         ':cvar tfds_dir: directory to look for models in. Defaults to "~/tensorflow_datasets"\n',
         ':cvar K: backend engine, e.g., `np` or `tf`. Defaults to "np"\n',
-        ":cvar as_numpy: Convert to numpy ndarrays. Defaults to None\n",
+        ":cvar as_numpy: Convert to numpy ndarrays\n",
         ":cvar data_loader_kwargs: pass this as arguments to data_loader function\n",
         ":cvar return_type: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))",
     )
@@ -64,15 +64,15 @@ class ConfigClass(object):
     :cvar dataset_name: name of dataset. Defaults to "mnist"
     :cvar tfds_dir: directory to look for models in. Defaults to "~/tensorflow_datasets"
     :cvar K: backend engine, e.g., `np` or `tf`. Defaults to "np"
-    :cvar as_numpy: Convert to numpy ndarrays. Defaults to None
+    :cvar as_numpy: Convert to numpy ndarrays
     :cvar data_loader_kwargs: pass this as arguments to data_loader function
     :cvar return_type: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))"""
 
     dataset_name: str = "mnist"
     tfds_dir: str = "~/tensorflow_datasets"
     K: Literal["np", "tf"] = "np"
-    as_numpy: Optional[bool] = None
-    data_loader_kwargs: Optional[dict] = None
+    as_numpy: Optional[bool]
+    data_loader_kwargs: Optional[dict]
     return_type: Union[
         Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]
     ] = (
@@ -185,7 +185,7 @@ class_ast = ClassDef(
             ),
             simple=1,
             target=Name("as_numpy", Store()),
-            value=set_value(None),
+            value=None,
             expr=None,
             expr_target=None,
             expr_annotation=None,
@@ -199,7 +199,7 @@ class_ast = ClassDef(
                 "data_loader_kwargs",
                 Store(),
             ),
-            value=set_value(None),
+            value=None,
             expr=None,
             expr_target=None,
             expr_annotation=None,
@@ -252,6 +252,15 @@ class_ast_no_default_doc.body[0] = Expr(
         )
     )
 )
+
+class_ast_with_none = deepcopy(class_ast)
+assert (
+    isinstance(class_ast_with_none.body[4], AnnAssign)
+    and class_ast_with_none.body[4].target.id == "as_numpy"
+)
+class_ast_with_none.body[4].value = set_value(
+    None
+)  # E.g., because argparse has a default set to `None`
 
 class_nargs_ast = ClassDef(
     bases=[Name("object", Load())],
@@ -906,10 +915,10 @@ class_torch_nn_l1loss_ast = ClassDef(
         Expr(set_value(class_torch_nn_l1loss_docstring_str)),
         Assign(
             targets=[Name("__constants__", Store())],
-            type_comment=None,
             value=List([set_value("reduction")], Load()),
             expr=None,
             lineno=None,
+            **maybe_type_comment,
         ),
         FunctionDef(
             args=arguments(
@@ -967,11 +976,11 @@ class_torch_nn_l1loss_ast = ClassDef(
             decorator_list=[],
             name="__init__",
             returns=set_value(None),
-            type_comment=None,
             arguments_args=None,
             identifier_name=None,
             stmt=None,
             lineno=None,
+            **maybe_type_comment,
         ),
         FunctionDef(
             args=arguments(
@@ -1217,11 +1226,11 @@ class_torch_nn_one_cycle_lr_ast = ClassDef(
             decorator_list=[],
             name="__init__",
             returns=None,
-            type_comment=None,
             arguments_args=None,
             identifier_name=None,
             stmt=None,
             lineno=None,
+            **maybe_type_comment,
         ),
     ],
     decorator_list=[],
@@ -1251,6 +1260,7 @@ class_reduction_v2 = ClassDef(
 
 __all__ = [
     "class_ast",
+    "class_ast_with_none",
     "class_google_tf_tensorboard_ast",
     "class_google_tf_tensorboard_str",
     "class_nargs_ast",

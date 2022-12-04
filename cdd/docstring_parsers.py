@@ -10,7 +10,7 @@ Translates from [Google's docstring format](https://google.github.io/styleguide/
 """
 
 import ast
-from ast import AST, Constant, NameConstant
+from ast import AST
 from collections import OrderedDict
 from copy import deepcopy
 from functools import partial
@@ -120,7 +120,9 @@ def parse_docstring(
                 k: OrderedDict(
                     map(
                         partial(
-                            interpolate_defaults, emit_default_doc=emit_default_doc
+                            interpolate_defaults,
+                            emit_default_doc=emit_default_doc,
+                            require_default=False,
                         ),
                         ir[k].items(),
                     )
@@ -476,7 +478,7 @@ def _parse_phase(
     )
 
 
-def _set_name_and_type(param, infer_type, word_wrap):
+def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=False):
     """
     Sanitise the name and set the type (iff default and no existing type) for the param
 
@@ -489,6 +491,9 @@ def _set_name_and_type(param, infer_type, word_wrap):
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
+    :param none_default_for_kwargs: Whether to set `None` as default for kwargs
+    :type none_default_for_kwargs: ```bool```
+
     :return: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
     """
@@ -498,12 +503,12 @@ def _set_name_and_type(param, infer_type, word_wrap):
         name = name.lstrip("*")
         if _param.get("typ", "dict") == "dict":
             _param["typ"] = "Optional[dict]"
-        if (
-            "default" not in _param
-            or isinstance(_param["default"], (NameConstant, Constant))
-            and get_value(_param["default"]) in none_types
-        ):
-            _param["default"] = NoneStr
+        # if (
+        #     "default" not in _param
+        #     or isinstance(_param["default"], (NameConstant, Constant))
+        #     and get_value(_param["default"]) in none_types
+        # ) and none_default_for_kwargs:
+        #     _param["default"] = NoneStr
     elif name is not None and name.startswith("*"):
         name = name[1:]
         if _param.get("typ") is None:
@@ -948,11 +953,13 @@ def _parse_phase_rest(
                     ),
                     infer_type=infer_type,
                     word_wrap=word_wrap,
+                    none_default_for_kwargs=False,
                 )
                 if not emit_default_doc and not emit_default_prop:
                     param = _remove_default_from_param(
                         param, emit_default_prop=emit_default_doc
                     )
+
         elif not intermediate_repr["doc"]:
             intermediate_repr["doc"] = (
                 line if parse_original_whitespace else line.strip()

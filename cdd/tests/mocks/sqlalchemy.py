@@ -74,14 +74,12 @@ config_tbl = Table(
         "as_numpy",
         Boolean,
         doc="Convert to numpy ndarrays",
-        default=None,
         nullable=True,
     ),
     Column(
         "data_loader_kwargs",
         JSON,
         doc="pass this as arguments to data_loader function",
-        default=None,
         nullable=True,
     ),
     comment={comment!r},
@@ -164,7 +162,6 @@ config_tbl_ast = Assign(
                         value=set_value("Convert to numpy ndarrays"),
                         identifier=None,
                     ),
-                    keyword(arg="default", value=set_value(None), identifier=None),
                     keyword(arg="nullable", value=set_value(True), identifier=None),
                 ],
                 expr=None,
@@ -181,7 +178,6 @@ config_tbl_ast = Assign(
                         ),
                         identifier=None,
                     ),
-                    keyword(arg="default", value=set_value(None), identifier=None),
                     keyword(arg="nullable", value=set_value(True), identifier=None),
                 ],
                 expr=None,
@@ -232,14 +228,12 @@ class Config(Base):
     as_numpy = Column(
         Boolean,
         doc="Convert to numpy ndarrays",
-        default=None,
         nullable=True,
     )
 
     data_loader_kwargs = Column(
         JSON,
         doc="pass this as arguments to data_loader function",
-        default=None,
         nullable=True,
     )
 
@@ -358,7 +352,6 @@ config_decl_base_ast = ClassDef(
                         value=set_value("Convert to numpy ndarrays"),
                         identifier=None,
                     ),
-                    keyword(arg="default", value=set_value(None), identifier=None),
                     keyword(arg="nullable", value=set_value(True), identifier=None),
                 ],
                 expr=None,
@@ -381,7 +374,6 @@ config_decl_base_ast = ClassDef(
                         ),
                         identifier=None,
                     ),
-                    keyword(arg="default", value=set_value(None), identifier=None),
                     keyword(arg="nullable", value=set_value(True), identifier=None),
                 ],
                 expr=None,

@@ -85,7 +85,7 @@ class C(object):
         :param K: backend engine, e.g., `np` or `tf`.
         :type K: ```Literal['np', 'tf']```
 {sep}
-        :param as_numpy: Convert to numpy ndarrays.
+        :param as_numpy: Convert to numpy ndarrays
         :type as_numpy: ```Optional[bool]```
 {sep}
         :param data_loader_kwargs: pass this as arguments to data_loader function
@@ -122,7 +122,7 @@ class C(object):
 
         :param K: backend engine, e.g., `np` or `tf`.
 
-        :param as_numpy: Convert to numpy ndarrays.
+        :param as_numpy: Convert to numpy ndarrays
 
         :param data_loader_kwargs: pass this as arguments to data_loader function
 
@@ -154,7 +154,7 @@ class C(object):
 
         :param K: backend engine, e.g., `np` or `tf`.
 
-        :param as_numpy: Convert to numpy ndarrays.
+        :param as_numpy: Convert to numpy ndarrays
 
         :param data_loader_kwargs: pass this as arguments to data_loader function
 
@@ -713,7 +713,7 @@ def call_cliff(
 
     :param dataset_name: name of dataset.
 
-    :param as_numpy: Convert to numpy ndarrays.
+    :param as_numpy: Convert to numpy ndarrays
 
     :param K: backend engine, e.g., `np` or `tf`.
 
@@ -774,7 +774,7 @@ method_complex_args_variety_ast = FunctionDef(
             set_value(
                 "\n    Call cliff\n\n    "
                 ":param dataset_name: name of dataset.\n\n    "
-                ":param as_numpy: Convert to numpy ndarrays.\n\n    "
+                ":param as_numpy: Convert to numpy ndarrays\n\n    "
                 ":param K: backend engine, e.g., `np` or `tf`.\n\n    "
                 ":param tfds_dir: directory to look for models in.\n\n    "
                 ":param writer: IO object to write out to\n\n    "
