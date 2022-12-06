@@ -2,7 +2,7 @@
 Emit constant strings with interpolated values for route generation
 """
 
-from cdd.routes.emit_constants import (
+from cdd.routes.emit.bottle_constants import (
     create_helper_variants,
     create_route_variants,
     delete_route_variants,

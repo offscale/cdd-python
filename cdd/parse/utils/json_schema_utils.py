@@ -1,6 +1,7 @@
 """
 Utility functions for `cdd.parse.json_schema`
 """
+
 from cdd.ast_utils import NoneStr, json_type2typ
 from cdd.pure_utils import none_types
 

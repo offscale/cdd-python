@@ -1,6 +1,7 @@
 """
 Tests for the Intermediate Representation produced by the argparse parser
 """
+
 from ast import FunctionDef
 from copy import deepcopy
 from unittest import TestCase
@@ -36,8 +37,6 @@ class TestParseArgparse(TestCase):
         _intermediate_repr_no_default_doc = deepcopy(intermediate_repr_no_default_doc)
         _intermediate_repr_no_default_doc["name"] = "set_cli_args"
         self.assertDictEqual(ir, _intermediate_repr_no_default_doc)
-
-    maxDiff = None
 
     def test_from_argparse_ast_empty(self) -> None:
         """

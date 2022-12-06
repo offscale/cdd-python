@@ -1,6 +1,7 @@
 """
 Utility functions for `cdd.parse.sqlalchemy`
 """
+
 from ast import Call, Name
 from itertools import chain
 

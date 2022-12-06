@@ -1,6 +1,7 @@
 """
 Utility functions for `cdd.parse.class`
 """
+
 from inspect import getsource
 
 

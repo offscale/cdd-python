@@ -13,11 +13,11 @@ import cdd.parse.class_
 import cdd.parse.docstring
 import cdd.parse.function
 import cdd.parse.sqlalchemy
+import cdd.routes.parse.bottle
 from cdd.ast_utils import get_value
 from cdd.parse.utils.parser_utils import infer
 from cdd.pure_utils import rpartial, update_d
-from cdd.routes import parse as routes_parse
-from cdd.routes.parser_utils import get_route_meta
+from cdd.routes.parse.bottle_utils import get_route_meta
 from cdd.tests.mocks.json_schema import server_error_schema
 
 
@@ -194,9 +194,9 @@ def openapi_bulk(app_name, model_paths, routes_paths):
                         lambda route: (
                             get_value(route.decorator_list[0].args[0]),
                             {
-                                route.decorator_list[0].func.attr: routes_parse.bottle(
-                                    route
-                                )
+                                route.decorator_list[
+                                    0
+                                ].func.attr: cdd.routes.parse.bottle.bottle(route)
                             },
                         ),
                         chain.from_iterable(map(parse_route, routes_paths)),

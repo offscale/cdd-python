@@ -9,10 +9,10 @@ from operator import attrgetter, itemgetter
 from os import path
 
 import cdd.parse.sqlalchemy
+import cdd.routes.emit.bottle
 from cdd.ast_utils import get_value
 from cdd.pure_utils import filename_from_mod_or_filename, rpartial
-from cdd.routes import emit as routes_emit
-from cdd.routes.parse import methods
+from cdd.routes.parse.bottle import methods
 from cdd.source_transformer import to_code
 from cdd.tests.mocks.routes import route_prelude
 
@@ -79,10 +79,14 @@ def gen_routes(app, model_path, model_name, crud, route):
     _route_config = {"app": app, "name": model_name, "route": route, "variant": -1}
     routes = []
     if "C" in crud:
-        routes.append(routes_emit.create(**_route_config))
+        routes.append(cdd.routes.emit.bottle.create(**_route_config))
     _route_config["primary_key"] = primary_key
 
-    funcs = {"R": routes_emit.read, "U": None, "D": routes_emit.destroy}
+    funcs = {
+        "R": cdd.routes.emit.bottle.read,
+        "U": None,
+        "D": cdd.routes.emit.bottle.destroy,
+    }
     routes.extend(funcs[key](**_route_config) for key in funcs if key in crud)
     return (
         map(itemgetter(0), map(attrgetter("body"), map(ast.parse, routes))),

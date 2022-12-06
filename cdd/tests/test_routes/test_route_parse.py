@@ -4,9 +4,9 @@ Tests route parsing
 
 from unittest import TestCase
 
-from cdd.routes import parse
-from cdd.routes.emit import create_util
-from cdd.routes.emit_constants import create_helper_variants
+import cdd.routes.emit.bottle
+import cdd.routes.emit.bottle_constants
+import cdd.routes.parse.bottle
 from cdd.tests.mocks.openapi import openapi_dict
 from cdd.tests.mocks.routes import (
     create_route,
@@ -31,7 +31,7 @@ class TestRouteEmit(TestCase):
         """
         _create_route = inspectable_compile(route_mock_prelude + create_route).create
         self.assertDictEqual(
-            parse.bottle(_create_route),
+            cdd.routes.parse.bottle.bottle(_create_route),
             openapi_dict["paths"][route_config["route"]]["post"],
         )
 
@@ -40,8 +40,10 @@ class TestRouteEmit(TestCase):
         Tests whether `create_util` is produced by `create_util`
         """
         self.assertEqual(
-            create_util(name=route_config["name"], route=route_config["route"]),
-            create_helper_variants[-1].format(
+            cdd.routes.emit.bottle.create_util(
+                name=route_config["name"], route=route_config["route"]
+            ),
+            cdd.routes.emit.bottle_constants.create_helper_variants[-1].format(
                 name=route_config["name"], route=route_config["route"]
             ),
         )
@@ -52,7 +54,8 @@ class TestRouteEmit(TestCase):
         """
         _read_route = inspectable_compile(route_mock_prelude + read_route).read
         self.assertDictEqual(
-            parse.bottle(_read_route), openapi_dict["paths"][self.route_id_url]["get"]
+            cdd.routes.parse.bottle.bottle(_read_route),
+            openapi_dict["paths"][self.route_id_url]["get"],
         )
 
     def test_delete(self) -> None:
@@ -61,7 +64,7 @@ class TestRouteEmit(TestCase):
         """
         _destroy_route = inspectable_compile(route_mock_prelude + destroy_route).destroy
         self.assertDictEqual(
-            parse.bottle(_destroy_route),
+            cdd.routes.parse.bottle.bottle(_destroy_route),
             openapi_dict["paths"][self.route_id_url]["delete"],
         )
 

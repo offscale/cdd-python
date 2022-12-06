@@ -1,6 +1,7 @@
 """
 Docstring emitter
 """
+
 from collections import OrderedDict
 from functools import partial
 

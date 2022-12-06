@@ -196,8 +196,6 @@ class TestParseFunction(TestCase):
             function_adder_ir,
         )
 
-    maxDiff = None
-
     def test_from_method_complex_args_variety(self) -> None:
         """
         Tests that `parse.function` produces correctly with:

@@ -56,8 +56,6 @@ class TestMarshallDocstring(TestCase):
     Tests whether docstrings are parsed out—and emitted—correctly
     """
 
-    maxDiff = None
-
     def test_ir_equality(self) -> None:
         """
         Tests whether `parse_docstring` produces `intermediate_repr`

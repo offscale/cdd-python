@@ -10,7 +10,7 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 from cdd.openapi.gen_routes import gen_routes, upsert_routes
-from cdd.routes.parser_utils import get_route_meta
+from cdd.routes.parse.bottle_utils import get_route_meta
 from cdd.tests.mocks.routes import (
     create_route,
     destroy_route,

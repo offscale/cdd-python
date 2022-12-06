@@ -582,8 +582,6 @@ class TestExMod(TestCase):
                     )
                     self.assertDictEqual(gold_ir, gen_ir)
 
-    maxDiff = None
-
     def _pip(self, pip_args, cwd=None):
         """
         Run `pip` with given args (and assert success).

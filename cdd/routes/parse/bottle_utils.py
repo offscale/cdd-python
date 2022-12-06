@@ -6,7 +6,7 @@ from ast import Call, FunctionDef
 
 from cdd.ast_utils import get_value
 from cdd.pure_utils import rpartial
-from cdd.routes.parse import methods
+from cdd.routes.parse.bottle import methods
 
 
 def get_route_meta(mod):

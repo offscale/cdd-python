@@ -1,6 +1,7 @@
 """
 JSON schema emitter
 """
+
 from collections import OrderedDict
 from functools import partial
 from operator import add
