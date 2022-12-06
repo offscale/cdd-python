@@ -5,7 +5,7 @@ Tests route emission
 from copy import deepcopy
 from unittest import TestCase
 
-from cdd.routes.emit_constants import (
+from cdd.routes.emit.bottle_constants import (
     create_route_variants,
     delete_route_variants,
     read_route_variants,

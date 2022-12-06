@@ -2,8 +2,8 @@
 Mock routes
 """
 
+import cdd.routes.emit.bottle
 from cdd.pure_utils import tab
-from cdd.routes import emit
 
 route_config = {
     "app": "rest_api",
@@ -12,12 +12,12 @@ route_config = {
     "variant": -1,
 }
 
-create_route = emit.create(**route_config)
+create_route = cdd.routes.emit.bottle.create(**route_config)
 
 route_config["primary_key"] = "dataset_name"
 
-read_route = emit.read(**route_config)
-destroy_route = emit.destroy(**route_config)
+read_route = cdd.routes.emit.bottle.read(**route_config)
+destroy_route = cdd.routes.emit.bottle.destroy(**route_config)
 
 route_mock_prelude = (
     'rest_api = type("App", tuple(),\n'

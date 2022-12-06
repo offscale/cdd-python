@@ -1,6 +1,7 @@
 """
 Docstring parser
 """
+
 from cdd.docstring_parsers import parse_docstring
 
 

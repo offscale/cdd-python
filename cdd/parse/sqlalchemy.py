@@ -1,6 +1,14 @@
 """
 SQLalchemy parsers
+
+TODO
+====
+
+  - Implement update (see https://github.com/sqlalchemy/sqlalchemy/discussions/5940)
+  - Implement batch CRUD
+
 """
+
 from ast import AnnAssign, Assign, Call, ClassDef, Load, Name, get_docstring, keyword
 from collections import OrderedDict
 from functools import partial

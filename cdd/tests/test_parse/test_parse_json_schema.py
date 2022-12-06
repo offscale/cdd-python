@@ -32,7 +32,5 @@ class TestParseJsonSchema(TestCase):
             intermediate_repr_no_default_sql_with_nones_doc,
         )
 
-    maxDiff = None
-
 
 unittest_main()

@@ -1,6 +1,7 @@
 """
 Tests for the Intermediate Representation produced by the parsers
 """
+
 from collections import OrderedDict
 from unittest import TestCase
 

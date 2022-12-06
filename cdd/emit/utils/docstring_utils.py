@@ -1,6 +1,7 @@
 """
 Utility functions for `cdd.emit.docstring`
 """
+
 from cdd.ast_utils import NoneStr
 from cdd.defaults_utils import extract_default
 from cdd.pure_utils import simple_types, unquote

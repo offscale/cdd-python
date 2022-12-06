@@ -20,10 +20,11 @@ Public SDK works with filenames, source code, and even in memory constructs (e.g
 
 | Type                                                                                                          | Parse | Emit | Convert to all other Types |
 |---------------------------------------------------------------------------------------------------------------|-------|------|----------------------------|
-| docstrings                                                                                                    | ✅     | ✅    | ✅                          |
+| docstrings (betwixt Google, NumPy, ReST formats; and betwixt type annotations and docstring)                  | ✅     | ✅    | ✅                          |
 | `class`es                                                                                                     | ✅     | ✅    | ✅                          |
 | functions                                                                                                     | ✅     | ✅    | ✅                          |
 | [`argparse` CLI generating](https://docs.python.org/3/library/argparse.html#argumentparser-objects) functions | ✅     | ✅    | ✅                          |
+| JSON-schema                                                                                                   | ✅     | ✅    | ✅                          |
 | [SQLalchemy `class`es](https://docs.sqlalchemy.org/en/14/orm/mapping_styles.html#orm-declarative-mapping)     | ✅     | ✅    | ✅                          |
 | [SQLalchemy `Table`s](https://docs.sqlalchemy.org/en/14/core/metadata.html#sqlalchemy.schema.Table)           | ✅     | ✅    | ✅                          |
 | [pydantic `class`es](https://pydantic-docs.helpmanual.io/usage/schema/)                                       | ✅     | ✅    | ✅                          |
@@ -37,9 +38,7 @@ utilises:
 |-----------------------------------------------------------------------------------------------------------|-------|------|
 | [Bottle route functions](https://bottlepy.org/docs/dev/api.html#routing)                                  | WiP   | WiP  |
 | [FastAPI route functions](https://fastapi.tiangolo.com/tutorial/body/#request-body-path-query-parameters) | ❌     | ❌    |
-| [SQLalchemy `class`es](https://docs.sqlalchemy.org/en/14/orm/mapping_styles.html#orm-declarative-mapping) | ✅     | ✅    |
-| [SQLalchemy `Table`s](https://docs.sqlalchemy.org/en/14/core/metadata.html#sqlalchemy.schema.Table)       | ✅     | ✅    |
-| [pydantic `class`es](https://pydantic-docs.helpmanual.io/usage/schema/)                                   | ✅     | ✅    |
+| JSON-schema (e.g., from [SQLalchemy](https://docs.sqlalchemy.org))                                        | ✅     | ✅    |
 
 ## Install package
 

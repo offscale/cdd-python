@@ -1,6 +1,7 @@
 """
 File emitter
 """
+
 from ast import Module
 from importlib import import_module
 from sys import modules

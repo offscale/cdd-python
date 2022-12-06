@@ -1,6 +1,7 @@
 """
 SQLalchemy emitters
 """
+
 from ast import Assign, Call, ClassDef, Expr, Load, Name, Store, keyword
 from collections import OrderedDict
 from functools import partial

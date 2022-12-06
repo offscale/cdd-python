@@ -62,7 +62,5 @@ class TestOpenApiBulk(TestCase):
 
             self.assertDictEqual(gen, gold)
 
-    maxDiff = None
-
 
 unittest_main()

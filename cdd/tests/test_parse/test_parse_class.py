@@ -262,7 +262,5 @@ class TestParseClass(TestCase):
         )
         self.assertEqual(ir["returns"], None)
 
-    maxDiff = None
-
 
 unittest_main()

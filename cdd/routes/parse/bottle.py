@@ -67,4 +67,4 @@ def bottle(function_def):
     # return route_dict
 
 
-__all__ = ["bottle"]
+__all__ = ["bottle", "methods"]

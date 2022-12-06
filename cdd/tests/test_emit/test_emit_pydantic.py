@@ -1,6 +1,7 @@
 """
 Tests for `cdd.emit.pydantic`
 """
+
 from unittest import TestCase
 
 import cdd.emit.pydantic
