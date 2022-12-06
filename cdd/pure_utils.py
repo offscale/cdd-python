@@ -429,7 +429,7 @@ def all_dunder_for_module(name, exclude):
     """
     Generate `__all__` for a given module using single-level filename hierarchy exclusively
 
-    :param name: Module name
+    :param name: Module path
     :type name: ```str```
 
     :param exclude: Strings to exclude

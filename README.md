@@ -37,7 +37,7 @@ utilises:
 | Type                                                                                                      | Parse | Emit |
 |-----------------------------------------------------------------------------------------------------------|-------|------|
 | [Bottle route functions](https://bottlepy.org/docs/dev/api.html#routing)                                  | WiP   | WiP  |
-| [FastAPI route functions](https://fastapi.tiangolo.com/tutorial/body/#request-body-path-query-parameters) | ❌     | ❌    |
+| [FastAPI route functions](https://fastapi.tiangolo.com/tutorial/body/#request-body-path-query-parameters) | ✅     | ❌    |
 | JSON-schema (e.g., from [SQLalchemy](https://docs.sqlalchemy.org))                                        | ✅     | ✅    |
 
 ## Install package

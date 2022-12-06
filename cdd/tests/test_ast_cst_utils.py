@@ -264,7 +264,7 @@ class TestAstCstUtils(TestCase):
             delta=Delta.added,
         )
 
-    def test_maybe_replace_function_return_type_removes(self):
+    def test_maybe_replace_function_return_type_removes(self) -> None:
         """
         Tests that `maybe_replace_function_return_type` removes return type
         """
@@ -286,7 +286,7 @@ class TestAstCstUtils(TestCase):
             delta=Delta.removed,
         )
 
-    def test_maybe_replace_function_return_type_replaces(self):
+    def test_maybe_replace_function_return_type_replaces(self) -> None:
         """
         Tests that `maybe_replace_function_return_type` replaces return type
         """
@@ -311,7 +311,7 @@ class TestAstCstUtils(TestCase):
             delta=Delta.replaced,
         )
 
-    def test_maybe_replace_function_args_nop(self):
+    def test_maybe_replace_function_args_nop(self) -> None:
         """
         Tests that `maybe_replace_function_args` does nothing on equal args
         """
@@ -395,7 +395,7 @@ class TestAstCstUtils(TestCase):
             after, "".join(map(attrgetter("value"), cst_list[cst_idx : cst_idx + 1]))
         )
 
-    def test_maybe_replace_function_args_added(self):
+    def test_maybe_replace_function_args_added(self) -> None:
         """
         Tests that `maybe_replace_function_args` adds to args (adds type annotations)
         """
@@ -406,7 +406,7 @@ class TestAstCstUtils(TestCase):
             delta=Delta.added,
         )
 
-    def test_maybe_replace_function_args_removed(self):
+    def test_maybe_replace_function_args_removed(self) -> None:
         """
         Tests that `maybe_replace_function_args` removes from args (removes type annotations)
         """
@@ -417,7 +417,7 @@ class TestAstCstUtils(TestCase):
             delta=Delta.removed,
         )
 
-    def test_maybe_replace_function_args_replaced(self):
+    def test_maybe_replace_function_args_replaced(self) -> None:
         """
         Tests that `maybe_replace_function_args` replaces to args (replaces type annotations)
         """

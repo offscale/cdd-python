@@ -1,71 +1,22 @@
 """
-Tests route parsing
+Tests `cdd.routes.parse` PARSERS
 """
 
+from os import path
 from unittest import TestCase
 
-import cdd.routes.emit.bottle
-import cdd.routes.emit.bottle_constants
-import cdd.routes.parse.bottle
-from cdd.tests.mocks.openapi import openapi_dict
-from cdd.tests.mocks.routes import (
-    create_route,
-    destroy_route,
-    read_route,
-    route_config,
-    route_mock_prelude,
-)
-from cdd.tests.utils_for_tests import inspectable_compile, unittest_main
+from cdd.pure_utils import all_dunder_for_module
+from cdd.routes.parse import PARSERS
+from cdd.tests.utils_for_tests import unittest_main
 
 
-class TestRouteEmit(TestCase):
-    """Tests `routes.parse`"""
+class TestRoutesParse(TestCase):
+    """Tests `cdd.routes.parse`"""
 
-    route_id_url = "{route_config[route]}/{{{route_config[primary_key]}}}".format(
-        route_config=route_config
-    )
-
-    def test_create(self) -> None:
-        """
-        Tests whether `create_route` is produced by `emit.route`
-        """
-        _create_route = inspectable_compile(route_mock_prelude + create_route).create
-        self.assertDictEqual(
-            cdd.routes.parse.bottle.bottle(_create_route),
-            openapi_dict["paths"][route_config["route"]]["post"],
-        )
-
-    def test_create_util(self) -> None:
-        """
-        Tests whether `create_util` is produced by `create_util`
-        """
-        self.assertEqual(
-            cdd.routes.emit.bottle.create_util(
-                name=route_config["name"], route=route_config["route"]
-            ),
-            cdd.routes.emit.bottle_constants.create_helper_variants[-1].format(
-                name=route_config["name"], route=route_config["route"]
-            ),
-        )
-
-    def test_read(self) -> None:
-        """
-        Tests whether `read_route` is produced by `emit.route`
-        """
-        _read_route = inspectable_compile(route_mock_prelude + read_route).read
-        self.assertDictEqual(
-            cdd.routes.parse.bottle.bottle(_read_route),
-            openapi_dict["paths"][self.route_id_url]["get"],
-        )
-
-    def test_delete(self) -> None:
-        """
-        Tests whether `destroy_route` is produced by `emit.route`
-        """
-        _destroy_route = inspectable_compile(route_mock_prelude + destroy_route).destroy
-        self.assertDictEqual(
-            cdd.routes.parse.bottle.bottle(_destroy_route),
-            openapi_dict["paths"][self.route_id_url]["delete"],
+    def test_routes_parse_root(self) -> None:
+        """Confirm that route parser names are up-to-date"""
+        self.assertListEqual(
+            PARSERS, all_dunder_for_module(path.join("routes", "parse"), tuple())
         )
 
 
