@@ -17,7 +17,7 @@ from ast import (
     keyword,
 )
 
-from cdd.ast_utils import set_arg, set_value
+from cdd.ast_utils import maybe_type_comment, set_arg, set_value
 
 fastapi_post_create_config_str = """
 @app.post(
@@ -144,6 +144,7 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
     ],
     lineno=None,
     returns=None,
+    **maybe_type_comment
 )
 
 
