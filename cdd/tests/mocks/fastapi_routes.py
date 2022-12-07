@@ -120,7 +120,7 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
                 keyword(
                     arg="responses",
                     value=Dict(
-                        keys=[set_value(201), set_value(404)],
+                        keys=list(map(set_value, (201, 404))),
                         values=[
                             Dict(
                                 keys=[set_value("model"), set_value("description")],

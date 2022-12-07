@@ -18,7 +18,7 @@ from cdd.tests.mocks.routes import (
 from cdd.tests.utils_for_tests import inspectable_compile, unittest_main
 
 
-class TestBottleRouteEmit(TestCase):
+class TestBottleRouteParse(TestCase):
     """Tests `routes.parse`"""
 
     route_id_url = "{route_config[route]}/{{{route_config[primary_key]}}}".format(

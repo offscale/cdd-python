@@ -74,6 +74,19 @@ FALLBACK_ARGPARSE_TYP = Name(
 )
 
 
+def Dict_to_dict(d):
+    """
+    Create a `dict` from a `Dict`
+
+    :param d: ast.Dict
+    :type d: ```Dict```
+
+    :return: Python dictionary
+    :rtype: ```dict```
+    """
+    return dict(zip(map(get_value, d.keys), d.values))
+
+
 def param2ast(param):
     """
     Converts a param to an AnnAssign
@@ -1275,6 +1288,7 @@ def parse_to_scalar(node):
 column_type2typ = {
     "BigInteger": "int",
     "Boolean": "bool",
+    "DateTime": "datetime",
     "Float": "float",
     "Integer": "int",
     "JSON": "Optional[dict]",
@@ -1608,6 +1622,7 @@ NoneStr = "```(None)```" if PY_GTE_3_9 else "```None```"
 __all__ = [
     "FALLBACK_ARGPARSE_TYP",
     "FALLBACK_TYP",
+    "Dict_to_dict",
     "NoneStr",
     "RewriteAtQuery",
     "annotate_ancestry",

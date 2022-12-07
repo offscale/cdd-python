@@ -15,7 +15,7 @@ from cdd.tests.mocks.openapi import openapi_dict
 from cdd.tests.utils_for_tests import run_ast_test, unittest_main
 
 
-class TestParseFastApiRoutes(TestCase):
+class TestFastApiRoutesParse(TestCase):
     """
     Tests FastAPI route parser
     """
