@@ -4,20 +4,7 @@ FastAPI utils
 
 from functools import partial
 
-from cdd.ast_utils import get_value
-
-
-def Dict_to_dict(d):
-    """
-    Create a `dict` from a `Dict`
-
-    :param d: ast.Dict
-    :type d: ```Dict```
-
-    :return: Python dictionary
-    :rtype: ```dict```
-    """
-    return dict(zip(map(get_value, d.keys), d.values))
+from cdd.ast_utils import Dict_to_dict, get_value
 
 
 def model_handler(key, model_name, location, mime_type):

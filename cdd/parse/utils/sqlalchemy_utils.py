@@ -60,7 +60,11 @@ def column_call_to_param(call):
         not _param["nullable"] or _handle_null()
         del _param["nullable"]
 
-    if "default" in _param and not get_value(call.args[0]).endswith("kwargs"):
+    if (
+        "default" in _param
+        and not get_value(call.args[0]).endswith("kwargs")
+        and "doc" in _param
+    ):
         _param["doc"] += "."
 
     return get_value(call.args[0]), _param
