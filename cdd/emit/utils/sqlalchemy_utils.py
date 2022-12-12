@@ -1,6 +1,7 @@
 """
 Utility functions for `cdd.emit.sqlalchemy`
 """
+
 import ast
 from ast import AST, Attribute, Call, Expr, FunctionDef, Load, Name, Return, arguments
 from platform import system

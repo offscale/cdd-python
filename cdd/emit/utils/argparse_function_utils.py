@@ -1,6 +1,7 @@
 """
 Utility functions for `cdd.emit.argparse_function`
 """
+
 import ast
 from ast import Name, Return
 from typing import Any

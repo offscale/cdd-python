@@ -56,6 +56,8 @@ class TestParseClass(TestCase):
         ir["name"] = None
         self.assertDictEqual(ir, intermediate_repr_no_default_doc)
 
+    maxDiff = None
+
     def test_from_class_in_memory(self) -> None:
         """
         Tests that parse.class produces properly from a `class` in memory of current interpreter

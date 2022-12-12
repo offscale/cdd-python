@@ -1,6 +1,7 @@
 """
 Tests for the Intermediate Representation produced by the SQLalchemy parsers
 """
+
 import ast
 from copy import deepcopy
 from unittest import TestCase

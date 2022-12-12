@@ -23,14 +23,22 @@ def json_schema_property_to_param(param, required):
     del param
     if name.endswith("kwargs"):
         _param["typ"] = "Optional[dict]"
-    elif "enum" in _param:
-        _param["typ"] = "Literal{}".format(_param.pop("enum"))
-        del _param["type"]
+    # elif "enum" in _param:
+    #     _param["typ"] = "Literal{}".format(_param.pop("enum"))
+    #     del _param["type"]
     if "description" in _param:
         _param["doc"] = _param.pop("description")
 
     if _param.get("type"):
         _param["typ"] = json_type2typ[_param.pop("type")]
+
+    if _param.get("pattern"):
+        maybe_enum = _param["pattern"].split("|")
+        if all(filter(str.isalpha, maybe_enum)):
+            _param["typ"] = "Literal[{}]".format(
+                ", ".join(map("'{}'".format, maybe_enum))
+            )
+            del _param["pattern"]
 
     if name not in required and _param.get("typ") and "Optional[" not in _param["typ"]:
         _param["typ"] = "Optional[{}]".format(_param["typ"])

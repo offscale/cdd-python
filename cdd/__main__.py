@@ -44,7 +44,15 @@ def _build_parser():
     subparsers.required = True
     subparsers.dest = "command"
 
-    parse_emit_types = "argparse", "class", "function", "sqlalchemy", "sqlalchemy_table"
+    parse_emit_types = (
+        "argparse",
+        "class",
+        "function",
+        "json_schema",
+        "pydantic",
+        "sqlalchemy",
+        "sqlalchemy_table",
+    )
 
     ############
     # Property #

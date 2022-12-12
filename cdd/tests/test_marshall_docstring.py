@@ -112,6 +112,8 @@ class TestMarshallDocstring(TestCase):
             ).rstrip("\n"),
         )
 
+    maxDiff = None
+
     def test_from_docstring(self) -> None:
         """
         Tests whether `docstring` produces `intermediate_repr_no_default_doc`

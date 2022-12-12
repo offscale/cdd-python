@@ -39,6 +39,7 @@ from ast import (
 )
 from contextlib import suppress
 from copy import deepcopy
+from functools import partial
 from importlib import import_module
 from inspect import isclass, isfunction
 from itertools import chain, filterfalse
@@ -84,7 +85,17 @@ def Dict_to_dict(d):
     :return: Python dictionary
     :rtype: ```dict```
     """
-    return dict(zip(map(get_value, d.keys), d.values))
+    return dict(zip(map(get_value, d.keys), map(get_value, d.values)))
+
+
+def ast_elts_to_container(node, container):
+    assert hasattr(node, "elts")
+    return container(map(get_value, node.elts))
+
+
+List_to_list = partial(ast_elts_to_container, container=list)
+Tuple_to_tuple = partial(ast_elts_to_container, container=tuple)
+Set_to_set = partial(ast_elts_to_container, container=set)
 
 
 def param2ast(param):
@@ -1320,7 +1331,10 @@ json_type2typ = {
     "string": "str",
     "object": "dict",
     "array": "list",
-    "number": "int",  # <- Actually a problem, maybe `literal_eval` on default then `type()` or just `type(default)`?
+    "int": "integer",
+    "integer": "int",
+    "float": "number",  # <- Actually a problem, maybe `literal_eval` on default then `type()` or just `type(default)`?
+    "number": "float",
     "null": "NoneType",
 }
 typ2json_type = {v: k for k, v in json_type2typ.items()}
@@ -1620,11 +1634,14 @@ def merge_modules(mod0, mod1, remove_imports_from_second=True):
 NoneStr = "```(None)```" if PY_GTE_3_9 else "```None```"
 
 __all__ = [
+    "Dict_to_dict",
     "FALLBACK_ARGPARSE_TYP",
     "FALLBACK_TYP",
-    "Dict_to_dict",
+    "List_to_list",
     "NoneStr",
     "RewriteAtQuery",
+    "Set_to_set",
+    "Tuple_to_tuple",
     "annotate_ancestry",
     "cmp_ast",
     "code_quoted",

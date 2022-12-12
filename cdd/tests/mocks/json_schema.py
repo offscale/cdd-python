@@ -6,7 +6,7 @@ from cdd.tests.mocks.docstrings import docstring_header_and_return_no_nl_str
 
 config_schema = {
     "$id": "https://offscale.io/config.schema.json",
-    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "description": docstring_header_and_return_no_nl_str,
     "type": "object",
     "properties": {
@@ -23,7 +23,7 @@ config_schema = {
         "K": {
             "description": "backend engine, e.g., `np` or `tf`.",
             "type": "string",
-            "enum": ["np", "tf"],
+            "pattern": "np|tf",
             "default": "np",
         },
         "as_numpy": {
@@ -40,7 +40,7 @@ config_schema = {
 
 server_error_schema = {
     "$id": "https://offscale.io/error_json.schema.json",
-    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "description": "Error schema",
     "type": "object",
     "properties": {
