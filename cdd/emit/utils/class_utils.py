@@ -1,6 +1,7 @@
 """
 Utility functions for `cdd.emit.class_`
 """
+
 import ast
 from ast import Attribute, Load, Name
 

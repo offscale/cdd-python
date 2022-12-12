@@ -19,7 +19,7 @@ from cdd.tests.mocks.json_schema import config_schema
 from cdd.tests.utils_for_tests import unittest_main
 
 
-class TestEmitClass(TestCase):
+class TestEmitJsonSchema(TestCase):
     """Tests emission"""
 
     def test_to_json_schema(self) -> None:
@@ -38,6 +38,8 @@ class TestEmitClass(TestCase):
             gen_config_schema,
             config_schema,
         )
+
+    maxDiff = None
 
 
 unittest_main()

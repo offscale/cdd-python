@@ -1,6 +1,7 @@
 """
 Argparse emitter
 """
+
 import ast
 from ast import (
     Assign,

@@ -13,7 +13,7 @@ from cdd.pure_utils import deindent
 
 def json_schema(
     intermediate_repr,
-    identifier="https://offscale.io/json.schema.json",
+    identifier=None,
     emit_original_whitespace=False,
 ):
     """
@@ -37,6 +37,13 @@ def json_schema(
     :return: JSON Schema dict
     :rtype: ```dict```
     """
+    assert isinstance(intermediate_repr, dict), "{typ} != FunctionDef".format(
+        typ=type(intermediate_repr).__name__
+    )
+    if identifier is None:
+        identifier = "https://offscale.io/{}.schema.json".format(
+            intermediate_repr["name"]
+        )
     required = []
     _param2json_schema_property = partial(param2json_schema_property, required=required)
     properties = dict(
@@ -45,7 +52,7 @@ def json_schema(
 
     return {
         "$id": identifier,
-        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": deindent(
             add(
                 *map(
@@ -69,7 +76,8 @@ def json_schema(
                     ),
                 )
             )
-        ).lstrip("\n"),
+        ).lstrip("\n")
+        or None,
         "type": "object",
         "properties": properties,
         "required": required,

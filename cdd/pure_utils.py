@@ -10,6 +10,7 @@ from importlib import import_module
 from importlib.util import find_spec
 from inspect import getmodule
 from itertools import chain, count, filterfalse, islice, takewhile, zip_longest
+from json import JSONEncoder
 from keyword import iskeyword
 from operator import attrgetter, eq, itemgetter
 from os import environ, extsep, listdir, path
@@ -794,6 +795,39 @@ def get_module(name, package=None, extra_symbols=None):
             raise
 
 
+def find_module_filepath(module_name, submodule_name):
+    """
+    Find module's file location without first importing it
+
+    :param module_name: Module name, e.g., "cdd.tests"
+    :type: ```str```
+
+    :param submodule_name: Submodule name, e.g., "test_pure_utils"
+    :type: ```str```
+
+    :return: Module location
+    :rpath: ```str```
+    """
+    module_origin = find_spec(module_name).origin
+    module_parent = path.dirname(module_origin)
+
+    return next(
+        filter(
+            path.exists,
+            (
+                path.join(
+                    module_parent, submodule_name, "__init__{}py".format(path.extsep)
+                ),
+                path.join(module_parent, "{}{}py".format(submodule_name, path.extsep)),
+                path.join(
+                    module_parent, submodule_name, "__init__{}py".format(path.extsep)
+                ),
+            ),
+        ),
+        module_origin,
+    )
+
+
 def count_chars_from(
     s, sentinel_char_unseen, char, end, s_len=len, start_idx=0, char_f=None
 ):
@@ -985,6 +1019,20 @@ def set_item(obj, key, val):
     return obj
 
 
+class SetEncoder(JSONEncoder):
+    """
+    JSON encoder that supports `set`s
+    """
+
+    def default(self, obj):
+        """
+        Handle `set` by giving a sorted list in its place
+        """
+        return (sorted if isinstance(obj, set) else partial(JSONEncoder.default, self))(
+            obj
+        )
+
+
 def no_magic_dir2attr(p_object):
     """
     Dictionary of `dir` without the __ prefix magics (also without _ prefix)
@@ -1007,7 +1055,16 @@ def no_magic_dir2attr(p_object):
 omit_whitespace = rpartial(str.translate, str.maketrans({" ": "", "\n": "", "\t": ""}))
 
 sanitise_emit_name = dict(
-    **{typ: typ for typ in ("function", "sqlalchemy", "sqlalchemy_table")},
+    **{
+        typ: typ
+        for typ in (
+            "function",
+            "json_schema",
+            "pydantic",
+            "sqlalchemy",
+            "sqlalchemy_table",
+        )
+    },
     **{"class": "class_", "argparse": "argparse_function"}
 ).__getitem__
 
@@ -1019,6 +1076,7 @@ __all__ = [
     "PY3_8",
     "PY_GTE_3_8",
     "PY_GTE_3_9",
+    "SetEncoder",
     "all_dunder_for_module",
     "assert_equal",
     "balanced_parentheses",

@@ -1,6 +1,7 @@
 """
 Function/method emitter
 """
+
 import ast
 from ast import Expr, FunctionDef, Load, Name, Return, arguments
 

@@ -1,6 +1,7 @@
 """
 Utility functions for `cdd.emit.function_utils`
 """
+
 import ast
 from ast import Expr, FunctionDef, Return, arguments
 

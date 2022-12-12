@@ -1,6 +1,7 @@
 """
 `class` emitter
 """
+
 import ast
 from ast import ClassDef, Expr, FunctionDef, Load, Name
 from collections import OrderedDict

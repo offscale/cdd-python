@@ -1,9 +1,18 @@
 """
 Utility functions for `cdd.emit.json_schema`
 """
-import ast
 
-from cdd.ast_utils import get_value, typ2json_type
+import ast
+from ast import Dict, List, Set, Tuple
+
+from cdd.ast_utils import (
+    Dict_to_dict,
+    List_to_list,
+    Set_to_set,
+    Tuple_to_tuple,
+    get_value,
+    typ2json_type,
+)
 from cdd.pure_utils import none_types
 
 
@@ -22,13 +31,23 @@ def param2json_schema_property(param, required):
     """
     name, _param = param
     del param
-
     if _param.get("doc"):
         _param["description"] = _param.pop("doc")
-    if _param.get("typ", ast) is not ast:
+    if _param.get("typ") == "datetime":
+        del _param["typ"]
+        _param.update({"type": "string", "format": "date-time"})
+        required.append(name)
+    elif _param.get("typ") in typ2json_type:
+        _param["type"] = typ2json_type[_param.pop("typ")]
+        required.append(name)
+    elif _param.get("typ", ast) is not ast:
         _param["type"] = _param.pop("typ")
         if _param["type"].startswith("Optional["):
             _param["type"] = _param["type"][len("Optional[") : -1]
+            if _param["type"] in typ2json_type:
+                _param["type"] = typ2json_type[_param["type"]]
+            # elif _param.get("typ") in typ2json_type:
+            #    _param["type"] = typ2json_type[_param.pop("typ")]
         else:
             required.append(name)
 
@@ -39,12 +58,27 @@ def param2json_schema_property(param, required):
             ), "Only basic Literal support is implemented, not {}".format(
                 parsed_typ.value.id
             )
-            _param["enum"] = list(map(get_value, get_value(parsed_typ.slice).elts))
-            _param["type"] = typ2json_type[type(_param["enum"][0]).__name__]
-        else:
-            _param["type"] = typ2json_type[_param["type"]]
+            enum = sorted(map(get_value, get_value(parsed_typ.slice).elts))
+            _param.update(
+                {
+                    "pattern": "|".join(enum),
+                    "type": typ2json_type[type(enum[0]).__name__],
+                }
+            )
     if _param.get("default", False) in none_types:
         del _param["default"]  # Will be inferred as `null` from the type
+    elif isinstance(_param.get("default"), Dict):
+        _param["default"] = Dict_to_dict(_param["default"])
+    elif isinstance(_param.get("default"), Set):
+        _param["default"] = Set_to_set(_param["default"])
+    elif isinstance(_param.get("default"), List):
+        _param["default"] = List_to_list(_param["default"])
+    elif isinstance(_param.get("default"), Tuple):
+        _param["default"] = Tuple_to_tuple(_param["default"])
+    if isinstance(_param.get("choices"), Set):
+        _param["pattern"] = "|".join(
+            sorted(map(str, Set_to_set(_param.pop("choices"))))
+        )
     return name, _param
 
 

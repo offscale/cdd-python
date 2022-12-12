@@ -91,7 +91,7 @@ def emit_file_on_hierarchy(
     :type name_orig_ir: ```Tuple[str, str, dict]```
 
     :param emit_name: What type(s) to generate.
-    :type emit_name: ```List[Literal["argparse", "class", "function", "sqlalchemy", "sqlalchemy_table"]]```
+    :type emit_name: ```List[Literal["argparse", "class", "function", "json_schema", "pydantic", "sqlalchemy", "sqlalchemy_table"]]```
 
     :param module_name: Name of [original] module
     :type module_name: ```str```
@@ -242,7 +242,7 @@ def _emit_symbol(
     :type name_orig_ir: ```Tuple[str, str, dict]```
 
     :param emit_name: What type(s) to generate.
-    :type emit_name: ```List[Literal["argparse", "class", "function", "sqlalchemy", "sqlalchemy_table"]]```
+    :type emit_name: ```List[Literal["argparse", "class", "function", "json_schema", "pydantic", "sqlalchemy", "sqlalchemy_table"]]```
 
     :param module_name: Name of [original] module
     :type module_name: ```str```

@@ -1,6 +1,7 @@
 """
 `class` parser
 """
+
 import ast
 from ast import (
     AnnAssign,

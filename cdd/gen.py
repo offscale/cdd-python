@@ -3,16 +3,35 @@ Functionality to generate classes, functions, and/or argparse functions from the
 """
 
 import ast
-from ast import Assign, Import, ImportFrom, Module, Name, Store
+from ast import (
+    AnnAssign,
+    Assign,
+    AsyncFunctionDef,
+    ClassDef,
+    FunctionDef,
+    Import,
+    ImportFrom,
+    Module,
+    Name,
+    Store,
+)
 from importlib import import_module
 from inspect import getfile
 from itertools import chain
+from json import dump
 from operator import itemgetter
 from os import path
 
+import cdd.emit.json_schema
 from cdd.ast_utils import get_at_root, maybe_type_comment, set_value
 from cdd.parse.utils.parser_utils import infer
-from cdd.pure_utils import get_module, sanitise_emit_name
+from cdd.pure_utils import (
+    SetEncoder,
+    find_module_filepath,
+    get_module,
+    rpartial,
+    sanitise_emit_name,
+)
 from cdd.source_transformer import to_code
 
 
@@ -39,10 +58,10 @@ def gen(
     :type input_mapping: ```str```
 
     :param parse_name: What type to parse.
-    :type parse_name: ```Literal["argparse", "class", "function", "sqlalchemy", "sqlalchemy_table"]```
+    :type parse_name: ```Literal["argparse", "class", "function", "json_schema", "pydantic", "sqlalchemy", "sqlalchemy_table"]```
 
     :param emit_name: What type to generate.
-    :type emit_name: ```Literal["argparse", "class", "function", "sqlalchemy", "sqlalchemy_table"]```
+    :type emit_name: ```Literal["argparse", "class", "function", "json_schema", "pydantic", "sqlalchemy", "sqlalchemy_table"]```
 
     :param output_filename: Output file to write to
     :type output_filename: ```str```
@@ -146,15 +165,65 @@ def gen(
             )
 
     module_path, _, symbol_name = input_mapping.rpartition(".")
-    input_mapping = getattr(
-        get_module(module_path, extra_symbols=extra_symbols), symbol_name
-    )
+
+    emit_name = sanitise_emit_name(emit_name)
+    input_mod = get_module(module_path, extra_symbols=extra_symbols)
+    if hasattr(input_mod, symbol_name):
+        input_mapping = getattr(input_mod, symbol_name)
+    else:
+        with open(find_module_filepath(module_path, symbol_name), "rt") as f:
+            input_ast_mod = ast.parse(f.read())
+
+        if emit_name == "sqlalchemy_table":
+            type_instance_must_be = Assign, AnnAssign
+        elif emit_name in frozenset(("function", "pydantic")):
+            type_instance_must_be = FunctionDef, AsyncFunctionDef
+        else:
+            type_instance_must_be = (ClassDef,)
+        input_mapping = dict(
+            map(
+                lambda node: (node.name, node)
+                if hasattr(node, "name")
+                else (
+                    (
+                        node.target if isinstance(node, AnnAssign) else node.targets[0]
+                    ).id,
+                    node,
+                ),
+                filter(
+                    rpartial(
+                        isinstance,
+                        type_instance_must_be,
+                    ),
+                    input_ast_mod.body,
+                ),
+            )
+        )
     input_mapping_it = (
         input_mapping.items() if hasattr(input_mapping, "items") else input_mapping
     )
 
+    if emit_name == "json_schema":
+        schemas_it = (
+            cdd.emit.json_schema.json_schema(
+                getattr(
+                    import_module(".".join(("cdd", "parse", parse_name))),
+                    parse_name,
+                )(v)
+            )
+            for k, v in input_mapping.items()
+        )
+        schemas = (
+            {"schemas": list(schemas_it)}
+            if len(input_mapping) > 1
+            else next(schemas_it)
+        )
+        with open(output_filename, "a") as f:
+            dump(schemas, f, cls=SetEncoder)
+        return
+
     global__all__ = []
-    emit_name = sanitise_emit_name(emit_name)
+
     content = "{prepend}{imports}\n{functions_and_classes}\n{__all__}".format(
         prepend="" if prepend is None else prepend,
         imports=imports,  # TODO: Optimize imports programmatically (akin to `autoflake --remove-all-unused-imports`)
