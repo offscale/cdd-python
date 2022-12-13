@@ -3,16 +3,9 @@ Utility functions for `cdd.emit.json_schema`
 """
 
 import ast
-from ast import Dict, List, Set, Tuple
+from ast import AST, Set
 
-from cdd.ast_utils import (
-    Dict_to_dict,
-    List_to_list,
-    Set_to_set,
-    Tuple_to_tuple,
-    get_value,
-    typ2json_type,
-)
+from cdd.ast_utils import Set_to_set, ast_type_to_python_type, get_value, typ2json_type
 from cdd.pure_utils import none_types
 
 
@@ -67,14 +60,8 @@ def param2json_schema_property(param, required):
             )
     if _param.get("default", False) in none_types:
         del _param["default"]  # Will be inferred as `null` from the type
-    elif isinstance(_param.get("default"), Dict):
-        _param["default"] = Dict_to_dict(_param["default"])
-    elif isinstance(_param.get("default"), Set):
-        _param["default"] = Set_to_set(_param["default"])
-    elif isinstance(_param.get("default"), List):
-        _param["default"] = List_to_list(_param["default"])
-    elif isinstance(_param.get("default"), Tuple):
-        _param["default"] = Tuple_to_tuple(_param["default"])
+    elif isinstance(_param.get("default"), AST):
+        _param["default"] = ast_type_to_python_type(_param["default"])
     if isinstance(_param.get("choices"), Set):
         _param["pattern"] = "|".join(
             sorted(map(str, Set_to_set(_param.pop("choices"))))

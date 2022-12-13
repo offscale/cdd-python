@@ -1089,6 +1089,7 @@ __all__ = [
     "emit_separating_tabs",
     "filename_from_mod_or_filename",
     "fill",
+    "find_module_filepath",
     "get_module",
     "identity",
     "indent_all_but_first",

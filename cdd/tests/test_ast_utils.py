@@ -21,6 +21,7 @@ from ast import (
     Mult,
     Name,
     NameConstant,
+    Num,
     Store,
     Str,
     Tuple,
@@ -29,6 +30,7 @@ from ast import (
     keyword,
 )
 from copy import deepcopy
+from functools import partial
 from itertools import repeat
 from os import extsep, path
 from unittest import TestCase
@@ -38,6 +40,7 @@ from cdd.ast_utils import (
     RewriteAtQuery,
     _parse_default_from_ast,
     annotate_ancestry,
+    ast_type_to_python_type,
     cmp_ast,
     del_ass_where_name,
     emit_ann_assign,
@@ -113,6 +116,16 @@ class TestAstUtils(TestCase):
         annotate_ancestry(node)
         self.assertEqual(node.body[0]._location, ["dataset_name"])
         self.assertEqual(node.body[1]._location, ["epochs"])
+
+    def test_ast_type_to_python_type(self) -> None:
+        """Test `ast_type_to_python_type`"""
+        vals = (5,)
+        self.assertEqual(ast_type_to_python_type(Num(n=vals[0])), vals[0])
+        self.assertEqual(ast_type_to_python_type(Constant(value=vals[0])), vals[0])
+        self.assertEqual(ast_type_to_python_type(Str(s=str(vals[0]))), str(vals[0]))
+        self.assertRaises(
+            NotImplementedError, partial(ast_type_to_python_type, node=set_arg("foo"))
+        )
 
     def test_cmp_ast(self) -> None:
         """Test `cmp_ast` branch that isn't tested anywhere else"""

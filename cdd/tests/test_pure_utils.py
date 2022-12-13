@@ -3,14 +3,17 @@
 import unittest
 from functools import partial
 from itertools import zip_longest
+from json import dumps
 from unittest import TestCase
 
 from cdd.pure_utils import (
+    SetEncoder,
     assert_equal,
     balanced_parentheses,
     blockwise,
     deindent,
     diff,
+    find_module_filepath,
     get_module,
     identity,
     location_within,
@@ -36,6 +39,13 @@ from cdd.tests.utils_for_tests import unittest_main
 class TestPureUtils(TestCase):
     """Test class for pure utils"""
 
+    def test_SetEncoder(self) -> None:
+        """Tests `SetEncoder` with JSON"""
+        data = {"foo", "bar"}
+        self.assertEqual(
+            dumps(data, cls=SetEncoder), str(sorted(data)).replace("'", '"')
+        )
+
     def test_balanced_parentheses(self) -> None:
         """Tests that `balanced_parentheses` handles edge cases"""
         self.assertTrue(balanced_parentheses("foo()"))
@@ -55,6 +65,14 @@ class TestPureUtils(TestCase):
         self.assertTupleEqual(tuple(blockwise(iter(()))), tuple())
         self.assertTupleEqual(tuple(blockwise("ABC")), (("A", "B"), ("C", None)))
         self.assertTupleEqual(tuple(blockwise("ABCD")), (("A", "B"), ("C", "D")))
+
+    def test_find_module_filepath(self) -> None:
+        """tests that it can `find_module_filepath`"""
+        self.assertEqual(find_module_filepath("cdd.tests", "test_pure_utils"), __file__)
+        self.assertRaises(
+            ModuleNotFoundError,
+            lambda: find_module_filepath("nosuchmodulecdd.tests", "test_pure_utils"),
+        )
 
     def test_pp(self) -> None:
         """Test that pp is from the right module"""

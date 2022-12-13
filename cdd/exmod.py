@@ -34,7 +34,8 @@ def exmod(
     Expose module as `emit` types into `output_directory`
 
     :param emit_name: What type(s) to generate.
-    :type emit_name: ```List[Literal["argparse", "class", "function", "json_schema", "pydantic", "sqlalchemy", "sqlalchemy_table"]]```
+    :type emit_name: ```List[Literal["argparse", "class", "function", "json_schema",
+                                     "pydantic", "sqlalchemy", "sqlalchemy_table"]]```
 
     :param module: Module name or path
     :type module: ```str```
