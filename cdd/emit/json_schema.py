@@ -4,11 +4,12 @@ JSON schema emitter
 
 from collections import OrderedDict
 from functools import partial
+from json import dump
 from operator import add
 
 from cdd.emit.docstring import docstring
 from cdd.emit.utils.json_schema_utils import param2json_schema_property
-from cdd.pure_utils import deindent
+from cdd.pure_utils import SetEncoder, deindent
 
 
 def json_schema(
@@ -37,7 +38,7 @@ def json_schema(
     :return: JSON Schema dict
     :rtype: ```dict```
     """
-    assert isinstance(intermediate_repr, dict), "{typ} != FunctionDef".format(
+    assert isinstance(intermediate_repr, dict), "{typ} != dict".format(
         typ=type(intermediate_repr).__name__
     )
     if identifier is None:
@@ -84,4 +85,22 @@ def json_schema(
     }
 
 
-__all__ = ["json_schema"]
+def json_schema_file(input_mapping, output_filename):
+    """
+    Emit `input_mapping`—as JSON schema—into `output_filename`
+
+    :param input_mapping: Import location of mapping/2-tuple collection.
+    :type input_mapping: ```Dict[str, AST]```
+
+    :param output_filename: Output file to write to
+    :type output_filename: ```str```
+    """
+    schemas_it = (json_schema(v) for k, v in input_mapping.items())
+    schemas = (
+        {"schemas": list(schemas_it)} if len(input_mapping) > 1 else next(schemas_it)
+    )
+    with open(output_filename, "a") as f:
+        dump(schemas, f, cls=SetEncoder)
+
+
+__all__ = ["json_schema", "json_schema_file"]

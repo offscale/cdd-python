@@ -27,6 +27,7 @@ from ast import (
     NameConstant,
     NodeTransformer,
     Num,
+    Set,
     Store,
     Str,
     Subscript,
@@ -96,6 +97,40 @@ def ast_elts_to_container(node, container):
 List_to_list = partial(ast_elts_to_container, container=list)
 Tuple_to_tuple = partial(ast_elts_to_container, container=tuple)
 Set_to_set = partial(ast_elts_to_container, container=set)
+
+
+def ast_type_to_python_type(node):
+    """
+    Unparse AST type as Python type
+
+    Implementation notes:
+      - this focuses on 'evaluated scalars' that can be represented as JSON
+      - think of this as a `get_value` alternative
+
+    :param node: AST node
+    :type node: ```Union[Num,Bytes,Str,Constant,Dict,Set,Tuple,List]```
+
+    :rtype: Union[dict,str,int,float,complex,bytes,list,tuple,set]
+    """
+    assert isinstance(node, AST), "Expected AST got {type_name!r}".format(
+        type_name=type(node).__name__
+    )
+    if isinstance(node, Num):
+        return node.n
+    elif isinstance(node, (Bytes, Str)):
+        return node.s
+    elif isinstance(node, Constant):
+        return node.value
+    elif isinstance(node, Dict):
+        return Dict_to_dict(node)
+    elif isinstance(node, Set):
+        return Set_to_set(node)
+    elif isinstance(node, Tuple):
+        return Tuple_to_tuple(node)
+    elif isinstance(node, List):
+        return List_to_list(node)
+    else:
+        raise NotImplementedError(node)
 
 
 def param2ast(param):
@@ -1643,6 +1678,7 @@ __all__ = [
     "Set_to_set",
     "Tuple_to_tuple",
     "annotate_ancestry",
+    "ast_type_to_python_type",
     "cmp_ast",
     "code_quoted",
     "column_type2typ",
