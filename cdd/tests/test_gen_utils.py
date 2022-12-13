@@ -1,6 +1,5 @@
 """ Tests for gen_utils """
 
-from ast import FunctionDef
 from unittest import TestCase
 
 from cdd.gen_utils import get_input_mapping_from_path
@@ -26,7 +25,7 @@ class TestGenUtils(TestCase):
         )
         self.assertEqual(len(name_to_node), 1)
         self.assertIn("f", name_to_node)
-        self.assertIsInstance(name_to_node["f"], FunctionDef)
+        self.assertIsInstance(name_to_node["f"], dict)
 
 
 unittest_main()
