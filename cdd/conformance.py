@@ -122,7 +122,7 @@ def ground_truth(args, truth_file):
         filenames = getattr(args, pluralise(fun_name))
         assert isinstance(
             filenames, (list, tuple)
-        ), "Expected Union[list, tuple] got {type_name!r}".format(
+        ), "Expected `Union[list, tuple]` got `{type_name}`".format(
             type_name=type(filenames).__name__
         )
 
@@ -183,7 +183,9 @@ def _conform_filename(
 
     with open(filename, "rt") as f:
         parsed_ast = ast_parse(f.read(), filename=filename)
-    assert isinstance(parsed_ast, Module)
+    assert isinstance(parsed_ast, Module), "Expected `Module` got `{type_name}`".format(
+        type_name=type(parsed_ast).__name__
+    )
 
     original_node = find_in_ast(search, parsed_ast)
     replacement_node = emit_func(

@@ -38,8 +38,10 @@ def json_schema(
     :return: JSON Schema dict
     :rtype: ```dict```
     """
-    assert isinstance(intermediate_repr, dict), "{typ} != dict".format(
-        typ=type(intermediate_repr).__name__
+    assert isinstance(
+        intermediate_repr, dict
+    ), "Expected `dict` got `{type_name}`".format(
+        type_name=type(intermediate_repr).__name__
     )
     if identifier is None:
         identifier = "https://offscale.io/{}.schema.json".format(

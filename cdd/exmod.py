@@ -91,7 +91,7 @@ def exmod(
     )
     assert isinstance(
         emit_name, (str, type(None))
-    ), "Expected str got {emit_name_type!r}".format(emit_name_type=type(emit_name))
+    ), "Expected `str` got `{emit_name_type!r}`".format(emit_name_type=type(emit_name))
 
     module_name, new_module_name = map(path.basename, (module, output_directory))
     module = (

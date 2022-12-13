@@ -2,6 +2,6 @@
 Module of route emitters
 """
 
-EMITTERS = ["bottle", "fastapi"]
+EMITTERS = ["bottle"]
 
 __all__ = ["EMITTERS"]

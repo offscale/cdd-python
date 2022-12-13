@@ -34,8 +34,10 @@ def bottle(function_def):
         # Dynamic function, i.e., this isn't source code; and is in your memory
         function_def = ast.parse(getsource(function_def)).body[0]
 
-    assert isinstance(function_def, FunctionDef), "{typ} != FunctionDef".format(
-        typ=type(function_def).__name__
+    assert isinstance(
+        function_def, FunctionDef
+    ), "Expected `FunctionDef` got `{type_name}`".format(
+        type_name=type(function_def).__name__
     )
     app_decorator = next(
         filter(

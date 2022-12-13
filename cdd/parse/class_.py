@@ -208,7 +208,11 @@ def class_(
     )
 
     if merge_inner_function is not None:
-        assert isinstance(class_def, ClassDef)
+        assert isinstance(
+            class_def, ClassDef
+        ), "Expected `ClassDef` got `{node_name!r}`".format(
+            node_name=type(class_def).__name__
+        )
 
         _merge_inner_function(
             class_def,

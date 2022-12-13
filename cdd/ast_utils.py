@@ -112,7 +112,7 @@ def ast_type_to_python_type(node):
 
     :rtype: Union[dict,str,int,float,complex,bytes,list,tuple,set]
     """
-    assert isinstance(node, AST), "Expected AST got {type_name!r}".format(
+    assert isinstance(node, AST), "Expected `AST` got `{type_name}`".format(
         type_name=type(node).__name__
     )
     if isinstance(node, Num):
@@ -567,8 +567,10 @@ def get_function_type(function_def):
     :return: Type of target, static is static or global method, others just become first arg
     :rtype: ```Literal['self', 'cls', 'static']```
     """
-    assert isinstance(function_def, FunctionDef), "{typ} != FunctionDef".format(
-        typ=type(function_def).__name__
+    assert isinstance(
+        function_def, FunctionDef
+    ), "Expected `FunctionDef` got `{type_name}`".format(
+        type_name=type(function_def).__name__
     )
     if (
         not hasattr(function_def, "args")
@@ -995,8 +997,8 @@ class RewriteAtQuery(NodeTransformer):
                 self.replacement_node = emit_arg(self.replacement_node)
             assert isinstance(
                 self.replacement_node, ast.arg
-            ), "Expected ast.arg got {replacement_node_name!r}".format(
-                replacement_node_name=type(self.replacement_node).__name__
+            ), "Expected `ast.arg` got `{type_name}`".format(
+                type_name=type(self.replacement_node).__name__
             )
 
             for arg_attr in "args", "kwonlyargs":
