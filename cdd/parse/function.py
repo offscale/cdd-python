@@ -84,7 +84,7 @@ def function(
 
     assert isinstance(
         function_def, FunctionDef
-    ), "Expected 'FunctionDef' got `{node_name!r}`".format(
+    ), "Expected `FunctionDef` got `{node_name!r}`".format(
         node_name=type(function_def).__name__
     )
     assert (

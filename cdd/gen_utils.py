@@ -18,6 +18,7 @@ from importlib import import_module
 from itertools import chain
 from operator import itemgetter
 
+import cdd.parse.utils.parser_utils
 from cdd.ast_utils import maybe_type_comment, set_value
 from cdd.parse.utils.parser_utils import infer
 from cdd.pure_utils import find_module_filepath, rpartial
@@ -50,18 +51,33 @@ def get_input_mapping_from_path(emit_name, module_path, symbol_name):
     }.get(emit_name, (ClassDef,))
     return dict(
         map(
-            lambda node: (node.name, node)
-            if hasattr(node, "name")
-            else (
-                (node.target if isinstance(node, AnnAssign) else node.targets[0]).id,
-                node,
+            lambda node_name: (
+                node_name[0],
+                (
+                    (
+                        lambda parser_name: getattr(
+                            import_module(".".join(("cdd", "parse", parser_name))),
+                            parser_name,
+                        )
+                    )(cdd.parse.utils.parser_utils.infer(node_name[1]))
+                )(node_name[1]),
             ),
-            filter(
-                rpartial(
-                    isinstance,
-                    type_instance_must_be,
+            map(
+                lambda node: (node.name, node)
+                if hasattr(node, "name")
+                else (
+                    (
+                        node.target if isinstance(node, AnnAssign) else node.targets[0]
+                    ).id,
+                    node,
                 ),
-                input_ast_mod.body,
+                filter(
+                    rpartial(
+                        isinstance,
+                        type_instance_must_be,
+                    ),
+                    input_ast_mod.body,
+                ),
             ),
         )
     )

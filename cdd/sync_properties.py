@@ -122,7 +122,11 @@ def sync_property(
             expr_target=None,
         )
     else:
-        assert isinstance(input_ast, ast.Module)
+        assert isinstance(
+            input_ast, ast.Module
+        ), "Expected `Module` got `{type_name}`".format(
+            type_name=type(input_ast).__name__
+        )
         annotate_ancestry(input_ast)
         replacement_node = find_in_ast(list(strip_split(input_param, ".")), input_ast)
 

@@ -37,7 +37,9 @@ def docstring(
     :return: intermediate_repr, whether it returns or not
     :rtype: ```Optional[Union[dict, Tuple[dict, bool]]]```
     """
-    assert isinstance(doc_string, str), "Expected 'str' got {doc_string_type!r}".format(
+    assert isinstance(
+        doc_string, str
+    ), "Expected `str` got `{doc_string_type!r}`".format(
         doc_string_type=type(doc_string).__name__
     )
     parsed = (

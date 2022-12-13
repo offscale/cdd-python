@@ -67,8 +67,8 @@ def class_(
     """
     assert isinstance(
         intermediate_repr, dict
-    ), "{intermediate_repr_type_name} != dict".format(
-        intermediate_repr_type_name=type(intermediate_repr).__name__
+    ), "Expected `dict` got `{type_name}`".format(
+        type_name=type(intermediate_repr).__name__
     )
     assert class_name or intermediate_repr["name"], "Class has no name"
 

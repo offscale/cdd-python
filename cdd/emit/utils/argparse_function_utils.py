@@ -37,7 +37,9 @@ def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
     :return: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```Tuple[str, dict]```
     """
-    assert isinstance(e, Return)
+    assert isinstance(e, Return), "Expected `Return` got `{type_name}`".format(
+        type_name=type(e).__name__
+    )
 
     typ = intermediate_repr["returns"]["return_type"]["typ"]
     if "[" in intermediate_repr["returns"]["return_type"]["typ"]:

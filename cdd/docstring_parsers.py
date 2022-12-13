@@ -83,8 +83,10 @@ def parse_docstring(
     :rtype: ```dict```
     """
 
-    assert isinstance(docstring, (type(None), str)), "{typ} != str".format(
-        typ=type(docstring).__name__
+    assert isinstance(
+        docstring, (type(None), str)
+    ), "Expected `Union[type(None), str]` got `{type_name}`".format(
+        type_name=type(docstring).__name__
     )
     style = derive_docstring_format(docstring)
 

@@ -379,7 +379,9 @@ def remove_args_from_docstring(doc_str):
     :rtype: ```str```
     """
     stack, in_args = [], False
-    assert isinstance(doc_str, str)
+    assert isinstance(doc_str, str), "Expected `str` got `{type_name}`".format(
+        type_name=type(doc_str).__name__
+    )
     for line in doc_str.splitlines():
         stripped_line = line.lstrip()
         if any(filter(stripped_line.startswith, TOKENS)):

@@ -69,7 +69,9 @@ def sqlalchemy_table(call_or_name, parse_original_whitespace=False):
         else docstring(comment, parse_original_whitespace=parse_original_whitespace)
     )
     intermediate_repr["name"] = name
-    assert isinstance(call_or_name, Call)
+    assert isinstance(call_or_name, Call), "Expected `all` got `{node_name!r}`".format(
+        node_name=type(call_or_name).__name__
+    )
     assert_equal(call_or_name.func.id.rpartition(".")[2], "Table")
     assert len(call_or_name.args) > 2
 
@@ -108,7 +110,7 @@ def sqlalchemy(class_def, parse_original_whitespace=False):
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :rtype: ```dict```
     """
-    assert isinstance(class_def, ClassDef), "Expected `ClassDef` got `{}`".format(
+    assert isinstance(class_def, ClassDef), "Expected `ClassDef` got `{!r}`".format(
         type(class_def).__name__
     )
 
