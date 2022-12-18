@@ -18,7 +18,7 @@ from cdd.tests.mocks.methods import (
 from cdd.tests.mocks.sqlalchemy import (
     config_decl_base_ast,
     config_decl_base_str,
-    config_tbl_ast,
+    config_tbl_with_comments_ast,
     sqlalchemy_imports_str,
 )
 from cdd.tests.utils_for_tests import inspectable_compile, unittest_main
@@ -197,7 +197,8 @@ class TestParserUtils(TestCase):
         Test `infer` can figure out the right parser name when its expected to be `sqlalchemy_table`
         """
         self.assertEqual(
-            cdd.parse.utils.parser_utils.infer(config_tbl_ast), "sqlalchemy_table"
+            cdd.parse.utils.parser_utils.infer(config_tbl_with_comments_ast),
+            "sqlalchemy_table",
         )
 
     # def test_infer_memory_sqlalchemy_table(self) -> None:

@@ -117,6 +117,9 @@ def sqlalchemy_table(
                         )
                     ),
                     identifier=None,
+                    expr=None,
+                    lineno=None,
+                    **maybe_type_comment,
                 )
             ]
             if intermediate_repr["doc"]
@@ -126,7 +129,7 @@ def sqlalchemy_table(
         ),
         lineno=None,
         expr=None,
-        **maybe_type_comment
+        **maybe_type_comment,
     )
 
 
@@ -260,7 +263,7 @@ def sqlalchemy(
                         value=set_value(table_name or class_name),
                         expr=None,
                         lineno=None,
-                        **maybe_type_comment
+                        **maybe_type_comment,
                     ),
                     *map(
                         lambda name_param: Assign(
@@ -270,7 +273,7 @@ def sqlalchemy(
                             ),
                             expr=None,
                             lineno=None,
-                            **maybe_type_comment
+                            **maybe_type_comment,
                         ),
                         intermediate_repr["params"].items(),
                     ),
