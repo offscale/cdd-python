@@ -16,7 +16,10 @@ from cdd.tests.mocks.routes import (
     read_route,
     route_mock_prelude,
 )
-from cdd.tests.mocks.sqlalchemy import config_tbl_str, sqlalchemy_imports_str
+from cdd.tests.mocks.sqlalchemy import (
+    config_tbl_with_comments_str,
+    sqlalchemy_imports_str,
+)
 from cdd.tests.utils_for_tests import unittest_main
 
 
@@ -35,7 +38,9 @@ class TestOpenApiBulk(TestCase):
             routes_filename = temp_dir_join("routes{extsep}py".format(extsep=extsep))
 
             with open(models_filename, "wt") as f:
-                f.write("\n".join((sqlalchemy_imports_str, config_tbl_str)))
+                f.write(
+                    "\n".join((sqlalchemy_imports_str, config_tbl_with_comments_str))
+                )
 
             with open(routes_filename, "wt") as f:
                 f.write(
