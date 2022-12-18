@@ -3,7 +3,6 @@ Tests for `cdd.emit.sqlalchemy`
 """
 import os
 from copy import deepcopy
-from operator import attrgetter
 from platform import system
 from unittest import TestCase, skipIf
 
@@ -72,19 +71,6 @@ class TestEmitSqlAlchemy(TestCase):
             ir,
             # class_name="Config",
             table_name="config_tbl",
-        )
-        print(
-            "config_decl_base_ast:",
-            list(map(attrgetter("arg"), config_decl_base_ast.body[2].value.keywords)),
-            ";",
-        )
-        print(
-            "gen_ast             :",
-            list(map(attrgetter("arg"), gen_ast.body[2].value.keywords)),
-            ";",
-        )
-        run_ast_test(
-            self, gen_ast=gen_ast.body[2].value, gold=config_decl_base_ast.body[2].value
         )
         run_ast_test(
             self,

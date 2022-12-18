@@ -41,16 +41,20 @@ class TestEmitSqlAlchemyUtils(TestCase):
             "typ": "int",
             "x_typ": {
                 "sql": {
-                    "default": Call(
-                        args=[], func=Name(ctx=Load(), id="Identity"), keywords=[]
-                    )
+                    "constraints": {
+                        "server_default": Call(
+                            args=[], func=Name(ctx=Load(), id="Identity"), keywords=[]
+                        )
+                    }
                 }
             },
         }
-        self.assertIsInstance(res["params"]["id"]["x_typ"]["sql"]["default"], Call)
-        res["params"]["id"]["x_typ"]["sql"]["default"] = ir["params"]["id"]["x_typ"][
-            "sql"
-        ]["default"]
+        self.assertIsInstance(
+            res["params"]["id"]["x_typ"]["sql"]["constraints"]["server_default"], Call
+        )
+        res["params"]["id"]["x_typ"]["sql"]["constraints"]["server_default"] = ir[
+            "params"
+        ]["id"]["x_typ"]["sql"]["constraints"]["server_default"]
         self.assertDictEqual(res, ir)
 
     maxDiff = None
