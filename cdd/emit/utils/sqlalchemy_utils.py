@@ -9,7 +9,6 @@ from operator import attrgetter, methodcaller
 from platform import system
 
 from cdd.ast_utils import (
-    NoneStr,
     get_value,
     maybe_type_comment,
     set_arg,
@@ -82,6 +81,9 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
     pk = _param.get("doc", "").startswith("[PK]")
     if pk:
         _param["doc"] = _param["doc"][4:].lstrip()
+        keywords.append(
+            ast.keyword(arg="primary_key", value=set_value(True), identifier=None),
+        )
     elif has_default and default not in none_types:
         nullable = False
 
@@ -102,20 +104,13 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
         ]
 
     if has_default:
-        if default == NoneStr:
-            default = None
+        # if default == NoneStr: default = None
         keywords.append(
             ast.keyword(
                 arg="default",
                 value=default if isinstance(default, AST) else set_value(default),
                 identifier=None,
             )
-        )
-
-    # Sorting :\
-    if pk:
-        keywords.append(
-            ast.keyword(arg="primary_key", value=set_value(True), identifier=None),
         )
 
     if isinstance(nullable, bool):
@@ -126,10 +121,10 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
     # if include_name is True and _param.get("doc") and _param["doc"] != "[PK]":
     if doc_added_at is not None:
         keywords[doc_added_at].arg = "comment"
-    elif _param["doc"]:
-        keywords.append(
-            ast.keyword(arg="comment", value=set_value(_param["doc"]), identifier=None)
-        )
+    # elif _param["doc"]:
+    #     keywords.append(
+    #         ast.keyword(arg="comment", value=set_value(_param["doc"]), identifier=None)
+    #     )
 
     return Call(
         func=Name("Column", Load()),
