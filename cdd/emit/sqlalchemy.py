@@ -11,6 +11,7 @@ from operator import add
 from cdd.ast_utils import maybe_type_comment, set_value
 from cdd.emit.docstring import docstring
 from cdd.emit.utils.sqlalchemy_utils import (
+    ensure_has_primary_key,
     generate_repr_method,
     param_to_sqlalchemy_column_call,
 )
@@ -76,7 +77,7 @@ def sqlalchemy_table(
                         ),
                         map(
                             partial(param_to_sqlalchemy_column_call, include_name=True),
-                            intermediate_repr["params"].items(),
+                            ensure_has_primary_key(intermediate_repr["params"]).items(),
                         ),
                     )
                 )

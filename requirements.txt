@@ -1,5 +1,5 @@
 # Note: no dependencies are required on Python >=3.9; `black` is optional; `pyyaml` is mostly optional
-https://github.com/offscale/astor/archive/refs/heads/empty-annassign.zip
+https://api.github.com/repos/offscale/astor/zipball/empty-annassign#egg=astor
 black
 pyyaml
 typing-extensions
