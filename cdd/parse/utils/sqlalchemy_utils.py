@@ -37,6 +37,8 @@ def column_call_to_param(call):
             )
         )
     )
+    if "comment" in _param and "doc" not in _param:
+        _param["doc"] = _param.pop("comment")
 
     if (
         isinstance(call.args[1], Call)
@@ -46,7 +48,7 @@ def column_call_to_param(call):
 
     pk = "primary_key" in _param
     if pk:
-        _param["doc"] = "[PK] {}".format(_param["doc"])
+        _param["doc"] = "[PK] {}".format(_param["doc"]) if _param.get("doc") else "[PK]"
         del _param["primary_key"]
 
     def _handle_null():

@@ -4,8 +4,8 @@ Utility functions for `cdd.emit.sqlalchemy`
 
 import ast
 from ast import AST, Attribute, Call, Expr, FunctionDef, Load, Name, Return, arguments
-from collections import OrderedDict
-from operator import methodcaller
+from collections import OrderedDict, deque
+from operator import attrgetter, methodcaller
 from platform import system
 
 from cdd.ast_utils import (
@@ -67,7 +67,6 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
                 expr_func=None,
             )
         )
-
     else:
         args.append(
             Name(
@@ -78,15 +77,18 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
             )
         )
 
-    has_default = _param.get("default", ast) is not ast
+    default = x_typ_sql.get("default", _param.get("default", ast))
+    has_default = default is not ast
     pk = _param.get("doc", "").startswith("[PK]")
     if pk:
         _param["doc"] = _param["doc"][4:].lstrip()
-    elif has_default and _param["default"] not in none_types:
+    elif has_default and default not in none_types:
         nullable = False
 
     rstripped_dot_doc = _param["doc"].rstrip(".")
+    doc_added_at = None
     if rstripped_dot_doc:
+        doc_added_at = len(keywords)
         keywords.append(
             ast.keyword(arg="doc", value=set_value(rstripped_dot_doc), identifier=None)
         )
@@ -100,14 +102,12 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
         ]
 
     if has_default:
-        if _param["default"] == NoneStr:
-            _param["default"] = None
+        if default == NoneStr:
+            default = None
         keywords.append(
             ast.keyword(
                 arg="default",
-                value=_param["default"]
-                if isinstance(_param["default"], AST)
-                else set_value(_param["default"]),
+                value=default if isinstance(default, AST) else set_value(default),
                 identifier=None,
             )
         )
@@ -123,10 +123,18 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
             ast.keyword(arg="nullable", value=set_value(nullable), identifier=None)
         )
 
+    # if include_name is True and _param.get("doc") and _param["doc"] != "[PK]":
+    if doc_added_at is not None:
+        keywords[doc_added_at].arg = "comment"
+    elif _param["doc"]:
+        keywords.append(
+            ast.keyword(arg="comment", value=set_value(_param["doc"]), identifier=None)
+        )
+
     return Call(
         func=Name("Column", Load()),
         args=args,
-        keywords=keywords,
+        keywords=sorted(keywords, key=attrgetter("arg")),
         expr=None,
         expr_func=None,
     )
@@ -238,20 +246,53 @@ def ensure_has_primary_key(intermediate_repr):
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :rtype: ```dict```
     """
-    if any(
+    params = (
+        intermediate_repr
+        if isinstance(intermediate_repr, OrderedDict)
+        else intermediate_repr["params"]
+    )
+    if not any(
         filter(
             rpartial(str.startswith, "[PK]"),
             map(
                 methodcaller("get", "doc", ""),
-                (
-                    intermediate_repr
-                    if isinstance(intermediate_repr, OrderedDict)
-                    else intermediate_repr["params"]
-                ).values(),
+                params.values(),
             ),
         )
     ):
-        return intermediate_repr
+        candidate_pks = []
+        deque(
+            map(
+                candidate_pks.append,
+                filter(
+                    lambda k: "_name" in k or "_id" in k or "id_" in k or k == "id",
+                    params.keys(),
+                ),
+            ),
+            maxlen=0,
+        )
+        if len(candidate_pks) == 1:
+            params[candidate_pks[0]]["doc"] = (
+                "[PK] {}".format(params["dataset_name"]["doc"])
+                if params["dataset_name"].get("doc")
+                else "[PK]"
+            )
+        else:
+            assert (
+                "id" not in intermediate_repr
+            ), "Primary key unable to infer and column `id` already taken"
+            params["id"] = {
+                "doc": "[PK]",
+                "typ": "int",
+                "x_typ": {
+                    "sql": {
+                        "default": Call(
+                            args=[], func=Name(ctx=Load(), id="Identity"), keywords=[]
+                        )
+                    }
+                },
+            }
+    return intermediate_repr
 
 
 __all__ = [

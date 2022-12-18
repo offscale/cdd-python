@@ -1082,6 +1082,14 @@ for param in "data_loader_kwargs", "as_numpy":
     ] = NoneStr
 
 
+intermediate_repr_empty = {
+    "name": None,
+    "type": "static",
+    "doc": "",
+    "params": OrderedDict(),
+    "returns": OrderedDict(),
+}
+
 intermediate_repr_only_return_type = {
     "name": None,
     "type": "static",
@@ -1187,6 +1195,7 @@ __all__ = [
     "function_adder_ir",
     "function_google_tf_ops_losses__safe_mean_ir",
     "intermediate_repr",
+    "intermediate_repr_empty",
     "intermediate_repr_extra_colons",
     "intermediate_repr_no_default_doc",
     "intermediate_repr_no_default_doc_or_prop",

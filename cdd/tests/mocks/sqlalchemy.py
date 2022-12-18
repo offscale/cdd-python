@@ -45,158 +45,130 @@ sqlalchemy_imports_str = "\n".join(
     )
 )
 
-config_tbl_str = """
+config_tbl_with_comments_str = """
 config_tbl = Table(
     "config_tbl",
     metadata,
     Column(
         "dataset_name",
         String,
-        doc="name of dataset",
+        comment="name of dataset",
         default="mnist",
         primary_key=True,
     ),
     Column(
         "tfds_dir",
         String,
-        doc="directory to look for models in",
+        comment="directory to look for models in",
         default="~/tensorflow_datasets",
         nullable=False,
     ),
     Column(
         "K",
         Enum("np", "tf", name="K"),
-        doc="backend engine, e.g., `np` or `tf`",
+        comment="backend engine, e.g., `np` or `tf`",
         default="np",
         nullable=False,
     ),
     Column(
         "as_numpy",
         Boolean,
-        doc="Convert to numpy ndarrays",
+        comment="Convert to numpy ndarrays",
         nullable=True,
     ),
     Column(
         "data_loader_kwargs",
         JSON,
-        doc="pass this as arguments to data_loader function",
+        comment="pass this as arguments to data_loader function",
         nullable=True,
     ),
     comment={comment!r},
 )
 """.format(
-    comment=docstring_header_and_return_str
+    comment=docstring_header_and_return_two_nl_str
 )
 
-config_tbl_ast = Assign(
-    targets=[Name("config_tbl", Store())],
+config_tbl_with_comments_ast = Assign(
+    targets=[Name(ctx=Store(), id="config_tbl")],
     value=Call(
-        func=Name("Table", Load()),
         args=[
             set_value("config_tbl"),
-            Name("metadata", Load()),
+            Name(ctx=Load(), id="metadata"),
             Call(
-                func=Name("Column", Load()),
-                args=[set_value("dataset_name"), Name("String", Load())],
+                args=[set_value("dataset_name"), Name(ctx=Load(), id="String")],
+                func=Name(ctx=Load(), id="Column"),
                 keywords=[
-                    keyword(
-                        arg="doc", value=set_value("name of dataset"), identifier=None
-                    ),
-                    keyword(arg="default", value=set_value("mnist"), identifier=None),
-                    keyword(arg="primary_key", value=set_value(True), identifier=None),
+                    keyword(arg="comment", value=set_value("name of dataset")),
+                    keyword(arg="default", value=set_value("mnist")),
+                    keyword(arg="primary_key", value=set_value(True)),
                 ],
-                expr=None,
-                expr_func=None,
             ),
             Call(
-                func=Name("Column", Load()),
-                args=[set_value("tfds_dir"), Name("String", Load())],
+                args=[set_value("tfds_dir"), Name(ctx=Load(), id="String")],
+                func=Name(ctx=Load(), id="Column"),
                 keywords=[
                     keyword(
-                        arg="doc",
+                        arg="comment",
                         value=set_value("directory to look for models in"),
-                        identifier=None,
                     ),
-                    keyword(
-                        arg="default",
-                        value=set_value("~/tensorflow_datasets"),
-                        identifier=None,
-                    ),
-                    keyword(arg="nullable", value=set_value(False), identifier=None),
+                    keyword(arg="default", value=set_value("~/tensorflow_datasets")),
+                    keyword(arg="nullable", value=set_value(False)),
                 ],
-                expr=None,
-                expr_func=None,
             ),
             Call(
-                func=Name("Column", Load()),
                 args=[
                     set_value("K"),
                     Call(
-                        func=Name("Enum", Load()),
-                        args=list(map(set_value, ("np", "tf"))),
-                        keywords=[
-                            keyword(arg="name", value=set_value("K"), identifier=None)
-                        ],
-                        expr=None,
-                        expr_func=None,
+                        args=[set_value("np"), set_value("tf")],
+                        func=Name(ctx=Load(), id="Enum"),
+                        keywords=[keyword(arg="name", value=set_value("K"))],
                     ),
                 ],
+                func=Name(ctx=Load(), id="Column"),
                 keywords=[
                     keyword(
-                        arg="doc",
+                        arg="comment",
                         value=set_value("backend engine, e.g., `np` or `tf`"),
-                        identifier=None,
                     ),
-                    keyword(arg="default", value=set_value("np"), identifier=None),
-                    keyword(arg="nullable", value=set_value(False), identifier=None),
+                    keyword(arg="default", value=set_value("np")),
+                    keyword(arg="nullable", value=set_value(False)),
                 ],
-                expr=None,
-                expr_func=None,
             ),
             Call(
-                func=Name("Column", Load()),
-                args=[set_value("as_numpy"), Name("Boolean", Load())],
+                args=[set_value("as_numpy"), Name(ctx=Load(), id="Boolean")],
+                func=Name(ctx=Load(), id="Column"),
                 keywords=[
                     keyword(
-                        arg="doc",
-                        value=set_value("Convert to numpy ndarrays"),
-                        identifier=None,
+                        arg="comment", value=set_value("Convert to numpy ndarrays")
                     ),
-                    keyword(arg="nullable", value=set_value(True), identifier=None),
+                    keyword(arg="nullable", value=set_value(True)),
                 ],
-                expr=None,
-                expr_func=None,
             ),
             Call(
-                func=Name("Column", Load()),
-                args=[set_value("data_loader_kwargs"), Name("JSON", Load())],
+                args=[set_value("data_loader_kwargs"), Name(ctx=Load(), id="JSON")],
+                func=Name(ctx=Load(), id="Column"),
                 keywords=[
                     keyword(
-                        arg="doc",
+                        arg="comment",
                         value=set_value(
                             "pass this as arguments to data_loader function"
                         ),
-                        identifier=None,
                     ),
-                    keyword(arg="nullable", value=set_value(True), identifier=None),
+                    keyword(arg="nullable", value=set_value(True)),
                 ],
-                expr=None,
-                expr_func=None,
             ),
         ],
+        func=Name(ctx=Load(), id="Table"),
         keywords=[
             keyword(
                 arg="comment",
                 value=set_value(docstring_header_and_return_two_nl_str),
-                identifier=None,
             )
         ],
-        expr=None,
-        expr_func=None,
     ),
-    lineno=None,
     expr=None,
-    **maybe_type_comment
+    lineno=None,
+    **maybe_type_comment,
 )
 
 config_decl_base_str = '''
@@ -206,34 +178,34 @@ class Config(Base):
 
     dataset_name = Column(
         String,
-        doc="name of dataset",
+        comment="name of dataset",
         default="mnist",
         primary_key=True,
     )
 
     tfds_dir = Column(
         String,
-        doc="directory to look for models in",
+        comment="directory to look for models in",
         default="~/tensorflow_datasets",
         nullable=False,
     )
 
     K = Column(
         Enum("np", "tf", name="K"),
-        doc="backend engine, e.g., `np` or `tf`",
+        comment="backend engine, e.g., `np` or `tf`",
         default="np",
         nullable=False,
     )
 
     as_numpy = Column(
         Boolean,
-        doc="Convert to numpy ndarrays",
+        comment="Convert to numpy ndarrays",
         nullable=True,
     )
 
     data_loader_kwargs = Column(
         JSON,
-        doc="pass this as arguments to data_loader function",
+        comment="pass this as arguments to data_loader function",
         nullable=True,
     )
 
@@ -264,7 +236,7 @@ config_decl_base_ast = ClassDef(
             value=set_value("config_tbl"),
             expr=None,
             lineno=None,
-            **maybe_type_comment
+            **maybe_type_comment,
         ),
         Assign(
             targets=[Name("dataset_name", Store())],
@@ -273,7 +245,9 @@ config_decl_base_ast = ClassDef(
                 args=[Name("String", Load())],
                 keywords=[
                     keyword(
-                        arg="doc", value=set_value("name of dataset"), identifier=None
+                        arg="comment",
+                        value=set_value("name of dataset"),
+                        identifier=None,
                     ),
                     keyword(arg="default", value=set_value("mnist"), identifier=None),
                     keyword(arg="primary_key", value=set_value(True), identifier=None),
@@ -283,7 +257,7 @@ config_decl_base_ast = ClassDef(
             ),
             expr=None,
             lineno=None,
-            **maybe_type_comment
+            **maybe_type_comment,
         ),
         Assign(
             targets=[Name("tfds_dir", Store())],
@@ -292,7 +266,7 @@ config_decl_base_ast = ClassDef(
                 args=[Name("String", Load())],
                 keywords=[
                     keyword(
-                        arg="doc",
+                        arg="comment",
                         value=set_value("directory to look for models in"),
                         identifier=None,
                     ),
@@ -308,7 +282,7 @@ config_decl_base_ast = ClassDef(
             ),
             expr=None,
             lineno=None,
-            **maybe_type_comment
+            **maybe_type_comment,
         ),
         Assign(
             targets=[Name("K", Store())],
@@ -327,7 +301,7 @@ config_decl_base_ast = ClassDef(
                 ],
                 keywords=[
                     keyword(
-                        arg="doc",
+                        arg="comment",
                         value=set_value("backend engine, e.g., `np` or `tf`"),
                         identifier=None,
                     ),
@@ -339,7 +313,7 @@ config_decl_base_ast = ClassDef(
             ),
             expr=None,
             lineno=None,
-            **maybe_type_comment
+            **maybe_type_comment,
         ),
         Assign(
             targets=[Name("as_numpy", Store())],
@@ -348,7 +322,7 @@ config_decl_base_ast = ClassDef(
                 args=[Name("Boolean", Load())],
                 keywords=[
                     keyword(
-                        arg="doc",
+                        arg="comment",
                         value=set_value("Convert to numpy ndarrays"),
                         identifier=None,
                     ),
@@ -359,7 +333,7 @@ config_decl_base_ast = ClassDef(
             ),
             expr=None,
             lineno=None,
-            **maybe_type_comment
+            **maybe_type_comment,
         ),
         Assign(
             targets=[Name("data_loader_kwargs", Store())],
@@ -368,7 +342,7 @@ config_decl_base_ast = ClassDef(
                 args=[Name("JSON", Load())],
                 keywords=[
                     keyword(
-                        arg="doc",
+                        arg="comment",
                         value=set_value(
                             "pass this as arguments to data_loader function"
                         ),
@@ -381,7 +355,7 @@ config_decl_base_ast = ClassDef(
             ),
             expr=None,
             lineno=None,
-            **maybe_type_comment
+            **maybe_type_comment,
         ),
         FunctionDef(
             name="__repr__",
@@ -455,7 +429,7 @@ config_decl_base_ast = ClassDef(
             stmt=None,
             lineno=None,
             returns=None,
-            **maybe_type_comment
+            **maybe_type_comment,
         ),
     ],
     decorator_list=[],
@@ -467,9 +441,37 @@ config_decl_base_ast = ClassDef(
     identifier_name=None,
 )
 
+empty_with_inferred_pk = Assign(
+    targets=[Name(id="empty_with_inferred_pk_tbl", ctx=Store())],
+    value=Call(
+        func=Name(id="Table", ctx=Load()),
+        args=[
+            set_value("empty_with_inferred_pk_tbl"),
+            Name(id="metadata", ctx=Load()),
+            Call(
+                func=Name(id="Column", ctx=Load()),
+                args=[set_value("id"), Name(id="Integer", ctx=Load())],
+                keywords=[
+                    keyword(
+                        arg="default",
+                        value=Call(
+                            func=Name(id="Identity", ctx=Load()), args=[], keywords=[]
+                        ),
+                    ),
+                    keyword(arg="primary_key", value=set_value(True)),
+                ],
+            ),
+        ],
+        keywords=[],
+    ),
+    expr=None,
+    lineno=None,
+    **maybe_type_comment,
+)
+
 __all__ = [
-    "config_tbl_ast",
-    "config_tbl_str",
+    "config_tbl_with_comments_str",
     "config_decl_base_ast",
     "config_decl_base_str",
+    "empty_with_inferred_pk",
 ]

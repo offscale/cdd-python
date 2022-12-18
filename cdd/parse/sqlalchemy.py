@@ -63,10 +63,19 @@ def sqlalchemy_table(call_or_name, parse_original_whitespace=False):
         ),
         None,
     )
+    doc = next(
+        map(
+            get_value,
+            map(get_value, filter(lambda kw: kw.arg == "doc", call_or_name.keywords)),
+        ),
+        None,
+    )
     intermediate_repr = (
         {"type": None, "doc": "", "params": OrderedDict()}
-        if comment is None
-        else docstring(comment, parse_original_whitespace=parse_original_whitespace)
+        if comment is None and doc is None
+        else docstring(
+            doc or comment, parse_original_whitespace=parse_original_whitespace
+        )
     )
     intermediate_repr["name"] = name
     assert isinstance(call_or_name, Call), "Expected `all` got `{node_name!r}`".format(
