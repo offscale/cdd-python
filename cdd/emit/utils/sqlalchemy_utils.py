@@ -4,6 +4,8 @@ Utility functions for `cdd.emit.sqlalchemy`
 
 import ast
 from ast import AST, Attribute, Call, Expr, FunctionDef, Load, Name, Return, arguments
+from collections import OrderedDict
+from operator import methodcaller
 from platform import system
 
 from cdd.ast_utils import (
@@ -14,7 +16,7 @@ from cdd.ast_utils import (
     set_value,
     typ2column_type,
 )
-from cdd.pure_utils import none_types, tab
+from cdd.pure_utils import none_types, rpartial, tab
 from cdd.tests.mocks.docstrings import docstring_repr_google_str, docstring_repr_str
 
 
@@ -214,4 +216,46 @@ def generate_repr_method(params, cls_name, docstring_format):
     )
 
 
-__all__ = ["param_to_sqlalchemy_column_call", "generate_repr_method"]
+def ensure_has_primary_key(intermediate_repr):
+    """
+    Add a primary key to the input (if nonexistent) then return the input.
+
+    :param intermediate_repr: a dictionary of form
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :type intermediate_repr: ```dict```
+
+    :return: a dictionary of form
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :rtype: ```dict```
+    """
+    if any(
+        filter(
+            rpartial(str.startswith, "[PK]"),
+            map(
+                methodcaller("get", "doc", ""),
+                (
+                    intermediate_repr
+                    if isinstance(intermediate_repr, OrderedDict)
+                    else intermediate_repr["params"]
+                ).values(),
+            ),
+        )
+    ):
+        return intermediate_repr
+
+
+__all__ = [
+    "ensure_has_primary_key",
+    "generate_repr_method",
+    "param_to_sqlalchemy_column_call",
+]

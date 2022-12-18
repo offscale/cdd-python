@@ -80,6 +80,8 @@ To break it down, with current tooling there is no way to know:
 Some of these problems can be solved dynamically, however in doing so one loses developer-tool insights.
 There is no code-completion, and likely the CLI parser won't provide you with the enumeration of possibilities.
 
+For migration from Google App Engine, this project builds upon cdd-python for a unidirectional experience: https://github.com/offscale/cdd-python-gae
+
 ## SDK example (REPL)
 
 To create a `class`
@@ -598,6 +600,11 @@ class Config(Base):
                             `__call__` internal function
       --decorator DECORATOR_LIST
                             List of decorators.
+
+
+PS: If you're outputting JSON-schema and want a file per schema then:
+
+    python -c 'import sys,json,os; f=open(sys.argv[1], "rt"); d=json.load(f); f.close(); [(lambda f: json.dump(sc,f) or f.close())(open(os.path.join(os.path.dirname(sys.argv[1]), sc["$id"].rpartition("/")[2]), "wt")) for sc in d["schemas"]]' <path_to_json_file>
 
 ### `gen_routes`
 

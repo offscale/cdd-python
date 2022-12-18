@@ -28,7 +28,7 @@ class TestEmitterUtils(TestCase):
                     {
                         "doc": "",
                         "typ": "str",
-                        "x_typ": {"sql": {"constraints": {"indexed": True}}},
+                        "x_typ": {"sql": {"constraints": {"index": True}}},
                     },
                 ),
                 include_name=False,
@@ -36,7 +36,7 @@ class TestEmitterUtils(TestCase):
             gold=Call(
                 func=Name(id="Column", ctx=Load()),
                 args=[Name(id="String", ctx=Load())],
-                keywords=[keyword(arg="indexed", value=set_value(True))],
+                keywords=[keyword(arg="index", value=set_value(True))],
             ),
         )
 

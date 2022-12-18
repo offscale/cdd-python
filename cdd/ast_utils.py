@@ -90,6 +90,18 @@ def Dict_to_dict(d):
 
 
 def ast_elts_to_container(node, container):
+    """
+    Convert AST container to Python container
+
+    :param node: AST node with elts attribute
+    :type node: ```AST```
+
+    :param container: Python container
+    :type container: ```type```
+
+    :return: Python container
+    :rtype: ```instanceof container```
+    """
     assert hasattr(node, "elts")
     return container(map(get_value, node.elts))
 
