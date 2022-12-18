@@ -452,13 +452,13 @@ empty_with_inferred_pk = Assign(
                 func=Name(id="Column", ctx=Load()),
                 args=[set_value("id"), Name(id="Integer", ctx=Load())],
                 keywords=[
+                    keyword(arg="primary_key", value=set_value(True)),
                     keyword(
-                        arg="default",
+                        arg="server_default",
                         value=Call(
                             func=Name(id="Identity", ctx=Load()), args=[], keywords=[]
                         ),
                     ),
-                    keyword(arg="primary_key", value=set_value(True)),
                 ],
             ),
         ],

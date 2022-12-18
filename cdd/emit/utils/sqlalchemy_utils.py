@@ -281,9 +281,13 @@ def ensure_has_primary_key(intermediate_repr):
                 "typ": "int",
                 "x_typ": {
                     "sql": {
-                        "default": Call(
-                            args=[], func=Name(ctx=Load(), id="Identity"), keywords=[]
-                        )
+                        "constraints": {
+                            "server_default": Call(
+                                args=[],
+                                func=Name(ctx=Load(), id="Identity"),
+                                keywords=[],
+                            )
+                        }
                     }
                 },
             }
