@@ -275,7 +275,7 @@ def sqlalchemy(
                             lineno=None,
                             **maybe_type_comment,
                         ),
-                        intermediate_repr["params"].items(),
+                        ensure_has_primary_key(intermediate_repr["params"]).items(),
                     ),
                     generate_repr_method(
                         intermediate_repr["params"], class_name, docstring_format

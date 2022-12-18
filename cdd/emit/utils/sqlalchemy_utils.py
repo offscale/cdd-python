@@ -274,7 +274,7 @@ def ensure_has_primary_key(intermediate_repr):
         if len(candidate_pks) == 1:
             params[candidate_pks[0]]["doc"] = (
                 "[PK] {}".format(params["dataset_name"]["doc"])
-                if params["dataset_name"].get("doc")
+                if params[candidate_pks[0]].get("doc")
                 else "[PK]"
             )
         else:
