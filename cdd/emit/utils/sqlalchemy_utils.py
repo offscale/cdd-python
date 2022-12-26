@@ -39,42 +39,55 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
 
     args, keywords, nullable = [], [], None
 
-    if _param["typ"].startswith("Optional["):
-        _param["typ"] = _param["typ"][len("Optional[") : -1]
-        nullable = True
-
     if include_name:
         args.append(set_value(name))
 
     x_typ_sql = _param.get("x_typ", {}).get("sql", {})
 
-    if "Literal[" in _param["typ"]:
-        parsed_typ = get_value(ast.parse(_param["typ"]).body[0])
-        assert (
-            parsed_typ.value.id == "Literal"
-        ), "Only basic Literal support is implemented, not {}".format(
-            parsed_typ.value.id
-        )
-        args.append(
-            Call(
-                func=Name("Enum", Load()),
-                args=get_value(parsed_typ.slice).elts,
-                keywords=[
-                    ast.keyword(arg="name", value=set_value(name), identifier=None)
-                ],
-                expr=None,
-                expr_func=None,
+    if "typ" in _param:
+        if _param["typ"].startswith("Optional["):
+            _param["typ"] = _param["typ"][len("Optional[") : -1]
+            nullable = True
+
+        if "Literal[" in _param["typ"]:
+            parsed_typ = get_value(ast.parse(_param["typ"]).body[0])
+            assert (
+                parsed_typ.value.id == "Literal"
+            ), "Only basic Literal support is implemented, not {}".format(
+                parsed_typ.value.id
             )
-        )
-    else:
-        args.append(
-            Name(
-                x_typ_sql["type"]
-                if "type" in x_typ_sql
-                else typ2column_type[_param["typ"]],
-                Load(),
+            args.append(
+                Call(
+                    func=Name("Enum", Load()),
+                    args=get_value(parsed_typ.slice).elts,
+                    keywords=[
+                        ast.keyword(arg="name", value=set_value(name), identifier=None)
+                    ],
+                    expr=None,
+                    expr_func=None,
+                )
             )
-        )
+        elif "items" in _param and _param["items"]["type"] in typ2column_type:
+            args.append(
+                Call(
+                    func=Name(id="ARRAY", ctx=Load()),
+                    args=[
+                        Name(id=typ2column_type[_param["items"]["type"]], ctx=Load())
+                    ],
+                    keywords=[],
+                    expr=None,
+                    expr_func=None,
+                )
+            )
+        else:
+            args.append(
+                Name(
+                    x_typ_sql["type"]
+                    if "type" in x_typ_sql
+                    else typ2column_type[_param["typ"]],
+                    Load(),
+                )
+            )
 
     default = x_typ_sql.get("default", _param.get("default", ast))
     has_default = default is not ast
@@ -87,7 +100,7 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
     elif has_default and default not in none_types:
         nullable = False
 
-    rstripped_dot_doc = _param["doc"].rstrip(".")
+    rstripped_dot_doc = _param.get("doc", "").rstrip(".")
     doc_added_at = None
     if rstripped_dot_doc:
         doc_added_at = len(keywords)
@@ -270,6 +283,12 @@ def ensure_has_primary_key(intermediate_repr):
             params[candidate_pks[0]]["doc"] = (
                 "[PK] {}".format(params["dataset_name"]["doc"])
                 if params[candidate_pks[0]].get("doc")
+                else "[PK]"
+            )
+        elif "id" in intermediate_repr:
+            params["id"]["doc"] = (
+                "[PK] {}".format(params["id"]["doc"])
+                if params["id"].get("doc")
                 else "[PK]"
             )
         else:
