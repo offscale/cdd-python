@@ -1361,6 +1361,7 @@ column_type2typ = {
     "float": "float",
     "int": "int",
     "str": "str",
+    "LargeBinary": "BlobProperty",
 }
 
 typ2column_type = {v: k for k, v in column_type2typ.items()}
@@ -1371,6 +1372,7 @@ typ2column_type.update(
         "float": "Float",
         "int": "Integer",
         "str": "String",
+        "string": "String",
     }
 )
 

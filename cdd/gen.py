@@ -5,6 +5,7 @@ Functionality to generate classes, functions, and/or argparse functions from the
 import ast
 from ast import Import, ImportFrom, Module
 from inspect import getfile
+from json import load
 from os import path
 
 import cdd.emit.json_schema
@@ -148,12 +149,16 @@ def gen(
     module_path, _, symbol_name = input_mapping.rpartition(".")
 
     emit_name = sanitise_emit_name(emit_name)
-    input_mod = get_module(module_path, extra_symbols=extra_symbols)
-    input_mapping = (
-        getattr(input_mod, symbol_name)
-        if hasattr(input_mod, symbol_name)
-        else get_input_mapping_from_path(emit_name, module_path, symbol_name)
-    )
+    if path.isfile(input_mapping) and parse_name == "json_schema":
+        with open(input_mapping, "rt") as f:
+            input_mapping = {symbol_name: load(f)}
+    else:
+        input_mod = get_module(module_path, extra_symbols=extra_symbols)
+        input_mapping = (
+            getattr(input_mod, symbol_name)
+            if hasattr(input_mod, symbol_name)
+            else get_input_mapping_from_path(emit_name, module_path, symbol_name)
+        )
     input_mapping_it = (
         input_mapping.items() if hasattr(input_mapping, "items") else input_mapping
     )

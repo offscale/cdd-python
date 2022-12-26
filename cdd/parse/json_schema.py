@@ -39,6 +39,11 @@ def json_schema(json_schema_dict, parse_original_whitespace=False):
     ir["params"] = OrderedDict(
         map(_json_schema_property_to_param, schema["properties"].items())
     )
+    name = json_schema_dict.get(
+        "name", json_schema_dict.get("id", json_schema_dict.get("title"))
+    )
+    if name is not None:
+        ir["name"] = name
     return ir
 
 
