@@ -84,7 +84,7 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
                 Name(
                     x_typ_sql["type"]
                     if "type" in x_typ_sql
-                    else typ2column_type[_param["typ"]],
+                    else typ2column_type.get(_param["typ"], _param["typ"]),
                     Load(),
                 )
             )

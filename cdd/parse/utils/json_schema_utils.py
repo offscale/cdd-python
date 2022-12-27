@@ -40,10 +40,37 @@ def json_schema_property_to_param(param, required):
             )
             del _param["pattern"]
 
-    if name not in required and _param.get("typ") and "Optional[" not in _param["typ"]:
+    if "anyOf" in _param:
+        _param["typ"] = tuple(
+            map(
+                lambda typ: (
+                    typ["$ref"].rpartition("/")[2].title().replace("_", "")
+                    if "$ref" in typ
+                    else typ["type"]
+                )
+                if isinstance(typ, dict)
+                else typ,
+                _param.pop("anyOf"),
+            )
+        )
+        _param["typ"] = (
+            _param["typ"][0]
+            if len(_param["typ"]) == 1
+            else "Union[{}]".format("|".join(_param["typ"]))
+        )
+    elif "$ref" in _param:
+        _param["typ"] = _param.pop("$ref").rpartition("/")[2].title().replace("_", "")
+
+    if (
+        name not in required
+        and _param.get("typ")
+        and "Optional[" not in _param["typ"]
+        # Could also parse out a `Union` for `None`
+        or _param.pop("nullable", False)
+    ):
         _param["typ"] = "Optional[{}]".format(_param["typ"])
-        if _param.get("default") in none_types:
-            _param["default"] = NoneStr
+    if _param.get("default", False) in none_types:
+        _param["default"] = NoneStr
 
     return name, _param
 

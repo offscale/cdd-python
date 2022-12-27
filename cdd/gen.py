@@ -151,7 +151,11 @@ def gen(
     emit_name = sanitise_emit_name(emit_name)
     if path.isfile(input_mapping) and parse_name == "json_schema":
         with open(input_mapping, "rt") as f:
-            input_mapping = {symbol_name: load(f)}
+            json_contents = load(f)
+        name = path.basename(module_path)
+        if "name" not in json_contents:
+            json_contents["name"] = name.title()
+        input_mapping = {name: json_contents}
     else:
         input_mod = get_module(module_path, extra_symbols=extra_symbols)
         input_mapping = (

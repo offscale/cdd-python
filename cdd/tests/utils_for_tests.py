@@ -3,7 +3,6 @@ Shared utility functions used by many tests
 """
 
 import ast
-import sys
 from ast import Expr
 from copy import deepcopy
 from functools import partial
@@ -14,7 +13,7 @@ from itertools import takewhile
 from operator import add
 from os import path
 from os.path import extsep
-from sys import modules, version_info
+from sys import modules
 from tempfile import NamedTemporaryFile
 from unittest import main
 from unittest.mock import MagicMock, patch
@@ -79,18 +78,18 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
         else (gold, gen_ast)
     )
 
-    if not cmp_ast(_gen_ast, _gold_ast):
-        if version_info > (3, 7):
-            from ast import dump
-
-            print_ast = partial(dump, indent=4)
-        else:
-            from meta.asttools import print_ast
-
-        print("#gen")
-        print(print_ast(_gen_ast), file=sys.stderr)
-        print("#gold")
-        print(print_ast(_gold_ast), file=sys.stderr)
+    # if not cmp_ast(_gen_ast, _gold_ast):
+    #     if version_info > (3, 7):
+    #         from ast import dump
+    #
+    #         print_ast = partial(dump, indent=4)
+    #     else:
+    #         from meta.asttools import print_ast
+    #
+    #     print("#gen")
+    #     print(print_ast(_gen_ast), file=sys.stderr)
+    #     print("#gold")
+    #     print(print_ast(_gold_ast), file=sys.stderr)
 
     if isinstance(_gen_ast, (ast.ClassDef, ast.AsyncFunctionDef, ast.FunctionDef)):
         test_case_instance.assertEqual(
@@ -117,18 +116,6 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
             coded_gold_gen,
         )
     )
-
-    # if not cmp_ast(_gen_ast, _gold_ast):
-    #     if version_info[0] > (3,7):
-    #         from ast import dump
-    #         print_ast = partial(dump, indent=4)
-    #     else:
-    #         from meta.asttools import print_ast
-    #
-    #     print("#gen")
-    #     print_ast(_gen_ast)
-    #     print("#gold")
-    #     print_ast(_gold_ast)
 
     test_case_instance.assertTrue(cmp_ast(_gen_ast, _gold_ast))
 
