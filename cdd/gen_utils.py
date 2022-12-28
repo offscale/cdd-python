@@ -19,7 +19,7 @@ from itertools import chain
 from operator import itemgetter
 
 import cdd.parse.utils.parser_utils
-from cdd.ast_utils import maybe_type_comment, set_value
+from cdd.ast_utils import infer_imports, maybe_type_comment, set_value
 from cdd.parse.utils.parser_utils import infer
 from cdd.pure_utils import find_module_filepath, rpartial
 from cdd.source_transformer import to_code
@@ -91,6 +91,7 @@ def gen_file(
     output_filename,
     prepend,
     emit_call,
+    emit_and_infer_imports,
     emit_default_doc,
     decorator_list,
     no_word_wrap,
@@ -122,6 +123,9 @@ def gen_file(
     :param emit_call: Whether to emit a `__call__` method from the `_internal` IR subdict
     :type emit_call: ```bool```
 
+    :param emit_and_infer_imports: Whether to emit and infer imports at the top of the generated code
+    :type emit_and_infer_imports: ```bool```
+
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
 
@@ -135,43 +139,48 @@ def gen_file(
     :type imports: ```str```
     """
     global__all__ = []
+    functions_and_classes = tuple(
+        print("\nGenerating: {name!r}".format(name=name))
+        or global__all__.append(name_tpl.format(name=name))
+        or (
+            getattr(import_module(".".join(("cdd", "emit", emit_name))), emit_name)(
+                (
+                    (
+                        lambda parser_name: getattr(
+                            import_module(".".join(("cdd", "parse", parser_name))),
+                            parser_name,
+                        )
+                    )(infer(obj) if parse_name in (None, "infer") else parse_name)
+                )(obj),
+                emit_default_doc=emit_default_doc,
+                word_wrap=no_word_wrap is None,
+                **(
+                    lambda _name: {
+                        "argparse_function": {"function_name": _name},
+                        "class_": {
+                            "class_name": _name,
+                            "decorator_list": decorator_list,
+                            "emit_call": emit_call,
+                        },
+                        "function": {
+                            "function_name": _name,
+                        },
+                        "sqlalchemy": {"table_name": _name},
+                        "sqlalchemy_table": {"table_name": _name},
+                    }[emit_name]
+                )(name_tpl.format(name=name)),
+            )
+        )
+        for name, obj in input_mapping_it
+    )
+    if emit_and_infer_imports:
+        imports = (imports or "") + " ".join(
+            map(to_code, map(infer_imports, functions_and_classes))
+        )
     content = "{prepend}{imports}\n{functions_and_classes}\n{__all__}".format(
         prepend="" if prepend is None else prepend,
         imports=imports,  # TODO: Optimize imports programmatically (akin to `autoflake --remove-all-unused-imports`)
-        functions_and_classes="\n\n".join(
-            print("\nGenerating: {name!r}".format(name=name))
-            or global__all__.append(name_tpl.format(name=name))
-            or to_code(
-                getattr(import_module(".".join(("cdd", "emit", emit_name))), emit_name)(
-                    (
-                        (
-                            lambda parser_name: getattr(
-                                import_module(".".join(("cdd", "parse", parser_name))),
-                                parser_name,
-                            )
-                        )(infer(obj) if parse_name in (None, "infer") else parse_name)
-                    )(obj),
-                    emit_default_doc=emit_default_doc,
-                    word_wrap=no_word_wrap is None,
-                    **(
-                        lambda _name: {
-                            "argparse_function": {"function_name": _name},
-                            "class_": {
-                                "class_name": _name,
-                                "decorator_list": decorator_list,
-                                "emit_call": emit_call,
-                            },
-                            "function": {
-                                "function_name": _name,
-                            },
-                            "sqlalchemy": {"table_name": _name},
-                            "sqlalchemy_table": {"table_name": _name},
-                        }[emit_name]
-                    )(name_tpl.format(name=name)),
-                )
-            )
-            for name, obj in input_mapping_it
-        ),
+        functions_and_classes="\n\n".join(map(to_code, functions_and_classes)),
         __all__=to_code(
             Assign(
                 targets=[Name("__all__", Store())],

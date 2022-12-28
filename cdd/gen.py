@@ -25,6 +25,7 @@ def gen(
     imports_from_file=None,
     emit_call=False,
     emit_default_doc=True,
+    emit_and_infer_imports=False,
     decorator_list=None,
     no_word_wrap=None,
 ):
@@ -57,6 +58,9 @@ def gen(
 
     :param emit_call: Whether to emit a `__call__` method from the `_internal` IR subdict
     :type emit_call: ```bool```
+
+    :param emit_and_infer_imports: Whether to emit and infer imports at the top of the generated code
+    :type emit_and_infer_imports: ```bool```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
@@ -178,6 +182,7 @@ def gen(
             output_filename,
             prepend,
             emit_call,
+            emit_and_infer_imports,
             emit_default_doc,
             decorator_list,
             no_word_wrap,

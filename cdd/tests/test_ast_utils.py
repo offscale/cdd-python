@@ -2,7 +2,7 @@
 
 import ast
 import pickle
-from ast import (alias,
+from ast import (
     AnnAssign,
     Assign,
     Attribute,
@@ -25,6 +25,7 @@ from ast import (alias,
     Store,
     Str,
     Tuple,
+    alias,
     arg,
     arguments,
     keyword,
