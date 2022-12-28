@@ -2,7 +2,7 @@
 
 import ast
 import pickle
-from ast import (
+from ast import (alias,
     AnnAssign,
     Assign,
     Attribute,
@@ -51,6 +51,7 @@ from cdd.ast_utils import (
     get_at_root,
     get_function_type,
     get_value,
+    infer_imports,
     infer_type_and_default,
     maybe_type_comment,
     merge_assignment_lists,
@@ -76,6 +77,7 @@ from cdd.tests.mocks.methods import (
     class_with_optional_arg_method_ast,
     function_adder_str,
 )
+from cdd.tests.mocks.sqlalchemy import config_decl_base_ast
 from cdd.tests.utils_for_tests import inspectable_compile, run_ast_test, unittest_main
 
 
@@ -320,6 +322,34 @@ class TestAstUtils(TestCase):
                     alias=None,
                 ),
             )
+        )
+
+    def test_infer_imports_with_sqlalchemy(self) -> None:
+        """
+        Test that `infer_imports` can infer imports for SQLalchemy
+        """
+        imports = infer_imports(
+            Module(body=[config_decl_base_ast], type_ignores=[], stmt=None)
+        )
+        self.assertEqual(len(imports), 1)
+        run_ast_test(
+            self,
+            imports[0],
+            ImportFrom(
+                module="sqlalchemy",
+                names=list(
+                    map(
+                        lambda names: alias(
+                            names,
+                            None,
+                            identifier=None,
+                            identifier_name=None,
+                        ),
+                        ("Boolean", "Column", "JSON", "String"),
+                    )
+                ),
+                level=0,
+            ),
         )
 
     def test_node_to_dict(self) -> None:
