@@ -1682,6 +1682,90 @@ def merge_modules(mod0, mod1, remove_imports_from_second=True):
     return new_mod
 
 
+def infer_imports(module):
+    """
+    Infer imports
+
+    :param module: Module
+    :type module: ```Module```
+
+    :return: Iterable of imports
+    :rtype: ```List[Union[Import, ImportFrom]]```
+    """
+    # SQLalchemy
+    sqlalchemy_classes = filter(
+        lambda cls_def: any(
+            filter(
+                lambda base: isinstance(base, Name) and base.id == "Base", cls_def.bases
+            )
+        ),
+        filter(
+            rpartial(isinstance, ClassDef),
+            module.body,
+        ),
+    )
+
+    def infer_imports_from_sqlalchemy(sqlalchemy_class_def):
+        """
+        Infer imports from SQLalchemy class
+
+        :param sqlalchemy_class_def: SQLalchemy class
+        :type sqlalchemy_class_def: ```ClassDef```
+
+        :return: chain of the imports
+        :rtype: ```chain```
+        """
+        return chain.from_iterable(
+            map(
+                lambda assign: chain.from_iterable(
+                    (
+                        (assign.value.func.id,),
+                        map(
+                            lambda node: node.id if hasattr(node, "id") else None,
+                            assign.value.args,
+                        ),
+                    )
+                ),
+                filter(
+                    lambda assign: isinstance(assign.value, Call)
+                    and isinstance(assign.value.func, Name),
+                    filter(rpartial(isinstance, Assign), sqlalchemy_class_def.body),
+                ),
+            )
+        )
+
+    # reduce(, sqlalchemy_classes, set)
+    return [
+        ImportFrom(
+            module="sqlalchemy",
+            names=list(
+                map(
+                    lambda names: alias(
+                        names,
+                        None,
+                        identifier=None,
+                        identifier_name=None,
+                    ),
+                    sorted(
+                        frozenset(
+                            filter(
+                                None,
+                                chain.from_iterable(
+                                    map(
+                                        infer_imports_from_sqlalchemy,
+                                        sqlalchemy_classes,
+                                    )
+                                ),
+                            )
+                        )
+                    ),
+                )
+            ),
+            level=0,
+        )
+    ] if sqlalchemy_classes else []
+
+
 NoneStr = "```(None)```" if PY_GTE_3_9 else "```None```"
 
 __all__ = [
@@ -1710,6 +1794,7 @@ __all__ = [
     "is_argparse_add_argument",
     "is_argparse_description",
     "it2literal",
+    "json_type2typ",
     "maybe_type_comment",
     "merge_assignment_lists",
     "merge_modules",
