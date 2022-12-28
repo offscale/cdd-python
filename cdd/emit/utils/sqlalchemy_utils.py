@@ -3,7 +3,7 @@ Utility functions for `cdd.emit.sqlalchemy`
 """
 
 import ast
-from ast import AST, Attribute, Call, Expr, FunctionDef, Load, Name, Return, arguments
+from ast import AST, Attribute, BinOp, Call, Expr, FunctionDef, Load, Name, Return, arguments
 from collections import OrderedDict, deque
 from operator import attrgetter, methodcaller
 from platform import system
@@ -16,6 +16,7 @@ from cdd.ast_utils import (
     typ2column_type,
 )
 from cdd.pure_utils import none_types, rpartial, tab
+from cdd.source_transformer import to_code
 from cdd.tests.mocks.docstrings import docstring_repr_google_str, docstring_repr_str
 
 
@@ -77,6 +78,26 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
                     keywords=[],
                     expr=None,
                     expr_func=None,
+                )
+            )
+        elif _param.get("typ").startswith("Union["):
+            # Hack to remove the union type. Enum parse seems to be incorrect?
+            union_typ = ast.parse(_param["typ"]).body[0]
+            assert isinstance(
+                union_typ.value.slice, BinOp
+            ), "Expected `BinOp` got `{type_name}`".format(
+                type_name=type(union_typ.value.slice).__name__
+            )
+            left, right = map(
+                rpartial(str.rstrip, "\n"),
+                map(to_code, (union_typ.value.slice.left, union_typ.value.slice.right)),
+            )
+            args.append(
+                Name(
+                    typ2column_type.get(right, right)
+                    if left in typ2column_type
+                    else typ2column_type.get(left, left),
+                    Load(),
                 )
             )
         else:

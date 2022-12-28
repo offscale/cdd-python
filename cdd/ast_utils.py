@@ -1692,6 +1692,11 @@ def infer_imports(module):
     :return: Iterable of imports
     :rtype: ```List[Union[Import, ImportFrom]]```
     """
+    if isinstance(module, ClassDef):
+        module = Module(body=[module], type_ignores=[], stmt=None)
+    assert isinstance(module, Module), "Expected `Module` got `{type_name}`".format(
+        type_name=type(module).__name__
+    )
     # SQLalchemy
     sqlalchemy_classes = filter(
         lambda cls_def: any(
@@ -1715,55 +1720,87 @@ def infer_imports(module):
         :return: chain of the imports
         :rtype: ```chain```
         """
-        return chain.from_iterable(
-            map(
-                lambda assign: chain.from_iterable(
-                    (
-                        (assign.value.func.id,),
-                        map(
-                            lambda node: node.id if hasattr(node, "id") else None,
-                            assign.value.args,
-                        ),
-                    )
-                ),
-                filter(
-                    lambda assign: isinstance(assign.value, Call)
-                    and isinstance(assign.value.func, Name),
-                    filter(rpartial(isinstance, Assign), sqlalchemy_class_def.body),
-                ),
+        # https://docs.sqlalchemy.org/en/14/core/type_basics.html#generic-camelcase-types
+        valid_types = frozenset(
+            (
+                "BigInteger",
+                "Boolean",
+                "Date",
+                "DateTime",
+                "Enum",
+                "Float",
+                "Integer",
+                "Interval",
+                "LargeBinary",
+                "MatchType",
+                "Numeric",
+                "PickleType",
+                "SchemaType",
+                "SmallInteger",
+                "String",
+                "Text",
+                "Time",
+                "Unicode",
+                "UnicodeText",
+                "Column",
             )
         )
-
-    # reduce(, sqlalchemy_classes, set)
-    return [
-        ImportFrom(
-            module="sqlalchemy",
-            names=list(
+        return filter(
+            valid_types.__contains__,
+            chain.from_iterable(
                 map(
-                    lambda names: alias(
-                        names,
-                        None,
-                        identifier=None,
-                        identifier_name=None,
-                    ),
-                    sorted(
-                        frozenset(
-                            filter(
-                                None,
-                                chain.from_iterable(
-                                    map(
-                                        infer_imports_from_sqlalchemy,
-                                        sqlalchemy_classes,
-                                    )
-                                ),
-                            )
+                    lambda assign: chain.from_iterable(
+                        (
+                            (assign.value.func.id,),
+                            map(
+                                lambda node: node.id if hasattr(node, "id") else None,
+                                assign.value.args,
+                            ),
                         )
+                    ),
+                    filter(
+                        lambda assign: isinstance(assign.value, Call)
+                        and isinstance(assign.value.func, Name),
+                        filter(rpartial(isinstance, Assign), sqlalchemy_class_def.body),
                     ),
                 )
             ),
-            level=0,
         )
-    ] if sqlalchemy_classes else []
+
+    # reduce(, sqlalchemy_classes, set)
+    return (
+        [
+            ImportFrom(
+                module="sqlalchemy",
+                names=list(
+                    map(
+                        lambda names: alias(
+                            names,
+                            None,
+                            identifier=None,
+                            identifier_name=None,
+                        ),
+                        sorted(
+                            frozenset(
+                                filter(
+                                    None,
+                                    chain.from_iterable(
+                                        map(
+                                            infer_imports_from_sqlalchemy,
+                                            sqlalchemy_classes,
+                                        )
+                                    ),
+                                )
+                            )
+                        ),
+                    )
+                ),
+                level=0,
+            )
+        ]
+        if sqlalchemy_classes
+        else []
+    )
 
 
 NoneStr = "```(None)```" if PY_GTE_3_9 else "```None```"
@@ -1791,6 +1828,7 @@ __all__ = [
     "get_doc_str",
     "get_function_type",
     "get_value",
+    "infer_imports",
     "is_argparse_add_argument",
     "is_argparse_description",
     "it2literal",

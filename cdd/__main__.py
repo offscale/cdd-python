@@ -247,6 +247,11 @@ def _build_parser():
         ),
     )
     gen_parser.add_argument(
+        "--emit-and-infer-imports",
+        action="store_true",
+        help="Whether to emit and infer imports at the top of the generated code",
+    )
+    gen_parser.add_argument(
         "--no-word-wrap",
         help="Whether word-wrap is disabled (on emission). None enables word-wrap. Defaults to None.",
         action="store_true",
