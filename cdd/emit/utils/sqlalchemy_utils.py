@@ -3,7 +3,18 @@ Utility functions for `cdd.emit.sqlalchemy`
 """
 
 import ast
-from ast import AST, Attribute, BinOp, Call, Expr, FunctionDef, Load, Name, Return, arguments
+from ast import (
+    AST,
+    Attribute,
+    BinOp,
+    Call,
+    Expr,
+    FunctionDef,
+    Load,
+    Name,
+    Return,
+    arguments,
+)
 from collections import OrderedDict, deque
 from operator import attrgetter, methodcaller
 from platform import system
@@ -46,69 +57,9 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
     x_typ_sql = _param.get("x_typ", {}).get("sql", {})
 
     if "typ" in _param:
-        if _param["typ"].startswith("Optional["):
-            _param["typ"] = _param["typ"][len("Optional[") : -1]
-            nullable = True
-
-        if "Literal[" in _param["typ"]:
-            parsed_typ = get_value(ast.parse(_param["typ"]).body[0])
-            assert (
-                parsed_typ.value.id == "Literal"
-            ), "Only basic Literal support is implemented, not {}".format(
-                parsed_typ.value.id
-            )
-            args.append(
-                Call(
-                    func=Name("Enum", Load()),
-                    args=get_value(parsed_typ.slice).elts,
-                    keywords=[
-                        ast.keyword(arg="name", value=set_value(name), identifier=None)
-                    ],
-                    expr=None,
-                    expr_func=None,
-                )
-            )
-        elif "items" in _param and _param["items"]["type"] in typ2column_type:
-            args.append(
-                Call(
-                    func=Name(id="ARRAY", ctx=Load()),
-                    args=[
-                        Name(id=typ2column_type[_param["items"]["type"]], ctx=Load())
-                    ],
-                    keywords=[],
-                    expr=None,
-                    expr_func=None,
-                )
-            )
-        elif _param.get("typ").startswith("Union["):
-            # Hack to remove the union type. Enum parse seems to be incorrect?
-            union_typ = ast.parse(_param["typ"]).body[0]
-            assert isinstance(
-                union_typ.value.slice, BinOp
-            ), "Expected `BinOp` got `{type_name}`".format(
-                type_name=type(union_typ.value.slice).__name__
-            )
-            left, right = map(
-                rpartial(str.rstrip, "\n"),
-                map(to_code, (union_typ.value.slice.left, union_typ.value.slice.right)),
-            )
-            args.append(
-                Name(
-                    typ2column_type.get(right, right)
-                    if left in typ2column_type
-                    else typ2column_type.get(left, left),
-                    Load(),
-                )
-            )
-        else:
-            args.append(
-                Name(
-                    x_typ_sql["type"]
-                    if "type" in x_typ_sql
-                    else typ2column_type.get(_param["typ"], _param["typ"]),
-                    Load(),
-                )
-            )
+        nullable = update_args_infer_typ_sqlalchemy(
+            _param, args, name, nullable, x_typ_sql
+        )
 
     default = x_typ_sql.get("default", _param.get("default", ast))
     has_default = default is not ast
@@ -167,6 +118,88 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
         expr=None,
         expr_func=None,
     )
+
+
+def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
+    """
+    :param _param: Param with typ
+    :type _param: ```dict```
+
+    :param args:
+    :type args: ```List```
+
+    :param name:
+    :type name: ```str```
+
+    :param nullable:
+    :type nullable: ```Optional[bool]```
+
+    :param x_typ_sql:
+    :type x_typ_sql: ```dict```
+
+    :rtype: ```bool```
+    """
+    if _param["typ"].startswith("Optional["):
+        _param["typ"] = _param["typ"][len("Optional[") : -1]
+        nullable = True
+    if "Literal[" in _param["typ"]:
+        parsed_typ = get_value(ast.parse(_param["typ"]).body[0])
+        assert (
+            parsed_typ.value.id == "Literal"
+        ), "Only basic Literal support is implemented, not {}".format(
+            parsed_typ.value.id
+        )
+        args.append(
+            Call(
+                func=Name("Enum", Load()),
+                args=get_value(parsed_typ.slice).elts,
+                keywords=[
+                    ast.keyword(arg="name", value=set_value(name), identifier=None)
+                ],
+                expr=None,
+                expr_func=None,
+            )
+        )
+    elif "items" in _param and _param["items"].get("type", False) in typ2column_type:
+        args.append(
+            Call(
+                func=Name(id="ARRAY", ctx=Load()),
+                args=[Name(id=typ2column_type[_param["items"]["type"]], ctx=Load())],
+                keywords=[],
+                expr=None,
+                expr_func=None,
+            )
+        )
+    elif _param.get("typ").startswith("Union["):
+        # Hack to remove the union type. Enum parse seems to be incorrect?
+        union_typ = ast.parse(_param["typ"]).body[0]
+        assert isinstance(
+            union_typ.value.slice, BinOp
+        ), "Expected `BinOp` got `{type_name}`".format(
+            type_name=type(union_typ.value.slice).__name__
+        )
+        left, right = map(
+            rpartial(str.rstrip, "\n"),
+            map(to_code, (union_typ.value.slice.left, union_typ.value.slice.right)),
+        )
+        args.append(
+            Name(
+                typ2column_type.get(right, right)
+                if left in typ2column_type
+                else typ2column_type.get(left, left),
+                Load(),
+            )
+        )
+    else:
+        args.append(
+            Name(
+                x_typ_sql["type"]
+                if "type" in x_typ_sql
+                else typ2column_type.get(_param["typ"], _param["typ"]),
+                Load(),
+            )
+        )
+    return nullable
 
 
 def generate_repr_method(params, cls_name, docstring_format):
@@ -302,7 +335,7 @@ def ensure_has_primary_key(intermediate_repr):
         )
         if len(candidate_pks) == 1:
             params[candidate_pks[0]]["doc"] = (
-                "[PK] {}".format(params["dataset_name"]["doc"])
+                "[PK] {}".format(params[candidate_pks[0]]["doc"])
                 if params[candidate_pks[0]].get("doc")
                 else "[PK]"
             )
