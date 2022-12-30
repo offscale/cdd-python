@@ -32,12 +32,14 @@ def json_schema(json_schema_dict, parse_original_whitespace=False):
     )
 
     ir = docstring(
-        json_schema_dict["description"],
+        json_schema_dict.get("description", ""),
         emit_default_doc=False,
         parse_original_whitespace=parse_original_whitespace,
     )
-    ir["params"] = OrderedDict(
-        map(_json_schema_property_to_param, schema["properties"].items())
+    ir["params"] = (
+        OrderedDict(map(_json_schema_property_to_param, schema["properties"].items()))
+        if "properties" in schema
+        else OrderedDict()
     )
     name = json_schema_dict.get(
         "name", json_schema_dict.get("id", json_schema_dict.get("title"))
