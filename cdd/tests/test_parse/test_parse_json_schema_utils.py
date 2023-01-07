@@ -1,6 +1,7 @@
 """
 Tests for the Intermediate Representation produced by the JSON schema parser
 """
+
 from copy import deepcopy
 from unittest import TestCase
 

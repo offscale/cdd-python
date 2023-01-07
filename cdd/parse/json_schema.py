@@ -36,16 +36,21 @@ def json_schema(json_schema_dict, parse_original_whitespace=False):
         emit_default_doc=False,
         parse_original_whitespace=parse_original_whitespace,
     )
-    ir["params"] = (
-        OrderedDict(map(_json_schema_property_to_param, schema["properties"].items()))
-        if "properties" in schema
-        else OrderedDict()
+    ir.update(
+        {
+            "params": (
+                OrderedDict(
+                    map(_json_schema_property_to_param, schema["properties"].items())
+                )
+                if "properties" in schema
+                else OrderedDict()
+            ),
+            "name": json_schema_dict.get(
+                "name",
+                json_schema_dict.get("id", json_schema_dict.get("title", ir["name"])),
+            ),
+        }
     )
-    name = json_schema_dict.get(
-        "name", json_schema_dict.get("id", json_schema_dict.get("title"))
-    )
-    if name is not None:
-        ir["name"] = name
     return ir
 
 

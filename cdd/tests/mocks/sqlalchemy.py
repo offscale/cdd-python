@@ -10,6 +10,7 @@ from ast import (
     Expr,
     FunctionDef,
     Load,
+    Module,
     Name,
     Return,
     Store,
@@ -225,6 +226,28 @@ class Config(Base):
 """,
 )
 
+dataset_primary_key_column_assign = Assign(
+    targets=[Name("dataset_name", Store())],
+    value=Call(
+        func=Name("Column", Load()),
+        args=[Name("String", Load())],
+        keywords=[
+            keyword(
+                arg="comment",
+                value=set_value("name of dataset"),
+                identifier=None,
+            ),
+            keyword(arg="default", value=set_value("mnist"), identifier=None),
+            keyword(arg="primary_key", value=set_value(True), identifier=None),
+        ],
+        expr=None,
+        expr_func=None,
+    ),
+    expr=None,
+    lineno=None,
+    **maybe_type_comment,
+)
+
 config_decl_base_ast = ClassDef(
     name="Config",
     bases=[Name("Base", Load())],
@@ -238,27 +261,7 @@ config_decl_base_ast = ClassDef(
             lineno=None,
             **maybe_type_comment,
         ),
-        Assign(
-            targets=[Name("dataset_name", Store())],
-            value=Call(
-                func=Name("Column", Load()),
-                args=[Name("String", Load())],
-                keywords=[
-                    keyword(
-                        arg="comment",
-                        value=set_value("name of dataset"),
-                        identifier=None,
-                    ),
-                    keyword(arg="default", value=set_value("mnist"), identifier=None),
-                    keyword(arg="primary_key", value=set_value(True), identifier=None),
-                ],
-                expr=None,
-                expr_func=None,
-            ),
-            expr=None,
-            lineno=None,
-            **maybe_type_comment,
-        ),
+        dataset_primary_key_column_assign,
         Assign(
             targets=[Name("tfds_dir", Store())],
             value=Call(
@@ -469,9 +472,103 @@ empty_with_inferred_pk = Assign(
     **maybe_type_comment,
 )
 
+foreign_sqlalchemy_tbls_str = """node = Table(
+    "node",
+    metadata_obj,
+    Column("node_id", Integer, primary_key=True),
+    Column("primary_element", Integer, ForeignKey("element.element_id")),
+)
+
+element = Table(
+    "element",
+    metadata_obj,
+    Column("element_id", Integer, primary_key=True),
+    Column("parent_node_id", Integer)
+)"""
+
+node_fk_call = Call(
+    func=Name(id="Column", ctx=Load()),
+    args=[
+        set_value("primary_element"),
+        Name(id="Integer", ctx=Load()),
+        Call(
+            func=Name(id="ForeignKey", ctx=Load()),
+            args=[set_value("element.element_id")],
+            keywords=[],
+        ),
+    ],
+    keywords=[],
+)
+node_fk_name_param = "primary_element", {"doc": "[FK]", "typ": "int"}
+
+node_pk_tbl_call = Call(
+    func=Name(id="Table", ctx=Load()),
+    args=[
+        set_value("node"),
+        Name(id="metadata_obj", ctx=Load()),
+        Call(
+            func=Name(id="Column", ctx=Load()),
+            args=[set_value("node_id"), Name(id="Integer", ctx=Load())],
+            keywords=[keyword(arg="primary_key", value=set_value(True))],
+        ),
+        node_fk_call,
+    ],
+    keywords=[],
+)
+
+node_pk_tbl_ass = Assign(
+    targets=[Name(id="node", ctx=Store())],
+    value=node_pk_tbl_call,
+    expr=None,
+    lineno=None,
+    **maybe_type_comment,
+)
+
+element_pk_fk_tbl = Call(
+    func=Name(id="Table", ctx=Load()),
+    args=[
+        set_value("element"),
+        Name(id="metadata_obj", ctx=Load()),
+        Call(
+            func=Name(id="Column", ctx=Load()),
+            args=[set_value("element_id"), Name(id="Integer", ctx=Load())],
+            keywords=[keyword(arg="primary_key", value=set_value(True))],
+        ),
+        Call(
+            func=Name(id="Column", ctx=Load()),
+            args=[
+                set_value("parent_node_id"),
+                Name(id="Integer", ctx=Load()),
+            ],
+            keywords=[],
+        ),
+    ],
+    keywords=[],
+)
+
+element_pk_fk_ass = Assign(
+    targets=[Name(id="element", ctx=Store())],
+    value=element_pk_fk_tbl,
+    expr=None,
+    lineno=None,
+    **maybe_type_comment,
+)
+
+foreign_sqlalchemy_tbls_mod = Module(
+    body=[node_pk_tbl_ass, element_pk_fk_ass],
+    type_ignores=[],
+)
+
 __all__ = [
-    "config_tbl_with_comments_str",
     "config_decl_base_ast",
     "config_decl_base_str",
+    "config_tbl_with_comments_ast",
+    "config_tbl_with_comments_str",
+    "dataset_primary_key_column_assign",
     "empty_with_inferred_pk",
+    "foreign_sqlalchemy_tbls_mod",
+    "foreign_sqlalchemy_tbls_str",
+    "node_fk_call",
+    "node_fk_name_param",
+    "node_pk_tbl_ass",
 ]
