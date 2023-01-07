@@ -53,7 +53,9 @@ class TestParseJsonSchemaUtils(TestCase):
         res = cdd.parse.utils.json_schema_utils.json_schema_property_to_param(mock, {})
 
         self.assertEqual(res[0], "tax")
-        self.assertDictEqual(res[1], {"typ": "Optional[CustomerTax]"})
+        self.assertDictEqual(
+            res[1], {"doc": "[FK(CustomerTax)]", "typ": "Optional[CustomerTax]"}
+        )
 
     def test_json_schema_property_to_param_default_none(self) -> None:
         """

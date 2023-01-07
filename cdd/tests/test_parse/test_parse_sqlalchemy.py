@@ -87,7 +87,7 @@ class TestParseSqlAlchemy(TestCase):
             foreign_sqlalchemy_tbls_mod,
             gold=ast.parse(foreign_sqlalchemy_tbls_str),
         )
-        ir = cdd.parse.sqlalchemy.sqlalchemy_table(node_pk_tbl_ass)
+        ir = cdd.parse.sqlalchemy.sqlalchemy_table(deepcopy(node_pk_tbl_ass))
         self.assertDictEqual(ir, intermediate_repr_node_pk)
 
 
