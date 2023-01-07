@@ -1182,6 +1182,19 @@ intermediate_repr_no_default_doc_or_prop = remove_defaults_from_intermediate_rep
     deepcopy(intermediate_repr), emit_default_prop=False
 )
 
+intermediate_repr_node_pk = {
+    "doc": "",
+    "name": "node",
+    "params": OrderedDict(
+        (
+            ("node_id", {"doc": "[PK]", "typ": "int"}),
+            ("primary_element", {"doc": "[FK]", "typ": "int"}),
+        )
+    ),
+    "returns": None,
+    "type": None,
+}
+
 __all__ = [
     "class_google_tf_tensorboard_ir",
     "class_torch_nn_l1loss_ir",
@@ -1202,6 +1215,7 @@ __all__ = [
     "intermediate_repr_no_default_sql_doc",
     "intermediate_repr_no_default_sql_with_nones_doc",
     "intermediate_repr_no_default_with_nones_doc",
+    "intermediate_repr_node_pk",
     "intermediate_repr_only_return_type",
     "method_complex_args_variety_ir",
     "pydantic_ir",

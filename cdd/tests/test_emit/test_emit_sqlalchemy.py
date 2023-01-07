@@ -1,6 +1,7 @@
 """
 Tests for `cdd.emit.sqlalchemy`
 """
+
 import os
 from copy import deepcopy
 from platform import system
