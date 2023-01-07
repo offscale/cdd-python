@@ -9,36 +9,13 @@ from unittest import TestCase
 from cdd.ast_utils import get_value, set_value
 from cdd.emit.utils.argparse_function_utils import parse_out_param
 from cdd.emit.utils.docstring_utils import interpolate_defaults
-from cdd.emit.utils.sqlalchemy_utils import param_to_sqlalchemy_column_call
 from cdd.tests.mocks.argparse import argparse_add_argument_ast, argparse_func_ast
 from cdd.tests.mocks.ir import intermediate_repr
-from cdd.tests.utils_for_tests import run_ast_test, unittest_main
+from cdd.tests.utils_for_tests import unittest_main
 
 
 class TestEmitterUtils(TestCase):
     """Test class for emitter_utils"""
-
-    def test_param_to_sqlalchemy_column_call_when_sql_constraints(self) -> None:
-        """Tests that with SQL constraints the SQLalchemy column is correctly generated"""
-        run_ast_test(
-            self,
-            param_to_sqlalchemy_column_call(
-                (
-                    "foo",
-                    {
-                        "doc": "",
-                        "typ": "str",
-                        "x_typ": {"sql": {"constraints": {"index": True}}},
-                    },
-                ),
-                include_name=False,
-            ),
-            gold=Call(
-                func=Name(id="Column", ctx=Load()),
-                args=[Name(id="String", ctx=Load())],
-                keywords=[keyword(arg="index", value=set_value(True))],
-            ),
-        )
 
     def test_parse_out_param(self) -> None:
         """Test that parse_out_param parses out the right dict"""

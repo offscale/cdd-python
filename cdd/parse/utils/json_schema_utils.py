@@ -2,6 +2,8 @@
 Utility functions for `cdd.parse.json_schema`
 """
 
+from itertools import filterfalse
+
 from cdd.ast_utils import NoneStr, json_type2typ
 from cdd.pure_utils import none_types
 
@@ -40,11 +42,28 @@ def json_schema_property_to_param(param, required):
             )
             del _param["pattern"]
 
+    def transform_ref_fk_set(ref, foreign_key):
+        """
+        Transform $ref to upper camel case and add to the foreign key
+
+        :param ref: JSON ref
+        :type ref: ```str```
+
+        :param foreign_key: Foreign key structure (pass by reference)
+        :type foreign_key: ```dict```
+
+        :rtype: ```str```
+        """
+        entity = "".join(filterfalse(str.isspace, ref.rpartition("/")[2]))
+        foreign_key["fk"] = entity
+        return entity
+
+    fk = {"fk": None}
     if "anyOf" in _param:
         _param["typ"] = tuple(
             map(
                 lambda typ: (
-                    typ["$ref"].rpartition("/")[2].title().replace("_", "")
+                    transform_ref_fk_set(typ["$ref"], fk)
                     if "$ref" in typ
                     else typ["type"]
                 )
@@ -59,7 +78,15 @@ def json_schema_property_to_param(param, required):
             else "Union[{}]".format("|".join(_param["typ"]))
         )
     elif "$ref" in _param:
-        _param["typ"] = _param.pop("$ref").rpartition("/")[2].title().replace("_", "")
+        _param["typ"] = transform_ref_fk_set(_param.pop("$ref"), fk)
+
+    if fk["fk"] is not None:
+        fk_prefix = "[FK({})]".format(fk.pop("fk"))
+        _param["doc"] = (
+            "[{}] {}".format(fk_prefix, _param["doc"])
+            if _param.get("doc")
+            else fk_prefix
+        )
 
     if (
         name not in required

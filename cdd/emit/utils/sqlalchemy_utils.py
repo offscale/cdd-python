@@ -64,10 +64,22 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
     default = x_typ_sql.get("default", _param.get("default", ast))
     has_default = default is not ast
     pk = _param.get("doc", "").startswith("[PK]")
+    fk = _param.get("doc", "").startswith("[FK")
     if pk:
         _param["doc"] = _param["doc"][4:].lstrip()
         keywords.append(
             ast.keyword(arg="primary_key", value=set_value(True), identifier=None),
+        )
+    elif fk:
+        end = _param["doc"].find("]") + 1
+        fk_val = _param["doc"][len("[FK(") : end - len(")]")]
+        _param["doc"] = _param["doc"][end:].lstrip()
+        args.append(
+            Call(
+                func=Name(id="ForeignKey", ctx=Load()),
+                args=[set_value(fk_val)],
+                keywords=[],
+            )
         )
     elif has_default and default not in none_types:
         nullable = False

@@ -1,19 +1,25 @@
 """
 Tests for `cdd.emit.sqlalchemy.utils.sqlalchemy_utils`
 """
-
+from _ast import keyword
 from ast import Call, Load, Name
 from collections import OrderedDict
 from copy import deepcopy
 from unittest import TestCase
 
-from cdd.emit.utils.sqlalchemy_utils import ensure_has_primary_key
+from cdd.ast_utils import set_value
+from cdd.emit.utils.sqlalchemy_utils import (
+    ensure_has_primary_key,
+    param_to_sqlalchemy_column_call,
+)
 from cdd.tests.mocks.ir import (
     intermediate_repr_empty,
     intermediate_repr_no_default_doc,
     intermediate_repr_no_default_sql_doc,
+    intermediate_repr_node_pk,
 )
-from cdd.tests.utils_for_tests import unittest_main
+from cdd.tests.mocks.sqlalchemy import node_fk_call
+from cdd.tests.utils_for_tests import run_ast_test, unittest_main
 
 
 class TestEmitSqlAlchemyUtils(TestCase):
@@ -57,7 +63,43 @@ class TestEmitSqlAlchemyUtils(TestCase):
         ]["id"]["x_typ"]["sql"]["constraints"]["server_default"]
         self.assertDictEqual(res, ir)
 
-    maxDiff = None
+    def test_param_to_sqlalchemy_column_call_when_sql_constraints(self) -> None:
+        """Tests that with SQL constraints the SQLalchemy column is correctly generated"""
+        run_ast_test(
+            self,
+            param_to_sqlalchemy_column_call(
+                (
+                    "foo",
+                    {
+                        "doc": "",
+                        "typ": "str",
+                        "x_typ": {"sql": {"constraints": {"index": True}}},
+                    },
+                ),
+                include_name=False,
+            ),
+            gold=Call(
+                func=Name(id="Column", ctx=Load()),
+                args=[Name(id="String", ctx=Load())],
+                keywords=[keyword(arg="index", value=set_value(True))],
+            ),
+        )
+
+    def test_param_to_sqlalchemy_column_call_when_foreign_key(self) -> None:
+        """Tests that SQLalchemy column with simple foreign key is correctly generated"""
+        run_ast_test(
+            self,
+            param_to_sqlalchemy_column_call(
+                (
+                    lambda _name: (
+                        _name,
+                        deepcopy(intermediate_repr_node_pk["params"][_name]),
+                    )
+                )("primary_element"),
+                include_name=True,
+            ),
+            gold=node_fk_call,
+        )
 
 
 unittest_main()

@@ -9,12 +9,9 @@ from cdd.parse.utils.sqlalchemy_utils import (
     column_call_name_manipulator,
     column_call_to_param,
 )
+from cdd.tests.mocks.ir import intermediate_repr_node_pk
 from cdd.tests.mocks.json_schema import config_schema
-from cdd.tests.mocks.sqlalchemy import (
-    dataset_primary_key_column_assign,
-    node_fk_call,
-    node_fk_name_param,
-)
+from cdd.tests.mocks.sqlalchemy import dataset_primary_key_column_assign, node_fk_call
 from cdd.tests.utils_for_tests import unittest_main
 
 
@@ -51,7 +48,9 @@ class TestParseSqlAlchemyUtils(TestCase):
         Tests that `parse.sqlalchemy.utils.column_call_to_param` works with FK
         """
         gen_name, gen_param = column_call_to_param(deepcopy(node_fk_call))
-        gold_name, gold_param = node_fk_name_param
+        gold_name, gold_param = (
+            lambda _name: (_name, deepcopy(intermediate_repr_node_pk["params"][_name]))
+        )("primary_element")
         self.assertEqual(gold_name, gen_name)
         self.assertDictEqual(gold_param, gen_param)
 

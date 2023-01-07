@@ -499,7 +499,6 @@ node_fk_call = Call(
     ],
     keywords=[],
 )
-node_fk_name_param = "primary_element", {"doc": "[FK]", "typ": "int"}
 
 node_pk_tbl_call = Call(
     func=Name(id="Table", ctx=Load()),
@@ -569,6 +568,5 @@ __all__ = [
     "foreign_sqlalchemy_tbls_mod",
     "foreign_sqlalchemy_tbls_str",
     "node_fk_call",
-    "node_fk_name_param",
     "node_pk_tbl_ass",
 ]

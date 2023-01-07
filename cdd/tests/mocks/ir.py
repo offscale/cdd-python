@@ -1188,7 +1188,7 @@ intermediate_repr_node_pk = {
     "params": OrderedDict(
         (
             ("node_id", {"doc": "[PK]", "typ": "int"}),
-            ("primary_element", {"doc": "[FK]", "typ": "int"}),
+            ("primary_element", {"doc": "[FK(element.element_id)]", "typ": "int"}),
         )
     ),
     "returns": None,
