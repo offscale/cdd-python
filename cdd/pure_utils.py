@@ -1052,6 +1052,39 @@ def no_magic_dir2attr(p_object):
     }
 
 
+def pascal_to_upper_camelcase(s):
+    """
+    Transform pascal input to upper camelcase
+
+    :param s: Pascal cased string
+    :type s: ```str```
+
+    :return: Upper camel case string
+    :rtype: ```str```
+    """
+    return "".join(filterfalse(str.isspace, s.title().replace("_", "")))
+
+
+def upper_camelcase_to_pascal(s):
+    """
+    Transform upper camelcase input to pascal case
+
+    :param s: Upper camel case string
+    :type s: ```str```
+
+    :return: Pascal cased string
+    :rtype: ```str```
+    """
+    return "_".join(
+        map(
+            str.lower,
+            "".join((" {}".format(c) if c.isupper() else c) for c in s)
+            .lstrip(" ")
+            .split(" "),
+        )
+    )
+
+
 omit_whitespace = rpartial(str.translate, str.maketrans({" ": "", "\n": "", "\t": ""}))
 
 sanitise_emit_name = dict(
@@ -1104,6 +1137,7 @@ __all__ = [
     "omit_whitespace",
     "paren_wrap_code",
     "parse_comment_from_line",
+    "pascal_to_upper_camelcase",
     "pluralise",
     "pp",
     "quote",
@@ -1120,5 +1154,6 @@ __all__ = [
     "tab",
     "unquote",
     "update_d",
+    "upper_camelcase_to_pascal"
     # "previous_line_range",
 ]

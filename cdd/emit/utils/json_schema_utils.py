@@ -5,7 +5,8 @@ Utility functions for `cdd.emit.json_schema`
 import ast
 from ast import AST, Set
 
-from cdd.ast_utils import Set_to_set, ast_type_to_python_type, get_value, typ2json_type
+from cdd.ast_utils import Set_to_set, ast_type_to_python_type, get_value
+from cdd.parse.utils.json_schema_utils import json_type2typ
 from cdd.pure_utils import none_types
 
 
@@ -68,5 +69,7 @@ def param2json_schema_property(param, required):
         )
     return name, _param
 
+
+typ2json_type = {v: k for k, v in json_type2typ.items()}
 
 __all__ = ["param2json_schema_property"]

@@ -1344,53 +1344,6 @@ def parse_to_scalar(node):
         )
 
 
-# Construct from https://docs.sqlalchemy.org/en/13/core/type_basics.html#generic-types
-column_type2typ = {
-    "BigInteger": "int",
-    "Boolean": "bool",
-    "DateTime": "datetime",
-    "Float": "float",
-    "Integer": "int",
-    "JSON": "Optional[dict]",
-    "String": "str",
-    "Text": "str",
-    "Unicode": "str",
-    "UnicodeText": "str",
-    "boolean": "bool",
-    "dict": "dict",
-    "float": "float",
-    "int": "int",
-    "str": "str",
-    "LargeBinary": "BlobProperty",
-}
-
-typ2column_type = {v: k for k, v in column_type2typ.items()}
-typ2column_type.update(
-    {
-        "bool": "Boolean",
-        "dict": "JSON",
-        "float": "Float",
-        "int": "Integer",
-        "str": "String",
-        "string": "String",
-    }
-)
-
-# https://json-schema.org/draft/2019-09/json-schema-core.html#rfc.section.4.2.1
-json_type2typ = {
-    "boolean": "bool",
-    "string": "str",
-    "object": "dict",
-    "array": "list",
-    "int": "integer",
-    "integer": "int",
-    "float": "number",  # <- Actually a problem, maybe `literal_eval` on default then `type()` or just `type(default)`?
-    "number": "float",
-    "null": "NoneType",
-}
-typ2json_type = {v: k for k, v in json_type2typ.items()}
-
-
 # `to_code` doesn't work due to partially instantiated module
 def _to_code(node):
     """
@@ -1692,114 +1645,30 @@ def infer_imports(module):
     :return: Iterable of imports
     :rtype: ```List[Union[Import, ImportFrom]]```
     """
-    if isinstance(module, ClassDef):
+    import cdd.parse.utils.sqlalchemy_utils  # Should this be a function param instead?
+
+    if isinstance(module, (ClassDef, FunctionDef, AsyncFunctionDef)):
         module = Module(body=[module], type_ignores=[], stmt=None)
     assert isinstance(module, Module), "Expected `Module` got `{type_name}`".format(
         type_name=type(module).__name__
     )
-    # SQLalchemy
+
     sqlalchemy_classes = filter(
         lambda cls_def: any(
             filter(
                 lambda base: isinstance(base, Name) and base.id == "Base", cls_def.bases
             )
         ),
-        filter(
-            rpartial(isinstance, ClassDef),
-            module.body,
-        ),
+        filter(rpartial(isinstance, ClassDef), module.body),
     )
 
-    def infer_imports_from_sqlalchemy(sqlalchemy_class_def):
-        """
-        Infer imports from SQLalchemy class
-
-        :param sqlalchemy_class_def: SQLalchemy class
-        :type sqlalchemy_class_def: ```ClassDef```
-
-        :return: chain of the imports
-        :rtype: ```chain```
-        """
-        # https://docs.sqlalchemy.org/en/14/core/type_basics.html#generic-camelcase-types
-        valid_types = frozenset(
-            (
-                "BigInteger",
-                "Boolean",
-                "Date",
-                "DateTime",
-                "Enum",
-                "Float",
-                "Integer",
-                "Interval",
-                "LargeBinary",
-                "MatchType",
-                "Numeric",
-                "PickleType",
-                "SchemaType",
-                "SmallInteger",
-                "String",
-                "Text",
-                "Time",
-                "Unicode",
-                "UnicodeText",
-                "Column",
-            )
-        )
-        return filter(
-            valid_types.__contains__,
-            chain.from_iterable(
-                map(
-                    lambda assign: chain.from_iterable(
-                        (
-                            (assign.value.func.id,),
-                            map(
-                                lambda node: node.id if hasattr(node, "id") else None,
-                                assign.value.args,
-                            ),
-                        )
-                    ),
-                    filter(
-                        lambda assign: isinstance(assign.value, Call)
-                        and isinstance(assign.value.func, Name),
-                        filter(rpartial(isinstance, Assign), sqlalchemy_class_def.body),
-                    ),
-                )
-            ),
-        )
-
     # reduce(, sqlalchemy_classes, set)
-    return (
-        [
-            ImportFrom(
-                module="sqlalchemy",
-                names=list(
-                    map(
-                        lambda names: alias(
-                            names,
-                            None,
-                            identifier=None,
-                            identifier_name=None,
-                        ),
-                        sorted(
-                            frozenset(
-                                filter(
-                                    None,
-                                    chain.from_iterable(
-                                        map(
-                                            infer_imports_from_sqlalchemy,
-                                            sqlalchemy_classes,
-                                        )
-                                    ),
-                                )
-                            )
-                        ),
-                    )
-                ),
-                level=0,
-            )
-        ]
-        if sqlalchemy_classes
-        else []
+    return list(
+        (
+            (cdd.parse.utils.sqlalchemy_utils.imports_from(sqlalchemy_classes),)
+            if sqlalchemy_classes
+            else iter(())
+        )
     )
 
 
@@ -1818,7 +1687,6 @@ __all__ = [
     "ast_type_to_python_type",
     "cmp_ast",
     "code_quoted",
-    "column_type2typ",
     "emit_ann_assign",
     "emit_arg",
     "find_ast_type",
@@ -1832,7 +1700,6 @@ __all__ = [
     "is_argparse_add_argument",
     "is_argparse_description",
     "it2literal",
-    "json_type2typ",
     "maybe_type_comment",
     "merge_assignment_lists",
     "merge_modules",
@@ -1846,6 +1713,4 @@ __all__ = [
     "set_value",
     "to_annotation",
     "to_type_comment",
-    "typ2column_type",
-    "typ2json_type",
 ]

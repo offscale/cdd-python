@@ -1,8 +1,7 @@
 """
 Tests for `cdd.emit.sqlalchemy.utils.sqlalchemy_utils`
 """
-from _ast import keyword
-from ast import Call, Load, Name
+from ast import Call, Load, Name, keyword
 from collections import OrderedDict
 from copy import deepcopy
 from unittest import TestCase
