@@ -2,10 +2,8 @@
 Utility functions for `cdd.parse.json_schema`
 """
 
-from itertools import filterfalse
-
-from cdd.ast_utils import NoneStr, json_type2typ
-from cdd.pure_utils import none_types
+from cdd.ast_utils import NoneStr
+from cdd.pure_utils import none_types, pascal_to_upper_camelcase
 
 
 def json_schema_property_to_param(param, required):
@@ -52,15 +50,17 @@ def json_schema_property_to_param(param, required):
         :param foreign_key: Foreign key structure (pass by reference)
         :type foreign_key: ```dict```
 
+        :return: $ref without the namespace and in upper camel case
         :rtype: ```str```
         """
-        entity = "".join(filterfalse(str.isspace, ref.rpartition("/")[2]))
+        entity = pascal_to_upper_camelcase(ref.rpartition("/")[2])
         foreign_key["fk"] = entity
+        print(repr(ref), "->", repr(entity))
         return entity
 
     fk = {"fk": None}
     if "anyOf" in _param:
-        _param["typ"] = tuple(
+        _param["typ"] = list(
             map(
                 lambda typ: (
                     transform_ref_fk_set(typ["$ref"], fk)
@@ -72,6 +72,8 @@ def json_schema_property_to_param(param, required):
                 _param.pop("anyOf"),
             )
         )
+        if len(_param["typ"]) > 1 and "string" in _param["typ"]:
+            del _param["typ"][_param["typ"].index("string")]
         _param["typ"] = (
             _param["typ"][0]
             if len(_param["typ"]) == 1
@@ -100,6 +102,20 @@ def json_schema_property_to_param(param, required):
         _param["default"] = NoneStr
 
     return name, _param
+
+
+# https://json-schema.org/draft/2019-09/json-schema-core.html#rfc.section.4.2.1
+json_type2typ = {
+    "boolean": "bool",
+    "string": "str",
+    "object": "dict",
+    "array": "list",
+    "int": "integer",
+    "integer": "int",
+    "float": "number",  # <- Actually a problem, maybe `literal_eval` on default then `type()` or just `type(default)`?
+    "number": "float",
+    "null": "NoneType",
+}
 
 
 __all__ = ["json_schema_property_to_param"]

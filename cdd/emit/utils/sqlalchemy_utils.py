@@ -10,23 +10,26 @@ from ast import (
     Call,
     Expr,
     FunctionDef,
+    ImportFrom,
     Load,
+    Module,
     Name,
     Return,
+    alias,
     arguments,
 )
 from collections import OrderedDict, deque
+from itertools import chain, filterfalse
 from operator import attrgetter, methodcaller
+from os import path
 from platform import system
 
-from cdd.ast_utils import (
-    get_value,
-    maybe_type_comment,
-    set_arg,
-    set_value,
-    typ2column_type,
+from cdd.ast_utils import get_value, maybe_type_comment, set_arg, set_value
+from cdd.parse.utils.sqlalchemy_utils import (
+    column_type2typ,
+    sqlalchemy_top_level_imports,
 )
-from cdd.pure_utils import none_types, rpartial, tab
+from cdd.pure_utils import none_types, rpartial, tab, upper_camelcase_to_pascal
 from cdd.source_transformer import to_code
 from cdd.tests.mocks.docstrings import docstring_repr_google_str, docstring_repr_str
 
@@ -378,6 +381,133 @@ def ensure_has_primary_key(intermediate_repr):
             }
     return intermediate_repr
 
+
+def update_with_imports_from_columns(filename):
+    """
+    Given an existing filename, figure out its relative imports
+
+    This is subsequent phase process, and must be preceded by:
+    - All SQLalchemy models being in the same directory as filename
+
+    It will take:
+    ```py
+    Column(TableName0,
+           ForeignKey("TableName0"),
+           nullable=True)
+    ```
+    …and add this import:
+    ```py
+    from `basename(filename)`.table_name import TableName0
+    ```
+
+    :param filename: Python filename containing SQLalchemy `class`(es)
+    :type filename: ```str```
+    """
+    with open(filename, "rt") as f:
+        mod = ast.parse(f.read())
+
+    candidates = sorted(
+        frozenset(
+            filterfalse(
+                str.istitle,
+                filterfalse(
+                    frozenset(
+                        ("list", "string", "int", "float", "complex", "long", "self")
+                    ).__contains__,
+                    filterfalse(
+                        sqlalchemy_top_level_imports.__contains__,
+                        map(
+                            attrgetter("id"),
+                            filter(
+                                rpartial(isinstance, Name),
+                                ast.walk(
+                                    Module(
+                                        body=list(
+                                            filter(
+                                                rpartial(isinstance, Call),
+                                                ast.walk(mod),
+                                            )
+                                        ),
+                                        type_ignores=[],
+                                        stmt=None,
+                                    )
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+        )
+    )
+
+    module = path.dirname(filename)
+    mod.body = list(
+        chain.from_iterable(
+            (
+                map(
+                    lambda class_name: ImportFrom(
+                        module=".".join(
+                            (module, upper_camelcase_to_pascal(class_name))
+                        ),
+                        names=[
+                            alias(
+                                class_name,
+                                None,
+                                identifier=None,
+                                identifier_name=None,
+                            )
+                        ],
+                        level=0,
+                    ),
+                    candidates,
+                ),
+                mod.body,
+            )
+        )
+    )
+
+    with open(filename, "wt") as f:
+        f.write(to_code(mod))
+
+
+def update_fk_for_file(filename):
+    """
+    Given an existing filename, use its imports and to replace its foreign keys with the correct values
+
+    This is subsequent phase process, and must be preceded by:
+    - All SQLalchemy models being in the same directory as filename
+    - Correct imports being added
+
+    Then it can transform:
+    ```py
+    Column(
+            TableName0,
+            ForeignKey("TableName0"),
+            nullable=True,
+        )
+    ```
+    To the following, inferring that the primary key field is `id` by resolving the symbol and `ast.parse`ing it:
+    ```py
+    Column(Integer, ForeignKey("table_name.id"))
+    ```
+
+    :param filename: Filename
+    :type filename: ```str```
+    """
+    raise NotImplementedError("update_fk_for_file" + filename)
+
+
+typ2column_type = {v: k for k, v in column_type2typ.items()}
+typ2column_type.update(
+    {
+        "bool": "Boolean",
+        "dict": "JSON",
+        "float": "Float",
+        "int": "Integer",
+        "str": "String",
+        "string": "String",
+    }
+)
 
 __all__ = [
     "ensure_has_primary_key",

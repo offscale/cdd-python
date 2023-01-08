@@ -2,11 +2,87 @@
 Utility functions for `cdd.parse.sqlalchemy`
 """
 
-from ast import Call, Constant, Load, Name, Str
-from itertools import chain
+import ast
+from ast import Call, Constant, ImportFrom, Load, Module, Name, Str, alias
+from itertools import chain, filterfalse
+from operator import attrgetter
 
-from cdd.ast_utils import column_type2typ, get_value
+from cdd.ast_utils import get_value
+from cdd.pure_utils import rpartial
 from cdd.source_transformer import to_code
+
+# SQLalchemy 1.14
+# `from sqlalchemy import __all__; sorted(filter(lambda s: any(filter(str.isupper, s)), __all__))`
+sqlalchemy_top_level_imports = frozenset(
+    (
+        "ARRAY",
+        "BIGINT",
+        "BINARY",
+        "BLANK_SCHEMA",
+        "BLOB",
+        "BOOLEAN",
+        "BigInteger",
+        "Boolean",
+        "CHAR",
+        "CLOB",
+        "CheckConstraint",
+        "Column",
+        "ColumnDefault",
+        "Computed",
+        "Constraint",
+        "DATE",
+        "DATETIME",
+        "DDL",
+        "DECIMAL",
+        "Date",
+        "DateTime",
+        "DefaultClause",
+        "Enum",
+        "FLOAT",
+        "FetchedValue",
+        "Float",
+        "ForeignKey",
+        "ForeignKeyConstraint",
+        "INT",
+        "INTEGER",
+        "Identity",
+        "Index",
+        "Integer",
+        "Interval",
+        "JSON",
+        "LABEL_STYLE_DEFAULT",
+        "LABEL_STYLE_DISAMBIGUATE_ONLY",
+        "LABEL_STYLE_NONE",
+        "LABEL_STYLE_TABLENAME_PLUS_COL",
+        "LargeBinary",
+        "MetaData",
+        "NCHAR",
+        "NUMERIC",
+        "NVARCHAR",
+        "Numeric",
+        "PickleType",
+        "PrimaryKeyConstraint",
+        "REAL",
+        "SMALLINT",
+        "Sequence",
+        "SmallInteger",
+        "String",
+        "TEXT",
+        "TIME",
+        "TIMESTAMP",
+        "Table",
+        "Text",
+        "ThreadLocalMetaData",
+        "Time",
+        "TupleType",
+        "TypeDecorator",
+        "Unicode",
+        "UnicodeText",
+        "UniqueConstraint",
+        "VARBINARY",
+        "VARCHAR",
+    )
+)
 
 
 def column_parse_arg(idx_arg):
@@ -143,4 +219,112 @@ def column_call_name_manipulator(call, operation="remove", name=None):
     return call
 
 
-__all__ = ["column_call_name_manipulator", "column_call_to_param"]
+def infer_imports_from_sqlalchemy(sqlalchemy_class_def):
+    """
+    Infer imports from SQLalchemy class
+
+    :param sqlalchemy_class_def: SQLalchemy class
+    :type sqlalchemy_class_def: ```ClassDef```
+
+    :return: filter of imports (can be considered ```Iterable[str]```)
+    :rtype: ```filter```
+    """
+    candidates = frozenset(
+        map(
+            attrgetter("id"),
+            filter(
+                rpartial(isinstance, Name),
+                ast.walk(
+                    Module(
+                        body=list(
+                            filter(
+                                rpartial(isinstance, Call),
+                                ast.walk(sqlalchemy_class_def),
+                            )
+                        ),
+                        type_ignores=[],
+                        stmt=None,
+                    )
+                ),
+            ),
+        )
+    )
+
+    candidates_not_in_valid_types = frozenset(
+        filterfalse(
+            frozenset(
+                ("list", "string", "int", "float", "complex", "long")
+            ).__contains__,
+            filterfalse(sqlalchemy_top_level_imports.__contains__, candidates),
+        )
+    )
+    return candidates_not_in_valid_types ^ candidates
+
+
+def imports_from(sqlalchemy_classes):
+    """
+    Generate `from sqlalchemy import <>` from the body of SQLalchemy `class`es
+
+    :param sqlalchemy_classes: SQLalchemy `class`es with base class of `Base`
+    :type sqlalchemy_classes: ```ClassDef```
+
+    :return: `from sqlalchemy import <>` where <> is what was inferred from `sqlalchemy_classes`
+    :rtype: ```ImportFrom```
+    """
+    return ImportFrom(
+        module="sqlalchemy",
+        names=list(
+            map(
+                lambda names: alias(
+                    names,
+                    None,
+                    identifier=None,
+                    identifier_name=None,
+                ),
+                sorted(
+                    frozenset(
+                        filter(
+                            None,
+                            chain.from_iterable(
+                                map(
+                                    infer_imports_from_sqlalchemy,
+                                    sqlalchemy_classes,
+                                )
+                            ),
+                        )
+                    )
+                ),
+            )
+        ),
+        level=0,
+    )
+
+
+# Construct from https://docs.sqlalchemy.org/en/13/core/type_basics.html#generic-types
+column_type2typ = {
+    "BigInteger": "int",
+    "Boolean": "bool",
+    "DateTime": "datetime",
+    "Float": "float",
+    "Integer": "int",
+    "JSON": "Optional[dict]",
+    "LargeBinary": "BlobProperty",
+    "String": "str",
+    "Text": "str",
+    "Unicode": "str",
+    "UnicodeText": "str",
+    "boolean": "bool",
+    "dict": "dict",
+    "float": "float",
+    "int": "int",
+    "str": "str",
+}
+
+
+__all__ = [
+    "column_call_name_manipulator",
+    "column_call_to_param",
+    "column_type2typ",
+    "imports_from",
+    "sqlalchemy_top_level_imports",
+]

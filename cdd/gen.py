@@ -10,8 +10,12 @@ from os import path
 
 import cdd.emit.json_schema
 from cdd.ast_utils import get_at_root
+from cdd.emit.utils.sqlalchemy_utils import (
+    update_fk_for_file,
+    update_with_imports_from_columns,
+)
 from cdd.gen_utils import gen_file, get_input_mapping_from_path
-from cdd.pure_utils import get_module, sanitise_emit_name
+from cdd.pure_utils import get_module, pascal_to_upper_camelcase, sanitise_emit_name
 from cdd.source_transformer import to_code
 
 
@@ -27,6 +31,7 @@ def gen(
     emit_default_doc=True,
     emit_and_infer_imports=False,
     decorator_list=None,
+    phase=0,
     no_word_wrap=None,
 ):
     """
@@ -68,11 +73,21 @@ def gen(
     :param decorator_list: List of decorators
     :type decorator_list: ```Optional[Union[List[Str], List[]]]```
 
+    :param phase: Which phase to run through. E.g., SQLalchemy may require multiple phases to resolve foreign keys
+    :type phase: ```int```
+
     :param no_word_wrap: Whether word-wrap is disabled (on emission).
     :type no_word_wrap: ```Optional[Literal[True]]```
     """
     extra_symbols = {}
-    if imports_from_file is None:
+    if phase > 0 and emit_name in frozenset(("sqlalchemy", "sqlalchemy_table")):
+        if phase == 1:
+            return update_with_imports_from_columns(output_filename)
+        elif phase == 2:
+            return update_fk_for_file(output_filename)
+        else:
+            raise NotImplementedError("phase {}".format(phase))
+    elif imports_from_file is None:
         imports = ""
     else:
         if prepend:
@@ -158,7 +173,7 @@ def gen(
             json_contents = load(f)
         name = path.basename(module_path)
         if "name" not in json_contents:
-            json_contents["name"] = name.title()
+            json_contents["name"] = pascal_to_upper_camelcase(name)
         input_mapping = {name: json_contents}
     else:
         input_mod = get_module(module_path, extra_symbols=extra_symbols)

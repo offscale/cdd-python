@@ -263,6 +263,12 @@ def _build_parser():
         type=str,
         dest="decorator_list",
     )
+    gen_parser.add_argument(
+        "--phase",
+        help="Which phase to run through. E.g., SQLalchemy may require multiple phases to resolve foreign keys.",
+        type=int,
+        default=0,
+    )
 
     ##############
     # gen_routes #
@@ -490,7 +496,7 @@ def main(cli_argv=None, return_args=False):
             require_file_existent(_parser, filename, name=arg_name)
         sync_properties(**args_dict)
     elif command == "gen":
-        if path.isfile(args.output_filename):
+        if path.isfile(args.output_filename) and args.phase == 0:
             raise IOError(
                 "File exists and this is a destructive operation. Delete/move {output_filename!r} then"
                 " rerun.".format(output_filename=args.output_filename)
