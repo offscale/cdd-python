@@ -55,7 +55,6 @@ def json_schema_property_to_param(param, required):
         """
         entity = pascal_to_upper_camelcase(ref.rpartition("/")[2])
         foreign_key["fk"] = entity
-        print(repr(ref), "->", repr(entity))
         return entity
 
     fk = {"fk": None}

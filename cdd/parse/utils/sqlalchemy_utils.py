@@ -3,7 +3,18 @@ Utility functions for `cdd.parse.sqlalchemy`
 """
 
 import ast
-from ast import Call, Constant, ImportFrom, Load, Module, Name, Str, alias
+from ast import (
+    Assign,
+    Call,
+    ClassDef,
+    Constant,
+    ImportFrom,
+    Load,
+    Module,
+    Name,
+    Str,
+    alias,
+)
 from itertools import chain, filterfalse
 from operator import attrgetter
 
@@ -297,6 +308,80 @@ def imports_from(sqlalchemy_classes):
             )
         ),
         level=0,
+    )
+
+
+def get_pk_and_type(sqlalchemy_class):
+    """
+    Get the primary key and its type from an SQLalchemy class
+
+    :param sqlalchemy_class: SQLalchemy class
+    :type sqlalchemy_class: ```ClassDef```
+
+    :return: Primary key and its type
+    :rtype: ```Tuple[str, str]```
+    """
+    assert isinstance(
+        sqlalchemy_class, ClassDef
+    ), "Expected `ClassDef` got `{type_name}`".format(
+        type_name=type(sqlalchemy_class).__name__
+    )
+    return (
+        lambda assign: assign
+        if assign is None
+        else (
+            assign.targets[0].id,
+            assign.value.args[0].id,  # First arg is type
+        )
+    )(
+        next(
+            filter(
+                lambda assign: any(
+                    filter(
+                        lambda key_word: key_word.arg == "primary_key"
+                        and get_value(key_word.value) is True,
+                        assign.value.keywords,
+                    )
+                ),
+                filter(
+                    lambda assign: isinstance(assign.value, Call)
+                    and isinstance(assign.value.func, Name)
+                    and assign.value.func.id == "Column",
+                    filter(rpartial(isinstance, Assign), sqlalchemy_class.body),
+                ),
+            ),
+            None,
+        )
+    )
+
+
+def get_table_name(sqlalchemy_class):
+    """
+    Get the primary key and its type from an SQLalchemy class
+
+    :param sqlalchemy_class: SQLalchemy class
+    :type sqlalchemy_class: ```ClassDef```
+
+    :return: Primary key and its type
+    :rtype: ```str```
+    """
+    return next(
+        map(
+            lambda assign: get_value(assign.value),
+            filter(
+                lambda node: next(
+                    filter(lambda target: target.id == "__tablename__", node.targets),
+                    None,
+                )
+                and node,
+                filter(
+                    lambda node: isinstance(node, Assign)
+                    and isinstance(node.value, (Str, Constant)),
+                    sqlalchemy_class.body,
+                ),
+            ),
+        ),
+        sqlalchemy_class.name,
     )
 
 
