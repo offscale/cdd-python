@@ -10,6 +10,7 @@ from cdd.ast_utils import set_value
 from cdd.emit.utils.sqlalchemy_utils import (
     ensure_has_primary_key,
     param_to_sqlalchemy_column_call,
+    update_args_infer_typ_sqlalchemy,
 )
 from cdd.tests.mocks.ir import (
     intermediate_repr_empty,
@@ -98,6 +99,38 @@ class TestEmitSqlAlchemyUtils(TestCase):
                 include_name=True,
             ),
             gold=node_fk_call,
+        )
+
+    def test_update_args_infer_typ_sqlalchemy_when_simple_array(self) -> None:
+        """Tests that SQLalchemy can infer the typ from a simple array"""
+        args = []
+        update_args_infer_typ_sqlalchemy(
+            {"items": {"type": "string"}, "typ": ""}, args, "", False, {}
+        )
+        self.assertEqual(len(args), 1)
+        run_ast_test(
+            self,
+            args[0],
+            gold=Call(
+                func=Name(id="ARRAY", ctx=Load()),
+                args=[Name(id="String", ctx=Load())],
+                keywords=[],
+                expr=None,
+                expr_func=None,
+            ),
+        )
+
+    def test_update_args_infer_typ_sqlalchemy_when_simple_union(self) -> None:
+        """Tests that SQLalchemy can infer the typ from a simple Union"""
+        args = []
+        update_args_infer_typ_sqlalchemy(
+            {"typ": "Union[string | Small]"}, args, "", False, {}
+        )
+        self.assertEqual(len(args), 1)
+        run_ast_test(
+            self,
+            args[0],
+            gold=Name(id="Small", ctx=Load()),
         )
 
 
