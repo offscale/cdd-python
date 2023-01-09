@@ -124,7 +124,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
         """Tests that SQLalchemy can infer the typ from a simple Union"""
         args = []
         update_args_infer_typ_sqlalchemy(
-            {"typ": "Union[string | Small]"}, args, "", False, {}
+            {"typ": "Union[string, Small]"}, args, "", False, {}
         )
         self.assertEqual(len(args), 1)
         run_ast_test(

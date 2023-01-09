@@ -7,16 +7,18 @@ from ast import (
     AST,
     Assign,
     Attribute,
-    BinOp,
     Call,
     ClassDef,
     Expr,
     FunctionDef,
     ImportFrom,
+    Index,
     Load,
     Module,
     Name,
     Return,
+    Subscript,
+    Tuple,
     alias,
     arguments,
 )
@@ -198,15 +200,13 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
     elif _param.get("typ").startswith("Union["):
         # Hack to remove the union type. Enum parse seems to be incorrect?
         union_typ = ast.parse(_param["typ"]).body[0]
-        assert isinstance(
-            union_typ.value.slice, BinOp
-        ), "Expected `BinOp` got `{type_name}`".format(
-            type_name=type(union_typ.value.slice).__name__
+        assert (
+            isinstance(union_typ.value, Subscript)
+            and isinstance(union_typ.value.slice, Index)
+            and isinstance(union_typ.value.slice.value, Tuple)
         )
-        left, right = map(
-            rpartial(str.rstrip, "\n"),
-            map(to_code, (union_typ.value.slice.left, union_typ.value.slice.right)),
-        )
+        assert len(union_typ.value.slice.value.elts) == 2
+        left, right = map(attrgetter("id"), union_typ.value.slice.value.elts)
         args.append(
             Name(
                 typ2column_type.get(right, right)
