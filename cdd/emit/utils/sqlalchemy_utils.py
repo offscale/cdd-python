@@ -35,7 +35,7 @@ from cdd.parse.utils.sqlalchemy_utils import (
     sqlalchemy_top_level_imports,
 )
 from cdd.pure_utils import (
-    PY_GTE_3_8,
+    PY_GTE_3_9,
     find_module_filepath,
     none_types,
     rpartial,
@@ -202,7 +202,7 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
         union_typ = ast.parse(_param["typ"]).body[0]
         assert isinstance(union_typ.value, Subscript)
         union_typ_tuple = (
-            union_typ.value.slice if PY_GTE_3_8 else union_typ.value.slice.value
+            union_typ.value.slice if PY_GTE_3_9 else union_typ.value.slice.value
         )
         assert isinstance(union_typ_tuple, Tuple)
         assert len(union_typ_tuple.elts) == 2
