@@ -23,7 +23,7 @@ from os.path import extsep
 from shutil import rmtree
 from tempfile import mkdtemp
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import cdd.emit.class_
 import cdd.parse.function
@@ -32,7 +32,7 @@ from cdd.gen import gen
 from cdd.pure_utils import rpartial
 from cdd.source_transformer import to_code
 from cdd.tests.mocks.methods import function_adder_ast
-from cdd.tests.utils_for_tests import run_ast_test
+from cdd.tests.utils_for_tests import run_ast_test, unittest_main
 
 method_adder_ast = deepcopy(function_adder_ast)
 method_adder_ast.body[0] = Expr(set_value(" C class (mocked!) "))
@@ -319,8 +319,47 @@ class TestGen(TestCase):
             gold=gold,
         )
 
+    def test_gen_phase_mocked(self) -> None:
+        """Tests that different phases are branched to correctly (doesn't test their internals though)"""
+        with patch(
+            "cdd.gen.update_with_imports_from_columns", new_callable=MagicMock()
+        ) as phase1_func:
+            gen(
+                name_tpl="{name}",
+                input_mapping="",
+                parse_name=None,
+                emit_name="sqlalchemy",
+                output_filename="",
+                phase=1,
+            )
+        self.assertEqual(phase1_func.call_count, 1)
 
-# unittest_main()
+        with patch(
+            "cdd.gen.update_fk_for_file", new_callable=MagicMock()
+        ) as phase2_func:
+            gen(
+                name_tpl="{name}",
+                input_mapping="",
+                parse_name=None,
+                emit_name="sqlalchemy",
+                output_filename="",
+                phase=2,
+            )
+        self.assertEqual(phase2_func.call_count, 1)
+
+        self.assertRaises(
+            NotImplementedError,
+            gen,
+            name_tpl="{name}",
+            input_mapping="",
+            parse_name=None,
+            emit_name="sqlalchemy",
+            output_filename="",
+            phase=33,
+        )
+
+
+unittest_main()
 # mock_class = ClassDef(
 #             name="ClassyB",
 #             bases=tuple(),

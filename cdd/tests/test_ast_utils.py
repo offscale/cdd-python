@@ -346,7 +346,7 @@ class TestAstUtils(TestCase):
                             identifier=None,
                             identifier_name=None,
                         ),
-                        ("Boolean", "Column", "JSON", "String"),
+                        ("Boolean", "Column", "Enum", "JSON", "String"),
                     )
                 ),
                 level=0,
