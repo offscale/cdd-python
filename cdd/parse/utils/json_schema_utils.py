@@ -76,7 +76,7 @@ def json_schema_property_to_param(param, required):
         _param["typ"] = (
             _param["typ"][0]
             if len(_param["typ"]) == 1
-            else "Union[{}]".format("|".join(_param["typ"]))
+            else "Union[{}]".format(",".join(_param["typ"]))
         )
     elif "$ref" in _param:
         _param["typ"] = transform_ref_fk_set(_param.pop("$ref"), fk)
