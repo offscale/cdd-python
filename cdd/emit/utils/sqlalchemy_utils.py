@@ -12,7 +12,6 @@ from ast import (
     Expr,
     FunctionDef,
     ImportFrom,
-    Index,
     Load,
     Module,
     Name,
@@ -36,6 +35,7 @@ from cdd.parse.utils.sqlalchemy_utils import (
     sqlalchemy_top_level_imports,
 )
 from cdd.pure_utils import (
+    PY_GTE_3_8,
     find_module_filepath,
     none_types,
     rpartial,
@@ -200,13 +200,13 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
     elif _param.get("typ").startswith("Union["):
         # Hack to remove the union type. Enum parse seems to be incorrect?
         union_typ = ast.parse(_param["typ"]).body[0]
-        assert (
-            isinstance(union_typ.value, Subscript)
-            and isinstance(union_typ.value.slice, Index)
-            and isinstance(union_typ.value.slice.value, Tuple)
+        assert isinstance(union_typ.value, Subscript)
+        union_typ_tuple = (
+            union_typ.value.slice if PY_GTE_3_8 else union_typ.value.slice.value
         )
-        assert len(union_typ.value.slice.value.elts) == 2
-        left, right = map(attrgetter("id"), union_typ.value.slice.value.elts)
+        assert isinstance(union_typ_tuple, Tuple)
+        assert len(union_typ_tuple.elts) == 2
+        left, right = map(attrgetter("id"), union_typ_tuple.elts)
         args.append(
             Name(
                 typ2column_type.get(right, right)
