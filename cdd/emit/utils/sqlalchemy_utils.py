@@ -5,9 +5,11 @@ Utility functions for `cdd.emit.sqlalchemy`
 import ast
 from ast import (
     AST,
+    Assign,
     Attribute,
     BinOp,
     Call,
+    ClassDef,
     Expr,
     FunctionDef,
     ImportFrom,
@@ -27,9 +29,17 @@ from platform import system
 from cdd.ast_utils import get_value, maybe_type_comment, set_arg, set_value
 from cdd.parse.utils.sqlalchemy_utils import (
     column_type2typ,
+    get_pk_and_type,
+    get_table_name,
     sqlalchemy_top_level_imports,
 )
-from cdd.pure_utils import none_types, rpartial, tab, upper_camelcase_to_pascal
+from cdd.pure_utils import (
+    find_module_filepath,
+    none_types,
+    rpartial,
+    tab,
+    upper_camelcase_to_pascal,
+)
 from cdd.source_transformer import to_code
 from cdd.tests.mocks.docstrings import docstring_repr_google_str, docstring_repr_str
 
@@ -478,7 +488,7 @@ def update_fk_for_file(filename):
     - All SQLalchemy models being in the same directory as filename
     - Correct imports being added
 
-    Then it can transform:
+    Then it can transform classes with members like:
     ```py
     Column(
             TableName0,
@@ -488,13 +498,166 @@ def update_fk_for_file(filename):
     ```
     To the following, inferring that the primary key field is `id` by resolving the symbol and `ast.parse`ing it:
     ```py
-    Column(Integer, ForeignKey("table_name.id"))
+    Column(Integer, ForeignKey("table_name0.id"))
     ```
 
     :param filename: Filename
     :type filename: ```str```
     """
-    raise NotImplementedError("update_fk_for_file" + filename)
+    with open(filename, "rt") as f:
+        mod = ast.parse(f.read())
+
+    def handle_sqlalchemy_cls(symbol_to_module, sqlalchemy_class_def):
+        """
+        Ensure the SQLalchemy classes have their foreign keys resolved properly
+
+        :param symbol_to_module: Dictionary of symbol to module, like `{"join": "os.path"}`
+        :type symbol_to_module: ```Dict[str,str]````
+
+        :param sqlalchemy_class_def: SQLalchemy `class`
+        :type sqlalchemy_class_def: ```ClassDef```
+
+        :return: SQLalchemy with foreign keys resolved properly
+        :rtype: ```ClassDef```
+        """
+        sqlalchemy_class_def.body = list(
+            map(
+                lambda outer_node: rewrite_fk(symbol_to_module, outer_node)
+                if isinstance(outer_node, Assign)
+                and isinstance(outer_node.value, Call)
+                and isinstance(outer_node.value.func, Name)
+                and outer_node.value.func.id == "Column"
+                and any(
+                    filter(
+                        lambda node: isinstance(node, Call)
+                        and isinstance(node.func, Name)
+                        and node.func.id == "ForeignKey",
+                        outer_node.value.args,
+                    )
+                )
+                else outer_node,
+                sqlalchemy_class_def.body,
+            )
+        )
+        return sqlalchemy_class_def
+
+    symbol2module = dict(
+        chain.from_iterable(
+            map(
+                lambda import_from: map(
+                    lambda _alias: (_alias.name, import_from.module), import_from.names
+                ),
+                filterfalse(
+                    lambda import_from: import_from.module == "sqlalchemy",
+                    filter(
+                        rpartial(isinstance, ImportFrom),
+                        ast.walk(mod),
+                    ),
+                ),
+            )
+        )
+    )
+
+    mod.body = list(
+        map(
+            lambda node: handle_sqlalchemy_cls(symbol2module, node)
+            if isinstance(node, ClassDef)
+            and any(
+                filter(
+                    lambda base: isinstance(base, Name) and base.id == "Base",
+                    node.bases,
+                )
+            )
+            else node,
+            mod.body,
+        )
+    )
+
+    with open(filename, "wt") as f:
+        f.write(to_code(mod))
+
+
+def rewrite_fk(symbol_to_module, column_assign):
+    """
+    Rewrite of the form:
+    ```py
+    column_name = Column(
+            TableName0,
+            ForeignKey("TableName0"),
+            nullable=True,
+        )
+    ```
+    To the following, inferring that the primary key field is `id` by resolving the symbol and `ast.parse`ing it:
+    ```py
+    column_name = Column(Integer, ForeignKey("table_name0.id"))
+    ```
+
+    :param symbol_to_module: Dictionary of symbol to module, like `{"join": "os.path"}`
+    :type symbol_to_module: ```Dict[str,str]````
+
+    :param column_assign: `column_name = Column()` in SQLalchemy with unresolved foreign key
+    :type column_assign: ```Assign```d
+
+    :return: `Assign()` in SQLalchemy with resolved foreign key
+    :rtype: ```Assign```
+    """
+    assert (
+        isinstance(column_assign.value, Call)
+        and isinstance(column_assign.value.func, Name)
+        and column_assign.value.func.id == "Column"
+    )
+
+    def rewrite_fk_from_import(column_name, foreign_key_call):
+        """
+        :param column_name: Field name
+        :type column_name: ```Name```
+
+        :param foreign_key_call: `ForeignKey` function call
+        :type foreign_key_call: ```Call```
+
+        :return:
+        :rtype: ```Tuple[Name, Call]```
+        """
+        assert isinstance(column_name, Name)
+        assert (
+            isinstance(foreign_key_call, Call)
+            and isinstance(foreign_key_call.func, Name)
+            and foreign_key_call.func.id == "ForeignKey"
+        )
+        if column_name.id in symbol_to_module:
+            with open(
+                find_module_filepath(symbol_to_module[column_name.id], column_name.id),
+                "rt",
+            ) as f:
+                mod = ast.parse(f.read())
+            matching_class = next(
+                filter(
+                    lambda node: isinstance(node, ClassDef)
+                    and node.name == column_name.id,
+                    mod.body,
+                )
+            )
+            pk_typ = get_pk_and_type(matching_class)
+            assert pk_typ is not None
+            pk, typ = pk_typ
+            del pk_typ
+            return Name(id=typ, ctx=Load()), Call(
+                func=Name(id="ForeignKey", ctx=Load()),
+                args=[set_value(".".join((get_table_name(matching_class), pk)))],
+                keywords=[],
+            )
+        return column_name, foreign_key_call
+
+    column_assign.value.args = list(
+        chain.from_iterable(
+            (
+                rewrite_fk_from_import(*column_assign.value.args[:2]),
+                column_assign.value.args[2:],
+            )
+        )
+    )
+
+    return column_assign
 
 
 typ2column_type = {v: k for k, v in column_type2typ.items()}
