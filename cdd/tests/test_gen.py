@@ -19,9 +19,10 @@ from ast import (
 )
 from copy import deepcopy
 from io import StringIO
+from json import dump
 from os.path import extsep
 from shutil import rmtree
-from tempfile import mkdtemp
+from tempfile import TemporaryDirectory, mkdtemp
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
@@ -31,6 +32,7 @@ from cdd.ast_utils import maybe_type_comment, set_value
 from cdd.gen import gen
 from cdd.pure_utils import rpartial
 from cdd.source_transformer import to_code
+from cdd.tests.mocks.json_schema import server_error_schema
 from cdd.tests.mocks.methods import function_adder_ast
 from cdd.tests.utils_for_tests import run_ast_test, unittest_main
 
@@ -357,6 +359,23 @@ class TestGen(TestCase):
             output_filename="",
             phase=33,
         )
+
+    def test_gen_json_schema_input_mapping(self) -> None:
+        """Test `gen` with JSON schema parse target on file"""
+        with patch(
+            "cdd.emit.json_schema.json_schema_file", new_callable=MagicMock()
+        ) as json_schema_file_mock, TemporaryDirectory() as tempdir:
+            json_schema_file = os.path.join(tempdir, "foo.json")
+            with open(json_schema_file, "wt") as f:
+                dump(server_error_schema, f)
+            gen(
+                "{name}",
+                input_mapping=json_schema_file,
+                parse_name="json_schema",
+                emit_name="json_schema",
+                output_filename=os.path.join(tempdir, "foo.gen.json"),
+            )
+        self.assertEqual(json_schema_file_mock.call_count, 1)
 
 
 unittest_main()

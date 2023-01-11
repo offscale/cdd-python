@@ -37,10 +37,10 @@ from cdd.parse.utils.sqlalchemy_utils import (
 from cdd.pure_utils import (
     PY_GTE_3_9,
     find_module_filepath,
+    namespaced_upper_camelcase_to_pascal,
     none_types,
     rpartial,
     tab,
-    upper_camelcase_to_pascal,
 )
 from cdd.source_transformer import to_code
 from cdd.tests.mocks.docstrings import docstring_repr_google_str, docstring_repr_str
@@ -200,12 +200,24 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
     elif _param.get("typ").startswith("Union["):
         # Hack to remove the union type. Enum parse seems to be incorrect?
         union_typ = ast.parse(_param["typ"]).body[0]
-        assert isinstance(union_typ.value, Subscript)
+        assert isinstance(
+            union_typ.value, Subscript
+        ), "Expected `Subscript` got `{type_name}`".format(
+            type_name=type(union_typ.value).__name__
+        )
         union_typ_tuple = (
             union_typ.value.slice if PY_GTE_3_9 else union_typ.value.slice.value
         )
-        assert isinstance(union_typ_tuple, Tuple)
-        assert len(union_typ_tuple.elts) == 2
+        assert isinstance(
+            union_typ_tuple, Tuple
+        ), "Expected `Tuple` got `{type_name}`".format(
+            type_name=type(union_typ_tuple).__name__
+        )
+        assert (
+            len(union_typ_tuple.elts) == 2
+        ), "Expected length of 2 got `{tuple_len}`".format(
+            tuple_len=len(union_typ_tuple.elts)
+        )
         left, right = map(attrgetter("id"), union_typ_tuple.elts)
         args.append(
             Name(
@@ -457,7 +469,7 @@ def update_with_imports_from_columns(filename):
                 map(
                     lambda class_name: ImportFrom(
                         module=".".join(
-                            (module, upper_camelcase_to_pascal(class_name))
+                            (module, namespaced_upper_camelcase_to_pascal(class_name))
                         ),
                         names=[
                             alias(
@@ -605,6 +617,8 @@ def rewrite_fk(symbol_to_module, column_assign):
         isinstance(column_assign.value, Call)
         and isinstance(column_assign.value.func, Name)
         and column_assign.value.func.id == "Column"
+    ), 'Expected `Call.func.Name.id` of "<var> = Column" eval to `<var> = Column(...)` got `{code}`'.format(
+        code=to_code(column_assign).rstrip()
     )
 
     def rewrite_fk_from_import(column_name, foreign_key_call):
@@ -618,11 +632,17 @@ def rewrite_fk(symbol_to_module, column_assign):
         :return:
         :rtype: ```Tuple[Name, Call]```
         """
-        assert isinstance(column_name, Name)
+        assert isinstance(
+            column_name, Name
+        ), "Expected `Name` got `{type_name}`".format(
+            type_name=type(column_name).__name__
+        )
         assert (
             isinstance(foreign_key_call, Call)
             and isinstance(foreign_key_call.func, Name)
             and foreign_key_call.func.id == "ForeignKey"
+        ), 'Expected `Call.func.Name.id` of "ForeignKey" eval to `ForeignKey(...)` got `{code}`'.format(
+            code=to_code(foreign_key_call).rstrip()
         )
         if column_name.id in symbol_to_module:
             with open(

@@ -3,7 +3,7 @@ Utility functions for `cdd.parse.json_schema`
 """
 
 from cdd.ast_utils import NoneStr
-from cdd.pure_utils import none_types, pascal_to_upper_camelcase
+from cdd.pure_utils import namespaced_pascal_to_upper_camelcase, none_types
 
 
 def json_schema_property_to_param(param, required):
@@ -53,7 +53,9 @@ def json_schema_property_to_param(param, required):
         :return: $ref without the namespace and in upper camel case
         :rtype: ```str```
         """
-        entity = pascal_to_upper_camelcase(ref.rpartition("/")[2])
+        entity = namespaced_pascal_to_upper_camelcase(
+            ref.rpartition("/")[2].replace(".", "__")
+        )
         foreign_key["fk"] = entity
         return entity
 
@@ -82,11 +84,10 @@ def json_schema_property_to_param(param, required):
         _param["typ"] = transform_ref_fk_set(_param.pop("$ref"), fk)
 
     if fk["fk"] is not None:
-        fk_prefix = "[FK({})]".format(fk.pop("fk"))
+        fk_val = fk.pop("fk")
+        fk_prefix = fk_val if fk_val.startswith("[FK(") else "[FK({})]".format(fk_val)
         _param["doc"] = (
-            "[{}] {}".format(fk_prefix, _param["doc"])
-            if _param.get("doc")
-            else fk_prefix
+            "{} {}".format(fk_prefix, _param["doc"]) if _param.get("doc") else fk_prefix
         )
 
     if (

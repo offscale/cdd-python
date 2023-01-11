@@ -808,7 +808,11 @@ def find_module_filepath(module_name, submodule_name):
     :return: Module location
     :rpath: ```str```
     """
-    module_origin = find_spec(module_name).origin
+    assert module_name is not None
+    assert submodule_name is not None
+    module_spec = find_spec(module_name)
+    assert module_spec is not None, "spec not found for {}".format(module_name)
+    module_origin = module_spec.origin
     module_parent = path.dirname(module_origin)
 
     return next(
@@ -1065,6 +1069,25 @@ def pascal_to_upper_camelcase(s):
     return "".join(filterfalse(str.isspace, s.title().replace("_", "")))
 
 
+def namespaced_pascal_to_upper_camelcase(s, sep="__"):
+    """
+    Convert potentially namespaced pascal to upper camelcase
+
+    E.g., "foo__bar_can" becomes "Foo__BarCan"
+
+    :param s: Pascal cased string (potentially with namespace, i.e., `sep`)
+    :type s: ```str```
+
+    :param sep: Separator (a.k.a., namespace)
+    :type sep: ```str```
+
+    :return: Upper camel case string (potentially with namespace)
+    :rtype: ```str```
+    """
+    first, sep, last = s.rpartition(sep)
+    return "{}{}{}".format(first.title(), sep, pascal_to_upper_camelcase(last))
+
+
 def upper_camelcase_to_pascal(s):
     """
     Transform upper camelcase input to pascal case
@@ -1083,6 +1106,25 @@ def upper_camelcase_to_pascal(s):
             .split(" "),
         )
     )
+
+
+def namespaced_upper_camelcase_to_pascal(s, sep="__"):
+    """
+    Convert potentially namespaced pascal to upper camelcase
+
+    E.g., "foo__bar_can" becomes "Foo__BarCan"
+
+    :param s: Upper camel case string (potentially with namespace, i.e., `sep`)
+    :type s: ```str```
+
+    :param sep: Separator (a.k.a., namespace)
+    :type sep: ```str```
+
+    :return: Pascal cased string (potentially with namespace)
+    :rtype: ```str```
+    """
+    first, sep, last = s.rpartition(sep)
+    return "{}{}{}".format(first.lower(), sep, upper_camelcase_to_pascal(last))
 
 
 omit_whitespace = rpartial(str.translate, str.maketrans({" ": "", "\n": "", "\t": ""}))
@@ -1131,6 +1173,8 @@ __all__ = [
     "location_within",
     "lstrip_namespace",
     "multiline",
+    "namespaced_pascal_to_upper_camelcase",
+    "namespaced_upper_camelcase_to_pascal",
     "no_magic_dir2attr",
     "none_types",
     "num_of_nls",
