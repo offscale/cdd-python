@@ -329,9 +329,7 @@ class TestAstUtils(TestCase):
         """
         Test that `infer_imports` can infer imports for SQLalchemy
         """
-        imports = infer_imports(
-            Module(body=[config_decl_base_ast], type_ignores=[], stmt=None)
-        )
+        imports = infer_imports(config_decl_base_ast)
         self.assertEqual(len(imports), 1)
         run_ast_test(
             self,
