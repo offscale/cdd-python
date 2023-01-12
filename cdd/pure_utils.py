@@ -1112,7 +1112,7 @@ def namespaced_upper_camelcase_to_pascal(s, sep="__"):
     """
     Convert potentially namespaced pascal to upper camelcase
 
-    E.g., "foo__bar_can" becomes "Foo__BarCan"
+    E.g., "Foo__BarCan" becomes "foo__bar_can"
 
     :param s: Upper camel case string (potentially with namespace, i.e., `sep`)
     :type s: ```str```

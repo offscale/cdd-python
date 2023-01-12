@@ -19,6 +19,8 @@ from cdd.pure_utils import (
     location_within,
     lstrip_namespace,
     multiline,
+    namespaced_pascal_to_upper_camelcase,
+    namespaced_upper_camelcase_to_pascal,
     parse_comment_from_line,
     pluralise,
     pp,
@@ -277,6 +279,28 @@ class TestPureUtils(TestCase):
     def test_deindent(self) -> None:
         """Test that deindent deindents"""
         self.assertEqual(deindent("    foo\tbar\n\tcanhaz"), "foo\tbar\ncanhaz")
+
+    def test_namespaced_upper_camelcase_to_pascal(self) -> None:
+        """
+        Test that `namespaced_upper_camelcase_to_pascal` works
+        """
+        self.assertEqual(
+            namespaced_upper_camelcase_to_pascal("Foo__BarCan"), "foo__bar_can"
+        )
+        self.assertEqual(
+            namespaced_upper_camelcase_to_pascal("FooBarCan"), "foo_bar_can"
+        )
+
+    def test_namespaced_pascal_to_upper_camelcase(self) -> None:
+        """
+        Tests that `namespaced_pascal_to_upper_camelcase` works
+        """
+        self.assertEqual(
+            namespaced_pascal_to_upper_camelcase("foo__bar_can"), "Foo__BarCan"
+        )
+        self.assertEqual(
+            namespaced_pascal_to_upper_camelcase("foo_bar_can"), "FooBarCan"
+        )
 
 
 unittest_main()
