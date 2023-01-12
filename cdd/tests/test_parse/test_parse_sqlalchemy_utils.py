@@ -1,6 +1,7 @@
 """
 Tests for the utils that is used by the SQLalchemy parsers
 """
+
 from copy import deepcopy
 from unittest import TestCase
 
