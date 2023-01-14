@@ -64,6 +64,21 @@ class TestEmitSqlAlchemyUtils(TestCase):
         ]["id"]["x_typ"]["sql"]["constraints"]["server_default"]
         self.assertDictEqual(res, ir)
 
+    def test_ensure_has_primary_key_from_id(self) -> None:
+        """
+        Tests `cdd.emit.sqlalchemy.utils.sqlalchemy_utils.ensure_has_primary_key`
+        """
+        ir = deepcopy(intermediate_repr_empty)
+        ir["params"] = OrderedDict(
+            (
+                ("id", {"doc": "My doc", "typ": "str"}),
+                ("not_pk_id", {"doc": "", "typ": "str"}),
+            )
+        )
+        res = ensure_has_primary_key(deepcopy(ir))
+        ir["params"]["id"]["doc"] = "[PK] {}".format(ir["params"]["id"]["doc"])
+        self.assertDictEqual(res, ir)
+
     def test_param_to_sqlalchemy_column_call_when_sql_constraints(self) -> None:
         """Tests that with SQL constraints the SQLalchemy column is correctly generated"""
         run_ast_test(

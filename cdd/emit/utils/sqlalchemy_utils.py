@@ -376,15 +376,15 @@ def ensure_has_primary_key(intermediate_repr):
                 if params[candidate_pks[0]].get("doc")
                 else "[PK]"
             )
-        elif "id" in intermediate_repr:
+        elif "id" in intermediate_repr.get("params", iter(())):
             params["id"]["doc"] = (
                 "[PK] {}".format(params["id"]["doc"])
                 if params["id"].get("doc")
                 else "[PK]"
             )
         else:
-            assert (
-                "id" not in intermediate_repr
+            assert "id" not in intermediate_repr.get(
+                "params", iter(())
             ), "Primary key unable to infer and column `id` already taken"
             params["id"] = {
                 "doc": "[PK]",
