@@ -9,18 +9,16 @@ TODO
 
 """
 
-from ast import AnnAssign, Assign, Call, ClassDef, Load, Name, get_docstring, keyword
+from ast import AnnAssign, Assign, Call, ClassDef
 from collections import OrderedDict
-from functools import partial
-from itertools import chain, filterfalse
-from operator import attrgetter, eq
 
 import cdd.parse.utils.parser_utils
-from cdd.ast_utils import get_value, set_value
+from cdd.ast_utils import get_value
 from cdd.defaults_utils import extract_default
+from cdd.emit.utils.sqlalchemy_utils import sqlalchemy_class_to_table
 from cdd.parse.docstring import docstring
 from cdd.parse.utils.sqlalchemy_utils import column_call_to_param
-from cdd.pure_utils import assert_equal, rpartial
+from cdd.pure_utils import assert_equal
 
 
 def sqlalchemy_table(call_or_name, parse_original_whitespace=False):
@@ -123,67 +121,8 @@ def sqlalchemy(class_def, parse_original_whitespace=False):
         type(class_def).__name__
     )
 
-    # Parse into the same format that `sqlalchemy_table` can read, then return with a call to it
-
-    name = get_value(
-        next(
-            filter(
-                lambda assign: any(
-                    filter(
-                        partial(eq, "__tablename__"),
-                        map(attrgetter("id"), assign.targets),
-                    )
-                ),
-                filter(rpartial(isinstance, Assign), class_def.body),
-            )
-        ).value
-    )
-    doc_string = get_docstring(class_def, clean=parse_original_whitespace)
-
-    def _merge_name_to_column(assign):
-        """
-        Merge `a = Column()` into `Column("a")`
-
-        :param assign: Of form `a = Column()`
-        :type assign: ```Assign```
-
-        :return: Unwrapped Call with name prepended
-        :rtype: ```Call```
-        """
-        assign.value.args.insert(0, set_value(assign.targets[0].id))
-        return assign.value
-
     return sqlalchemy_table(
-        Call(
-            func=Name("Table", Load()),
-            args=list(
-                chain.from_iterable(
-                    (
-                        iter((set_value(name), Name("metadata", Load()))),
-                        map(
-                            _merge_name_to_column,
-                            filterfalse(
-                                lambda assign: any(
-                                    map(
-                                        lambda target: target.id == "__tablename__"
-                                        or hasattr(target, "value")
-                                        and isinstance(target.value, Call)
-                                        and target.func.rpartition(".")[2] == "Column",
-                                        assign.targets,
-                                    ),
-                                ),
-                                filter(rpartial(isinstance, Assign), class_def.body),
-                            ),
-                        ),
-                    )
-                )
-            ),
-            keywords=[]
-            if doc_string is None
-            else [keyword(arg="comment", value=set_value(doc_string), identifier=None)],
-            expr=None,
-            expr_func=None,
-        )
+        sqlalchemy_class_to_table(class_def, parse_original_whitespace)
     )
 
 

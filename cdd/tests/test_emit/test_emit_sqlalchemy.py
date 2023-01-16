@@ -22,7 +22,7 @@ from cdd.tests.mocks.ir import (
 from cdd.tests.mocks.sqlalchemy import (
     config_decl_base_ast,
     config_tbl_with_comments_ast,
-    empty_with_inferred_pk,
+    empty_with_inferred_pk_column_assign,
 )
 from cdd.tests.utils_for_tests import run_ast_test, unittest_main
 
@@ -53,7 +53,7 @@ class TestEmitSqlAlchemy(TestCase):
         run_ast_test(
             self,
             sql_table,
-            gold=empty_with_inferred_pk,
+            gold=empty_with_inferred_pk_column_assign,
         )
 
     @skipIf(

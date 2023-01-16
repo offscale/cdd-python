@@ -2,24 +2,37 @@
 Tests for `cdd.emit.sqlalchemy.utils.sqlalchemy_utils`
 """
 
-from ast import Call, Load, Name, keyword
+import ast
+from ast import Assign, Call, ImportFrom, Load, Module, Name, Store, alias, keyword
 from collections import OrderedDict
 from copy import deepcopy
+from os import mkdir, path
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 from cdd.ast_utils import set_value
 from cdd.emit.utils.sqlalchemy_utils import (
     ensure_has_primary_key,
     param_to_sqlalchemy_column_call,
+    sqlalchemy_class_to_table,
+    sqlalchemy_table_to_class,
     update_args_infer_typ_sqlalchemy,
+    update_with_imports_from_columns,
 )
+from cdd.source_transformer import to_code
 from cdd.tests.mocks.ir import (
     intermediate_repr_empty,
     intermediate_repr_no_default_doc,
     intermediate_repr_no_default_sql_doc,
     intermediate_repr_node_pk,
 )
-from cdd.tests.mocks.sqlalchemy import node_fk_call
+from cdd.tests.mocks.sqlalchemy import (
+    element_pk_fk_ass,
+    node_fk_call,
+    node_pk_tbl_ass,
+    node_pk_tbl_call,
+    node_pk_tbl_class,
+)
 from cdd.tests.utils_for_tests import run_ast_test, unittest_main
 
 
@@ -147,6 +160,103 @@ class TestEmitSqlAlchemyUtils(TestCase):
             self,
             args[0],
             gold=Name(id="Small", ctx=Load()),
+        )
+
+    def test_update_with_imports_from_columns(self) -> None:
+        """Tests basic `update_with_imports_from_columns` usage"""
+        with TemporaryDirectory() as tempdir:
+            mod_name = "test_update_with_imports_from_columns"
+            temp_mod_dir = path.join(tempdir, mod_name)
+            mkdir(temp_mod_dir)
+            node_filename = path.join(temp_mod_dir, "node.py")
+            element_filename = path.join(temp_mod_dir, "element.py")
+            node_pk_with_phase1_fk = deepcopy(node_pk_tbl_class)
+            node_pk_with_phase1_fk.body[2] = Assign(
+                targets=[Name(id="primary_element", ctx=Store())],
+                value=Call(
+                    func=Name(id="Column", ctx=Load()),
+                    args=[
+                        Name(id="element", ctx=Load()),
+                        Call(
+                            func=Name(id="ForeignKey", ctx=Load()),
+                            args=[set_value("element.not_the_right_primary_key")],
+                            keywords=[],
+                        ),
+                    ],
+                    keywords=[],
+                ),
+                lineno=None,
+            )
+            with open(node_filename, "wt") as f:
+                f.write(
+                    to_code(
+                        Module(
+                            body=[
+                                ImportFrom(
+                                    module=".".join(
+                                        (
+                                            mod_name,
+                                            path.splitext(path.basename(node_filename))[
+                                                0
+                                            ],
+                                        )
+                                    ),
+                                    names=[
+                                        alias(
+                                            "element",
+                                            None,
+                                            identifier=None,
+                                            identifier_name=None,
+                                        )
+                                    ],
+                                    level=0,
+                                ),
+                                node_pk_tbl_class,
+                            ],
+                            type_ignores=[],
+                        )
+                    )
+                )
+
+            with open(element_filename, "wt") as f:
+                f.write(
+                    to_code(
+                        Module(
+                            body=[sqlalchemy_table_to_class(element_pk_fk_ass)],
+                            type_ignores=[],
+                        )
+                    )
+                )
+
+            update_with_imports_from_columns(node_filename)
+
+            with open(node_filename, "rt") as f:
+                node_filename_str = f.read()
+            gen_mod = ast.parse(node_filename_str)
+
+        run_ast_test(
+            self,
+            gen_mod.body[1],
+            gold=node_pk_tbl_class,
+        )
+
+    def test_sqlalchemy_table_to_class(self) -> None:
+        """Tests that `sqlalchemy_table_to_class` works"""
+        run_ast_test(
+            self,
+            gen_ast=sqlalchemy_table_to_class(deepcopy(node_pk_tbl_ass)),
+            gold=node_pk_tbl_class,
+        )
+
+    def test_sqlalchemy_class_to_table(self) -> None:
+        """Tests that `sqlalchemy_class_to_table` works"""
+
+        run_ast_test(
+            self,
+            sqlalchemy_class_to_table(
+                deepcopy(node_pk_tbl_class), parse_original_whitespace=False
+            ),
+            gold=node_pk_tbl_call,
         )
 
 
