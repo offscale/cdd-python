@@ -16,14 +16,17 @@ from ast import (
     Module,
     Name,
     Return,
+    Store,
     Subscript,
     Tuple,
     alias,
     arguments,
+    keyword,
 )
 from collections import OrderedDict, deque
+from functools import partial
 from itertools import chain, filterfalse
-from operator import attrgetter, methodcaller
+from operator import attrgetter, eq, methodcaller
 from os import path
 from platform import system
 
@@ -319,7 +322,7 @@ def generate_repr_method(params, cls_name, docstring_format):
         stmt=None,
         lineno=None,
         returns=None,
-        **maybe_type_comment
+        **maybe_type_comment,
     )
 
 
@@ -434,7 +437,7 @@ def update_with_imports_from_columns(filename):
                 str.istitle,
                 filterfalse(
                     frozenset(
-                        ("list", "string", "int", "float", "complex", "long", "self")
+                        ("complex", "float", "int", "list", "long", "self", "string")
                     ).__contains__,
                     filterfalse(
                         sqlalchemy_top_level_imports.__contains__,
@@ -462,7 +465,7 @@ def update_with_imports_from_columns(filename):
         )
     )
 
-    module = path.dirname(filename)
+    module = path.basename(path.dirname(filename))
     mod.body = list(
         chain.from_iterable(
             (
@@ -680,6 +683,153 @@ def rewrite_fk(symbol_to_module, column_assign):
     return column_assign
 
 
+def sqlalchemy_class_to_table(class_def, parse_original_whitespace):
+    """
+    Convert SQLalchemy class to SQLalchemy Table expression
+
+    :param class_def: A class inheriting from declarative `Base`, where `Base = sqlalchemy.orm.declarative_base()`
+    :type class_def: ```ClassDef```
+
+    :param parse_original_whitespace: Whether to parse original whitespace or strip it out
+    :type parse_original_whitespace: ```bool```
+
+    :return: SQLalchemy Talbe expression
+    :rtype: ```Call```
+    """
+    assert isinstance(
+        class_def, ClassDef
+    ), "Expected `ClassDef` got `{type_name}`".format(
+        type_name=type(class_def).__name__
+    )
+
+    # Parse into the same format that `sqlalchemy_table` can read, then return with a call to it
+
+    name = get_value(
+        next(
+            filter(
+                lambda assign: any(
+                    filter(
+                        partial(eq, "__tablename__"),
+                        map(attrgetter("id"), assign.targets),
+                    )
+                ),
+                filter(rpartial(isinstance, Assign), class_def.body),
+            )
+        ).value
+    )
+    doc_string = ast.get_docstring(class_def, clean=parse_original_whitespace)
+
+    def _merge_name_to_column(assign):
+        """
+        Merge `a = Column()` into `Column("a")`
+
+        :param assign: Of form `a = Column()`
+        :type assign: ```Assign```
+
+        :return: Unwrapped Call with name prepended
+        :rtype: ```Call```
+        """
+        print("b4::assign", to_code(assign))
+        assign.value.args.insert(0, set_value(assign.targets[0].id))
+        print("l8::assign", to_code(assign), "\n")
+        return assign.value
+
+    return Call(
+        func=Name("Table", Load()),
+        args=list(
+            chain.from_iterable(
+                (
+                    (set_value(name), Name("metadata_obj", Load())),
+                    map(
+                        _merge_name_to_column,
+                        filterfalse(
+                            lambda assign: any(
+                                map(
+                                    lambda target: target.id == "__tablename__"
+                                    or hasattr(target, "value")
+                                    and isinstance(target.value, Call)
+                                    and target.func.rpartition(".")[2] == "Column",
+                                    assign.targets,
+                                ),
+                            ),
+                            filter(rpartial(isinstance, Assign), class_def.body),
+                        ),
+                    ),
+                )
+            )
+        ),
+        keywords=[]
+        if doc_string is None
+        else [keyword(arg="comment", value=set_value(doc_string), identifier=None)],
+        expr=None,
+        expr_func=None,
+    )
+
+
+def sqlalchemy_table_to_class(table_expr_ass):
+    """Convert `table_name = Table(column_name)` to `class table_name(Base): column_name"""
+    assert isinstance(
+        table_expr_ass, Assign
+    ), "Expected `Assign` got `{type_name}`".format(
+        type_name=type(table_expr_ass).__name__
+    )
+    assert len(table_expr_ass.targets) == 1 and isinstance(
+        table_expr_ass.targets[0], Name
+    )
+    assert len(table_expr_ass.value.args) > 1
+
+    return ClassDef(
+        name=table_expr_ass.targets[0].id,
+        bases=[Name("Base", Load())],
+        keywords=[],
+        body=list(
+            chain.from_iterable(
+                (
+                    (
+                        Assign(
+                            targets=[Name("__tablename__", Store())],
+                            value=set_value(get_value(table_expr_ass.value.args[0])),
+                            expr=None,
+                            lineno=None,
+                            **maybe_type_comment,
+                        ),
+                    ),
+                    map(
+                        lambda column_call: Assign(
+                            targets=[Name(get_value(column_call.args[0]), Store())],
+                            value=Call(
+                                func=column_call.func,
+                                args=column_call.args[1:]
+                                if len(column_call.args) > 1
+                                else [],
+                                keywords=column_call.keywords,
+                                expr=None,
+                                expr_func=None,
+                            ),
+                            expr=None,
+                            lineno=None,
+                            **maybe_type_comment,
+                        ),
+                        filter(
+                            lambda node: isinstance(node, Call)
+                            and isinstance(node.func, Name)
+                            and node.func.id == "Column",
+                            table_expr_ass.value.args[2:],
+                        ),
+                    ),
+                )
+            )
+        ),
+        decorator_list=[],
+        expr=None,
+        lineno=None,
+        col_offset=None,
+        end_lineno=None,
+        end_col_offset=None,
+        identifier_name=None,
+    )
+
+
 typ2column_type = {v: k for k, v in column_type2typ.items()}
 typ2column_type.update(
     {
@@ -696,4 +846,8 @@ __all__ = [
     "ensure_has_primary_key",
     "generate_repr_method",
     "param_to_sqlalchemy_column_call",
+    "sqlalchemy_class_to_table",
+    "sqlalchemy_table_to_class",
+    "update_args_infer_typ_sqlalchemy",
+    "update_with_imports_from_columns",
 ]

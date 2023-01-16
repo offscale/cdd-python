@@ -444,7 +444,7 @@ config_decl_base_ast = ClassDef(
     identifier_name=None,
 )
 
-empty_with_inferred_pk = Assign(
+empty_with_inferred_pk_column_assign = Assign(
     targets=[Name(id="empty_with_inferred_pk_tbl", ctx=Store())],
     value=Call(
         func=Name(id="Table", ctx=Load()),
@@ -523,6 +523,45 @@ node_pk_tbl_ass = Assign(
     **maybe_type_comment,
 )
 
+node_pk_tbl_class = ClassDef(
+    name="node",
+    bases=[Name(id="Base", ctx=Load())],
+    keywords=[],
+    body=[
+        Assign(
+            targets=[Name(id="__tablename__", ctx=Store())],
+            value=set_value("node"),
+            lineno=None,
+        ),
+        Assign(
+            targets=[Name(id="node_id", ctx=Store())],
+            value=Call(
+                func=Name(id="Column", ctx=Load()),
+                args=[Name(id="Integer", ctx=Load())],
+                keywords=[keyword(arg="primary_key", value=set_value(True))],
+            ),
+            lineno=None,
+        ),
+        Assign(
+            targets=[Name(id="primary_element", ctx=Store())],
+            value=Call(
+                func=Name(id="Column", ctx=Load()),
+                args=[
+                    Name(id="Integer", ctx=Load()),
+                    Call(
+                        func=Name(id="ForeignKey", ctx=Load()),
+                        args=[set_value("element.element_id")],
+                        keywords=[],
+                    ),
+                ],
+                keywords=[],
+            ),
+            lineno=None,
+        ),
+    ],
+    decorator_list=[],
+)
+
 element_pk_fk_tbl = Call(
     func=Name(id="Table", ctx=Load()),
     args=[
@@ -564,9 +603,12 @@ __all__ = [
     "config_tbl_with_comments_ast",
     "config_tbl_with_comments_str",
     "dataset_primary_key_column_assign",
-    "empty_with_inferred_pk",
+    "element_pk_fk_ass",
+    "empty_with_inferred_pk_column_assign",
     "foreign_sqlalchemy_tbls_mod",
     "foreign_sqlalchemy_tbls_str",
     "node_fk_call",
     "node_pk_tbl_ass",
+    "node_pk_tbl_call",
+    "node_pk_tbl_class",
 ]

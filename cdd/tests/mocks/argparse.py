@@ -112,6 +112,29 @@ _cli_doc_nosplit_expr = Expr(
     )
 )
 
+as_numpy_argparse_call = Expr(
+    Call(
+        args=[set_value("--as_numpy")],
+        func=Attribute(
+            Name("argument_parser", Load()),
+            "add_argument",
+            Load(),
+        ),
+        keywords=[
+            keyword(arg="type", value=Name("bool", Load()), identifier=None),
+            keyword(
+                arg="help",
+                value=set_value(
+                    "Convert to numpy ndarrays",
+                ),
+                identifier=None,
+            ),
+        ],
+        expr=None,
+        expr_func=None,
+    )
+)
+
 _argparse_add_arguments = (
     Expr(
         Call(
@@ -211,28 +234,7 @@ _argparse_add_arguments = (
             expr_func=None,
         )
     ),
-    Expr(
-        Call(
-            args=[set_value("--as_numpy")],
-            func=Attribute(
-                Name("argument_parser", Load()),
-                "add_argument",
-                Load(),
-            ),
-            keywords=[
-                keyword(arg="type", value=Name("bool", Load()), identifier=None),
-                keyword(
-                    arg="help",
-                    value=set_value(
-                        "Convert to numpy ndarrays",
-                    ),
-                    identifier=None,
-                ),
-            ],
-            expr=None,
-            expr_func=None,
-        )
-    ),
+    as_numpy_argparse_call,
     Expr(
         Call(
             args=[set_value("--data_loader_kwargs")],

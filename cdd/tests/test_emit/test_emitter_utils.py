@@ -6,10 +6,14 @@ from copy import deepcopy
 from operator import itemgetter
 from unittest import TestCase
 
-from cdd.ast_utils import get_value, set_value
+from cdd.ast_utils import NoneStr, get_value, set_value
 from cdd.emit.utils.argparse_function_utils import parse_out_param
 from cdd.emit.utils.docstring_utils import interpolate_defaults
-from cdd.tests.mocks.argparse import argparse_add_argument_ast, argparse_func_ast
+from cdd.tests.mocks.argparse import (
+    argparse_add_argument_ast,
+    argparse_func_ast,
+    as_numpy_argparse_call,
+)
 from cdd.tests.mocks.ir import intermediate_repr
 from cdd.tests.utils_for_tests import unittest_main
 
@@ -40,6 +44,15 @@ class TestEmitterUtils(TestCase):
         self.assertDictEqual(
             parse_out_param(argparse_add_argument_ast)[1],
             {"default": 0, "doc": None, "typ": "int"},
+        )
+
+        self.assertDictEqual(
+            parse_out_param(as_numpy_argparse_call, require_default=True)[1],
+            {
+                "default": NoneStr,
+                "doc": "Convert to numpy ndarrays",
+                "typ": "Optional[bool]",
+            },
         )
 
     def test_parse_out_param_fails(self) -> None:
