@@ -532,6 +532,7 @@ node_pk_tbl_class = ClassDef(
             targets=[Name(id="__tablename__", ctx=Store())],
             value=set_value("node"),
             lineno=None,
+            **maybe_type_comment,
         ),
         Assign(
             targets=[Name(id="node_id", ctx=Store())],
@@ -541,6 +542,7 @@ node_pk_tbl_class = ClassDef(
                 keywords=[keyword(arg="primary_key", value=set_value(True))],
             ),
             lineno=None,
+            **maybe_type_comment,
         ),
         Assign(
             targets=[Name(id="primary_element", ctx=Store())],
@@ -557,6 +559,7 @@ node_pk_tbl_class = ClassDef(
                 keywords=[],
             ),
             lineno=None,
+            **maybe_type_comment,
         ),
     ],
     decorator_list=[],

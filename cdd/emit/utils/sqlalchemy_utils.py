@@ -729,9 +729,7 @@ def sqlalchemy_class_to_table(class_def, parse_original_whitespace):
         :return: Unwrapped Call with name prepended
         :rtype: ```Call```
         """
-        print("b4::assign", to_code(assign))
         assign.value.args.insert(0, set_value(assign.targets[0].id))
-        print("l8::assign", to_code(assign), "\n")
         return assign.value
 
     return Call(
