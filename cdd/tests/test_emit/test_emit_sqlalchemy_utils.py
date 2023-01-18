@@ -3,9 +3,11 @@ Tests for `cdd.emit.sqlalchemy.utils.sqlalchemy_utils`
 """
 
 import ast
+from _ast import Import
 from ast import Assign, Call, ImportFrom, Load, Module, Name, Store, alias, keyword
 from collections import OrderedDict
 from copy import deepcopy
+from operator import attrgetter
 from os import mkdir, path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
@@ -17,8 +19,10 @@ from cdd.emit.utils.sqlalchemy_utils import (
     sqlalchemy_class_to_table,
     sqlalchemy_table_to_class,
     update_args_infer_typ_sqlalchemy,
+    update_fk_for_file,
     update_with_imports_from_columns,
 )
+from cdd.pure_utils import rpartial
 from cdd.source_transformer import to_code
 from cdd.tests.mocks.ir import (
     intermediate_repr_empty,
@@ -163,7 +167,19 @@ class TestEmitSqlAlchemyUtils(TestCase):
         )
 
     def test_update_with_imports_from_columns(self) -> None:
-        """Tests basic `update_with_imports_from_columns` usage"""
+        """
+        Tests basic `update_with_imports_from_columns` usage
+
+        Confirms that this:
+        ```
+        primary_element = Column(element, ForeignKey('element.not_the_right_primary_key'))
+        ```
+
+        Turns into this:
+        ```
+        primary_element = Column(Integer, ForeignKey('element.element_id'))
+        ```
+        """
         with TemporaryDirectory() as tempdir:
             mod_name = "test_update_with_imports_from_columns"
             temp_mod_dir = path.join(tempdir, mod_name)
@@ -187,6 +203,82 @@ class TestEmitSqlAlchemyUtils(TestCase):
                 ),
                 lineno=None,
             )
+            node_mod = Module(
+                body=[
+                    node_pk_tbl_class,
+                ],
+                type_ignores=[],
+            )
+
+            with open(node_filename, "wt") as f:
+                f.write(to_code(node_mod))
+
+            with open(element_filename, "wt") as f:
+                f.write(
+                    to_code(
+                        Module(
+                            body=[sqlalchemy_table_to_class(element_pk_fk_ass)],
+                            type_ignores=[],
+                        )
+                    )
+                )
+
+            update_with_imports_from_columns(node_filename)
+
+            with open(node_filename, "rt") as f:
+                node_filename_str = f.read()
+            gen_mod = ast.parse(node_filename_str)
+
+        node_body, gen_body = map(attrgetter("body"), (node_mod, gen_mod))
+        node_mod_imports = filter(rpartial(isinstance, (ImportFrom, Import)), node_body)
+        gen_imports = filter(rpartial(isinstance, (ImportFrom, Import)), gen_body)
+        print("node_mod_imports:", tuple(map(to_code, node_mod_imports)), ";")
+        print("gen_imports:", tuple(map(to_code, gen_imports)), ";")
+
+        run_ast_test(
+            self,
+            gen_mod.body[1],
+            gold=node_pk_tbl_class,
+        )
+
+    def test_update_fk_for_file(self) -> None:
+        """
+        Tests basic `update_with_imports_from_columns` usage
+
+        Confirms that this:
+        ```
+        primary_element = Column(element, ForeignKey('element.not_the_right_primary_key'))
+        ```
+
+        Turns into this:
+        ```
+        primary_element = Column(Integer, ForeignKey('element.element_id'))
+        ```
+        """
+        with TemporaryDirectory() as tempdir:
+            mod_name = "test_update_with_imports_from_columns"
+            temp_mod_dir = path.join(tempdir, mod_name)
+            mkdir(temp_mod_dir)
+            node_filename = path.join(temp_mod_dir, "node.py")
+            element_filename = path.join(temp_mod_dir, "element.py")
+            node_pk_with_phase1_fk = deepcopy(node_pk_tbl_class)
+            node_pk_with_phase1_fk.body[2] = Assign(
+                targets=[Name(id="primary_element", ctx=Store())],
+                value=Call(
+                    func=Name(id="Column", ctx=Load()),
+                    args=[
+                        Name(id="element", ctx=Load()),
+                        Call(
+                            func=Name(id="ForeignKey", ctx=Load()),
+                            args=[set_value("element.not_the_right_primary_key")],
+                            keywords=[],
+                        ),
+                    ],
+                    keywords=[],
+                ),
+                lineno=None,
+            )
+            print("to_code:", to_code(node_pk_with_phase1_fk.body[2]))
             with open(node_filename, "wt") as f:
                 f.write(
                     to_code(
@@ -228,7 +320,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
                     )
                 )
 
-            update_with_imports_from_columns(node_filename)
+            update_fk_for_file(node_filename)
 
             with open(node_filename, "rt") as f:
                 node_filename_str = f.read()
@@ -250,7 +342,6 @@ class TestEmitSqlAlchemyUtils(TestCase):
 
     def test_sqlalchemy_class_to_table(self) -> None:
         """Tests that `sqlalchemy_class_to_table` works"""
-
         run_ast_test(
             self,
             sqlalchemy_class_to_table(

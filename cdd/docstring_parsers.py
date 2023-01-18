@@ -1,12 +1,11 @@
 """
 Docstring parsers.
 
-Translates from the [ReST docstring format (Sphinx)](
+Parses these formats into the cdd_python common IR format:
+ - [ReST docstring format (Sphinx)](
   https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html#the-sphinx-docstring-format)
-
-Translates from the [numpydoc docstring format](https://numpydoc.readthedocs.io/en/latest/format.html)
-
-Translates from [Google's docstring format](https://google.github.io/styleguide/pyguide.html)
+ - [numpydoc docstring format](https://numpydoc.readthedocs.io/en/latest/format.html)
+ - [Google's docstring format](https://google.github.io/styleguide/pyguide.html)
 """
 
 import ast
