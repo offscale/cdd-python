@@ -1,5 +1,11 @@
 """
-Docstring emitter
+Docstring emitter.
+
+Emits into these formats from the cdd_python common IR format:
+ - [ReST docstring format (Sphinx)](
+  https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html#the-sphinx-docstring-format)
+ - [numpydoc docstring format](https://numpydoc.readthedocs.io/en/latest/format.html)
+ - [Google's docstring format](https://google.github.io/styleguide/pyguide.html)
 """
 
 from collections import OrderedDict
