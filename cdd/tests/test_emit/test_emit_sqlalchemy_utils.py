@@ -3,11 +3,20 @@ Tests for `cdd.emit.sqlalchemy.utils.sqlalchemy_utils`
 """
 
 import ast
-from _ast import Import
-from ast import Assign, Call, ImportFrom, Load, Module, Name, Store, alias, keyword
+from ast import (
+    Assign,
+    Call,
+    Import,
+    ImportFrom,
+    Load,
+    Module,
+    Name,
+    Store,
+    alias,
+    keyword,
+)
 from collections import OrderedDict
 from copy import deepcopy
-from operator import attrgetter
 from os import mkdir, path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
@@ -184,15 +193,15 @@ class TestEmitSqlAlchemyUtils(TestCase):
             mod_name = "test_update_with_imports_from_columns"
             temp_mod_dir = path.join(tempdir, mod_name)
             mkdir(temp_mod_dir)
-            node_filename = path.join(temp_mod_dir, "node.py")
-            element_filename = path.join(temp_mod_dir, "element.py")
+            node_filename = path.join(temp_mod_dir, "Node.py")
+            element_filename = path.join(temp_mod_dir, "Element.py")
             node_pk_with_phase1_fk = deepcopy(node_pk_tbl_class)
             node_pk_with_phase1_fk.body[2] = Assign(
                 targets=[Name(id="primary_element", ctx=Store())],
                 value=Call(
                     func=Name(id="Column", ctx=Load()),
                     args=[
-                        Name(id="element", ctx=Load()),
+                        Name(id="Element", ctx=Load()),
                         Call(
                             func=Name(id="ForeignKey", ctx=Load()),
                             args=[set_value("element.not_the_right_primary_key")],
@@ -203,25 +212,15 @@ class TestEmitSqlAlchemyUtils(TestCase):
                 ),
                 lineno=None,
             )
-            node_mod = Module(
-                body=[
-                    node_pk_tbl_class,
-                ],
-                type_ignores=[],
-            )
 
             with open(node_filename, "wt") as f:
-                f.write(to_code(node_mod))
+                f.write(to_code(node_pk_with_phase1_fk))
+
+            element_class = sqlalchemy_table_to_class(element_pk_fk_ass)
+            element_class.name = "Element"
 
             with open(element_filename, "wt") as f:
-                f.write(
-                    to_code(
-                        Module(
-                            body=[sqlalchemy_table_to_class(element_pk_fk_ass)],
-                            type_ignores=[],
-                        )
-                    )
-                )
+                f.write(to_code(element_class))
 
             update_with_imports_from_columns(node_filename)
 
@@ -229,16 +228,26 @@ class TestEmitSqlAlchemyUtils(TestCase):
                 node_filename_str = f.read()
             gen_mod = ast.parse(node_filename_str)
 
-        node_body, gen_body = map(attrgetter("body"), (node_mod, gen_mod))
-        node_mod_imports = filter(rpartial(isinstance, (ImportFrom, Import)), node_body)
-        gen_imports = filter(rpartial(isinstance, (ImportFrom, Import)), gen_body)
-        print("node_mod_imports:", tuple(map(to_code, node_mod_imports)), ";")
-        print("gen_imports:", tuple(map(to_code, gen_imports)), ";")
+        gen_imports = tuple(
+            filter(rpartial(isinstance, (ImportFrom, Import)), gen_mod.body)
+        )
+        self.assertEqual(len(gen_imports), 1)
 
         run_ast_test(
             self,
-            gen_mod.body[1],
-            gold=node_pk_tbl_class,
+            gen_imports[0],
+            ImportFrom(
+                module=".".join(("test_update_with_imports_from_columns", "element")),
+                names=[
+                    alias(
+                        "Element",
+                        None,
+                        identifier=None,
+                        identifier_name=None,
+                    )
+                ],
+                level=0,
+            ),
         )
 
     def test_update_fk_for_file(self) -> None:
@@ -278,7 +287,6 @@ class TestEmitSqlAlchemyUtils(TestCase):
                 ),
                 lineno=None,
             )
-            print("to_code:", to_code(node_pk_with_phase1_fk.body[2]))
             with open(node_filename, "wt") as f:
                 f.write(
                     to_code(

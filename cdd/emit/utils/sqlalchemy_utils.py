@@ -433,7 +433,7 @@ def update_with_imports_from_columns(filename):
 
     candidates = sorted(
         frozenset(
-            filterfalse(
+            filter(
                 str.istitle,
                 filterfalse(
                     frozenset(
@@ -847,5 +847,6 @@ __all__ = [
     "sqlalchemy_class_to_table",
     "sqlalchemy_table_to_class",
     "update_args_infer_typ_sqlalchemy",
+    "update_fk_for_file",
     "update_with_imports_from_columns",
 ]
