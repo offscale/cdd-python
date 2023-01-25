@@ -162,6 +162,23 @@ class TestEmitSqlAlchemyUtils(TestCase):
             ),
         )
 
+    def test_update_args_infer_typ_sqlalchemy_when_simple_array_in_typ(self) -> None:
+        """Tests that SQLalchemy can infer the typ from a simple array (in `typ`)"""
+        args = []
+        update_args_infer_typ_sqlalchemy({"typ": "List[str]"}, args, "", False, {})
+        self.assertEqual(len(args), 1)
+        run_ast_test(
+            self,
+            args[0],
+            gold=Call(
+                func=Name(id="ARRAY", ctx=Load()),
+                args=[Name(id="String", ctx=Load())],
+                keywords=[],
+                expr=None,
+                expr_func=None,
+            ),
+        )
+
     def test_update_args_infer_typ_sqlalchemy_when_simple_union(self) -> None:
         """Tests that SQLalchemy can infer the typ from a simple Union"""
         args = []

@@ -39,7 +39,7 @@ black = (
 
 def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     """
-    Compares `gen_ast` with `gold` standard
+    Compares `gen_ast` with `gold` standard. Uses only the first element if `Module`.
 
     :param test_case_instance: instance of `TestCase`
     :type test_case_instance: ```unittest.TestCase```
@@ -47,11 +47,11 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     :param gen_ast: generated AST
     :type gen_ast: ```Union[ast.Module, ast.ClassDef, ast.FunctionDef]```
 
-    :param skip_black: Whether to skip formatting with black. Turned off for performance, turn on for pretty debug.
-    :type skip_black: ```bool```
-
     :param gold: mocked AST
     :type gold: ```Union[ast.Module, ast.ClassDef, ast.FunctionDef]```
+
+    :param skip_black: Whether to skip formatting with black. Turned off for performance, turn on for pretty debug.
+    :type skip_black: ```bool```
     """
     if isinstance(gen_ast, str):
         gen_ast = ast.parse(gen_ast).body[0]
@@ -98,7 +98,9 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     #     print("#gold", file=sys.stderr)
     #     print_ast(_gold_ast, file=sys.stderr)
 
-    if isinstance(_gen_ast, (ast.ClassDef, ast.AsyncFunctionDef, ast.FunctionDef)):
+    if isinstance(
+        _gen_ast, (ast.Module, ast.ClassDef, ast.AsyncFunctionDef, ast.FunctionDef)
+    ):
         test_case_instance.assertEqual(
             *map(partial(ast.get_docstring, clean=True), (_gold_ast, _gen_ast))
         )

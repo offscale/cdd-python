@@ -253,7 +253,7 @@ def sqlalchemy(
                             )
                         )
                     )
-                    if intermediate_repr["doc"]
+                    if intermediate_repr.get("doc")
                     or (intermediate_repr["returns"] or {})
                     .get("return_type", {})
                     .get("doc")

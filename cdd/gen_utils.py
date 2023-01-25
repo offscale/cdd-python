@@ -174,8 +174,9 @@ def gen_file(
         for name, obj in input_mapping_it
     )
     if emit_and_infer_imports:
-        imports = (imports or "") + " ".join(
-            map(to_code, map(infer_imports, functions_and_classes))
+        imports = "{}{}".format(
+            imports or "",
+            " ".join(map(to_code, map(infer_imports, functions_and_classes))),
         )
     content = "{prepend}{imports}\n{functions_and_classes}\n{__all__}".format(
         prepend="" if prepend is None else prepend,

@@ -26,6 +26,7 @@ from ast import (
 from collections import OrderedDict, deque
 from functools import partial
 from itertools import chain, filterfalse
+from json import dumps
 from operator import attrgetter, eq, methodcaller
 from os import path
 from platform import system
@@ -118,6 +119,16 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
             for k, v in _param["x_typ"]["sql"]["constraints"].items()
         ]
 
+    # TODO: Maybe `CREATE TYPE` and use that?
+    if _param["typ"] == "dict" and "ir" in _param:
+        keywords.append(
+            ast.keyword(
+                arg="comment",
+                value=set_value("[schema={}]".format(dumps(_param["ir"]))),
+                identifier=None,
+            )
+        )
+
     if has_default:
         # if default == NoneStr: default = None
         keywords.append(
@@ -190,6 +201,37 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
                 expr_func=None,
             )
         )
+    elif _param["typ"].startswith("List["):
+        list_typ = ast.parse(_param["typ"]).body[0]
+        assert isinstance(list_typ, Expr), "Expected `Expr` got `{type_name}`".format(
+            type_name=type(list_typ).__name__
+        )
+        assert isinstance(
+            list_typ.value, Subscript
+        ), "Expected `Subscript` got `{type_name}`".format(
+            type_name=type(list_typ.value).__name__
+        )
+        assert isinstance(
+            list_typ.value.slice, Name
+        ), "Expected `Name` got `{type_name}`".format(
+            type_name=type(list_typ.value.slice).__name__
+        )
+        args.append(
+            Call(
+                func=Name(id="ARRAY", ctx=Load()),
+                args=[
+                    Name(
+                        id=typ2column_type.get(
+                            list_typ.value.slice.id, list_typ.value.slice.id
+                        ),
+                        ctx=Load(),
+                    )
+                ],
+                keywords=[],
+                expr=None,
+                expr_func=None,
+            )
+        )
     elif "items" in _param and _param["items"].get("type", False) in typ2column_type:
         args.append(
             Call(
@@ -231,13 +273,24 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
             )
         )
     else:
+        type_name = (
+            x_typ_sql["type"]
+            if "type" in x_typ_sql
+            else typ2column_type.get(_param["typ"], _param["typ"])
+        )
         args.append(
-            Name(
-                x_typ_sql["type"]
-                if "type" in x_typ_sql
-                else typ2column_type.get(_param["typ"], _param["typ"]),
-                Load(),
+            Call(
+                func=Name(type_name, Load()),
+                args=list(map(set_value, x_typ_sql.get("type_args", iter(())))),
+                keywords=[
+                    keyword(arg=arg, value=set_value(val))
+                    for arg, val in x_typ_sql.get("type_kwargs", dict()).items()
+                ],
+                expr=None,
+                expr_func=None,
             )
+            if "type_args" in x_typ_sql or "type_kwargs" in x_typ_sql
+            else Name(type_name, Load())
         )
     return nullable
 
