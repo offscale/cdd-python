@@ -31,7 +31,6 @@ from ast import (
     keyword,
 )
 from copy import deepcopy
-from functools import partial
 from itertools import repeat
 from os import extsep, path
 from unittest import TestCase
@@ -126,9 +125,7 @@ class TestAstUtils(TestCase):
         self.assertEqual(ast_type_to_python_type(Num(n=vals[0])), vals[0])
         self.assertEqual(ast_type_to_python_type(Constant(value=vals[0])), vals[0])
         self.assertEqual(ast_type_to_python_type(Str(s=str(vals[0]))), str(vals[0]))
-        self.assertRaises(
-            NotImplementedError, partial(ast_type_to_python_type, node=set_arg("foo"))
-        )
+        self.assertRaises(NotImplementedError, ast_type_to_python_type, set_arg("foo"))
 
     def test_cmp_ast(self) -> None:
         """Test `cmp_ast` branch that isn't tested anywhere else"""
