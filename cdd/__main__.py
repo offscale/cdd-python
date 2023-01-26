@@ -22,6 +22,16 @@ from cdd.openapi.gen_routes import gen_routes, upsert_routes
 from cdd.pure_utils import pluralise, rpartial
 from cdd.sync_properties import sync_properties
 
+parse_emit_types = (
+    "argparse",
+    "class",
+    "function",
+    "json_schema",
+    "pydantic",
+    "sqlalchemy",
+    "sqlalchemy_table",
+)
+
 
 def _build_parser():
     """
@@ -43,16 +53,6 @@ def _build_parser():
     subparsers = parser.add_subparsers()
     subparsers.required = True
     subparsers.dest = "command"
-
-    parse_emit_types = (
-        "argparse",
-        "class",
-        "function",
-        "json_schema",
-        "pydantic",
-        "sqlalchemy",
-        "sqlalchemy_table",
-    )
 
     ############
     # Property #
@@ -230,7 +230,7 @@ def _build_parser():
     )
     gen_parser.add_argument(
         "--emit",
-        help="What type to generate.",
+        help="Which type to generate.",
         choices=parse_emit_types,
         required=True,
         dest="emit_name",
@@ -392,7 +392,7 @@ def _build_parser():
     )
     exmod_parser.add_argument(
         "--emit",
-        help="What type to generate.",
+        help="Which type to generate.",
         choices=parse_emit_types,
         required=True,
         dest="emit_name",
@@ -564,4 +564,4 @@ def require_file_existent(_parser, filename, name):
 if __name__ == "__main__":
     main()
 
-__all__ = ["main"]
+__all__ = ["main", "parse_emit_types"]
