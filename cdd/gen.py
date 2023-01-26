@@ -43,11 +43,11 @@ def gen(
     :param input_mapping: Import location of dictionary/mapping/2-tuple collection.
     :type input_mapping: ```str```
 
-    :param parse_name: What type to parse.
+    :param parse_name: Which type to parse.
     :type parse_name: ```Literal["argparse", "class", "function", "json_schema",
                                  "pydantic", "sqlalchemy", "sqlalchemy_table"]```
 
-    :param emit_name: What type to generate.
+    :param emit_name: Which type to generate.
     :type emit_name: ```Literal["argparse", "class", "function", "json_schema",
                                 "pydantic", "sqlalchemy", "sqlalchemy_table"]```
 
