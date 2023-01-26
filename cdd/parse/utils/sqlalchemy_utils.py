@@ -410,6 +410,8 @@ __all__ = [
     "column_call_name_manipulator",
     "column_call_to_param",
     "column_type2typ",
+    "get_pk_and_type",
+    "get_table_name",
     "imports_from",
     "sqlalchemy_top_level_imports",
 ]
