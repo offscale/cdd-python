@@ -211,19 +211,18 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
         ), "Expected `Subscript` got `{type_name}`".format(
             type_name=type(list_typ.value).__name__
         )
-        assert isinstance(
-            list_typ.value.slice, Name
-        ), "Expected `Name` got `{type_name}`".format(
-            type_name=type(list_typ.value.slice).__name__
+        name = next(
+            filter(rpartial(isinstance, Name), ast.walk(list_typ.value.slice)), None
+        )
+        assert name is not None, "Could not find a type in {!r}".format(
+            to_code(list_typ.value.slice)
         )
         args.append(
             Call(
                 func=Name(id="ARRAY", ctx=Load()),
                 args=[
                     Name(
-                        id=typ2column_type.get(
-                            list_typ.value.slice.id, list_typ.value.slice.id
-                        ),
+                        id=typ2column_type.get(name.id, name.id),
                         ctx=Load(),
                     )
                 ],
