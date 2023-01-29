@@ -378,7 +378,7 @@ def generate_repr_method(params, cls_name, docstring_format):
     )
 
 
-def ensure_has_primary_key(intermediate_repr):
+def ensure_has_primary_key(intermediate_repr, force_pk_id=False):
     """
     Add a primary key to the input (if nonexistent) then return the input.
 
@@ -390,6 +390,9 @@ def ensure_has_primary_key(intermediate_repr):
            "returns": Optional[OrderedDict[Literal['return_type'],
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :type intermediate_repr: ```dict```
+
+    :param force_pk_id: Whether to force primary_key to be named `id` (if there isn't already a primary_key)
+    :type force_pk_id: ```bool```
 
     :return: a dictionary of form
         {  "name": Optional[str],
@@ -425,7 +428,7 @@ def ensure_has_primary_key(intermediate_repr):
             ),
             maxlen=0,
         )
-        if len(candidate_pks) == 1:
+        if not force_pk_id and len(candidate_pks) == 1:
             params[candidate_pks[0]]["doc"] = (
                 "[PK] {}".format(params[candidate_pks[0]]["doc"])
                 if params[candidate_pks[0]].get("doc")

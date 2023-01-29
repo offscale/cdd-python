@@ -7,6 +7,7 @@ from collections import OrderedDict
 from functools import partial
 from itertools import chain
 from operator import add
+from os import environ
 
 from cdd.ast_utils import maybe_type_comment, set_value
 from cdd.emit.docstring import docstring
@@ -17,10 +18,14 @@ from cdd.emit.utils.sqlalchemy_utils import (
 )
 from cdd.pure_utils import deindent, indent_all_but_first, tab
 
+FORCE_PK_ID = environ.get("FORCE_PK_ID", False) in (False, 0, "0", "false")
+
 
 def sqlalchemy_table(
     intermediate_repr,
     name="config_tbl",
+    table_name=None,
+    force_pk_id=FORCE_PK_ID,
     docstring_format="rest",
     word_wrap=True,
     emit_original_whitespace=False,
@@ -40,6 +45,12 @@ def sqlalchemy_table(
 
     :param name: name of binding + table
     :type name: ```str```
+
+    :param table_name: Table name, defaults to `name`
+    :type table_name: ```str```
+
+    :param force_pk_id: Whether to force primary_key to be named `id` (if there isn't already a primary_key)
+    :type force_pk_id: ```bool```
 
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
@@ -71,13 +82,15 @@ def sqlalchemy_table(
                     (
                         iter(
                             (
-                                set_value(name),
+                                set_value(name if table_name is None else table_name),
                                 Name("metadata", Load()),
                             )
                         ),
                         map(
                             partial(param_to_sqlalchemy_column_call, include_name=True),
-                            ensure_has_primary_key(intermediate_repr["params"]).items(),
+                            ensure_has_primary_key(
+                                intermediate_repr["params"], force_pk_id
+                            ).items(),
                         ),
                     )
                 )
@@ -122,7 +135,7 @@ def sqlalchemy_table(
                     **maybe_type_comment,
                 )
             ]
-            if intermediate_repr["doc"]
+            if intermediate_repr.get("doc")
             else [],
             expr=None,
             expr_func=None,
@@ -140,6 +153,7 @@ def sqlalchemy(
     class_bases=("Base",),
     decorator_list=None,
     table_name=None,
+    force_pk_id=FORCE_PK_ID,
     docstring_format="rest",
     word_wrap=True,
     emit_original_whitespace=False,
@@ -171,6 +185,9 @@ def sqlalchemy(
 
     :param table_name: Table name, defaults to `class_name`
     :type table_name: ```str```
+
+    :param force_pk_id: Whether to force primary_key to be named `id` (if there isn't already a primary_key)
+    :type force_pk_id: ```bool```
 
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
@@ -275,7 +292,9 @@ def sqlalchemy(
                             lineno=None,
                             **maybe_type_comment,
                         ),
-                        ensure_has_primary_key(intermediate_repr["params"]).items(),
+                        ensure_has_primary_key(
+                            intermediate_repr["params"], force_pk_id
+                        ).items(),
                     ),
                     generate_repr_method(
                         intermediate_repr["params"], class_name, docstring_format
