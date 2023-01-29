@@ -125,6 +125,9 @@ def get_emit_kwarg(decorator_list, emit_call, emit_name, name_tpl, name):
     :param name_tpl: Template for the name, e.g., `{name}Config`.
     :type name_tpl: ```str```
 
+    :param name: Interpolates into `name_tpl`
+    :type name: ```str```
+
     :return: Dictionary of keyword arguments targeted the specialised emit function.
     :rtype: ```dict``
     """
