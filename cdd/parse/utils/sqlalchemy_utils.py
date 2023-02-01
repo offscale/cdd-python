@@ -134,9 +134,11 @@ def column_parse_kwarg(key_word):
     :rtype: ```Tuple[str, Any]```
     """
     val = get_value(key_word.value)
-    assert val != key_word.value, "Unable to parse {!r} of {}".format(
-        key_word.arg, to_code(key_word.value)
-    )
+
+    # Checking that the keyword.value has a value OR is a function call.
+    assert val != key_word.value or isinstance(
+        key_word.value, Call
+    ), "Unable to parse {!r} of {}".format(key_word.arg, to_code(key_word.value))
     return key_word.arg, val
 
 
@@ -170,6 +172,17 @@ def column_call_to_param(call):
     )
     if "comment" in _param and "doc" not in _param:
         _param["doc"] = _param.pop("comment")
+
+    if "server_default" in _param:
+        _param.setdefault("x_typ", {"sql": {}})
+        if "sql" not in _param["x_typ"]:
+            _param["x_typ"]["sql"] = {}
+        _param["x_typ"]["sql"].setdefault("constraints", {})
+        if "constraints" not in _param["x_typ"]["sql"]:
+            _param["x_typ"]["sql"]["constraints"] = {}
+        _param["x_typ"]["sql"]["constraints"]["server_default"] = _param[
+            "server_default"
+        ]
 
     for shortname, longname in ("PK", "primary_key"), (
         "FK({})".format(_param.get("foreign_key")),
