@@ -42,14 +42,18 @@ def get_input_mapping_from_path(emit_name, module_path, symbol_name):
     :return: Dictionary of (name, AST) where AST is produced by a cdd emitter matching `emit_name`
     :rtype: ```dict```
     """
-    with open(find_module_filepath(module_path, symbol_name), "rt") as f:
+    module_filepath = find_module_filepath(module_path, symbol_name)
+    with open(module_filepath, "rt") as f:
         input_ast_mod = ast.parse(f.read())
     type_instance_must_be = {
         "sqlalchemy_table": (Assign, AnnAssign),
+        "argparse": (FunctionDef,),
         "function": (FunctionDef, AsyncFunctionDef),
         "pydantic": (FunctionDef, AsyncFunctionDef),
-    }.get(emit_name, (ClassDef,))
-    return dict(
+        "class": (ClassDef,),
+        "class_": (ClassDef,),
+    }.get(emit_name, (FunctionDef, ClassDef))
+    input_mapping = dict(
         map(
             lambda node_name: (
                 node_name[0],
@@ -81,6 +85,8 @@ def get_input_mapping_from_path(emit_name, module_path, symbol_name):
             ),
         )
     )
+    assert input_mapping, "Nothing parsed out of {!r}".format(module_filepath)
+    return input_mapping
 
 
 def get_parser(node, parse_name):
@@ -221,6 +227,16 @@ def gen_file(
         parse_name,
         prepend,
     )
+    assert (
+        len(parsed_ast.body) > 1
+        or not isinstance(parsed_ast.body[0], Assign)
+        and any(
+            filter(
+                lambda target: isinstance(target, Name) and target.id == "__all__",
+                parsed_ast.body[0].targets,
+            )
+        )
+    ), "Nothing will be append to {!r}".format(output_filename)
     with open(output_filename, "a") as f:
         f.write(to_code(parsed_ast))
 

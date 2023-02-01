@@ -202,21 +202,27 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
             )
         )
     elif _param["typ"].startswith("List["):
-        list_typ = ast.parse(_param["typ"]).body[0]
-        assert isinstance(list_typ, Expr), "Expected `Expr` got `{type_name}`".format(
-            type_name=type(list_typ).__name__
-        )
-        assert isinstance(
-            list_typ.value, Subscript
-        ), "Expected `Subscript` got `{type_name}`".format(
-            type_name=type(list_typ.value).__name__
-        )
-        name = next(
-            filter(rpartial(isinstance, Name), ast.walk(list_typ.value.slice)), None
-        )
-        assert name is not None, "Could not find a type in {!r}".format(
-            to_code(list_typ.value.slice)
-        )
+        after_generic = _param["typ"][len("List[") :]
+        if "struct" in after_generic:  # "," in after_generic or
+            name = Name(id="JSON", ctx=Load())
+        else:
+            list_typ = ast.parse(_param["typ"]).body[0]
+            assert isinstance(
+                list_typ, Expr
+            ), "Expected `Expr` got `{type_name}`".format(
+                type_name=type(list_typ).__name__
+            )
+            assert isinstance(
+                list_typ.value, Subscript
+            ), "Expected `Subscript` got `{type_name}`".format(
+                type_name=type(list_typ.value).__name__
+            )
+            name = next(
+                filter(rpartial(isinstance, Name), ast.walk(list_typ.value.slice)), None
+            )
+            assert name is not None, "Could not find a type in {!r}".format(
+                to_code(list_typ.value.slice)
+            )
         args.append(
             Call(
                 func=Name(id="ARRAY", ctx=Load()),
