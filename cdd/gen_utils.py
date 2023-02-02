@@ -436,11 +436,17 @@ def get_functions_and_classes(
     :return: Side-effect of appending `__all__`, this returns emitted values out of `input_mapping_it`
     :rtype: ```Tuple[AST]```
     """
+    module_type = (
+        import_module(".".join(("cdd", "emit", "sqlalchemy")), emit_name)
+        if emit_name == "sqlalchemy_table"
+        else import_module(".".join(("cdd", "emit", emit_name)))
+    )
+
     return tuple(
         print("\nGenerating: {name!r}".format(name=name))
         or global__all__.append(name_tpl.format(name=name))
         or (
-            getattr(import_module(".".join(("cdd", "emit", emit_name))), emit_name)(
+            getattr(module_type, emit_name)(
                 get_parser(obj, parse_name),
                 emit_default_doc=emit_default_doc,
                 word_wrap=no_word_wrap is None,

@@ -59,6 +59,37 @@ def remove_whitespace_comments(source):
     )
 
 
+def append_to_dict(d, keys, value):
+    """
+    Append keys to a dictionary in a hierarchical manner and set the last key to a value.
+    For example, given an empty dictionary and keys = [a, b, c] and value = d then the new
+    dictionary would look like the following: {a: {b: {c: d}}}
+
+    :param d: dictionary to append keys
+    :type d: ```dict```
+
+    :param keys: keys to append to d
+    :type keys: ```List[str]```
+
+    :param value: value to set keys[-1]
+    :type value: ```any```
+
+    :return: `dict` with new keys and value added
+    :rtype: ```dict```
+    """
+    pointer = d
+    for i, key in enumerate(keys):
+        if i == len(keys) - 1 and isinstance(pointer, dict):
+            pointer[key] = value
+            return d
+        if isinstance(pointer, dict):
+            pointer.setdefault(key, {})
+            pointer = pointer[key]
+        else:
+            return d
+    return d
+
+
 def parse_comment_from_line(line):
     """
     Remove from comment onwards in line
@@ -1187,6 +1218,7 @@ __all__ = [
     "quote",
     "reindent",
     "remove_whitespace_comments",
+    "append_to_dict",
     "rpartial",
     "sanitise",
     "sanitise_emit_name",
