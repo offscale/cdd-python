@@ -8,6 +8,7 @@ from unittest import TestCase
 
 from cdd.pure_utils import (
     SetEncoder,
+    append_to_dict,
     assert_equal,
     balanced_parentheses,
     blockwise,
@@ -189,6 +190,19 @@ class TestPureUtils(TestCase):
         self.assertEqual(pluralise("wish"), "wishes")
         self.assertEqual(pluralise("morphosis"), "morphosises")
         self.assertEqual(pluralise("s"), "ss")
+
+    def test_append_to_dict(self) -> None:
+        self.assertEqual(
+            append_to_dict({"a": {"b": {}}}, ["a", "b", "c"], "d"),
+            {"a": {"b": {"c": "d"}}},
+        )
+        self.assertEqual(
+            append_to_dict({"a": {"b": 2}}, ["a", "b", "c"], "d"), {"a": {"b": 2}}
+        )
+        self.assertEqual(
+            append_to_dict({"a": {"b": {"c": {}}}}, ["a", "b", "c"], "d"),
+            {"a": {"b": {"c": "d"}}},
+        )
 
     def test_remove_whitespace_comments(self) -> None:
         """Tests `remove_whitespace_comments` actually removes whitespace and comments from Python source"""

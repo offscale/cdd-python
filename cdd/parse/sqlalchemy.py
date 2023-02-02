@@ -9,8 +9,10 @@ TODO
 
 """
 
+import ast
 from ast import AnnAssign, Assign, Call, ClassDef
 from collections import OrderedDict
+from inspect import getsource
 
 import cdd.parse.utils.parser_utils
 from cdd.ast_utils import get_value
@@ -117,6 +119,9 @@ def sqlalchemy(class_def, parse_original_whitespace=False):
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :rtype: ```dict```
     """
+
+    if not isinstance(class_def, ClassDef):
+        class_def = ast.parse(getsource(class_def)).body[0]
     assert isinstance(class_def, ClassDef), "Expected `ClassDef` got `{!r}`".format(
         type(class_def).__name__
     )

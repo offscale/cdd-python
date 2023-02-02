@@ -19,7 +19,7 @@ from itertools import chain, filterfalse
 from operator import attrgetter
 
 from cdd.ast_utils import get_value
-from cdd.pure_utils import rpartial
+from cdd.pure_utils import append_to_dict, rpartial
 from cdd.source_transformer import to_code
 
 # SQLalchemy 1.14
@@ -115,7 +115,7 @@ def column_parse_arg(idx_arg):
         elif func_id == "ForeignKey":
             return "foreign_key", ",".join(map(get_value, arg.args))
         else:
-            raise NotImplementedError(func_id)
+            return "typ", to_code(idx_arg[1]).replace("\n", "")
 
     val = get_value(arg)
     assert val != arg, "Unable to parse {!r}".format(arg)
@@ -174,15 +174,11 @@ def column_call_to_param(call):
         _param["doc"] = _param.pop("comment")
 
     if "server_default" in _param:
-        _param.setdefault("x_typ", {"sql": {}})
-        if "sql" not in _param["x_typ"]:
-            _param["x_typ"]["sql"] = {}
-        _param["x_typ"]["sql"].setdefault("constraints", {})
-        if "constraints" not in _param["x_typ"]["sql"]:
-            _param["x_typ"]["sql"]["constraints"] = {}
-        _param["x_typ"]["sql"]["constraints"]["server_default"] = _param[
-            "server_default"
-        ]
+        append_to_dict(
+            _param,
+            ["x_typ", "sql", "constraints", "server_default"],
+            _param["server_default"],
+        )
 
     for shortname, longname in ("PK", "primary_key"), (
         "FK({})".format(_param.get("foreign_key")),

@@ -60,14 +60,6 @@ class TestParseSqlAlchemyUtils(TestCase):
         self.assertEqual(gold_name, gen_name)
         self.assertDictEqual(gold_param, gen_param)
 
-    def test_column_call_to_param_not_implemented(self) -> None:
-        """
-        Tests that `parse.sqlalchemy.utils.column_call_to_param` raises `NotImplementedError`
-        """
-        call = deepcopy(node_fk_call)
-        call.args[2].func.id = "NotFound"
-        self.assertRaises(NotImplementedError, column_call_to_param, call)
-
     def test_get_pk_and_type(self) -> None:
         """
         Tests get_pk_and_type
