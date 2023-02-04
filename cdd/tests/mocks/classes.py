@@ -33,9 +33,9 @@ from itertools import chain
 from operator import add, itemgetter
 from textwrap import indent
 
-from cdd.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
-from cdd.defaults_utils import extract_default
-from cdd.pure_utils import strip_starting, tab
+from cdd.shared.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
+from cdd.shared.defaults_utils import extract_default
+from cdd.shared.pure_utils import strip_starting, tab
 from cdd.tests.mocks.docstrings import docstring_header_str, docstring_reduction_v2_str
 from cdd.tests.mocks.methods import (
     function_google_tf_squared_hinge_docstring_str,

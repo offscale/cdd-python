@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 from cdd import __description__, __version__
 from cdd.__main__ import _build_parser
-from cdd.pure_utils import PY3_8
+from cdd.shared.pure_utils import PY3_8
 from cdd.tests.utils_for_tests import run_cli_test, unittest_main
 
 

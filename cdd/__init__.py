@@ -8,10 +8,10 @@ import logging
 from logging import getLogger as get_logger
 
 __author__ = "Samuel Marks"
-__version__ = "0.0.98"
+__version__ = "0.0.99-alpha"
 __description__ = (
     "Open API to/fro routes, models, and tests. "
-    "Convert between docstrings, classes, methods, argparse, and SQLalchemy."
+    "Convert between docstrings, classes, methods, argparse, pydantic, and SQLalchemy."
 )
 
 

@@ -21,8 +21,8 @@ from ast import (
     keyword,
 )
 
-from cdd.ast_utils import FALLBACK_TYP, maybe_type_comment, set_arg, set_value
-from cdd.pure_utils import deindent, emit_separating_tabs, tab
+from cdd.shared.ast_utils import FALLBACK_TYP, maybe_type_comment, set_arg, set_value
+from cdd.shared.pure_utils import deindent, emit_separating_tabs, tab
 from cdd.tests.mocks.classes import (
     class_torch_nn_l1loss_docstring_str,
     tensorboard_doc_str_no_args_str,

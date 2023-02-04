@@ -3,7 +3,7 @@ Mock routes
 """
 
 import cdd.routes.emit.bottle
-from cdd.pure_utils import tab
+from cdd.shared.pure_utils import tab
 
 route_config = {
     "app": "rest_api",

@@ -4,7 +4,7 @@ Constant strings and tuples of strings which are to be interpolated in `emit.py`
 
 from string import Template
 
-from cdd.pure_utils import indent_all_but_first
+from cdd.shared.pure_utils import indent_all_but_first
 
 _create_route_desc = indent_all_but_first(
     '''"""Create `{name}`

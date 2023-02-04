@@ -6,9 +6,9 @@ from copy import deepcopy
 from operator import itemgetter
 from unittest import TestCase
 
-from cdd.ast_utils import NoneStr, get_value, set_value
-from cdd.emit.utils.argparse_function_utils import parse_out_param
-from cdd.emit.utils.docstring_utils import interpolate_defaults
+from cdd.argparse_function.utils.emit_utils import parse_out_param
+from cdd.docstring.utils.emit_utils import interpolate_defaults
+from cdd.shared.ast_utils import NoneStr, get_value, set_value
 from cdd.tests.mocks.argparse import (
     argparse_add_argument_ast,
     argparse_func_ast,

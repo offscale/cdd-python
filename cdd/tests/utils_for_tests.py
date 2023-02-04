@@ -18,10 +18,10 @@ from tempfile import NamedTemporaryFile
 from unittest import main
 from unittest.mock import MagicMock, patch
 
-from cdd import source_transformer
-from cdd.ast_utils import cmp_ast, get_value, set_value
-from cdd.docstring_utils import TOKENS
-from cdd.pure_utils import PY3_8, count_iter_items, identity, reindent, tab
+from cdd.shared import source_transformer
+from cdd.shared.ast_utils import cmp_ast, get_value, set_value
+from cdd.shared.docstring_utils import TOKENS
+from cdd.shared.pure_utils import PY3_8, count_iter_items, identity, reindent, tab
 
 black = (
     import_module("black")

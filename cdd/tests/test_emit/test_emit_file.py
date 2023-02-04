@@ -9,15 +9,15 @@ from sys import modules
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-import cdd.emit.argparse_function
-import cdd.emit.class_
-import cdd.emit.docstring
-import cdd.emit.file
-import cdd.emit.function
-import cdd.emit.json_schema
-import cdd.emit.sqlalchemy
-import cdd.parse.argparse_function
-from cdd.ast_utils import cmp_ast
+import cdd.argparse_function.emit
+import cdd.argparse_function.parse
+import cdd.class_.emit
+import cdd.docstring.emit
+import cdd.function.emit
+import cdd.json_schema.emit
+import cdd.shared.emit.file
+import cdd.sqlalchemy.emit
+from cdd.shared.ast_utils import cmp_ast
 from cdd.tests.mocks.classes import class_ast
 from cdd.tests.utils_for_tests import unittest_main
 
@@ -35,14 +35,14 @@ class TestEmitFile(TestCase):
                 tempdir, "delete_me{extsep}py".format(extsep=extsep)
             )
             try:
-                cdd.emit.file.file(class_ast, filename, skip_black=True)
+                cdd.shared.emit.file.file(class_ast, filename, skip_black=True)
 
                 with open(filename, "rt") as f:
                     ugly = f.read()
 
                 os.remove(filename)
 
-                cdd.emit.file.file(class_ast, filename, skip_black=False)
+                cdd.shared.emit.file.file(class_ast, filename, skip_black=False)
 
                 with open(filename, "rt") as f:
                     blacked = f.read()

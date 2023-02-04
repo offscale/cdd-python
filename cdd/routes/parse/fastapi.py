@@ -2,8 +2,8 @@
 FastAPI route parser
 """
 
-from cdd.ast_utils import get_value
 from cdd.routes.parse.fastapi_utils import parse_fastapi_responses
+from cdd.shared.ast_utils import get_value
 
 
 def fastapi(fastapi_route):

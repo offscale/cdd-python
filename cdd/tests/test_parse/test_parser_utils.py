@@ -5,9 +5,9 @@ from copy import deepcopy
 from unittest import TestCase
 from unittest.mock import patch
 
-import cdd.parse.utils.parser_utils
-from cdd.ast_utils import set_value
-from cdd.parse.utils.class_utils import get_source
+import cdd.shared.parse.utils.parser_utils
+from cdd.class_.utils.parse_utils import get_source
+from cdd.shared.ast_utils import set_value
 from cdd.tests.mocks import imports_header
 from cdd.tests.mocks.argparse import argparse_func_ast, argparse_func_str
 from cdd.tests.mocks.classes import class_ast, class_str
@@ -32,7 +32,7 @@ class TestParserUtils(TestCase):
         target = {"params": OrderedDict(), "returns": None}
         other = {"params": OrderedDict(), "returns": None}
         self.assertDictEqual(
-            cdd.parse.utils.parser_utils.ir_merge(target, other),
+            cdd.shared.parse.utils.parser_utils.ir_merge(target, other),
             target,
         )
 
@@ -46,7 +46,7 @@ class TestParserUtils(TestCase):
         }
         other = {"params": OrderedDict(), "returns": None}
         self.assertDictEqual(
-            cdd.parse.utils.parser_utils.ir_merge(target, other),
+            cdd.shared.parse.utils.parser_utils.ir_merge(target, other),
             target,
         )
 
@@ -65,7 +65,7 @@ class TestParserUtils(TestCase):
             "returns": None,
         }
         self.assertDictEqual(
-            cdd.parse.utils.parser_utils.ir_merge(deepcopy(target), other),
+            cdd.shared.parse.utils.parser_utils.ir_merge(deepcopy(target), other),
             {
                 "params": OrderedDict(
                     (("something", {"doc": "neat", "typ": "str"}),),
@@ -99,7 +99,7 @@ class TestParserUtils(TestCase):
             ),
         }
         self.assertDictEqual(
-            cdd.parse.utils.parser_utils.ir_merge(deepcopy(target), other),
+            cdd.shared.parse.utils.parser_utils.ir_merge(deepcopy(target), other),
             {
                 "params": OrderedDict(),
                 "returns": OrderedDict(
@@ -112,13 +112,13 @@ class TestParserUtils(TestCase):
         """Tests that `_join_non_none` returns early"""
         empty_str_dict = {"": ""}
         self.assertDictEqual(
-            cdd.parse.utils.parser_utils._join_non_none(
+            cdd.shared.parse.utils.parser_utils._join_non_none(
                 primacy={}, other=empty_str_dict
             ),
             empty_str_dict,
         )
         self.assertDictEqual(
-            cdd.parse.utils.parser_utils._join_non_none(
+            cdd.shared.parse.utils.parser_utils._join_non_none(
                 primacy=empty_str_dict, other={}
             ),
             empty_str_dict,
@@ -129,7 +129,7 @@ class TestParserUtils(TestCase):
         Test `infer` can figure out the right parser name when its expected to be `argparse_ast`
         """
         self.assertEqual(
-            cdd.parse.utils.parser_utils.infer(argparse_func_ast), "argparse_ast"
+            cdd.shared.parse.utils.parser_utils.infer(argparse_func_ast), "argparse_ast"
         )
 
     def test_infer_memory_argparse_ast(self) -> None:
@@ -141,21 +141,23 @@ class TestParserUtils(TestCase):
             "set_cli_args",
         )
         self.assertEqual(
-            cdd.parse.utils.parser_utils.infer(set_cli_args), "argparse_ast"
+            cdd.shared.parse.utils.parser_utils.infer(set_cli_args), "argparse_ast"
         )
 
     def test_infer_docstring(self) -> None:
         """
         Test `infer` can figure out the right parser name when its expected to be `docstring`
         """
-        self.assertEqual(cdd.parse.utils.parser_utils.infer(""), "docstring")
-        self.assertEqual(cdd.parse.utils.parser_utils.infer(set_value("")), "docstring")
+        self.assertEqual(cdd.shared.parse.utils.parser_utils.infer(""), "docstring")
+        self.assertEqual(
+            cdd.shared.parse.utils.parser_utils.infer(set_value("")), "docstring"
+        )
 
     def test_infer_class(self) -> None:
         """
         Test `infer` can figure out the right parser name when its expected to be `class_`
         """
-        self.assertEqual(cdd.parse.utils.parser_utils.infer(class_ast), "class_")
+        self.assertEqual(cdd.shared.parse.utils.parser_utils.infer(class_ast), "class_")
 
     def test_infer_memory_class(self) -> None:
         """
@@ -165,14 +167,16 @@ class TestParserUtils(TestCase):
             inspectable_compile(imports_header + class_str),
             "ConfigClass",
         )
-        self.assertEqual(cdd.parse.utils.parser_utils.infer(set_cli_args), "class_")
+        self.assertEqual(
+            cdd.shared.parse.utils.parser_utils.infer(set_cli_args), "class_"
+        )
 
     def test_infer_function(self) -> None:
         """
         Test `infer` can figure out the right parser name when its expected to be `function`
         """
         self.assertEqual(
-            cdd.parse.utils.parser_utils.infer(
+            cdd.shared.parse.utils.parser_utils.infer(
                 function_default_complex_default_arg_ast
             ),
             "function",
@@ -190,14 +194,16 @@ class TestParserUtils(TestCase):
             ),
             "call_cliff",
         )
-        self.assertEqual(cdd.parse.utils.parser_utils.infer(call_cliff), "function")
+        self.assertEqual(
+            cdd.shared.parse.utils.parser_utils.infer(call_cliff), "function"
+        )
 
     def test_infer_sqlalchemy_table(self) -> None:
         """
         Test `infer` can figure out the right parser name when its expected to be `sqlalchemy_table`
         """
         self.assertEqual(
-            cdd.parse.utils.parser_utils.infer(config_tbl_with_comments_ast),
+            cdd.shared.parse.utils.parser_utils.infer(config_tbl_with_comments_ast),
             "sqlalchemy_table",
         )
 
@@ -219,7 +225,8 @@ class TestParserUtils(TestCase):
         Test `infer` can figure out the right parser name when its expected to be `sqlalchemy`
         """
         self.assertEqual(
-            cdd.parse.utils.parser_utils.infer(config_decl_base_ast), "sqlalchemy"
+            cdd.shared.parse.utils.parser_utils.infer(config_decl_base_ast),
+            "sqlalchemy",
         )
 
     def test_infer_memory_sqlalchemy(self) -> None:
@@ -234,7 +241,9 @@ class TestParserUtils(TestCase):
             ),
             "Config",
         )
-        self.assertEqual(cdd.parse.utils.parser_utils.infer(Config), "sqlalchemy")
+        self.assertEqual(
+            cdd.shared.parse.utils.parser_utils.infer(Config), "sqlalchemy"
+        )
 
     def test_get_source_raises(self) -> None:
         """Tests that `get_source` raises an exception"""

@@ -4,9 +4,9 @@ Parser utils for routes
 
 from ast import Call, FunctionDef
 
-from cdd.ast_utils import get_value
-from cdd.pure_utils import rpartial
 from cdd.routes.parse.bottle import methods
+from cdd.shared.ast_utils import get_value
+from cdd.shared.pure_utils import rpartial
 
 
 def get_route_meta(mod):
