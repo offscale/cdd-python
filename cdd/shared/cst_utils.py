@@ -361,7 +361,7 @@ def infer_cst_type(statement_stripped, words):
         return AugAssignment
 
     statement_frozenset = frozenset(statement_stripped)
-    for (key, constructor) in multicontains2statement:
+    for key, constructor in multicontains2statement:
         if statement_frozenset & key == key:
             return constructor
 

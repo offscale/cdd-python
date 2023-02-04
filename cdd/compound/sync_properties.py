@@ -54,7 +54,7 @@ def sync_properties(
         output_ast = ast_parse(f.read(), filename=output_filename)
 
     assert len(input_params) == len(output_params)
-    for (input_param, output_param) in zip(input_params, output_params):
+    for input_param, output_param in zip(input_params, output_params):
         output_ast = sync_property(
             input_eval,
             input_param,
