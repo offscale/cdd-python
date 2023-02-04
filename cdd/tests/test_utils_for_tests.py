@@ -9,7 +9,7 @@ from typing import Any
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
-from cdd.pure_utils import PY_GTE_3_8
+from cdd.shared.pure_utils import PY_GTE_3_8
 from cdd.tests.mocks.classes import tensorboard_doc_str, tensorboard_doc_str_no_args_str
 from cdd.tests.utils_for_tests import remove_args_from_docstring, unittest_main
 

@@ -4,7 +4,7 @@ Pydantic mocks
 
 from ast import AnnAssign, ClassDef, Index, Load, Name, Store, Subscript
 
-from cdd.ast_utils import maybe_type_comment, set_value
+from cdd.shared.ast_utils import maybe_type_comment, set_value
 
 pydantic_class_str = """
 class Cat(BaseModel):

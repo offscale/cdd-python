@@ -28,8 +28,8 @@ from functools import partial
 from operator import add
 from textwrap import indent
 
-from cdd.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
-from cdd.pure_utils import emit_separating_tabs, tab
+from cdd.shared.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
+from cdd.shared.pure_utils import emit_separating_tabs, tab
 from cdd.tests.mocks.docstrings import (
     docstring_google_tf_adadelta,
     docstring_google_tf_mean_squared_error_str,

@@ -8,10 +8,10 @@ from importlib import import_module
 from inspect import getsource
 from types import FunctionType
 
-import cdd.parse.openapi
-from cdd.ast_utils import get_value
-from cdd.docstring_parsers import parse_docstring
-from cdd.pure_utils import PY_GTE_3_8
+import cdd.compound.openapi.parse
+from cdd.shared.ast_utils import get_value
+from cdd.shared.docstring_parsers import parse_docstring
+from cdd.shared.pure_utils import PY_GTE_3_8
 
 Literal = getattr(
     import_module("typing" if PY_GTE_3_8 else "typing_extensions"), "Literal"
@@ -63,7 +63,7 @@ def bottle(function_def):
             - len(yml_end_str)
             + 2
         ]
-        return cdd.parse.openapi.openapi(
+        return cdd.compound.openapi.parse.openapi(
             openapi_str, route_dict, ir["doc"][:yml_start].rstrip()
         )
     # return route_dict

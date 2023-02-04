@@ -1,6 +1,6 @@
 """Mocks for cst"""
 
-from cdd.cst_utils import (
+from cdd.shared.cst_utils import (
     AnnAssignment,
     Assignment,
     AugAssignment,

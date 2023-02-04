@@ -5,9 +5,9 @@ IR mocks
 from collections import OrderedDict
 from copy import deepcopy
 
-from cdd.ast_utils import NoneStr
-from cdd.defaults_utils import remove_defaults_from_intermediate_repr
-from cdd.pure_utils import deindent, paren_wrap_code
+from cdd.shared.ast_utils import NoneStr
+from cdd.shared.defaults_utils import remove_defaults_from_intermediate_repr
+from cdd.shared.pure_utils import deindent, paren_wrap_code
 from cdd.tests.mocks.classes import (
     class_torch_nn_l1loss_docstring_str,
     class_torch_nn_one_cycle_lr_docstring_str,

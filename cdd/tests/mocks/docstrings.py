@@ -5,7 +5,7 @@ Mocks for docstrings
 from itertools import chain
 from textwrap import indent
 
-from cdd.pure_utils import identity, tab
+from cdd.shared.pure_utils import identity, tab
 
 docstring_header_no_nl_str = (
     "Acquire from the official tensorflow_datasets model zoo,"

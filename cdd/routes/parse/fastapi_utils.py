@@ -4,7 +4,7 @@ FastAPI utils
 
 from functools import partial
 
-from cdd.ast_utils import Dict_to_dict, get_value
+from cdd.shared.ast_utils import Dict_to_dict, get_value
 
 
 def model_handler(key, model_name, location, mime_type):

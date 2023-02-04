@@ -18,8 +18,8 @@ from ast import (
 )
 from copy import deepcopy
 
-from cdd.ast_utils import maybe_type_comment, set_arg, set_value
-from cdd.pure_utils import tab
+from cdd.shared.ast_utils import maybe_type_comment, set_arg, set_value
+from cdd.shared.pure_utils import tab
 from cdd.tests.mocks.docstrings import docstring_sum_tuple
 from cdd.tests.utils_for_tests import reindent_docstring, replace_docstring
 

@@ -12,15 +12,15 @@ from operator import eq
 from os import path
 
 from cdd import __description__, __version__
-from cdd.conformance import ground_truth
-from cdd.docstring_parsers import Style
-from cdd.doctrans import doctrans
-from cdd.exmod import exmod
-from cdd.gen import gen
-from cdd.openapi.gen_openapi import openapi_bulk
-from cdd.openapi.gen_routes import gen_routes, upsert_routes
-from cdd.pure_utils import pluralise, rpartial
-from cdd.sync_properties import sync_properties
+from cdd.compound.doctrans import doctrans
+from cdd.compound.exmod import exmod
+from cdd.compound.gen import gen
+from cdd.compound.openapi.gen_openapi import openapi_bulk
+from cdd.compound.openapi.gen_routes import gen_routes, upsert_routes
+from cdd.compound.sync_properties import sync_properties
+from cdd.shared.conformance import ground_truth
+from cdd.shared.docstring_parsers import Style
+from cdd.shared.pure_utils import pluralise, rpartial
 
 parse_emit_types = (
     "argparse",

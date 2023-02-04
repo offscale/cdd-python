@@ -7,13 +7,13 @@ from collections import OrderedDict
 from copy import deepcopy
 from unittest import TestCase
 
-import cdd.emit
-import cdd.emit.docstring
-import cdd.emit.utils.emitter_utils
-import cdd.parse.docstring
-import cdd.parse.function
-from cdd.ast_utils import set_value
-from cdd.docstring_parsers import _set_name_and_type, parse_docstring
+import cdd.docstring.emit
+import cdd.docstring.parse
+import cdd.function.parse
+import cdd.shared.emit
+import cdd.shared.emit.utils.emitter_utils
+from cdd.shared.ast_utils import set_value
+from cdd.shared.docstring_parsers import _set_name_and_type, parse_docstring
 from cdd.tests.mocks.docstrings import (
     docstring_extra_colons_str,
     docstring_google_pytorch_lbfgs_str,
@@ -102,7 +102,7 @@ class TestMarshallDocstring(TestCase):
         """Tests whether `emit.docstring` produces `docstring_str` from `intermediate_repr`"""
         self.assertEqual(
             docstring_no_nl_no_none_str.strip("\n"),
-            cdd.emit.docstring.docstring(
+            cdd.docstring.emit.docstring(
                 deepcopy(intermediate_repr),
                 indent_level=0,
                 emit_types=True,
@@ -112,13 +112,11 @@ class TestMarshallDocstring(TestCase):
             ).rstrip("\n"),
         )
 
-    maxDiff = None
-
     def test_from_docstring(self) -> None:
         """
         Tests whether `docstring` produces `intermediate_repr_no_default_doc`
               from `docstring_str`"""
-        ir, returns = cdd.parse.docstring.docstring(
+        ir, returns = cdd.docstring.parse.docstring(
             docstring_str, return_tuple=True, emit_default_doc=False
         )
         self.assertTrue(returns)
@@ -128,7 +126,7 @@ class TestMarshallDocstring(TestCase):
         """
         Tests whether `docstring` produces `intermediate_repr_no_default_doc`
               from `docstring_numpydoc_str`"""
-        ir, returns = cdd.parse.docstring.docstring(
+        ir, returns = cdd.docstring.parse.docstring(
             docstring_numpydoc_str, return_tuple=True, emit_default_doc=False
         )
         self.assertTrue(returns)
@@ -138,7 +136,7 @@ class TestMarshallDocstring(TestCase):
         """
         Tests whether `docstring` produces `intermediate_repr_no_default_doc`
               from `docstring_numpydoc_only_params_str`"""
-        ir, returns = cdd.parse.docstring.docstring(
+        ir, returns = cdd.docstring.parse.docstring(
             docstring_numpydoc_only_params_str,
             return_tuple=True,
             emit_default_doc=False,
@@ -200,7 +198,7 @@ class TestMarshallDocstring(TestCase):
         """
         Tests whether `docstring` produces `intermediate_repr_no_default_doc`
               from `docstring_numpydoc_only_returns_str`"""
-        ir, returns = cdd.parse.docstring.docstring(
+        ir, returns = cdd.docstring.parse.docstring(
             docstring_numpydoc_only_returns_str,
             return_tuple=True,
             emit_default_doc=False,
@@ -221,7 +219,7 @@ class TestMarshallDocstring(TestCase):
         """
         Tests whether `docstring` produces `intermediate_repr_no_default_doc`
               from `docstring_numpydoc_only_doc_str`"""
-        ir, returns = cdd.parse.docstring.docstring(
+        ir, returns = cdd.docstring.parse.docstring(
             docstring_numpydoc_only_doc_str.strip(), return_tuple=True
         )
         self.assertFalse(returns)
@@ -308,8 +306,8 @@ class TestMarshallDocstring(TestCase):
               from `function_google_tf_mean_squared_error_ast`
         """
 
-        gen = cdd.emit.docstring.docstring(
-            cdd.parse.function.function(
+        gen = cdd.docstring.emit.docstring(
+            cdd.function.parse.function(
                 function_google_tf_mean_squared_error_ast,
                 # emit_default_doc=True,
                 infer_type=True,

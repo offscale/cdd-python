@@ -19,8 +19,8 @@ from ast import (
 )
 from textwrap import indent
 
-from cdd.ast_utils import maybe_type_comment, set_arg, set_value
-from cdd.pure_utils import reindent, tab
+from cdd.shared.ast_utils import maybe_type_comment, set_arg, set_value
+from cdd.shared.pure_utils import reindent, tab
 from cdd.tests.mocks.docstrings import (
     docstring_header_and_return_str,
     docstring_header_and_return_two_nl_str,
