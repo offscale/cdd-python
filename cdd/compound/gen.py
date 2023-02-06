@@ -4,19 +4,24 @@ Functionality to generate classes, functions, and/or argparse functions from the
 
 import ast
 from ast import Import, ImportFrom, Module
+from collections import deque
+from functools import partial
 from inspect import getfile
-from json import load
-from os import path
+from os import listdir, path
 
 import cdd.compound.openapi.utils.emit_utils
 import cdd.json_schema.emit
-from cdd.compound.gen_utils import gen_file, get_input_mapping_from_path
-from cdd.shared.ast_utils import get_at_root
-from cdd.shared.pure_utils import (
-    get_module,
-    pascal_to_upper_camelcase,
-    sanitise_emit_name,
+import cdd.shared.parse.utils.parser_utils
+from cdd.compound.gen_utils import (
+    file_to_input_mapping,
+    gen_file,
+    get_emit_kwarg,
+    get_input_mapping_from_path,
+    get_parser,
 )
+from cdd.shared.ast_utils import get_at_root
+from cdd.shared.emit.utils.emitter_utils import get_emitter
+from cdd.shared.pure_utils import get_module, sanitise_emit_name
 from cdd.shared.source_transformer import to_code
 
 
@@ -41,12 +46,12 @@ def gen(
     :param name_tpl: Template for the name, e.g., `{name}Config`.
     :type name_tpl: ```str```
 
-    :param input_mapping: Import location of dictionary/mapping/2-tuple collection.
+    :param input_mapping: Fully-qualified module, filepath, or directory.
     :type input_mapping: ```str```
 
     :param parse_name: Which type to parse.
     :type parse_name: ```Literal["argparse", "class", "function", "json_schema",
-                                 "pydantic", "sqlalchemy", "sqlalchemy_table"]```
+                                 "pydantic", "sqlalchemy", "sqlalchemy_table", "infer"]```
 
     :param emit_name: Which type to generate.
     :type emit_name: ```Literal["argparse", "class", "function", "json_schema",
@@ -175,13 +180,25 @@ def gen(
     module_path, _, symbol_name = input_mapping.rpartition(".")
 
     emit_name = sanitise_emit_name(emit_name)
-    if path.isfile(input_mapping) and parse_name == "json_schema":
-        with open(input_mapping, "rt") as f:
-            json_contents = load(f)
-        name = path.basename(module_path)
-        if "name" not in json_contents:
-            json_contents["name"] = pascal_to_upper_camelcase(name)
-        input_mapping = {name: json_contents}
+    if path.isfile(input_mapping):
+        input_mapping = file_to_input_mapping(input_mapping, parse_name)
+    elif path.isdir(input_mapping):
+        _input_mapping = {}
+        deque(
+            map(
+                _input_mapping.update,
+                map(
+                    partial(
+                        file_to_input_mapping,
+                        parse_name=parse_name,
+                    ),
+                    map(partial(path.join, input_mapping), listdir(input_mapping)),
+                ),
+            ),
+            maxlen=0,
+        )
+        input_mapping = _input_mapping
+        del _input_mapping
     else:
         input_mod = get_module(module_path, extra_symbols=extra_symbols)
         input_mapping = (
@@ -194,7 +211,20 @@ def gen(
     )
 
     return (
-        cdd.json_schema.emit.json_schema_file(input_mapping, output_filename)
+        cdd.json_schema.emit.json_schema_file(
+            {
+                name: get_emitter(emit_name)(
+                    get_parser(node, parse_name)(node),
+                    emit_default_doc=emit_default_doc,
+                    word_wrap=no_word_wrap is None,
+                    **get_emit_kwarg(
+                        decorator_list, emit_call, emit_name, name_tpl, name
+                    ),
+                )
+                for name, node in input_mapping_it
+            },
+            output_filename,
+        )
         if emit_name == "json_schema"
         else gen_file(
             name_tpl,

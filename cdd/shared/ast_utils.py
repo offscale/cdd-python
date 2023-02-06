@@ -46,7 +46,6 @@ from inspect import isclass, isfunction
 from itertools import chain, filterfalse
 from json import dumps
 from operator import attrgetter, contains, inv, neg, not_, pos
-from sys import version_info
 
 from yaml import safe_dump_all
 
@@ -1358,7 +1357,7 @@ def _to_code(node):
 
     return (
         getattr(import_module("astor"), "to_source")
-        if version_info[:2] < (3, 9)
+        if PY_GTE_3_9
         else getattr(import_module("ast"), "unparse")
     )(node)
 

@@ -3,6 +3,7 @@ Functions which produce intermediate_repr from various different inputs
 """
 
 import ast
+from importlib import import_module
 
 
 def get_internal_body(target_name, target_type, intermediate_repr):
@@ -84,8 +85,34 @@ def ast_parse_fix(s):
 #     return intermediate_repr
 
 
+def get_emitter(emit_name):
+    """
+    Get emiter function specialised for output `node`
+
+    :param emit_name: Which type to emit.
+    :type emit_name: ```Literal["argparse", "class", "function", "json_schema",
+                                 "pydantic", "sqlalchemy", "sqlalchemy_table"]```
+
+    :return: Function which returns intermediate_repr
+    :rtype: ```Callable[[...], dict]````
+    """
+    return getattr(
+        import_module(
+            ".".join(
+                (
+                    "cdd",
+                    "sqlalchemy" if emit_name == "sqlalchemy_table" else emit_name,
+                    "emit",
+                )
+            )
+        ),
+        emit_name,
+    )
+
+
 __all__ = [
     "ast_parse_fix",
     "get_internal_body",
+    "get_emitter"
     # "normalise_intermediate_representation",
 ]

@@ -3,8 +3,7 @@ All encompassing solution to generating the OpenAPI schema
 """
 
 import ast
-from _ast import AnnAssign, Assign
-from ast import Call, ClassDef, FunctionDef, Module
+from ast import AnnAssign, Assign, Call, ClassDef, FunctionDef, Module
 from itertools import chain, groupby
 from operator import itemgetter
 

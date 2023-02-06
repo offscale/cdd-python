@@ -9,13 +9,15 @@ from operator import add
 
 from cdd.docstring.emit import docstring
 from cdd.json_schema.utils.emit_utils import param2json_schema_property
-from cdd.shared.pure_utils import SetEncoder, deindent
+from cdd.shared.pure_utils import SetEncoder, deindent, pp
 
 
 def json_schema(
     intermediate_repr,
     identifier=None,
     emit_original_whitespace=False,
+    emit_default_doc=False,
+    word_wrap=False,
 ):
     """
     Construct a JSON schema dict
@@ -35,17 +37,29 @@ def json_schema(
     :param emit_original_whitespace: Whether to emit original whitespace (in top-level `description`) or strip it out
     :type emit_original_whitespace: ```bool```
 
+    :param emit_default_doc: Whether help/docstring should include 'With default' text
+    :type emit_default_doc: ```bool```
+
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
+
     :return: JSON Schema dict
     :rtype: ```dict```
     """
+    del emit_default_doc, word_wrap
     assert isinstance(
         intermediate_repr, dict
     ), "Expected `dict` got `{type_name}`".format(
         type_name=type(intermediate_repr).__name__
     )
+    if "$id" in intermediate_repr and "params" not in intermediate_repr:
+        return intermediate_repr  # Somehow this function got JSON schema as input
     if identifier is None:
-        identifier = "https://offscale.io/{}.schema.json".format(
-            intermediate_repr["name"]
+        identifier = intermediate_repr.get(
+            "$id",
+            "https://offscale.io/{}.schema.json".format(
+                intermediate_repr.get("name", "INFERRED")
+            ),
         )
     required = []
     _param2json_schema_property = partial(param2json_schema_property, required=required)
@@ -97,6 +111,7 @@ def json_schema_file(input_mapping, output_filename):
     :param output_filename: Output file to write to
     :type output_filename: ```str```
     """
+    pp(dict(input_mapping))
     schemas_it = (json_schema(v) for k, v in input_mapping.items())
     schemas = (
         {"schemas": list(schemas_it)} if len(input_mapping) > 1 else next(schemas_it)
