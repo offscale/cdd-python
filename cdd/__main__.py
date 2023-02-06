@@ -7,7 +7,7 @@
 from argparse import ArgumentParser, Namespace
 from codecs import decode
 from collections import deque
-from itertools import filterfalse
+from itertools import chain, filterfalse
 from operator import eq
 from os import path
 
@@ -206,7 +206,7 @@ def _build_parser():
     )
     gen_parser.add_argument(
         "--input-mapping",
-        help="Import location of dictionary/mapping/2-tuple collection.",
+        help="Fully-qualified module, filepath, or directory.",
         required=True,
     )
     gen_parser.add_argument(
@@ -224,7 +224,7 @@ def _build_parser():
     gen_parser.add_argument(
         "--parse",
         help="What type the input is.",
-        choices=parse_emit_types,
+        choices=tuple(chain.from_iterable((parse_emit_types, ("infer",)))),
         default="infer",
         dest="parse_name",
     )

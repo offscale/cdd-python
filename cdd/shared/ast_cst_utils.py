@@ -338,6 +338,7 @@ def maybe_replace_function_args(new_node, cur_ast_node, cst_idx, cst_list):
 
 __all__ = [
     "Delta",
+    "debug_doctrans",
     "find_cst_at_ast",
     "maybe_replace_doc_str_in_function_or_class",
     "maybe_replace_function_args",

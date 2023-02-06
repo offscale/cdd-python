@@ -66,7 +66,7 @@ def class_(
                                            {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
     :rtype: ```dict```
     """
-    assert not isinstance(class_def, FunctionDef)
+    assert not isinstance(class_def, FunctionDef), "Expected not `FunctionDef`"
     is_supported_ast_node = isinstance(class_def, (Module, ClassDef))
     if not is_supported_ast_node and isinstance(class_def, type):
         return _class_from_memory(

@@ -3,26 +3,22 @@ Utility functions for cdd.gen
 """
 
 import ast
-from ast import (
-    AnnAssign,
-    Assign,
-    AsyncFunctionDef,
-    ClassDef,
-    FunctionDef,
-    Import,
-    ImportFrom,
-    Name,
-    Store,
-)
-from importlib import import_module
+from ast import Assign, ClassDef, FunctionDef, Import, ImportFrom, Name, Store
 from itertools import chain
+from json import load
 from operator import itemgetter
+from os import path
 
-import cdd.shared.parse.utils.parser_utils
 from cdd.shared.ast_utils import infer_imports, maybe_type_comment, set_value
-from cdd.shared.parse.utils.parser_utils import infer
-from cdd.shared.pure_utils import find_module_filepath, rpartial
-from cdd.shared.source_transformer import to_code
+from cdd.shared.emit.utils.emitter_utils import get_emitter
+from cdd.shared.parse import kind2instance_type
+from cdd.shared.parse.utils.parser_utils import get_parser
+from cdd.shared.pure_utils import (
+    find_module_filepath,
+    pascal_to_upper_camelcase,
+    rpartial,
+)
+from cdd.shared.source_transformer import ast_parse, to_code
 
 
 def get_input_mapping_from_path(emit_name, module_path, symbol_name):
@@ -45,36 +41,12 @@ def get_input_mapping_from_path(emit_name, module_path, symbol_name):
     module_filepath = find_module_filepath(module_path, symbol_name)
     with open(module_filepath, "rt") as f:
         input_ast_mod = ast.parse(f.read())
-    type_instance_must_be = {
-        "sqlalchemy_table": (Assign, AnnAssign),
-        "argparse": (FunctionDef,),
-        "function": (FunctionDef, AsyncFunctionDef),
-        "pydantic": (FunctionDef, AsyncFunctionDef),
-        "class": (ClassDef,),
-        "class_": (ClassDef,),
-    }.get(emit_name, (FunctionDef, ClassDef))
+    type_instance_must_be = kind2instance_type.get(emit_name, (FunctionDef, ClassDef))
     input_mapping = dict(
         map(
-            lambda node_name: (
-                node_name[0],
-                (
-                    (
-                        lambda parser_name: getattr(
-                            import_module(".".join(("cdd", parser_name, "parse"))),
-                            parser_name,
-                        )
-                    )(cdd.shared.parse.utils.parser_utils.infer(node_name[1]))
-                )(node_name[1]),
-            ),
+            lambda ir: (ir["name"], ir),
             map(
-                lambda node: (node.name, node)
-                if hasattr(node, "name")
-                else (
-                    (
-                        node.target if isinstance(node, AnnAssign) else node.targets[0]
-                    ).id,
-                    node,
-                ),
+                lambda node: get_parser(node, emit_name)(node),
                 filter(
                     rpartial(
                         isinstance,
@@ -87,30 +59,6 @@ def get_input_mapping_from_path(emit_name, module_path, symbol_name):
     )
     assert input_mapping, "Nothing parsed out of {!r}".format(module_filepath)
     return input_mapping
-
-
-def get_parser(node, parse_name):
-    """
-    Get parser function specialised for input `node`
-
-    :param node: Node to parse
-    :type node: ```AST```
-
-    :param parse_name: Which type to parse.
-    :type parse_name: ```Literal["argparse", "class", "function", "json_schema",
-                                 "pydantic", "sqlalchemy", "sqlalchemy_table"]```
-
-    :return: Function which returns intermediate_repr
-    :rtype: ```Callable[[...], dict]````
-    """
-    return (
-        (
-            lambda parser_name: getattr(
-                import_module(".".join(("cdd", parser_name, "parse"))),
-                parser_name,
-            )
-        )(infer(node) if parse_name in (None, "infer") else parse_name)
-    )(node)
 
 
 def get_emit_kwarg(decorator_list, emit_call, emit_name, name_tpl, name):
@@ -148,10 +96,13 @@ def get_emit_kwarg(decorator_list, emit_call, emit_name, name_tpl, name):
             "function": {
                 "function_name": _name,
             },
+            "json_schema": {
+                "identifier": _name,
+            },
             "sqlalchemy": {"table_name": _name},
             "sqlalchemy_table": {"table_name": _name},
         }[emit_name]
-    )(name_tpl.format(name=name))
+    )(None if name == "infer" else name_tpl.format(name=name))
 
 
 def gen_file(
@@ -436,25 +387,64 @@ def get_functions_and_classes(
     :return: Side-effect of appending `__all__`, this returns emitted values out of `input_mapping_it`
     :rtype: ```Tuple[AST]```
     """
-    module_type = (
-        import_module(".".join(("cdd", "sqlalchemy", "emit")), emit_name)
-        if emit_name == "sqlalchemy_table"
-        else import_module(".".join(("cdd", emit_name, "emit")))
-    )
-
+    emitter = get_emitter(emit_name)
     return tuple(
         print("\nGenerating: {name!r}".format(name=name))
         or global__all__.append(name_tpl.format(name=name))
-        or (
-            getattr(module_type, emit_name)(
-                get_parser(obj, parse_name),
-                emit_default_doc=emit_default_doc,
-                word_wrap=no_word_wrap is None,
-                **get_emit_kwarg(decorator_list, emit_call, emit_name, name_tpl, name),
-            )
+        or emitter(
+            get_parser(obj, parse_name)(obj),
+            emit_default_doc=emit_default_doc,
+            word_wrap=no_word_wrap is None,
+            **get_emit_kwarg(decorator_list, emit_call, emit_name, name_tpl, name),
         )
         for name, obj in input_mapping_it
     )
 
 
-__all__ = ["get_input_mapping_from_path", "gen_file"]
+def file_to_input_mapping(filepath, parse_name):
+    """
+    Create an `input_mapping` from a given file, i.e. Dict[str, AST]
+
+    :param filepath: Location of JSON or Python file
+    :type filepath: ```str```
+
+    :param parse_name: Which type to parse.
+    :type parse_name: ```Literal["argparse", "class", "function", "json_schema",
+                                 "pydantic", "sqlalchemy", "sqlalchemy_table", "infer"]```
+
+    :return: Dictionary of string (name) to AST node
+    :rtype: ```dict``
+    """
+    if (
+        parse_name == "json_schema"
+        or parse_name == "infer"
+        and filepath.endswith("{}json".format(path.extsep))
+    ):
+        with open(filepath, "rt") as f:
+            json_contents = load(f)
+        name = path.basename(filepath)
+        if "name" not in json_contents:
+            json_contents["name"] = pascal_to_upper_camelcase(name)
+        input_mapping = {name: json_contents}
+    else:
+        with open(filepath, "rt") as f:
+            mod = ast_parse(f.read())
+
+        input_mapping = dict(
+            map(
+                lambda node: (parse_name, node),
+                filter(
+                    rpartial(
+                        isinstance,
+                        tuple(kind2instance_type.values())
+                        if parse_name == "infer"
+                        else kind2instance_type[parse_name],
+                    ),
+                    mod.body,
+                ),
+            ),
+        )
+    return input_mapping
+
+
+__all__ = ["file_to_input_mapping", "get_input_mapping_from_path", "gen_file"]

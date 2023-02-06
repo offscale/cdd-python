@@ -11,8 +11,7 @@ cdd-python
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort)
 [![PyPi: release](https://img.shields.io/pypi/v/python-cdd.svg?maxAge=3600)](https://pypi.org/project/python-cdd)
 
-[OpenAPI](https://openapis.org) to/fro routes, models, and tests. Convert between docstrings, `class`es,
-methods, [argparse](https://docs.python.org/3/library/argparse.html), and [SQLalchemy](https://sqlalchemy.org).
+[OpenAPI](https://openapis.org) to/fro routes, models, and tests. Convert between docstrings, `class`es, methods, [argparse](https://docs.python.org/3/library/argparse.html), pydantic, and [SQLalchemy](https://sqlalchemy.org).
 
 Public SDK works with filenames, source code, and even in memory constructs (e.g., as imported into your REPL).
 
@@ -583,8 +582,7 @@ class Config(Base):
       -h, --help            show this help message and exit
       --name-tpl NAME_TPL   Template for the name, e.g., `{name}Config`.
       --input-mapping INPUT_MAPPING
-                            Import location of dictionary/mapping/2-tuple
-                            collection.
+                            Fully-qualified module, filepath, or directory.
       --prepend PREPEND     Prepend file with this. Use '\n' for newlines.
       --imports-from-file IMPORTS_FROM_FILE
                             Extract imports from file and append to `output_file`.

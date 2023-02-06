@@ -1,6 +1,7 @@
 """
 Tests `cdd.routes.parse` PARSERS
 """
+
 from itertools import filterfalse
 from operator import itemgetter
 from os import listdir, path

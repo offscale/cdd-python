@@ -7,6 +7,7 @@ from ast import AnnAssign, Assign, Call, ClassDef, FunctionDef, Module
 from collections import OrderedDict
 from contextlib import suppress
 from functools import partial
+from importlib import import_module
 from inspect import _empty, getdoc, getsource, isfunction, signature
 from itertools import chain
 from operator import attrgetter, eq, itemgetter
@@ -218,6 +219,8 @@ def infer(*args, **kwargs):
     elif isinstance(node, Call):
         if len(node.args) > 2 and node.args[1].id == "metadata":
             return "sqlalchemy_table"
+    else:
+        raise NotImplementedError(node)
 
 
 def _inspect(obj, name, parse_original_whitespace, word_wrap):
@@ -325,4 +328,34 @@ def _inspect(obj, name, parse_original_whitespace, word_wrap):
     return ir
 
 
-__all__ = ["ir_merge", "infer", "lstrip_typings", "_inspect"]
+def get_parser(node, parse_name):
+    """
+    Get parser function specialised for input `node`
+
+    :param node: Node to parse
+    :type node: ```AST```
+
+    :param parse_name: Which type to parse.
+    :type parse_name: ```Literal["argparse", "class", "function", "json_schema",
+                                 "pydantic", "sqlalchemy", "sqlalchemy_table","infer"]```
+
+    :return: Function which returns intermediate_repr
+    :rtype: ```Callable[[...], dict]````
+    """
+    if parse_name in (None, "infer"):
+        parse_name = infer(node)
+    return getattr(
+        import_module(
+            ".".join(
+                (
+                    "cdd",
+                    "sqlalchemy" if parse_name == "sqlalchemy_table" else parse_name,
+                    "parse",
+                )
+            )
+        ),
+        parse_name,
+    )
+
+
+__all__ = ["get_parser", "ir_merge", "infer", "lstrip_typings", "_inspect"]
