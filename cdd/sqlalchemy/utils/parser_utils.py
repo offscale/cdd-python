@@ -96,6 +96,21 @@ sqlalchemy_top_level_imports = frozenset(
 )
 
 
+def column_parse_extra_sql(idx_arg):
+    """
+    Parse Column arg into extra sql type information
+
+    :param idx_arg: argument number, node
+    :type idx_arg: ```Tuple[int, AST]```
+
+    :rtype: ```Optional[Tuple[str, dict]]```
+    """
+    idx, arg = idx_arg
+    if idx < 2 and isinstance(arg, Name) and arg.id in column_type2typ:
+        return "x_typ", {"sql": {"type": arg.id}}
+    return None
+
+
 def column_parse_arg(idx_arg):
     """
     Parse Column arg
@@ -165,6 +180,7 @@ def column_call_to_param(call):
             chain.from_iterable(
                 (
                     map(column_parse_arg, enumerate(call.args)),
+                    map(column_parse_extra_sql, enumerate(call.args)),
                     map(column_parse_kwarg, call.keywords),
                 )
             ),

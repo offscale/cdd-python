@@ -24,12 +24,15 @@ PARSERS = [
 ]
 
 kind2instance_type = {
-    "sqlalchemy_table": (Assign, AnnAssign),
     "argparse": (FunctionDef,),
-    "function": (FunctionDef, AsyncFunctionDef),
-    "pydantic": (FunctionDef, AsyncFunctionDef),
+    "argparse_function": (FunctionDef,),
     "class": (ClassDef,),
     "class_": (ClassDef,),
+    "function": (FunctionDef, AsyncFunctionDef),
+    "method": (FunctionDef, AsyncFunctionDef),
+    "pydantic": (ClassDef,),
+    "sqlalchemy_table": (Assign, AnnAssign),
+    "sqlalchemy": (ClassDef,),
 }
 
 __all__ = ["PARSERS", "kind2instance_type"]
