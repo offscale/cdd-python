@@ -46,7 +46,6 @@ from inspect import isclass, isfunction
 from itertools import chain, filterfalse
 from json import dumps
 from operator import attrgetter, contains, inv, neg, not_, pos
-import itertools
 
 from yaml import safe_dump_all
 
