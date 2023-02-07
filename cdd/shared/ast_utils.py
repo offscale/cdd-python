@@ -46,6 +46,7 @@ from inspect import isclass, isfunction
 from itertools import chain, filterfalse
 from json import dumps
 from operator import attrgetter, contains, inv, neg, not_, pos
+import itertools
 
 from yaml import safe_dump_all
 
@@ -1646,22 +1647,24 @@ def infer_imports(module):
     """
     import cdd.sqlalchemy.utils.parser_utils  # Should this be a function param instead?
 
-    if isinstance(module, (ClassDef, FunctionDef, AsyncFunctionDef)):
+    if isinstance(module, (ClassDef, FunctionDef, AsyncFunctionDef, Assign)):
         module = Module(body=[module], type_ignores=[], stmt=None)
     assert isinstance(module, Module), "Expected `Module` got `{type_name}`".format(
         type_name=type(module).__name__
     )
 
-    sqlalchemy_classes = filter(
-        lambda cls_def: any(
-            filter(
-                lambda base: isinstance(base, Name) and base.id == "Base", cls_def.bases
-            )
-        ),
-        filter(rpartial(isinstance, ClassDef), module.body),
-    )
+    if not isinstance(module.body[0], Assign):
+        sqlalchemy_classes = filter(
+            lambda cls_def: any(
+                filter(
+                    lambda base: isinstance(base, Name) and base.id == "Base", cls_def.bases
+                )
+            ),
+            filter(rpartial(isinstance, ClassDef), module.body),
+        )
+    else:
+        sqlalchemy_classes = [module.body[0]]
 
-    # reduce(, sqlalchemy_classes, set)
     return list(
         (
             (cdd.sqlalchemy.utils.parser_utils.imports_from(sqlalchemy_classes),)

@@ -188,6 +188,20 @@ class TestGen(TestCase):
         # input("removing: {tempdir!r}".format(tempdir=cls.tempdir))
         rmtree(cls.tempdir)
 
+
+    def test_imports(self) -> None:
+        gen(
+            name_tpl="{name}",
+            input_mapping="output.py",
+            emit_name="sqlalchemy_table",
+            parse_name="sqlalchemy",
+            output_filename="newput.py",
+            prepend="\n",
+            emit_call=True,
+            emit_default_doc=False,
+            emit_and_infer_imports=True
+        )
+
     def test_gen(self) -> None:
         """Tests `gen`"""
 

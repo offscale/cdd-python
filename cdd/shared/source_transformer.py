@@ -27,6 +27,8 @@ def to_code(node):
     :rtype: ```str```
     """
     # ^Not `to_code = getattr…` so docstring can be included^
+    if (isinstance(node, list)):
+        node = node[0]
     return unparse(node)
 
 

@@ -269,6 +269,8 @@ def gen_module(
             parse_name,
         )
     if emit_and_infer_imports:
+        print("Hey")
+        print(imports)
         imports = "{}{}".format(
             imports or "",
             " ".join(map(to_code, map(infer_imports, functions_and_classes))),
