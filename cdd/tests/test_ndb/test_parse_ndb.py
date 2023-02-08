@@ -21,6 +21,5 @@ class TestParseNDB(TestCase):
         """
         ir = ndb(ast.parse(ndb_model_example).body[0])
         self.assertDictEqual(ir, ndb_ir)
-        print(str(ir))
 
 
