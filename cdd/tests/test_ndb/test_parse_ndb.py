@@ -20,7 +20,7 @@ class TestParseNDB(TestCase):
         """
 
         asts = ast.parse(ndb_model_example);
-        ndb_model(ast.parse(ndb_model_example).body[0])
+        ir = ndb_model(ast.parse(ndb_model_example).body[0])
         print("hey")
 
 
