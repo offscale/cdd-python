@@ -55,7 +55,7 @@ config_tbl = Table(
         String,
         comment="name of dataset",
         default="mnist",
-        primary_key=True,
+        primary_key=True
     ),
     Column(
         "tfds_dir",

@@ -55,6 +55,7 @@ class TestParseSqlAlchemy(TestCase):
             ),
             config_tbl_with_comments_str.replace("config_tbl =", "", 1).lstrip(),
         ):
+            toPrase = ast.parse(variant);
             ir = cdd.sqlalchemy.parse.sqlalchemy_table(ast.parse(variant).body[0])
             self.assertEqual(ir["name"], "config_tbl")
             ir["name"] = None
