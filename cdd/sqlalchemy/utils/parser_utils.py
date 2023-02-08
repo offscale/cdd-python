@@ -255,12 +255,12 @@ def column_call_name_manipulator(call, operation="remove", name=None):
     return call
 
 
-def infer_imports_from_sqlalchemy(sqlalchemy_ast_def):
+def infer_imports_from_sqlalchemy(sqlalchemy_class_or_assigns):
     """
     Infer imports from SQLalchemy ast
 
-    :param sqlalchemy_ast_def: SQLalchemy ast
-    :type sqlalchemy_ast_def: ```AST```
+    :param sqlalchemy_class_or_assigns: SQLalchemy Class or Assign
+    :type sqlalchemy_class_or_assigns: ```Union[ClassDef, Assign]```
 
     :return: filter of imports (can be considered ```Iterable[str]```)
     :rtype: ```filter```
@@ -275,7 +275,7 @@ def infer_imports_from_sqlalchemy(sqlalchemy_ast_def):
                         body=list(
                             filter(
                                 rpartial(isinstance, Call),
-                                ast.walk(sqlalchemy_ast_def),
+                                ast.walk(sqlalchemy_class_or_assigns),
                             )
                         ),
                         type_ignores=[],
