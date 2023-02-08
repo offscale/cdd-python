@@ -1652,22 +1652,19 @@ def infer_imports(module):
         type_name=type(module).__name__
     )
 
-    if not isinstance(module.body[0], Assign):
-        sqlalchemy_classes = filter(
-            lambda cls_def: any(
-                filter(
-                    lambda base: isinstance(base, Name) and base.id == "Base", cls_def.bases
-                )
-            ),
-            filter(rpartial(isinstance, ClassDef), module.body),
-        )
-    else:
-        sqlalchemy_classes = [module.body[0]]
+    sqlalchemy_asts = filter(
+        lambda ast_def: any(
+            filter(
+                lambda base: isinstance(base, Name) and base.id == "Base", ast_def.bases
+            )
+        ) if isinstance(ast_def, ClassDef) else isinstance(ast_def.value, Call) and ast_def.value.func.id.endswith("Table"),
+        filter(rpartial(isinstance, (ClassDef, Assign)), module.body),
+    )
 
     return list(
         (
-            (cdd.sqlalchemy.utils.parser_utils.imports_from(sqlalchemy_classes),)
-            if sqlalchemy_classes
+            (cdd.sqlalchemy.utils.parser_utils.imports_from(sqlalchemy_asts),)
+            if sqlalchemy_asts
             else iter(())
         )
     )
