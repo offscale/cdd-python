@@ -37,7 +37,6 @@ def ndb_model(model, parse_original_whitespace=False):
             doc, parse_original_whitespace=parse_original_whitespace
         )
     )
-    # intermediate_repr = {"type": None, "doc": "", "params": OrderedDict()}
     intermediate_repr["name"] = model.name
     merge_ir = {
         "params": OrderedDict(map(property_to_param, filter(rpartial(isinstance, Assign), model.body))),
