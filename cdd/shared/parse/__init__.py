@@ -31,6 +31,7 @@ kind2instance_type = {
     "function": (FunctionDef, AsyncFunctionDef),
     "method": (FunctionDef, AsyncFunctionDef),
     "pydantic": (ClassDef,),
+    "ndb": (ClassDef,),
     "sqlalchemy_table": (Assign, AnnAssign),
     "sqlalchemy": (ClassDef,),
 }

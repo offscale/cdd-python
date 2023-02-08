@@ -35,6 +35,8 @@ from cdd.shared.source_transformer import to_code
 from cdd.tests.mocks.json_schema import server_error_schema
 from cdd.tests.mocks.methods import function_adder_ast
 from cdd.tests.utils_for_tests import run_ast_test, unittest_main
+from cdd.tests.mocks.ndb import ndb_model_example
+from cdd.tests.mocks.sqlalchemy import sqlalchemy_simple_config_str
 
 method_adder_ast = deepcopy(function_adder_ast)
 method_adder_ast.body[0] = Expr(set_value(" C class (mocked!) "))
@@ -361,6 +363,29 @@ class TestGen(TestCase):
             output_filename="",
             phase=33,
         )
+
+    def test_gen_from_ndb(self) -> None:
+        """Test `gen` with ndb model -> sqlalchemy"""
+        input_filename = "input.py"
+        output_filename = "output.py"
+        with open(input_filename, "a") as f:
+            f.write(ndb_model_example)
+        gen(
+            name_tpl="{name}",
+            input_mapping=input_filename,
+            emit_name="sqlalchemy",
+            parse_name="ndb",
+            output_filename="output.py",
+            prepend="\n",
+            emit_call=True,
+            emit_default_doc=False,
+        )
+        with open(output_filename, "rt") as f:
+            gen_module_str = f.read()
+        os.remove(output_filename)
+        os.remove(input_filename)
+        self.assertEqual(gen_module_str, sqlalchemy_simple_config_str)
+
 
     def test_gen_json_schema_input_mapping(self) -> None:
         """Test `gen` with JSON schema parse target on file"""

@@ -1,6 +1,7 @@
 from unittest import TestCase
 from cdd.tests.mocks.ndb import ndb_model_example
-from cdd.ndb.parse import ndb_model
+from cdd.ndb.parse import ndb
+from cdd.tests.mocks.ir import ndb_ir
 import ast
 class TestParseNDB(TestCase):
     """
@@ -18,9 +19,8 @@ class TestParseNDB(TestCase):
         """
         Tests that `ndb.parse` produces `intermediate_repr_ndb` properly
         """
-
-        asts = ast.parse(ndb_model_example);
-        ir = ndb_model(ast.parse(ndb_model_example).body[0])
-        print("hey")
+        ir = ndb(ast.parse(ndb_model_example).body[0])
+        self.assertDictEqual(ir, ndb_ir)
+        print(str(ir))
 
 

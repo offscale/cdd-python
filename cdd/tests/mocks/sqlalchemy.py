@@ -46,6 +46,29 @@ sqlalchemy_imports_str = "\n".join(
     )
 )
 
+sqlalchemy_simple_config_str = '''class Greeting(Base):
+    """
+    Models an individual Guestbook entry with content and date.
+        """
+    __tablename__ = 'ndb'
+    content = Column(String)
+    date = Column(DateTime)
+    id = Column(Integer, primary_key=True, server_default=Identity())
+
+    def __repr__(self):
+        """
+        Emit a string representation of the current instance
+        
+        :return: String representation of instance
+        :rtype: ```str```
+        """
+        return ('Greeting(content={content!r}, date={date!r}, id={id!r})'.
+            format(content=self.content, date=self.date, id=self.id))
+
+
+__all__ = ['ndb']
+'''
+
 config_tbl_with_comments_str = """
 config_tbl = Table(
     "config_tbl",
@@ -602,6 +625,7 @@ foreign_sqlalchemy_tbls_mod = Module(
 
 __all__ = [
     "config_decl_base_ast",
+    "sqlalchemy_simple_config_str",
     "config_decl_base_str",
     "config_tbl_with_comments_ast",
     "config_tbl_with_comments_str",

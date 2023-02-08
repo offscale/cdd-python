@@ -988,6 +988,12 @@ pydantic_ir = {
     "type": "static",
 }
 
+ndb_ir = {'name': 'Greeting',
+          'type': 'static',
+          'doc': 'Models an individual Guestbook entry with content and date.',
+          'params': OrderedDict([('content', {'typ': 'str'}), ('date', {'typ': 'datetime'})]), 'returns': None
+}
+
 intermediate_repr_extra_colons = {
     "name": None,
     "params": OrderedDict(
@@ -1219,4 +1225,5 @@ __all__ = [
     "intermediate_repr_only_return_type",
     "method_complex_args_variety_ir",
     "pydantic_ir",
+    "ndb_ir"
 ]

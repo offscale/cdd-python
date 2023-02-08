@@ -6,9 +6,7 @@ from cdd.docstring.parse import docstring
 from collections import OrderedDict
 from cdd.shared.pure_utils import rpartial
 from ast import Assign, Expr, Constant
-
-
-def ndb_model(model, parse_original_whitespace=False):
+def ndb(model, parse_original_whitespace=False):
     """
     Parse out a `ndb.Model`, into the IR
 
