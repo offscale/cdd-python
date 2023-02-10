@@ -255,12 +255,12 @@ def column_call_name_manipulator(call, operation="remove", name=None):
     return call
 
 
-def infer_imports_from_sqlalchemy(sqlalchemy_class_def):
+def infer_imports_from_sqlalchemy(sqlalchemy_class_or_assigns):
     """
-    Infer imports from SQLalchemy class
+    Infer imports from SQLalchemy ast
 
-    :param sqlalchemy_class_def: SQLalchemy class
-    :type sqlalchemy_class_def: ```ClassDef```
+    :param sqlalchemy_class_or_assigns: SQLalchemy Class or Assign
+    :type sqlalchemy_class_or_assigns: ```Union[ClassDef, Assign]```
 
     :return: filter of imports (can be considered ```Iterable[str]```)
     :rtype: ```filter```
@@ -275,7 +275,7 @@ def infer_imports_from_sqlalchemy(sqlalchemy_class_def):
                         body=list(
                             filter(
                                 rpartial(isinstance, Call),
-                                ast.walk(sqlalchemy_class_def),
+                                ast.walk(sqlalchemy_class_or_assigns),
                             )
                         ),
                         type_ignores=[],
@@ -297,12 +297,12 @@ def infer_imports_from_sqlalchemy(sqlalchemy_class_def):
     return candidates_not_in_valid_types ^ candidates
 
 
-def imports_from(sqlalchemy_classes):
+def imports_from(sqlalchemy_asts):
     """
     Generate `from sqlalchemy import <>` from the body of SQLalchemy `class`es
 
-    :param sqlalchemy_classes: SQLalchemy `class`es with base class of `Base`
-    :type sqlalchemy_classes: ```ClassDef```
+    :param sqlalchemy_asts: SQLalchemy `class`es with base class of `Base`
+    :type sqlalchemy_asts: ```ClassDef```
 
     :return: `from sqlalchemy import <>` where <> is what was inferred from `sqlalchemy_classes`
     :rtype: ```ImportFrom```
@@ -324,7 +324,7 @@ def imports_from(sqlalchemy_classes):
                             chain.from_iterable(
                                 map(
                                     infer_imports_from_sqlalchemy,
-                                    sqlalchemy_classes,
+                                    sqlalchemy_asts,
                                 )
                             ),
                         )
