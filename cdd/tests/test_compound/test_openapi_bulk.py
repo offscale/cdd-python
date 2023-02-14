@@ -31,7 +31,7 @@ class TestOpenApi(TestCase):
                     ),
                 )
             ),
-            openapi_dict,
+            openapi_dict(),
         )
 
 

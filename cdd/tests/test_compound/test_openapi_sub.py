@@ -55,7 +55,7 @@ class TestOpenApiBulk(TestCase):
                     model_paths=(models_filename,),
                     routes_paths=(routes_filename,),
                 ),
-                openapi_dict,
+                openapi_dict(include_sql_types=True),
             )
 
             self.assertEqual(

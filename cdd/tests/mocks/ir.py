@@ -1081,6 +1081,12 @@ for param in "data_loader_kwargs", "as_numpy":
         "default"
     ] = NoneStr
 
+intermediate_repr_no_default_sql_with_sql_types = deepcopy(
+    intermediate_repr_no_default_sql_doc
+)
+for param, typ in ("dataset_name", "String"), ("tfds_dir", "String"), ("as_numpy", "Boolean"), ("data_loader_kwargs", "JSON"):
+    intermediate_repr_no_default_sql_with_sql_types["params"][param]["x_typ"] = {'sql': {'type': typ}}
+
 
 intermediate_repr_empty = {
     "name": None,
@@ -1187,8 +1193,8 @@ intermediate_repr_node_pk = {
     "name": "node",
     "params": OrderedDict(
         (
-            ("node_id", {"doc": "[PK]", "typ": "int"}),
-            ("primary_element", {"doc": "[FK(element.element_id)]", "typ": "int"}),
+            ("node_id", {"x_typ": {"sql": {"type": "Integer"}}, "doc": "[PK]", "typ": "int"}),
+            ("primary_element", {"x_typ": {"sql": {"type": "Integer"}}, "doc": "[FK(element.element_id)]", "typ": "int"}),
         )
     ),
     "returns": None,
@@ -1215,6 +1221,7 @@ __all__ = [
     "intermediate_repr_no_default_sql_doc",
     "intermediate_repr_no_default_sql_with_nones_doc",
     "intermediate_repr_no_default_with_nones_doc",
+    "intermediate_repr_no_default_sql_with_sql_types",
     "intermediate_repr_node_pk",
     "intermediate_repr_only_return_type",
     "method_complex_args_variety_ir",
