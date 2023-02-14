@@ -1356,9 +1356,9 @@ def _to_code(node):
     """
 
     return (
-        getattr(import_module("astor"), "to_source")
+        getattr(import_module("ast"), "unparse")
         if PY_GTE_3_9
-        else getattr(import_module("ast"), "unparse")
+        else getattr(import_module("astor"), "to_source")
     )(node)
 
 
