@@ -38,7 +38,7 @@ class TestParseSqlAlchemyUtils(TestCase):
                     "default": config_schema["properties"][_name]["default"],
                     "typ": "str",
                     "doc": config_schema["properties"][_name]["description"],
-                    "x_typ": {"sql": {"type": "String"}}
+                    "x_typ": {"sql": {"type": "String"}},
                 },
             )
         )("dataset_name")

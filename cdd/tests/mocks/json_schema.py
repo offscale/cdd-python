@@ -39,11 +39,14 @@ config_schema = {
     "required": ["dataset_name", "tfds_dir", "K"],
 }
 
-config_schema_with_sql_types = deepcopy(
-    config_schema
-)
-for param, typ in ("dataset_name", "String"), ("tfds_dir", "String"), ("as_numpy", "Boolean"), ("data_loader_kwargs", "JSON"):
-    config_schema_with_sql_types["properties"][param]["x_typ"] = {'sql': {'type': typ}}
+config_schema_with_sql_types = deepcopy(config_schema)
+for param, typ in (
+    ("dataset_name", "String"),
+    ("tfds_dir", "String"),
+    ("as_numpy", "Boolean"),
+    ("data_loader_kwargs", "JSON"),
+):
+    config_schema_with_sql_types["properties"][param]["x_typ"] = {"sql": {"type": typ}}
 
 
 server_error_schema = {

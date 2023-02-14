@@ -2,7 +2,11 @@
 OpenAPI mocks
 """
 
-from cdd.tests.mocks.json_schema import config_schema, config_schema_with_sql_types, server_error_schema
+from cdd.tests.mocks.json_schema import (
+    config_schema,
+    config_schema_with_sql_types,
+    server_error_schema,
+)
 from cdd.tests.mocks.routes import route_config
 
 
@@ -22,14 +26,18 @@ def openapi_dict(include_sql_types=False):
                             }
                         }
                     },
-                    "description": "A `{name}` object.".format(name=route_config["name"]),
+                    "description": "A `{name}` object.".format(
+                        name=route_config["name"]
+                    ),
                     "required": True,
                 }
             },
             "schemas": {
                 name: {k: v for k, v in schema.items() if not k.startswith("$")}
                 for name, schema in {
-                    route_config["name"]: config_schema_with_sql_types if include_sql_types else config_schema,
+                    route_config["name"]: config_schema_with_sql_types
+                    if include_sql_types
+                    else config_schema,
                     "ServerError": server_error_schema,
                 }.items()
             },
@@ -61,7 +69,9 @@ def openapi_dict(include_sql_types=False):
                         "400": {
                             "content": {
                                 "application/json": {
-                                    "schema": {"$ref": "#/components/schemas/ServerError"}
+                                    "schema": {
+                                        "$ref": "#/components/schemas/ServerError"
+                                    }
                                 }
                             },
                             "description": "A `ServerError` object.",
@@ -96,7 +106,9 @@ def openapi_dict(include_sql_types=False):
                         "404": {
                             "content": {
                                 "application/json": {
-                                    "schema": {"$ref": "#/components/schemas/ServerError"}
+                                    "schema": {
+                                        "$ref": "#/components/schemas/ServerError"
+                                    }
                                 }
                             },
                             "description": "A `ServerError` object.",

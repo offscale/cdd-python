@@ -1084,8 +1084,15 @@ for param in "data_loader_kwargs", "as_numpy":
 intermediate_repr_no_default_sql_with_sql_types = deepcopy(
     intermediate_repr_no_default_sql_doc
 )
-for param, typ in ("dataset_name", "String"), ("tfds_dir", "String"), ("as_numpy", "Boolean"), ("data_loader_kwargs", "JSON"):
-    intermediate_repr_no_default_sql_with_sql_types["params"][param]["x_typ"] = {'sql': {'type': typ}}
+for param, typ in (
+    ("dataset_name", "String"),
+    ("tfds_dir", "String"),
+    ("as_numpy", "Boolean"),
+    ("data_loader_kwargs", "JSON"),
+):
+    intermediate_repr_no_default_sql_with_sql_types["params"][param]["x_typ"] = {
+        "sql": {"type": typ}
+    }
 
 
 intermediate_repr_empty = {
@@ -1193,8 +1200,18 @@ intermediate_repr_node_pk = {
     "name": "node",
     "params": OrderedDict(
         (
-            ("node_id", {"x_typ": {"sql": {"type": "Integer"}}, "doc": "[PK]", "typ": "int"}),
-            ("primary_element", {"x_typ": {"sql": {"type": "Integer"}}, "doc": "[FK(element.element_id)]", "typ": "int"}),
+            (
+                "node_id",
+                {"x_typ": {"sql": {"type": "Integer"}}, "doc": "[PK]", "typ": "int"},
+            ),
+            (
+                "primary_element",
+                {
+                    "x_typ": {"sql": {"type": "Integer"}},
+                    "doc": "[FK(element.element_id)]",
+                    "typ": "int",
+                },
+            ),
         )
     ),
     "returns": None,
