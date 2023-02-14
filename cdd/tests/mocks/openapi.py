@@ -1,135 +1,131 @@
 """
 OpenAPI mocks
 """
+from copy import deepcopy
 
-from cdd.tests.mocks.json_schema import (
-    config_schema,
-    config_schema_with_sql_types,
-    server_error_schema,
-)
+from cdd.tests.mocks.json_schema import config_schema, config_schema_with_sql_types, server_error_schema
 from cdd.tests.mocks.routes import route_config
 
-
-def openapi_dict(include_sql_types=False):
-    return {
-        "openapi": "3.0.0",
-        "info": {"title": "REST API", "version": "0.0.1"},
-        "components": {
-            "requestBodies": {
-                "ConfigBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/{name}".format(
-                                    name=route_config["name"]
-                                )
-                            }
+openapi_dict = {
+    "openapi": "3.0.0",
+    "info": {"title": "REST API", "version": "0.0.1"},
+    "components": {
+        "requestBodies": {
+            "ConfigBody": {
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/{name}".format(
+                                name=route_config["name"]
+                            )
                         }
-                    },
-                    "description": "A `{name}` object.".format(
+                    }
+                },
+                "description": "A `{name}` object.".format(name=route_config["name"]),
+                "required": True,
+            }
+        },
+        "schemas": {
+            name: {k: v for k, v in schema.items() if not k.startswith("$")}
+            for name, schema in {
+                route_config["name"]: config_schema,
+                "ServerError": server_error_schema,
+            }.items()
+        },
+    },
+    "paths": {
+        route_config["route"]: {
+            "post": {
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/{name}Body".format(
                         name=route_config["name"]
                     ),
                     "required": True,
-                }
-            },
-            "schemas": {
-                name: {k: v for k, v in schema.items() if not k.startswith("$")}
-                for name, schema in {
-                    route_config["name"]: config_schema_with_sql_types
-                    if include_sql_types
-                    else config_schema,
-                    "ServerError": server_error_schema,
-                }.items()
-            },
-        },
-        "paths": {
-            route_config["route"]: {
-                "post": {
-                    "requestBody": {
-                        "$ref": "#/components/requestBodies/{name}Body".format(
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/{name}".format(
+                                        name=route_config["name"]
+                                    )
+                                }
+                            }
+                        },
+                        "description": "A `{name}` object.".format(
                             name=route_config["name"]
                         ),
-                        "required": True,
                     },
-                    "responses": {
-                        "201": {
-                            "content": {
-                                "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/{name}".format(
-                                            name=route_config["name"]
-                                        )
-                                    }
-                                }
-                            },
-                            "description": "A `{name}` object.".format(
-                                name=route_config["name"]
-                            ),
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/ServerError"}
+                            }
                         },
-                        "400": {
-                            "content": {
-                                "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/ServerError"
-                                    }
-                                }
-                            },
-                            "description": "A `ServerError` object.",
-                        },
+                        "description": "A `ServerError` object.",
                     },
-                    "summary": "A `{name}` object.".format(name=route_config["name"]),
-                }
+                },
+                "summary": "A `{name}` object.".format(name=route_config["name"]),
+            }
+        },
+        "{route_config[route]}/{{{route_config[primary_key]}}}".format(
+            route_config=route_config
+        ): {
+            "delete": {
+                "responses": {"204": {}},
+                "summary": "Delete one `{name}`".format(name=route_config["name"]),
             },
-            "{route_config[route]}/{{{route_config[primary_key]}}}".format(
-                route_config=route_config
-            ): {
-                "delete": {
-                    "responses": {"204": {}},
-                    "summary": "Delete one `{name}`".format(name=route_config["name"]),
-                },
-                "get": {
-                    "responses": {
-                        "200": {
-                            "content": {
-                                "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/{name}".format(
-                                            name=route_config["name"]
-                                        )
-                                    }
+            "get": {
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/{name}".format(
+                                        name=route_config["name"]
+                                    )
                                 }
-                            },
-                            "description": "A `{name}` object.".format(
-                                name=route_config["name"]
-                            ),
+                            }
                         },
-                        "404": {
-                            "content": {
-                                "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/ServerError"
-                                    }
-                                }
-                            },
-                            "description": "A `ServerError` object.",
-                        },
-                    },
-                    "summary": "A `{name}` object.".format(name=route_config["name"]),
-                },
-                "parameters": [
-                    {
-                        "description": "Primary key of target `{name}`".format(
+                        "description": "A `{name}` object.".format(
                             name=route_config["name"]
                         ),
-                        "in": "path",
-                        "name": route_config["primary_key"],
-                        "required": True,
-                        "schema": {"type": "string"},
-                    }
-                ],
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/ServerError"}
+                            }
+                        },
+                        "description": "A `ServerError` object.",
+                    },
+                },
+                "summary": "A `{name}` object.".format(name=route_config["name"]),
             },
+            "parameters": [
+                {
+                    "description": "Primary key of target `{name}`".format(
+                        name=route_config["name"]
+                    ),
+                    "in": "path",
+                    "name": route_config["primary_key"],
+                    "required": True,
+                    "schema": {"type": "string"},
+                }
+            ],
         },
-    }
+    },
+}
+
+openapi_dict_with_sql_types = deepcopy(openapi_dict)
+openapi_dict_with_sql_types["components"]["schemas"] = {
+            name: {k: v for k, v in schema.items() if not k.startswith("$")}
+            for name, schema in {
+                route_config["name"]: config_schema_with_sql_types,
+                "ServerError": server_error_schema,
+            }.items()
+        }
 
 
-__all__ = ["openapi_dict"]
+__all__ = ["openapi_dict", "openapi_dict_with_sql_types"]

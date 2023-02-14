@@ -38,7 +38,7 @@ class TestFastApiRoutesParse(TestCase):
         )
         self.assertEqual(fastapi_func_resp[0], "/api/config")
 
-        mock_api_config = deepcopy(openapi_dict()["paths"]["/api/config"])
+        mock_api_config = deepcopy(openapi_dict["paths"]["/api/config"])
         del mock_api_config["post"]["summary"], mock_api_config["post"]["requestBody"]
         mock_api_config["post"]["responses"].update(
             {

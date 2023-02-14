@@ -32,7 +32,7 @@ class TestBottleRouteParse(TestCase):
         _create_route = inspectable_compile(route_mock_prelude + create_route).create
         self.assertDictEqual(
             cdd.routes.parse.bottle.bottle(_create_route),
-            openapi_dict()["paths"][route_config["route"]]["post"],
+            openapi_dict["paths"][route_config["route"]]["post"],
         )
 
     def test_create_util(self) -> None:
@@ -55,7 +55,7 @@ class TestBottleRouteParse(TestCase):
         _read_route = inspectable_compile(route_mock_prelude + read_route).read
         self.assertDictEqual(
             cdd.routes.parse.bottle.bottle(_read_route),
-            openapi_dict()["paths"][self.route_id_url]["get"],
+            openapi_dict["paths"][self.route_id_url]["get"],
         )
 
     def test_delete(self) -> None:
@@ -65,7 +65,7 @@ class TestBottleRouteParse(TestCase):
         _destroy_route = inspectable_compile(route_mock_prelude + destroy_route).destroy
         self.assertDictEqual(
             cdd.routes.parse.bottle.bottle(_destroy_route),
-            openapi_dict()["paths"][self.route_id_url]["delete"],
+            openapi_dict["paths"][self.route_id_url]["delete"],
         )
 
 
