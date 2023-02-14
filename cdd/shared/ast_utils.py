@@ -1655,15 +1655,23 @@ def infer_imports(module):
     sqlalchemy_class_or_assigns = filter(
         lambda class_or_assign_def: any(
             filter(
-                lambda base: isinstance(base, Name) and base.id == "Base", class_or_assign_def.bases
+                lambda base: isinstance(base, Name) and base.id == "Base",
+                class_or_assign_def.bases,
             )
-        ) if isinstance(class_or_assign_def, ClassDef) else isinstance(class_or_assign_def.value, Call) and class_or_assign_def.value.func.id.endswith("Table"),
+        )
+        if isinstance(class_or_assign_def, ClassDef)
+        else isinstance(class_or_assign_def.value, Call)
+        and class_or_assign_def.value.func.id.endswith("Table"),
         filter(rpartial(isinstance, (ClassDef, Assign)), module.body),
     )
 
     return list(
         (
-            (cdd.sqlalchemy.utils.parser_utils.imports_from(sqlalchemy_class_or_assigns),)
+            (
+                cdd.sqlalchemy.utils.parser_utils.imports_from(
+                    sqlalchemy_class_or_assigns
+                ),
+            )
             if sqlalchemy_class_or_assigns
             else iter(())
         )
