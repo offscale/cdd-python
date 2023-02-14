@@ -271,7 +271,7 @@ def gen_module(
     if emit_and_infer_imports:
         imports = "{}{}".format(
             imports or "",
-            " ".join(map(to_code, map(infer_imports, functions_and_classes))),
+            " ".join(map(to_code, chain(*map(infer_imports, functions_and_classes)))),
         )
 
     # Too many params! - Clean things up for debugging:
