@@ -3,7 +3,11 @@ OpenAPI mocks
 """
 from copy import deepcopy
 
-from cdd.tests.mocks.json_schema import config_schema, config_schema_with_sql_types, server_error_schema
+from cdd.tests.mocks.json_schema import (
+    config_schema,
+    config_schema_with_sql_types,
+    server_error_schema,
+)
 from cdd.tests.mocks.routes import route_config
 
 openapi_dict = {
@@ -120,12 +124,12 @@ openapi_dict = {
 
 openapi_dict_with_sql_types = deepcopy(openapi_dict)
 openapi_dict_with_sql_types["components"]["schemas"] = {
-            name: {k: v for k, v in schema.items() if not k.startswith("$")}
-            for name, schema in {
-                route_config["name"]: config_schema_with_sql_types,
-                "ServerError": server_error_schema,
-            }.items()
-        }
+    name: {k: v for k, v in schema.items() if not k.startswith("$")}
+    for name, schema in {
+        route_config["name"]: config_schema_with_sql_types,
+        "ServerError": server_error_schema,
+    }.items()
+}
 
 
 __all__ = ["openapi_dict", "openapi_dict_with_sql_types"]
