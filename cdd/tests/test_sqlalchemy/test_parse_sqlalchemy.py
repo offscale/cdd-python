@@ -9,6 +9,7 @@ from unittest import TestCase
 import cdd.sqlalchemy.parse
 from cdd.tests.mocks.ir import (
     intermediate_repr_no_default_sql_doc,
+    intermediate_repr_no_default_sql_with_sql_types,
     intermediate_repr_node_pk,
 )
 from cdd.tests.mocks.sqlalchemy import (
@@ -58,7 +59,7 @@ class TestParseSqlAlchemy(TestCase):
             ir = cdd.sqlalchemy.parse.sqlalchemy_table(ast.parse(variant).body[0])
             self.assertEqual(ir["name"], "config_tbl")
             ir["name"] = None
-            self.assertDictEqual(ir, intermediate_repr_no_default_sql_doc)
+            self.assertDictEqual(ir, intermediate_repr_no_default_sql_with_sql_types)
 
     def test_from_sqlalchemy(self) -> None:
         """
@@ -75,7 +76,7 @@ class TestParseSqlAlchemy(TestCase):
         ir = cdd.sqlalchemy.parse.sqlalchemy(deepcopy(config_decl_base_ast))
         self.assertEqual(ir["name"], "config_tbl")
         ir["name"] = None
-        self.assertDictEqual(ir, intermediate_repr_no_default_sql_doc)
+        self.assertDictEqual(ir, intermediate_repr_no_default_sql_with_sql_types)
 
     def test_from_sqlalchemy_with_foreign_rel(self) -> None:
         """Test from SQLalchemy with a foreign key relationship"""

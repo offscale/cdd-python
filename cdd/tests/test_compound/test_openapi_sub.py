@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 from cdd.compound.openapi.gen_openapi import openapi_bulk
-from cdd.tests.mocks.openapi import openapi_dict
+from cdd.tests.mocks.openapi import openapi_dict_with_sql_types
 from cdd.tests.mocks.routes import (
     create_route,
     destroy_route,
@@ -55,7 +55,7 @@ class TestOpenApiBulk(TestCase):
                     model_paths=(models_filename,),
                     routes_paths=(routes_filename,),
                 ),
-                openapi_dict,
+                openapi_dict_with_sql_types,
             )
 
             self.assertEqual(
