@@ -87,9 +87,12 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
         parsed_typ: Call = cast(
             Call, cdd.shared.ast_utils.get_value(ast.parse(_param["typ"]).body[0])
         )
-        assert parsed_typ.value.id == "Literal", "Expected `Literal` got: {!r}".format(
-            parsed_typ.value.id
-        )
+        try:
+            assert (
+                parsed_typ.value.id == "Literal"
+            ), "Expected `Literal` got: {!r}".format(parsed_typ.value.id)
+        except AssertionError:
+            raise
         val = cdd.shared.ast_utils.get_value(parsed_typ.slice)
         (
             args.append(
