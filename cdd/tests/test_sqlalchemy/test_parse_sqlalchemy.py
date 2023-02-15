@@ -8,7 +8,6 @@ from unittest import TestCase
 
 import cdd.sqlalchemy.parse
 from cdd.tests.mocks.ir import (
-    intermediate_repr_no_default_sql_doc,
     intermediate_repr_no_default_sql_with_sql_types,
     intermediate_repr_node_pk,
 )
