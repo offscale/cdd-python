@@ -6,8 +6,8 @@ import sys
 from ast import (
     Assign,
     Attribute,
-    ClassDef,
     Call,
+    ClassDef,
     Dict,
     Expr,
     Import,
@@ -36,9 +36,12 @@ from cdd.shared.pure_utils import rpartial
 from cdd.shared.source_transformer import to_code
 from cdd.tests.mocks.json_schema import server_error_schema
 from cdd.tests.mocks.methods import function_adder_ast
+from cdd.tests.mocks.sqlalchemy import (
+    config_decl_base_str,
+    config_tbl_with_comments_ast,
+    sqlalchemy_imports_ast,
+)
 from cdd.tests.utils_for_tests import run_ast_test, unittest_main
-
-from cdd.tests.mocks.sqlalchemy import config_decl_base_str, sqlalchemy_imports_ast, config_tbl_with_comments_ast
 
 method_adder_ast = deepcopy(function_adder_ast)
 method_adder_ast.body[0] = Expr(set_value(" C class (mocked!) "))
@@ -60,7 +63,9 @@ def populate_files(tempdir, input_module_str=None):
     :rtype: ```Tuple[str, str, str, str, Module]```
     """
     input_filename = os.path.join(tempdir, "input{extsep}py".format(extsep=extsep))
-    sqlalchemy_filename = os.path.join(tempdir, "config_tbl{extsep}py".format(extsep=extsep))
+    sqlalchemy_filename = os.path.join(
+        tempdir, "config_tbl{extsep}py".format(extsep=extsep)
+    )
     sqlalchemy_class_name = "Config"
     input_class_name = "Foo"
     input_class_ast = cdd.class_.emit.class_(
@@ -81,7 +86,7 @@ def populate_files(tempdir, input_module_str=None):
                 ),
                 expr=None,
                 lineno=None,
-                **maybe_type_comment
+                **maybe_type_comment,
             ),
             Assign(
                 targets=[Name("__all__", Store())],
@@ -92,7 +97,7 @@ def populate_files(tempdir, input_module_str=None):
                 ),
                 expr=None,
                 lineno=None,
-                **maybe_type_comment
+                **maybe_type_comment,
             ),
         ],
         type_ignores=[],
@@ -124,7 +129,7 @@ def populate_files(tempdir, input_module_str=None):
                 ),
                 expr=None,
                 lineno=None,
-                **maybe_type_comment
+                **maybe_type_comment,
             ),
             config_decl_base_ast,
             Assign(
@@ -132,12 +137,21 @@ def populate_files(tempdir, input_module_str=None):
                 value=Dict(
                     keys=[set_value("config_tbl")],
                     values=[
-                        Name(next(filter(rpartial(isinstance, ClassDef), config_decl_base_ast.body)).name, Load())],
+                        Name(
+                            next(
+                                filter(
+                                    rpartial(isinstance, ClassDef),
+                                    config_decl_base_ast.body,
+                                )
+                            ).name,
+                            Load(),
+                        )
+                    ],
                     expr=None,
                 ),
                 expr=None,
                 lineno=None,
-                **maybe_type_comment
+                **maybe_type_comment,
             ),
             Assign(
                 targets=[Name("__all__", Store())],
@@ -148,7 +162,7 @@ def populate_files(tempdir, input_module_str=None):
                 ),
                 expr=None,
                 lineno=None,
-                **maybe_type_comment
+                **maybe_type_comment,
             ),
         ],
         type_ignores=[],
@@ -177,7 +191,13 @@ def populate_files(tempdir, input_module_str=None):
         f.write(input_module_str)
     with open(sqlalchemy_filename, "wt") as f:
         f.write(to_code(sqlalchemy_module_ast))
-    return input_filename, sqlalchemy_filename, input_module_ast, input_class_ast, expected_class_ast
+    return (
+        input_filename,
+        sqlalchemy_filename,
+        input_module_ast,
+        input_class_ast,
+        expected_class_ast,
+    )
 
 
 _import_star_from_input_ast = ImportFrom(
@@ -365,7 +385,7 @@ class TestGen(TestCase):
                         ),
                         expr=None,
                         lineno=None,
-                        **maybe_type_comment
+                        **maybe_type_comment,
                     ),
                 ],
                 type_ignores=[],
@@ -416,7 +436,7 @@ class TestGen(TestCase):
                     ),
                     expr=None,
                     lineno=None,
-                    **maybe_type_comment
+                    **maybe_type_comment,
                 ),
             ],
             type_ignores=[],

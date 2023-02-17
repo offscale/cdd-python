@@ -2,19 +2,19 @@
 Mocks for SQLalchemy
 """
 from ast import (
-    alias,
     Assign,
     Attribute,
     Call,
     ClassDef,
     Expr,
     FunctionDef,
-    Load,
     ImportFrom,
+    Load,
     Module,
     Name,
     Return,
     Store,
+    alias,
     arguments,
     keyword,
 )
