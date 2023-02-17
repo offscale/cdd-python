@@ -24,7 +24,10 @@ class TestDocTrans(TestCase):
         ):
             filename = path.join(temp_dir, "foo")
             with open(filename, "wt") as f:
-                f.write("5*5")
+                f.write("""
+def add2(a: str, b: str):
+    return a + b
+                """)
             self.assertIsNone(
                 doctrans(
                     filename=filename,

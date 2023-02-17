@@ -5,7 +5,9 @@ import os
 import sys
 from ast import (
     Assign,
+    Attribute,
     ClassDef,
+    Call,
     Dict,
     Expr,
     Import,
@@ -36,6 +38,8 @@ from cdd.tests.mocks.json_schema import server_error_schema
 from cdd.tests.mocks.methods import function_adder_ast
 from cdd.tests.utils_for_tests import run_ast_test, unittest_main
 
+from cdd.tests.mocks.sqlalchemy import config_decl_base_str, sqlalchemy_imports_ast, config_tbl_with_comments_ast
+
 method_adder_ast = deepcopy(function_adder_ast)
 method_adder_ast.body[0] = Expr(set_value(" C class (mocked!) "))
 method_adder_ast.decorator_list = [Name("staticmethod", Load())]
@@ -52,10 +56,12 @@ def populate_files(tempdir, input_module_str=None):
     :param input_module_str: Input string to write to the input_filename. If None, uses preset mock module.
     :type input_module_str: ```Optional[str]```
 
-    :return: input filename, input str, expected_output
-    :rtype: ```Tuple[str, str, str, Module]```
+    :return: input filename, sqlalchemy_filename, input str, expected_output
+    :rtype: ```Tuple[str, str, str, str, Module]```
     """
     input_filename = os.path.join(tempdir, "input{extsep}py".format(extsep=extsep))
+    sqlalchemy_filename = os.path.join(tempdir, "config_tbl{extsep}py".format(extsep=extsep))
+    sqlalchemy_class_name = "Config"
     input_class_name = "Foo"
     input_class_ast = cdd.class_.emit.class_(
         cdd.function.parse.function(deepcopy(method_adder_ast)),
@@ -92,6 +98,62 @@ def populate_files(tempdir, input_module_str=None):
         type_ignores=[],
         stmt=None,
     )
+    config_decl_base_ast = ast.parse(config_decl_base_str)
+    sqlalchemy_module_ast = Module(
+        body=[
+            sqlalchemy_imports_ast,
+            ImportFrom(
+                module="sqlalchemy.orm",
+                names=[
+                    alias(
+                        name="declarative_base",
+                        asname=None,
+                        identifier=None,
+                        identifier_name=None,
+                    ),
+                ],
+                level=0,
+                identifier=None,
+            ),
+            Assign(
+                targets=[Name("Base", Store())],
+                value=Call(
+                    args=[],
+                    func=Name("declarative_base", Load()),
+                    keywords=[],
+                ),
+                expr=None,
+                lineno=None,
+                **maybe_type_comment
+            ),
+            config_decl_base_ast,
+            Assign(
+                targets=[Name("sql_map", Store())],
+                value=Dict(
+                    keys=[set_value("config_tbl")],
+                    values=[
+                        Name(next(filter(rpartial(isinstance, ClassDef), config_decl_base_ast.body)).name, Load())],
+                    expr=None,
+                ),
+                expr=None,
+                lineno=None,
+                **maybe_type_comment
+            ),
+            Assign(
+                targets=[Name("__all__", Store())],
+                value=List(
+                    ctx=Load(),
+                    elts=[set_value(sqlalchemy_class_name), set_value("sql_map")],
+                    expr=None,
+                ),
+                expr=None,
+                lineno=None,
+                **maybe_type_comment
+            ),
+        ],
+        type_ignores=[],
+        stmt=None,
+    )
 
     input_module_str = input_module_str or to_code(input_module_ast)
     # expected_output_class_str = (
@@ -111,11 +173,11 @@ def populate_files(tempdir, input_module_str=None):
         emit_call=True,
         class_name="{input_class_name}Config".format(input_class_name=input_class_name),
     )
-
     with open(input_filename, "wt") as f:
         f.write(input_module_str)
-
-    return input_filename, input_module_ast, input_class_ast, expected_class_ast
+    with open(sqlalchemy_filename, "wt") as f:
+        f.write(to_code(sqlalchemy_module_ast))
+    return input_filename, sqlalchemy_filename, input_module_ast, input_class_ast, expected_class_ast
 
 
 _import_star_from_input_ast = ImportFrom(
@@ -137,7 +199,27 @@ _import_star_from_input_ast = ImportFrom(
     level=1,
     identifier=None,
 )
+_import_sqlalchemy_class_ast = ImportFrom(
+    module="config_tbl",
+    names=[
+        alias(
+            name="sql_map",
+            asname=None,
+            identifier=None,
+            identifier_name=None,
+        ),
+        alias(
+            name="Config",
+            asname=None,
+            identifier=None,
+            identifier_name=None,
+        ),
+    ],
+    level=1,
+    identifier=None,
+)
 _import_star_from_input_str = to_code(_import_star_from_input_ast)
+_import_sqlalchemy_class_str = to_code(_import_sqlalchemy_class_ast)
 
 _import_gen_test_module_ast = Import(
     names=[
@@ -169,6 +251,7 @@ class TestGen(TestCase):
         os.mkdir(temp_module_dir)
         (
             cls.input_filename,
+            cls.sqlalchemy_filename,
             cls.input_module_ast,
             cls.input_class_ast,
             cls.expected_class_ast,
@@ -177,7 +260,7 @@ class TestGen(TestCase):
             os.path.join(temp_module_dir, "__init__{extsep}py".format(extsep=extsep)),
             "w",
         ) as f:
-            f.write(_import_star_from_input_str)
+            f.write(f"{_import_star_from_input_str}{_import_sqlalchemy_class_str}")
 
         sys.path.append(cls.tempdir)
 
@@ -216,6 +299,30 @@ class TestGen(TestCase):
             self,
             gen_ast=next(filter(rpartial(isinstance, ClassDef), gen_module_ast.body)),
             gold=self.expected_class_ast,
+        )
+
+    def test_sqlalchemy_to_sqlalchemy_table(self) -> None:
+        """Tests conversion of sqlalchemy -> sqlalchemy_table"""
+        output_filename = os.path.join(
+            self.tempdir, "test_sqlalchemy_table_output{extsep}py".format(extsep=extsep)
+        )
+        gen(
+            name_tpl="{name}",
+            input_mapping=f"gen_test_module.sql_map",
+            imports_from_file="gen_test_module",
+            emit_name="sqlalchemy_table",
+            parse_name="sqlalchemy",
+            output_filename=output_filename,
+            emit_call=True,
+            emit_default_doc=True,
+        )
+        with open(output_filename, "rt") as f:
+            gen_module_str = f.read()
+        gen_module_ast = ast.parse(gen_module_str)
+        run_ast_test(
+            self,
+            gen_ast=next(filter(rpartial(isinstance, Assign), gen_module_ast.body)),
+            gold=config_tbl_with_comments_ast,
         )
 
     def test_gen_with_imports_from_file(self) -> None:

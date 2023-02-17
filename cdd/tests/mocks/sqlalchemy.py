@@ -1,8 +1,8 @@
 """
 Mocks for SQLalchemy
 """
-
 from ast import (
+    alias,
     Assign,
     Attribute,
     Call,
@@ -10,6 +10,7 @@ from ast import (
     Expr,
     FunctionDef,
     Load,
+    ImportFrom,
     Module,
     Name,
     Return,
@@ -44,6 +45,56 @@ sqlalchemy_imports_str = "\n".join(
             "Enum",
         ),
     )
+)
+
+sqlalchemy_imports_ast = ImportFrom(
+    module="sqlalchemy",
+    names=[
+        alias(
+            name="Column",
+            asname=None,
+            identifier=None,
+            identifier_name=None,
+        ),
+        alias(
+            name="Integer",
+            asname=None,
+            identifier=None,
+            identifier_name=None,
+        ),
+        alias(
+            name="JSON",
+            asname=None,
+            identifier=None,
+            identifier_name=None,
+        ),
+        alias(
+            name="Boolean",
+            asname=None,
+            identifier=None,
+            identifier_name=None,
+        ),
+        alias(
+            name="String",
+            asname=None,
+            identifier=None,
+            identifier_name=None,
+        ),
+        alias(
+            name="ForeignKey",
+            asname=None,
+            identifier=None,
+            identifier_name=None,
+        ),
+        alias(
+            name="Enum",
+            asname=None,
+            identifier=None,
+            identifier_name=None,
+        ),
+    ],
+    level=0,
+    identifier=None,
 )
 
 config_tbl_with_comments_str = """
@@ -610,6 +661,7 @@ __all__ = [
     "empty_with_inferred_pk_column_assign",
     "foreign_sqlalchemy_tbls_mod",
     "foreign_sqlalchemy_tbls_str",
+    "sqlalchemy_imports_ast",
     "node_fk_call",
     "node_pk_tbl_ass",
     "node_pk_tbl_call",
