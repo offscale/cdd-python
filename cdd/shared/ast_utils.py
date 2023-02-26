@@ -1644,7 +1644,7 @@ def infer_imports(module):
     :return: Iterable of imports
     :rtype: ```List[Union[Import, ImportFrom]]```
     """
-    import cdd.sqlalchemy.utils.parser_utils  # Should this be a function param instead?
+    import cdd.sqlalchemy.utils.parse_utils  # Should this be a function param instead?
 
     if isinstance(module, (ClassDef, FunctionDef, AsyncFunctionDef, Assign)):
         module = Module(body=[module], type_ignores=[], stmt=None)

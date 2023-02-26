@@ -20,7 +20,7 @@ from cdd.docstring.parse import docstring
 from cdd.shared.ast_utils import get_value
 from cdd.shared.defaults_utils import extract_default
 from cdd.shared.pure_utils import assert_equal
-from cdd.sqlalchemy.utils.parser_utils import column_call_to_param
+from cdd.sqlalchemy.utils.parse_utils import column_call_to_param
 
 
 def sqlalchemy_table(call_or_name, parse_original_whitespace=False):

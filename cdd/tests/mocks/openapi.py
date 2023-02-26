@@ -1,6 +1,7 @@
 """
 OpenAPI mocks
 """
+
 from copy import deepcopy
 
 from cdd.tests.mocks.json_schema import (

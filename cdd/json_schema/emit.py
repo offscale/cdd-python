@@ -9,7 +9,7 @@ from operator import add
 
 from cdd.docstring.emit import docstring
 from cdd.json_schema.utils.emit_utils import param2json_schema_property
-from cdd.shared.pure_utils import SetEncoder, deindent, pp
+from cdd.shared.pure_utils import SetEncoder, deindent
 
 
 def json_schema(
@@ -111,7 +111,6 @@ def json_schema_file(input_mapping, output_filename):
     :param output_filename: Output file to write to
     :type output_filename: ```str```
     """
-    pp(dict(input_mapping))
     schemas_it = (json_schema(v) for k, v in input_mapping.items())
     schemas = (
         {"schemas": list(schemas_it)} if len(input_mapping) > 1 else next(schemas_it)

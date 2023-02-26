@@ -9,16 +9,12 @@ from itertools import chain
 from operator import add
 from os import environ
 
-from cdd.compound.openapi.utils.emit_utils import (
-    ensure_has_primary_key,
-    generate_repr_method,
-    param_to_sqlalchemy_column_call,
-)
+import cdd.compound.openapi.utils.emit_utils
 from cdd.docstring.emit import docstring
 from cdd.shared.ast_utils import maybe_type_comment, set_value
 from cdd.shared.pure_utils import deindent, indent_all_but_first, tab
 
-FORCE_PK_ID = environ.get("FORCE_PK_ID", False) in (False, 0, "0", "false")
+FORCE_PK_ID = environ.get("FORCE_PK_ID", False) not in (False, 0, "0", "false")
 
 
 def sqlalchemy_table(
@@ -87,8 +83,11 @@ def sqlalchemy_table(
                             )
                         ),
                         map(
-                            partial(param_to_sqlalchemy_column_call, include_name=True),
-                            ensure_has_primary_key(
+                            partial(
+                                cdd.compound.openapi.utils.emit_utils.param_to_sqlalchemy_column_call,
+                                include_name=True,
+                            ),
+                            cdd.compound.openapi.utils.emit_utils.ensure_has_primary_key(
                                 intermediate_repr["params"], force_pk_id
                             ).items(),
                         ),
@@ -285,18 +284,18 @@ def sqlalchemy(
                     *map(
                         lambda name_param: Assign(
                             targets=[Name(name_param[0], Store())],
-                            value=param_to_sqlalchemy_column_call(
+                            value=cdd.compound.openapi.utils.emit_utils.param_to_sqlalchemy_column_call(
                                 name_param, include_name=False
                             ),
                             expr=None,
                             lineno=None,
                             **maybe_type_comment,
                         ),
-                        ensure_has_primary_key(
+                        cdd.compound.openapi.utils.emit_utils.ensure_has_primary_key(
                             intermediate_repr["params"], force_pk_id
                         ).items(),
                     ),
-                    generate_repr_method(
+                    cdd.compound.openapi.utils.emit_utils.generate_repr_method(
                         intermediate_repr["params"], class_name, docstring_format
                     )
                     if emit_repr

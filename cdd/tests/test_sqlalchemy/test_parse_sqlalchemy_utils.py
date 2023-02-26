@@ -5,7 +5,7 @@ Tests for the utils that is used by the SQLalchemy parsers
 from copy import deepcopy
 from unittest import TestCase
 
-from cdd.sqlalchemy.utils.parser_utils import (
+from cdd.sqlalchemy.utils.parse_utils import (
     column_call_name_manipulator,
     column_call_to_param,
     get_pk_and_type,

@@ -3,6 +3,7 @@ Utility functions for `cdd.parse.sqlalchemy`
 """
 
 import ast
+from _ast import Call, Load, Name
 from ast import (
     Assign,
     Call,
@@ -17,6 +18,8 @@ from ast import (
 )
 from itertools import chain, filterfalse
 from operator import attrgetter
+
+from _operator import attrgetter
 
 from cdd.shared.ast_utils import get_value
 from cdd.shared.pure_utils import append_to_dict, rpartial
@@ -429,7 +432,6 @@ column_type2typ = {
     "int": "int",
     "str": "str",
 }
-
 
 __all__ = [
     "column_call_name_manipulator",

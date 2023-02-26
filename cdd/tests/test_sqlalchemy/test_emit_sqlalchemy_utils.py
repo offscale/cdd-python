@@ -26,13 +26,13 @@ from cdd.compound.openapi.utils.emit_utils import (
     param_to_sqlalchemy_column_call,
     sqlalchemy_class_to_table,
     sqlalchemy_table_to_class,
-    update_args_infer_typ_sqlalchemy,
     update_fk_for_file,
     update_with_imports_from_columns,
 )
 from cdd.shared.ast_utils import set_value
 from cdd.shared.pure_utils import rpartial
 from cdd.shared.source_transformer import to_code
+from cdd.sqlalchemy.utils.shared_utils import update_args_infer_typ_sqlalchemy
 from cdd.tests.mocks.ir import (
     intermediate_repr_empty,
     intermediate_repr_no_default_doc,

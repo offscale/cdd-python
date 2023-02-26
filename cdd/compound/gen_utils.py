@@ -392,7 +392,7 @@ def get_functions_and_classes(
         print("\nGenerating: {name!r}".format(name=name))
         or global__all__.append(name_tpl.format(name=name))
         or emitter(
-            get_parser(obj, parse_name)(obj),
+            print("obj:", obj, ";") or get_parser(obj, parse_name)(obj),
             emit_default_doc=emit_default_doc,
             word_wrap=no_word_wrap is None,
             **get_emit_kwarg(decorator_list, emit_call, emit_name, name_tpl, name),

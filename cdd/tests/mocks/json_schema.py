@@ -1,6 +1,7 @@
 """
 Mocks for JSON Schema
 """
+
 from copy import deepcopy
 
 from cdd.tests.mocks.docstrings import docstring_header_and_return_no_nl_str
