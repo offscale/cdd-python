@@ -1668,7 +1668,7 @@ def infer_imports(module):
     return list(
         (
             (
-                cdd.sqlalchemy.utils.parser_utils.imports_from(
+                cdd.sqlalchemy.utils.parse_utils.imports_from(
                     sqlalchemy_class_or_assigns
                 ),
             )

@@ -3,7 +3,6 @@ Utility functions for `cdd.parse.sqlalchemy`
 """
 
 import ast
-from _ast import Call, Load, Name
 from ast import (
     Assign,
     Call,
