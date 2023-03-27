@@ -18,8 +18,6 @@ from ast import (
 from itertools import chain, filterfalse
 from operator import attrgetter
 
-from _operator import attrgetter
-
 from cdd.shared.ast_utils import get_value
 from cdd.shared.pure_utils import append_to_dict, rpartial
 from cdd.shared.source_transformer import to_code

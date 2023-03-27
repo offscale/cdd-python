@@ -96,6 +96,7 @@ def get_emitter(emit_name):
     :return: Function which returns intermediate_repr
     :rtype: ```Callable[[...], dict]````
     """
+    emit_name = {"class": "class_"}.get(emit_name, emit_name)
     return getattr(
         import_module(
             ".".join(

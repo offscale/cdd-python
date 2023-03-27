@@ -3,20 +3,7 @@
 import ast
 import os
 import sys
-from ast import (
-    Assign,
-    ClassDef,
-    Dict,
-    Expr,
-    Import,
-    ImportFrom,
-    List,
-    Load,
-    Module,
-    Name,
-    Store,
-    alias,
-)
+from ast import Assign, ClassDef, Dict, Expr, List, Load, Module, Name, Store
 from copy import deepcopy
 from io import StringIO
 from json import dump
@@ -32,6 +19,12 @@ from cdd.compound.gen import gen
 from cdd.shared.ast_utils import maybe_type_comment, set_value
 from cdd.shared.pure_utils import rpartial
 from cdd.shared.source_transformer import to_code
+from cdd.tests.mocks.gen import (
+    import_gen_test_module_ast,
+    import_gen_test_module_str,
+    import_star_from_input_ast,
+    import_star_from_input_str,
+)
 from cdd.tests.mocks.json_schema import server_error_schema
 from cdd.tests.mocks.methods import function_adder_ast
 from cdd.tests.utils_for_tests import run_ast_test, unittest_main
@@ -118,43 +111,6 @@ def populate_files(tempdir, input_module_str=None):
     return input_filename, input_module_ast, input_class_ast, expected_class_ast
 
 
-_import_star_from_input_ast = ImportFrom(
-    module="input",
-    names=[
-        alias(
-            name="input_map",
-            asname=None,
-            identifier=None,
-            identifier_name=None,
-        ),
-        alias(
-            name="Foo",
-            asname=None,
-            identifier=None,
-            identifier_name=None,
-        ),
-    ],
-    level=1,
-    identifier=None,
-)
-_import_star_from_input_str = to_code(_import_star_from_input_ast)
-
-_import_gen_test_module_ast = Import(
-    names=[
-        alias(
-            name="gen_test_module",
-            asname=None,
-            identifier=None,
-            identifier_name=None,
-        )
-    ],
-    alias=None,
-)
-_import_gen_test_module_str = "{}\n".format(
-    to_code(_import_gen_test_module_ast).rstrip("\n")
-)
-
-
 class TestGen(TestCase):
     """Test class for gen.py"""
 
@@ -177,7 +133,7 @@ class TestGen(TestCase):
             os.path.join(temp_module_dir, "__init__{extsep}py".format(extsep=extsep)),
             "w",
         ) as f:
-            f.write(_import_star_from_input_str)
+            f.write(import_star_from_input_str)
 
         sys.path.append(cls.tempdir)
 
@@ -247,7 +203,7 @@ class TestGen(TestCase):
             gen_ast=gen_ast,
             gold=Module(
                 body=[
-                    _import_star_from_input_ast,
+                    import_star_from_input_ast,
                     self.expected_class_ast,
                     Assign(
                         targets=[Name("__all__", Store())],
@@ -285,7 +241,7 @@ class TestGen(TestCase):
                     imports_from_file="gen_test_module",
                     emit_name="class",
                     parse_name="infer",
-                    prepend=_import_gen_test_module_str,
+                    prepend=import_gen_test_module_str,
                     output_filename=output_filename,
                     emit_call=True,
                     emit_default_doc=False,
@@ -296,8 +252,8 @@ class TestGen(TestCase):
             gen_ast = ast.parse(f.read())
         gold = Module(
             body=[
-                _import_gen_test_module_ast,
-                _import_star_from_input_ast,
+                import_gen_test_module_ast,
+                import_star_from_input_ast,
                 self.expected_class_ast,
                 # self.input_module_ast.body[1],
                 Assign(
@@ -375,7 +331,9 @@ class TestGen(TestCase):
                 input_mapping=json_schema_file,
                 parse_name="json_schema",
                 emit_name="json_schema",
-                output_filename=os.path.join(tempdir, "foo.gen.json"),
+                output_filename=os.path.join(
+                    tempdir, "foo.gen{}json".format(os.path.extsep)
+                ),
             )
         self.assertEqual(json_schema_file_mock.call_count, 1)
 

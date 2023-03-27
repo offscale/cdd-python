@@ -344,6 +344,7 @@ def get_parser(node, parse_name):
     """
     if parse_name in (None, "infer"):
         parse_name = infer(node)
+    parse_name = {"class": "class_"}.get(parse_name, parse_name)
     return getattr(
         import_module(
             ".".join(

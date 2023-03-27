@@ -57,6 +57,7 @@ from cdd.shared.ast_utils import (
     merge_assignment_lists,
     merge_modules,
     node_to_dict,
+    optimise_imports,
     param2argparse_param,
     param2ast,
     parse_to_scalar,
@@ -71,6 +72,7 @@ from cdd.shared.source_transformer import ast_parse
 from cdd.tests.mocks.argparse import argparse_add_argument_expr
 from cdd.tests.mocks.classes import class_ast, class_str
 from cdd.tests.mocks.doctrans import function_type_annotated
+from cdd.tests.mocks.gen import import_star_from_input_ast
 from cdd.tests.mocks.methods import (
     class_with_method_and_body_types_ast,
     class_with_method_and_body_types_str,
@@ -1236,6 +1238,20 @@ class TestAstUtils(TestCase):
                     *map(ast.parse, (src, src)), remove_imports_from_second=False
                 ),
             )
+        )
+
+    def test_optimise_imports(self):
+        """Tests that `optimise_imports` deduplicates"""
+        run_ast_test(
+            self,
+            optimise_imports(
+                (
+                    import_star_from_input_ast,
+                    import_star_from_input_ast,
+                    import_star_from_input_ast,
+                )
+            )[0],
+            gold=import_star_from_input_ast,
         )
 
 

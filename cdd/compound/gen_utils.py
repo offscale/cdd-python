@@ -9,7 +9,12 @@ from json import load
 from operator import itemgetter
 from os import path
 
-from cdd.shared.ast_utils import infer_imports, maybe_type_comment, set_value
+from cdd.shared.ast_utils import (
+    infer_imports,
+    maybe_type_comment,
+    optimise_imports,
+    set_value,
+)
 from cdd.shared.emit.utils.emitter_utils import get_emitter
 from cdd.shared.parse import kind2instance_type
 from cdd.shared.parse.utils.parser_utils import get_parser
@@ -271,7 +276,12 @@ def gen_module(
     if emit_and_infer_imports:
         imports = "{}{}".format(
             imports or "",
-            " ".join(map(to_code, chain(*map(infer_imports, functions_and_classes)))),
+            " ".join(
+                map(
+                    to_code,
+                    optimise_imports(chain(*map(infer_imports, functions_and_classes))),
+                )
+            ),
         )
 
     # Too many params! - Clean things up for debugging:
@@ -430,9 +440,11 @@ def file_to_input_mapping(filepath, parse_name):
         with open(filepath, "rt") as f:
             mod = ast_parse(f.read())
 
+        # print(ast.dump(mod, indent=4))
+
         input_mapping = dict(
             map(
-                lambda node: (parse_name, node),
+                lambda node: (node.name, node),
                 filter(
                     rpartial(
                         isinstance,
@@ -447,4 +459,10 @@ def file_to_input_mapping(filepath, parse_name):
     return input_mapping
 
 
-__all__ = ["file_to_input_mapping", "get_input_mapping_from_path", "gen_file"]
+__all__ = [
+    "file_to_input_mapping",
+    "get_input_mapping_from_path",
+    "get_emit_kwarg",
+    "gen_file",
+    "get_parser",
+]

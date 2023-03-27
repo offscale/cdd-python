@@ -43,7 +43,7 @@ from copy import deepcopy
 from functools import partial
 from importlib import import_module
 from inspect import isclass, isfunction
-from itertools import chain, filterfalse
+from itertools import chain, filterfalse, groupby
 from json import dumps
 from operator import attrgetter, contains, inv, neg, not_, pos
 
@@ -1634,6 +1634,40 @@ def merge_modules(mod0, mod1, remove_imports_from_second=True):
     return new_mod
 
 
+def optimise_imports(imports):
+    """
+    Optimise imports involves:
+    - Deduplication of module names
+    - Deduplication of symbols import from module names
+
+    For more complicated set-ups I recommend use of:
+    - autoflake --remove-all-unused-imports
+    - isort
+
+    :param imports: `ImportFrom` nodes
+    :type imports: ```Iterable[ImportFrom]```
+
+    :return: `ImportFrom` nodes
+    :rtype: ```List[ImportFrom]```
+    """
+    seen_pair = set()
+    return [
+        ImportFrom(
+            module=module,
+            names=list(
+                seen_pair.add(_alias.name + str(alias.asname)) or _alias
+                for _alias in chain.from_iterable(map(attrgetter("names"), symbols))
+                if _alias.name + str(alias.asname) not in seen_pair
+            ),
+            level=1,
+            identifier=None,
+        )
+        for module, symbols in groupby(
+            sorted(imports, key=attrgetter("module")), attrgetter("module")
+        )
+    ]
+
+
 def infer_imports(module):
     """
     Infer imports
@@ -1710,6 +1744,7 @@ __all__ = [
     "merge_assignment_lists",
     "merge_modules",
     "node_to_dict",
+    "optimise_imports",
     "param2argparse_param",
     "param2ast",
     "parse_to_scalar",
