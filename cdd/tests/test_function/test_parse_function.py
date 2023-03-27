@@ -155,7 +155,7 @@ class TestParseFunction(TestCase):
         # This is a hack because JetBrains wraps stdout
         self.assertIn(
             type(ir["params"]["writer"]["default"]).__name__,
-            frozenset(("FlushingStringIO", "TextIOWrapper")),
+            frozenset(("EncodedFile", "FlushingStringIO", "TextIOWrapper")),
         )
 
         # This extra typ is copied, for now. TODO: Update AST-level parser to set types when defaults are given.

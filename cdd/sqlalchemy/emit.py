@@ -70,7 +70,14 @@ def sqlalchemy_table(
     :rtype: ```ClassDef```
     """
     return Assign(
-        targets=[Name(name, Store())],
+        targets=[
+            Name(
+                name
+                if name not in (None, "config_tbl") or not intermediate_repr["name"]
+                else intermediate_repr["name"],
+                Store(),
+            )
+        ],
         value=Call(
             func=Name("Table", Load()),
             args=list(
@@ -94,46 +101,49 @@ def sqlalchemy_table(
                     )
                 )
             ),
-            keywords=[
-                keyword(
-                    arg="comment",
-                    value=set_value(
-                        deindent(
-                            add(
-                                *map(
-                                    partial(
-                                        docstring,
-                                        emit_default_doc=emit_default_doc,
-                                        docstring_format=docstring_format,
-                                        word_wrap=word_wrap,
-                                        emit_original_whitespace=emit_original_whitespace,
-                                        emit_types=True,
-                                    ),
-                                    (
-                                        {
-                                            "doc": intermediate_repr["doc"].lstrip()
-                                            + "\n\n"
-                                            if intermediate_repr["returns"]
-                                            else "",
-                                            "params": OrderedDict(),
-                                            "returns": None,
-                                        },
-                                        {
-                                            "doc": "",
-                                            "params": OrderedDict(),
-                                            "returns": intermediate_repr["returns"],
-                                        },
-                                    ),
-                                )
-                            ).strip()
+            keywords=(
+                lambda val: [
+                    keyword(
+                        arg="comment",
+                        value=set_value(val),
+                        identifier=None,
+                        expr=None,
+                        lineno=None,
+                        **maybe_type_comment,
+                    )
+                ]
+                if val
+                else []
+            )(
+                deindent(
+                    add(
+                        *map(
+                            partial(
+                                docstring,
+                                emit_default_doc=emit_default_doc,
+                                docstring_format=docstring_format,
+                                word_wrap=word_wrap,
+                                emit_original_whitespace=emit_original_whitespace,
+                                emit_types=True,
+                            ),
+                            (
+                                {
+                                    "doc": intermediate_repr["doc"].lstrip() + "\n\n"
+                                    if intermediate_repr["returns"]
+                                    else "",
+                                    "params": OrderedDict(),
+                                    "returns": None,
+                                },
+                                {
+                                    "doc": "",
+                                    "params": OrderedDict(),
+                                    "returns": intermediate_repr["returns"],
+                                },
+                            ),
                         )
-                    ),
-                    identifier=None,
-                    expr=None,
-                    lineno=None,
-                    **maybe_type_comment,
+                    ).strip()
                 )
-            ]
+            )
             if intermediate_repr.get("doc")
             else [],
             expr=None,

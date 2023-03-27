@@ -45,7 +45,7 @@ from importlib import import_module
 from inspect import isclass, isfunction
 from itertools import chain, filterfalse, groupby
 from json import dumps
-from operator import attrgetter, contains, inv, neg, not_, pos
+from operator import attrgetter, contains, inv, itemgetter, neg, not_, pos
 
 from yaml import safe_dump_all
 
@@ -1655,9 +1655,20 @@ def optimise_imports(imports):
         ImportFrom(
             module=module,
             names=list(
-                seen_pair.add(_alias.name + str(alias.asname)) or _alias
-                for _alias in chain.from_iterable(map(attrgetter("names"), symbols))
-                if _alias.name + str(alias.asname) not in seen_pair
+                map(
+                    itemgetter(1),
+                    filter(
+                        lambda key_alias: key_alias[0] not in seen_pair
+                        and (seen_pair.add(key_alias[0]) or True),
+                        map(
+                            lambda _alias: (
+                                _alias.name + (getattr(_alias, "asname", None) or ""),
+                                _alias,
+                            ),
+                            chain.from_iterable(map(attrgetter("names"), symbols)),
+                        ),
+                    ),
+                )
             ),
             level=1,
             identifier=None,

@@ -440,8 +440,6 @@ def file_to_input_mapping(filepath, parse_name):
         with open(filepath, "rt") as f:
             mod = ast_parse(f.read())
 
-        # print(ast.dump(mod, indent=4))
-
         input_mapping = dict(
             map(
                 lambda node: (node.name, node),
