@@ -1083,6 +1083,29 @@ def emit_arg(node):
         raise NotImplementedError(type(node).__name__)
 
 
+def construct_module_with_symbols(module, symbols):
+    """
+    Create a module out of the input module that only contains nodes
+    with a name contained in `symbols`
+
+    :param module: Input module
+    :type module: ```Module```
+
+    :param symbols: Symbols
+    :type symbols: ```FrozenSet[str]```
+
+    :return: Module with only members whose `.name` is in `symbols`
+    :rtype: ```Module```
+    """
+    return Module(
+        body=list(
+            filter(lambda node: getattr(node, "name", "") in symbols, module.body)
+        ),
+        type_ignores=[],
+        stmt=None,
+    )
+
+
 def it2literal(it):
     """
     Convert a collection of constants into a type annotation
@@ -1670,7 +1693,7 @@ def optimise_imports(imports):
                     ),
                 )
             ),
-            level=1,
+            level=0,
             identifier=None,
         )
         for module, symbols in groupby(
@@ -1738,6 +1761,7 @@ __all__ = [
     "ast_type_to_python_type",
     "cmp_ast",
     "code_quoted",
+    "construct_module_with_symbols",
     "emit_ann_assign",
     "emit_arg",
     "find_ast_type",

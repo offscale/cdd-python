@@ -999,4 +999,4 @@ def _set_param_values(input_str, val, sw=":type"):
     )
 
 
-__all__ = ["parse_docstring", "Style"]
+__all__ = ["parse_docstring", "_set_name_and_type", "Style"]

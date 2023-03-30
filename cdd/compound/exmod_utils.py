@@ -1,7 +1,9 @@
 """ Exmod utils """
 
 import ast
+from _ast import FunctionDef
 from ast import Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias
+from collections import OrderedDict
 from functools import partial
 from inspect import getfile, ismodule
 from itertools import chain
@@ -9,7 +11,9 @@ from operator import attrgetter, eq
 from os import extsep, makedirs, path
 
 import cdd.argparse_function.emit
+import cdd.class_
 import cdd.class_.emit
+import cdd.class_.parse
 import cdd.compound.openapi.emit
 import cdd.docstring.emit
 import cdd.function.emit
@@ -18,9 +22,12 @@ import cdd.pydantic.emit
 import cdd.shared.ast_utils
 import cdd.shared.emit.file
 import cdd.sqlalchemy.emit
+from cdd.shared.parse.utils.parser_utils import get_parser
+from cdd.shared.pkg_utils import relative_filename
 from cdd.shared.pure_utils import (
     INIT_FILENAME,
     no_magic_dir2attr,
+    pp,
     rpartial,
     sanitise_emit_name,
 )
@@ -43,9 +50,24 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
     :param _result: The result var (used internally as accumulator)
     :type _result: ```dict```
 
-    :return: Values (could be modules, classes, and whatever other symbols are exposed)
-    :rtype: ```Generator[Any]```
+    :return: fully-qualified module name to values (could be modules, classes, and whatever other symbols are exposed)
+    :rtype: ```Dict[str,Generator[Any]]```
     """
+    if path.isfile(module_root_dir):
+        with open(module_root_dir, "rt") as f:
+            mod = ast.parse(f.read())
+        return dict(
+            map(
+                lambda node: (
+                    "{current_module}.{name}".format(
+                        current_module=current_module, name=node.name
+                    ),
+                    node,
+                ),
+                filter(lambda node: hasattr(node, "name"), mod.body),
+            )
+        )
+
     for name, symbol in no_magic_dir2attr(obj).items():
         fq = "{current_module}.{name}".format(current_module=current_module, name=name)
         try:
@@ -115,6 +137,9 @@ def emit_file_on_hierarchy(
     """
     mod_name, _, name = name_orig_ir[0].rpartition(".")
     original_relative_filename_path, ir = name_orig_ir[1], name_orig_ir[2]
+    assert isinstance(original_relative_filename_path, str)
+    pp({"ir": ir})
+    assert isinstance(ir, dict)
     assert original_relative_filename_path
     if not name and ir.get("name") is not None:
         name = ir.get("name")
@@ -282,7 +307,16 @@ def _emit_symbol(
     """
     emitter = (
         lambda sanitised_emit_name: getattr(
-            getattr(getattr(cdd, sanitised_emit_name), "emit"), sanitised_emit_name
+            getattr(
+                getattr(
+                    cdd,
+                    "sqlalchemy"
+                    if sanitised_emit_name == "sqlalchemy_table"
+                    else sanitised_emit_name,
+                ),
+                "emit",
+            ),
+            sanitised_emit_name,
         )
     )(sanitise_emit_name(emit_name))
     gen_node = emitter(
@@ -291,10 +325,12 @@ def _emit_symbol(
         **dict(
             **{
                 "{emit_name}_name".format(
-                    emit_name="function" if emit_name == "argparse" else emit_name
+                    emit_name="function"
+                    if emit_name == "argparse"
+                    else emit_name.replace("sqlalchemy_table", "table")
                 ): name
             },
-            **{} if emit_name == "class" else {"function_type": "static"}
+            **{"function_type": "static"} if emit_name == "function" else {}
         )
     )
     __all___node = Assign(
@@ -373,4 +409,214 @@ def _emit_symbol(
             )
 
 
-__all__ = ["get_module_contents", "emit_file_on_hierarchy"]
+def emit_files_from_module_and_return_imports(
+    module_name,
+    module_root_dir,
+    new_module_name,
+    emit_name,
+    module,
+    output_directory,
+    mock_imports,
+    no_word_wrap,
+    dry_run,
+    filesystem_layout,
+):
+    """
+    Emit type `emit_name` of all files in `module_root_dir` into `output_directory`
+    on `new_module_name` hierarchy. Then return the new imports.
+
+    :param module_name: Name of existing module
+    :type module_name: ```str```
+
+    :param module_root_dir: Root dir of existing module
+    :type module_root_dir: ```str```
+
+    :param new_module_name: New module name
+    :type new_module_name: ```str```
+
+    :param emit_name: What type(s) to generate.
+    :type emit_name: ```List[Literal["argparse", "class", "function", "json_schema",
+                                     "pydantic", "sqlalchemy", "sqlalchemy_table"]]```
+
+    :param module: Module itself
+    :type module: ```Module```
+
+    :param output_directory: Where to place the generated exposed interfaces to the given `--module`.
+    :type output_directory: ```str```
+
+    :param mock_imports: Whether to generate mock TensorFlow imports
+    :type mock_imports: ```bool```
+
+    :param no_word_wrap: Whether word-wrap is disabled (on emission).
+    :type no_word_wrap: ```Optional[Literal[True]]```
+
+    :param dry_run: Show what would be created; don't actually write to the filesystem
+    :type dry_run: ```bool```
+
+    :param filesystem_layout: Hierarchy of folder and file names generated. "java" is file per package per name.
+    :type filesystem_layout: ```Literal["java", "as_input"]```
+
+    :return: List of `ImportFrom` refering to generated module
+    :rtype: ```List[ImportFrom]```
+    """
+    _emit_file_on_hierarchy = partial(
+        emit_file_on_hierarchy,
+        emit_name=emit_name,
+        module_name=module_name,
+        new_module_name=new_module_name,
+        mock_imports=mock_imports,
+        filesystem_layout=filesystem_layout,
+        output_directory=output_directory,
+        no_word_wrap=no_word_wrap,
+        dry_run=dry_run,
+    )
+    print("emit_files_from_module_and_return_imports::module_name:", module_name, ";")
+    print("emit_files_from_module_and_return_imports::module:", module, ";")
+    print(
+        "emit_files_from_module_and_return_imports::module_root_dir:",
+        module_root_dir,
+        ";\n",
+    )
+    # Might need some `groupby` in case multiple files are in the one project; same for `get_module_contents`
+    return list(
+        map(
+            _emit_file_on_hierarchy,
+            map(
+                lambda name_source: (
+                    name_source[0],
+                    module_root_dir
+                    if path.isfile(module_root_dir)
+                    else (
+                        lambda filename: filename[len(module_name) + 1 :]
+                        if filename.startswith(module_name)
+                        else filename
+                    )(relative_filename(getfile(name_source[1]))),
+                    {"params": OrderedDict(), "returns": OrderedDict()}
+                    if dry_run
+                    else (
+                        cdd.class_.parse.class_(
+                            name_source[1], merge_inner_function="__init__"
+                        )
+                        if not isinstance(name_source[1], FunctionDef)
+                        else (
+                            print(
+                                'get_parser(name_source[1], "infer"):',
+                                get_parser(name_source[1], "infer"),
+                                ";",
+                            )
+                            or get_parser(name_source[1], "infer")
+                        )
+                    )(name_source[1]),
+                ),
+                map(
+                    lambda name_source: (
+                        name_source[0][len(module_name) + 1 :],
+                        name_source[1],
+                    ),
+                    get_module_contents(
+                        module, module_root_dir=module_root_dir
+                    ).items(),
+                ),
+            ),
+        ),
+    )
+
+
+def emit_files_from_module_and_return_imports2(
+    module_name,
+    module_root_dir,
+    new_module_name,
+    emit_name,
+    module,
+    output_directory,
+    mock_imports,
+    no_word_wrap,
+    dry_run,
+    filesystem_layout,
+):
+    """
+    Emit type `emit_name` of all files in `module_root_dir` into `output_directory`
+    on `new_module_name` hierarchy. Then return the new imports.
+
+    :param module_name: Name of existing module
+    :type module_name: ```str```
+
+    :param module_root_dir: Root dir of existing module
+    :type module_root_dir: ```str```
+
+    :param new_module_name: New module name
+    :type new_module_name: ```str```
+
+    :param emit_name: What type(s) to generate.
+    :type emit_name: ```List[Literal["argparse", "class", "function", "json_schema",
+                                     "pydantic", "sqlalchemy", "sqlalchemy_table"]]```
+
+    :param module: Module itself
+    :type module: ```Module```
+
+    :param output_directory: Where to place the generated exposed interfaces to the given `--module`.
+    :type output_directory: ```str```
+
+    :param mock_imports: Whether to generate mock TensorFlow imports
+    :type mock_imports: ```bool```
+
+    :param no_word_wrap: Whether word-wrap is disabled (on emission).
+    :type no_word_wrap: ```Optional[Literal[True]]```
+
+    :param dry_run: Show what would be created; don't actually write to the filesystem
+    :type dry_run: ```bool```
+
+    :param filesystem_layout: Hierarchy of folder and file names generated. "java" is file per package per name.
+    :type filesystem_layout: ```Literal["java", "as_input"]```
+
+    :return: List of `ImportFrom` refering to generated module
+    :rtype: ```List[ImportFrom]```
+    """
+    _emit_file_on_hierarchy = partial(
+        emit_file_on_hierarchy,
+        emit_name=emit_name,
+        module_name=module_name,
+        new_module_name=new_module_name,
+        mock_imports=mock_imports,
+        filesystem_layout=filesystem_layout,
+        output_directory=output_directory,
+        no_word_wrap=no_word_wrap,
+        dry_run=dry_run,
+    )
+    # Might need some `groupby` in case multiple files are in the one project; same for `get_module_contents`
+    return list(
+        map(
+            _emit_file_on_hierarchy,
+            map(
+                lambda name_source: (
+                    name_source[0],
+                    (
+                        lambda filename: filename[len(module_name) + 1 :]
+                        if filename.startswith(module_name)
+                        else filename
+                    )(relative_filename(getfile(name_source[1]))),
+                    {"params": OrderedDict(), "returns": OrderedDict()}
+                    if dry_run
+                    else cdd.class_.parse.class_(
+                        name_source[1], merge_inner_function="__init__"
+                    ),
+                ),
+                map(
+                    lambda name_source: (
+                        name_source[0][len(module_name) + 1 :],
+                        name_source[1],
+                    ),
+                    get_module_contents(
+                        module, module_root_dir=module_root_dir
+                    ).items(),
+                ),
+            ),
+        ),
+    )
+
+
+__all__ = [
+    "get_module_contents",
+    "emit_file_on_hierarchy",
+    "emit_files_from_module_and_return_imports",
+]

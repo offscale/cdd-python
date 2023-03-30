@@ -118,7 +118,7 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
         ]
 
     # TODO: Maybe `CREATE TYPE` and use that?
-    if _param["typ"] == "dict" and "ir" in _param:
+    if _param.get("typ") == "dict" and "ir" in _param:
         keywords.append(
             ast.keyword(
                 arg="comment",

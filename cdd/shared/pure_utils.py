@@ -35,6 +35,23 @@ line_length = environ.get("DOCTRANS_LINE_LENGTH", 100)
 fill = partial(_fill, width=line_length)
 
 
+def read_file_to_str(filename, mode="rt"):
+    """
+    Read filename into a str, closing the file afterwards
+
+    :param filename: Input filename
+    :type filename: ```str```
+
+    :param mode: File mode
+    :type mode: ```str```
+
+    :return: Filename content as str
+    :rtype: ```str```
+    """
+    with open(filename, mode) as f:
+        return f.read()
+
+
 # From https://github.com/Suor/funcy/blob/0ee7ae8/funcy/funcs.py#L34-L36
 def rpartial(func, *args):
     """Partially applies last arguments."""
@@ -1192,6 +1209,7 @@ __all__ = [
     "PY_GTE_3_9",
     "SetEncoder",
     "all_dunder_for_module",
+    "append_to_dict",
     "assert_equal",
     "balanced_parentheses",
     "blockwise",
@@ -1224,9 +1242,9 @@ __all__ = [
     "pluralise",
     "pp",
     "quote",
+    "read_file_to_str",
     "reindent",
     "remove_whitespace_comments",
-    "append_to_dict",
     "rpartial",
     "sanitise",
     "sanitise_emit_name",

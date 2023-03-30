@@ -2,21 +2,28 @@
 Not a dead module
 """
 
-from ast import Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias
-from collections import OrderedDict, deque
+from ast import Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias, parse
+from collections import deque
 from functools import partial
-from importlib import import_module
-from inspect import getfile
 from itertools import chain, groupby
-from operator import itemgetter
+from operator import attrgetter, itemgetter
 from os import makedirs, path
 
 import cdd.class_.parse
 import cdd.shared.emit.file
-from cdd.compound.exmod_utils import emit_file_on_hierarchy, get_module_contents
-from cdd.shared.ast_utils import maybe_type_comment, set_value
-from cdd.shared.pkg_utils import relative_filename
-from cdd.shared.pure_utils import INIT_FILENAME
+from cdd.compound.exmod_utils import emit_files_from_module_and_return_imports
+from cdd.shared.ast_utils import (
+    construct_module_with_symbols,
+    maybe_type_comment,
+    set_value,
+)
+from cdd.shared.pure_utils import (
+    INIT_FILENAME,
+    find_module_filepath,
+    pp,
+    read_file_to_str,
+    rpartial,
+)
 
 
 def exmod(
@@ -86,7 +93,9 @@ def exmod(
 
     emit_name = (
         emit_name[0]
-        if emit_name is not None and len(emit_name) == 1 and isinstance(emit_name, list)
+        if emit_name is not None
+        and len(emit_name) == 1
+        and isinstance(emit_name, (list, tuple))
         else emit_name
     )
     assert isinstance(
@@ -94,16 +103,10 @@ def exmod(
     ), "Expected `str` got `{emit_name_type!r}`".format(emit_name_type=type(emit_name))
 
     module_name, new_module_name = map(path.basename, (module, output_directory))
-    module = (
-        # partial(module_from_file, module_name=module_name)
-        # if path.isdir(module) else
-        import_module
-    )(module)
 
-    # if module.__file__ is None:
-    #     raise ModuleNotFoundError(module_name)
-
-    module_root_dir = path.dirname(module.__file__) + path.sep
+    module_root_dir = (
+        path.dirname(find_module_filepath(*module.rsplit(".", 1))) + path.sep
+    )
 
     mod_path = ".".join((path.basename(module_root_dir[:-1]), module_name))
     blacklist, whitelist = map(
@@ -118,50 +121,55 @@ def exmod(
     if not proceed:
         return
 
-    _emit_file_on_hierarchy = partial(
-        emit_file_on_hierarchy,
-        emit_name=emit_name,
-        module_name=module_name,
+    _emit_files_from_module_and_return_imports = partial(
+        emit_files_from_module_and_return_imports,
         new_module_name=new_module_name,
-        mock_imports=mock_imports,
-        filesystem_layout=filesystem_layout,
+        emit_name=emit_name,
         output_directory=output_directory,
+        mock_imports=mock_imports,
         no_word_wrap=no_word_wrap,
         dry_run=dry_run,
+        filesystem_layout=filesystem_layout,
     )
 
-    # Might need some `groupby` in case multiple files are in the one project; same for `get_module_contents`
+    imports = _emit_files_from_module_and_return_imports(
+        module_name=module_name, module=module, module_root_dir=module_root_dir
+    )
+    if not imports:
+        # Case: no obvious folder hierarchy, so parse the `__init__` file in root
+        with open(module_root_dir + "__init__{}py".format(path.extsep), "rt") as f:
+            mod = parse(f.read())
 
-    imports = list(
-        map(
-            _emit_file_on_hierarchy,
-            map(
-                lambda name_source: (
-                    name_source[0],
-                    (
-                        lambda filename: filename[len(module_name) + 1 :]
-                        if filename.startswith(module_name)
-                        else filename
-                    )(relative_filename(getfile(name_source[1]))),
-                    {"params": OrderedDict(), "returns": OrderedDict()}
-                    if dry_run
-                    else cdd.class_.parse.class_(
-                        name_source[1], merge_inner_function="__init__"
-                    ),
-                ),
+        # TODO: Optimise these imports
+        imports = list(
+            chain.from_iterable(
                 map(
-                    lambda name_source: (
-                        name_source[0][len(module_name) + 1 :],
-                        name_source[1],
+                    lambda filepath_name_module: _emit_files_from_module_and_return_imports(
+                        module_root_dir=filepath_name_module[0],
+                        module_name=filepath_name_module[1],
+                        module=filepath_name_module[2],
                     ),
-                    get_module_contents(
-                        module, module_root_dir=module_root_dir
-                    ).items(),
-                ),
-            ),
-        ),
-    )
-    assert len(imports), "Module contents are empty"
+                    map(
+                        lambda import_from: (
+                            (
+                                lambda module_filepath: (
+                                    module_filepath,
+                                    import_from.module,
+                                    construct_module_with_symbols(
+                                        parse(read_file_to_str(module_filepath)),
+                                        map(attrgetter("name"), import_from.names),
+                                    ),
+                                )
+                            )(find_module_filepath(*import_from.module.rsplit(".", 1)))
+                        ),
+                        filter(rpartial(isinstance, ImportFrom), mod.body),
+                    ),
+                )
+            )
+        )
+        pp(imports)
+
+    assert imports, "Module contents are empty"
     modules_names = tuple(
         map(
             lambda name_module: (

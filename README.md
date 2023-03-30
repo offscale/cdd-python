@@ -480,13 +480,12 @@ class Config(Base):
 ## CLI for this project
 
     $ python -m cdd --help
-    
     usage: python -m cdd [-h] [--version]
                          {sync_properties,sync,gen,gen_routes,openapi,doctrans,exmod}
                          ...
     
     Open API to/fro routes, models, and tests. Convert between docstrings,
-    classes, methods, argparse, and SQLalchemy.
+    classes, methods, argparse, pydantic, and SQLalchemy.
     
     positional arguments:
       {sync_properties,sync,gen,gen_routes,openapi,doctrans,exmod}
@@ -511,13 +510,13 @@ class Config(Base):
 ### `sync`
 
     $ python -m cdd sync --help
-
     usage: python -m cdd sync [-h] [--argparse-function ARGPARSE_FUNCTIONS]
                               [--argparse-function-name ARGPARSE_FUNCTION_NAMES]
                               [--class CLASSES] [--class-name CLASS_NAMES]
                               [--function FUNCTIONS]
-                              [--function-name FUNCTION_NAMES] --truth
-                              {argparse_function,class,function}
+                              [--function-name FUNCTION_NAMES] [--no-word-wrap]
+                              --truth
+                              {argparse_function,class,function,sqlalchemy,sqlalchemy_table}
     
     options:
       -h, --help            show this help message and exit
@@ -532,14 +531,15 @@ class Config(Base):
       --function-name FUNCTION_NAMES
                             Name of Function. If method, use Python resolution
                             syntax, i.e., ClassName.function_name
-      --truth {argparse_function,class,function}
+      --no-word-wrap        Whether word-wrap is disabled (on emission). None
+                            enables word-wrap. Defaults to None.
+      --truth {argparse_function,class,function,sqlalchemy,sqlalchemy_table}
                             Single source of truth. Others will be generated from
                             this. Will run with first found choice.
 
 ### `sync_properties`
 
     $ python -m cdd sync_properties --help
-
     usage: python -m cdd sync_properties [-h] --input-filename INPUT_FILENAME
                                          --input-param INPUT_PARAMS [--input-eval]
                                          --output-filename OUTPUT_FILENAME
@@ -568,17 +568,17 @@ class Config(Base):
 ### `gen`
 
     $ python -m cdd gen --help
-
     usage: python -m cdd gen [-h] --name-tpl NAME_TPL --input-mapping
                              INPUT_MAPPING [--prepend PREPEND]
                              [--imports-from-file IMPORTS_FROM_FILE]
-                             [--parse {argparse,class,function,sqlalchemy,sqlalchemy_table}]
+                             [--parse {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_table,infer}]
                              --emit
-                             {argparse,class,function,sqlalchemy,sqlalchemy_table}
+                             {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_table}
                              --output-filename OUTPUT_FILENAME [--emit-call]
-                             [--decorator DECORATOR_LIST]
+                             [--emit-and-infer-imports] [--no-word-wrap]
+                             [--decorator DECORATOR_LIST] [--phase PHASE]
     
-    optional arguments:
+    options:
       -h, --help            show this help message and exit
       --name-tpl NAME_TPL   Template for the name, e.g., `{name}Config`.
       --input-mapping INPUT_MAPPING
@@ -588,16 +588,23 @@ class Config(Base):
                             Extract imports from file and append to `output_file`.
                             If module or other symbol path given, resolve file
                             then use it.
-      --parse {argparse,class,function,sqlalchemy,sqlalchemy_table}
+      --parse {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_table,infer}
                             What type the input is.
-      --emit {argparse,class,function,sqlalchemy,sqlalchemy_table}
-                            What type to generate.
+      --emit {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_table}
+                            Which type to generate.
       --output-filename OUTPUT_FILENAME, -o OUTPUT_FILENAME
                             Output file to write to.
       --emit-call           Whether to place all the previous body into a new
                             `__call__` internal function
+      --emit-and-infer-imports
+                            Whether to emit and infer imports at the top of the
+                            generated code
+      --no-word-wrap        Whether word-wrap is disabled (on emission). None
+                            enables word-wrap. Defaults to None.
       --decorator DECORATOR_LIST
                             List of decorators.
+      --phase PHASE         Which phase to run through. E.g., SQLalchemy may
+                            require multiple phases to resolve foreign keys.
 
 
 PS: If you're outputting JSON-schema and want a file per schema then:
@@ -607,7 +614,6 @@ PS: If you're outputting JSON-schema and want a file per schema then:
 ### `gen_routes`
 
     $ python -m cdd gen_routes --help
-
     usage: python -m cdd gen_routes [-h] --crud {CRUD,CR,C,R,U,D,CR,CU,CD,CRD}
                                     [--app-name APP_NAME] --model-path MODEL_PATH
                                     --model-name MODEL_NAME --routes-path
@@ -634,29 +640,26 @@ PS: If you're outputting JSON-schema and want a file per schema then:
 ### `openapi`
 
     $ python -m cdd openapi --help
-
     usage: python -m cdd openapi [-h] [--app-name APP_NAME] --model-paths
-                                 MODEL_PATHS --routes-paths
-                                 [ROUTES_PATHS [ROUTES_PATHS ...]]
+                                 MODEL_PATHS --routes-paths [ROUTES_PATHS ...]
     
-    optional arguments:
+    options:
       -h, --help            show this help message and exit
       --app-name APP_NAME   Name of app (e.g., `app_name = Bottle();
                             @app_name.get('/api') def slash(): pass`)
       --model-paths MODEL_PATHS
                             Python module resolution (foo.models) or filepath
                             (foo/models)
-      --routes-paths [ROUTES_PATHS [ROUTES_PATHS ...]]
+      --routes-paths [ROUTES_PATHS ...]
                             Python module resolution 'foo.routes' or filepath
                             'foo/routes'
 
 ### `doctrans`
 
     $ python -m cdd doctrans --help
-    
     usage: python -m cdd doctrans [-h] --filename FILENAME --format
                                   {rest,google,numpydoc}
-                                  (--type-annotations | --no-type-annotations)
+                                  (--type-annotations | --no-type-annotations | --no-word-wrap)
     
     options:
       -h, --help            show this help message and exit
@@ -669,22 +672,26 @@ PS: If you're outputting JSON-schema and want a file per schema then:
       --no-type-annotations
                             Ensure all types are in docstring (rather than a
                             PEP484 type annotation)
+      --no-word-wrap        Whether word-wrap is disabled (on emission). None
+                            enables word-wrap. Defaults to None.
 
 ### `exmod`
 
     $ python -m cdd exmod --help
-    
     usage: python -m cdd exmod [-h] --module MODULE --emit
-                               {argparse,class,function,sqlalchemy,sqlalchemy_table}
-                               [--blacklist BLACKLIST] [--whitelist WHITELIST]
-                               --output-directory OUTPUT_DIRECTORY [--dry-run]
+                               {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_table}
+                               [--no-word-wrap] [--blacklist BLACKLIST]
+                               [--whitelist WHITELIST] --output-directory
+                               OUTPUT_DIRECTORY [--dry-run]
     
     options:
       -h, --help            show this help message and exit
       --module MODULE, -m MODULE
                             The module or fully-qualified name (FQN) to expose.
-      --emit {argparse,class,function,sqlalchemy,sqlalchemy_table}
-                            What type to generate.
+      --emit {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_table}
+                            Which type to generate.
+      --no-word-wrap        Whether word-wrap is disabled (on emission). None
+                            enables word-wrap. Defaults to None.
       --blacklist BLACKLIST
                             Modules/FQN to omit. If unspecified will emit all
                             (unless whitelist).
