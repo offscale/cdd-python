@@ -4,7 +4,7 @@ Not a dead module
 
 from ast import Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias, parse
 from collections import deque
-from functools import partial
+from functools import partial, reduce
 from itertools import chain, groupby
 from operator import attrgetter, itemgetter
 from os import makedirs, path
@@ -15,12 +15,12 @@ from cdd.compound.exmod_utils import emit_files_from_module_and_return_imports
 from cdd.shared.ast_utils import (
     construct_module_with_symbols,
     maybe_type_comment,
+    merge_modules,
     set_value,
 )
 from cdd.shared.pure_utils import (
     INIT_FILENAME,
     find_module_filepath,
-    pp,
     read_file_to_str,
     rpartial,
 )
@@ -150,24 +150,49 @@ def exmod(
                         module=filepath_name_module[2],
                     ),
                     map(
-                        lambda import_from: (
-                            (
-                                lambda module_filepath: (
-                                    module_filepath,
-                                    import_from.module,
-                                    construct_module_with_symbols(
-                                        parse(read_file_to_str(module_filepath)),
-                                        map(attrgetter("name"), import_from.names),
-                                    ),
-                                )
-                            )(find_module_filepath(*import_from.module.rsplit(".", 1)))
+                        lambda filepath2modname_group: (
+                            filepath2modname_group[0][0],
+                            filepath2modname_group[0][1],
+                            reduce(
+                                partial(merge_modules, deduplicate_names=True),
+                                map(itemgetter(1), filepath2modname_group[1]),
+                            ),
                         ),
-                        filter(rpartial(isinstance, ImportFrom), mod.body),
+                        groupby(
+                            sorted(
+                                map(
+                                    lambda import_from: (
+                                        (
+                                            lambda module_filepath: (
+                                                (module_filepath, import_from.module),
+                                                construct_module_with_symbols(
+                                                    parse(
+                                                        read_file_to_str(
+                                                            module_filepath
+                                                        )
+                                                    ),
+                                                    map(
+                                                        attrgetter("name"),
+                                                        import_from.names,
+                                                    ),
+                                                ),
+                                            )
+                                        )(
+                                            find_module_filepath(
+                                                *import_from.module.rsplit(".", 1)
+                                            )
+                                        )
+                                    ),
+                                    filter(rpartial(isinstance, ImportFrom), mod.body),
+                                ),
+                                key=itemgetter(0),
+                            ),
+                            key=itemgetter(0),
+                        ),
                     ),
                 )
             )
         )
-        pp(imports)
 
     assert imports, "Module contents are empty"
     modules_names = tuple(

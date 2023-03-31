@@ -1619,7 +1619,7 @@ def merge_assignment_lists(node, name, unique_sort=True):
     )
 
 
-def merge_modules(mod0, mod1, remove_imports_from_second=True):
+def merge_modules(mod0, mod1, remove_imports_from_second=True, deduplicate_names=False):
     """
     Merge modules (removing module docstring from mod1)
 
@@ -1631,6 +1631,9 @@ def merge_modules(mod0, mod1, remove_imports_from_second=True):
 
     :param remove_imports_from_second: Whether to remove global imports from second module
     :type remove_imports_from_second: ```bool```
+
+    :param deduplicate_names: Whether to deduplicate names; names can be function name, class name, AnnAssign name, or Assign name
+    :type deduplicate_names: ```bool```
 
     :return: Merged module (copy)
     :rtype: ```Module```
@@ -1653,6 +1656,46 @@ def merge_modules(mod0, mod1, remove_imports_from_second=True):
         if remove_imports_from_second
         else deepcopy(mod1_body)
     )
+    if deduplicate_names:
+
+        def unique_nodes(node):
+            """
+            :param node: AST node
+            :type node: ```AST```
+
+            :return: node if name is in `seen` set else None; with side-effect of adding to `seen`
+            :rtype: ```bool```
+            """
+
+            def side_effect_ret(name):
+                """
+                :param name: Name
+                :type name: ```str```
+
+                :return: node if name is in `seen` set else None; with side-effect of adding to `seen`
+                :rtype: ```bool```
+                """
+                if name in seen:
+                    return None
+                else:
+                    seen.add(node.name)
+                    return node
+
+            if isinstance(node, (FunctionDef, AsyncFunctionDef, ClassDef)):
+                return side_effect_ret(node.name)
+            elif isinstance(node, AnnAssign):
+                return side_effect_ret(get_value(node.target))
+            elif isinstance(node, Assign):
+                return any(
+                    filter(
+                        lambda target: side_effect_ret(get_value(target)), node.targets
+                    )
+                )
+            else:
+                return node
+
+        seen = set()
+        new_mod.body = list(filter(None, map(unique_nodes, new_mod.body)))
 
     return new_mod
 

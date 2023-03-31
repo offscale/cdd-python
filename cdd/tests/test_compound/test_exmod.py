@@ -569,11 +569,9 @@ class TestExMod(TestCase):
                                 next(
                                     filter(
                                         rpartial(isinstance, ClassDef),
-                                        (
-                                            lambda node_read: ast_parse(  # print("%%%%%\n", node_read, ';') or
-                                                node_read
-                                            ).body
-                                        )(node.read()),
+                                        (lambda node_read: ast_parse(node_read).body)(
+                                            node.read()
+                                        ),
                                     )
                                 )
                             ),

@@ -30,7 +30,13 @@ from os import path
 from platform import system
 
 import cdd.sqlalchemy.utils.shared_utils
-from cdd.shared.ast_utils import get_value, maybe_type_comment, set_arg, set_value
+from cdd.shared.ast_utils import (
+    NoneStr,
+    get_value,
+    maybe_type_comment,
+    set_arg,
+    set_value,
+)
 from cdd.shared.pure_utils import (
     find_module_filepath,
     namespaced_upper_camelcase_to_pascal,
@@ -132,7 +138,9 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
         keywords.append(
             ast.keyword(
                 arg="default",
-                value=default if isinstance(default, AST) else set_value(default),
+                value=default
+                if isinstance(default, AST)
+                else set_value(None if default == NoneStr else default),
                 identifier=None,
             )
         )

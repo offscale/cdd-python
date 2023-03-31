@@ -1,7 +1,6 @@
 """ Exmod utils """
 
 import ast
-from _ast import FunctionDef
 from ast import Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias
 from collections import OrderedDict
 from functools import partial
@@ -27,7 +26,6 @@ from cdd.shared.pkg_utils import relative_filename
 from cdd.shared.pure_utils import (
     INIT_FILENAME,
     no_magic_dir2attr,
-    pp,
     rpartial,
     sanitise_emit_name,
 )
@@ -137,9 +135,6 @@ def emit_file_on_hierarchy(
     """
     mod_name, _, name = name_orig_ir[0].rpartition(".")
     original_relative_filename_path, ir = name_orig_ir[1], name_orig_ir[2]
-    assert isinstance(original_relative_filename_path, str)
-    pp({"ir": ir})
-    assert isinstance(ir, dict)
     assert original_relative_filename_path
     if not name and ir.get("name") is not None:
         name = ir.get("name")
@@ -470,13 +465,7 @@ def emit_files_from_module_and_return_imports(
         no_word_wrap=no_word_wrap,
         dry_run=dry_run,
     )
-    print("emit_files_from_module_and_return_imports::module_name:", module_name, ";")
-    print("emit_files_from_module_and_return_imports::module:", module, ";")
-    print(
-        "emit_files_from_module_and_return_imports::module_root_dir:",
-        module_root_dir,
-        ";\n",
-    )
+
     # Might need some `groupby` in case multiple files are in the one project; same for `get_module_contents`
     return list(
         map(
@@ -484,7 +473,7 @@ def emit_files_from_module_and_return_imports(
             map(
                 lambda name_source: (
                     name_source[0],
-                    module_root_dir
+                    path.join(output_directory, path.basename(module_root_dir))
                     if path.isfile(module_root_dir)
                     else (
                         lambda filename: filename[len(module_name) + 1 :]
@@ -494,19 +483,10 @@ def emit_files_from_module_and_return_imports(
                     {"params": OrderedDict(), "returns": OrderedDict()}
                     if dry_run
                     else (
-                        cdd.class_.parse.class_(
-                            name_source[1], merge_inner_function="__init__"
-                        )
-                        if not isinstance(name_source[1], FunctionDef)
-                        else (
-                            print(
-                                'get_parser(name_source[1], "infer"):',
-                                get_parser(name_source[1], "infer"),
-                                ";",
-                            )
-                            or get_parser(name_source[1], "infer")
-                        )
-                    )(name_source[1]),
+                        lambda parser: partial(parser, merge_inner_function="__init__")
+                        if parser is cdd.class_.parse.class_
+                        else parser
+                    )(get_parser(name_source[1], "infer"))(name_source[1]),
                 ),
                 map(
                     lambda name_source: (

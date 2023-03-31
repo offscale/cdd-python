@@ -7,7 +7,7 @@ from ast import Call, Expr, Load, Name, Subscript, Tuple, keyword
 from operator import attrgetter
 
 import cdd.compound.openapi.utils.emit_utils
-from cdd.shared.ast_utils import get_value, set_value
+from cdd.shared.ast_utils import NoneStr, get_value, set_value
 from cdd.shared.pure_utils import PY_GTE_3_9, rpartial
 from cdd.shared.source_transformer import to_code
 
@@ -31,6 +31,8 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
 
     :rtype: ```bool```
     """
+    if _param["typ"] is None:
+        return _param.get("default") == NoneStr
     if _param["typ"].startswith("Optional["):
         _param["typ"] = _param["typ"][len("Optional[") : -1]
         nullable = True
