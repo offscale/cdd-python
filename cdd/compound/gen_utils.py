@@ -19,6 +19,7 @@ from cdd.shared.emit.utils.emitter_utils import get_emitter
 from cdd.shared.parse import kind2instance_type
 from cdd.shared.parse.utils.parser_utils import get_parser
 from cdd.shared.pure_utils import (
+    ensure_valid_identifier,
     find_module_filepath,
     pascal_to_upper_camelcase,
     rpartial,
@@ -107,7 +108,7 @@ def get_emit_kwarg(decorator_list, emit_call, emit_name, name_tpl, name):
             "sqlalchemy": {"table_name": _name},
             "sqlalchemy_table": {"table_name": _name},
         }[emit_name]
-    )(None if name == "infer" else name_tpl.format(name=name))
+    )(None if name == "infer" else ensure_valid_identifier(name_tpl.format(name=name)))
 
 
 def gen_file(

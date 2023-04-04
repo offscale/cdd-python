@@ -12,7 +12,12 @@ from os import environ
 import cdd.compound.openapi.utils.emit_utils
 from cdd.docstring.emit import docstring
 from cdd.shared.ast_utils import maybe_type_comment, set_value
-from cdd.shared.pure_utils import deindent, indent_all_but_first, tab
+from cdd.shared.pure_utils import (
+    deindent,
+    ensure_valid_identifier,
+    indent_all_but_first,
+    tab,
+)
 
 FORCE_PK_ID = environ.get("FORCE_PK_ID", False) not in (False, 0, "0", "false")
 
@@ -72,9 +77,11 @@ def sqlalchemy_table(
     return Assign(
         targets=[
             Name(
-                name
-                if name not in (None, "config_tbl") or not intermediate_repr["name"]
-                else intermediate_repr["name"],
+                ensure_valid_identifier(
+                    name
+                    if name not in (None, "config_tbl") or not intermediate_repr["name"]
+                    else intermediate_repr["name"]
+                ),
                 Store(),
             )
         ],

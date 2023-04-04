@@ -1035,6 +1035,26 @@ def emit_separating_tabs(s, indent_level=1, run_per_line=str.lstrip):
     )
 
 
+def ensure_valid_identifier(s):
+    """
+    Ensure identifier is valid
+
+    :param s: Potentially valid identifier
+    :type s: ```str```
+
+    :returns: Valid identifier from `s`
+    :rtype: ```str```
+    """
+    if not s:
+        return "_"
+    elif iskeyword(s):
+        return "{}_".format(s)
+    elif s[0].isdigit():
+        s = "_{}".format(s)
+    valid = frozenset("_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
+    return "".join(filter(valid.__contains__, s))
+
+
 def set_attr(obj, key, val):
     """
     Sets the named attribute on the given object to the specified value.
