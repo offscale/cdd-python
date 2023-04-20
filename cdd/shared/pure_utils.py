@@ -1042,7 +1042,7 @@ def ensure_valid_identifier(s):
     :param s: Potentially valid identifier
     :type s: ```str```
 
-    :returns: Valid identifier from `s`
+    :return: Valid identifier from `s`
     :rtype: ```str```
     """
     if not s:

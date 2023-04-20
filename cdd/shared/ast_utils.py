@@ -38,6 +38,7 @@ from ast import (
     keyword,
     walk,
 )
+from collections import namedtuple
 from contextlib import suppress
 from copy import deepcopy
 from functools import partial
@@ -45,7 +46,7 @@ from importlib import import_module
 from inspect import isclass, isfunction
 from itertools import chain, filterfalse, groupby
 from json import dumps
-from operator import attrgetter, contains, inv, itemgetter, neg, not_, pos
+from operator import attrgetter, contains, inv, neg, not_, pos
 
 from yaml import safe_dump_all
 
@@ -1719,29 +1720,68 @@ def optimise_imports(imports):
     seen_pair = set()
     return [
         ImportFrom(
-            module=module,
-            names=list(
-                map(
-                    itemgetter(1),
-                    filter(
-                        lambda key_alias: key_alias[0] not in seen_pair
-                        and (seen_pair.add(key_alias[0]) or True),
-                        map(
-                            lambda _alias: (
-                                _alias.name + (getattr(_alias, "asname", None) or ""),
-                                _alias,
-                            ),
-                            chain.from_iterable(map(attrgetter("names"), symbols)),
+            module=module_name,
+            level=sym[0].level,
+            names=list(map(lambda al: alias(name=al.name, asname=al.asname), sym[1])),
+        )
+        for module_name, symbols in map(
+            lambda key_group: (
+                key_group[0],
+                filter(
+                    None,
+                    map(
+                        lambda node: (
+                            lambda filtered: (
+                                namedtuple("_", ("level",))(node.level),
+                                filtered,
+                            )
+                            if filtered
+                            else None
+                        )(
+                            tuple(
+                                filter(
+                                    None,
+                                    map(
+                                        lambda name_asname_key: None
+                                        if name_asname_key.key in seen_pair
+                                        else (
+                                            seen_pair.add(name_asname_key.key)
+                                            or namedtuple("_", ("name", "asname"))(
+                                                name_asname_key.name,
+                                                name_asname_key.asname,
+                                            )
+                                        ),
+                                        map(
+                                            lambda _alias: namedtuple(
+                                                "_", ("name", "asname", "key")
+                                            )(
+                                                _alias.name,
+                                                _alias.asname,
+                                                "{}{}{}".format(
+                                                    key_group[0],
+                                                    _alias.name,
+                                                    _alias.asname,
+                                                ),
+                                            ),
+                                            node.names,
+                                        ),
+                                    ),
+                                )
+                            )
                         ),
+                        key_group[1],
                     ),
-                )
+                ),
             ),
-            level=0,
-            identifier=None,
+            groupby(
+                sorted(
+                    imports,
+                    key=attrgetter("module"),
+                ),
+                key=attrgetter("module"),
+            ),
         )
-        for module, symbols in groupby(
-            sorted(imports, key=attrgetter("module")), attrgetter("module")
-        )
+        for sym in symbols
     ]
 
 
