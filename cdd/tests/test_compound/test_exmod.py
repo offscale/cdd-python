@@ -1,13 +1,13 @@
 """ Tests for exmod subcommand """
 
-from ast import ClassDef
+from ast import Assign, ClassDef, ImportFrom, List, Load, Module, Name, Store, alias
 from functools import partial
 from io import StringIO
 from itertools import chain, groupby
-from operator import add, itemgetter
+from operator import itemgetter
 from os import environ, listdir, mkdir, path, walk
 from os.path import extsep
-from subprocess import DEVNULL, call
+from subprocess import run
 from sys import executable, platform
 from tempfile import TemporaryDirectory
 from unittest import TestCase
@@ -15,9 +15,10 @@ from unittest.mock import patch
 
 import cdd.class_.parse
 from cdd.compound.exmod import exmod
+from cdd.shared.ast_utils import maybe_type_comment, set_value
 from cdd.shared.pkg_utils import relative_filename
-from cdd.shared.pure_utils import ENCODING, INIT_FILENAME, rpartial, unquote
-from cdd.shared.source_transformer import ast_parse
+from cdd.shared.pure_utils import ENCODING, INIT_FILENAME, pp, rpartial, unquote
+from cdd.shared.source_transformer import ast_parse, to_code
 from cdd.tests.mocks import imports_header
 from cdd.tests.mocks.classes import class_str
 from cdd.tests.mocks.exmod import setup_py_mock
@@ -27,18 +28,36 @@ from cdd.tests.utils_for_tests import unittest_main
 class TestExMod(TestCase):
     """Test class for exmod.py"""
 
+    parent_name = ""
+    parent_dir = ""
+    child_name = ""
+    child_dir = ""
+    grandchild_name = ""
+    grandchild_dir = ""
+    module_hierarchy = ()
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        """
+        Create module hierarchy
+        """
+        cls.parent_name, cls.parent_dir = "parent", "parent_dir"
+        cls.child_name, cls.child_dir = "child", path.join(cls.parent_dir, "child_dir")
+        cls.grandchild_name, cls.grandchild_dir = "grandchild", path.join(
+            cls.child_dir, "grandchild_dir"
+        )
+        cls.module_hierarchy = (
+            (cls.parent_name, cls.parent_dir),
+            (cls.child_name, cls.child_dir),
+            (cls.grandchild_name, cls.grandchild_dir),
+        )
+
     def test_exmod(self) -> None:
         """Tests `exmod`"""
 
         try:
-            with TemporaryDirectory(
-                prefix="gold", suffix="gold"
-            ) as existent_module_dir, TemporaryDirectory(
-                prefix="gen", suffix="gen"
-            ) as new_module_dir:
-                self._create_fs(existent_module_dir)
-                # sys.path.insert(0, existent_module_dir)
-                self._pip(["install", "."], existent_module_dir)
+            with TemporaryDirectory(prefix="search_root", suffix="search_path") as root:
+                _, new_module_dir = self.create_and_install_pkg(root)
 
                 exmod(
                     module=self.module_name,
@@ -53,23 +72,18 @@ class TestExMod(TestCase):
                 self._check_emission(new_module_dir)
         finally:
             # sys.path.remove(existent_module_dir)
-            self._pip(["uninstall", "-y", self.module_name])
+            self._pip(["uninstall", "-y", self.package_root_name])
 
     def test_exmod_blacklist(self) -> None:
         """Tests `exmod` blacklist"""
 
         try:
-            with TemporaryDirectory(
-                prefix="gold", suffix="gold"
-            ) as existent_module_dir, TemporaryDirectory(
-                prefix="gen", suffix="gen"
-            ) as new_module_dir:
-                self._create_fs(existent_module_dir)
-                self._pip(["install", "."], existent_module_dir)
+            with TemporaryDirectory(prefix="search_root", suffix="search_path") as root:
+                existent_module_dir, new_module_dir = self.create_and_install_pkg(root)
                 exmod(
                     module=self.module_name,
                     emit_name="class",
-                    blacklist=(".".join((self.module_name,) * 2),),
+                    blacklist=(".".join((existent_module_dir,) * 2),),
                     whitelist=tuple(),
                     mock_imports=True,
                     output_directory=new_module_dir,
@@ -78,25 +92,19 @@ class TestExMod(TestCase):
                 )
                 self.assertListEqual(listdir(new_module_dir), [])
         finally:
-            self._pip(["uninstall", "-y", self.module_name])
+            self._pip(["uninstall", "-y", self.package_root_name])
 
     def test_exmod_whitelist(self) -> None:
         """Tests `exmod` whitelist"""
 
         try:
-            with TemporaryDirectory(
-                prefix="gold", suffix="gold"
-            ) as existent_module_dir, TemporaryDirectory(
-                prefix="gen", suffix="gen"
-            ) as new_module_dir:
-                self._create_fs(existent_module_dir)
-                self._pip(["install", "."], existent_module_dir)
-                existent_module_name = path.basename(existent_module_dir)
+            with TemporaryDirectory(prefix="search_root", suffix="search_path") as root:
+                new_module_dir = self.create_and_install_pkg(root)
                 exmod(
                     module=self.module_name,
                     emit_name="class",
                     blacklist=tuple(),
-                    whitelist=(".".join((existent_module_name,) * 2),),
+                    whitelist=(".".join((self.module_name,) * 2),),
                     mock_imports=True,
                     output_directory=new_module_dir,
                     no_word_wrap=None,
@@ -189,7 +197,7 @@ class TestExMod(TestCase):
 
                 self.assertListEqual(gen, gold)
         finally:
-            self._pip(["uninstall", "-y", self.module_name])
+            self._pip(["uninstall", "-y", self.package_root_name])
 
     def test_exmod_module_directory(self) -> None:
         """Tests `exmod` module whence directory"""
@@ -241,14 +249,15 @@ class TestExMod(TestCase):
         """Tests `exmod` dry_run"""
 
         try:
-            with TemporaryDirectory(
-                prefix="gold", suffix="gold"
-            ) as existent_module_dir, TemporaryDirectory(
-                prefix="gen", suffix="gen"
-            ) as new_module_dir:
-                self._create_fs(existent_module_dir)
-                self._pip(["install", "."], existent_module_dir)
+            with TemporaryDirectory(prefix="search_root", suffix="search_path") as root:
+                new_module_dir = self.create_and_install_pkg(root)
 
+                pp(
+                    {
+                        "test_exmod_dry_run::self.module_name": self.module_name,
+                        "test_exmod_dry_run::new_module_dir": new_module_dir,
+                    }
+                )
                 with patch("sys.stdout", new_callable=StringIO) as f:
                     exmod(
                         module=self.module_name,
@@ -406,89 +415,206 @@ class TestExMod(TestCase):
 
                 self._check_emission(new_module_dir, dry_run=True)
         finally:
-            self._pip(["uninstall", "-y", self.module_name])
+            self._pip(["uninstall", "-y", self.package_root_name])
 
-    def _create_fs(self, tempdir):
+    def create_and_install_pkg(self, root):
         """
-        Populate filesystem from `tempdir` root with module hierarchy &etc. for later exposure (exmod)
+        Create and install the pacakge
 
-        :param tempdir: Temporary directory
-        :type tempdir: ```str```
+        :param root: Root directory
+        :type root: ```str```
 
-        :return: tempdir
-        :rtype: ```str```
+        :return: existent_module_dir, new_module_dir
+        :rtype: ```Tuple[str,str]```
         """
-        self.module_name, self.gold_dir = path.basename(tempdir), tempdir
-        self.parent_name, self.parent_dir = "parent", "parent_dir"
-        self.child_name, self.child_dir = "child", path.join(
-            self.parent_dir, "child_dir"
-        )
-        self.grandchild_name, self.grandchild_dir = "grandchild", path.join(
-            self.child_dir, "grandchild_dir"
-        )
-        self.module_hierarchy = (
-            (self.parent_name, self.parent_dir),
-            (self.child_name, self.child_dir),
-            (self.grandchild_name, self.grandchild_dir),
-        )
-
+        self.package_root_name = path.basename(root)
+        existent_module_dir = path.join(root, self.package_root_name, "gen")
+        new_module_dir = path.join(root, self.package_root_name, "gold")
+        package_root_mod_dir = path.join(root, self.package_root_name)
+        mkdir(package_root_mod_dir)
         with open(
-            path.join(tempdir, "setup{extsep}py".format(extsep=extsep)), "wt"
-        ) as f:
-            f.write(
-                setup_py_mock.format(encoding=ENCODING, package_name=self.module_name)
-            )
-
-        open(path.join(tempdir, "README{extsep}md".format(extsep=extsep)), "a").close()
-        mkdir(path.join(tempdir, self.module_name))
-        with open(
-            path.join(tempdir, self.module_name, INIT_FILENAME),
+            path.join(package_root_mod_dir, "__init__{extsep}py".format(extsep=extsep)),
             "wt",
         ) as f:
             f.write(
                 "{encoding}\n\n"
-                "{imports}\n"
-                "__author__ = {author!r}\n"
-                "__version__ = {version!r}\n\n"
-                "{all__}\n".format(
+                "{mod}\n".format(
                     encoding=ENCODING,
-                    imports="\n".join(
-                        (
-                            "import {module_name}.{other_imports}\n".format(
-                                module_name=self.module_name,
-                                other_imports="\nimport {module_name}.".format(
-                                    module_name=self.module_name
-                                ).join(
-                                    map(
-                                        rpartial(str.replace, path.sep, "."),
-                                        map(itemgetter(1), self.module_hierarchy),
-                                    )
+                    mod=to_code(
+                        Module(
+                            body=[
+                                ImportFrom(
+                                    module=".".join((self.package_root_name, "gen")),
+                                    names=[
+                                        alias(
+                                            "*",
+                                            None,
+                                            identifier=None,
+                                            identifier_name=None,
+                                        )
+                                    ],
+                                    level=0,
                                 ),
-                            ),
-                        )
-                    ),
-                    # module_name=self.module_name,
-                    # parent_name=self.parent_name,
-                    # cls_name="{name}Class".format(name=self.parent_name.title()),
-                    author=environ.get("CDD_AUTHOR", "Samuel Marks"),
-                    version=environ.get("CDD_VERSION", "0.0.0"),
-                    all__="__all__ = {__all__!r}".format(
-                        __all__=list(
-                            map(
-                                rpartial(add, "_dir"),
-                                (
-                                    self.parent_name,
-                                    self.child_name,
-                                    self.grandchild_name,
+                                Assign(
+                                    targets=[Name("__author__", Store())],
+                                    value=set_value(
+                                        environ.get("CDD_AUTHOR", "Samuel Marks")
+                                    ),
+                                    expr=None,
+                                    lineno=None,
+                                    **maybe_type_comment,
                                 ),
-                            )
+                                Assign(
+                                    targets=[Name("__version__", Store())],
+                                    value=set_value(
+                                        environ.get("CDD_VERSION", "0.0.0")
+                                    ),
+                                    expr=None,
+                                    lineno=None,
+                                    **maybe_type_comment,
+                                ),
+                                Assign(
+                                    targets=[Name("__all__", Store())],
+                                    value=List(
+                                        ctx=Load(),
+                                        elts=list(
+                                            map(
+                                                set_value,
+                                                chain.from_iterable(
+                                                    (
+                                                        (
+                                                            "__author__",
+                                                            "__version__",
+                                                        ),
+                                                        map(
+                                                            itemgetter(0),
+                                                            self.module_hierarchy,
+                                                        ),
+                                                    )
+                                                ),
+                                            )
+                                        ),
+                                        expr=None,
+                                    ),
+                                    expr=None,
+                                    lineno=None,
+                                    **maybe_type_comment,
+                                ),
+                            ],
+                            type_ignores=[],
+                            stmt=None,
                         )
                     ),
                 )
             )
+        mkdir(new_module_dir)
+        self._create_fs(existent_module_dir)
+        self._pip(["install", "."], root)
+        return existent_module_dir, new_module_dir
+
+    def _create_fs(self, module_root):
+        """
+        Populate filesystem from `module_root` root with module hierarchy &etc. for later exposure (exmod)
+
+        :param module_root: Root directory for module, one directory below setup.py
+        :type module_root: ```str```
+
+        :return: module_root
+        :rtype: ```str```
+        """
+        self.module_name, self.gold_dir = path.basename(module_root), module_root
+        pp(
+            {
+                "_create_fs::self.module_name": self.module_name,
+                "_create_fs::module_root": module_root,
+            }
+        )
+        package_root = path.dirname(path.dirname(module_root))
+        self.module_root_name = self.module_name
+
+        self.module_name = ".".join((self.package_root_name, self.module_name))
+        pp({"_create_fs::self.module_name": self.module_name})
+
+        with open(
+            path.join(package_root, "setup{extsep}py".format(extsep=extsep)), "wt"
+        ) as f:
+            f.write(
+                setup_py_mock.format(
+                    encoding=ENCODING,
+                    package_name=self.package_root_name,
+                    module_name=self.module_root_name,
+                )
+            )
+
+        open(
+            path.join(package_root, "README{extsep}md".format(extsep=extsep)), "a"
+        ).close()
+        mkdir(module_root)
+
+        mod = Module(
+            body=list(
+                chain.from_iterable(
+                    (
+                        (
+                            ImportFrom(
+                                module=".".join(
+                                    (
+                                        self.package_root_name,
+                                        "gen",
+                                        directory.replace(path.sep, "."),
+                                    )
+                                ),
+                                names=[
+                                    alias(
+                                        name,
+                                        None,
+                                        identifier=None,
+                                        identifier_name=None,
+                                    )
+                                ],
+                                level=0,
+                            )
+                            for name, directory in self.module_hierarchy
+                        ),
+                        (
+                            Assign(
+                                targets=[Name("__all__", Store())],
+                                value=List(
+                                    ctx=Load(),
+                                    elts=list(
+                                        map(
+                                            set_value,
+                                            map(itemgetter(0), self.module_hierarchy),
+                                        )
+                                    ),
+                                    expr=None,
+                                ),
+                                expr=None,
+                                lineno=None,
+                                **maybe_type_comment,
+                            ),
+                        ),
+                    )
+                )
+            ),
+            type_ignores=[],
+            stmt=None,
+        )
+
+        with open(
+            path.join(module_root, INIT_FILENAME),
+            "wt",
+        ) as f:
+            f.write(
+                "{encoding}\n\n"
+                "{mod}".format(
+                    encoding=ENCODING,
+                    mod=to_code(mod),
+                )
+            )
 
         for name, _folder in self.module_hierarchy:
-            folder = path.join(tempdir, self.module_name, _folder)
+            folder = path.join(module_root, _folder)
             mkdir(folder)
             cls_name = "{name}Class".format(name=name.title())
             with open(
@@ -519,7 +645,7 @@ class TestExMod(TestCase):
                     )
                 )
 
-        return tempdir
+        return module_root
 
     def _check_emission(self, tempdir, dry_run=False):
         """
@@ -592,12 +718,10 @@ class TestExMod(TestCase):
         :type cwd: ```Optional[str]```
         """
         self.assertEqual(
-            call(
+            run(
                 [executable, "-m", "pip"] + pip_args,
-                cwd=cwd,
-                stdout=DEVNULL,
-                stderr=DEVNULL,
-            ),
+                cwd=cwd,  # stdout=DEVNULL
+            ).returncode,
             0,
             "EXIT_SUCCESS not reached",
         )

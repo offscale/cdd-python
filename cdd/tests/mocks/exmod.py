@@ -15,6 +15,7 @@ from os.path import extsep
 from setuptools import find_packages, setup
 
 package_name = {package_name!r}
+module_name = {module_name!r}
 
 
 def main():

@@ -25,7 +25,7 @@ from cdd.shared.parse.utils.parser_utils import get_parser
 from cdd.shared.pkg_utils import relative_filename
 from cdd.shared.pure_utils import (
     INIT_FILENAME,
-    no_magic_dir2attr,
+    no_magic_or_builtin_dir2attr,
     rpartial,
     sanitise_emit_name,
 )
@@ -66,7 +66,7 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
             )
         )
 
-    for name, symbol in no_magic_dir2attr(obj).items():
+    for name, symbol in no_magic_or_builtin_dir2attr(obj).items():
         fq = "{current_module}.{name}".format(current_module=current_module, name=name)
         try:
             symbol_location = getfile(symbol)

@@ -21,6 +21,7 @@ from cdd.shared.ast_utils import (
 from cdd.shared.pure_utils import (
     INIT_FILENAME,
     find_module_filepath,
+    pp,
     read_file_to_str,
     rpartial,
 )
@@ -102,7 +103,9 @@ def exmod(
         emit_name, (str, type(None))
     ), "Expected `str` got `{emit_name_type!r}`".format(emit_name_type=type(emit_name))
 
-    module_name, new_module_name = map(path.basename, (module, output_directory))
+    pp({"exmod::module": module, "exmod::output_directory": output_directory})
+    module_name, new_module_name = module, ".".join((module.rpartition(".")[0], "gold"))
+    pp({"exmod::module_name": module_name, "exmod::new_module_name": new_module_name})
 
     module_root_dir = (
         path.dirname(find_module_filepath(*module.rsplit(".", 1))) + path.sep
@@ -137,7 +140,9 @@ def exmod(
     )
     if not imports:
         # Case: no obvious folder hierarchy, so parse the `__init__` file in root
-        with open(module_root_dir + "__init__{}py".format(path.extsep), "rt") as f:
+        with open(
+            module_root_dir + "__init__{extsep}py".format(extsep=path.extsep), "rt"
+        ) as f:
             mod = parse(f.read())
 
         # TODO: Optimise these imports

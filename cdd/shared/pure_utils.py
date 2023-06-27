@@ -18,6 +18,7 @@ from pprint import PrettyPrinter
 from sys import version_info
 from textwrap import fill as _fill
 from textwrap import indent
+from types import BuiltinFunctionType
 from typing import Callable, Dict, FrozenSet, Optional, Tuple, Union
 
 pp: Callable[[object], None] = PrettyPrinter(indent=4, width=100).pprint
@@ -1113,9 +1114,10 @@ class SetEncoder(JSONEncoder):
         )
 
 
-def no_magic_dir2attr(p_object):
+def no_magic_or_builtin_dir2attr(p_object):
     """
     Dictionary of `dir` without the __ prefix magics (also without _ prefix)
+    and without builtins
     return the names comprising (some of) the attributes
     of the given object, and of attributes reachable from it.
 
@@ -1129,6 +1131,7 @@ def no_magic_dir2attr(p_object):
         attr: getattr(p_object, attr)
         for attr in dir(p_object)
         if not attr.startswith("_")
+        and not isinstance(getattr(p_object, attr), BuiltinFunctionType)
     }
 
 
@@ -1252,7 +1255,7 @@ __all__ = [
     "multiline",
     "namespaced_pascal_to_upper_camelcase",
     "namespaced_upper_camelcase_to_pascal",
-    "no_magic_dir2attr",
+    "no_magic_or_builtin_dir2attr",
     "none_types",
     "num_of_nls",
     "omit_whitespace",
