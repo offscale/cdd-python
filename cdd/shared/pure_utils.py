@@ -15,13 +15,13 @@ from keyword import iskeyword
 from operator import attrgetter, eq, itemgetter
 from os import environ, extsep, listdir, path
 from pprint import PrettyPrinter
-from sys import version_info
+from sys import stderr, version_info
 from textwrap import fill as _fill
 from textwrap import indent
 from types import BuiltinFunctionType
 from typing import Callable, Dict, FrozenSet, Optional, Tuple, Union
 
-pp: Callable[[object], None] = PrettyPrinter(indent=4, width=100).pprint
+pp: Callable[[object], None] = PrettyPrinter(indent=4, width=100, stream=stderr).pprint
 tab: str = environ.get("DOCTRANS_TAB", " " * 4)
 simple_types: Dict[Optional[str], Union[int, float, complex, str, bool, None]] = {
     "int": 0,

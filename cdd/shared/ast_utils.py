@@ -1633,7 +1633,7 @@ def merge_modules(mod0, mod1, remove_imports_from_second=True, deduplicate_names
     :param remove_imports_from_second: Whether to remove global imports from second module
     :type remove_imports_from_second: ```bool```
 
-    :param deduplicate_names: Whether to deduplicate names; names can be function name, class name, AnnAssign name, or Assign name
+    :param deduplicate_names: Whether to deduplicate names; names can be function|class|AnnAssign|Assign name
     :type deduplicate_names: ```bool```
 
     :return: Merged module (copy)

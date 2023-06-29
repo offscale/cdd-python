@@ -17,7 +17,7 @@ import cdd.class_.parse
 from cdd.compound.exmod import exmod
 from cdd.shared.ast_utils import maybe_type_comment, set_value
 from cdd.shared.pkg_utils import relative_filename
-from cdd.shared.pure_utils import ENCODING, INIT_FILENAME, pp, rpartial, unquote
+from cdd.shared.pure_utils import ENCODING, INIT_FILENAME, rpartial, unquote
 from cdd.shared.source_transformer import ast_parse, to_code
 from cdd.tests.mocks import imports_header
 from cdd.tests.mocks.classes import class_str
@@ -252,12 +252,6 @@ class TestExMod(TestCase):
             with TemporaryDirectory(prefix="search_root", suffix="search_path") as root:
                 new_module_dir = self.create_and_install_pkg(root)
 
-                pp(
-                    {
-                        "test_exmod_dry_run::self.module_name": self.module_name,
-                        "test_exmod_dry_run::new_module_dir": new_module_dir,
-                    }
-                )
                 with patch("sys.stdout", new_callable=StringIO) as f:
                     exmod(
                         module=self.module_name,
@@ -523,17 +517,10 @@ class TestExMod(TestCase):
         :rtype: ```str```
         """
         self.module_name, self.gold_dir = path.basename(module_root), module_root
-        pp(
-            {
-                "_create_fs::self.module_name": self.module_name,
-                "_create_fs::module_root": module_root,
-            }
-        )
         package_root = path.dirname(path.dirname(module_root))
         self.module_root_name = self.module_name
 
         self.module_name = ".".join((self.package_root_name, self.module_name))
-        pp({"_create_fs::self.module_name": self.module_name})
 
         with open(
             path.join(package_root, "setup{extsep}py".format(extsep=extsep)), "wt"

@@ -2,7 +2,7 @@
 
 import ast
 from ast import Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict, deque
 from functools import partial
 from inspect import getfile, ismodule
 from itertools import chain
@@ -26,9 +26,12 @@ from cdd.shared.pkg_utils import relative_filename
 from cdd.shared.pure_utils import (
     INIT_FILENAME,
     no_magic_or_builtin_dir2attr,
+    pp,
+    read_file_to_str,
     rpartial,
     sanitise_emit_name,
 )
+from cdd.shared.source_transformer import ast_parse
 from cdd.tests.mocks import imports_header_ast
 
 
@@ -51,41 +54,138 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
     :return: fully-qualified module name to values (could be modules, classes, and whatever other symbols are exposed)
     :rtype: ```Dict[str,Generator[Any]]```
     """
+    module_root_dir_init = path.join(
+        module_root_dir, "__init__{extsep}py".format(extsep=path.extsep)
+    )
+    process_module_contents = partial(
+        _process_module_contents,
+        _result=_result,
+        current_module=current_module,
+        module_root_dir=module_root_dir,
+    )
     if path.isfile(module_root_dir):
         with open(module_root_dir, "rt") as f:
             mod = ast.parse(f.read())
-        return dict(
+
+        # Bring in imported symbols that should be exposed based on `__all__`
+        all_magic_var = next(
             map(
-                lambda node: (
-                    "{current_module}.{name}".format(
-                        current_module=current_module, name=node.name
-                    ),
-                    node,
+                lambda assign: frozenset(
+                    map(cdd.shared.ast_utils.get_value, assign.value.elts)
                 ),
-                filter(lambda node: hasattr(node, "name"), mod.body),
+                filter(
+                    lambda assign: len(assign.targets) == 1
+                    and isinstance(assign.targets[0], Name)
+                    and assign.targets[0].id == "__all__",
+                    filter(rpartial(isinstance, Assign), mod.body),
+                ),
+            ),
+            None,
+        )
+        mod_to_symbol = defaultdict(list)
+        deque(
+            (
+                mod_to_symbol[import_from.module].append(name.name)
+                for import_from in filter(
+                    rpartial(isinstance, ImportFrom), ast.walk(mod)
+                )
+                for name in import_from.names
+                if name.asname is None
+                and name.name in all_magic_var
+                or name.asname in all_magic_var
+            ),
+            maxlen=0,
+        )
+        res = {
+            "{module_name}.{submodule_name}.{node_name}".format(
+                module_name=module_name,
+                submodule_name=submodule_name,
+                node_name=node.name
+            ): node
+            for module_name, submodule_names in mod_to_symbol.items()
+            for submodule_name in submodule_names
+            for node in ast_parse(
+                read_file_to_str(
+                    cdd.shared.pure_utils.find_module_filepath(
+                        module_name, submodule_name
+                    )
+                )
+            )
+            if hasattr(node, "name")
+        }
+        res.update(
+            dict(
+                map(
+                    lambda node: (
+                        "{current_module}.{name}".format(
+                            current_module=current_module, name=node.name
+                        ),
+                        node,
+                    ),
+                    filter(lambda node: hasattr(node, "name"), mod.body),
+                )
             )
         )
-
-    for name, symbol in no_magic_or_builtin_dir2attr(obj).items():
-        fq = "{current_module}.{name}".format(current_module=current_module, name=name)
-        try:
-            symbol_location = getfile(symbol)
-        except TypeError:
-            symbol_location = None
-        if symbol_location is not None and symbol_location.startswith(module_root_dir):
-            if isinstance(symbol, type):
-                _result[fq] = symbol
-            elif (
-                current_module != getattr(symbol, "__name__", current_module)
-                and ismodule(symbol)
-                and fq not in _result
-            ):
-                get_module_contents(
-                    symbol,
-                    module_root_dir=module_root_dir,
-                    current_module=symbol.__name__,
+        return res
+    elif path.isfile(module_root_dir_init):
+        pp(
+            {
+                "get_module_contents": get_module_contents(
+                    obj=obj,
+                    module_root_dir=module_root_dir_init,
+                    current_module=current_module,
+                    _result=_result,
                 )
+            }
+        )
+        pp({"_result": _result})
+    did_stuff = False
+
+    pp({"obj": obj, "module_root_dir": module_root_dir, "dir(obj)": sorted(dir(obj))})
+    # assert not isinstance(
+    #     obj, (int, float, complex, str, bool, type(None))
+    # ), "module is unexpected type: {!r}".format(type(obj).__name__)
+    for name, symbol in no_magic_or_builtin_dir2attr(obj).items():
+        process_module_contents(name=name, symbol=symbol)
     return _result
+
+
+def _process_module_contents(_result, current_module, module_root_dir, name, symbol):
+    """
+    Internal function to get the symbol and store it with a fully-qualified name in `_result`
+
+    :param current_module: The current module
+    :type current_module: ```Optional[str]```
+
+    :param module_root_dir: Root of module
+    :type module_root_dir: ```str```
+
+    :param name: Name—first value—from `dir(module)`
+    :type name: ```str```
+
+    :param symbol: Symbol—second value—from `dir(module)`
+    :type symbol: ```type```
+    """
+    fq = "{current_module}.{name}".format(current_module=current_module, name=name)
+    try:
+        symbol_location = getfile(symbol)
+    except TypeError:
+        symbol_location = None
+        print("could not find", symbol)
+    if symbol_location is not None and symbol_location.startswith(module_root_dir):
+        print("non none")
+        if isinstance(symbol, type):
+            _result[fq] = symbol
+        elif (
+            current_module != getattr(symbol, "__name__", current_module)
+            and ismodule(symbol)
+            and fq not in _result
+        ):
+            get_module_contents(
+                symbol,
+                module_root_dir=module_root_dir,
+                current_module=symbol.__name__,
+            )
 
 
 def emit_file_on_hierarchy(

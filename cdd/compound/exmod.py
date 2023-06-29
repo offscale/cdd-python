@@ -21,7 +21,6 @@ from cdd.shared.ast_utils import (
 from cdd.shared.pure_utils import (
     INIT_FILENAME,
     find_module_filepath,
-    pp,
     read_file_to_str,
     rpartial,
 )
@@ -103,9 +102,7 @@ def exmod(
         emit_name, (str, type(None))
     ), "Expected `str` got `{emit_name_type!r}`".format(emit_name_type=type(emit_name))
 
-    pp({"exmod::module": module, "exmod::output_directory": output_directory})
     module_name, new_module_name = module, ".".join((module.rpartition(".")[0], "gold"))
-    pp({"exmod::module_name": module_name, "exmod::new_module_name": new_module_name})
 
     module_root_dir = (
         path.dirname(find_module_filepath(*module.rsplit(".", 1))) + path.sep
