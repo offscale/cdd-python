@@ -61,7 +61,8 @@ def ast_parse(
     """
     parsed_ast = parse(source, filename=filename, mode=mode)
     if not skip_annotate:
-        annotate_ancestry(parsed_ast)
+        annotate_ancestry(parsed_ast, filename=filename)
+        setattr(parsed_ast, "__file__", filename)
     if not skip_docstring_remit and isinstance(
         parsed_ast, (Module, ClassDef, FunctionDef, AsyncFunctionDef)
     ):

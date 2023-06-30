@@ -19,7 +19,8 @@ def relative_filename(filename, remove_hints=tuple()):
     :rtype: ```str```
     """
     _filename = filename.casefold()
-    for elem in remove_hints + (get_python_lib(), get_python_lib(prefix="")):
+    lib = get_python_lib(), get_python_lib(prefix="")
+    for elem in remove_hints + lib:
         if _filename.startswith(elem.casefold()):
             return filename[len(elem) + 1 :]
     return filename

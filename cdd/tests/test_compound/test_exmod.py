@@ -99,7 +99,7 @@ class TestExMod(TestCase):
 
         try:
             with TemporaryDirectory(prefix="search_root", suffix="search_path") as root:
-                new_module_dir = self.create_and_install_pkg(root)
+                _, new_module_dir = self.create_and_install_pkg(root)
                 exmod(
                     module=self.module_name,
                     emit_name="class",
@@ -250,9 +250,11 @@ class TestExMod(TestCase):
 
         try:
             with TemporaryDirectory(prefix="search_root", suffix="search_path") as root:
-                new_module_dir = self.create_and_install_pkg(root)
+                _, new_module_dir = self.create_and_install_pkg(root)
 
-                with patch("sys.stdout", new_callable=StringIO) as f:
+                with patch(
+                    "cdd.compound.exmod_utils.EXMOD_OUT_STREAM", new_callable=StringIO
+                ) as f:
                     exmod(
                         module=self.module_name,
                         emit_name="class",
@@ -311,7 +313,7 @@ class TestExMod(TestCase):
                 all_tests_running = len(result["write"]) == 1
 
                 key_counts = (
-                    (("mkdir", 10), ("touch", 4), ("write", 1))
+                    (("mkdir", 4), ("touch", 1), ("write", 1))
                     if all_tests_running
                     else (("mkdir", 7), ("touch", 4), ("write", 4))
                 )
@@ -319,92 +321,22 @@ class TestExMod(TestCase):
                 for key, count in key_counts:
                     self.assertEqual(count, len(result[key]), key)
 
-                gold_module_name = next(
-                    map(
-                        lambda p: p.partition(path.sep)[0],
-                        filter(rpartial(str.startswith, "gold"), result["mkdir"]),
-                    ),
-                    path.basename(self.gold_dir),
+                gold = dict(
+                    touch=(path.join(path.dirname(self.gold_dir), INIT_FILENAME),),
+                    **{
+                        k: tuple(
+                            map(
+                                rpartial(str.rstrip, path.sep),
+                                map(partial(path.join, new_module_dir), v),
+                            )
+                        )
+                        for k, v in {
+                            "mkdir": ("", *map(itemgetter(1), self.module_hierarchy)),
+                            "write": (INIT_FILENAME,),
+                        }.items()
+                    },
                 )
-                gold = {
-                    k: tuple(map(unquote, map(repr, v)))
-                    for k, v in {
-                        "mkdir": chain.from_iterable(
-                            (
-                                (new_module_dir,),
-                                map(
-                                    partial(path.join, gold_module_name),
-                                    (
-                                        self.module_hierarchy[0][1],
-                                        self.module_hierarchy[1][1],
-                                        self.module_hierarchy[2][1],
-                                    ),
-                                )
-                                if all_tests_running
-                                else iter(()),
-                                (
-                                    self.module_hierarchy[0][1],
-                                    self.module_hierarchy[1][1],
-                                    path.join(
-                                        self.module_hierarchy[1][1],
-                                        self.module_hierarchy[1][0],
-                                    ),
-                                    self.module_hierarchy[2][1],
-                                    path.join(
-                                        self.module_hierarchy[2][1],
-                                        self.module_hierarchy[2][0],
-                                    ),
-                                    path.join(
-                                        self.module_hierarchy[0][1],
-                                        self.module_hierarchy[0][0],
-                                    ),
-                                ),
-                            )
-                        ),
-                        "touch": (
-                            INIT_FILENAME,
-                            *map(
-                                rpartial(path.join, INIT_FILENAME),
-                                (
-                                    self.module_hierarchy[0][1],
-                                    self.module_hierarchy[1][1],
-                                    self.module_hierarchy[2][1],
-                                ),
-                            ),
-                        ),
-                        "write": (
-                            lambda write_block: tuple(write_block[:1])
-                            if all_tests_running
-                            else write_block
-                        )(
-                            (
-                                INIT_FILENAME,
-                                path.join(
-                                    self.module_hierarchy[1][1],
-                                    "{name}{extsep}py".format(
-                                        name=self.module_hierarchy[1][0],
-                                        extsep=extsep,
-                                    ),
-                                ),
-                                path.join(
-                                    self.module_hierarchy[2][1],
-                                    "{name}{extsep}py".format(
-                                        name=self.module_hierarchy[2][0],
-                                        extsep=extsep,
-                                    ),
-                                ),
-                                path.join(
-                                    self.module_hierarchy[0][1],
-                                    "{name}{extsep}py".format(
-                                        name=self.module_hierarchy[0][0],
-                                        extsep=extsep,
-                                    ),
-                                ),
-                            )
-                        ),
-                    }.items()
-                }
-
+                self.maxDiff = None
                 self.assertDictEqual(result, gold)
 
                 self._check_emission(new_module_dir, dry_run=True)
@@ -648,7 +580,12 @@ class TestExMod(TestCase):
 
         for name, folder in self.module_hierarchy:
             gen_folder = path.join(tempdir, new_module_name, folder)
-            gold_folder = path.join(self.gold_dir, self.module_name, folder)
+            gold_folder = path.join(
+                self.gold_dir,
+                *(folder,)
+                if self.gold_dir.endswith(self.module_name.replace(".", path.sep))
+                else (self.module_name, folder),
+            )
 
             def _open(_folder):
                 """
@@ -665,7 +602,9 @@ class TestExMod(TestCase):
                     "rt",
                 )
 
-            self.assertTrue(path.isdir(gold_folder))
+            self.assertTrue(
+                path.isdir(gold_folder), "Expected {!r} to exist".format(gold_folder)
+            )
 
             gen_is_dir = path.isdir(gen_folder)
             if dry_run:

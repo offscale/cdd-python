@@ -842,22 +842,33 @@ def find_in_ast(search, node):
                 break
 
 
-def annotate_ancestry(node):
+def annotate_ancestry(node, filename=None):
     """
     Look to your roots. Find the child; find the parent.
-    Sets _location attribute to every child node.
+    Sets _location and __file__ attributes to every child node.
 
     :param node: AST node. Will be annotated in-place.
     :type node: ```AST```
+
+    :param filename: Where the node was originally defined. Sets the `__file__` attribute to this.
+    :type filename: ```Optional[str]```
 
     :return: Annotated AST node; also `node` arg will be annotated in-place.
     :rtype: ```AST```
     """
     # print("annotating", getattr(node, "name", None))
     node._location = [node.name] if hasattr(node, "name") else []
+    if filename not in (None, "<unknown>") and isinstance(
+        node, (AnnAssign, Assign, AsyncFunctionDef, ClassDef, FunctionDef, Module)
+    ):
+        setattr(node, "__file__", filename)
     parent_location = []
     for _node in walk(node):
         name = [_node.name] if hasattr(_node, "name") else []
+        if filename not in (None, "<unknown>") and isinstance(
+            _node, (AnnAssign, Assign, AsyncFunctionDef, ClassDef, FunctionDef, Module)
+        ):
+            setattr(_node, "__file__", filename)
         for child_node in iter_child_nodes(_node):
             if hasattr(child_node, "name") and not isinstance(child_node, alias):
                 child_node._location = name + [child_node.name]

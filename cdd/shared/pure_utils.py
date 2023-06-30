@@ -852,7 +852,7 @@ def get_module(name, package=None, extra_symbols=None):
             raise
 
 
-def find_module_filepath(module_name, submodule_name):
+def find_module_filepath(module_name, submodule_name, none_when_no_spec=False):
     """
     Find module's file location without first importing it
 
@@ -862,13 +862,19 @@ def find_module_filepath(module_name, submodule_name):
     :param submodule_name: Submodule name, e.g., "test_pure_utils"
     :type: ```str```
 
+    :param none_when_no_spec: When `find_spec` returns `None` return that. If `False` raises `AssertionError` then.
+    :type none_when_no_spec: ```bool```
+
     :return: Module location
     :rpath: ```str```
     """
     assert module_name is not None
     assert submodule_name is not None
     module_spec = find_spec(module_name)
-    assert module_spec is not None, "spec not found for {}".format(module_name)
+    if module_spec is None:
+        if none_when_no_spec:
+            return module_spec
+        raise AssertionError("spec not found for {}".format(module_name))
     module_origin = module_spec.origin
     module_parent = path.dirname(module_origin)
 

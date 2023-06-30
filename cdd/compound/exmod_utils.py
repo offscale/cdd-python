@@ -7,7 +7,8 @@ from functools import partial
 from inspect import getfile, ismodule
 from itertools import chain
 from operator import attrgetter, eq
-from os import extsep, makedirs, path
+from os import environ, extsep, makedirs, path
+from sys import stdout
 
 import cdd.argparse_function.emit
 import cdd.class_
@@ -26,13 +27,14 @@ from cdd.shared.pkg_utils import relative_filename
 from cdd.shared.pure_utils import (
     INIT_FILENAME,
     no_magic_or_builtin_dir2attr,
-    pp,
     read_file_to_str,
     rpartial,
     sanitise_emit_name,
 )
 from cdd.shared.source_transformer import ast_parse
 from cdd.tests.mocks import imports_header_ast
+
+EXMOD_OUT_STREAM = environ.get("EXMOD_OUT_STREAM", stdout)
 
 
 def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
@@ -100,18 +102,20 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
             "{module_name}.{submodule_name}.{node_name}".format(
                 module_name=module_name,
                 submodule_name=submodule_name,
-                node_name=node.name
+                node_name=node.name,
             ): node
             for module_name, submodule_names in mod_to_symbol.items()
             for submodule_name in submodule_names
-            for node in ast_parse(
-                read_file_to_str(
-                    cdd.shared.pure_utils.find_module_filepath(
-                        module_name, submodule_name
-                    )
+            for node in (
+                lambda module_filepath: iter(())
+                if module_filepath is None
+                else ast_parse(read_file_to_str(module_filepath), module_filepath).body
+            )(
+                cdd.shared.pure_utils.find_module_filepath(
+                    module_name, submodule_name, none_when_no_spec=True
                 )
             )
-            if hasattr(node, "name")
+            if hasattr(node, "name") and submodule_name != "ParentClass"
         }
         res.update(
             dict(
@@ -128,20 +132,12 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
         )
         return res
     elif path.isfile(module_root_dir_init):
-        pp(
-            {
-                "get_module_contents": get_module_contents(
-                    obj=obj,
-                    module_root_dir=module_root_dir_init,
-                    current_module=current_module,
-                    _result=_result,
-                )
-            }
+        return get_module_contents(
+            obj=obj,
+            module_root_dir=module_root_dir_init,
+            current_module=current_module,
+            _result=_result,
         )
-        pp({"_result": _result})
-    did_stuff = False
-
-    pp({"obj": obj, "module_root_dir": module_root_dir, "dir(obj)": sorted(dir(obj))})
     # assert not isinstance(
     #     obj, (int, float, complex, str, bool, type(None))
     # ), "module is unexpected type: {!r}".format(type(obj).__name__)
@@ -171,9 +167,7 @@ def _process_module_contents(_result, current_module, module_root_dir, name, sym
         symbol_location = getfile(symbol)
     except TypeError:
         symbol_location = None
-        print("could not find", symbol)
     if symbol_location is not None and symbol_location.startswith(module_root_dir):
-        print("non none")
         if isinstance(symbol, type):
             _result[fq] = symbol
         elif (
@@ -236,33 +230,53 @@ def emit_file_on_hierarchy(
     mod_name, _, name = name_orig_ir[0].rpartition(".")
     original_relative_filename_path, ir = name_orig_ir[1], name_orig_ir[2]
     assert original_relative_filename_path
+
+    relative_filename_path = original_relative_filename_path
+    module_name_as_path = module_name.replace(".", path.sep)
+    new_module_name_as_path = new_module_name.replace(".", path.sep)
+    if relative_filename_path.startswith(module_name_as_path + path.sep):
+        relative_filename_path = relative_filename_path[len(new_module_name_as_path) :]
     if not name and ir.get("name") is not None:
         name = ir.get("name")
+
+    output_dir_is_module = output_directory.replace(path.sep, ".").endswith(
+        new_module_name
+    )
     mod_path = path.join(
         output_directory,
-        new_module_name,
-        mod_name.replace(".", path.sep),
+        *()
+        if output_dir_is_module
+        else (new_module_name, mod_name.replace(".", path.sep))
     )
-    # print("mkdir\t{mod_path!r}".format(mod_path=mod_path))
+    # print("mkdir\t{mod_path!r}".format(mod_path=mod_path), file=EXMOD_OUT_STREAM)
     if not path.isdir(mod_path):
         if dry_run:
-            print("mkdir\t{mod_path!r}".format(mod_path=mod_path))
+            print(
+                "mkdir\t{mod_path!r}".format(mod_path=mod_path), file=EXMOD_OUT_STREAM
+            )
         else:
             makedirs(mod_path)
 
     init_filepath = path.join(path.dirname(mod_path), INIT_FILENAME)
     if dry_run:
-        print("touch\t{init_filepath!r}".format(init_filepath=init_filepath))
+        print(
+            "touch\t{init_filepath!r}".format(init_filepath=init_filepath),
+            file=EXMOD_OUT_STREAM,
+        )
     else:
         open(init_filepath, "a").close()
 
     emit_filename, init_filepath = (
         map(
-            partial(path.join, output_directory, new_module_name),
+            partial(
+                path.join,
+                output_directory,
+                *() if output_dir_is_module else (new_module_name,)
+            ),
             (
-                original_relative_filename_path,
+                relative_filename_path,
                 path.join(
-                    path.dirname(original_relative_filename_path),
+                    path.dirname(relative_filename_path),
                     INIT_FILENAME,
                 ),
             ),
@@ -299,7 +313,8 @@ def emit_file_on_hierarchy(
             print(
                 "mkdir\t{emit_filename_dir!r}".format(
                     emit_filename_dir=emit_filename_dir
-                )
+                ),
+                file=EXMOD_OUT_STREAM,
             ) if dry_run else makedirs(emit_filename_dir)
 
     if not symbol_in_file and (ir.get("name") or ir["params"] or ir["returns"]):
@@ -320,7 +335,7 @@ def emit_file_on_hierarchy(
 
     return (
         mod_name,
-        original_relative_filename_path,
+        relative_filename_path,
         ImportFrom(
             module=name,
             names=[
@@ -466,12 +481,18 @@ def _emit_symbol(
         gen_node = cdd.shared.ast_utils.merge_modules(existent_mod, gen_node)
         cdd.shared.ast_utils.merge_assignment_lists(gen_node, "__all__")
     if dry_run:
-        print("write\t{emit_filename!r}".format(emit_filename=emit_filename))
+        print(
+            "write\t{emit_filename!r}".format(emit_filename=emit_filename),
+            file=EXMOD_OUT_STREAM,
+        )
     else:
         cdd.shared.emit.file.file(gen_node, filename=emit_filename, mode="wt")
     if name != "__init__" and not path.isfile(init_filepath):
         if dry_run:
-            print("write\t{emit_filename!r}".format(emit_filename=emit_filename))
+            print(
+                "write\t{emit_filename!r}".format(emit_filename=emit_filename),
+                file=EXMOD_OUT_STREAM,
+            )
         else:
             cdd.shared.emit.file.file(
                 Module(
@@ -579,7 +600,13 @@ def emit_files_from_module_and_return_imports(
                         lambda filename: filename[len(module_name) + 1 :]
                         if filename.startswith(module_name)
                         else filename
-                    )(relative_filename(getfile(name_source[1]))),
+                    )(
+                        relative_filename(
+                            name_source[1].__file__
+                            if hasattr(name_source[1], "__file__")
+                            else getfile(name_source[1])
+                        )
+                    ),
                     {"params": OrderedDict(), "returns": OrderedDict()}
                     if dry_run
                     else (

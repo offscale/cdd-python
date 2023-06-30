@@ -20,7 +20,9 @@ class TestExmodUtils(TestCase):
         """Test that `emit_file_on_hierarchy` works with dry_run"""
 
         ir = {"name": "YEP", "doc": None}
-        with patch("sys.stdout", new_callable=StringIO) as f:
+        with patch(
+            "cdd.compound.exmod_utils.EXMOD_OUT_STREAM", new_callable=StringIO
+        ) as f:
             emit_file_on_hierarchy(
                 ("", "foo_dir", ir),
                 "argparse",
@@ -45,7 +47,7 @@ class TestExmodUtils(TestCase):
 
         ir = {"name": "YEP", "doc": None}
         with patch(
-            "sys.stdout", new_callable=StringIO
+            "cdd.compound.exmod_utils.EXMOD_OUT_STREAM", new_callable=StringIO
         ), TemporaryDirectory() as tempdir:
             open(path.join(tempdir, INIT_FILENAME), "a").close()
             emit_file_on_hierarchy(
@@ -63,9 +65,11 @@ class TestExmodUtils(TestCase):
 
     def test__emit_symbols_isfile_emit_filename_true(self) -> None:
         """Test `_emit_symbol` when `isfile_emit_filename is True`"""
-        with patch("sys.stdout", new_callable=StringIO), patch(
-            "cdd.shared.ast_utils.merge_modules", MagicMock()
-        ) as f, patch("cdd.shared.ast_utils.merge_assignment_lists", MagicMock()) as g:
+        with patch(
+            "cdd.compound.exmod_utils.EXMOD_OUT_STREAM", new_callable=StringIO
+        ), patch("cdd.shared.ast_utils.merge_modules", MagicMock()) as f, patch(
+            "cdd.shared.ast_utils.merge_assignment_lists", MagicMock()
+        ) as g:
             _emit_symbol(
                 name_orig_ir=("", "", dict()),
                 emit_name="argparse",

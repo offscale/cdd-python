@@ -10,8 +10,8 @@ from operator import attrgetter, itemgetter
 from os import makedirs, path
 
 import cdd.class_.parse
+import cdd.compound.exmod_utils
 import cdd.shared.emit.file
-from cdd.compound.exmod_utils import emit_files_from_module_and_return_imports
 from cdd.shared.ast_utils import (
     construct_module_with_symbols,
     maybe_type_comment,
@@ -87,7 +87,10 @@ def exmod(
             maxlen=0,
         )
     elif dry_run:
-        print("mkdir\t{output_directory!r}".format(output_directory=output_directory))
+        print(
+            "mkdir\t{output_directory!r}".format(output_directory=output_directory),
+            file=cdd.compound.exmod_utils.EXMOD_OUT_STREAM,
+        )
     elif not path.isdir(output_directory):
         makedirs(output_directory)
 
@@ -102,11 +105,10 @@ def exmod(
         emit_name, (str, type(None))
     ), "Expected `str` got `{emit_name_type!r}`".format(emit_name_type=type(emit_name))
 
-    module_name, new_module_name = module, ".".join((module.rpartition(".")[0], "gold"))
+    module_root, _, submodule = module.rpartition(".")
+    module_name, new_module_name = module, ".".join((module_root, "gold"))
 
-    module_root_dir = (
-        path.dirname(find_module_filepath(*module.rsplit(".", 1))) + path.sep
-    )
+    module_root_dir = path.dirname(find_module_filepath(module_root, submodule))
 
     mod_path = ".".join((path.basename(module_root_dir[:-1]), module_name))
     blacklist, whitelist = map(
@@ -122,7 +124,7 @@ def exmod(
         return
 
     _emit_files_from_module_and_return_imports = partial(
-        emit_files_from_module_and_return_imports,
+        cdd.compound.exmod_utils.emit_files_from_module_and_return_imports,
         new_module_name=new_module_name,
         emit_name=emit_name,
         output_directory=output_directory,
@@ -138,7 +140,8 @@ def exmod(
     if not imports:
         # Case: no obvious folder hierarchy, so parse the `__init__` file in root
         with open(
-            module_root_dir + "__init__{extsep}py".format(extsep=path.extsep), "rt"
+            path.join(module_root_dir, "__init__{extsep}py".format(extsep=path.extsep)),
+            "rt",
         ) as f:
             mod = parse(f.read())
 
@@ -216,9 +219,17 @@ def exmod(
         )
     )
 
-    init_filepath = path.join(output_directory, new_module_name, INIT_FILENAME)
+    init_filepath = path.join(
+        output_directory,
+        *(INIT_FILENAME,)
+        if output_directory.endswith(new_module_name.replace(".", path.sep))
+        else (new_module_name, INIT_FILENAME)
+    )
     if dry_run:
-        print("write\t{init_filepath!r}".format(init_filepath=init_filepath))
+        print(
+            "write\t{init_filepath!r}".format(init_filepath=init_filepath),
+            file=cdd.compound.exmod_utils.EXMOD_OUT_STREAM,
+        )
     else:
         cdd.shared.emit.file.file(
             Module(
