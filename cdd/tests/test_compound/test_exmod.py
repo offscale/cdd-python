@@ -66,6 +66,7 @@ class TestExMod(TestCase):
                     whitelist=tuple(),
                     mock_imports=True,
                     output_directory=new_module_dir,
+                    target_module_name=None,
                     no_word_wrap=None,
                     dry_run=False,
                 )
@@ -87,10 +88,13 @@ class TestExMod(TestCase):
                     whitelist=tuple(),
                     mock_imports=True,
                     output_directory=new_module_dir,
+                    target_module_name=None,
                     no_word_wrap=None,
                     dry_run=False,
                 )
-                self.assertListEqual(listdir(new_module_dir), [])
+                self.assertListEqual(
+                    listdir(new_module_dir), [INIT_FILENAME, self.parent_dir]
+                )
         finally:
             self._pip(["uninstall", "-y", self.package_root_name])
 
@@ -99,18 +103,20 @@ class TestExMod(TestCase):
 
         try:
             with TemporaryDirectory(prefix="search_root", suffix="search_path") as root:
-                _, new_module_dir = self.create_and_install_pkg(root)
+                existent_module_dir, new_module_dir = self.create_and_install_pkg(root)
                 exmod(
                     module=self.module_name,
                     emit_name="class",
                     blacklist=tuple(),
-                    whitelist=(".".join((self.module_name,) * 2),),
+                    whitelist=(".".join((self.package_root_name, "gen")),),
                     mock_imports=True,
                     output_directory=new_module_dir,
+                    target_module_name=None,
                     no_word_wrap=None,
                     dry_run=False,
                 )
 
+                new_module_dir_len = len(new_module_dir + path.sep)
                 gen, gold = map(
                     sorted,
                     (
@@ -121,9 +127,7 @@ class TestExMod(TestCase):
                                 else _p
                             )(p.partition(path.sep)[2]),
                             (
-                                path.join(dirpath, filename)[
-                                    len(new_module_dir + path.sep) :
-                                ]
+                                path.join(dirpath, filename)[new_module_dir_len:]
                                 for (dirpath, dirnames, filenames) in walk(
                                     new_module_dir
                                 )
@@ -153,47 +157,6 @@ class TestExMod(TestCase):
                         ),
                     ),
                 )
-                all_tests_running = len(gold) == 7
-                if all_tests_running:
-                    gold = list(
-                        chain.from_iterable(
-                            (
-                                gold[:1],
-                                chain.from_iterable(
-                                    map(
-                                        lambda p: (p, p),
-                                        map(
-                                            partial(path.join, "gold", "parent_dir"),
-                                            (
-                                                INIT_FILENAME,
-                                                *map(
-                                                    partial(path.join, "child_dir"),
-                                                    (
-                                                        INIT_FILENAME,
-                                                        "child{sep}py".format(
-                                                            sep=extsep
-                                                        ),
-                                                        path.join(
-                                                            "grandchild_dir",
-                                                            INIT_FILENAME,
-                                                        ),
-                                                        path.join(
-                                                            "grandchild_dir",
-                                                            "grandchild{sep}py".format(
-                                                                sep=extsep
-                                                            ),
-                                                        ),
-                                                    ),
-                                                ),
-                                                "parent{sep}py".format(sep=extsep),
-                                            ),
-                                        ),
-                                    )
-                                ),
-                                gold[1:],
-                            )
-                        )
-                    )
 
                 self.assertListEqual(gen, gold)
         finally:
@@ -210,6 +173,7 @@ class TestExMod(TestCase):
                 whitelist=tuple(),
                 mock_imports=True,
                 output_directory=path.join(tempdir, "nonexistent"),
+                target_module_name=None,
                 no_word_wrap=None,
                 dry_run=False,
             )
@@ -224,6 +188,7 @@ class TestExMod(TestCase):
                 whitelist=tuple(),
                 mock_imports=True,
                 output_directory=path.join(tempdir, "nonexistent"),
+                target_module_name=None,
                 no_word_wrap=None,
                 dry_run=False,
             )
@@ -241,6 +206,7 @@ class TestExMod(TestCase):
                 whitelist=tuple(),
                 mock_imports=True,
                 output_directory=output_directory,
+                target_module_name=None,
                 no_word_wrap=None,
                 dry_run=False,
             )
@@ -262,6 +228,7 @@ class TestExMod(TestCase):
                         whitelist=tuple(),
                         mock_imports=True,
                         output_directory=new_module_dir,
+                        target_module_name=None,
                         no_word_wrap=None,
                         dry_run=True,
                     )
@@ -579,7 +546,12 @@ class TestExMod(TestCase):
         new_module_name = path.basename(tempdir)
 
         for name, folder in self.module_hierarchy:
-            gen_folder = path.join(tempdir, new_module_name, folder)
+            gen_folder = path.join(
+                tempdir,
+                *(folder,)
+                if tempdir.rpartition(path.sep)[2] == new_module_name
+                else (new_module_name, folder),
+            )
             gold_folder = path.join(
                 self.gold_dir,
                 *(folder,)
@@ -610,7 +582,7 @@ class TestExMod(TestCase):
             if dry_run:
                 self.assertFalse(gen_is_dir)
             else:
-                self.assertTrue(gen_is_dir)
+                self.assertTrue(gen_is_dir, gen_folder)
 
                 with _open(gen_folder) as gen, _open(gold_folder) as gold:
                     gen_ir, gold_ir = map(

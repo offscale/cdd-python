@@ -115,7 +115,7 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
                     module_name, submodule_name, none_when_no_spec=True
                 )
             )
-            if hasattr(node, "name") and submodule_name != "ParentClass"
+            if hasattr(node, "name")
         }
         res.update(
             dict(

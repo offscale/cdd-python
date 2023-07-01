@@ -210,8 +210,12 @@ class TestEmitSqlAlchemyUtils(TestCase):
             mod_name = "test_update_with_imports_from_columns"
             temp_mod_dir = path.join(tempdir, mod_name)
             mkdir(temp_mod_dir)
-            node_filename = path.join(temp_mod_dir, "Node.py")
-            element_filename = path.join(temp_mod_dir, "Element.py")
+            node_filename = path.join(
+                temp_mod_dir, "Node{sep}py".format(sep=path.extsep)
+            )
+            element_filename = path.join(
+                temp_mod_dir, "Element{sep}py".format(sep=path.extsep)
+            )
             node_pk_with_phase1_fk = deepcopy(node_pk_tbl_class)
             node_pk_with_phase1_fk.body[2] = Assign(
                 targets=[Name(id="primary_element", ctx=Store())],
@@ -285,8 +289,12 @@ class TestEmitSqlAlchemyUtils(TestCase):
             mod_name = "test_update_with_imports_from_columns"
             temp_mod_dir = path.join(tempdir, mod_name)
             mkdir(temp_mod_dir)
-            node_filename = path.join(temp_mod_dir, "node.py")
-            element_filename = path.join(temp_mod_dir, "element.py")
+            node_filename = path.join(
+                temp_mod_dir, "node{sep}py".format(sep=path.extsep)
+            )
+            element_filename = path.join(
+                temp_mod_dir, "element{sep}py".format(sep=path.extsep)
+            )
             node_pk_with_phase1_fk = deepcopy(node_pk_tbl_class)
             node_pk_with_phase1_fk.body[2] = Assign(
                 targets=[Name(id="primary_element", ctx=Store())],

@@ -21,6 +21,7 @@ from cdd.shared.ast_utils import (
 from cdd.shared.pure_utils import (
     INIT_FILENAME,
     find_module_filepath,
+    pp,
     read_file_to_str,
     rpartial,
 )
@@ -32,6 +33,7 @@ def exmod(
     blacklist,
     whitelist,
     output_directory,
+    target_module_name,
     mock_imports,
     no_word_wrap,
     dry_run,
@@ -55,6 +57,9 @@ def exmod(
 
     :param output_directory: Where to place the generated exposed interfaces to the given `--module`.
     :type output_directory: ```str```
+
+    :param target_module_name: Target module name
+    :type target_module_name: ```Optional[str]```
 
     :param mock_imports: Whether to generate mock TensorFlow imports
     :type mock_imports: ```bool```
@@ -80,6 +85,7 @@ def exmod(
                     filesystem_layout=filesystem_layout,
                     no_word_wrap=no_word_wrap,
                     output_directory=output_directory,
+                    target_module_name=target_module_name,
                     dry_run=dry_run,
                 ),
                 emit_name or iter(()),
@@ -106,13 +112,32 @@ def exmod(
     ), "Expected `str` got `{emit_name_type!r}`".format(emit_name_type=type(emit_name))
 
     module_root, _, submodule = module.rpartition(".")
-    module_name, new_module_name = module, ".".join((module_root, "gold"))
+    module_name, new_module_name = module, target_module_name or ".".join(
+        (module_root, "gold")
+    )
 
-    module_root_dir = path.dirname(find_module_filepath(module_root, submodule))
+    try:
+        module_root_dir = path.dirname(find_module_filepath(module_root, submodule))
+    except AssertionError as e:
+        raise ModuleNotFoundError(e)
 
-    mod_path = ".".join((path.basename(module_root_dir[:-1]), module_name))
+    mod_path = (
+        module_name
+        if module_name.startswith(module_root + ".")
+        else ".".join((module_root, module_name))
+    )
     blacklist, whitelist = map(
         frozenset, (blacklist or iter(()), whitelist or iter(()))
+    )
+    pp(
+        {
+            "whitelist": whitelist,
+            "mod_path": mod_path,
+            "module_root_dir": module_root_dir,
+            "module_name": module_name,
+            "module_root": module_root,
+            "submodule": submodule,
+        }
     )
     proceed = any(
         (
@@ -222,7 +247,9 @@ def exmod(
     init_filepath = path.join(
         output_directory,
         *(INIT_FILENAME,)
-        if output_directory.endswith(new_module_name.replace(".", path.sep))
+        if output_directory.endswith(
+            "{}{}".format(path.sep, new_module_name.replace(".", path.sep))
+        )
         else (new_module_name, INIT_FILENAME)
     )
     if dry_run:

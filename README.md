@@ -606,7 +606,6 @@ class Config(Base):
       --phase PHASE         Which phase to run through. E.g., SQLalchemy may
                             require multiple phases to resolve foreign keys.
 
-
 PS: If you're outputting JSON-schema and want a file per schema then:
 
     python -c 'import sys,json,os; f=open(sys.argv[1], "rt"); d=json.load(f); f.close(); [(lambda f: json.dump(sc,f) or f.close())(open(os.path.join(os.path.dirname(sys.argv[1]), sc["$id"].rpartition("/")[2]), "wt")) for sc in d["schemas"]]' <path_to_json_file>
@@ -682,7 +681,9 @@ PS: If you're outputting JSON-schema and want a file per schema then:
                                {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_table}
                                [--no-word-wrap] [--blacklist BLACKLIST]
                                [--whitelist WHITELIST] --output-directory
-                               OUTPUT_DIRECTORY [--dry-run]
+                               OUTPUT_DIRECTORY
+                               [--target-module-name TARGET_MODULE_NAME]
+                               [--dry-run]
     
     options:
       -h, --help            show this help message and exit
@@ -701,6 +702,8 @@ PS: If you're outputting JSON-schema and want a file per schema then:
       --output-directory OUTPUT_DIRECTORY, -o OUTPUT_DIRECTORY
                             Where to place the generated exposed interfaces to the
                             given `--module`.
+      --target-module-name TARGET_MODULE_NAME
+                            Target module name. Defaults to `${module}.gold`.
       --dry-run             Show what would be created; don't actually write to
                             the filesystem.
 

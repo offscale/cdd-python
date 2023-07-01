@@ -420,6 +420,13 @@ def _build_parser():
         required=True,
     )
     exmod_parser.add_argument(
+        "--target-module-name",
+        help="Target module name. Defaults to `${module}.gold`.",
+        required=False,
+        default=None,
+    )
+
+    exmod_parser.add_argument(
         "--dry-run",
         help="Show what would be created; don't actually write to the filesystem.",
         action="store_true",
