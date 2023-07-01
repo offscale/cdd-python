@@ -120,40 +120,25 @@ class TestExMod(TestCase):
                 gen, gold = map(
                     sorted,
                     (
-                        map(
-                            lambda p: (
-                                lambda _p: path.join("gold", _p.partition(path.sep)[2])
-                                if _p.startswith("gold") and _p.count("gold") == 2
-                                else _p
-                            )(p.partition(path.sep)[2]),
-                            (
-                                path.join(dirpath, filename)[new_module_dir_len:]
-                                for (dirpath, dirnames, filenames) in walk(
-                                    new_module_dir
-                                )
-                                for filename in filenames
-                            ),
-                        ),
                         (
-                            INIT_FILENAME,
-                            *chain.from_iterable(
-                                map(
-                                    lambda i: map(
-                                        partial(
-                                            path.join,
-                                            self.module_hierarchy[i][1],
+                            path.join(dirpath, filename)[new_module_dir_len:]
+                            for (dirpath, dirnames, filenames) in walk(new_module_dir)
+                            for filename in filenames
+                        ),
+                        chain.from_iterable(
+                            (
+                                (INIT_FILENAME,),
+                                chain.from_iterable(
+                                    (
+                                        path.join(directory, INIT_FILENAME),
+                                        "{basepath}{extsep}py".format(
+                                            basepath=path.join(directory, name),
+                                            extsep=path.extsep,
                                         ),
-                                        (
-                                            "{name}{sep}py".format(
-                                                name=self.module_hierarchy[i][0],
-                                                sep=extsep,
-                                            ),
-                                            INIT_FILENAME,
-                                        ),
-                                    ),
-                                    range(len(self.module_hierarchy)),
+                                    )
+                                    for name, directory in self.module_hierarchy
                                 ),
-                            ),
+                            )
                         ),
                     ),
                 )

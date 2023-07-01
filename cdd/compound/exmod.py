@@ -21,7 +21,6 @@ from cdd.shared.ast_utils import (
 from cdd.shared.pure_utils import (
     INIT_FILENAME,
     find_module_filepath,
-    pp,
     read_file_to_str,
     rpartial,
 )
@@ -128,16 +127,6 @@ def exmod(
     )
     blacklist, whitelist = map(
         frozenset, (blacklist or iter(()), whitelist or iter(()))
-    )
-    pp(
-        {
-            "whitelist": whitelist,
-            "mod_path": mod_path,
-            "module_root_dir": module_root_dir,
-            "module_name": module_name,
-            "module_root": module_root,
-            "submodule": submodule,
-        }
     )
     proceed = any(
         (
