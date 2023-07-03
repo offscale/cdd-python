@@ -52,6 +52,29 @@ class TestExMod(TestCase):
             (cls.grandchild_name, cls.grandchild_dir),
         )
 
+    @staticmethod
+    def normalise_double_paths(*dictionaries):
+        """
+        On Windows the paths can come up weird, like C:\\\\foo instead of C:\\foo
+
+        This fixes that issue, and also safe to work on non-Windows
+
+        :param dictionaries: Dictionaries
+        :type dictionaries: ```Tuple[dictionaries]```
+
+        :return: `map` of normalised `dictionaries`
+        :rtype: ```map```
+        """
+        return map(
+            lambda d: {
+                k: tuple(
+                    map(repr, map(rpartial(str.replace, path.sep * 2, path.sep), v))
+                )
+                for k, v in d.items()
+            },
+            dictionaries,
+        )
+
     def test_exmod(self) -> None:
         """Tests `exmod`"""
 
@@ -93,7 +116,10 @@ class TestExMod(TestCase):
                     dry_run=False,
                 )
                 self.assertListEqual(
-                    listdir(new_module_dir), [INIT_FILENAME, self.parent_dir]
+                    *map(
+                        sorted,
+                        (listdir(new_module_dir), [INIT_FILENAME, self.parent_dir]),
+                    ),
                 )
         finally:
             self._pip(["uninstall", "-y", self.package_root_name])
@@ -288,8 +314,7 @@ class TestExMod(TestCase):
                         }.items()
                     },
                 )
-                self.maxDiff = None
-                self.assertDictEqual(result, gold)
+                self.assertDictEqual(*self.normalise_double_paths(result, gold))
 
                 self._check_emission(new_module_dir, dry_run=True)
         finally:
@@ -332,6 +357,7 @@ class TestExMod(TestCase):
                                         )
                                     ],
                                     level=0,
+                                    identifier=None,
                                 ),
                                 Assign(
                                     targets=[Name("__author__", Store())],
@@ -444,6 +470,7 @@ class TestExMod(TestCase):
                                     )
                                 ],
                                 level=0,
+                                identifier=None,
                             )
                             for name, directory in self.module_hierarchy
                         ),
