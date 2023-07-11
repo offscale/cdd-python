@@ -659,6 +659,8 @@ function_adder_ast = FunctionDef(
     arguments_args=None,
     identifier_name=None,
     stmt=None,
+    lineno=None,
+    returns=None,
 )
 
 function_default_complex_default_arg_str = (

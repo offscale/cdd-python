@@ -26,7 +26,6 @@ from cdd.shared.parse.utils.parser_utils import get_parser
 from cdd.shared.pkg_utils import relative_filename
 from cdd.shared.pure_utils import (
     INIT_FILENAME,
-    no_magic_or_builtin_dir2attr,
     read_file_to_str,
     rpartial,
     sanitise_emit_name,
@@ -59,12 +58,12 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
     module_root_dir_init = path.join(
         module_root_dir, "__init__{extsep}py".format(extsep=path.extsep)
     )
-    process_module_contents = partial(
-        _process_module_contents,
-        _result=_result,
-        current_module=current_module,
-        module_root_dir=module_root_dir,
-    )
+    # process_module_contents = partial(
+    #     _process_module_contents,
+    #     _result=_result,
+    #     current_module=current_module,
+    #     module_root_dir=module_root_dir,
+    # )
     if path.isfile(module_root_dir):
         with open(module_root_dir, "rt") as f:
             mod = ast.parse(f.read())
@@ -141,8 +140,8 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
     # assert not isinstance(
     #     obj, (int, float, complex, str, bool, type(None))
     # ), "module is unexpected type: {!r}".format(type(obj).__name__)
-    for name, symbol in no_magic_or_builtin_dir2attr(obj).items():
-        process_module_contents(name=name, symbol=symbol)
+    # for name, symbol in no_magic_or_builtin_dir2attr(obj).items():
+    #     process_module_contents(name=name, symbol=symbol)
     return _result
 
 

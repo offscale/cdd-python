@@ -42,6 +42,7 @@ from cdd.shared.ast_utils import (
     annotate_ancestry,
     ast_type_to_python_type,
     cmp_ast,
+    construct_module_with_symbols,
     del_ass_where_name,
     emit_ann_assign,
     emit_arg,
@@ -70,13 +71,14 @@ from cdd.shared.ast_utils import (
 from cdd.shared.pure_utils import PY3_8, PY_GTE_3_8, tab
 from cdd.shared.source_transformer import ast_parse
 from cdd.tests.mocks.argparse import argparse_add_argument_expr
-from cdd.tests.mocks.classes import class_ast, class_str
-from cdd.tests.mocks.doctrans import function_type_annotated
+from cdd.tests.mocks.classes import class_ast, class_doc_str_expr, class_str
+from cdd.tests.mocks.doctrans import ann_assign_with_annotation, function_type_annotated
 from cdd.tests.mocks.gen import import_star_from_input_ast
 from cdd.tests.mocks.methods import (
     class_with_method_and_body_types_ast,
     class_with_method_and_body_types_str,
     class_with_optional_arg_method_ast,
+    function_adder_ast,
     function_adder_str,
 )
 from cdd.tests.mocks.sqlalchemy import config_decl_base_ast
@@ -132,6 +134,29 @@ class TestAstUtils(TestCase):
     def test_cmp_ast(self) -> None:
         """Test `cmp_ast` branch that isn't tested anywhere else"""
         self.assertFalse(cmp_ast(None, 5))
+
+    def test_construct_module_with_symbols(self) -> None:
+        """Tests `construct_module_with_symbols` creates a Module with symbols"""
+        run_ast_test(
+            self,
+            gen_ast=construct_module_with_symbols(
+                Module(
+                    body=[
+                        class_doc_str_expr,
+                        ann_assign_with_annotation,
+                        function_adder_ast,
+                    ],
+                    type_ignores=[],
+                    stmt=None,
+                ),
+                ("add_6_5",),
+            ),
+            gold=Module(
+                body=[function_adder_ast],
+                type_ignores=[],
+                stmt=None,
+            ),
+        )
 
     def test_emit_ann_assign(self) -> None:
         """Tests that AnnAssign is emitted from `emit_ann_assign`"""
