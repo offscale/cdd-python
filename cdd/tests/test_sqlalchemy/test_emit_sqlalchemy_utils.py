@@ -40,6 +40,8 @@ from cdd.tests.mocks.ir import (
     intermediate_repr_node_pk,
 )
 from cdd.tests.mocks.sqlalchemy import (
+    config_hybrid_ast,
+    config_tbl_with_comments_ast,
     element_pk_fk_ass,
     node_fk_call,
     node_pk_tbl_ass,
@@ -381,6 +383,18 @@ class TestEmitSqlAlchemyUtils(TestCase):
                 deepcopy(node_pk_tbl_class), parse_original_whitespace=False
             ),
             gold=node_pk_tbl_call,
+        )
+
+    def test_sqlalchemy_hybrid_class_to_table(self) -> None:
+        """Tests that `sqlalchemy_class_to_table` works on hybrid class"""
+        gold = deepcopy(config_tbl_with_comments_ast)
+        gold.targets[0].id = "__table__"
+        run_ast_test(
+            self,
+            sqlalchemy_class_to_table(
+                deepcopy(config_hybrid_ast), parse_original_whitespace=False
+            ),
+            gold=gold,
         )
 
 

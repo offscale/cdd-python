@@ -200,7 +200,7 @@ def emit_file_on_hierarchy(
 
     :param emit_name: What type(s) to generate.
     :type emit_name: ```List[Literal["argparse", "class", "function", "json_schema",
-                                     "pydantic", "sqlalchemy", "sqlalchemy_table"]]```
+                                     "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]]```
 
     :param module_name: Name of [original] module
     :type module_name: ```str```
@@ -373,7 +373,7 @@ def _emit_symbol(
 
     :param emit_name: What type(s) to generate.
     :type emit_name: ```List[Literal["argparse", "class", "function", "json_schema",
-                                     "pydantic", "sqlalchemy", "sqlalchemy_table"]]```
+                                     "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]]```
 
     :param module_name: Name of [original] module
     :type module_name: ```str```
@@ -551,7 +551,7 @@ def emit_files_from_module_and_return_imports(
 
     :param emit_name: What type(s) to generate.
     :type emit_name: ```List[Literal["argparse", "class", "function", "json_schema",
-                                     "pydantic", "sqlalchemy", "sqlalchemy_table"]]```
+                                     "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]]```
 
     :param module: Module itself
     :type module: ```Module```
@@ -655,7 +655,7 @@ def emit_files_from_module_and_return_imports2(
 
     :param emit_name: What type(s) to generate.
     :type emit_name: ```List[Literal["argparse", "class", "function", "json_schema",
-                                     "pydantic", "sqlalchemy", "sqlalchemy_table"]]```
+                                     "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]]```
 
     :param module: Module itself
     :type module: ```Module```

@@ -19,7 +19,7 @@ from itertools import chain, filterfalse
 from operator import attrgetter
 
 from cdd.shared.ast_utils import get_value
-from cdd.shared.pure_utils import append_to_dict, rpartial
+from cdd.shared.pure_utils import append_to_dict, indent_all_but_first, rpartial, tab
 from cdd.shared.source_transformer import to_code
 
 # SQLalchemy 1.14
@@ -255,6 +255,26 @@ def column_call_name_manipulator(call, operation="remove", name=None):
     return call
 
 
+def concat_with_whitespace(a, b):
+    """
+    Concatenate a with b with correct whitespace around and within each
+
+    :param a: first string
+    :type a: ```str```
+
+    :param b: second string
+    :type b: ```str```
+
+    :return: combined strings with correct whitespace around and within
+    :rtype: ```str```
+    """
+    b_splits = b.split("\n{tab}".format(tab=tab))
+    res = "{a}{snd}\n{tab}{end}{tab}".format(
+        a=a, tab=tab, snd=b_splits[0], end="\n".join(b_splits[1:])
+    )
+    return indent_all_but_first(res, indent_level=1, sep=tab)
+
+
 def infer_imports_from_sqlalchemy(sqlalchemy_class_or_assigns):
     """
     Infer imports from SQLalchemy ast
@@ -434,6 +454,7 @@ __all__ = [
     "column_call_name_manipulator",
     "column_call_to_param",
     "column_type2typ",
+    "concat_with_whitespace",
     "get_pk_and_type",
     "get_table_name",
     "imports_from",

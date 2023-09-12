@@ -106,6 +106,8 @@ def sqlalchemy(class_def, parse_original_whitespace=False):
     Parse out a `class C(Base): __tablename__=  'tbl'; dataset_name = Column(String, doc="p", primary_key=True)`,
         as constructed on an SQLalchemy declarative `Base`.
 
+    Also supports hybrid syntax: `class TableName(Base): __table__ = sqlalchemy.Table(name, metadata, Column(…), …)`
+
     :param class_def: A class inheriting from declarative `Base`, where `Base = sqlalchemy.orm.declarative_base()`
     :type class_def: ```Union[ClassDef]```
 
@@ -133,4 +135,32 @@ def sqlalchemy(class_def, parse_original_whitespace=False):
     )
 
 
-__all__ = ["sqlalchemy_table", "sqlalchemy"]
+# Separate function to get a new docstring + as mirror to `emit.sqlalchemy_hybrid`
+
+
+def sqlalchemy_hybrid(class_def, parse_original_whitespace=False):
+    """
+    Parse out a `class TableName(Base): __table__ = sqlalchemy.Table(name, metadata, Column(…), …)`,
+        as constructed on an SQLalchemy declarative `Base`.
+
+    :param class_def: A class inheriting from declarative `Base`, where `Base = sqlalchemy.orm.declarative_base()`
+    :type class_def: ```Union[ClassDef]```
+
+    :param parse_original_whitespace: Whether to parse original whitespace or strip it out
+    :type parse_original_whitespace: ```bool```
+
+    :return: a dictionary of form
+        {  "name": Optional[str],
+           "type": Optional[str],
+           "doc": Optional[str],
+           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+           "returns": Optional[OrderedDict[Literal['return_type'],
+                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :rtype: ```dict```
+    """
+    return sqlalchemy(
+        class_def=class_def, parse_original_whitespace=parse_original_whitespace
+    )
+
+
+__all__ = ["sqlalchemy", "sqlalchemy_hybrid", "sqlalchemy_table"]

@@ -91,7 +91,7 @@ def get_emitter(emit_name):
 
     :param emit_name: Which type to emit.
     :type emit_name: ```Literal["argparse", "class", "function", "json_schema",
-                                 "pydantic", "sqlalchemy", "sqlalchemy_table"]```
+                                 "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]```
 
     :return: Function which returns intermediate_repr
     :rtype: ```Callable[[...], dict]````

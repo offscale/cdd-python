@@ -337,7 +337,7 @@ def get_parser(node, parse_name):
 
     :param parse_name: Which type to parse.
     :type parse_name: ```Literal["argparse", "class", "function", "json_schema",
-                                 "pydantic", "sqlalchemy", "sqlalchemy_table","infer"]```
+                                 "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid","infer"]```
 
     :return: Function which returns intermediate_repr
     :rtype: ```Callable[[...], dict]````

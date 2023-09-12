@@ -51,11 +51,11 @@ def gen(
 
     :param parse_name: Which type to parse.
     :type parse_name: ```Literal["argparse", "class", "function", "json_schema",
-                                 "pydantic", "sqlalchemy", "sqlalchemy_table", "infer"]```
+                                 "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid", "infer"]```
 
     :param emit_name: Which type to generate.
     :type emit_name: ```Literal["argparse", "class", "function", "json_schema",
-                                "pydantic", "sqlalchemy", "sqlalchemy_table"]```
+                                "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]```
 
     :param output_filename: Output file to write to
     :type output_filename: ```str```

@@ -33,7 +33,7 @@ def get_input_mapping_from_path(emit_name, module_path, symbol_name):
 
     :param emit_name: Which type to generate.
     :type emit_name: ```Literal["argparse", "class", "function", "json_schema",
-                                "pydantic", "sqlalchemy", "sqlalchemy_table"]```
+                                "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]```
 
     :param module_path: Module path
     :type module_path: ```str```
@@ -77,7 +77,7 @@ def get_emit_kwarg(decorator_list, emit_call, emit_name, name_tpl, name):
 
     :param emit_name: Which type to generate.
     :type emit_name: ```Literal["argparse", "class", "function", "json_schema",
-                                "pydantic", "sqlalchemy", "sqlalchemy_table"]```
+                                "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]```
 
     :param emit_call: Whether to emit a `__call__` method from the `_internal` IR subdict
     :type emit_call: ```bool```
@@ -106,6 +106,7 @@ def get_emit_kwarg(decorator_list, emit_call, emit_name, name_tpl, name):
                 "identifier": _name,
             },
             "sqlalchemy": {"table_name": _name},
+            "sqlalchemy_hybrid": {"table_name": _name},
             "sqlalchemy_table": {"table_name": _name},
         }[emit_name]
     )(None if name == "infer" else ensure_valid_identifier(name_tpl.format(name=name)))
@@ -137,11 +138,11 @@ def gen_file(
 
     :param parse_name: Which type to parse.
     :type parse_name: ```Literal["argparse", "class", "function", "json_schema",
-                                 "pydantic", "sqlalchemy", "sqlalchemy_table"]```
+                                 "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]```
 
     :param emit_name: Which type to generate.
     :type emit_name: ```Literal["argparse", "class", "function", "json_schema",
-                                "pydantic", "sqlalchemy", "sqlalchemy_table"]```
+                                "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]```
 
     :param output_filename: Output file to write to
     :type output_filename: ```str```
@@ -224,11 +225,11 @@ def gen_module(
 
     :param parse_name: Which type to parse.
     :type parse_name: ```Literal["argparse", "class", "function", "json_schema",
-                                 "pydantic", "sqlalchemy", "sqlalchemy_table"]```
+                                 "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]```
 
     :param emit_name: Which type to generate.
     :type emit_name: ```Literal["argparse", "class", "function", "json_schema",
-                                "pydantic", "sqlalchemy", "sqlalchemy_table"]```
+                                "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]```
 
     :param prepend: Prepend file with this. Use '\n' for newlines.
     :type prepend: ```Optional[str]```
@@ -376,7 +377,7 @@ def get_functions_and_classes(
 
     :param emit_name: Which type to generate.
     :type emit_name: ```Literal["argparse", "class", "function", "json_schema",
-                                "pydantic", "sqlalchemy", "sqlalchemy_table"]```
+                                "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]```
 
 
     :param global__all__: `__all__` symbols for that magic
@@ -393,7 +394,7 @@ def get_functions_and_classes(
 
     :param parse_name: Which type to parse.
     :type parse_name: ```Literal["argparse", "class", "function", "json_schema",
-                                 "pydantic", "sqlalchemy", "sqlalchemy_table"]```
+                                 "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]```
 
     :return: Side-effect of appending `__all__`, this returns emitted values out of `input_mapping_it`
     :rtype: ```Tuple[AST]```
@@ -421,7 +422,7 @@ def file_to_input_mapping(filepath, parse_name):
 
     :param parse_name: Which type to parse.
     :type parse_name: ```Literal["argparse", "class", "function", "json_schema",
-                                 "pydantic", "sqlalchemy", "sqlalchemy_table", "infer"]```
+                                 "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid", "infer"]```
 
     :return: Dictionary of string (name) to AST node
     :rtype: ```dict``

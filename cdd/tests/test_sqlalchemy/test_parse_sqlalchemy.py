@@ -72,10 +72,13 @@ class TestParseSqlAlchemy(TestCase):
             gold=ast.parse(config_decl_base_str).body[0],
         )
 
-        ir = cdd.sqlalchemy.parse.sqlalchemy(deepcopy(config_decl_base_ast))
-        self.assertEqual(ir["name"], "config_tbl")
-        ir["name"] = None
-        self.assertDictEqual(ir, intermediate_repr_no_default_sql_with_sql_types)
+        for ir in (
+            cdd.sqlalchemy.parse.sqlalchemy(deepcopy(config_decl_base_ast)),
+            cdd.sqlalchemy.parse.sqlalchemy_hybrid(deepcopy(config_decl_base_ast)),
+        ):
+            self.assertEqual(ir["name"], "config_tbl")
+            ir["name"] = None
+            self.assertDictEqual(ir, intermediate_repr_no_default_sql_with_sql_types)
 
     def test_from_sqlalchemy_with_foreign_rel(self) -> None:
         """Test from SQLalchemy with a foreign key relationship"""

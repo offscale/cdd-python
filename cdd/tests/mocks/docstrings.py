@@ -615,7 +615,39 @@ docstring_repr_str = (
     + tab * 2
 )
 
+docstring_create_from_attr_str = (
+    indent(
+        "\n".join(
+            (
+                "",
+                "Construct an instance from an object with identical columns (as attributes) as this `class`/`Table`",
+                "",
+                ":return: A new instance made from the input object's attributes",
+                ":rtype: ```self```",
+                "",
+            )
+        ),
+        tab * 2,
+        identity,
+    )
+    + tab * 2
+)
+
 # docstring_repr_google_str = emit.docstring(parse.docstring(docstring_repr_str), docstring_format="google")
+docstring_repr_google_str = (
+    "\nConstruct an instance from an object with identical columns (as attributes) as this `class`/`Table`\n\n\n\n\n"
+    "Returns:\n"
+    "  self:\n"
+    "   A new instance made from the input object's attributes\n"
+)
+
+docstring_create_from_attr_google_str = (
+    "\nEmit a string representation of the current instance\n\n\n\n\n"
+    "Returns:\n"
+    "  str:\n"
+    "   String representation of instance\n"
+)
+
 docstring_repr_google_str = (
     "\nEmit a string representation of the current instance\n\n\n\n\n"
     "Returns:\n"

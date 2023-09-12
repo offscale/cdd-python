@@ -9,16 +9,21 @@ from ast import (
     Attribute,
     Call,
     ClassDef,
+    Compare,
+    DictComp,
     Expr,
     FunctionDef,
     ImportFrom,
+    IsNot,
     Load,
     Module,
     Name,
     Return,
     Store,
+    Tuple,
     alias,
     arguments,
+    comprehension,
     keyword,
 )
 from collections import OrderedDict, deque
@@ -51,7 +56,12 @@ from cdd.sqlalchemy.utils.parse_utils import (
     get_table_name,
     sqlalchemy_top_level_imports,
 )
-from cdd.tests.mocks.docstrings import docstring_repr_google_str, docstring_repr_str
+from cdd.tests.mocks.docstrings import (
+    docstring_create_from_attr_google_str,
+    docstring_create_from_attr_str,
+    docstring_repr_google_str,
+    docstring_repr_str,
+)
 
 
 def param_to_sqlalchemy_column_call(name_param, include_name):
@@ -242,6 +252,111 @@ def generate_repr_method(params, cls_name, docstring_format):
             ),
         ],
         decorator_list=[],
+        arguments_args=None,
+        identifier_name=None,
+        stmt=None,
+        lineno=None,
+        returns=None,
+        **maybe_type_comment,
+    )
+
+
+def generate_create_from_attr_staticmethod(params, cls_name, docstring_format):
+    """
+    Generate a `__repr__` method with all params, using `str.format` syntax
+
+    :param params: an `OrderedDict` of form
+        OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
+    :type params: ```OrderedDict```
+
+    :param cls_name: Name of class
+    :type cls_name: ```str```
+
+    :param docstring_format: Format of docstring
+    :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
+
+    :return: `__repr__` method
+    :rtype: ```FunctionDef```
+    """
+    keys = tuple(params.keys())
+    return FunctionDef(
+        name="create_from_attr",
+        args=arguments(
+            posonlyargs=[],
+            arg=None,
+            args=[set_arg("record")],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[],
+            vararg=None,
+            kwarg=None,
+        ),
+        body=[
+            Expr(
+                set_value(
+                    """\n{sep}{_repr_docstring}""".format(
+                        sep=tab * 2,
+                        _repr_docstring=(
+                            docstring_create_from_attr_str
+                            if docstring_format == "rest"
+                            else docstring_create_from_attr_google_str
+                        )
+                        .replace("self", cls_name)
+                        .lstrip(),
+                    )
+                )
+            ),
+            Return(
+                value=Call(
+                    func=Name(id=cls_name, ctx=Load()),
+                    args=[],
+                    keywords=[
+                        keyword(
+                            value=DictComp(
+                                key=Name(id="attr", ctx=Load()),
+                                value=Call(
+                                    func=Name(id="getattr", ctx=Load()),
+                                    args=[
+                                        Name(id="node", ctx=Load()),
+                                        Name(id="attr", ctx=Load()),
+                                    ],
+                                    keywords=[],
+                                ),
+                                generators=[
+                                    comprehension(
+                                        target=Name(id="attr", ctx=Store()),
+                                        iter=Tuple(
+                                            elts=list(map(set_value, keys)),
+                                            ctx=Load(),
+                                        ),
+                                        ifs=[
+                                            Compare(
+                                                left=Call(
+                                                    func=Name(id="getattr", ctx=Load()),
+                                                    args=[
+                                                        Name(id="node", ctx=Load()),
+                                                        Name(id="attr", ctx=Load()),
+                                                        set_value(None),
+                                                    ],
+                                                    keywords=[],
+                                                ),
+                                                ops=[IsNot()],
+                                                comparators=[set_value(None)],
+                                            )
+                                        ],
+                                        is_async=0,
+                                    )
+                                ],
+                            )
+                        )
+                    ],
+                    expr=None,
+                    expr_func=None,
+                ),
+                expr=None,
+            ),
+        ],
+        decorator_list=[Name(id="staticmethod", ctx=Load())],
         arguments_args=None,
         identifier_name=None,
         stmt=None,
@@ -629,6 +744,22 @@ def sqlalchemy_class_to_table(class_def, parse_original_whitespace):
     ), "Expected `ClassDef` got `{type_name}`".format(
         type_name=type(class_def).__name__
     )
+
+    # Hybrid SQLalchemy class/table handler
+    table_dunder = next(
+        filter(
+            lambda assign: any(
+                filter(
+                    partial(eq, "__table__"),
+                    map(attrgetter("id"), assign.targets),
+                )
+            ),
+            filter(rpartial(isinstance, Assign), class_def.body),
+        ),
+        None,
+    )
+    if table_dunder is not None:
+        return table_dunder
 
     # Parse into the same format that `sqlalchemy_table` can read, then return with a call to it
 

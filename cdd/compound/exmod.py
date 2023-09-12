@@ -43,7 +43,7 @@ def exmod(
 
     :param emit_name: What type(s) to generate.
     :type emit_name: ```List[Literal["argparse", "class", "function", "json_schema",
-                                     "pydantic", "sqlalchemy", "sqlalchemy_table"]]```
+                                     "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]]```
 
     :param module: Module name or path
     :type module: ```str```
