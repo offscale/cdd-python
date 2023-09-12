@@ -420,7 +420,8 @@ def _emit_symbol(
                 getattr(
                     cdd,
                     "sqlalchemy"
-                    if sanitised_emit_name == "sqlalchemy_table"
+                    if sanitised_emit_name
+                    in frozenset(("sqlalchemy_hybrid", "sqlalchemy_table"))
                     else sanitised_emit_name,
                 ),
                 "emit",

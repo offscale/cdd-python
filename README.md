@@ -17,16 +17,17 @@ Public SDK works with filenames, source code, and even in memory constructs (e.g
 
 ## Features
 
-| Type                                                                                                          | Parse | Emit | Convert to all other Types |
-|---------------------------------------------------------------------------------------------------------------|-------|------|----------------------------|
-| docstrings (betwixt Google, NumPy, ReST formats; and betwixt type annotations and docstring)                  | ✅     | ✅    | ✅                          |
-| `class`es                                                                                                     | ✅     | ✅    | ✅                          |
-| functions                                                                                                     | ✅     | ✅    | ✅                          |
-| [`argparse` CLI generating](https://docs.python.org/3/library/argparse.html#argumentparser-objects) functions | ✅     | ✅    | ✅                          |
-| JSON-schema                                                                                                   | ✅     | ✅    | ✅                          |
-| [SQLalchemy `class`es](https://docs.sqlalchemy.org/en/14/orm/mapping_styles.html#orm-declarative-mapping)     | ✅     | ✅    | ✅                          |
-| [SQLalchemy `Table`s](https://docs.sqlalchemy.org/en/14/core/metadata.html#sqlalchemy.schema.Table)           | ✅     | ✅    | ✅                          |
-| [pydantic `class`es](https://pydantic-docs.helpmanual.io/usage/schema/)                                       | ✅     | ✅    | ✅                          |
+| Type                                                                                                                                                    | Parse | Emit | Convert to all other Types |
+|---------------------------------------------------------------------------------------------------------------------------------------------------------|-------|------|----------------------------|
+| docstrings (between Google, NumPy, ReST formats; and betwixt type annotations and docstring)                                                            | ✅     | ✅    | ✅                          |
+| `class`es                                                                                                                                               | ✅     | ✅    | ✅                          |
+| functions                                                                                                                                               | ✅     | ✅    | ✅                          |
+| [`argparse` CLI generating](https://docs.python.org/3/library/argparse.html#argumentparser-objects) functions                                           | ✅     | ✅    | ✅                          |
+| JSON-schema                                                                                                                                             | ✅     | ✅    | ✅                          |
+| [SQLalchemy `class`es](https://docs.sqlalchemy.org/en/14/orm/mapping_styles.html#orm-declarative-mapping)                                               | ✅     | ✅    | ✅                          |
+| [SQLalchemy `Table`s](https://docs.sqlalchemy.org/en/14/core/metadata.html#sqlalchemy.schema.Table)                                                     | ✅     | ✅    | ✅                          |
+| [SQLalchemy hybrid `class`es](https://docs.sqlalchemy.org/en/14/orm/declarative_tables.html#declarative-with-imperative-table-a-k-a-hybrid-declarative) | ✅     | ✅    | ✅                          |
+| [pydantic `class`es](https://pydantic-docs.helpmanual.io/usage/schema/)                                                                                 | ✅     | ✅    | ✅                          |
 
 ### [OpenAPI](https://openapis.org) composite
 
@@ -43,12 +44,12 @@ utilises:
 
 ### PyPi
 
-    pip install python-cdd
+    python -m pip install python-cdd
 
 ### Master
 
-    pip install -r https://raw.githubusercontent.com/offscale/cdd-python/master/requirements.txt
-    pip install https://api.github.com/repos/offscale/cdd-python/zipball#egg=cdd
+    python -m pip install -r https://raw.githubusercontent.com/offscale/cdd-python/master/requirements.txt
+    python -m pip install https://api.github.com/repos/offscale/cdd-python/zipball#egg=cdd
 
 ## Goal
 
@@ -516,7 +517,7 @@ class Config(Base):
                               [--function FUNCTIONS]
                               [--function-name FUNCTION_NAMES] [--no-word-wrap]
                               --truth
-                              {argparse_function,class,function,sqlalchemy,sqlalchemy_table}
+                              {argparse_function,class,function,sqlalchemy,sqlalchemy_hybrid,sqlalchemy_table}
     
     options:
       -h, --help            show this help message and exit
@@ -533,7 +534,7 @@ class Config(Base):
                             syntax, i.e., ClassName.function_name
       --no-word-wrap        Whether word-wrap is disabled (on emission). None
                             enables word-wrap. Defaults to None.
-      --truth {argparse_function,class,function,sqlalchemy,sqlalchemy_table}
+      --truth {argparse_function,class,function,sqlalchemy,sqlalchemy_hybrid,sqlalchemy_table}
                             Single source of truth. Others will be generated from
                             this. Will run with first found choice.
 
@@ -571,9 +572,9 @@ class Config(Base):
     usage: python -m cdd gen [-h] --name-tpl NAME_TPL --input-mapping
                              INPUT_MAPPING [--prepend PREPEND]
                              [--imports-from-file IMPORTS_FROM_FILE]
-                             [--parse {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_table,infer}]
+                             [--parse {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_hybrid,sqlalchemy_table,infer}]
                              --emit
-                             {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_table}
+                             {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_hybrid,sqlalchemy_table}
                              --output-filename OUTPUT_FILENAME [--emit-call]
                              [--emit-and-infer-imports] [--no-word-wrap]
                              [--decorator DECORATOR_LIST] [--phase PHASE]
@@ -588,9 +589,9 @@ class Config(Base):
                             Extract imports from file and append to `output_file`.
                             If module or other symbol path given, resolve file
                             then use it.
-      --parse {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_table,infer}
+      --parse {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_hybrid,sqlalchemy_table,infer}
                             What type the input is.
-      --emit {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_table}
+      --emit {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_hybrid,sqlalchemy_table}
                             Which type to generate.
       --output-filename OUTPUT_FILENAME, -o OUTPUT_FILENAME
                             Output file to write to.
@@ -678,7 +679,7 @@ PS: If you're outputting JSON-schema and want a file per schema then:
 
     $ python -m cdd exmod --help
     usage: python -m cdd exmod [-h] --module MODULE --emit
-                               {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_table}
+                               {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_hybrid,sqlalchemy_table}
                                [--no-word-wrap] [--blacklist BLACKLIST]
                                [--whitelist WHITELIST] --output-directory
                                OUTPUT_DIRECTORY
@@ -689,7 +690,7 @@ PS: If you're outputting JSON-schema and want a file per schema then:
       -h, --help            show this help message and exit
       --module MODULE, -m MODULE
                             The module or fully-qualified name (FQN) to expose.
-      --emit {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_table}
+      --emit {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_hybrid,sqlalchemy_table}
                             Which type to generate.
       --no-word-wrap        Whether word-wrap is disabled (on emission). None
                             enables word-wrap. Defaults to None.

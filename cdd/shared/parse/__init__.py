@@ -20,6 +20,7 @@ PARSERS = [
     "pydantic",
     "routes",
     "sqlalchemy",
+    "sqlalchemy_hybrid",
     "sqlalchemy_table",
 ]
 
@@ -31,6 +32,7 @@ kind2instance_type = {
     "function": (FunctionDef, AsyncFunctionDef),
     "method": (FunctionDef, AsyncFunctionDef),
     "pydantic": (ClassDef,),
+    "sqlalchemy_hybrid": (ClassDef,),
     "sqlalchemy_table": (Assign, AnnAssign),
     "sqlalchemy": (ClassDef,),
 }

@@ -86,7 +86,9 @@ def gen(
     :type no_word_wrap: ```Optional[Literal[True]]```
     """
     extra_symbols = {}
-    if phase > 0 and emit_name in frozenset(("sqlalchemy", "sqlalchemy_table")):
+    if phase > 0 and emit_name in frozenset(
+        ("sqlalchemy", "sqlalchemy_hybrid", "sqlalchemy_table")
+    ):
         if phase == 1:
             return (
                 cdd.compound.openapi.utils.emit_utils.update_with_imports_from_columns(

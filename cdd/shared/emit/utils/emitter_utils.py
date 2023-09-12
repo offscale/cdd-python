@@ -102,7 +102,9 @@ def get_emitter(emit_name):
             ".".join(
                 (
                     "cdd",
-                    "sqlalchemy" if emit_name == "sqlalchemy_table" else emit_name,
+                    "sqlalchemy"
+                    if emit_name in frozenset(("sqlalchemy_hybrid", "sqlalchemy_table"))
+                    else emit_name,
                     "emit",
                 )
             )

@@ -350,7 +350,10 @@ def get_parser(node, parse_name):
             ".".join(
                 (
                     "cdd",
-                    "sqlalchemy" if parse_name == "sqlalchemy_table" else parse_name,
+                    "sqlalchemy"
+                    if parse_name
+                    in frozenset(("sqlalchemy_hybrid", "sqlalchemy_table"))
+                    else parse_name,
                     "parse",
                 )
             )

@@ -21,6 +21,7 @@ EMITTERS = [
     "pydantic",
     "routes",
     "sqlalchemy",
+    "sqlalchemy_hybrid",
     "sqlalchemy_table",
 ]
 

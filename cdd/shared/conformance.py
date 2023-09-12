@@ -200,7 +200,7 @@ def _conform_filename(
     assert len(search) > 0
 
     assert (
-        type(replacement_node) == type_wanted
+        type(replacement_node) is type_wanted
     ), "Expected {type_wanted!r} got {type_replacement_node!r}".format(
         type_wanted=type_wanted, type_replacement_node=type(replacement_node).__name__
     )

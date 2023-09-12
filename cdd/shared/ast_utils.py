@@ -1438,7 +1438,7 @@ def cmp_ast(node0, node1):
     :rtype: ```bool```
     """
 
-    if type(node0) != type(node1):
+    if type(node0) is not type(node1):
         return False
 
     if isinstance(node0, (list, tuple)):

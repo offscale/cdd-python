@@ -3,7 +3,7 @@ Generate routes
 """
 
 import ast
-from ast import Attribute, Call, ClassDef, FunctionDef, Name
+from ast import Attribute, Call, ClassDef, FunctionDef, Module, Name
 from itertools import chain
 from operator import attrgetter, itemgetter
 from os import path
@@ -65,7 +65,9 @@ def gen_routes(app, model_path, model_name, crud, route):
         ),
         None,
     )
-    sqlalchemy_ir = cdd.sqlalchemy.parse.sqlalchemy(sqlalchemy_node)
+    sqlalchemy_ir = cdd.sqlalchemy.parse.sqlalchemy(
+        Module(body=sqlalchemy_node, stmt=None, type_ignores=[])
+    )
     primary_key = next(
         map(
             itemgetter(0),

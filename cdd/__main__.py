@@ -29,6 +29,7 @@ parse_emit_types = (
     "json_schema",
     "pydantic",
     "sqlalchemy",
+    "sqlalchemy_hybrid",
     "sqlalchemy_table",
 )
 
@@ -184,6 +185,7 @@ def _build_parser():
             "class",
             "function",
             "sqlalchemy",
+            "sqlalchemy_hybrid",
             "sqlalchemy_table",
         ),
         type=str,
