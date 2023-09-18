@@ -21,7 +21,10 @@ class TestParsers(TestCase):
             PARSERS,
             all_dunder_for_module(
                 path.dirname(path.dirname(path.dirname(__file__))),
-                ("sqlalchemy_table",),
+                (
+                    "sqlalchemy_hybrid",
+                    "sqlalchemy_table",
+                ),
             ),
         )
 

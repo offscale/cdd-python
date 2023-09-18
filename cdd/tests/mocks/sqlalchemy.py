@@ -7,17 +7,23 @@ from ast import (
     Attribute,
     Call,
     ClassDef,
+    Compare,
+    DictComp,
     Expr,
     FunctionDef,
+    IsNot,
     Load,
     Module,
     Name,
     Return,
     Store,
+    Tuple,
     arguments,
+    comprehension,
     keyword,
 )
 from copy import deepcopy
+from functools import partial
 from itertools import chain, islice
 from textwrap import indent
 
@@ -610,6 +616,93 @@ foreign_sqlalchemy_tbls_mod = Module(
     type_ignores=[],
 )
 
+create_from_attr_mock = FunctionDef(
+    name="create_from_attr",
+    args=arguments(
+        posonlyargs=[],
+        args=[set_arg("record")],
+        kwonlyargs=[],
+        kw_defaults=[],
+        defaults=[],
+    ),
+    body=[
+        Expr(
+            value=set_value(
+                "\n".join(
+                    map(
+                        partial(indent, prefix=tab * 2),
+                        (
+                            "",
+                            "Construct an instance from an object with identical columns (as attributes) as this `class`/`Table`",
+                            tab * 2,
+                            ":return: A new instance made from the input object's attributes",
+                            ":rtype: ```foo```",
+                            tab * 2,
+                        ),
+                    )
+                )
+            )
+        ),
+        Return(
+            value=Call(
+                func=Name(id="foo", ctx=Load()),
+                args=[],
+                keywords=[
+                    keyword(
+                        value=DictComp(
+                            key=Name(id="attr", ctx=Load()),
+                            value=Call(
+                                func=Name(id="getattr", ctx=Load()),
+                                args=[
+                                    Name(id="node", ctx=Load()),
+                                    Name(id="attr", ctx=Load()),
+                                ],
+                                keywords=[],
+                            ),
+                            generators=[
+                                comprehension(
+                                    target=Name(id="attr", ctx=Store()),
+                                    iter=Tuple(
+                                        elts=[
+                                            set_value("id"),
+                                            set_value("not_pk_id"),
+                                        ],
+                                        ctx=Load(),
+                                    ),
+                                    ifs=[
+                                        Compare(
+                                            left=Call(
+                                                func=Name(id="getattr", ctx=Load()),
+                                                args=[
+                                                    Name(
+                                                        id="node",
+                                                        ctx=Load(),
+                                                    ),
+                                                    Name(
+                                                        id="attr",
+                                                        ctx=Load(),
+                                                    ),
+                                                    set_value(None),
+                                                ],
+                                                keywords=[],
+                                            ),
+                                            ops=[IsNot()],
+                                            comparators=[set_value(None)],
+                                        )
+                                    ],
+                                    is_async=0,
+                                )
+                            ],
+                        )
+                    )
+                ],
+            )
+        ),
+    ],
+    lineno=None,
+    decorator_list=[Name(id="staticmethod", ctx=Load())],
+)
+
 __all__ = [
     "config_decl_base_ast",
     "config_decl_base_str",
@@ -617,6 +710,7 @@ __all__ = [
     "config_tbl_with_comments_ast",
     "config_tbl_with_comments_ast",
     "config_tbl_with_comments_str",
+    "create_from_attr_mock",
     "dataset_primary_key_column_assign",
     "element_pk_fk_ass",
     "empty_with_inferred_pk_column_assign",

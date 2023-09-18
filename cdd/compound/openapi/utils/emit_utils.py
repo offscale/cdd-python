@@ -903,6 +903,7 @@ typ2column_type.update(
 
 __all__ = [
     "ensure_has_primary_key",
+    "generate_create_from_attr_staticmethod",
     "generate_repr_method",
     "param_to_sqlalchemy_column_call",
     "sqlalchemy_class_to_table",

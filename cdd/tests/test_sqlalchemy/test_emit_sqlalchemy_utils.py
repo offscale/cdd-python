@@ -23,6 +23,7 @@ from unittest import TestCase
 
 from cdd.compound.openapi.utils.emit_utils import (
     ensure_has_primary_key,
+    generate_create_from_attr_staticmethod,
     param_to_sqlalchemy_column_call,
     sqlalchemy_class_to_table,
     sqlalchemy_table_to_class,
@@ -42,6 +43,7 @@ from cdd.tests.mocks.ir import (
 from cdd.tests.mocks.sqlalchemy import (
     config_hybrid_ast,
     config_tbl_with_comments_ast,
+    create_from_attr_mock,
     element_pk_fk_ass,
     node_fk_call,
     node_pk_tbl_ass,
@@ -106,6 +108,24 @@ class TestEmitSqlAlchemyUtils(TestCase):
         res = ensure_has_primary_key(deepcopy(ir))
         ir["params"]["id"]["doc"] = "[PK] {}".format(ir["params"]["id"]["doc"])
         self.assertDictEqual(res, ir)
+
+    def test_generate_create_from_attr_staticmethod(self):
+        """Tests that `generate_create_from_attr` staticmethod is correctly constructed"""
+        run_ast_test(
+            self,
+            generate_create_from_attr_staticmethod(
+                OrderedDict(
+                    (
+                        ("id", {"doc": "My doc", "typ": "str"}),
+                        ("not_pk_id", {"doc": "", "typ": "str"}),
+                    )
+                ),
+                cls_name="foo",
+                docstring_format="rest",
+            ),
+            create_from_attr_mock,
+            skip_black=True,
+        )
 
     def test_param_to_sqlalchemy_column_call_when_sql_constraints(self) -> None:
         """Tests that with SQL constraints the SQLalchemy column is correctly generated"""
