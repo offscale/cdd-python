@@ -145,7 +145,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
             gold=Call(
                 func=Name(id="Column", ctx=Load()),
                 args=[Name(id="String", ctx=Load())],
-                keywords=[keyword(arg="index", value=set_value(True))],
+                keywords=[keyword(arg="index", value=set_value(True), identifier=None)],
             ),
         )
 

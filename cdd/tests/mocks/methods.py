@@ -890,7 +890,9 @@ function_google_tf_ops_losses__safe_mean_ast = FunctionDef(
                     Name(id="total_loss", ctx=Load()),
                     Name(id="num_present", ctx=Load()),
                 ],
-                keywords=[keyword(arg="name", value=set_value("value"))],
+                keywords=[
+                    keyword(arg="name", value=set_value("value"), identifier=None)
+                ],
             )
         ),
     ],

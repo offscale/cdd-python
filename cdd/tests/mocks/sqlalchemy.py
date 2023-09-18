@@ -107,9 +107,13 @@ config_tbl_with_comments_ast = Assign(
                 args=[set_value("dataset_name"), Name(ctx=Load(), id="String")],
                 func=Name(ctx=Load(), id="Column"),
                 keywords=[
-                    keyword(arg="comment", value=set_value("name of dataset")),
-                    keyword(arg="default", value=set_value("mnist")),
-                    keyword(arg="primary_key", value=set_value(True)),
+                    keyword(
+                        arg="comment",
+                        value=set_value("name of dataset"),
+                        identifier=None,
+                    ),
+                    keyword(arg="default", value=set_value("mnist"), identifier=None),
+                    keyword(arg="primary_key", value=set_value(True), identifier=None),
                 ],
             ),
             Call(
@@ -119,9 +123,14 @@ config_tbl_with_comments_ast = Assign(
                     keyword(
                         arg="comment",
                         value=set_value("directory to look for models in"),
+                        identifier=None,
                     ),
-                    keyword(arg="default", value=set_value("~/tensorflow_datasets")),
-                    keyword(arg="nullable", value=set_value(False)),
+                    keyword(
+                        arg="default",
+                        value=set_value("~/tensorflow_datasets"),
+                        identifier=None,
+                    ),
+                    keyword(arg="nullable", value=set_value(False), identifier=None),
                 ],
             ),
             Call(
@@ -130,7 +139,9 @@ config_tbl_with_comments_ast = Assign(
                     Call(
                         args=[set_value("np"), set_value("tf")],
                         func=Name(ctx=Load(), id="Enum"),
-                        keywords=[keyword(arg="name", value=set_value("K"))],
+                        keywords=[
+                            keyword(arg="name", value=set_value("K"), identifier=None)
+                        ],
                     ),
                 ],
                 func=Name(ctx=Load(), id="Column"),
@@ -138,9 +149,10 @@ config_tbl_with_comments_ast = Assign(
                     keyword(
                         arg="comment",
                         value=set_value("backend engine, e.g., `np` or `tf`"),
+                        identifier=None,
                     ),
-                    keyword(arg="default", value=set_value("np")),
-                    keyword(arg="nullable", value=set_value(False)),
+                    keyword(arg="default", value=set_value("np"), identifier=None),
+                    keyword(arg="nullable", value=set_value(False), identifier=None),
                 ],
             ),
             Call(
@@ -148,9 +160,11 @@ config_tbl_with_comments_ast = Assign(
                 func=Name(ctx=Load(), id="Column"),
                 keywords=[
                     keyword(
-                        arg="comment", value=set_value("Convert to numpy ndarrays")
+                        arg="comment",
+                        value=set_value("Convert to numpy ndarrays"),
+                        identifier=None,
                     ),
-                    keyword(arg="nullable", value=set_value(True)),
+                    keyword(arg="nullable", value=set_value(True), identifier=None),
                 ],
             ),
             Call(
@@ -162,6 +176,7 @@ config_tbl_with_comments_ast = Assign(
                         value=set_value(
                             "pass this as arguments to data_loader function"
                         ),
+                        identifier=None,
                     ),
                     keyword(arg="nullable", value=set_value(True)),
                 ],
@@ -172,6 +187,7 @@ config_tbl_with_comments_ast = Assign(
             keyword(
                 arg="comment",
                 value=set_value(docstring_header_and_return_two_nl_str),
+                identifier=None,
             )
         ],
     ),
@@ -372,7 +388,6 @@ config_decl_base_ast = ClassDef(
             name="__repr__",
             args=arguments(
                 posonlyargs=[],
-                arg=None,
                 args=[set_arg("self")],
                 kwonlyargs=[],
                 kw_defaults=[],
@@ -624,6 +639,8 @@ create_from_attr_mock = FunctionDef(
         kwonlyargs=[],
         kw_defaults=[],
         defaults=[],
+        vararg=None,
+        kwarg=None,
     ),
     body=[
         Expr(
@@ -633,7 +650,8 @@ create_from_attr_mock = FunctionDef(
                         partial(indent, prefix=tab * 2),
                         (
                             "",
-                            "Construct an instance from an object with identical columns (as attributes) as this `class`/`Table`",
+                            "Construct an instance from an object with identical columns (as attributes)"
+                            " as this `class`/`Table`",
                             tab * 2,
                             ":return: A new instance made from the input object's attributes",
                             ":rtype: ```foo```",
@@ -649,6 +667,7 @@ create_from_attr_mock = FunctionDef(
                 args=[],
                 keywords=[
                     keyword(
+                        arg=None,
                         value=DictComp(
                             key=Name(id="attr", ctx=Load()),
                             value=Call(
@@ -693,13 +712,14 @@ create_from_attr_mock = FunctionDef(
                                     is_async=0,
                                 )
                             ],
-                        )
+                        ),
                     )
                 ],
             )
         ),
     ],
     lineno=None,
+    returns=None,
     decorator_list=[Name(id="staticmethod", ctx=Load())],
 )
 

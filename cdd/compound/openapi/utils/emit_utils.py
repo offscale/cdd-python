@@ -312,6 +312,7 @@ def generate_create_from_attr_staticmethod(params, cls_name, docstring_format):
                     args=[],
                     keywords=[
                         keyword(
+                            arg=None,
                             value=DictComp(
                                 key=Name(id="attr", ctx=Load()),
                                 value=Call(
@@ -347,7 +348,8 @@ def generate_create_from_attr_staticmethod(params, cls_name, docstring_format):
                                         is_async=0,
                                     )
                                 ],
-                            )
+                            ),
+                            identifier=None,
                         )
                     ],
                     expr=None,

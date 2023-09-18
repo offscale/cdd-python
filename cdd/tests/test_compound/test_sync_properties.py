@@ -159,12 +159,7 @@ class TestSyncProperties(TestCase):
         """Tests `sync_properties` with `output_param_wrap` set when type annotation isn't being replaced"""
 
         with TemporaryDirectory() as tempdir:
-            (
-                input_filename,
-                input_str,
-                output_filename,
-                output_str,
-            ) = populate_files(
+            (input_filename, input_str, output_filename, output_str,) = populate_files(
                 tempdir,
                 input_str=(
                     "from {package} import Literal\n\n"
@@ -198,12 +193,7 @@ class TestSyncProperties(TestCase):
         """Tests `sync_properties` with `output_param_wrap` set when replacement_node has no type"""
 
         with TemporaryDirectory() as tempdir:
-            (
-                input_filename,
-                input_str,
-                output_filename,
-                output_str,
-            ) = populate_files(
+            (input_filename, input_str, output_filename, output_str,) = populate_files(
                 tempdir,
                 output_str=(
                     "from {package} import Literal\n\n"
@@ -241,12 +231,7 @@ class TestSyncProperties(TestCase):
         """Tests `sync_properties` with `output_param_wrap` set when replacement_node is subscript and !input_eval"""
 
         with TemporaryDirectory() as tempdir:
-            (
-                input_filename,
-                input_str,
-                output_filename,
-                output_str,
-            ) = populate_files(
+            (input_filename, input_str, output_filename, output_str,) = populate_files(
                 tempdir,
                 input_str="a = tuple(range(5))",
                 output_str="def j(k):\n" "{tab}pass\n".format(tab=tab),
@@ -274,12 +259,7 @@ class TestSyncProperties(TestCase):
         """Tests `sync_properties` with `output_param_wrap` set when replacement_node is subscript"""
 
         with TemporaryDirectory() as tempdir:
-            (
-                input_filename,
-                input_str,
-                output_filename,
-                output_str,
-            ) = populate_files(
+            (input_filename, input_str, output_filename, output_str,) = populate_files(
                 tempdir, input_str="a = tuple(range(5))", output_str="def j(k): pass"
             )
 
@@ -307,12 +287,7 @@ class TestSyncProperties(TestCase):
         """Tests `sync_properties` with `output_param_wrap` set when replacement_node is subscript"""
 
         with TemporaryDirectory() as tempdir:
-            (
-                input_filename,
-                input_str,
-                output_filename,
-                output_str,
-            ) = populate_files(
+            (input_filename, input_str, output_filename, output_str,) = populate_files(
                 tempdir,
                 input_str="import pip\n"
                 "c = { attr: getattr(pip, attr)"

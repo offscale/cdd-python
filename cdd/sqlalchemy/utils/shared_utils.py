@@ -158,7 +158,7 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
                 func=Name(type_name, Load()),
                 args=list(map(set_value, x_typ_sql.get("type_args", iter(())))),
                 keywords=[
-                    keyword(arg=arg, value=set_value(val))
+                    keyword(arg=arg, value=set_value(val), identifier=None)
                     for arg, val in x_typ_sql.get("type_kwargs", dict()).items()
                 ],
                 expr=None,

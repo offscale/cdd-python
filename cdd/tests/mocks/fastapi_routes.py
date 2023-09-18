@@ -72,7 +72,9 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
                         func=Name(id="JSONResponse", ctx=Load()),
                         args=[],
                         keywords=[
-                            keyword(arg="status_code", value=set_value(404)),
+                            keyword(
+                                arg="status_code", value=set_value(404), identifier=None
+                            ),
                             keyword(
                                 arg="content",
                                 value=Dict(
@@ -93,6 +95,7 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
                                         )
                                     ),
                                 ),
+                                identifier=None,
                             ),
                         ],
                     )
@@ -105,8 +108,12 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
                 func=Name(id="JSONResponse", ctx=Load()),
                 args=[],
                 keywords=[
-                    keyword(arg="status_code", value=set_value(201)),
-                    keyword(arg="content", value=Name(id="config", ctx=Load())),
+                    keyword(arg="status_code", value=set_value(201), identifier=None),
+                    keyword(
+                        arg="content",
+                        value=Name(id="config", ctx=Load()),
+                        identifier=None,
+                    ),
                 ],
             )
         ),
@@ -116,7 +123,11 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
             func=Attribute(value=Name(id="app", ctx=Load()), attr="post", ctx=Load()),
             args=[set_value("/api/config")],
             keywords=[
-                keyword(arg="response_model", value=Name(id="Config", ctx=Load())),
+                keyword(
+                    arg="response_model",
+                    value=Name(id="Config", ctx=Load()),
+                    identifier=None,
+                ),
                 keyword(
                     arg="responses",
                     value=Dict(
@@ -138,6 +149,7 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
                             ),
                         ],
                     ),
+                    identifier=None,
                 ),
             ],
         )
