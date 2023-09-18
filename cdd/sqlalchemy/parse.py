@@ -10,7 +10,7 @@ TODO
 """
 
 import ast
-from ast import AnnAssign, Assign, Call, ClassDef
+from ast import AnnAssign, Assign, Call, ClassDef, Module
 from collections import OrderedDict
 from inspect import getsource
 
@@ -19,7 +19,7 @@ from cdd.compound.openapi.utils.emit_utils import sqlalchemy_class_to_table
 from cdd.docstring.parse import docstring
 from cdd.shared.ast_utils import get_value
 from cdd.shared.defaults_utils import extract_default
-from cdd.shared.pure_utils import assert_equal
+from cdd.shared.pure_utils import assert_equal, rpartial
 from cdd.sqlalchemy.utils.parse_utils import column_call_to_param
 
 
@@ -125,7 +125,11 @@ def sqlalchemy(class_def, parse_original_whitespace=False):
     """
 
     if not isinstance(class_def, ClassDef):
-        class_def = ast.parse(getsource(class_def)).body[0]
+        class_def = (
+            next(filter(rpartial(isinstance, ClassDef), class_def.body))
+            if isinstance(class_def, Module)
+            else ast.parse(getsource(class_def)).body[0]
+        )
     assert isinstance(class_def, ClassDef), "Expected `ClassDef` got `{!r}`".format(
         type(class_def).__name__
     )

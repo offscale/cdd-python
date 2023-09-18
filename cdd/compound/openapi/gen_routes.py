@@ -66,7 +66,7 @@ def gen_routes(app, model_path, model_name, crud, route):
         None,
     )
     sqlalchemy_ir = cdd.sqlalchemy.parse.sqlalchemy(
-        Module(body=sqlalchemy_node, stmt=None, type_ignores=[])
+        Module(body=[sqlalchemy_node], stmt=None, type_ignores=[])
     )
     primary_key = next(
         map(
