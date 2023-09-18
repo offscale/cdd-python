@@ -720,6 +720,7 @@ create_from_attr_mock = FunctionDef(
     ],
     lineno=None,
     returns=None,
+    type_comment=None,
     decorator_list=[Name(id="staticmethod", ctx=Load())],
 )
 
