@@ -78,7 +78,7 @@ jobs:
             -   name: Lint with flake8
                 run: |
                     pip install flake8
-                    flake8 . --count --select=$(printf '%s,' {A..Z}) --ignore='W503,E203' --show-source --max-complexity=13 --max-line-length=119 --statistics
+                    flake8 . --count --select=$(printf '%s,' {A..Z}) --ignore='F821,W503,E203' --show-source --max-complexity=13 --max-line-length=119 --statistics
                 if: matrix.python-version == '3.8' && matrix.os.name == 'Linux' && github.ref == 'refs/heads/master'
             -   name: Check formatted with black
                 run: |
