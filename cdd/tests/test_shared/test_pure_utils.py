@@ -14,6 +14,7 @@ from cdd.shared.pure_utils import (
     blockwise,
     deindent,
     diff,
+    ensure_valid_identifier,
     find_module_filepath,
     get_module,
     identity,
@@ -68,6 +69,19 @@ class TestPureUtils(TestCase):
         self.assertTupleEqual(tuple(blockwise(iter(()))), tuple())
         self.assertTupleEqual(tuple(blockwise("ABC")), (("A", "B"), ("C", None)))
         self.assertTupleEqual(tuple(blockwise("ABCD")), (("A", "B"), ("C", "D")))
+
+    def test_ensure_valid_identifier(self) -> None:
+        """Tests that `ensure_valid_identifier` works"""
+        self.assertEqual(ensure_valid_identifier("_5"), "_5")
+        for ident in "foo", "bar", "can", "haz_", "_", "_5", "_a":
+            self.assertEqual(ensure_valid_identifier(ident), ident)
+        for ident in "6", "5":
+            self.assertEqual(ensure_valid_identifier(ident), "_{}".format(ident))
+        for ident in "for", "while", "break", "continue", "def", "class":
+            self.assertEqual(ensure_valid_identifier(ident), "{}_".format(ident))
+        for ident in "$", "-", "-%":
+            self.assertEqual(ensure_valid_identifier(ident), "_")
+        self.assertEqual(ensure_valid_identifier(""), "_")
 
     def test_find_module_filepath(self) -> None:
         """tests that it can `find_module_filepath`"""

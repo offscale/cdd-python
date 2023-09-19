@@ -2,6 +2,7 @@
 Pure utils for pure functions. For the same input will always produce the same input_str.
 """
 
+import string
 import typing
 from ast import Name, Str
 from collections import deque
@@ -1057,8 +1058,8 @@ def ensure_valid_identifier(s):
         return "{}_".format(s)
     elif s[0].isdigit():
         s = "_{}".format(s)
-    valid = frozenset("_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
-    return "".join(filter(valid.__contains__, s))
+    valid = frozenset("_{}{}".format(string.ascii_letters, string.digits))
+    return "".join(filter(valid.__contains__, s)) or "_"
 
 
 def set_attr(obj, key, val):
