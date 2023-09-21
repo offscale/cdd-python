@@ -395,7 +395,7 @@ class TestAstCstUtils(TestCase):
             after, "".join(map(attrgetter("value"), cst_list[cst_idx : cst_idx + 1]))
         )
 
-    def test_maybe_replace_function_args_added(self) -> None:
+    def test_maybe_replace_function_args_added0(self) -> None:
         """
         Tests that `maybe_replace_function_args` adds to args (adds type annotations)
         """

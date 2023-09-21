@@ -1,7 +1,6 @@
 """
 Helpers to traverse the AST, extract the docstring out, parse and format to intended style
 """
-
 from ast import (
     AnnAssign,
     Assign,
@@ -35,7 +34,13 @@ from cdd.shared.ast_utils import (
 )
 from cdd.shared.cst_utils import reindent_block_with_pass_body
 from cdd.shared.docstring_parsers import parse_docstring
-from cdd.shared.pure_utils import PY_GTE_3_8, is_ir_empty, none_types, omit_whitespace
+from cdd.shared.pure_utils import (
+    PY_GTE_3_8,
+    is_ir_empty,
+    none_types,
+    omit_whitespace,
+    rpartial,
+)
 from cdd.shared.source_transformer import ast_parse
 
 
@@ -342,38 +347,47 @@ def doctransify_cst(cst_list, node):
     :param node: AST node with a `.body`, probably the `ast.Module`
     :type node: ```AST```
     """
-    for _node in walk(node):
-        if hasattr(_node, "_location"):
-            is_func = isinstance(_node, (AsyncFunctionDef, FunctionDef))
-            if isinstance(_node, ClassDef) or is_func:
-                cst_idx, cst_node = cdd.shared.ast_cst_utils.find_cst_at_ast(
-                    cst_list, _node
-                )
+    for _node in filter(rpartial(hasattr, "_location"), walk(node)):
+        is_func = isinstance(_node, (AsyncFunctionDef, FunctionDef))
+        if isinstance(_node, ClassDef) or is_func:
+            cst_idx, cst_node = cdd.shared.ast_cst_utils.find_cst_at_ast(
+                cst_list, _node
+            )
 
-                if cst_node is not None:
-                    cdd.shared.ast_cst_utils.maybe_replace_doc_str_in_function_or_class(
-                        _node, cst_idx, cst_list
-                    )
+            if cst_node is None:
+                continue
 
-                    if is_func:
-                        cur_ast_node = ast_parse(
-                            reindent_block_with_pass_body(cst_list[cst_idx].value),
-                            skip_annotate=True,
-                            skip_docstring_remit=True,
-                        ).body[0]
+            cdd.shared.ast_cst_utils.maybe_replace_doc_str_in_function_or_class(
+                _node, cst_idx, cst_list
+            )
 
-                        cdd.shared.ast_cst_utils.maybe_replace_function_return_type(
-                            _node, cur_ast_node, cst_idx, cst_list
-                        )
-                        cdd.shared.ast_cst_utils.maybe_replace_function_args(
-                            _node, cur_ast_node, cst_idx, cst_list
-                        )
-            # TODO: AnnAssign|Assign
-            # AnnAssign|Assign is separate task than the `maybe_replace_function_args` as inferring types is done
-            #   better with knowledge of function return types and function arguments (`default` being the only issue)
-            # elif isinstance(_node, (AnnAssign, Assign)):
-            #     print("(AnnAssign | Assign)._location:", _node._location, ";")
-            #     print_ast(_node)
+            if not is_func:
+                continue
+
+            cur_ast_node = ast_parse(
+                reindent_block_with_pass_body(cst_list[cst_idx].value),
+                skip_annotate=True,
+                skip_docstring_remit=True,
+            ).body[0]
+
+            cdd.shared.ast_cst_utils.maybe_replace_function_return_type(
+                _node, cur_ast_node, cst_idx, cst_list
+            )
+            cdd.shared.ast_cst_utils.maybe_replace_function_args(
+                _node, cur_ast_node, cst_idx, cst_list
+            )
+            # cdd.shared.ast_cst_utils.maybe_replace_body(
+            #     _node, cur_ast_node, cst_idx, cst_list
+            # )
+
+        # TODO: AnnAssign|Assign
+        # AnnAssign|Assign is separate task than the `maybe_replace_function_args` as inferring types is done
+        #   better with knowledge of function return types and function arguments (`default` being the only issue)
+        # elif isinstance(_node, (AnnAssign, Assign)):
+        #     print(
+        #         "(AnnAssign | Assign)._location:", _node._location, ";", file=sys.stderr
+        #     )
+        #     print_ast(_node)
 
 
 __all__ = ["DocTrans", "clear_annotation", "doctransify_cst", "has_type_annotations"]

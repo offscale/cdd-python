@@ -1,7 +1,6 @@
 """
 Utils for working with AST (builtin) and cdd's CST
 """
-
 from copy import deepcopy
 from enum import Enum
 from itertools import takewhile
@@ -294,25 +293,37 @@ def maybe_replace_function_args(new_node, cur_ast_node, cst_idx, cst_list):
                     changed = Delta.replaced
                 break
 
-        pre, returning, post = cst_list[cst_idx].value.rpartition("->")
-        left_parens, right_parens = 0, 0
-        start_idx, end_idx = pre.rfind("("), pre.rfind(")")
-        for start_idx in range(end_idx, 0, -1):
-            if pre[start_idx] == ")":
-                right_parens += 1
-            elif pre[start_idx] == "(":
-                left_parens += 1
+        def_len = len("def ")
+        function_name_starts_at = (
+            def_len
+            if cst_list[cst_idx].value.startswith("def ")
+            else (lambda i: cst_list[cst_idx].value.find(")def ") if i == -1 else i)(
+                cst_list[cst_idx].value.find(" def ")
+            )
+            + def_len
+            + 1
+        )
+        arg_start_idx = cst_list[cst_idx].value.find("(", function_name_starts_at)
+        func_end = cst_list[cst_idx].value.rfind(":")
+        return_type = cst_list[cst_idx].value.rfind("->", None, func_end)
+        if return_type > -1:
+            last_col = func_end
+            func_end = return_type
+            return_type = cst_list[cst_idx].value[return_type + len("->") : last_col]
+        else:
+            return_type = None
+        func_end = cst_list[cst_idx].value.rfind(")", None, func_end) + 1
 
-            if right_parens == left_parens and right_parens > 0:
-                break
+        # returns="" if return_type is None else return_type
 
         cst_list[cst_idx] = FunctionDefinitionStart(
             line_no_start=cst_list[cst_idx].line_no_start,
             line_no_end=cst_list[cst_idx].line_no_end,
             name=cst_list[cst_idx].name,
             # TODO: Handle comments in the middle of args, and match whitespace, and maybe even limit line length
-            value="{start}{args}{end}{returning}{post}".format(
-                start=pre[: start_idx + 1],
+            value="{start}{args}{end}".format(
+                start=cst_list[cst_idx].value[: arg_start_idx + 1],
+                end=cst_list[cst_idx].value[func_end - 1 :],
                 args=", ".join(
                     "{arg_name}{annotation}".format(
                         annotation=""
@@ -324,9 +335,6 @@ def maybe_replace_function_args(new_node, cur_ast_node, cst_idx, cst_list):
                     )
                     for arg in new_args
                 ),
-                end=pre[end_idx:],
-                returning=returning,
-                post=post,
             ),
         )
 
@@ -336,10 +344,81 @@ def maybe_replace_function_args(new_node, cur_ast_node, cst_idx, cst_list):
     return changed
 
 
+# def maybe_replace_body(new_node, cur_ast_node, cst_idx, cst_list):
+#     """
+#     Maybe replace the body of a function or class
+#
+#     :param new_node: AST function node
+#     :type new_node: ```Union[AsyncFunctionDef, FunctionDef]```
+#
+#     :param cur_ast_node: AST function node of CST (with fake body)
+#     :type cur_ast_node: ```AST```
+#
+#     :param cst_idx: Index of start of function/class in cst_list
+#     :type cst_idx: ```int```
+#
+#     :param cst_list: List of `namedtuple`s with at least ("line_no_start", "line_no_end", "value") attributes
+#     :type cst_list: ```List[NamedTuple]```
+#
+#     :return: Delta value indicating what changed (if anything)
+#     :rtype: ```Delta```
+#     """
+#     assert isinstance(new_node, (ClassDef, FunctionDef, AsyncFunctionDef)), (
+#         "Expected `ClassDef  | FunctionDef | AsyncFunctionDef`"
+#         " got `{type_name}`".format(type_name=type(new_node).__name__)
+#     )
+#     new_node = deepcopy(new_node)
+#     new_node.body = cur_ast_node.body
+#     changed = Delta.nop
+#     if not cmp_ast(cur_ast_node.body, new_node.body):
+#         new_body, cur_body = map(attrgetter("body"), (new_node, cur_ast_node))
+#         assert len(new_body) == len(cur_body)
+#
+#         for i in range(len(cur_body)):
+#             if isinstance(new_body[i], Assign) and isinstance(cur_body[i], AnnAssign):
+#                 changed = Delta.added
+#             elif isinstance(new_body[i], AnnAssign) and isinstance(cur_body[i], Assign):
+#                 changed = Delta.removed
+#
+#         # TODO
+#         cst_list[cst_idx] = FunctionDefinitionStart(
+#             line_no_start=cst_list[cst_idx].line_no_start,
+#             line_no_end=cst_list[cst_idx].line_no_end,
+#             name=cst_list[cst_idx].name,
+#             # TODO: Handle comments in the middle of args, and match whitespace, and maybe even limit line length
+#             value="{start}{args}{end}".format(
+#                 start=cst_list[cst_idx].value[: arg_start_idx + 1],
+#                 end=cst_list[cst_idx].value[func_end - 1 :],
+#                 args=", ".join(
+#                     "{arg_name}{annotation}".format(
+#                         annotation=""
+#                         if arg.annotation is None
+#                         else ": {annotation_unparsed}".format(
+#                             annotation_unparsed=to_code(arg.annotation).rstrip("\n")
+#                         ),
+#                         arg_name=arg.arg,
+#                     )
+#                     for arg in new_args
+#                 ),
+#             ),
+#         )
+#
+#     if changed is not Delta.nop:
+#         debug_doctrans(
+#             changed,
+#             "ClassDef  | FunctionDef | AsyncFunctionDef",
+#             new_node.name,
+#             type(new_node).__name__,
+#         )
+#
+#     return changed
+
+
 __all__ = [
     "Delta",
     "debug_doctrans",
     "find_cst_at_ast",
+    #    "maybe_replace_body",
     "maybe_replace_doc_str_in_function_or_class",
     "maybe_replace_function_args",
     "maybe_replace_function_return_type",
