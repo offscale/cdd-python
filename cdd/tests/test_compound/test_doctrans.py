@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 from cdd.compound.doctrans import doctrans
 from cdd.shared.ast_utils import annotate_ancestry
-from cdd.shared.source_transformer import ast_parse, to_code
+from cdd.shared.source_transformer import to_code
 from cdd.tests.mocks.doctrans import function_type_annotated
 from cdd.tests.mocks.methods import return_ast
 from cdd.tests.utils_for_tests import unittest_main
@@ -54,9 +54,9 @@ class TestDocTrans(TestCase):
                     type_annotations=False,
                 )
             )
-            with open(filename, "rt") as f:
-                src = f.read()
-            new_node = ast_parse(src, skip_docstring_remit=True).body[0]
+            # with open(filename, "rt") as f:
+            #    src = f.read()
+            # new_node = ast_parse(src, skip_docstring_remit=True).body[0]
             # run_ast_test(
             #     self, new_node, gold=function_type_in_docstring, skip_black=True
             # )
