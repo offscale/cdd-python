@@ -2,9 +2,11 @@
 Tests for the utils that is used by the SQLalchemy parsers
 """
 
+from ast import keyword
 from copy import deepcopy
 from unittest import TestCase
 
+from cdd.shared.ast_utils import set_value
 from cdd.sqlalchemy.utils.parse_utils import (
     column_call_name_manipulator,
     column_call_to_param,
@@ -54,24 +56,24 @@ class TestParseSqlAlchemyUtils(TestCase):
         """
         Tests that `parse.sqlalchemy.utils.column_call_to_param` works with server_default
         """
-
-        gold_name, gold_param = (
-            lambda _name: (
-                _name,
-                {
-                    "server_default": config_schema["properties"][_name]["default"],
-                    "typ": "str",
-                    "doc": config_schema["properties"][_name]["description"],
-                    "x_typ": {"sql": {"type": "String"}},
-                },
-            )
-        )("dataset_name")
-        gen_name, gen_param = column_call_to_param(
-            column_call_name_manipulator(
-                deepcopy(dataset_primary_key_column_assign.value), "add", gold_name
+        node = deepcopy(node_fk_call)
+        node.keywords.append(
+            keyword(
+                arg="server_default",
+                value=set_value("mnist"),
+                identifier=None,
             )
         )
-        gen_param["server_default"] = gen_param.pop("default")
+        gen_name, gen_param = column_call_to_param(node)
+
+        gold_name, gold_param = gen_name, {
+            "doc": "[FK(element.element_id)]",
+            "server_default": "mnist",
+            "typ": "int",
+            "x_typ": {
+                "sql": {"constraints": {"server_default": "mnist"}, "type": "Integer"}
+            },
+        }
         self.assertEqual(gold_name, gen_name)
         self.assertDictEqual(gold_param, gen_param)
 
