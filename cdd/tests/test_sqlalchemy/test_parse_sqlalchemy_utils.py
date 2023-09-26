@@ -50,6 +50,31 @@ class TestParseSqlAlchemyUtils(TestCase):
         self.assertEqual(gold_name, gen_name)
         self.assertDictEqual(gold_param, gen_param)
 
+    def test_column_call_to_param_server_default(self) -> None:
+        """
+        Tests that `parse.sqlalchemy.utils.column_call_to_param` works with server_default
+        """
+
+        gold_name, gold_param = (
+            lambda _name: (
+                _name,
+                {
+                    "server_default": config_schema["properties"][_name]["default"],
+                    "typ": "str",
+                    "doc": config_schema["properties"][_name]["description"],
+                    "x_typ": {"sql": {"type": "String"}},
+                },
+            )
+        )("dataset_name")
+        gen_name, gen_param = column_call_to_param(
+            column_call_name_manipulator(
+                deepcopy(dataset_primary_key_column_assign.value), "add", gold_name
+            )
+        )
+        gen_param["server_default"] = gen_param.pop("default")
+        self.assertEqual(gold_name, gen_name)
+        self.assertDictEqual(gold_param, gen_param)
+
     def test_column_call_to_param_fk(self) -> None:
         """
         Tests that `parse.sqlalchemy.utils.column_call_to_param` works with FK
