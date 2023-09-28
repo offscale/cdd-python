@@ -3,6 +3,7 @@ Tests for `cdd.emit.sqlalchemy.utils.sqlalchemy_utils`
 """
 
 import ast
+import json
 from ast import (
     Assign,
     Call,
@@ -163,6 +164,38 @@ class TestEmitSqlAlchemyUtils(TestCase):
                 include_name=True,
             ),
             gold=node_fk_call,
+        )
+
+    def test_param_to_sqlalchemy_column_call_for_schema_comment(self) -> None:
+        """Tests that SQLalchemy column is generated with schema as comment"""
+        run_ast_test(
+            self,
+            param_to_sqlalchemy_column_call(
+                (
+                    "foo",
+                    {
+                        "doc": "",
+                        "typ": "dict",
+                        "ir": intermediate_repr_no_default_doc,
+                    },
+                ),
+                include_name=False,
+            ),
+            gold=Call(
+                func=Name(id="Column", ctx=Load()),
+                args=[Name(id="JSON", ctx=Load())],
+                keywords=[
+                    keyword(
+                        arg="comment",
+                        value=set_value(
+                            "[schema={}]".format(
+                                json.dumps(intermediate_repr_no_default_doc)
+                            )
+                        ),
+                        identifier=None,
+                    )
+                ],
+            ),
         )
 
     def test_update_args_infer_typ_sqlalchemy_when_simple_array(self) -> None:
