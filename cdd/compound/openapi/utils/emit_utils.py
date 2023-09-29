@@ -642,10 +642,10 @@ def rewrite_fk(symbol_to_module, column_assign):
     Rewrite of the form:
     ```py
     column_name = Column(
-            TableName0,
-            ForeignKey("TableName0"),
-            nullable=True,
-        )
+        TableName0,
+        ForeignKey("TableName0"),
+        nullable=True,
+    )
     ```
     To the following, inferring that the primary key field is `id` by resolving the symbol and `ast.parse`ing it:
     ```py
@@ -656,7 +656,7 @@ def rewrite_fk(symbol_to_module, column_assign):
     :type symbol_to_module: ```Dict[str,str]````
 
     :param column_assign: `column_name = Column()` in SQLalchemy with unresolved foreign key
-    :type column_assign: ```Assign```d
+    :type column_assign: ```Assign```
 
     :return: `Assign()` in SQLalchemy with resolved foreign key
     :rtype: ```Assign```
@@ -908,6 +908,7 @@ __all__ = [
     "generate_create_from_attr_staticmethod",
     "generate_repr_method",
     "param_to_sqlalchemy_column_call",
+    "rewrite_fk",
     "sqlalchemy_class_to_table",
     "sqlalchemy_table_to_class",
     "typ2column_type",
