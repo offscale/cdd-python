@@ -245,6 +245,11 @@ class TestParserUtils(TestCase):
             cdd.shared.parse.utils.parser_utils.infer(Config), "sqlalchemy"
         )
 
+    def test_infer_raise(self) -> None:
+        """Test `infer` raises `NotImplementedError`"""
+        with self.assertRaises(NotImplementedError):
+            cdd.shared.parse.utils.parser_utils.infer(None)
+
     def test_get_source_raises(self) -> None:
         """Tests that `get_source` raises an exception"""
         with self.assertRaises(TypeError):

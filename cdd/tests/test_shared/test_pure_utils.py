@@ -5,6 +5,7 @@ from functools import partial
 from itertools import zip_longest
 from json import dumps
 from unittest import TestCase
+from unittest.mock import patch
 
 from cdd.shared.pure_utils import (
     SetEncoder,
@@ -94,6 +95,14 @@ class TestPureUtils(TestCase):
                 "cdd.nosuchmodulecdd.tests", "test_pure_utils"
             ),
         )
+        with patch("cdd.shared.pure_utils.find_spec", lambda _: None):
+            self.assertIsNone(
+                find_module_filepath(
+                    "cdd.nosuchmodulecdd.tests",
+                    "test_pure_utils",
+                    none_when_no_spec=True,
+                ),
+            )
 
     def test_pp(self) -> None:
         """Test that pp is from the right module"""

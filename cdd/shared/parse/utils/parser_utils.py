@@ -193,7 +193,7 @@ def infer(*args, **kwargs):
             and not node.startswith("class ")
         ):
             return "docstring"
-    assert is_supported_ast_node
+
     if isinstance(node, FunctionDef):
         if next(
             filter(

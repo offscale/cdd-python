@@ -8,7 +8,11 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
-from cdd.compound.exmod_utils import _emit_symbol, emit_file_on_hierarchy
+from cdd.compound.exmod_utils import (
+    _emit_symbol,
+    emit_file_on_hierarchy,
+    get_module_contents,
+)
 from cdd.shared.pure_utils import INIT_FILENAME, quote, rpartial
 from cdd.tests.utils_for_tests import unittest_main
 
@@ -86,6 +90,10 @@ class TestExmodUtils(TestCase):
             )
             f.assert_called_once()
             g.assert_called_once()
+
+    def test_get_module_contents_empty(self) -> None:
+        """`get_module_contents`"""
+        self.assertDictEqual(get_module_contents(None, "nonexistent", {}), {})
 
 
 unittest_main()
