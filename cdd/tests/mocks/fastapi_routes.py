@@ -154,6 +154,7 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
             ],
         )
     ],
+    type_params=[],
     lineno=None,
     returns=None,
     **maybe_type_comment

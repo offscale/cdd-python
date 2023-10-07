@@ -14,6 +14,9 @@ if PY_GTE_3_12:
     from sysconfig import get_python_version
 
     def is_virtual_environment():
+        """
+        Whether one is in a virtual environment
+        """
         return sys.base_prefix != sys.prefix or hasattr(sys, "real_prefix")
 
     def get_python_lib(plat_specific=0, standard_lib=0, prefix=None):
@@ -63,7 +66,7 @@ if PY_GTE_3_12:
         else:
 
             class DistutilsPlatformError(Exception):
-                pass
+                """DistutilsPlatformError"""
 
             raise DistutilsPlatformError(
                 "I don't know where Python installs its library "

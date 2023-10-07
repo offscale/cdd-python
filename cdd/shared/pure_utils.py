@@ -1216,6 +1216,7 @@ __all__ = [
     "PY3_8",
     "PY_GTE_3_8",
     "PY_GTE_3_9",
+    "PY_GTE_3_12",
     "SetEncoder",
     "all_dunder_for_module",
     "append_to_dict",
