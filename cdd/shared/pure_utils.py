@@ -154,6 +154,7 @@ _python_major_minor: Tuple[int, int] = version_info[:2]
 PY3_8: bool = _python_major_minor == (3, 8)
 PY_GTE_3_8: bool = _python_major_minor >= (3, 8)
 PY_GTE_3_9: bool = _python_major_minor >= (3, 9)
+PY_GTE_3_12: bool = _python_major_minor >= (3, 12)
 
 ENCODING = "# -*- coding: utf-8 -*-"
 

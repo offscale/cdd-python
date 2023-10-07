@@ -124,6 +124,7 @@ class TestEmitDocstring(TestCase):
                         ),
                         body=[Expr(doc_str)],
                         decorator_list=[],
+                        type_params=[],
                         lineno=None,
                         returns=None,
                     ),

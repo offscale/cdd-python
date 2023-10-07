@@ -90,6 +90,7 @@ def _make_call_meth(body, return_type, param_names, docstring_format, word_wrap)
                 ),
                 body=body,
                 decorator_list=[],
+                type_params=[],
                 name="__call__",
                 returns=None,
                 arguments_args=None,

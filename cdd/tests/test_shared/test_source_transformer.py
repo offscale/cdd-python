@@ -32,6 +32,7 @@ class TestSourceTransformer(TestCase):
             ),
             body=[Pass()],
             decorator_list=[],
+            type_params=[],
             lineno=None,
             returns=None,
         )

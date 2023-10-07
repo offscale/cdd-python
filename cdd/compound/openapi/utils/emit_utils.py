@@ -252,6 +252,7 @@ def generate_repr_method(params, cls_name, docstring_format):
             ),
         ],
         decorator_list=[],
+        type_params=[],
         arguments_args=None,
         identifier_name=None,
         stmt=None,
@@ -880,6 +881,7 @@ def sqlalchemy_table_to_class(table_expr_ass):
             )
         ),
         decorator_list=[],
+        type_params=[],
         expr=None,
         lineno=None,
         col_offset=None,

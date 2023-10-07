@@ -9,7 +9,7 @@ from typing import Any
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
-from cdd.shared.pure_utils import PY_GTE_3_8
+from cdd.shared.pure_utils import PY_GTE_3_8, PY_GTE_3_12
 from cdd.tests.mocks.classes import tensorboard_doc_str, tensorboard_doc_str_no_args_str
 from cdd.tests.utils_for_tests import remove_args_from_docstring, unittest_main
 
@@ -33,7 +33,11 @@ class TestUtilsForTests(TestCase):
 
             cdd.tests.utils_for_tests.unittest_main()
 
-        self.assertIsInstance(e.exception.code, bool)
+        # Python >=3.12 has:
+        # if self.result.testsRun == 0: sys.exit(_NO_TESTS_EXITCODE) where `_NO_TESTS_EXITCODE` is `5`
+        self.assertEqual(e.exception.code, 5) if PY_GTE_3_12 else self.assertIsInstance(
+            e.exception.code, bool
+        )
         self.assertIsNone(argparse_mock.call_args)
         self.assertIsNone(cdd.tests.utils_for_tests.unittest_main())
 

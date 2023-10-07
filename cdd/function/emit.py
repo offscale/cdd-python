@@ -183,6 +183,7 @@ def function(
             )
         ),
         decorator_list=[],
+        type_params=[],
         name=function_name,
         returns=(
             ast.parse(intermediate_repr["returns"]["return_type"]["typ"]).body[0].value

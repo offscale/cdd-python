@@ -82,6 +82,7 @@ function_type_annotated = FunctionDef(
         Return(value=Name("res", Load())),
     ],
     decorator_list=[],
+    type_params=[],
     lineno=None,
     returns=Name("int", Load()),
 )
@@ -110,6 +111,7 @@ function_type_in_docstring = FunctionDef(
         Return(value=Name("res", Load())),
     ],
     decorator_list=[],
+    type_params=[],
     lineno=None,
     returns=None,
 )
@@ -121,6 +123,7 @@ class_with_internal_annotated = ClassDef(
     bases=tuple(),
     keywords=tuple(),
     decorator_list=[],
+    type_params=[],
     body=[
         _class_doc_str_expr,
         AnnAssign(
@@ -160,6 +163,7 @@ class_with_internal_type_commented_and_docstring_typed = ClassDef(
     bases=tuple(),
     keywords=tuple(),
     decorator_list=[],
+    type_params=[],
     body=[
         _class_doc_str_expr,
         Assign(

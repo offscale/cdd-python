@@ -259,6 +259,7 @@ def argparse_function(
             )
         ),
         decorator_list=[],
+        type_params=[],
         name=function_name,
         returns=None,
         lineno=None,
