@@ -228,6 +228,7 @@ def sqlalchemy(
         name=class_name,
         bases=list(map(lambda class_base: Name(class_base, Load()), class_bases)),
         decorator_list=decorator_list or [],
+        type_params=[],
         keywords=[],
         body=list(
             filter(
@@ -380,6 +381,7 @@ def sqlalchemy_hybrid(
         name=class_name,
         bases=list(map(lambda class_base: Name(class_base, Load()), class_bases)),
         decorator_list=decorator_list or [],
+        type_params=[],
         keywords=[],
         body=list(
             filter(

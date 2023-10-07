@@ -596,6 +596,7 @@ node_pk_tbl_class = ClassDef(
         ),
     ],
     decorator_list=[],
+    type_params=[],
 )
 
 element_pk_fk_tbl = Call(

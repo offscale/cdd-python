@@ -43,6 +43,7 @@ pydantic_class_cls_def = ClassDef(
         ),
     ],
     decorator_list=[],
+    type_params=[],
     keywords=[],
     name="Cat",
 )

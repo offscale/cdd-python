@@ -173,6 +173,7 @@ def class_(
         decorator_list=list(map(rpartial(Name, Load()), decorator_list))
         if decorator_list
         else [],
+        type_params=[],
         keywords=[],
         name=class_name or intermediate_repr["name"],
         expr=None,
