@@ -1,5 +1,7 @@
 """
 Mocks for the `class`
+
+Note: TensorFlow code is taken from `5a56eb1`; the same that tf 2.15.0 was released with on 14/11/2023.
 """
 
 from ast import (
@@ -559,7 +561,7 @@ class_squared_hinge_config_ast = ClassDef(
     name="SquaredHingeConfig",
 )
 
-# https://github.com/tensorflow/tensorflow/blob/v2.4.1/tensorflow/python/keras/callbacks.py#L1923-L2430 [- many funcs]
+# https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/callbacks.py#L2019-L2143 [- args]
 tensorboard_doc_str_no_args = (
     "Enable visualizations for TensorBoard.",
     "",
@@ -572,6 +574,11 @@ tensorboard_doc_str_no_args = (
     "  * Activation histograms",
     "  * Sampled profiling",
     "",
+    "  When used in `Model.evaluate`, in addition to epoch summaries, there will be",
+    "  a summary that records evaluation metrics vs `Model.optimizer.iterations`",
+    "  written. The metric names will be prepended with `evaluation`, with",
+    "  `Model.optimizer.iterations` being the step in the visualized TensorBoard.",
+    "",
     "  If you have installed TensorFlow with pip, you should be able",
     "  to launch TensorBoard from the command line:",
     "",
@@ -581,7 +588,6 @@ tensorboard_doc_str_no_args = (
     "",
     "  You can find more information about TensorBoard",
     "  [here](https://www.tensorflow.org/get_started/summaries_and_tensorboard).",
-    "",
     "",
     "  Examples:",
     "",
@@ -649,6 +655,7 @@ tensorboard_doc_str_no_args = (
     "      log_dir='./logs', profile_batch=(10,20))",
     "  model.fit(x_train, y_train, epochs=2, callbacks=[tensorboard_callback])",
     "  ```",
+    "  ",
 )
 
 tensorboard_doc_str_no_args_str = "\n".join(
@@ -665,7 +672,8 @@ tensorboard_doc_str_no_args_examples_idx = tensorboard_doc_str_no_args.index(
 tensorboard_doc_str_args = (
     "  Args:",
     "      log_dir: the path of the directory where to save the log files to be",
-    "        parsed by TensorBoard.",
+    "        parsed by TensorBoard. e.g. log_dir = os.path.join(working_dir, 'logs')",
+    "        This directory should not be reused by any other callbacks.",
     "      histogram_freq: frequency (in epochs) at which to compute activation and",
     "        weight histograms for the layers of the model. If set to 0, histograms",
     "        won't be computed. Validation data (or split) must be specified for",
@@ -674,6 +682,8 @@ tensorboard_doc_str_args = (
     "        can become quite large when write_graph is set to True.",
     "      write_images: whether to write model weights to visualize as image in",
     "        TensorBoard.",
+    "      write_steps_per_second: whether to log the training steps per second into",
+    "        Tensorboard. This supports both epoch and batch frequency logging.",
     "      update_freq: `'batch'` or `'epoch'` or integer. When using `'batch'`,",
     "        writes the losses and metrics to TensorBoard after each batch. The same",
     "        applies for `'epoch'`. If using an integer, let's say `1000`, the",
@@ -687,12 +697,10 @@ tensorboard_doc_str_args = (
     "        to disable profiling.",
     "      embeddings_freq: frequency (in epochs) at which embedding layers will be",
     "        visualized. If set to 0, embeddings won't be visualized.",
-    "      embeddings_metadata: a dictionary which maps layer name to a file name in",
-    "        which metadata for this embedding layer is saved. See the",
-    "        [details](",
-    "          https://www.tensorflow.org/how_tos/embedding_viz/#metadata_optional)",
-    "        about metadata files format. In case if the same metadata file is",
-    "        used for all embedding layers, string can be passed.",
+    "      embeddings_metadata: Dictionary which maps embedding layer names to the",
+    "        filename of a file in which to save metadata for the embedding layer.",
+    "        In case the same metadata file is to be",
+    "        used for all embedding layers, a single filename can be passed.",
 )
 
 tensorboard_doc_str = "\n".join(
@@ -711,6 +719,7 @@ tensorboard_doc_str = "\n".join(
 )
 del tensorboard_doc_str_no_args_examples_idx
 
+# Minus a lot of functions, just includes args and first line of `__init__` and `set_model`
 class_google_tf_tensorboard_str = '''
 class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
   # pylint: disable=line-too-long
@@ -723,6 +732,7 @@ class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
                histogram_freq=0,
                write_graph=True,
                write_images=False,
+               write_steps_per_second=False,
                update_freq='epoch',
                profile_batch=2,
                embeddings_freq=0,
@@ -759,6 +769,7 @@ class_google_tf_tensorboard_ast = ClassDef(
                             "histogram_freq",
                             "write_graph",
                             "write_images",
+                            "write_steps_per_second",
                             "update_freq",
                             "profile_batch",
                             "embeddings_freq",
@@ -770,7 +781,7 @@ class_google_tf_tensorboard_ast = ClassDef(
                 kw_defaults=[],
                 kwarg=set_arg("kwargs"),
                 defaults=list(
-                    map(set_value, ("logs", 0, True, False, "epoch", 2, 0, None))
+                    map(set_value, ("logs", 0, True, False, False, "epoch", 2, 0, None))
                 ),
                 vararg=None,
             ),

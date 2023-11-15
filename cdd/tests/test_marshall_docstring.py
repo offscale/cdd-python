@@ -14,6 +14,7 @@ import cdd.shared.emit
 import cdd.shared.emit.utils.emitter_utils
 from cdd.shared.ast_utils import set_value
 from cdd.shared.docstring_parsers import _set_name_and_type, parse_docstring
+from cdd.shared.pure_utils import pp
 from cdd.tests.mocks.docstrings import (
     docstring_extra_colons_str,
     docstring_google_pytorch_lbfgs_str,
@@ -278,6 +279,11 @@ class TestMarshallDocstring(TestCase):
         Tests whether `parse_docstring` produces the right IR
               from `docstring_google_tf_adadelta_str`
         """
+        pp(
+            parse_docstring(
+                docstring_google_tf_adadelta_str, emit_default_doc=True, infer_type=True
+            )
+        )
         self.assertDictEqual(
             parse_docstring(
                 docstring_google_tf_adadelta_str, emit_default_doc=True, infer_type=True

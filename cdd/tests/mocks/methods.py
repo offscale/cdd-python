@@ -1,5 +1,7 @@
 """
 Mocks for methods
+
+Note: TensorFlow code is taken from `5a56eb1`; the same that tf 2.15.0 was released with on 14/11/2023.
 """
 
 from ast import (
@@ -820,7 +822,7 @@ method_complex_args_variety_ast = FunctionDef(
     stmt=None,
 )
 
-# https://github.com/tensorflow/tensorflow/blob/7ad2723/tensorflow/python/keras/losses.py#L1327-L1355
+# https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/losses.py#L1433-L1454
 function_google_tf_squared_hinge_docstring = (
     "Computes the squared hinge loss between `y_true` and `y_pred`.",
     "",
@@ -917,7 +919,7 @@ function_google_tf_ops_losses__safe_mean_ast = FunctionDef(
 #
 # print(ast.dump(ast.parse(inspect.getsource(mean_squared_error)).body[0], indent=4)
 # ```
-# https://github.com/tensorflow/tensorflow/blob/v2.7.0/tensorflow/python/ops/losses/losses_impl.py#L624-L771
+# https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/ops/losses/losses_impl.py#L627-L755
 #
 # minus non-docstring body and `decorator_list`
 function_google_tf_mean_squared_error_ast = FunctionDef(

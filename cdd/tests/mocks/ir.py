@@ -332,6 +332,7 @@ class_torch_nn_one_cycle_lr_ir = {
     "type": "static",
 }
 
+# https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/optimizer_v2/adadelta.py#L27-L62
 docstring_google_tf_adadelta_ir = {
     "doc": remove_args_from_docstring(docstring_google_tf_adadelta_str),
     "name": None,
@@ -340,35 +341,38 @@ docstring_google_tf_adadelta_ir = {
             (
                 "learning_rate",
                 {
-                    "doc": "A `Tensor`, floating point "
-                    "value, or a schedule that is a "
-                    "`tf.keras.optimizers.schedules.LearningRateSchedule`. "
-                    "The learning rate. To match the "
-                    "exact form in the original paper "
-                    "use 1.0."
+                    "default": 0.001,
+                    "doc": "Initial value for the learning rate: either a "
+                    "floating point value, or a "
+                    "`tf.keras.optimizers.schedules.LearningRateSchedule` "
+                    "instance. Defaults to 0.001. Note that `Adadelta` "
+                    "tends to benefit from higher initial learning rate "
+                    "values compared to other optimizers. To match the "
+                    "exact form in the original paper, use 1.0.",
+                    "typ": "float",
                 },
             ),
             (
                 "rho",
-                {"doc": "A `Tensor` or a floating point " "value. The decay rate."},
+                {
+                    "default": NoneStr,
+                    "doc": "A `Tensor` or a floating point value. The decay rate.",
+                },
             ),
             (
                 "epsilon",
                 {
-                    "doc": "A `Tensor` or a floating point "
-                    "value.  A constant epsilon used "
-                    "to better conditioning the grad "
-                    "update."
+                    "default": NoneStr,
+                    "doc": "Small floating point value used to maintain "
+                    "numerical stability.",
                 },
             ),
             (
                 "name",
                 {
                     "default": "Adadelta",
-                    "doc": "Optional name prefix for the "
-                    "operations created when applying "
-                    "gradients.  Defaults to "
-                    '`"Adadelta"`.',
+                    "doc": "Optional name prefix for the operations created when "
+                    'applying gradients.  Defaults to `"Adadelta"`.',
                     "typ": "Optional[str]",
                 },
             ),
@@ -376,12 +380,12 @@ docstring_google_tf_adadelta_ir = {
                 "kwargs",
                 {
                     "default": NoneStr,
-                    "doc": "Keyword arguments. Allowed to be "
-                    'one of `"clipnorm"` or '
-                    '`"clipvalue"`. `"clipnorm"` '
-                    "(float) clips gradients by norm; "
-                    '`"clipvalue"` (float) clips '
-                    "gradients by value.",
+                    "doc": 'Keyword arguments. Allowed to be one of `"clipnorm"` '
+                    'or `"clipvalue"`. `"clipnorm"` (float) clips '
+                    "gradients by norm and represents the maximum norm of "
+                    'each parameter; `"clipvalue"` (float) clips gradient '
+                    "by value and represents the maximum absolute value "
+                    "of each parameter.",
                     "typ": "Optional[dict]",
                 },
             ),
@@ -391,7 +395,7 @@ docstring_google_tf_adadelta_ir = {
     "type": "static",
 }
 
-
+# https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/callbacks.py#L2792-L2840
 docstring_google_tf_lambda_callback_ir = {
     "doc": remove_args_from_docstring(docstring_google_tf_lambda_callback_str),
     "name": None,
@@ -412,6 +416,7 @@ docstring_google_tf_lambda_callback_ir = {
     "type": "static",
 }
 
+# https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/optimizer_v2/adadelta.py#L27-L62
 docstring_google_tf_adadelta_function_ir = {
     "doc": remove_args_from_docstring(docstring_google_tf_adadelta_str),
     "name": "Adadelta",
@@ -421,12 +426,10 @@ docstring_google_tf_adadelta_function_ir = {
                 "learning_rate",
                 {
                     "default": 0.001,
-                    "doc": "A `Tensor`, floating point "
-                    "value, or a schedule that is a "
-                    "`tf.keras.optimizers.schedules.LearningRateSchedule`. "
-                    "The learning rate. To match the "
-                    "exact form in the original paper "
-                    "use 1.0.",
+                    "doc": "A `Tensor`, floating point value, or a schedule that "
+                    "is a `tf.keras.optimizers.schedules.LearningRateSchedule`. "
+                    "The learning rate. To match the exact form in the "
+                    "original paper use 1.0.",
                     "typ": "float",
                 },
             ),
@@ -434,7 +437,7 @@ docstring_google_tf_adadelta_function_ir = {
                 "rho",
                 {
                     "default": 0.95,
-                    "doc": "A `Tensor` or a floating point " "value. The decay rate.",
+                    "doc": "A `Tensor` or a floating point value. The decay " "rate.",
                     "typ": "float",
                 },
             ),
@@ -442,10 +445,8 @@ docstring_google_tf_adadelta_function_ir = {
                 "epsilon",
                 {
                     "default": 1e-07,
-                    "doc": "A `Tensor` or a floating point "
-                    "value.  A constant epsilon used "
-                    "to better conditioning the grad "
-                    "update.",
+                    "doc": "A `Tensor` or a floating point value.  A constant "
+                    "epsilon used to better conditioning the grad update.",
                     "typ": "float",
                 },
             ),
@@ -453,9 +454,8 @@ docstring_google_tf_adadelta_function_ir = {
                 "name",
                 {
                     "default": "Adadelta",
-                    "doc": "Optional name prefix for the "
-                    "operations created when applying "
-                    "gradients.",
+                    "doc": "Optional name prefix for the operations created when "
+                    "applying gradients.",
                     "typ": "Optional[str]",
                 },
             ),
@@ -463,11 +463,9 @@ docstring_google_tf_adadelta_function_ir = {
                 "kwargs",
                 {
                     "default": NoneStr,
-                    "doc": "Keyword arguments. Allowed to be "
-                    'one of `"clipnorm"` or '
-                    '`"clipvalue"`. `"clipnorm"` '
-                    "(float) clips gradients by norm; "
-                    '`"clipvalue"` (float) clips '
+                    "doc": 'Keyword arguments. Allowed to be one of `"clipnorm"` '
+                    'or `"clipvalue"`. `"clipnorm"` (float) clips '
+                    'gradients by norm; `"clipvalue"` (float) clips '
                     "gradients by value.",
                     "typ": "Optional[dict]",
                 },
@@ -478,6 +476,7 @@ docstring_google_tf_adadelta_function_ir = {
     "returns": None,
 }
 
+# https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/optimizer_v2/adam.py#L32-L99
 docstring_google_tf_adam_ir = {
     "doc": remove_args_from_docstring(docstring_google_tf_adam_str),
     "name": None,
@@ -580,6 +579,7 @@ docstring_google_tf_adam_ir = {
     "type": "static",
 }
 
+# https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/losses.py#L862-L875
 docstring_google_tf_squared_hinge_ir = {
     "doc": docstring_google_tf_squared_hinge_no_args_doc_str,
     "name": None,

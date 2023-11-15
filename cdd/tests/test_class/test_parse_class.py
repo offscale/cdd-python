@@ -12,6 +12,7 @@ import cdd.argparse_function.emit
 import cdd.class_.parse
 import cdd.json_schema.parse
 from cdd.shared.ast_utils import RewriteAtQuery
+from cdd.shared.pure_utils import pp
 from cdd.tests.mocks.classes import (
     class_ast,
     class_google_tf_tensorboard_ast,
@@ -78,7 +79,7 @@ class TestParseClass(TestCase):
 
     def test_from_adadelta_class_in_memory(self) -> None:
         """
-        Tests that parse.class produces properly from a `class` in memory of current interpreter
+        Tests that `parse.class_` produces properly from a `class` in memory of current interpreter
         """
         Adadelta = getattr(
             inspectable_compile(docstring_google_tf_adadelta_function_str),
@@ -87,6 +88,7 @@ class TestParseClass(TestCase):
         ir = cdd.class_.parse.class_(Adadelta)
         del ir["_internal"]
         # self.assertDictEqual(ir, docstring_google_tf_adadelta_ir)
+        pp(docstring_google_tf_adadelta_function_ir)
         self.assertDictEqual(
             ir,
             docstring_google_tf_adadelta_function_ir,
