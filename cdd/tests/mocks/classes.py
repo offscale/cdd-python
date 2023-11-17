@@ -561,23 +561,33 @@ class_squared_hinge_config_ast = ClassDef(
     name="SquaredHingeConfig",
 )
 
-# https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/callbacks.py#L2019-L2143 [- args]
+# ```py
+# import ast
+# import inspect
+#
+# import keras.callbacks
+#
+# ast.parse(inspect.getsource(keras.callbacks.TensorBoard)).body[0].body[0].value.value.splitlines()
+# ```
+# https://github.com/keras-team/keras/blob/f889c1f/keras/callbacks/tensorboard.py#L20-L157 [- args]
 tensorboard_doc_str_no_args = (
     "Enable visualizations for TensorBoard.",
     "",
-    "  TensorBoard is a visualization tool provided with TensorFlow.",
+    "  TensorBoard is a visualization tool provided with TensorFlow. A TensorFlow",
+    "  installation is required to use this callback.",
     "",
     "  This callback logs events for TensorBoard, including:",
     "",
     "  * Metrics summary plots",
     "  * Training graph visualization",
-    "  * Activation histograms",
+    "  * Weight histograms",
     "  * Sampled profiling",
     "",
-    "  When used in `Model.evaluate`, in addition to epoch summaries, there will be",
-    "  a summary that records evaluation metrics vs `Model.optimizer.iterations`",
-    "  written. The metric names will be prepended with `evaluation`, with",
-    "  `Model.optimizer.iterations` being the step in the visualized TensorBoard.",
+    "  When used in `model.evaluate()` or regular validation",
+    "  in addition to epoch summaries, there will be a summary that records",
+    "  evaluation metrics vs `model.optimizer.iterations` written. The metric names",
+    "  will be prepended with `evaluation`, with `model.optimizer.iterations` being",
+    "  the step in the visualized TensorBoard.",
     "",
     "  If you have installed TensorFlow with pip, you should be able",
     "  to launch TensorBoard from the command line:",
@@ -594,7 +604,7 @@ tensorboard_doc_str_no_args = (
     "  Basic usage:",
     "",
     "  ```python",
-    '  tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")',
+    '  tensorboard_callback = keras.callbacks.TensorBoard(log_dir="./logs")',
     "  model.fit(x_train, y_train, epochs=2, callbacks=[tensorboard_callback])",
     "  # Then run the tensorboard command to view the visualizations.",
     "  ```",
@@ -602,23 +612,23 @@ tensorboard_doc_str_no_args = (
     "  Custom batch-level summaries in a subclassed Model:",
     "",
     "  ```python",
-    "  class MyModel(tf.keras.Model):",
+    "  class MyModel(keras.Model):",
     "",
-    "    def build(self, _):",
-    "      self.dense = tf.keras.layers.Dense(10)",
+    "      def build(self, _):",
+    "          self.dense = keras.layers.Dense(10)",
     "",
-    "    def call(self, x):",
-    "      outputs = self.dense(x)",
-    "      tf.summary.histogram('outputs', outputs)",
-    "      return outputs",
+    "      def call(self, x):",
+    "          outputs = self.dense(x)",
+    "          tf.summary.histogram('outputs', outputs)",
+    "          return outputs",
     "",
     "  model = MyModel()",
     "  model.compile('sgd', 'mse')",
     "",
-    "  # Make sure to set `update_freq=N` to log a batch-level summary every N batches.",
-    "  # In addition to any `tf.summary` contained in `Model.call`, metrics added in",
-    "  # `Model.compile` will be logged every N batches.",
-    "  tb_callback = tf.keras.callbacks.TensorBoard('./logs', update_freq=1)",
+    "  # Make sure to set `update_freq=N` to log a batch-level summary every N",
+    "  # batches.  In addition to any `tf.summary` contained in `model.call()`,",
+    "  # metrics added in `Model.compile` will be logged every N batches.",
+    "  tb_callback = keras.callbacks.TensorBoard('./logs', update_freq=1)",
     "  model.fit(x_train, y_train, callbacks=[tb_callback])",
     "  ```",
     "",
@@ -626,19 +636,19 @@ tensorboard_doc_str_no_args = (
     "",
     "  ```python",
     "  def my_summary(x):",
-    "    tf.summary.histogram('x', x)",
-    "    return x",
+    "      tf.summary.histogram('x', x)",
+    "      return x",
     "",
-    "  inputs = tf.keras.Input(10)",
-    "  x = tf.keras.layers.Dense(10)(inputs)",
-    "  outputs = tf.keras.layers.Lambda(my_summary)(x)",
-    "  model = tf.keras.Model(inputs, outputs)",
+    "  inputs = keras.Input(10)",
+    "  x = keras.layers.Dense(10)(inputs)",
+    "  outputs = keras.layers.Lambda(my_summary)(x)",
+    "  model = keras.Model(inputs, outputs)",
     "  model.compile('sgd', 'mse')",
     "",
-    "  # Make sure to set `update_freq=N` to log a batch-level summary every N batches.",
-    "  # In addition to any `tf.summary` contained in `Model.call`, metrics added in",
-    "  # `Model.compile` will be logged every N batches.",
-    "  tb_callback = tf.keras.callbacks.TensorBoard('./logs', update_freq=1)",
+    "  # Make sure to set `update_freq=N` to log a batch-level summary every N",
+    "  # batches. In addition to any `tf.summary` contained in `Model.call`,",
+    "  # metrics added in `Model.compile` will be logged every N batches.",
+    "  tb_callback = keras.callbacks.TensorBoard('./logs', update_freq=1)",
     "  model.fit(x_train, y_train, callbacks=[tb_callback])",
     "  ```",
     "",
@@ -646,16 +656,16 @@ tensorboard_doc_str_no_args = (
     "",
     "  ```python",
     "  # Profile a single batch, e.g. the 5th batch.",
-    "  tensorboard_callback = tf.keras.callbacks.TensorBoard(",
+    "  tensorboard_callback = keras.callbacks.TensorBoard(",
     "      log_dir='./logs', profile_batch=5)",
     "  model.fit(x_train, y_train, epochs=2, callbacks=[tensorboard_callback])",
     "",
     "  # Profile a range of batches, e.g. from 10 to 20.",
-    "  tensorboard_callback = tf.keras.callbacks.TensorBoard(",
+    "  tensorboard_callback = keras.callbacks.TensorBoard(",
     "      log_dir='./logs', profile_batch=(10,20))",
     "  model.fit(x_train, y_train, epochs=2, callbacks=[tensorboard_callback])",
     "  ```",
-    "  ",
+    "",
 )
 
 tensorboard_doc_str_no_args_str = "\n".join(
@@ -665,42 +675,55 @@ tensorboard_doc_str_no_args_str = "\n".join(
     )
 )
 
-tensorboard_doc_str_no_args_examples_idx = tensorboard_doc_str_no_args.index(
+tensorboard_doc_str_no_args_examples_idx = tensorboard_doc_str_no_args_str.index(
     "  Examples:"
 )
 
 tensorboard_doc_str_args = (
-    "  Args:",
-    "      log_dir: the path of the directory where to save the log files to be",
-    "        parsed by TensorBoard. e.g. log_dir = os.path.join(working_dir, 'logs')",
-    "        This directory should not be reused by any other callbacks.",
-    "      histogram_freq: frequency (in epochs) at which to compute activation and",
-    "        weight histograms for the layers of the model. If set to 0, histograms",
-    "        won't be computed. Validation data (or split) must be specified for",
-    "        histogram visualizations.",
-    "      write_graph: whether to visualize the graph in TensorBoard. The log file",
-    "        can become quite large when write_graph is set to True.",
-    "      write_images: whether to write model weights to visualize as image in",
-    "        TensorBoard.",
-    "      write_steps_per_second: whether to log the training steps per second into",
-    "        Tensorboard. This supports both epoch and batch frequency logging.",
-    "      update_freq: `'batch'` or `'epoch'` or integer. When using `'batch'`,",
-    "        writes the losses and metrics to TensorBoard after each batch. The same",
-    "        applies for `'epoch'`. If using an integer, let's say `1000`, the",
-    "        callback will write the metrics and losses to TensorBoard every 1000",
-    "        batches. Note that writing too frequently to TensorBoard can slow down",
-    "        your training.",
-    "      profile_batch: Profile the batch(es) to sample compute characteristics.",
-    "        profile_batch must be a non-negative integer or a tuple of integers.",
-    "        A pair of positive integers signify a range of batches to profile.",
-    "        By default, it will profile the second batch. Set profile_batch=0",
-    "        to disable profiling.",
-    "      embeddings_freq: frequency (in epochs) at which embedding layers will be",
-    "        visualized. If set to 0, embeddings won't be visualized.",
-    "      embeddings_metadata: Dictionary which maps embedding layer names to the",
-    "        filename of a file in which to save metadata for the embedding layer.",
-    "        In case the same metadata file is to be",
-    "        used for all embedding layers, a single filename can be passed.",
+    "    Args:",
+    "        log_dir: the path of the directory where to save the log files to be",
+    "            parsed by TensorBoard. e.g.,",
+    "            `log_dir = os.path.join(working_dir, 'logs')`.",
+    "            This directory should not be reused by any other callbacks.",
+    "        histogram_freq: frequency (in epochs) at which to compute",
+    "            weight histograms for the layers of the model. If set to 0,",
+    "            histograms won't be computed. Validation data (or split) must be",
+    "            specified for histogram visualizations.",
+    "        write_graph:  (Not supported at this time)",
+    "            Whether to visualize the graph in TensorBoard.",
+    "            Note that the log file can become quite large",
+    "            when `write_graph` is set to `True`.",
+    "        write_images: whether to write model weights to visualize as image in",
+    "            TensorBoard.",
+    "        write_steps_per_second: whether to log the training steps per second",
+    "            into TensorBoard. This supports both epoch and batch frequency",
+    "            logging.",
+    '        update_freq: `"batch"` or `"epoch"` or integer. When using `"epoch"`,',
+    "            writes the losses and metrics to TensorBoard after every epoch.",
+    "            If using an integer, let's say `1000`, all metrics and losses",
+    "            (including custom ones added by `Model.compile`) will be logged to",
+    '            TensorBoard every 1000 batches. `"batch"` is a synonym for 1,',
+    "            meaning that they will be written every batch.",
+    "            Note however that writing too frequently to TensorBoard can slow",
+    "            down your training, especially when used with distribution",
+    "            strategies as it will incur additional synchronization overhead.",
+    "            Batch-level summary writing is also available via `train_step`",
+    "            override. Please see",
+    "            [TensorBoard Scalars tutorial](",
+    "                https://www.tensorflow.org/tensorboard/scalars_and_keras#batch-level_logging)  # noqa: E501",
+    "            for more details.",
+    "        profile_batch: (Not supported at this time)",
+    "            Profile the batch(es) to sample compute characteristics.",
+    "            profile_batch must be a non-negative integer or a tuple of integers.",
+    "            A pair of positive integers signify a range of batches to profile.",
+    "            By default, profiling is disabled.",
+    "        embeddings_freq: frequency (in epochs) at which embedding layers will be",
+    "            visualized. If set to 0, embeddings won't be visualized.",
+    "        embeddings_metadata: Dictionary which maps embedding layer names to the",
+    "            filename of a file in which to save metadata for the embedding layer.",
+    "            In case the same metadata file is to be",
+    "            used for all embedding layers, a single filename can be passed.",
+    "",
 )
 
 tensorboard_doc_str = "\n".join(
@@ -720,38 +743,33 @@ tensorboard_doc_str = "\n".join(
 del tensorboard_doc_str_no_args_examples_idx
 
 # Minus a lot of functions, just includes args and first line of `__init__` and `set_model`
-class_google_tf_tensorboard_str = '''
-class TensorBoard(Callback, version_utils.TensorBoardVersionSelector):
-  # pylint: disable=line-too-long
-  r"""{tensorboard_doc_str}"""
+class_google_keras_tensorboard_str = '''
+class TensorBoard(Callback):
+    """{tensorboard_doc_str}"""
 
-  # pylint: enable=line-too-long
+    def __init__(
+        self,
+        log_dir="logs",
+        histogram_freq=0,
+        write_graph=True,
+        write_images=False,
+        write_steps_per_second=False,
+        update_freq="epoch",
+        profile_batch=0,
+        embeddings_freq=0,
+        embeddings_metadata=None,
+    ):
+        super().__init__()
 
-  def __init__(self,
-               log_dir='logs',
-               histogram_freq=0,
-               write_graph=True,
-               write_images=False,
-               write_steps_per_second=False,
-               update_freq='epoch',
-               profile_batch=2,
-               embeddings_freq=0,
-               embeddings_metadata=None,
-               **kwargs):
-    super(TensorBoard, self).__init__()
-
-  def set_model(self, model):
-    """Sets Keras model and writes graph if specified."""
+    def set_model(self, model):
+        """Sets Keras model and writes graph if specified."""
 '''.format(
     tensorboard_doc_str=tensorboard_doc_str
 )
 
-class_google_tf_tensorboard_ast = ClassDef(
+class_google_keras_tensorboard_ast = ClassDef(
     name="TensorBoard",
-    bases=[
-        Name("Callback", Load()),
-        Attribute(Name("version_utils", Load()), "TensorBoardVersionSelector", Load()),
-    ],
+    bases=[Name(id="Callback", ctx=Load())],
     keywords=[],
     body=[
         Expr(set_value(tensorboard_doc_str)),
@@ -759,7 +777,6 @@ class_google_tf_tensorboard_ast = ClassDef(
             name="__init__",
             args=arguments(
                 posonlyargs=[],
-                arg=None,
                 args=list(
                     map(
                         set_arg,
@@ -779,35 +796,27 @@ class_google_tf_tensorboard_ast = ClassDef(
                 ),
                 kwonlyargs=[],
                 kw_defaults=[],
-                kwarg=set_arg("kwargs"),
                 defaults=list(
-                    map(set_value, ("logs", 0, True, False, False, "epoch", 2, 0, None))
+                    map(set_value, ("logs", 0, True, False, False, "epoch", 0, 0, None))
                 ),
+                kwarg=None,
                 vararg=None,
+                arg=None,
             ),
             body=[
                 Expr(
-                    Call(
+                    value=Call(
                         func=Attribute(
-                            Call(
-                                func=Name("super", Load()),
-                                args=[
-                                    Name("TensorBoard", Load()),
-                                    Name("self", Load()),
-                                ],
-                                keywords=[],
-                                expr=None,
-                                expr_func=None,
+                            value=Call(
+                                func=Name(id="super", ctx=Load()), args=[], keywords=[]
                             ),
-                            "__init__",
-                            Load(),
+                            attr="__init__",
+                            ctx=Load(),
                         ),
                         args=[],
                         keywords=[],
-                        expr=None,
-                        expr_func=None,
                     )
-                )
+                ),
             ],
             decorator_list=[],
             type_params=[],
@@ -822,13 +831,13 @@ class_google_tf_tensorboard_ast = ClassDef(
             name="set_model",
             args=arguments(
                 posonlyargs=[],
-                arg=None,
                 args=list(map(set_arg, ("self", "model"))),
-                kwarg=None,
                 kwonlyargs=[],
                 kw_defaults=[],
                 defaults=[],
+                kwarg=None,
                 vararg=None,
+                arg=None,
             ),
             body=[Expr(set_value("Sets Keras model and writes graph if specified."))],
             decorator_list=[],
@@ -1285,8 +1294,8 @@ class_reduction_v2 = ClassDef(
 __all__ = [
     "class_ast",
     "class_ast_with_none",
-    "class_google_tf_tensorboard_ast",
-    "class_google_tf_tensorboard_str",
+    "class_google_keras_tensorboard_ast",
+    "class_google_keras_tensorboard_str",
     "class_nargs_ast",
     "class_nargs_str",
     "class_reduction_v2",

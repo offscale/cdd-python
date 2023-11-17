@@ -33,7 +33,7 @@ from textwrap import indent
 from cdd.shared.ast_utils import maybe_type_comment, set_arg, set_slice, set_value
 from cdd.shared.pure_utils import emit_separating_tabs, tab
 from cdd.tests.mocks.docstrings import (
-    docstring_google_tf_adadelta,
+    docstring_google_keras_adadelta,
     docstring_google_tf_mean_squared_error_str,
     docstring_google_tf_ops_losses__safe_mean_str,
     docstring_header_str,
@@ -912,7 +912,7 @@ function_google_tf_ops_losses__safe_mean_ast = FunctionDef(
     decorator_list=[],
 )
 
-# ```python
+# ```py
 # import ast
 # import inspect
 # from tensorflow.python.ops.losses.losses_impl import mean_squared_error
@@ -966,7 +966,7 @@ docstring_google_tf_adadelta_function = (
     "",
     "class Adadelta(object):",
     '  """{}"""'.format(
-        "\n".join(map(partial(add, " " * 2), docstring_google_tf_adadelta))
+        "\n".join(map(partial(add, " " * 2), docstring_google_keras_adadelta))
     ),
     "",
     "  _HAS_AGGREGATE_GRAD = True",
@@ -1052,7 +1052,7 @@ docstring_google_tf_adadelta_function = (
     "    })",
     "    return config",
 )
-docstring_google_tf_adadelta_function_str = "\n".join(
+docstring_google_keras_adadelta_function_str = "\n".join(
     docstring_google_tf_adadelta_function
 )
 
@@ -1065,7 +1065,7 @@ __all__ = [
     "class_with_method_types_str",
     "class_with_optional_arg_method_ast",
     "class_with_optional_arg_method_str",
-    "docstring_google_tf_adadelta_function_str",
+    "docstring_google_keras_adadelta_function_str",
     "function_adder_ast",
     "function_adder_str",
     "function_default_complex_default_arg_ast",

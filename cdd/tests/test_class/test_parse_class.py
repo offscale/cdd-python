@@ -15,8 +15,8 @@ from cdd.shared.ast_utils import RewriteAtQuery
 from cdd.shared.pure_utils import pp
 from cdd.tests.mocks.classes import (
     class_ast,
-    class_google_tf_tensorboard_ast,
-    class_google_tf_tensorboard_str,
+    class_google_keras_tensorboard_ast,
+    class_google_keras_tensorboard_str,
     class_reduction_v2,
     class_torch_nn_l1loss_ast,
     class_torch_nn_l1loss_str,
@@ -24,13 +24,13 @@ from cdd.tests.mocks.classes import (
     class_torch_nn_one_cycle_lr_str,
 )
 from cdd.tests.mocks.ir import (
-    class_google_tf_tensorboard_ir,
+    class_google_keras_tensorboard_ir,
     class_torch_nn_l1loss_ir,
     class_torch_nn_one_cycle_lr_ir,
-    docstring_google_tf_adadelta_function_ir,
+    docstring_google_keras_adadelta_function_ir,
     intermediate_repr_no_default_doc,
 )
-from cdd.tests.mocks.methods import docstring_google_tf_adadelta_function_str
+from cdd.tests.mocks.methods import docstring_google_keras_adadelta_function_str
 from cdd.tests.utils_for_tests import inspectable_compile, run_ast_test, unittest_main
 
 
@@ -82,16 +82,16 @@ class TestParseClass(TestCase):
         Tests that `parse.class_` produces properly from a `class` in memory of current interpreter
         """
         Adadelta = getattr(
-            inspectable_compile(docstring_google_tf_adadelta_function_str),
+            inspectable_compile(docstring_google_keras_adadelta_function_str),
             "Adadelta",
         )
         ir = cdd.class_.parse.class_(Adadelta)
         del ir["_internal"]
-        # self.assertDictEqual(ir, docstring_google_tf_adadelta_ir)
-        pp(docstring_google_tf_adadelta_function_ir)
+        # self.assertDictEqual(ir, docstring_google_keras_adadelta_ir)
+        pp(docstring_google_keras_adadelta_function_ir)
         self.assertDictEqual(
             ir,
-            docstring_google_tf_adadelta_function_ir,
+            docstring_google_keras_adadelta_function_ir,
         )
 
     def test_from_class_and_function(self) -> None:
@@ -103,12 +103,12 @@ class TestParseClass(TestCase):
         # Sanity check
         run_ast_test(
             self,
-            class_google_tf_tensorboard_ast,
-            gold=ast.parse(class_google_tf_tensorboard_str).body[0],
+            class_google_keras_tensorboard_ast,
+            gold=ast.parse(class_google_keras_tensorboard_str).body[0],
         )
 
         parsed_ir = cdd.class_.parse.class_(
-            class_google_tf_tensorboard_ast,
+            class_google_keras_tensorboard_ast,
             merge_inner_function="__init__",
             parse_original_whitespace=True,
             word_wrap=False,
@@ -118,9 +118,9 @@ class TestParseClass(TestCase):
         del parsed_ir["_internal"]  # Not needed for this test
 
         self.assertEqual(
-            *map(itemgetter("doc"), (parsed_ir, class_google_tf_tensorboard_ir))
+            *map(itemgetter("doc"), (parsed_ir, class_google_keras_tensorboard_ir))
         )
-        self.assertDictEqual(parsed_ir, class_google_tf_tensorboard_ir)
+        self.assertDictEqual(parsed_ir, class_google_keras_tensorboard_ir)
 
     def test_from_class_and_function_in_memory(self) -> None:
         """

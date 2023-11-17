@@ -17,13 +17,13 @@ from cdd.shared.docstring_parsers import _set_name_and_type, parse_docstring
 from cdd.shared.pure_utils import pp
 from cdd.tests.mocks.docstrings import (
     docstring_extra_colons_str,
+    docstring_google_keras_adadelta_str,
+    docstring_google_keras_adam_str,
+    docstring_google_keras_lambda_callback_str,
+    docstring_google_keras_squared_hinge_str,
     docstring_google_pytorch_lbfgs_str,
     docstring_google_str,
-    docstring_google_tf_adadelta_str,
-    docstring_google_tf_adam_str,
-    docstring_google_tf_lambda_callback_str,
     docstring_google_tf_mean_squared_error_str,
-    docstring_google_tf_squared_hinge_str,
     docstring_header_and_return_str,
     docstring_header_str,
     docstring_no_default_doc_str,
@@ -36,11 +36,11 @@ from cdd.tests.mocks.docstrings import (
     docstring_str,
 )
 from cdd.tests.mocks.ir import (
+    docstring_google_keras_adadelta_ir,
+    docstring_google_keras_adam_ir,
+    docstring_google_keras_lambda_callback_ir,
+    docstring_google_keras_squared_hinge_ir,
     docstring_google_pytorch_lbfgs_ir,
-    docstring_google_tf_adadelta_ir,
-    docstring_google_tf_adam_ir,
-    docstring_google_tf_lambda_callback_ir,
-    docstring_google_tf_squared_hinge_ir,
     intermediate_repr,
     intermediate_repr_extra_colons,
     intermediate_repr_no_default_doc,
@@ -247,63 +247,67 @@ class TestMarshallDocstring(TestCase):
         _intermediate_repr_no_default_doc["doc"] = docstring_header_str
         self.assertDictEqual(ir, _intermediate_repr_no_default_doc)
 
-    def test_from_docstring_google_tf_squared_hinge(self) -> None:
+    def test_from_docstring_google_keras_squared_hinge(self) -> None:
         """
         Tests whether `parse_docstring` produces the right IR
-              from `docstring_google_tf_squared_hinge_str`
+              from `docstring_google_keras_squared_hinge_str`
         """
         self.assertDictEqual(
             parse_docstring(
-                docstring_google_tf_squared_hinge_str,
+                docstring_google_keras_squared_hinge_str,
                 emit_default_doc=True,
                 infer_type=True,
                 default_search_announce=("Default value is", "defaults to"),
             ),
-            docstring_google_tf_squared_hinge_ir,
+            docstring_google_keras_squared_hinge_ir,
         )
 
-    def test_from_docstring_google_tf_adam(self) -> None:
+    def test_from_docstring_google_keras_adam(self) -> None:
         """
         Tests whether `parse_docstring` produces the right IR
               from `docstring_google_tf_squared_hinge_str`
         """
         self.assertDictEqual(
             parse_docstring(
-                docstring_google_tf_adam_str, emit_default_doc=True, infer_type=True
+                docstring_google_keras_adam_str, emit_default_doc=True, infer_type=True
             ),
-            docstring_google_tf_adam_ir,
+            docstring_google_keras_adam_ir,
         )
 
-    def test_from_docstring_google_tf_adadelta_str(self) -> None:
+    def test_from_docstring_google_keras_adadelta_str(self) -> None:
         """
         Tests whether `parse_docstring` produces the right IR
-              from `docstring_google_tf_adadelta_str`
+              from `docstring_google_keras_adadelta_str`
         """
         pp(
             parse_docstring(
-                docstring_google_tf_adadelta_str, emit_default_doc=True, infer_type=True
+                docstring_google_keras_adadelta_str,
+                emit_default_doc=True,
+                infer_type=True,
             )
         )
         self.assertDictEqual(
             parse_docstring(
-                docstring_google_tf_adadelta_str, emit_default_doc=True, infer_type=True
+                docstring_google_keras_adadelta_str,
+                emit_default_doc=True,
+                infer_type=True,
             ),
-            docstring_google_tf_adadelta_ir,
+            docstring_google_keras_adadelta_ir,
         )
 
-    def test_from_docstring_google_tf_lambda_callback_str(self) -> None:
+    def test_from_docstring_google_keras_lambda_callback_str(self) -> None:
         """
         Tests whether `parse_docstring` produces the same IR doc
               as from a direct read
         """
         self.assertEqual(
             parse_docstring(
-                docstring_google_tf_lambda_callback_str,
+                docstring_google_keras_lambda_callback_str,
                 emit_default_doc=True,
                 infer_type=True,
                 parse_original_whitespace=True,
             ),
-            docstring_google_tf_lambda_callback_ir,
+            docstring_google_keras_lambda_callback_ir,
         )
 
     def test_from_docstring_google_tf_mean_squared_error_str(self) -> None:

@@ -6,7 +6,6 @@ Note: TensorFlow code is taken from `5a56eb1`; the same that tf 2.15.0 was relea
 
 from itertools import chain
 from textwrap import indent
-from typing import Optional, Literal, Union
 
 from cdd.shared.pure_utils import identity, tab
 
@@ -42,198 +41,272 @@ Some comment
 :type dataset_name: ```str```
 """
 
-# https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/losses.py#L862-L875
-docstring_google_tf_squared_hinge_no_args_doc_str = (
+# ```py
+# import ast
+# import inspect
+#
+# import keras.losses
+#
+# ast.parse(inspect.getsource(keras.losses.SquaredHinge)).body[0].body[0].value.value.splitlines()
+# ```
+# https://github.com/keras-team/keras/blob/f889c1f/keras/losses/losses.py#L282-L297
+docstring_google_keras_squared_hinge_no_args_doc_str = (
     "Initializes `SquaredHinge` instance."
 )
-docstring_google_tf_squared_hinge = (
-    docstring_google_tf_squared_hinge_no_args_doc_str,
+docstring_google_keras_squared_hinge = (
+    docstring_google_keras_squared_hinge_no_args_doc_str,
     "    Args:",
-    "      reduction: Type of `tf.keras.losses.Reduction` to apply to",
-    "        loss. Default value is `AUTO`. `AUTO` indicates that the reduction",
-    "        option will be determined by the usage context. For almost all cases",
-    "        this defaults to `SUM_OVER_BATCH_SIZE`. When used with",
-    "        `tf.distribute.Strategy`, outside of built-in training loops such as",
-    "        `tf.keras` `compile` and `fit`, using `AUTO` or `SUM_OVER_BATCH_SIZE`",
-    "        will raise an error. Please see this custom training [tutorial](",
-    "          https://www.tensorflow.org/tutorials/distribute/custom_training) for",
-    "            more details.",
-    "      name: Optional name for the instance. Defaults to 'squared_hinge'.",
+    "        reduction: Type of reduction to apply to the loss. In almost all cases",
+    '            this should be `"sum_over_batch_size"`.',
+    '            Supported options are `"sum"`, `"sum_over_batch_size"` or `None`.',
+    "        name: Optional name for the loss instance.",
     "    ",
 )
-docstring_google_tf_squared_hinge_str = "\n".join(docstring_google_tf_squared_hinge)
+docstring_google_keras_squared_hinge_str = "\n".join(
+    docstring_google_keras_squared_hinge
+)
 
-# https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/optimizer_v2/adam.py#L32-L99
-docstring_google_tf_adam = (
+# ```py
+# import ast
+# import inspect
+#
+# import keras.optimizers
+# from keras.src.optimizers.base_optimizer import base_optimizer_keyword_args
+#
+# ast.parse(inspect.getsource(keras.optimizers.Adam)).body[0].body[0].value.value.replace(
+#     "{{base_optimizer_keyword_args}}", base_optimizer_keyword_args).splitlines()
+# ```
+# https://github.com/keras-team/keras/blob/f889c1f/keras/optimizers/adam.py#L8-L40
+docstring_google_keras_adam = (
     "Optimizer that implements the Adam algorithm.",
     "",
-    "  Adam optimization is a stochastic gradient descent method that is based on",
-    "  adaptive estimation of first-order and second-order moments.",
+    "    Adam optimization is a stochastic gradient descent method that is based on",
+    "    adaptive estimation of first-order and second-order moments.",
     "",
-    "  According to",
-    "  [Kingma et al., 2014](http://arxiv.org/abs/1412.6980),",
-    '  the method is "*computationally',
-    "  efficient, has little memory requirement, invariant to diagonal rescaling of",
-    "  gradients, and is well suited for problems that are large in terms of",
-    '  data/parameters*".',
+    "    According to",
+    "    [Kingma et al., 2014](http://arxiv.org/abs/1412.6980),",
+    '    the method is "*computationally',
+    "    efficient, has little memory requirement, invariant to diagonal rescaling of",
+    "    gradients, and is well suited for problems that are large in terms of",
+    '    data/parameters*".',
     "",
-    "  Args:",
-    "    learning_rate: A `Tensor`, floating point value, or a schedule that is a",
-    "      `tf.keras.optimizers.schedules.LearningRateSchedule`, or a callable",
-    "      that takes no arguments and returns the actual value to use, The",
-    "      learning rate. Defaults to 0.001.",
-    "    beta_1: A float value or a constant float tensor, or a callable",
-    "      that takes no arguments and returns the actual value to use. The",
-    "      exponential decay rate for the 1st moment estimates. Defaults to 0.9.",
-    "    beta_2: A float value or a constant float tensor, or a callable",
-    "      that takes no arguments and returns the actual value to use, The",
-    "      exponential decay rate for the 2nd moment estimates. Defaults to 0.999.",
-    "    epsilon: A small constant for numerical stability. This epsilon is",
-    '      "epsilon hat" in the Kingma and Ba paper (in the formula just before',
-    "      Section 2.1), not the epsilon in Algorithm 1 of the paper. Defaults to",
-    "      1e-7.",
-    "    amsgrad: Boolean. Whether to apply AMSGrad variant of this algorithm from",
-    '      the paper "On the Convergence of Adam and beyond". Defaults to `False`.',
-    "    name: Optional name for the operations created when applying gradients.",
-    '      Defaults to `"Adam"`.',
-    "    **kwargs: Keyword arguments. Allowed to be one of",
-    '      `"clipnorm"` or `"clipvalue"`.',
-    '      `"clipnorm"` (float) clips gradients by norm; `"clipvalue"` (float) clips',
-    "      gradients by value.",
+    "    Args:",
+    "        learning_rate: A float, a",
+    "            `keras.optimizers.schedules.LearningRateSchedule` instance, or",
+    "            a callable that takes no arguments and returns the actual value to",
+    "            use. The learning rate. Defaults to `0.001`.",
+    "        beta_1: A float value or a constant float tensor, or a callable",
+    "            that takes no arguments and returns the actual value to use. The",
+    "            exponential decay rate for the 1st moment estimates. Defaults to",
+    "            `0.9`.",
+    "        beta_2: A float value or a constant float tensor, or a callable",
+    "            that takes no arguments and returns the actual value to use. The",
+    "            exponential decay rate for the 2nd moment estimates. Defaults to",
+    "            `0.999`.",
+    "        epsilon: A small constant for numerical stability. This epsilon is",
+    '            "epsilon hat" in the Kingma and Ba paper (in the formula just before',
+    "            Section 2.1), not the epsilon in Algorithm 1 of the paper. Defaults",
+    "            to `1e-7`.",
+    "        amsgrad: Boolean. Whether to apply AMSGrad variant of this algorithm",
+    '            from the paper "On the Convergence of Adam and beyond". Defaults',
+    "            to `False`.",
+    "        name: String. The name to use",
+    "          for momentum accumulator weights created by",
+    "          the optimizer.",
+    "        weight_decay: Float. If set, weight decay is applied.",
+    "        clipnorm: Float. If set, the gradient of each weight is individually",
+    "          clipped so that its norm is no higher than this value.",
+    "        clipvalue: Float. If set, the gradient of each weight is clipped to be",
+    "          no higher than this value.",
+    "        global_clipnorm: Float. If set, the gradient of all weights is clipped",
+    "          so that their global norm is no higher than this value.",
+    "        use_ema: Boolean, defaults to False. If True, exponential moving average",
+    "          (EMA) is applied. EMA consists of computing an exponential moving",
+    "          average of the weights of the model (as the weight values change after",
+    "          each training batch), and periodically overwriting the weights with",
+    "          their moving average.",
+    "        ema_momentum: Float, defaults to 0.99. Only used if `use_ema=True`.",
+    "          This is the momentum to use when computing",
+    "          the EMA of the model's weights:",
+    "          `new_average = ema_momentum * old_average + (1 - ema_momentum) *",
+    "          current_variable_value`.",
+    "        ema_overwrite_frequency: Int or None, defaults to None. Only used if",
+    "          `use_ema=True`. Every `ema_overwrite_frequency` steps of iterations,",
+    "          we overwrite the model variable by its moving average.",
+    "          If None, the optimizer",
+    "          does not overwrite model variables in the middle of training, and you",
+    "          need to explicitly overwrite the variables at the end of training",
+    "          by calling `optimizer.finalize_variable_values()`",
+    "          (which updates the model",
+    "          variables in-place). When using the built-in `fit()` training loop,",
+    "          this happens automatically after the last epoch,",
+    "          and you don't need to do anything.",
+    "        loss_scale_factor: Float or `None`. If a float, the scale factor will",
+    "          be multiplied the loss before computing gradients, and the inverse of",
+    "          the scale factor will be multiplied by the gradients before updating",
+    "          variables. Useful for preventing underflow during mixed precision",
+    "          training. Alternately, `keras.optimizers.LossScaleOptimizer` will",
+    "          automatically set a loss scale factor.",
     "",
-    "  Usage:",
-    "",
-    "  >>> opt = tf.keras.optimizers.Adam(learning_rate=0.1)",
-    "  >>> var1 = tf.Variable(10.0)",
-    "  >>> loss = lambda: (var1 ** 2)/2.0       # d(loss)/d(var1) == var1",
-    "  >>> step_count = opt.minimize(loss, [var1]).numpy()",
-    "  >>> # The first step is `-learning_rate*sign(grad)`",
-    "  >>> var1.numpy()",
-    "  9.9",
-    "",
-    "  Reference:",
-    "    - [Kingma et al., 2014](http://arxiv.org/abs/1412.6980)",
-    "    - [Reddi et al., 2018](",
-    "        https://openreview.net/pdf?id=ryQu7f-RZ) for `amsgrad`.",
-    "",
-    "  Notes:",
-    "",
-    "  The default value of 1e-7 for epsilon might not be a good default in",
-    "  general. For example, when training an Inception network on ImageNet a",
-    "  current good choice is 1.0 or 0.1. Note that since Adam uses the",
-    "  formulation just before Section 2.1 of the Kingma and Ba paper rather than",
-    '  the formulation in Algorithm 1, the "epsilon" referred to here is "epsilon',
-    '  hat" in the paper.',
-    "",
-    "  The sparse implementation of this algorithm (used when the gradient is an",
-    "  IndexedSlices object, typically because of `tf.gather` or an embedding",
-    "  lookup in the forward pass) does apply momentum to variable slices even if",
-    "  they were not used in the forward pass (meaning they have a gradient equal",
-    "  to zero). Momentum decay (beta1) is also applied to the entire momentum",
-    "  accumulator. This means that the sparse behavior is equivalent to the dense",
-    "  behavior (in contrast to some momentum implementations which ignore momentum",
-    "  unless a variable slice was actually used).",
+    "    ",
 )
-docstring_google_tf_adam_str = "\n".join(docstring_google_tf_adam)
+docstring_google_keras_adam_str = "\n".join(docstring_google_keras_adam)
 
-# https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/optimizer_v2/adadelta.py#L27-L62
-docstring_google_tf_adadelta = (
+# ```py
+# import ast
+# import inspect
+#
+# import keras.optimizers
+# from keras.src.optimizers.base_optimizer import base_optimizer_keyword_args
+#
+# ast.parse(inspect.getsource(keras.optimizers.Adadelta)).body[0].body[0].value.value.replace(
+#     "{{base_optimizer_keyword_args}}", base_optimizer_keyword_args).splitlines()
+# ```
+# https://github.com/keras-team/keras/blob/f889c1f/keras/optimizers/adadelta.py#L8-L37
+docstring_google_keras_adadelta = (
     "Optimizer that implements the Adadelta algorithm.",
     "",
-    "  Adadelta optimization is a stochastic gradient descent method that is based on",
-    "  adaptive learning rate per dimension to address two drawbacks:",
+    "    Adadelta optimization is a stochastic gradient descent method that is based",
+    "    on adaptive learning rate per dimension to address two drawbacks:",
     "",
-    "  - The continual decay of learning rates throughout training.",
-    "  - The need for a manually selected global learning rate.",
+    "    - The continual decay of learning rates throughout training.",
+    "    - The need for a manually selected global learning rate.",
     "",
-    "  Adadelta is a more robust extension of Adagrad that adapts learning rates",
-    "  based on a moving window of gradient updates, instead of accumulating all",
-    "  past gradients. This way, Adadelta continues learning even when many updates",
-    "  have been done. Compared to Adagrad, in the original version of Adadelta you",
-    "  don't have to set an initial learning rate. In this version, the initial",
-    "  learning rate can be set, as in most other Keras optimizers.",
+    "    Adadelta is a more robust extension of Adagrad that adapts learning rates",
+    "    based on a moving window of gradient updates, instead of accumulating all",
+    "    past gradients. This way, Adadelta continues learning even when many updates",
+    "    have been done. Compared to Adagrad, in the original version of Adadelta you",
+    "    don't have to set an initial learning rate. In this version, the initial",
+    "    learning rate can be set, as in most other Keras optimizers.",
     "",
-    "  Args:",
-    "    learning_rate: Initial value for the learning rate:",
-    "      either a floating point value,",
-    "      or a `tf.keras.optimizers.schedules.LearningRateSchedule` instance.",
-    "      Defaults to 0.001.",
-    "      Note that `Adadelta` tends to benefit from higher initial learning rate",
-    "      values compared to other optimizers.",
-    "      To match the exact form in the original paper, use 1.0.",
-    "    rho: A `Tensor` or a floating point value. The decay rate.",
-    "    epsilon: Small floating point value used to maintain numerical stability.",
-    "    name: Optional name prefix for the operations created when applying",
-    '      gradients.  Defaults to `"Adadelta"`.',
-    "    **kwargs: Keyword arguments. Allowed to be one of",
-    '      `"clipnorm"` or `"clipvalue"`.',
-    '      `"clipnorm"` (float) clips gradients by norm and represents',
-    "      the maximum norm of each parameter;",
-    '      `"clipvalue"` (float) clips gradient by value and represents the',
-    "      maximum absolute value of each parameter.",
+    "    Args:",
+    "        learning_rate: A float, a",
+    "            `keras.optimizers.schedules.LearningRateSchedule` instance, or",
+    "            a callable that takes no arguments and returns the actual value to",
+    "            use. The learning rate. Defaults to `0.001`. Note that `Adadelta`",
+    "            tends to benefit from higher initial learning rate values compared",
+    "            to other optimizers. To match the exact form in the original paper,",
+    "            use 1.0.",
+    "        rho: A floating point value. The decay rate. Defaults to `0.95`.",
+    "        epsilon: Small floating point value for maintaining numerical stability.",
+    "        name: String. The name to use",
+    "          for momentum accumulator weights created by",
+    "          the optimizer.",
+    "        weight_decay: Float. If set, weight decay is applied.",
+    "        clipnorm: Float. If set, the gradient of each weight is individually",
+    "          clipped so that its norm is no higher than this value.",
+    "        clipvalue: Float. If set, the gradient of each weight is clipped to be",
+    "          no higher than this value.",
+    "        global_clipnorm: Float. If set, the gradient of all weights is clipped",
+    "          so that their global norm is no higher than this value.",
+    "        use_ema: Boolean, defaults to False. If True, exponential moving average",
+    "          (EMA) is applied. EMA consists of computing an exponential moving",
+    "          average of the weights of the model (as the weight values change after",
+    "          each training batch), and periodically overwriting the weights with",
+    "          their moving average.",
+    "        ema_momentum: Float, defaults to 0.99. Only used if `use_ema=True`.",
+    "          This is the momentum to use when computing",
+    "          the EMA of the model's weights:",
+    "          `new_average = ema_momentum * old_average + (1 - ema_momentum) *",
+    "          current_variable_value`.",
+    "        ema_overwrite_frequency: Int or None, defaults to None. Only used if",
+    "          `use_ema=True`. Every `ema_overwrite_frequency` steps of iterations,",
+    "          we overwrite the model variable by its moving average.",
+    "          If None, the optimizer",
+    "          does not overwrite model variables in the middle of training, and you",
+    "          need to explicitly overwrite the variables at the end of training",
+    "          by calling `optimizer.finalize_variable_values()`",
+    "          (which updates the model",
+    "          variables in-place). When using the built-in `fit()` training loop,",
+    "          this happens automatically after the last epoch,",
+    "          and you don't need to do anything.",
+    "        loss_scale_factor: Float or `None`. If a float, the scale factor will",
+    "          be multiplied the loss before computing gradients, and the inverse of",
+    "          the scale factor will be multiplied by the gradients before updating",
+    "          variables. Useful for preventing underflow during mixed precision",
+    "          training. Alternately, `keras.optimizers.LossScaleOptimizer` will",
+    "          automatically set a loss scale factor.",
     "",
-    "  Reference:",
+    "",
+    "    Reference:",
+    "",
     "    - [Zeiler, 2012](http://arxiv.org/abs/1212.5701)",
-    "  ",
+    "    ",
 )
-docstring_google_tf_adadelta_str = "\n".join(docstring_google_tf_adadelta)
+docstring_google_keras_adadelta_str = "\n".join(docstring_google_keras_adadelta)
 
-# https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/callbacks.py#L2792-L2840
-docstring_google_tf_lambda_callback = (
+# ```py
+# import ast
+# import inspect
+# import keras.callbacks
+#
+# ast.parse(inspect.getsource(keras.callbacks.LambdaCallback)).body[0].body[0].value.value.splitlines()
+# ```
+# https://github.com/keras-team/keras/blob/f889c1f/keras/callbacks/lambda_callback.py#L7-L61
+docstring_google_keras_lambda_callback = (
     "Callback for creating simple, custom callbacks on-the-fly.",
     "",
-    "  This callback is constructed with anonymous functions that will be called",
-    "  at the appropriate time (during `Model.{fit | evaluate | predict}`).",
-    "  Note that the callbacks expects positional arguments, as:",
+    "    This callback is constructed with anonymous functions that will be called",
+    "    at the appropriate time (during `Model.{fit | evaluate | predict}`).",
+    "    Note that the callbacks expects positional arguments, as:",
     "",
-    "  - `on_epoch_begin` and `on_epoch_end` expect two positional arguments:",
-    "    `epoch`, `logs`",
-    "  - `on_batch_begin` and `on_batch_end` expect two positional arguments:",
-    "    `batch`, `logs`",
-    "  - `on_train_begin` and `on_train_end` expect one positional argument:",
-    "    `logs`",
+    "    - `on_epoch_begin` and `on_epoch_end` expect two positional arguments:",
+    "      `epoch`, `logs`",
+    "    - `on_train_begin` and `on_train_end` expect one positional argument:",
+    "      `logs`",
+    "    - `on_train_batch_begin` and `on_train_batch_end` expect two positional",
+    "      arguments: `batch`, `logs`",
+    "    - See `Callback` class definition for the full list of functions and their",
+    "      expected arguments.",
     "",
-    "  Args:",
-    "      on_epoch_begin: called at the beginning of every epoch.",
-    "      on_epoch_end: called at the end of every epoch.",
-    "      on_batch_begin: called at the beginning of every batch.",
-    "      on_batch_end: called at the end of every batch.",
-    "      on_train_begin: called at the beginning of model training.",
-    "      on_train_end: called at the end of model training.",
+    "    Args:",
+    "        on_epoch_begin: called at the beginning of every epoch.",
+    "        on_epoch_end: called at the end of every epoch.",
+    "        on_train_begin: called at the beginning of model training.",
+    "        on_train_end: called at the end of model training.",
+    "        on_train_batch_begin: called at the beginning of every train batch.",
+    "        on_train_batch_end: called at the end of every train batch.",
+    "        kwargs: Any function in `Callback` that you want to override by",
+    "            passing `function_name=function`. For example,",
+    "            `LambdaCallback(.., on_train_end=train_end_fn)`. The custom function",
+    "            needs to have same arguments as the ones defined in `Callback`.",
     "",
-    "  Example:",
+    "    Example:",
     "",
-    "  ```python",
-    "  # Print the batch number at the beginning of every batch.",
-    "  batch_print_callback = LambdaCallback(",
-    "      on_batch_begin=lambda batch,logs: print(batch))",
+    "    ```python",
+    "    # Print the batch number at the beginning of every batch.",
+    "    batch_print_callback = LambdaCallback(",
+    "        on_train_batch_begin=lambda batch,logs: print(batch))",
     "",
-    "  # Stream the epoch loss to a file in JSON format. The file content",
-    "  # is not well-formed JSON but rather has a JSON object per line.",
-    "  import json",
-    "  json_log = open('loss_log.json', mode='wt', buffering=1)",
-    "  json_logging_callback = LambdaCallback(",
-    "      on_epoch_end=lambda epoch, logs: json_log.write(",
-    "          json.dumps({'epoch': epoch, 'loss': logs['loss']}) + '\\n'),",
-    "      on_train_end=lambda logs: json_log.close()",
-    "  )",
+    "    # Stream the epoch loss to a file in JSON format. The file content",
+    "    # is not well-formed JSON but rather has a JSON object per line.",
+    "    import json",
+    "    json_log = open('loss_log.json', mode='wt', buffering=1)",
+    "    json_logging_callback = LambdaCallback(",
+    "        on_epoch_end=lambda epoch, logs: json_log.write(",
+    "            json.dumps({'epoch': epoch, 'loss': logs['loss']}) + '",
+    "'),",
+    "        on_train_end=lambda logs: json_log.close()",
+    "    )",
     "",
-    "  # Terminate some processes after having finished model training.",
-    "  processes = ...",
-    "  cleanup_callback = LambdaCallback(",
-    "      on_train_end=lambda logs: [",
-    "          p.terminate() for p in processes if p.is_alive()])",
+    "    # Terminate some processes after having finished model training.",
+    "    processes = ...",
+    "    cleanup_callback = LambdaCallback(",
+    "        on_train_end=lambda logs: [",
+    "            p.terminate() for p in processes if p.is_alive()])",
     "",
-    "  model.fit(...,",
-    "            callbacks=[batch_print_callback,",
-    "                       json_logging_callback,",
-    "                       cleanup_callback])",
-    "  ```",
-    "  ",
+    "    model.fit(...,",
+    "              callbacks=[batch_print_callback,",
+    "                         json_logging_callback,",
+    "                         cleanup_callback])",
+    "    ```",
+    "    ",
 )
-docstring_google_tf_lambda_callback_str = "\n".join(docstring_google_tf_lambda_callback)
+docstring_google_keras_lambda_callback_str = "\n".join(
+    docstring_google_keras_lambda_callback
+)
 
-# ```python
+# ```py
 # import ast
 # import inspect
 # from tensorflow.python.ops.losses.losses_impl import mean_squared_error
@@ -641,12 +714,12 @@ docstring_create_from_attr_str = (
 )
 
 # docstring_repr_google_str = emit.docstring(parse.docstring(docstring_repr_str), docstring_format="google")
-docstring_repr_google_str = (
-    "\nConstruct an instance from an object with identical columns (as attributes) as this `class`/`Table`\n\n\n\n\n"
-    "Returns:\n"
-    "  self:\n"
-    "   A new instance made from the input object's attributes\n"
-)
+# docstring_repr_google_str = (
+#     "\nConstruct an instance from an object with identical columns (as attributes) as this `class`/`Table`\n\n\n\n\n"
+#     "Returns:\n"
+#     "  self:\n"
+#     "   A new instance made from the input object's attributes\n"
+# )
 
 docstring_create_from_attr_google_str = (
     "\nEmit a string representation of the current instance\n\n\n\n\n"
@@ -831,16 +904,17 @@ docstring_sum_tuple = (
 
 __all__ = [
     "docstring_extra_colons_str",
+    "docstring_google_keras_adadelta_str",
+    "docstring_google_keras_adam_str",
+    "docstring_google_keras_lambda_callback_str",
+    "docstring_google_pytorch_lbfgs_str",
     "docstring_google_str",
-    "docstring_google_tf_adadelta_str",
-    "docstring_google_tf_adam_str",
-    "docstring_google_tf_lambda_callback_str",
     "docstring_google_tf_mean_squared_error_args_tuple",
     "docstring_google_tf_mean_squared_error_footer_tuple",
     "docstring_google_tf_mean_squared_error_header_tuple",
     "docstring_google_tf_mean_squared_error_str",
     "docstring_google_tf_ops_losses__safe_mean_str",
-    "docstring_google_tf_squared_hinge_str",
+    "docstring_google_keras_squared_hinge_str",
     "docstring_header_and_return_no_nl_str",
     "docstring_header_and_return_str",
     "docstring_header_and_return_two_nl_str",

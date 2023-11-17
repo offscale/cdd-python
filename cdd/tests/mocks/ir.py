@@ -14,18 +14,18 @@ from cdd.tests.mocks.classes import (
     tensorboard_doc_str_no_args_str,
 )
 from cdd.tests.mocks.docstrings import (
+    docstring_google_keras_adadelta_str,
+    docstring_google_keras_adam_str,
+    docstring_google_keras_lambda_callback_str,
+    docstring_google_keras_squared_hinge_no_args_doc_str,
     docstring_google_pytorch_lbfgs_str,
-    docstring_google_tf_adadelta_str,
-    docstring_google_tf_adam_str,
-    docstring_google_tf_lambda_callback_str,
-    docstring_google_tf_squared_hinge_no_args_doc_str,
     docstring_header_no_nl_str,
     docstring_keras_rmsprop_class_str,
     docstring_keras_rmsprop_method_str,
 )
 from cdd.tests.utils_for_tests import remove_args_from_docstring
 
-class_google_tf_tensorboard_ir = {
+class_google_keras_tensorboard_ir = {
     "doc": tensorboard_doc_str_no_args_str,
     "name": "TensorBoard",
     "params": OrderedDict(
@@ -333,8 +333,8 @@ class_torch_nn_one_cycle_lr_ir = {
 }
 
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/optimizer_v2/adadelta.py#L27-L62
-docstring_google_tf_adadelta_ir = {
-    "doc": remove_args_from_docstring(docstring_google_tf_adadelta_str),
+docstring_google_keras_adadelta_ir = {
+    "doc": remove_args_from_docstring(docstring_google_keras_adadelta_str),
     "name": None,
     "params": OrderedDict(
         (
@@ -396,8 +396,8 @@ docstring_google_tf_adadelta_ir = {
 }
 
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/callbacks.py#L2792-L2840
-docstring_google_tf_lambda_callback_ir = {
-    "doc": remove_args_from_docstring(docstring_google_tf_lambda_callback_str),
+docstring_google_keras_lambda_callback_ir = {
+    "doc": remove_args_from_docstring(docstring_google_keras_lambda_callback_str),
     "name": None,
     "params": OrderedDict(
         (
@@ -417,8 +417,8 @@ docstring_google_tf_lambda_callback_ir = {
 }
 
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/optimizer_v2/adadelta.py#L27-L62
-docstring_google_tf_adadelta_function_ir = {
-    "doc": remove_args_from_docstring(docstring_google_tf_adadelta_str),
+docstring_google_keras_adadelta_function_ir = {
+    "doc": remove_args_from_docstring(docstring_google_keras_adadelta_str),
     "name": "Adadelta",
     "params": OrderedDict(
         (
@@ -477,8 +477,8 @@ docstring_google_tf_adadelta_function_ir = {
 }
 
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/optimizer_v2/adam.py#L32-L99
-docstring_google_tf_adam_ir = {
-    "doc": remove_args_from_docstring(docstring_google_tf_adam_str),
+docstring_google_keras_adam_ir = {
+    "doc": remove_args_from_docstring(docstring_google_keras_adam_str),
     "name": None,
     "params": OrderedDict(
         (
@@ -580,8 +580,8 @@ docstring_google_tf_adam_ir = {
 }
 
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/losses.py#L862-L875
-docstring_google_tf_squared_hinge_ir = {
-    "doc": docstring_google_tf_squared_hinge_no_args_doc_str,
+docstring_google_keras_squared_hinge_ir = {
+    "doc": docstring_google_keras_squared_hinge_no_args_doc_str,
     "name": None,
     "params": OrderedDict(
         (
@@ -1219,15 +1219,15 @@ intermediate_repr_node_pk = {
 }
 
 __all__ = [
-    "class_google_tf_tensorboard_ir",
+    "class_google_keras_tensorboard_ir",
     "class_torch_nn_l1loss_ir",
     "class_torch_nn_one_cycle_lr_ir",
+    "docstring_google_keras_adadelta_function_ir",
+    "docstring_google_keras_adadelta_ir",
+    "docstring_google_keras_adam_ir",
+    "docstring_google_keras_lambda_callback_ir",
     "docstring_google_pytorch_lbfgs_ir",
-    "docstring_google_tf_adadelta_function_ir",
-    "docstring_google_tf_adadelta_ir",
-    "docstring_google_tf_adam_ir",
-    "docstring_google_tf_lambda_callback_ir",
-    "docstring_google_tf_squared_hinge_ir",
+    "docstring_google_keras_squared_hinge_ir",
     "function_adder_ir",
     "function_google_tf_ops_losses__safe_mean_ir",
     "intermediate_repr",
@@ -1237,8 +1237,8 @@ __all__ = [
     "intermediate_repr_no_default_doc_or_prop",
     "intermediate_repr_no_default_sql_doc",
     "intermediate_repr_no_default_sql_with_nones_doc",
-    "intermediate_repr_no_default_with_nones_doc",
     "intermediate_repr_no_default_sql_with_sql_types",
+    "intermediate_repr_no_default_with_nones_doc",
     "intermediate_repr_node_pk",
     "intermediate_repr_only_return_type",
     "method_complex_args_variety_ir",

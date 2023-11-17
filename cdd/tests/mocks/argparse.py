@@ -612,7 +612,7 @@ argparse_func_action_append_ast = fix_missing_locations(
     )
 )
 
-argparse_function_google_tf_tensorboard_ast = FunctionDef(
+argparse_function_google_keras_tensorboard_ast = FunctionDef(
     args=arguments(
         args=[set_arg("argument_parser")],
         defaults=[],
@@ -1051,5 +1051,5 @@ __all__ = [
     "argparse_func_torch_nn_l1loss_ast",
     "argparse_func_with_body_ast",
     "argparse_func_with_body_str",
-    "argparse_function_google_tf_tensorboard_ast",
+    "argparse_function_google_keras_tensorboard_ast",
 ]

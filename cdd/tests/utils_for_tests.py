@@ -78,25 +78,27 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
         else (gold, gen_ast)
     )
 
-    # if not cmp_ast(_gen_ast, _gold_ast):
-    #     if sys.version_info > (3, 7):
-    #         from ast import dump
-    #
-    #         def print_ast(*args, file=sys.stdout, **kwargs):
-    #             """
-    #             Proxy for `ast.dump` that matches interface of `meta.asttools.print_ast`
-    #             """
-    #             if sys.version_info > (3, 9):
-    #                 kwargs["indent"] = 4
-    #             return print(dump(*args, **kwargs), file=file)
-    #
-    #     else:
-    #         from meta.asttools import print_ast
-    #
-    #     print("#gen", file=sys.stderr)
-    #     print_ast(_gen_ast, file=sys.stderr)
-    #     print("#gold", file=sys.stderr)
-    #     print_ast(_gold_ast, file=sys.stderr)
+    if not cmp_ast(_gen_ast, _gold_ast):
+        import sys
+
+        if sys.version_info > (3, 7):
+            from ast import dump
+
+            def print_ast(*args, file=sys.stdout, **kwargs):
+                """
+                Proxy for `ast.dump` that matches interface of `meta.asttools.print_ast`
+                """
+                if sys.version_info > (3, 9):
+                    kwargs["indent"] = 4
+                return print(dump(*args, **kwargs), file=file)
+
+        else:
+            from meta.asttools import print_ast
+
+        print("#gen", file=sys.stderr)
+        print_ast(_gen_ast, file=sys.stderr)
+        print("#gold", file=sys.stderr)
+        print_ast(_gold_ast, file=sys.stderr)
 
     if isinstance(
         _gen_ast, (ast.Module, ast.ClassDef, ast.AsyncFunctionDef, ast.FunctionDef)

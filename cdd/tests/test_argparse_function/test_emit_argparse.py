@@ -20,11 +20,11 @@ from cdd.tests.mocks.argparse import (
     argparse_func_ast,
     argparse_func_torch_nn_l1loss_ast,
     argparse_func_with_body_ast,
-    argparse_function_google_tf_tensorboard_ast,
+    argparse_function_google_keras_tensorboard_ast,
 )
 from cdd.tests.mocks.classes import (
     class_ast,
-    class_google_tf_tensorboard_ast,
+    class_google_keras_tensorboard_ast,
     class_nargs_ast,
 )
 from cdd.tests.mocks.ir import class_torch_nn_l1loss_ir
@@ -61,7 +61,9 @@ class TestEmitArgparse(TestCase):
             gold=argparse_func_action_append_ast,
         )
 
-    def test_to_argparse_google_tf_tensorboard(self) -> None:
+    maxDiff = None
+
+    def test_to_argparse_google_keras_tensorboard(self) -> None:
         """
         Tests whether `to_argparse` produces `argparse_function_google_tf_tensorboard_ast`
                                     given `class_google_tf_tensorboard_ast`
@@ -70,12 +72,12 @@ class TestEmitArgparse(TestCase):
             self,
             gen_ast=cdd.argparse_function.emit.argparse_function(
                 cdd.class_.parse.class_(
-                    class_google_tf_tensorboard_ast, merge_inner_function="__init__"
+                    class_google_keras_tensorboard_ast, merge_inner_function="__init__"
                 ),
                 emit_default_doc=False,
                 word_wrap=False,
             ),
-            gold=argparse_function_google_tf_tensorboard_ast,
+            gold=argparse_function_google_keras_tensorboard_ast,
         )
 
     def test_from_argparse_with_extra_body_to_argparse_with_extra_body(self) -> None:
