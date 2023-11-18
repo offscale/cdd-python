@@ -9,6 +9,7 @@ Parses these formats into the cdd_python common IR format:
 """
 
 import ast
+import sys
 from ast import AST
 from collections import OrderedDict
 from copy import deepcopy
@@ -33,11 +34,28 @@ from cdd.shared.pure_utils import (
     location_within,
     none_types,
     paren_wrap_code,
+    pp,
     rpartial,
     unquote,
     update_d,
 )
 from cdd.shared.source_transformer import to_code
+
+adhoc_type_to_type = {
+    "boolean": "bool",
+    "bool": "bool",
+    "dictionary": "dict",
+    "dict": "dict",
+    "filename": "str",
+    "float": "float",
+    "integer": "int",
+    "list": "list",
+    "number": "int",
+    "quantity": "int",
+    "string": "str",
+    "str": "str",
+    "tuple": "Tuple",
+}
 
 
 def parse_docstring(
@@ -540,15 +558,27 @@ def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=Fal
                 if word_wrap
                 else _param["doc"]
             ).rstrip()
+
+        # Google's Keras and other codebases (sometimes) have an adhoc syntax where the first word refers to type.
+        fst_word = "".join(takewhile(str.isidentifier, _param["doc"])).lower()
+
+        # if first word is stopword or list/tuple second word might be worth looking at
+        # if fst_word.lower() in frozenset(("the", "a", "an", "one", "list", "tuple")):
+        #    snd_word = "".join(
+        #        takewhile(str.isidentifier, _param["doc"][len(fst_word) + 1 :])
+        #    )
+        if fst_word in adhoc_type_to_type:
+            _param["typ"] = adhoc_type_to_type[fst_word]
+
         if (
-            (
-                _param["doc"].startswith("(Optional)")
-                or _param["doc"].startswith("Optional")
-            )
+            _param["doc"].startswith(("(Optional)", "Optional"))
             and "typ" in _param
             and not _param["typ"].startswith("Optional[")
         ):
             _param["typ"] = "Optional[{typ}]".format(typ=_param["typ"])
+
+    pp({name: _param})
+    print("-" * 70, file=sys.stderr)
 
     return name, _param
 

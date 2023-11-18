@@ -62,6 +62,7 @@ from cdd.shared.pure_utils import (
     quote,
     rpartial,
     simple_types,
+    pp,
 )
 
 # Was `"globals().__getitem__"`; this type is used for `Any` and any other unhandled
@@ -167,8 +168,7 @@ def param2ast(param):
             if _param["typ"] in frozenset(("Constant", "Str", "NamedConstant")):
                 _param["typ"] = "object"
         # elif _param["default"] == NoneStr: _param["default"] = None
-
-    if _param.get("typ") is None:
+    if _param.get("typ") in (None, NoneStr):
         return AnnAssign(
             annotation=Name("object", Load()),
             simple=1,
@@ -281,8 +281,9 @@ def _generic_param2ast(param):
                 if "default" in _param
                 else None
             )
-        # else:
-        #     value = set_value(None)
+    pp({"<<{}>>".format(name): value})
+    # else:
+    #     value = set_value(None)
     return AnnAssign(
         annotation=annotation,
         simple=1,
@@ -1418,9 +1419,7 @@ def node_to_dict(node):
             else get_value(val)
         )(getattr(node, attr))
         for attr in dir(node)
-        if not attr.startswith("_")
-        and not attr.endswith("lineno")
-        and not attr.endswith("offset")
+        if not attr.startswith("_") and not attr.endswith(("lineno", "offset"))
     }
 
 

@@ -81,7 +81,7 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
                     filter(rpartial(isinstance, Assign), mod.body),
                 ),
             ),
-            None,
+            iter(()),
         )
         mod_to_symbol = defaultdict(list)
         deque(
@@ -429,6 +429,7 @@ def _emit_symbol(
             sanitised_emit_name,
         )
     )(sanitise_emit_name(emit_name))
+    print("emitter:", emitter, ";")
     gen_node = emitter(
         intermediate_repr,
         word_wrap=no_word_wrap is None,

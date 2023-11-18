@@ -423,7 +423,7 @@ def _build_parser():
     )
     exmod_parser.add_argument(
         "--target-module-name",
-        help="Target module name. Defaults to `${module}.gold`.",
+        help="Target module name. Defaults to `${module}___gold`.",
         required=False,
         default=None,
     )

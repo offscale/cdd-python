@@ -111,7 +111,7 @@ def exmod(
     ), "Expected `str` got `{emit_name_type!r}`".format(emit_name_type=type(emit_name))
 
     module_root, _, submodule = module.rpartition(".")
-    module_name, new_module_name = module, target_module_name or ".".join(
+    module_name, new_module_name = module, target_module_name or "___".join(
         (module_root, "gold")
     )
 

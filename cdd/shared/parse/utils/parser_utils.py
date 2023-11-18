@@ -344,22 +344,12 @@ def get_parser(node, parse_name):
     """
     if parse_name in (None, "infer"):
         parse_name = infer(node)
-    parse_name = {"class": "class_"}.get(parse_name, parse_name)
-    return getattr(
-        import_module(
-            ".".join(
-                (
-                    "cdd",
-                    "sqlalchemy"
-                    if parse_name
-                    in frozenset(("sqlalchemy_hybrid", "sqlalchemy_table"))
-                    else parse_name,
-                    "parse",
-                )
-            )
-        ),
-        parse_name,
-    )
+    parse_name = {
+        "class": "class_",
+        "sqlalchemy_hybrid": "sqlalchemy",
+        "sqlalchemy_table": "sqlalchemy",
+    }.get(parse_name, parse_name)
+    return getattr(import_module(".".join(("cdd", parse_name, "parse"))), parse_name)
 
 
 __all__ = ["get_parser", "ir_merge", "infer", "lstrip_typings", "_inspect"]
