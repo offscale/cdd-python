@@ -10,7 +10,7 @@ from functools import partial
 from importlib import import_module
 from importlib.util import find_spec
 from inspect import getmodule
-from itertools import chain, count, filterfalse, islice, takewhile, zip_longest
+from itertools import chain, count, filterfalse, islice, takewhile, tee, zip_longest
 from json import JSONEncoder
 from keyword import iskeyword
 from operator import attrgetter, eq, itemgetter
@@ -154,6 +154,7 @@ _python_major_minor: Tuple[int, int] = version_info[:2]
 PY3_8: bool = _python_major_minor == (3, 8)
 PY_GTE_3_8: bool = _python_major_minor >= (3, 8)
 PY_GTE_3_9: bool = _python_major_minor >= (3, 9)
+PY_GTE_3_10: bool = _python_major_minor >= (3, 10)
 PY_GTE_3_12: bool = _python_major_minor >= (3, 12)
 
 ENCODING = "# -*- coding: utf-8 -*-"
@@ -983,6 +984,32 @@ def is_ir_empty(intermediate_repr):
     )
 
 
+if PY_GTE_3_10:
+    from itertools import pairwise
+else:
+
+    def pairwise(iterable):
+        """
+        Return successive overlapping pairs taken from the input iterable.
+
+        The number of 2-tuples in the output iterator will be one fewer than the number of inputs.
+        It will be empty if the input iterable has fewer than two values.
+
+        https://docs.python.org/3/library/itertools.html#itertools.pairwise
+        but it's only avail. from 3.10 onwards
+
+        :param iterable: An iterable
+        :type iterable: ```Iterable```
+
+        :return: A pair of 2-tuples or empty
+        :rtype: ```zip```
+        """
+        # pairwise('ABCDEFG') --> AB BC CD DE EF FG
+        a, b = tee(iterable)
+        next(b, None)
+        return zip(a, b)
+
+
 def paren_wrap_code(code):
     """
     The new builtin AST unparser adds extra parentheses, so match that behaviour on older versions
@@ -1107,6 +1134,29 @@ def set_item(obj, key, val):
     return obj
 
 
+def sliding_window(iterable, n):
+    """
+    Sliding window
+
+    https://docs.python.org/3/library/itertools.html#itertools-recipes
+
+    :param iterable: An iterable
+    :type iterable: ```Iterable```
+
+    :param n: Window size
+    :type n: ```int```
+
+    :return: sliding window
+    :rtype: ```Generator[Tuple]```
+    """
+    # sliding_window('ABCDEFG', 4) --> ABCD BCDE CDEF DEFG
+    it = iter(iterable)
+    window = deque(islice(it, n - 1), maxlen=n)
+    for x in it:
+        window.append(x)
+        yield tuple(window)
+
+
 class SetEncoder(JSONEncoder):
     """
     JSON encoder that supports `set`s
@@ -1214,9 +1264,9 @@ __all__ = [
     "ENCODING",
     "INIT_FILENAME",
     "PY3_8",
+    "PY_GTE_3_12",
     "PY_GTE_3_8",
     "PY_GTE_3_9",
-    "PY_GTE_3_12",
     "SetEncoder",
     "all_dunder_for_module",
     "append_to_dict",
@@ -1245,6 +1295,7 @@ __all__ = [
     "none_types",
     "num_of_nls",
     "omit_whitespace",
+    "pairwise",
     "paren_wrap_code",
     "parse_comment_from_line",
     "pascal_to_upper_camelcase",

@@ -62,7 +62,6 @@ from cdd.shared.pure_utils import (
     quote,
     rpartial,
     simple_types,
-    pp,
 )
 
 # Was `"globals().__getitem__"`; this type is used for `Any` and any other unhandled
@@ -281,7 +280,6 @@ def _generic_param2ast(param):
                 if "default" in _param
                 else None
             )
-    pp({"<<{}>>".format(name): value})
     # else:
     #     value = set_value(None)
     return AnnAssign(

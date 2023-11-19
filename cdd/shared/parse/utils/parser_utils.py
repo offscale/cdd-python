@@ -116,10 +116,15 @@ def _join_non_none(primacy, other):
         return other
     elif not other:
         return primacy
+    # & for `dict` keys is only available in newer Python versions
     all_keys = frozenset(chain.from_iterable((primacy.keys(), other.keys())))
-    for key in all_keys:
-        if primacy.get(key) is None and other.get(key) is not None:
-            primacy[key] = other[key]
+    primacy.update(
+        {
+            key: other[key]
+            for key in all_keys
+            if primacy.get(key) is None and other.get(key) is not None
+        }
+    )
     return primacy
 
 

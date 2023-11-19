@@ -66,6 +66,12 @@ docstring_google_keras_squared_hinge_str = "\n".join(
     docstring_google_keras_squared_hinge
 )
 
+docstring_google_keras_tensorboard_return_str = """
+    Returns:
+        True on success, or False if no summary was written because no default
+        summary writer was available.
+"""
+
 # ```py
 # import ast
 # import inspect
