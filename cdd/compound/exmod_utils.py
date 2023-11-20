@@ -429,7 +429,6 @@ def _emit_symbol(
             sanitised_emit_name,
         )
     )(sanitise_emit_name(emit_name))
-    print("emitter:", emitter, ";")
     gen_node = emitter(
         intermediate_repr,
         word_wrap=no_word_wrap is None,

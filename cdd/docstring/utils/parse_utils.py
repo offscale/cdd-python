@@ -114,7 +114,10 @@ def _union_literal_from_sentence(sentence):
             return candidate_type
 
     union = sorted(
-        map(lambda k: adhoc_type_to_type.get(k, k), filterfalse(str.isspace, union))
+        map(
+            lambda k: adhoc_type_to_type.get(k.lower(), k),
+            filterfalse(str.isspace, union),
+        )
     )
     pp({"union": union})
     literals = count_iter_items(
@@ -131,7 +134,7 @@ def _union_literal_from_sentence(sentence):
     elif literals:
         return "Literal[{}]".format(", ".join(union[:literals]))
     elif union:
-        return "Union[{}]".format(", ".join(union))
+        return "Union[{}]".format(", ".join(union)) if len(union) > 1 else union[0]
     else:
         return None
 

@@ -7,8 +7,8 @@ Parses these formats into the cdd_python common IR format:
  - [numpydoc docstring format](https://numpydoc.readthedocs.io/en/latest/format.html)
  - [Google's docstring format](https://google.github.io/styleguide/pyguide.html)
 """
-
 import ast
+import sys
 from ast import AST
 from collections import OrderedDict
 from copy import deepcopy
@@ -544,7 +544,11 @@ def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=Fal
 
         typ = parse_adhoc_doc_for_typ(_param["doc"])
         if typ is not None:
-            _param["typ"] = typ
+            try:
+                eval(typ, globals(), locals())
+                _param["typ"] = typ
+            except (NameError, SyntaxError) as e:
+                print(e, file=sys.stderr)
 
         if (
             _param["doc"].startswith(("(Optional)", "Optional"))
