@@ -32,7 +32,7 @@ class TestParseDocstringUtils(TestCase):
         deque(
             map(
                 lambda output_input: self.assertEqual(
-                    output_input[0], parse_adhoc_doc_for_typ(output_input[1])
+                    output_input[0], parse_adhoc_doc_for_typ(output_input[1], name="")
                 ),
                 (
                     (
@@ -56,23 +56,24 @@ class TestParseDocstringUtils(TestCase):
                         "int",
                         "Explicit `int64`-castable monotonic step value for this summary.",
                     ),
+                    (
+                        "bool",
+                        cdd.shared.docstring_parsers.parse_docstring(
+                            docstring_google_keras_tensorboard_return_str
+                        )["returns"]["return_type"]["typ"],
+                    ),
+                    (
+                        "Literal['auto', 'max', 'min']",
+                        "String. One of `{'auto', 'min', 'max'}`. In `'min'` mode,",
+                    ),
+                    (
+                        'Union[Literal["epoch"], bool, int]',
+                        '`"epoch"`, integer, or `False`.'
+                        'When set to `"epoch" the callback saves the checkpoint at the end of each epoch.',
+                    ),
                 ),
             ),
             maxlen=0,
-        )
-
-        self.assertEqual(
-            cdd.shared.docstring_parsers.parse_docstring(
-                docstring_google_keras_tensorboard_return_str
-            )["returns"]["return_type"]["typ"],
-            "bool",
-        )
-
-        self.assertEqual(
-            parse_adhoc_doc_for_typ(
-                "String. One of `{'auto', 'min', 'max'}`. In `'min'` mode,"
-            ),
-            "Literal['auto', 'max', 'min']",
         )
 
 

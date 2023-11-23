@@ -3,11 +3,13 @@ Docstring parse utils
 """
 
 import string
+from collections import Counter
 from functools import partial
 from itertools import filterfalse, takewhile
+from keyword import iskeyword
 from operator import contains, itemgetter
 
-from cdd.shared.pure_utils import count_iter_items, pp, sliding_window
+from cdd.shared.pure_utils import count_iter_items, sliding_window
 
 adhoc_type_to_type = {
     "bool": "bool",
@@ -68,7 +70,15 @@ def _union_literal_from_sentence(sentence):
             union[-1].append(ch)
         elif is_space:
             if union[-1]:
-                union[-1] = "".join(union[-1])
+                union[-1] = "".join(
+                    union[-1][:-1]
+                    if union[-1][-1] in frozenset((",", ";"))
+                    and (
+                        union[-1][0] in frozenset(string.digits + "'\"`")
+                        or union[-1][0].isidentifier()
+                    )
+                    else union[-1]
+                )
                 if union[-1] in frozenset(
                     ("or", "or,", "or;", "or:", "of", "of,", "of;", "of:")
                 ):
@@ -98,7 +108,6 @@ def _union_literal_from_sentence(sentence):
         union[-1] = "".join(
             union[-1][:-1] if union[-1][-1] in frozenset((".", ",")) else union[-1]
         )
-    # pp({"union": union})
     if len(union) > 1:
         candidate_type = next(
             map(
@@ -114,12 +123,31 @@ def _union_literal_from_sentence(sentence):
             return candidate_type
 
     union = sorted(
-        map(
-            lambda k: adhoc_type_to_type.get(k.lower(), k),
-            filterfalse(str.isspace, union),
+        frozenset(
+            map(
+                lambda k: adhoc_type_to_type.get(k.lower(), k),
+                filterfalse(str.isspace, union),
+            )
         )
     )
-    pp({"union": union})
+    # Sanity check, if the vars are not legit then exit now
+    # checks if each var is keyword or digit or quoted
+    if any(
+        filter(
+            lambda e: iskeyword(e)
+            or e.isdigit()
+            or (
+                # could take care and use a customer scanner to handle escaped quotes; but this hack for now
+                lambda counter: counter["'"] & 1 == 1
+                and counter["'"] > 0
+                or counter['"'] & 1 == 1
+                and counter['"'] > 0
+            )(Counter(e)),
+            union,
+        )
+    ):
+        return None
+
     literals = count_iter_items(
         takewhile(
             frozenset(string.digits + "'\"").__contains__,
@@ -139,7 +167,7 @@ def _union_literal_from_sentence(sentence):
         return None
 
 
-def parse_adhoc_doc_for_typ(doc):
+def parse_adhoc_doc_for_typ(doc, name):
     """
     Google's Keras and other frameworks have an adhoc syntax.
 
@@ -147,6 +175,9 @@ def parse_adhoc_doc_for_typ(doc):
 
     :param doc: Possibly ambiguous docstring for argument, that *might* hint as to the type
     :type doc: ```str```
+
+    :param name: Name of argument; useful for debugging and if the name hints as to the type
+    :type name: ```str```
 
     :return: The type (if determined) else `None`
     :rtype: ```Optional[str]```
@@ -164,6 +195,8 @@ def parse_adhoc_doc_for_typ(doc):
             or ch == "."
             and len(doc) > (i + 1)
             and doc[i + 1] in word_chars
+            # Make "bar" start the next sentence:    `foo`.bar
+            and (i - 1 == 0 or doc[i - 1] != "`")
         ):
             words[-1].append(ch)
         elif ch in frozenset((".", ";", ",")) or ch.isspace():
@@ -173,12 +206,19 @@ def parse_adhoc_doc_for_typ(doc):
                 sentence_ends = len(words)
             words.append([])
     words[-1] = "".join(words[-1])
+
+    candidate_type = next(
+        map(
+            adhoc_type_to_type.__getitem__,
+            filter(partial(contains, adhoc_type_to_type), words),
+        ),
+        None,
+    )
+
     fst_sentence = "".join(words[:sentence_ends])
     sentence = None
 
-    if words[0] == "Whether":
-        return "bool"
-
+    type_in_fst_sentence = adhoc_type_to_type.get(next(filterfalse(str.isspace, words)))
     if " or " in fst_sentence or " of " in fst_sentence:
         sentence = fst_sentence
     else:
@@ -209,17 +249,12 @@ def parse_adhoc_doc_for_typ(doc):
                 wrap_type_with = candidate_collection + "[{}]"
             sentence = sentence[fst_tick : sentence.rfind("`")]
 
-        candidate_type = _union_literal_from_sentence(sentence)
+        new_candidate_type = _union_literal_from_sentence(sentence)
+        if new_candidate_type is not None:
+            candidate_type = new_candidate_type
         if candidate_type is not None:
             return wrap_type_with.format(candidate_type)
 
-    candidate_type = next(
-        map(
-            adhoc_type_to_type.__getitem__,
-            filter(partial(contains, adhoc_type_to_type), words),
-        ),
-        None,
-    )
     if candidate_type is not None:
         return candidate_type
     elif "/" in words[2]:

@@ -7,6 +7,7 @@ Parses these formats into the cdd_python common IR format:
  - [numpydoc docstring format](https://numpydoc.readthedocs.io/en/latest/format.html)
  - [Google's docstring format](https://google.github.io/styleguide/pyguide.html)
 """
+
 import ast
 import sys
 from ast import AST
@@ -16,6 +17,7 @@ from functools import partial
 from itertools import chain, takewhile
 from operator import attrgetter, eq, le
 from typing import Dict, List, Tuple
+from typing import *
 
 from cdd.docstring.utils.emit_utils import interpolate_defaults
 from cdd.docstring.utils.parse_utils import parse_adhoc_doc_for_typ
@@ -542,7 +544,7 @@ def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=Fal
                 else _param["doc"]
             ).rstrip()
 
-        typ = parse_adhoc_doc_for_typ(_param["doc"])
+        typ = parse_adhoc_doc_for_typ(_param["doc"], name)
         if typ is not None:
             try:
                 eval(typ, globals(), locals())
@@ -556,7 +558,6 @@ def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=Fal
             and not _param["typ"].startswith("Optional[")
         ):
             _param["typ"] = "Optional[{typ}]".format(typ=_param["typ"])
-
     return name, _param
 
 

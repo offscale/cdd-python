@@ -11,8 +11,6 @@ from functools import partial
 from itertools import takewhile
 from operator import contains, eq
 
-from typing import *
-
 from cdd.shared.pure_utils import (
     PY_GTE_3_9,
     count_iter_items,
