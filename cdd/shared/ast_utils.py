@@ -176,7 +176,7 @@ def param2ast(param):
             expr_target=None,
             expr_annotation=None,
             value=None
-            if _param.get("default") is None
+            if _param.get("default") in (None, NoneStr)
             else set_value(_param["default"]),
         )
         # return Assign(
@@ -190,7 +190,14 @@ def param2ast(param):
         #     **maybe_type_comment
         # )
     elif needs_quoting(_param["typ"]):
-        val = quote(_param["default"]) if _param.get("default") else None
+        val = (
+            _param["default"]
+            if _param.get("default") in (None, NoneStr)
+            else quote(_param["default"])
+        )
+        if val in (None, NoneStr) and _param["typ"] == "str":
+            _param["typ"] = "Optional[Any]"
+
         return AnnAssign(
             annotation=Name(_param["typ"], Load())
             if _param["typ"] in simple_types
@@ -200,7 +207,7 @@ def param2ast(param):
             expr=None,
             expr_target=None,
             expr_annotation=None,
-            value=None if val is None else set_value(val),
+            value=None if val is None else set_value(None if val == NoneStr else val),
         )
     elif _param["typ"] in simple_types:
         return AnnAssign(
