@@ -110,7 +110,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
         ir["params"]["id"]["doc"] = "[PK] {}".format(ir["params"]["id"]["doc"])
         self.assertDictEqual(res, ir)
 
-    def test_generate_create_from_attr_staticmethod(self):
+    def test_generate_create_from_attr_staticmethod(self) -> None:
         """Tests that `generate_create_from_attr` staticmethod is correctly constructed"""
         run_ast_test(
             self,

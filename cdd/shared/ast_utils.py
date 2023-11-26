@@ -191,7 +191,7 @@ def param2ast(param):
         # )
     elif needs_quoting(_param["typ"]):
         val = (
-            _param["default"]
+            _param.get("default")
             if _param.get("default") in (None, NoneStr)
             else quote(_param["default"])
         )

@@ -257,7 +257,7 @@ def parse_adhoc_doc_for_typ(doc, name):
 
     if candidate_type is not None:
         return candidate_type
-    elif "/" in words[2]:
+    elif len(words) > 2 and "/" in words[2]:
         return "Union[{}]".format(",".join(sorted(words[2].split("/"))))
 
     return None

@@ -123,7 +123,7 @@ class TestUtilsForTests(TestCase):
         """
         self.assertEqual(
             remove_args_from_docstring(tensorboard_doc_str),
-            tensorboard_doc_str_no_args_str,
+            tensorboard_doc_str_no_args_str.rstrip(" "),
         )
 
 

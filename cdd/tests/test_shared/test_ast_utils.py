@@ -1269,7 +1269,7 @@ class TestAstUtils(TestCase):
             )
         )
 
-    def test_optimise_imports(self):
+    def test_optimise_imports(self) -> None:
         """Tests that `optimise_imports` deduplicates"""
         run_ast_test(
             self,
