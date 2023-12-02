@@ -31,13 +31,15 @@ def sqlalchemy_table(
     """
     Construct an `name = sqlalchemy.Table(name, metadata, Column(…), …)`
 
-    :param intermediate_repr: a dictionary of form
-        {  "name": Optional[str],
-           "type": Optional[str],
-           "doc": Optional[str],
-           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
-           "returns": Optional[OrderedDict[Literal['return_type'],
-                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :param intermediate_repr: a dictionary consistent with `IntermediateRepr`, defined as:
+        ParamVal = TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
+        IntermediateRepr = TypedDict("IntermediateRepr", {
+            "name": Optional[str],
+            "type": Optional[str],
+            "doc": Optional[str],
+            "params": OrderedDict[str, ParamVal],
+            "returns": Optional[OrderedDict[Literal["return_type"], ParamVal]],
+        })
     :type intermediate_repr: ```dict```
 
     :param name: name of binding + table
@@ -174,13 +176,15 @@ def sqlalchemy(
     """
     Construct an SQLAlchemy declarative class
 
-    :param intermediate_repr: a dictionary of form
-        {  "name": Optional[str],
-           "type": Optional[str],
-           "doc": Optional[str],
-           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
-           "returns": Optional[OrderedDict[Literal['return_type'],
-                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :param intermediate_repr: a dictionary consistent with `IntermediateRepr`, defined as:
+        ParamVal = TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
+        IntermediateRepr = TypedDict("IntermediateRepr", {
+            "name": Optional[str],
+            "type": Optional[str],
+            "doc": Optional[str],
+            "params": OrderedDict[str, ParamVal],
+            "returns": Optional[OrderedDict[Literal["return_type"], ParamVal]],
+        })
     :type intermediate_repr: ```dict```
 
     :param emit_repr: Whether to generate a `__repr__` method
@@ -324,13 +328,15 @@ def sqlalchemy_hybrid(
     - docs.sqlalchemy.org/en/14/orm/declarative_tables.html#declarative-with-imperative-table-a-k-a-hybrid-declarative
     - docs.sqlalchemy.org/en/20/orm/declarative_tables.html#declarative-with-imperative-table-a-k-a-hybrid-declarative
 
-    :param intermediate_repr: a dictionary of form
-        {  "name": Optional[str],
-           "type": Optional[str],
-           "doc": Optional[str],
-           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
-           "returns": Optional[OrderedDict[Literal['return_type'],
-                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :param intermediate_repr: a dictionary consistent with `IntermediateRepr`, defined as:
+        ParamVal = TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
+        IntermediateRepr = TypedDict("IntermediateRepr", {
+            "name": Optional[str],
+            "type": Optional[str],
+            "doc": Optional[str],
+            "params": OrderedDict[str, ParamVal],
+            "returns": Optional[OrderedDict[Literal["return_type"], ParamVal]],
+        })
     :type intermediate_repr: ```dict```
 
     :param emit_repr: Whether to generate a `__repr__` method

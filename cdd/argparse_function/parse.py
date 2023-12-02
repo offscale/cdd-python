@@ -43,13 +43,15 @@ def argparse_ast(
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
-    :return: a dictionary of form
-        {  "name": Optional[str],
-           "type": Optional[str],
-           "doc": Optional[str],
-           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
-           "returns": Optional[OrderedDict[Literal['return_type'],
-                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :return: a dictionary consistent with `IntermediateRepr`, defined as:
+        ParamVal = TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
+        IntermediateRepr = TypedDict("IntermediateRepr", {
+            "name": Optional[str],
+            "type": Optional[str],
+            "doc": Optional[str],
+            "params": OrderedDict[str, ParamVal],
+            "returns": Optional[OrderedDict[Literal["return_type"], ParamVal]],
+        })
     :rtype: ```dict```
     """
     assert isinstance(

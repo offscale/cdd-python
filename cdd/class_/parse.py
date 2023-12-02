@@ -17,6 +17,7 @@ from collections import OrderedDict, deque
 from functools import partial
 from itertools import filterfalse
 from operator import setitem
+from typing import Optional, TypedDict, Any, Literal
 
 import cdd.docstring.parse
 import cdd.function.parse
@@ -57,15 +58,18 @@ def class_(
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
-    :return: a dictionary of form
-        {  "name": Optional[str],
-           "type": Optional[str],
-           "doc": Optional[str],
-           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
-           "returns": Optional[OrderedDict[Literal['return_type'],
-                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :return: a dictionary consistent with `IntermediateRepr`, defined as:
+        ParamVal = TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
+        IntermediateRepr = TypedDict("IntermediateRepr", {
+            "name": Optional[str],
+            "type": Optional[str],
+            "doc": Optional[str],
+            "params": OrderedDict[str, ParamVal],
+            "returns": Optional[OrderedDict[Literal["return_type"], ParamVal]],
+        })
     :rtype: ```dict```
     """
+
     assert not isinstance(class_def, FunctionDef), "Expected not `FunctionDef`"
     is_supported_ast_node = isinstance(class_def, (Module, ClassDef))
     if not is_supported_ast_node and isinstance(class_def, type):
@@ -254,13 +258,15 @@ def _class_from_memory(
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
 
-    :return: a dictionary of form
-        {  "name": Optional[str],
-           "type": Optional[str],
-           "doc": Optional[str],
-           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
-           "returns": Optional[OrderedDict[Literal['return_type'],
-                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :return: a dictionary consistent with `IntermediateRepr`, defined as:
+        ParamVal = TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
+        IntermediateRepr = TypedDict("IntermediateRepr", {
+            "name": Optional[str],
+            "type": Optional[str],
+            "doc": Optional[str],
+            "params": OrderedDict[str, ParamVal],
+            "returns": Optional[OrderedDict[Literal["return_type"], ParamVal]],
+        })
     :rtype: ```dict```
     """
     ir = cdd.shared.parse.utils.parser_utils._inspect(
@@ -322,25 +328,29 @@ def _merge_inner_function(
     :param infer_type: Whether to try inferring the typ (from the default)
     :type infer_type: ```bool```
 
-    :param intermediate_repr: a dictionary of form
-        {  "name": Optional[str],
-           "type": Optional[str],
-           "doc": Optional[str],
-           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
-           "returns": Optional[OrderedDict[Literal['return_type'],
-                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :param intermediate_repr: a dictionary consistent with `IntermediateRepr`, defined as:
+        ParamVal = TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
+        IntermediateRepr = TypedDict("IntermediateRepr", {
+            "name": Optional[str],
+            "type": Optional[str],
+            "doc": Optional[str],
+            "params": OrderedDict[str, ParamVal],
+            "returns": Optional[OrderedDict[Literal["return_type"], ParamVal]],
+        })
     :type intermediate_repr: ```dict```
 
     :param merge_inner_function: Name of inner function to merge. If None, merge nothing.
     :type merge_inner_function: ```Optional[str]```
 
-    :return: a dictionary of form
-        {  "name": Optional[str],
-           "type": Optional[str],
-           "doc": Optional[str],
-           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
-           "returns": Optional[OrderedDict[Literal['return_type'],
-                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :return: a dictionary consistent with `IntermediateRepr`, defined as:
+        ParamVal = TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
+        IntermediateRepr = TypedDict("IntermediateRepr", {
+            "name": Optional[str],
+            "type": Optional[str],
+            "doc": Optional[str],
+            "params": OrderedDict[str, ParamVal],
+            "returns": Optional[OrderedDict[Literal["return_type"], ParamVal]],
+        })
     :rtype: ```dict```
     """
     function_def = next(

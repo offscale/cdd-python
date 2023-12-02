@@ -43,13 +43,15 @@ def argparse_function(
     """
     Convert to an argparse FunctionDef
 
-    :param intermediate_repr: a dictionary of form
-        {  "name": Optional[str],
-           "type": Optional[str],
-           "doc": Optional[str],
-           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
-           "returns": Optional[OrderedDict[Literal['return_type'],
-                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :param intermediate_repr: a dictionary consistent with `IntermediateRepr`, defined as:
+        ParamVal = TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
+        IntermediateRepr = TypedDict("IntermediateRepr", {
+            "name": Optional[str],
+            "type": Optional[str],
+            "doc": Optional[str],
+            "params": OrderedDict[str, ParamVal],
+            "returns": Optional[OrderedDict[Literal["return_type"], ParamVal]],
+        })
     :type intermediate_repr: ```dict```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text

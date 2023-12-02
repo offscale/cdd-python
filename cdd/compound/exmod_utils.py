@@ -387,13 +387,15 @@ def _emit_symbol(
     :param init_filepath: The filepath of the __init__.py file
     :type init_filepath: ```str```
 
-    :param intermediate_repr: a dictionary of form
-        {  "name": Optional[str],
-           "type": Optional[str],
-           "doc": Optional[str],
-           "params": OrderedDict[str, {'typ': str, 'doc': Optional[str], 'default': Any}]
-           "returns": Optional[OrderedDict[Literal['return_type'],
-                                           {'typ': str, 'doc': Optional[str], 'default': Any}),)]] }
+    :param intermediate_repr: a dictionary consistent with `IntermediateRepr`, defined as:
+        ParamVal = TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
+        IntermediateRepr = TypedDict("IntermediateRepr", {
+            "name": Optional[str],
+            "type": Optional[str],
+            "doc": Optional[str],
+            "params": OrderedDict[str, ParamVal],
+            "returns": Optional[OrderedDict[Literal["return_type"], ParamVal]],
+        })
     :type intermediate_repr: ```dict```
 
     :param isfile_emit_filename: Whether the emit filename exists

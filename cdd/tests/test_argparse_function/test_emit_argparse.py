@@ -15,6 +15,7 @@ import cdd.function.parse
 import cdd.json_schema.emit
 import cdd.shared.emit.file
 import cdd.sqlalchemy.emit
+from cdd.shared.pure_utils import pp
 from cdd.tests.mocks.argparse import (
     argparse_func_action_append_ast,
     argparse_func_ast,
@@ -68,12 +69,14 @@ class TestEmitArgparse(TestCase):
         Tests whether `to_argparse` produces `argparse_function_google_tf_tensorboard_ast`
                                     given `class_google_tf_tensorboard_ast`
         """
+        ir = cdd.class_.parse.class_(
+            class_google_keras_tensorboard_ast, merge_inner_function="__init__"
+        )
+        pp(ir)
         run_ast_test(
             self,
             gen_ast=cdd.argparse_function.emit.argparse_function(
-                cdd.class_.parse.class_(
-                    class_google_keras_tensorboard_ast, merge_inner_function="__init__"
-                ),
+                ir,
                 emit_default_doc=False,
                 word_wrap=False,
             ),

@@ -613,238 +613,223 @@ argparse_func_action_append_ast = fix_missing_locations(
 )
 
 argparse_function_google_keras_tensorboard_ast = FunctionDef(
+    name="set_cli_args",
     args=arguments(
-        args=[set_arg("argument_parser")],
-        defaults=[],
-        kw_defaults=[],
-        kwarg=None,
-        kwonlyargs=[],
         posonlyargs=[],
-        vararg=None,
-        arg=None,
+        args=[set_arg("argument_parser")],
+        kwonlyargs=[],
+        kw_defaults=[],
+        defaults=[],
     ),
     body=[
         _cli_doc_nosplit_expr,
         Assign(
             targets=[
                 Attribute(
-                    Name("argument_parser", Load()),
-                    "description",
-                    Store(),
+                    value=Name(id="argument_parser", ctx=Load()),
+                    attr="description",
+                    ctx=Store(),
                 )
             ],
-            lineno=None,
             value=set_value(tensorboard_doc_str_no_args_str),
+            lineno=None,
             expr=None,
             **maybe_type_comment
         ),
         Expr(
-            Call(
+            value=Call(
+                func=Attribute(
+                    value=Name(id="argument_parser", ctx=Load()),
+                    attr="add_argument",
+                    ctx=Load(),
+                ),
                 args=[set_value("--log_dir")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
-                ),
                 keywords=[
                     keyword(
                         arg="help",
                         value=set_value(
-                            "the path of the directory where to save the log files to be parsed by TensorBoard."
+                            "the path of the directory where to save the log files to be parsed by TensorBoard. e.g., `log_dir = os.path.join(working_dir, 'logs')`. This directory should not be reused by any other callbacks."
                         ),
-                        identifier=None,
                     ),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(arg="default", value=set_value("logs"), identifier=None),
+                    keyword(arg="required", value=set_value(True)),
+                    keyword(arg="default", value=set_value("logs")),
                 ],
-                expr=None,
-                expr_func=None,
             )
         ),
         Expr(
-            Call(
+            value=Call(
+                func=Attribute(
+                    value=Name(id="argument_parser", ctx=Load()),
+                    attr="add_argument",
+                    ctx=Load(),
+                ),
                 args=[set_value("--histogram_freq")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
-                ),
                 keywords=[
-                    keyword(arg="type", value=Name("int", Load()), identifier=None),
+                    keyword(arg="type", value=Name(id="int", ctx=Load())),
                     keyword(
                         arg="help",
                         value=set_value(
-                            "frequency (in epochs) at which to compute activation and weight histograms for the layers"
-                            " of the model. If set to 0, histograms won't be computed. Validation data (or split) must"
-                            " be specified for histogram visualizations."
+                            "frequency (in epochs) at which to compute weight histograms for the layers of the model. If set to 0, histograms won't be computed. Validation data (or split) must be specified for histogram visualizations."
                         ),
-                        identifier=None,
                     ),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(arg="default", value=set_value(0), identifier=None),
+                    keyword(arg="required", value=set_value(True)),
+                    keyword(arg="default", value=set_value(0)),
                 ],
-                expr=None,
-                expr_func=None,
             )
         ),
         Expr(
-            Call(
+            value=Call(
+                func=Attribute(
+                    value=Name(id="argument_parser", ctx=Load()),
+                    attr="add_argument",
+                    ctx=Load(),
+                ),
                 args=[set_value("--write_graph")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
-                ),
                 keywords=[
-                    keyword(arg="type", value=Name("bool", Load()), identifier=None),
+                    keyword(arg="type", value=Name(id="bool", ctx=Load())),
                     keyword(
                         arg="help",
                         value=set_value(
-                            "whether to visualize the graph in TensorBoard. The log file can become quite large when"
-                            " write_graph is set to True."
+                            "(Not supported at this time) Whether to visualize the graph in TensorBoard. Note that the log file can become quite large when `write_graph` is set to `True`."
                         ),
-                        identifier=None,
                     ),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(arg="default", value=set_value(True), identifier=None),
+                    keyword(arg="required", value=set_value(True)),
+                    keyword(arg="default", value=set_value(True)),
                 ],
-                expr=None,
-                expr_func=None,
             )
         ),
         Expr(
-            Call(
-                args=[set_value("--write_images")],
+            value=Call(
                 func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
+                    value=Name(id="argument_parser", ctx=Load()),
+                    attr="add_argument",
+                    ctx=Load(),
                 ),
+                args=[set_value("--write_images")],
                 keywords=[
-                    keyword(arg="type", value=Name("bool", Load()), identifier=None),
+                    keyword(arg="type", value=Name(id="bool", ctx=Load())),
                     keyword(
                         arg="help",
                         value=set_value(
                             "whether to write model weights to visualize as image in TensorBoard."
                         ),
-                        identifier=None,
                     ),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(arg="default", value=set_value(False), identifier=None),
+                    keyword(arg="required", value=set_value(True)),
+                    keyword(arg="default", value=set_value(False)),
                 ],
-                expr=None,
-                expr_func=None,
             )
         ),
         Expr(
-            Call(
+            value=Call(
+                func=Attribute(
+                    value=Name(id="argument_parser", ctx=Load()),
+                    attr="add_argument",
+                    ctx=Load(),
+                ),
+                args=[set_value("--write_steps_per_second")],
+                keywords=[
+                    keyword(arg="type", value=Name(id="bool", ctx=Load())),
+                    keyword(
+                        arg="help",
+                        value=set_value(
+                            "whether to log the training steps per second into TensorBoard. This supports both epoch and batch frequency logging."
+                        ),
+                    ),
+                    keyword(arg="required", value=set_value(True)),
+                    keyword(arg="default", value=set_value(False)),
+                ],
+            )
+        ),
+        Expr(
+            value=Call(
+                func=Attribute(
+                    value=Name(id="argument_parser", ctx=Load()),
+                    attr="add_argument",
+                    ctx=Load(),
+                ),
                 args=[set_value("--update_freq")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
-                ),
                 keywords=[
+                    keyword(
+                        arg="choices",
+                        value=Tuple(
+                            elts=[set_value("batch"), set_value("epoch")], ctx=Load()
+                        ),
+                    ),
                     keyword(
                         arg="help",
                         value=set_value(
-                            "`'batch'` or `'epoch'` or integer. When using `'batch'`, writes the losses and metrics "
-                            "to TensorBoard after each batch. The same applies for `'epoch'`. If using an integer, "
-                            "let's say `1000`, the callback will write the metrics and losses to TensorBoard every "
-                            "1000 batches. Note that writing too frequently to TensorBoard can slow down your training"
-                            "."
+                            '`"batch"` or `"epoch"` or integer. When using `"epoch"`, writes the losses and metrics to TensorBoard after every epoch. If using an integer, let\'s say `1000`, all metrics and losses (including custom ones added by `Model.compile`) will be logged to TensorBoard every 1000 batches. `"batch"` is a synonym for 1, meaning that they will be written every batch. Note however that writing too frequently to TensorBoard can slow down your training, especially when used with distribution strategies as it will incur additional synchronization overhead. Batch-level summary writing is also available via `train_step` override. Please see [TensorBoard Scalars tutorial]( https://www.tensorflow.org/tensorboard/scalars_and_keras#batch-level_logging)  # noqa: E501 for more details.'
                         ),
-                        identifier=None,
                     ),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(arg="default", value=set_value("epoch"), identifier=None),
+                    keyword(arg="required", value=set_value(True)),
+                    keyword(arg="default", value=set_value("epoch")),
                 ],
-                expr=None,
-                expr_func=None,
             )
         ),
         Expr(
-            Call(
+            value=Call(
+                func=Attribute(
+                    value=Name(id="argument_parser", ctx=Load()),
+                    attr="add_argument",
+                    ctx=Load(),
+                ),
                 args=[set_value("--profile_batch")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
-                ),
                 keywords=[
-                    keyword(arg="type", value=Name("int", Load()), identifier=None),
+                    keyword(arg="type", value=Name(id="int", ctx=Load())),
                     keyword(
                         arg="help",
                         value=set_value(
-                            "Profile the batch(es) to sample compute characteristics. profile_batch must be a"
-                            " non-negative integer or a tuple of integers. A pair of positive integers signify a range"
-                            " of batches to profile. By default, it will profile the second batch. Set profile_batch=0"
-                            " to disable profiling."
+                            "(Not supported at this time) Profile the batch(es) to sample compute characteristics. profile_batch must be a non-negative integer or a tuple of integers. A pair of positive integers signify a range of batches to profile. By default, profiling is disabled."
                         ),
-                        identifier=None,
                     ),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(arg="default", value=set_value(2), identifier=None),
+                    keyword(arg="required", value=set_value(True)),
+                    keyword(arg="default", value=set_value(0)),
                 ],
-                expr=None,
-                expr_func=None,
             )
         ),
         Expr(
-            Call(
+            value=Call(
+                func=Attribute(
+                    value=Name(id="argument_parser", ctx=Load()),
+                    attr="add_argument",
+                    ctx=Load(),
+                ),
                 args=[set_value("--embeddings_freq")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
-                ),
                 keywords=[
-                    keyword(arg="type", value=Name("int", Load()), identifier=None),
+                    keyword(arg="type", value=Name(id="int", ctx=Load())),
                     keyword(
                         arg="help",
                         value=set_value(
-                            "frequency (in epochs) at which embedding layers will be visualized. "
-                            "If set to 0, embeddings won't be visualized."
+                            "frequency (in epochs) at which embedding layers will be visualized. If set to 0, embeddings won't be visualized."
                         ),
-                        identifier=None,
                     ),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(arg="default", value=set_value(0), identifier=None),
+                    keyword(arg="required", value=set_value(True)),
+                    keyword(arg="default", value=set_value(0)),
                 ],
-                expr=None,
-                expr_func=None,
             )
         ),
         Expr(
-            Call(
-                args=[set_value("--embeddings_metadata")],
+            value=Call(
                 func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
+                    value=Name(id="argument_parser", ctx=Load()),
+                    attr="add_argument",
+                    ctx=Load(),
                 ),
+                args=[set_value("--embeddings_metadata")],
                 keywords=[
                     keyword(
                         arg="help",
                         value=set_value(
-                            "a dictionary which maps layer name to a file name in which metadata for this"
-                            " embedding layer is saved. See the "
-                            "[details]( https://www.tensorflow.org/how_tos/embedding_viz/#metadata_optional) about"
-                            " metadata files format. In case if the same metadata file is used for all embedding"
-                            " layers, string can be passed."
+                            "Dictionary which maps embedding layer names to the filename of a file in which to save metadata for the embedding layer. In case the same metadata file is to be used for all embedding layers, a single filename can be passed."
                         ),
-                        identifier=None,
-                    ),
+                    )
                 ],
-                expr=None,
-                expr_func=None,
             )
         ),
-        Return(value=Name("argument_parser", Load()), expr=None),
+        Return(value=Name(id="argument_parser", ctx=Load())),
     ],
     decorator_list=[],
     type_params=[],
-    name="set_cli_args",
     returns=None,
     arguments_args=None,
     identifier_name=None,
@@ -874,12 +859,12 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
                     Store(),
                 )
             ],
-            lineno=None,
             value=set_value(
                 deindent(
                     remove_args_from_docstring(class_torch_nn_l1loss_docstring_str), 1
                 )
             ),
+            lineno=None,
             expr=None,
             **maybe_type_comment
         ),
