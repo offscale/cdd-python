@@ -631,7 +631,7 @@ argparse_function_google_keras_tensorboard_ast = FunctionDef(
                     ctx=Store(),
                 )
             ],
-            value=set_value(tensorboard_doc_str_no_args_str),
+            value=set_value(tensorboard_doc_str_no_args_str.rstrip(" ")),
             lineno=None,
             expr=None,
             **maybe_type_comment

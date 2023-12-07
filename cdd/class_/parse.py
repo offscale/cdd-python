@@ -17,7 +17,6 @@ from collections import OrderedDict, deque
 from functools import partial
 from itertools import filterfalse
 from operator import setitem
-from typing import Optional, TypedDict, Any, Literal
 
 import cdd.docstring.parse
 import cdd.function.parse
