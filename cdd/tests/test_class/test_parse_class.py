@@ -88,11 +88,23 @@ class TestParseClass(TestCase):
         )
         ir = cdd.class_.parse.class_(Adadelta)
         del ir["_internal"]
+        # pp(ir)
         # self.assertDictEqual(ir, docstring_google_keras_adadelta_ir)
+        self.assertEqual(
+            *map(
+                itemgetter("doc"),
+                (
+                    ir,
+                    docstring_google_keras_adadelta_function_ir,
+                ),
+            )
+        )
         self.assertDictEqual(
             ir,
             docstring_google_keras_adadelta_function_ir,
         )
+
+    maxDiff = None
 
     def test_from_class_and_function(self) -> None:
         """

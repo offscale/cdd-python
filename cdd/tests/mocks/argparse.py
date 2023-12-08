@@ -648,7 +648,9 @@ argparse_function_google_keras_tensorboard_ast = FunctionDef(
                     keyword(
                         arg="help",
                         value=set_value(
-                            "the path of the directory where to save the log files to be parsed by TensorBoard. e.g., `log_dir = os.path.join(working_dir, 'logs')`. This directory should not be reused by any other callbacks."
+                            "the path of the directory where to save the log files to be parsed by TensorBoard. "
+                            "e.g., `log_dir = os.path.join(working_dir, 'logs')`. "
+                            "This directory should not be reused by any other callbacks."
                         ),
                     ),
                     keyword(arg="required", value=set_value(True)),

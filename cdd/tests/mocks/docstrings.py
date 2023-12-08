@@ -233,7 +233,6 @@ docstring_google_keras_adadelta = (
     "          training. Alternately, `keras.optimizers.LossScaleOptimizer` will",
     "          automatically set a loss scale factor.",
     "",
-    "",
     "    Reference:",
     "",
     "    - [Zeiler, 2012](http://arxiv.org/abs/1212.5701)",

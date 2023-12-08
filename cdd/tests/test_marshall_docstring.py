@@ -287,6 +287,8 @@ class TestMarshallDocstring(TestCase):
             docstring_google_keras_adadelta_ir,
         )
 
+    maxDiff = None
+
     def test_from_docstring_google_keras_lambda_callback_str(self) -> None:
         """
         Tests whether `parse_docstring` produces the same IR doc
