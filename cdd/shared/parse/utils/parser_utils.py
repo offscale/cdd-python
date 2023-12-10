@@ -21,6 +21,7 @@ from cdd.class_.utils.parse_utils import get_source
 from cdd.shared.ast_utils import get_value
 from cdd.shared.docstring_parsers import _set_name_and_type
 from cdd.shared.pure_utils import lstrip_namespace, none_types, rpartial, simple_types
+from cdd.shared.types import IntermediateRepr
 
 lstrip_typings = partial(lstrip_namespace, namespaces=("typings.", "_extensions."))
 
@@ -273,7 +274,7 @@ def _inspect(obj, name, parse_original_whitespace, word_wrap):
     #     )
 
     is_function = isfunction(obj)
-    ir = (
+    ir: IntermediateRepr = (
         cdd.docstring.parse.docstring(
             doc,
             emit_default_doc=is_function,

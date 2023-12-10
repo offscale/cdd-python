@@ -23,6 +23,7 @@ import cdd.shared.emit.file
 import cdd.sqlalchemy.emit
 from cdd.shared.ast_utils import get_function_type, set_value
 from cdd.shared.pure_utils import none_types, rpartial, tab
+from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.classes import class_squared_hinge_config_ast
 from cdd.tests.mocks.docstrings import (
     docstring_header_str,
@@ -100,7 +101,7 @@ class TestEmitFunction(TestCase):
             )
         )
 
-        ir = cdd.function.parse.function(function_def)
+        ir: IntermediateRepr = cdd.function.parse.function(function_def)
         gen_ast = reindent_docstring(
             cdd.function.emit.function(
                 ir,
@@ -209,7 +210,9 @@ class TestEmitFunction(TestCase):
         - __call__
         """
 
-        gold_ir = cdd.class_.parse.class_(class_squared_hinge_config_ast)
+        gold_ir: IntermediateRepr = cdd.class_.parse.class_(
+            class_squared_hinge_config_ast
+        )
         gold_ir.update(
             {
                 key: OrderedDict(
@@ -230,7 +233,7 @@ class TestEmitFunction(TestCase):
             }
         )
 
-        gen_ir = cdd.function.parse.function(
+        gen_ir: IntermediateRepr = cdd.function.parse.function(
             ast.parse(function_google_tf_squared_hinge_str).body[0],
             infer_type=True,
             word_wrap=False,

@@ -7,7 +7,8 @@ from copy import deepcopy
 
 from cdd.shared.ast_utils import NoneStr
 from cdd.shared.defaults_utils import remove_defaults_from_intermediate_repr
-from cdd.shared.pure_utils import deindent, paren_wrap_code
+from cdd.shared.pure_utils import deindent, paren_wrap_code, tab
+from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.classes import (
     class_torch_nn_l1loss_docstring_str,
     class_torch_nn_one_cycle_lr_docstring_str,
@@ -25,7 +26,7 @@ from cdd.tests.mocks.docstrings import (
 )
 from cdd.tests.utils_for_tests import remove_args_from_docstring
 
-class_google_keras_tensorboard_ir = {
+class_google_keras_tensorboard_ir: IntermediateRepr = {
     "doc": tensorboard_doc_str_no_args_str,
     "name": "TensorBoard",
     "params": OrderedDict(
@@ -127,7 +128,7 @@ class_google_keras_tensorboard_ir = {
     "type": "static",
 }
 
-class_torch_nn_l1loss_ir = {
+class_torch_nn_l1loss_ir: IntermediateRepr = {
     "doc": deindent(remove_args_from_docstring(class_torch_nn_l1loss_docstring_str), 1),
     "name": "L1Loss",
     "params": OrderedDict(
@@ -182,7 +183,7 @@ class_torch_nn_l1loss_ir = {
     "type": "static",
 }
 
-class_torch_nn_one_cycle_lr_ir = {
+class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
     "doc": remove_args_from_docstring(class_torch_nn_one_cycle_lr_docstring_str),
     "name": "OneCycleLR",
     "params": OrderedDict(
@@ -333,7 +334,148 @@ class_torch_nn_one_cycle_lr_ir = {
 }
 
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/optimizer_v2/adadelta.py#L27-L62
-docstring_google_keras_adadelta_merged_init_ir = {
+docstring_google_keras_adadelta_ir: IntermediateRepr = {
+    "doc": remove_args_from_docstring(docstring_google_keras_adadelta_str) + tab,
+    "name": None,
+    "params": OrderedDict(
+        (
+            (
+                "learning_rate",
+                {
+                    "default": 0.001,
+                    "doc": "A float, a "
+                    "`keras.optimizers.schedules.LearningRateSchedule` "
+                    "instance, or a callable that takes no arguments and "
+                    "returns the actual value to use. The learning rate. "
+                    "Defaults to `0.001`. Note that `Adadelta` tends to "
+                    "benefit from higher initial learning rate values "
+                    "compared to other optimizers. To match the exact "
+                    "form in the original paper, use 1.0.",
+                    "typ": "float",
+                },
+            ),
+            (
+                "rho",
+                {
+                    "default": 0.95,
+                    "doc": "A floating point value. The decay rate. Defaults to "
+                    "`0.95`.",
+                    "typ": "float",
+                },
+            ),
+            (
+                "epsilon",
+                {
+                    "default": NoneStr,
+                    "doc": "Small floating point value for maintaining numerical "
+                    "stability.",
+                },
+            ),
+            (
+                "name",
+                {
+                    "default": NoneStr,
+                    "doc": "String. The name to use for momentum accumulator "
+                    "weights created by the optimizer.",
+                },
+            ),
+            (
+                "weight_decay",
+                {
+                    "default": NoneStr,
+                    "doc": "Float. If set, weight decay is applied.",
+                },
+            ),
+            (
+                "clipnorm",
+                {
+                    "default": NoneStr,
+                    "doc": "Float. If set, the gradient of each weight is "
+                    "individually clipped so that its norm is no higher "
+                    "than this value.",
+                },
+            ),
+            (
+                "clipvalue",
+                {
+                    "default": NoneStr,
+                    "doc": "Float. If set, the gradient of each weight is "
+                    "clipped to be no higher than this value.",
+                },
+            ),
+            (
+                "global_clipnorm",
+                {
+                    "default": NoneStr,
+                    "doc": "Float. If set, the gradient of all weights is "
+                    "clipped so that their global norm is no higher than "
+                    "this value.",
+                },
+            ),
+            (
+                "use_ema",
+                {
+                    "default": False,
+                    "doc": "Boolean, defaults to False. If True, exponential "
+                    "moving average (EMA) is applied. EMA consists of "
+                    "computing an exponential moving average of the "
+                    "weights of the model (as the weight values change "
+                    "after each training batch), and periodically "
+                    "overwriting the weights with their moving average.",
+                    "typ": "bool",
+                },
+            ),
+            (
+                "ema_momentum",
+                {
+                    "default": 0.99,
+                    "doc": "Float, defaults to 0.99. Only used if "
+                    "`use_ema=True`. This is the momentum to use when "
+                    "computing the EMA of the model's weights: "
+                    "`new_average = ema_momentum * old_average + (1 - "
+                    "ema_momentum) * current_variable_value`.",
+                    "typ": "float",
+                },
+            ),
+            (
+                "ema_overwrite_frequency",
+                {
+                    "default": NoneStr,
+                    "doc": "Int or None, defaults to None. Only used if "
+                    "`use_ema=True`. Every `ema_overwrite_frequency` "
+                    "steps of iterations, we overwrite the model variable "
+                    "by its moving average. If None, the optimizer does "
+                    "not overwrite model variables in the middle of "
+                    "training, and you need to explicitly overwrite the "
+                    "variables at the end of training by calling "
+                    "`optimizer.finalize_variable_values()` (which "
+                    "updates the model variables in-place). When using "
+                    "the built-in `fit()` training loop, this happens "
+                    "automatically after the last epoch, and you don't "
+                    "need to do anything.",
+                },
+            ),
+            (
+                "loss_scale_factor",
+                {
+                    "default": NoneStr,
+                    "doc": "Float or `None`. If a float, the scale factor will "
+                    "be multiplied the loss before computing gradients, "
+                    "and the inverse of the scale factor will be "
+                    "multiplied by the gradients before updating "
+                    "variables. Useful for preventing underflow during "
+                    "mixed precision training. Alternately, "
+                    "`keras.optimizers.LossScaleOptimizer` will "
+                    "automatically set a loss scale factor.",
+                    "typ": "float",
+                },
+            ),
+        )
+    ),
+    "returns": None,
+    "type": "static",
+}
+docstring_google_keras_adadelta_merged_init_ir: IntermediateRepr = {
     "doc": remove_args_from_docstring(docstring_google_keras_adadelta_str),
     "name": None,
     "params": OrderedDict(
@@ -396,7 +538,7 @@ docstring_google_keras_adadelta_merged_init_ir = {
 }
 
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/callbacks.py#L2792-L2840
-docstring_google_keras_lambda_callback_ir = {
+docstring_google_keras_lambda_callback_ir: IntermediateRepr = {
     "doc": remove_args_from_docstring(docstring_google_keras_lambda_callback_str),
     "name": None,
     "params": OrderedDict(
@@ -417,7 +559,7 @@ docstring_google_keras_lambda_callback_ir = {
 }
 
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/optimizer_v2/adadelta.py#L27-L62
-docstring_google_keras_adadelta_function_ir = {
+docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
     "name": "Adadelta",
     "doc": deindent(remove_args_from_docstring(docstring_google_keras_adadelta_str)),
     "params": OrderedDict(
@@ -565,7 +707,7 @@ docstring_google_keras_adadelta_function_ir = {
 }
 
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/optimizer_v2/adam.py#L32-L99
-docstring_google_keras_adam_ir = {
+docstring_google_keras_adam_ir: IntermediateRepr = {
     "doc": remove_args_from_docstring(docstring_google_keras_adam_str),
     "name": None,
     "params": OrderedDict(
@@ -668,7 +810,7 @@ docstring_google_keras_adam_ir = {
 }
 
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/losses.py#L862-L875
-docstring_google_keras_squared_hinge_ir = {
+docstring_google_keras_squared_hinge_ir: IntermediateRepr = {
     "doc": docstring_google_keras_squared_hinge_no_args_doc_str,
     "name": None,
     "params": OrderedDict(
@@ -712,7 +854,7 @@ docstring_google_keras_squared_hinge_ir = {
     "type": "static",
 }
 
-docstring_google_pytorch_lbfgs_ir = {
+docstring_google_pytorch_lbfgs_ir: IntermediateRepr = {
     "doc": remove_args_from_docstring(docstring_google_pytorch_lbfgs_str).strip(),
     "name": None,
     "params": OrderedDict(
@@ -771,7 +913,7 @@ docstring_google_pytorch_lbfgs_ir = {
 
 start_args_idx = docstring_keras_rmsprop_class_str.find("  Args:\n")
 end_args_idx = docstring_keras_rmsprop_class_str.find("\n\n", start_args_idx) + 2
-docstring_keras_rmsprop_class_ir = {
+docstring_keras_rmsprop_class_ir: IntermediateRepr = {
     "doc": docstring_keras_rmsprop_class_str[:start_args_idx]
     + docstring_keras_rmsprop_class_str[end_args_idx:],
     "name": None,
@@ -863,7 +1005,7 @@ del start_args_idx, end_args_idx
 start_args_idx = docstring_keras_rmsprop_method_str.find("  Args:\n")
 end_args_idx = docstring_keras_rmsprop_method_str.find("\n\n", start_args_idx + 1) + 4
 
-docstring_keras_rmsprop_method_ir = {
+docstring_keras_rmsprop_method_ir: IntermediateRepr = {
     "doc": docstring_keras_rmsprop_method_str[:start_args_idx]
     + docstring_keras_rmsprop_method_str[end_args_idx:],
     "name": None,
@@ -956,7 +1098,7 @@ docstring_keras_rmsprop_method_ir = {
 
 del start_args_idx, end_args_idx
 
-function_adder_ir = {
+function_adder_ir: IntermediateRepr = {
     "doc": "",
     "name": "add_6_5",
     "params": OrderedDict(
@@ -979,7 +1121,7 @@ function_adder_ir = {
     "type": "static",
 }
 
-function_google_tf_ops_losses__safe_mean_ir = {
+function_google_tf_ops_losses__safe_mean_ir: IntermediateRepr = {
     "doc": "Computes a safe mean of the losses.",
     "name": "_safe_mean",
     "params": OrderedDict(
@@ -1013,7 +1155,7 @@ function_google_tf_ops_losses__safe_mean_ir = {
     "type": "static",
 }
 
-method_complex_args_variety_ir = {
+method_complex_args_variety_ir: IntermediateRepr = {
     "doc": "Call cliff",
     "name": "call_cliff",
     "params": OrderedDict(
@@ -1063,7 +1205,7 @@ method_complex_args_variety_ir = {
     "type": "self",
 }
 
-pydantic_ir = {
+pydantic_ir: IntermediateRepr = {
     "doc": "",
     "name": "Cat",
     "params": OrderedDict(
@@ -1076,7 +1218,7 @@ pydantic_ir = {
     "type": "static",
 }
 
-intermediate_repr_extra_colons = {
+intermediate_repr_extra_colons: IntermediateRepr = {
     "name": None,
     "params": OrderedDict(
         (
@@ -1091,7 +1233,7 @@ intermediate_repr_extra_colons = {
     "type": "static",
 }
 
-intermediate_repr_no_default_doc = {
+intermediate_repr_no_default_doc: IntermediateRepr = {
     "name": None,
     "type": "static",
     "doc": docstring_header_no_nl_str,
@@ -1191,7 +1333,7 @@ intermediate_repr_empty = {
     "returns": OrderedDict(),
 }
 
-intermediate_repr_only_return_type = {
+intermediate_repr_only_return_type: IntermediateRepr = {
     "name": None,
     "type": "static",
     "doc": "Some comment",
@@ -1212,7 +1354,7 @@ intermediate_repr_only_return_type = {
     ),
 }
 
-intermediate_repr = {
+intermediate_repr: IntermediateRepr = {
     "name": None,
     "type": "static",
     "doc": docstring_header_no_nl_str,
@@ -1279,11 +1421,13 @@ intermediate_repr = {
     ),
 }
 
-intermediate_repr_no_default_doc_or_prop = remove_defaults_from_intermediate_repr(
-    deepcopy(intermediate_repr), emit_default_prop=False
+intermediate_repr_no_default_doc_or_prop: IntermediateRepr = (
+    remove_defaults_from_intermediate_repr(
+        deepcopy(intermediate_repr), emit_default_prop=False
+    )
 )
 
-intermediate_repr_node_pk = {
+intermediate_repr_node_pk: IntermediateRepr = {
     "doc": "",
     "name": "node",
     "params": OrderedDict(

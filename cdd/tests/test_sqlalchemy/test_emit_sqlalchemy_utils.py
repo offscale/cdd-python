@@ -34,6 +34,7 @@ from cdd.compound.openapi.utils.emit_utils import (
 from cdd.shared.ast_utils import set_value
 from cdd.shared.pure_utils import rpartial
 from cdd.shared.source_transformer import to_code
+from cdd.shared.types import IntermediateRepr
 from cdd.sqlalchemy.utils.shared_utils import update_args_infer_typ_sqlalchemy
 from cdd.tests.mocks.ir import (
     intermediate_repr_empty,
@@ -71,7 +72,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
             intermediate_repr_no_default_sql_doc,
         )
 
-        ir = deepcopy(intermediate_repr_empty)
+        ir: IntermediateRepr = deepcopy(intermediate_repr_empty)
         ir["params"] = OrderedDict((("foo", {"doc": "My doc", "typ": "str"}),))
         res = ensure_has_primary_key(deepcopy(ir))
         ir["params"]["id"] = {
@@ -99,7 +100,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
         """
         Tests `cdd.emit.sqlalchemy.utils.sqlalchemy_utils.ensure_has_primary_key`
         """
-        ir = deepcopy(intermediate_repr_empty)
+        ir: IntermediateRepr = deepcopy(intermediate_repr_empty)
         ir["params"] = OrderedDict(
             (
                 ("id", {"doc": "My doc", "typ": "str"}),

@@ -6,6 +6,7 @@ import ast
 from unittest import TestCase
 
 import cdd.pydantic.parse
+from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.ir import pydantic_ir
 from cdd.tests.mocks.pydantic import pydantic_class_cls_def, pydantic_class_str
 from cdd.tests.utils_for_tests import run_ast_test, unittest_main
@@ -39,7 +40,7 @@ class TestParsePydantic(TestCase):
         Tests whether `pydantic` produces `pydantic_ir`
               from `pydantic_class_cls_def`
         """
-        ir = cdd.pydantic.parse.pydantic(pydantic_class_cls_def)
+        ir: IntermediateRepr = cdd.pydantic.parse.pydantic(pydantic_class_cls_def)
         del ir["_internal"]  # Not needed for this test
         self.assertDictEqual(ir, pydantic_ir)
 

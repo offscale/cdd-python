@@ -22,6 +22,7 @@ from cdd.shared.conformance import (
     _get_name_from_namespace,
     ground_truth,
 )
+from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.argparse import argparse_func_ast
 from cdd.tests.mocks.classes import class_ast_no_default_doc
 from cdd.tests.mocks.ir import intermediate_repr
@@ -146,7 +147,7 @@ class TestConformance(TestCase):
     def test_ground_truth_changes(self) -> None:
         """Time for a new master."""
 
-        ir = deepcopy(intermediate_repr)
+        ir: IntermediateRepr = deepcopy(intermediate_repr)
         ir["returns"]["return_type"]["typ"] = "Tuple[np.ndarray, np.ndarray]"
 
         with TemporaryDirectory() as tempdir:

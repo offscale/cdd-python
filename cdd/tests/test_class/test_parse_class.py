@@ -12,6 +12,7 @@ import cdd.argparse_function.emit
 import cdd.class_.parse
 import cdd.json_schema.parse
 from cdd.shared.ast_utils import RewriteAtQuery
+from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.classes import (
     class_ast,
     class_google_keras_tensorboard_ast,
@@ -53,7 +54,7 @@ class TestParseClass(TestCase):
         Tests whether `class_` produces `intermediate_repr_no_default_doc`
               from `class_ast`
         """
-        ir = cdd.class_.parse.class_(class_ast)
+        ir: IntermediateRepr = cdd.class_.parse.class_(class_ast)
         del ir["_internal"]  # Not needed for this test
         ir["name"] = None
         self.assertDictEqual(ir, intermediate_repr_no_default_doc)
@@ -66,7 +67,7 @@ class TestParseClass(TestCase):
         class A(object):
             """A is one boring class"""
 
-        ir = cdd.class_.parse.class_(A)
+        ir: IntermediateRepr = cdd.class_.parse.class_(A)
         del ir["_internal"]  # Not needed for this test
         self.assertDictEqual(
             ir,
@@ -86,7 +87,7 @@ class TestParseClass(TestCase):
             inspectable_compile(docstring_google_keras_adadelta_function_str),
             "Adadelta",
         )
-        ir = cdd.class_.parse.class_(Adadelta)
+        ir: IntermediateRepr = cdd.class_.parse.class_(Adadelta)
         del ir["_internal"]
         # pp(ir)
         # self.assertDictEqual(ir, docstring_google_keras_adadelta_ir)
@@ -119,7 +120,7 @@ class TestParseClass(TestCase):
             gold=ast.parse(class_google_keras_tensorboard_str).body[0],
         )
 
-        parsed_ir = cdd.class_.parse.class_(
+        parsed_ir: IntermediateRepr = cdd.class_.parse.class_(
             class_google_keras_tensorboard_ast,
             merge_inner_function="__init__",
             parse_original_whitespace=True,
@@ -140,7 +141,7 @@ class TestParseClass(TestCase):
         with the inner function parameter defaults
         """
 
-        parsed_ir = cdd.class_.parse.class_(
+        parsed_ir: IntermediateRepr = cdd.class_.parse.class_(
             RewriteAtQuery,
             merge_inner_function="__init__",
             infer_type=True,
@@ -195,7 +196,7 @@ class TestParseClass(TestCase):
             gold=ast.parse(class_torch_nn_l1loss_str).body[0],
         )
 
-        parsed_ir = cdd.class_.parse.class_(
+        parsed_ir: IntermediateRepr = cdd.class_.parse.class_(
             class_torch_nn_l1loss_ast,
             merge_inner_function="__init__",
             infer_type=True,
@@ -219,7 +220,7 @@ class TestParseClass(TestCase):
             gold=ast.parse(class_torch_nn_one_cycle_lr_str).body[0],
         )
 
-        parsed_ir = cdd.class_.parse.class_(
+        parsed_ir: IntermediateRepr = cdd.class_.parse.class_(
             class_torch_nn_one_cycle_lr_ast,
             merge_inner_function="__init__",
             infer_type=True,
@@ -242,7 +243,7 @@ class TestParseClass(TestCase):
             """A is one boring class"""
 
         with patch("inspect.getsourcefile", lambda _: None):
-            ir = cdd.class_.parse._class_from_memory(
+            ir: IntermediateRepr = cdd.class_.parse._class_from_memory(
                 A, A.__name__, False, False, False, False
             )
         self.assertDictEqual(
@@ -259,7 +260,7 @@ class TestParseClass(TestCase):
         """
         Test class_reduction_v2 produces correct IR
         """
-        ir = cdd.class_.parse.class_(class_reduction_v2)
+        ir: IntermediateRepr = cdd.class_.parse.class_(class_reduction_v2)
         self.assertEqual(
             ir["params"],
             OrderedDict(

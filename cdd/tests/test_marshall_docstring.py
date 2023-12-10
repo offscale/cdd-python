@@ -14,6 +14,7 @@ import cdd.shared.emit
 import cdd.shared.emit.utils.emitter_utils
 from cdd.shared.ast_utils import set_value
 from cdd.shared.docstring_parsers import _set_name_and_type, parse_docstring
+from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.docstrings import (
     docstring_extra_colons_str,
     docstring_google_keras_adadelta_str,
@@ -68,7 +69,7 @@ class TestMarshallDocstring(TestCase):
         """
         Tests whether `parse_docstring` produces `docstring_str_no_default_doc`
               from `docstring_str_no_default_doc`"""
-        ir = parse_docstring(
+        ir: IntermediateRepr = parse_docstring(
             docstring_no_default_doc_str,
             emit_default_doc=False,
             emit_default_prop=False,
@@ -239,7 +240,7 @@ class TestMarshallDocstring(TestCase):
         Tests whether `parse_docstring` produces `intermediate_repr_no_default_doc`
               from `docstring_google_str`
         """
-        ir = parse_docstring(docstring_google_str)
+        ir: IntermediateRepr = parse_docstring(docstring_google_str)
         _intermediate_repr_no_default_doc = deepcopy(
             intermediate_repr_no_default_with_nones_doc
         )
@@ -286,8 +287,6 @@ class TestMarshallDocstring(TestCase):
             ),
             docstring_google_keras_adadelta_ir,
         )
-
-    maxDiff = None
 
     def test_from_docstring_google_keras_lambda_callback_str(self) -> None:
         """

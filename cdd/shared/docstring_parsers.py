@@ -43,6 +43,7 @@ from cdd.shared.pure_utils import (
     update_d,
 )
 from cdd.shared.source_transformer import to_code
+from cdd.shared.types import IntermediateRepr
 
 
 def parse_docstring(
@@ -96,7 +97,7 @@ def parse_docstring(
     )
     style = derive_docstring_format(docstring)
 
-    ir = {
+    ir: IntermediateRepr = {
         "name": None,
         "type": "static",
         # "_internal": {"_style": style.value},

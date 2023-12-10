@@ -67,7 +67,7 @@ def argparse_ast(
         "doc": "",
         "params": OrderedDict(),
     }
-    ir = parse_docstring(
+    ir: IntermediateRepr = parse_docstring(
         doc_string,
         word_wrap=word_wrap,
         emit_default_doc=True,

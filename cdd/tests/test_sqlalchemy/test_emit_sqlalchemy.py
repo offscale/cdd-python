@@ -15,6 +15,7 @@ import cdd.function.emit
 import cdd.json_schema.emit
 import cdd.shared.emit.file
 import cdd.sqlalchemy.emit
+from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.ir import (
     intermediate_repr_empty,
     intermediate_repr_no_default_sql_doc,
@@ -49,7 +50,7 @@ class TestEmitSqlAlchemy(TestCase):
         Tests that `emit.sqlalchemy_table` with `intermediate_repr_no_default_sql_doc` produces `config_tbl_ast`
         """
         for class_name in (None, "Config"):
-            ir = deepcopy(intermediate_repr_no_default_sql_doc)
+            ir: IntermediateRepr = deepcopy(intermediate_repr_no_default_sql_doc)
             ir["name"] = "Config"
             gen_ast = cdd.sqlalchemy.emit.sqlalchemy_hybrid(
                 ir,
@@ -87,7 +88,7 @@ class TestEmitSqlAlchemy(TestCase):
         """
         system() in frozenset(("Darwin", "Linux")) and print("test_to_sqlalchemy")
 
-        ir = deepcopy(intermediate_repr_no_default_sql_doc)
+        ir: IntermediateRepr = deepcopy(intermediate_repr_no_default_sql_doc)
         ir["name"] = "Config"
         gen_ast = cdd.sqlalchemy.emit.sqlalchemy(
             ir,

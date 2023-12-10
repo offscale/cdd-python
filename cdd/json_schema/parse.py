@@ -8,6 +8,7 @@ from functools import partial
 
 from cdd.docstring.parse import docstring
 from cdd.json_schema.utils.parse_utils import json_schema_property_to_param
+from cdd.shared.types import IntermediateRepr
 
 
 def json_schema(json_schema_dict, parse_original_whitespace=False):
@@ -31,7 +32,7 @@ def json_schema(json_schema_dict, parse_original_whitespace=False):
         json_schema_property_to_param, required=required
     )
 
-    ir = docstring(
+    ir: IntermediateRepr = docstring(
         json_schema_dict.get("description", ""),
         emit_default_doc=False,
         parse_original_whitespace=parse_original_whitespace,

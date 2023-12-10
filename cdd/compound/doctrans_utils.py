@@ -42,6 +42,7 @@ from cdd.shared.pure_utils import (
     rpartial,
 )
 from cdd.shared.source_transformer import ast_parse
+from cdd.shared.types import IntermediateRepr
 
 
 def has_type_annotations(node):
@@ -251,7 +252,7 @@ class DocTrans(NodeTransformer):
         :return: Same type as input with args, returns, and docstring potentially modified
         :rtype: ```Union[AsyncFunctionDef, FunctionDef]```
         """
-        ir = parse_docstring(original_doc_str)
+        ir: IntermediateRepr = parse_docstring(original_doc_str)
         cdd.shared.parse.utils.parser_utils.ir_merge(
             ir, cdd.function.parse.function(node)
         )

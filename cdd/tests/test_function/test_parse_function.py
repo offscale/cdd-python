@@ -12,6 +12,7 @@ import cdd.function.parse
 import cdd.json_schema.parse
 from cdd.shared.ast_utils import get_value
 from cdd.shared.pure_utils import PY_GTE_3_8, paren_wrap_code
+from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.ir import (
     function_adder_ir,
     function_google_tf_ops_losses__safe_mean_ir,
@@ -47,8 +48,10 @@ class TestParseFunction(TestCase):
         """
         Tests that cdd.parse.function.function produces properly
         """
-        gen_ir = cdd.function.parse.function(function_default_complex_default_arg_ast)
-        gold_ir = {
+        gen_ir: IntermediateRepr = cdd.function.parse.function(
+            function_default_complex_default_arg_ast
+        )
+        gold_ir: IntermediateRepr = {
             "name": "call_peril",
             "params": OrderedDict(
                 (
@@ -86,7 +89,9 @@ class TestParseFunction(TestCase):
         """
         Tests that cdd.parse.function.function produces properly from function with only keyword arguments
         """
-        gen_ir = cdd.function.parse.function(function_adder_ast, function_type="static")
+        gen_ir: IntermediateRepr = cdd.function.parse.function(
+            function_adder_ast, function_type="static"
+        )
         del gen_ir["_internal"]  # Not needed for this test
         self.assertDictEqual(
             gen_ir,
@@ -109,7 +114,7 @@ class TestParseFunction(TestCase):
 
         self.assertIsNone(foo(5, 6))
 
-        ir = cdd.function.parse.function(foo)
+        ir: IntermediateRepr = cdd.function.parse.function(foo)
         del ir["_internal"]  # Not needed for this test
         self.assertDictEqual(
             ir,
@@ -151,7 +156,7 @@ class TestParseFunction(TestCase):
             "call_cliff",
         )
 
-        ir = cdd.function.parse.function(call_cliff)
+        ir: IntermediateRepr = cdd.function.parse.function(call_cliff)
         del ir["_internal"]  # Not needed for this test
 
         # This is a hack because JetBrains wraps stdout
@@ -190,7 +195,7 @@ class TestParseFunction(TestCase):
             "add_6_5",
         )
 
-        ir = cdd.function.parse.function(add_6_5)
+        ir: IntermediateRepr = cdd.function.parse.function(add_6_5)
         del ir["_internal"]  # Not needed for this test
 
         self.assertDictEqual(
@@ -208,7 +213,9 @@ class TestParseFunction(TestCase):
         - unannotated;
         - splat
         """
-        gen_ir = cdd.function.parse.function(method_complex_args_variety_ast)
+        gen_ir: IntermediateRepr = cdd.function.parse.function(
+            method_complex_args_variety_ast
+        )
         del gen_ir["_internal"]  # Not needed for this test
         self.assertDictEqual(
             gen_ir,
@@ -217,7 +224,9 @@ class TestParseFunction(TestCase):
 
     def test_from_function_google_tf_ops_losses__safe_mean_ast(self) -> None:
         """Tests IR from function_google_tf_ops_losses__safe_mean_ast"""
-        ir = cdd.function.parse.function(function_google_tf_ops_losses__safe_mean_ast)
+        ir: IntermediateRepr = cdd.function.parse.function(
+            function_google_tf_ops_losses__safe_mean_ast
+        )
         _internal = ir.pop("_internal")
         for key in "original_doc_str", "body":
             del _internal[key]
@@ -234,7 +243,7 @@ class TestParseFunction(TestCase):
 
         no_body = deepcopy(function_google_tf_ops_losses__safe_mean_ast)
         del no_body.body[1:]
-        ir = cdd.function.parse.function(no_body)
+        ir: IntermediateRepr = cdd.function.parse.function(no_body)
         del ir["_internal"]
         gold = deepcopy(function_google_tf_ops_losses__safe_mean_ir)
         gold["returns"]["return_type"] = {

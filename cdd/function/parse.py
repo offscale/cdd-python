@@ -17,6 +17,7 @@ from cdd.function.utils.parse_utils import _interpolate_return
 from cdd.shared.ast_utils import NoneStr, func_arg2param, get_function_type
 from cdd.shared.docstring_parsers import _set_name_and_type
 from cdd.shared.pure_utils import rpartial
+from cdd.shared.types import IntermediateRepr
 
 
 def function(
@@ -61,7 +62,7 @@ def function(
     """
     if isinstance(function_def, FunctionType):
         # Dynamic function, i.e., this isn't source code; and is in your memory
-        ir = cdd.shared.parse.utils.parser_utils._inspect(
+        ir: IntermediateRepr = cdd.shared.parse.utils.parser_utils._inspect(
             function_def,
             function_name,
             parse_original_whitespace=parse_original_whitespace,

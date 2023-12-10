@@ -12,6 +12,7 @@ import cdd.compound.openapi.parse
 from cdd.shared.ast_utils import get_value
 from cdd.shared.docstring_parsers import parse_docstring
 from cdd.shared.pure_utils import PY_GTE_3_8
+from cdd.shared.types import IntermediateRepr
 
 Literal = getattr(
     import_module("typing" if PY_GTE_3_8 else "typing_extensions"), "Literal"
@@ -52,7 +53,7 @@ def bottle(function_def):
     route_dict = {"route": route, "name": name, "method": method}
     doc_str = ast.get_docstring(function_def, clean=True)
     if doc_str is not None:
-        ir = parse_docstring(doc_str)
+        ir: IntermediateRepr = parse_docstring(doc_str)
         yml_start_str, yml_end_str = "```yml", "```"
         yml_start = ir["doc"].find(yml_start_str)
         # if yml_start < 0:

@@ -14,6 +14,7 @@ from cdd.compound.exmod_utils import (
     get_module_contents,
 )
 from cdd.shared.pure_utils import INIT_FILENAME, quote, rpartial
+from cdd.shared.types import IntermediateRepr
 from cdd.tests.utils_for_tests import unittest_main
 
 
@@ -23,7 +24,7 @@ class TestExmodUtils(TestCase):
     def test_emit_file_on_hierarchy_dry_run(self) -> None:
         """Test that `emit_file_on_hierarchy` works with dry_run"""
 
-        ir = {"name": "YEP", "doc": None}
+        ir: IntermediateRepr = {"name": "YEP", "doc": None}
         with patch(
             "cdd.compound.exmod_utils.EXMOD_OUT_STREAM", new_callable=StringIO
         ) as f:
@@ -49,7 +50,7 @@ class TestExmodUtils(TestCase):
     def test_emit_file_on_hierarchy(self) -> None:
         """Test `emit_file_on_hierarchy`"""
 
-        ir = {"name": "YEP", "doc": None}
+        ir: IntermediateRepr = {"name": "YEP", "doc": None}
         with patch(
             "cdd.compound.exmod_utils.EXMOD_OUT_STREAM", new_callable=StringIO
         ), TemporaryDirectory() as tempdir:

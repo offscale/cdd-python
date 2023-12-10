@@ -10,6 +10,7 @@ import cdd.argparse_function.emit
 import cdd.argparse_function.parse
 from cdd.shared.pure_utils import tab
 from cdd.shared.source_transformer import to_code
+from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.argparse import argparse_func_ast
 from cdd.tests.mocks.ir import intermediate_repr_no_default_doc
 from cdd.tests.utils_for_tests import unittest_main
@@ -34,7 +35,9 @@ class TestParseArgparse(TestCase):
         """
         Tests whether `argparse_ast` produces `intermediate_repr_no_default_doc`
               from `argparse_func_ast`"""
-        ir = cdd.argparse_function.parse.argparse_ast(argparse_func_ast)
+        ir: IntermediateRepr = cdd.argparse_function.parse.argparse_ast(
+            argparse_func_ast
+        )
         del ir["_internal"]  # Not needed for this test
         _intermediate_repr_no_default_doc = deepcopy(intermediate_repr_no_default_doc)
         _intermediate_repr_no_default_doc["name"] = "set_cli_args"

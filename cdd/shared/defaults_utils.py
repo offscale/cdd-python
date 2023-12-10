@@ -19,6 +19,7 @@ from cdd.shared.pure_utils import (
     quote,
     simple_types,
 )
+from cdd.shared.types import IntermediateRepr
 
 NoneStr = "```(None)```" if PY_GTE_3_9 else "```None```"
 
@@ -321,7 +322,7 @@ def remove_defaults_from_intermediate_repr(intermediate_repr, emit_default_prop=
         })
     :rtype: ```dict```
     """
-    ir = deepcopy(intermediate_repr)
+    ir: IntermediateRepr = deepcopy(intermediate_repr)
 
     remove_default_from_param = partial(
         _remove_default_from_param, emit_default_prop=emit_default_prop

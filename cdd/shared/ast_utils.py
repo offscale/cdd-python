@@ -63,6 +63,7 @@ from cdd.shared.pure_utils import (
     rpartial,
     simple_types,
 )
+from cdd.shared.types import IntermediateRepr
 
 # Was `"globals().__getitem__"`; this type is used for `Any` and any other unhandled
 
@@ -1732,7 +1733,7 @@ def optimise_imports(imports):
     :return: `ImportFrom` nodes
     :rtype: ```List[ImportFrom]```
     """
-    seen_pair = set()
+    seen_pair: IntermediateRepr = set()
     return [
         ImportFrom(
             module=module_name,

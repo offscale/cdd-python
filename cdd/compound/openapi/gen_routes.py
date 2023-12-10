@@ -14,6 +14,7 @@ from cdd.routes.parse.bottle import methods
 from cdd.shared.ast_utils import get_value
 from cdd.shared.pure_utils import filename_from_mod_or_filename, rpartial
 from cdd.shared.source_transformer import to_code
+from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.routes import route_prelude
 
 
@@ -65,7 +66,7 @@ def gen_routes(app, model_path, model_name, crud, route):
         ),
         None,
     )
-    sqlalchemy_ir = cdd.sqlalchemy.parse.sqlalchemy(
+    sqlalchemy_ir: IntermediateRepr = cdd.sqlalchemy.parse.sqlalchemy(
         Module(body=[sqlalchemy_node], stmt=None, type_ignores=[])
     )
     primary_key = next(

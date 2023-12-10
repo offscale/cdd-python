@@ -17,6 +17,7 @@ import cdd.shared.emit.file
 import cdd.sqlalchemy.emit
 from cdd.shared.ast_utils import annotate_ancestry, find_in_ast
 from cdd.shared.pure_utils import rpartial
+from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.argparse import argparse_func_action_append_ast, argparse_func_ast
 from cdd.tests.mocks.classes import class_ast, class_nargs_ast
 from cdd.tests.mocks.docstrings import docstring_no_nl_str
@@ -32,7 +33,9 @@ class TestEmitClass(TestCase):
         Tests whether `class_` produces `class_ast` given `argparse_func_ast`
         """
 
-        ir = cdd.argparse_function.parse.argparse_ast(argparse_func_ast)
+        ir: IntermediateRepr = cdd.argparse_function.parse.argparse_ast(
+            argparse_func_ast
+        )
         gen_ast = cdd.class_.emit.class_(
             ir,
             emit_default_doc=True,
@@ -89,7 +92,7 @@ class TestEmitClass(TestCase):
             )
         )
 
-        ir = cdd.function.parse.function(
+        ir: IntermediateRepr = cdd.function.parse.function(
             find_in_ast(
                 "C.function_name".split("."),
                 class_with_method_and_body_types_ast,

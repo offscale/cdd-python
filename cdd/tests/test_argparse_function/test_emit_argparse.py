@@ -16,6 +16,7 @@ import cdd.json_schema.emit
 import cdd.shared.emit.file
 import cdd.sqlalchemy.emit
 from cdd.shared.pure_utils import pp
+from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.argparse import (
     argparse_func_action_append_ast,
     argparse_func_ast,
@@ -69,7 +70,7 @@ class TestEmitArgparse(TestCase):
         Tests whether `to_argparse` produces `argparse_function_google_tf_tensorboard_ast`
                                     given `class_google_tf_tensorboard_ast`
         """
-        ir = cdd.class_.parse.class_(
+        ir: IntermediateRepr = cdd.class_.parse.class_(
             class_google_keras_tensorboard_ast, merge_inner_function="__init__"
         )
         pp(ir)
@@ -86,7 +87,9 @@ class TestEmitArgparse(TestCase):
     def test_from_argparse_with_extra_body_to_argparse_with_extra_body(self) -> None:
         """Tests if this can make the roundtrip from a full argparse function to a argparse full function"""
 
-        ir = cdd.argparse_function.parse.argparse_ast(argparse_func_with_body_ast)
+        ir: IntermediateRepr = cdd.argparse_function.parse.argparse_ast(
+            argparse_func_with_body_ast
+        )
         func = cdd.argparse_function.emit.argparse_function(
             ir, emit_default_doc=False, word_wrap=True
         )

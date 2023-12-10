@@ -19,6 +19,7 @@ import cdd.json_schema.emit
 import cdd.shared.emit.file
 import cdd.sqlalchemy.emit
 from cdd.shared.pure_utils import omit_whitespace, reindent
+from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.classes import class_ast
 from cdd.tests.mocks.docstrings import (
     docstring_google_str,
@@ -53,7 +54,7 @@ class TestEmitDocstring(TestCase):
         """
         Tests whether `docstring` produces `docstring_str` given `class_ast`
         """
-        ir = cdd.class_.parse.class_(class_ast)
+        ir: IntermediateRepr = cdd.class_.parse.class_(class_ast)
         self.assertEqual(
             cdd.docstring.emit.docstring(ir, emit_default_doc=False),
             reindent(docstring_no_default_no_nl_str, 1),

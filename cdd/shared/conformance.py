@@ -18,6 +18,7 @@ import cdd.shared.emit.file
 from cdd.shared.ast_utils import RewriteAtQuery, cmp_ast, find_in_ast, get_function_type
 from cdd.shared.pure_utils import pluralise, strip_split
 from cdd.shared.source_transformer import ast_parse
+from cdd.shared.types import IntermediateRepr
 
 
 def _default_options(node, search, type_wanted):
@@ -109,7 +110,7 @@ def ground_truth(args, truth_file):
         true_ast = ast_parse(f.read(), filename=truth_file)
 
     original_node = find_in_ast(search, true_ast)
-    gold_ir = parse_func(
+    gold_ir: IntermediateRepr = parse_func(
         original_node,
         **_default_options(node=original_node, search=search, type_wanted=type_wanted)()
     )

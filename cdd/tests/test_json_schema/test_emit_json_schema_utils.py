@@ -9,6 +9,7 @@ from unittest import TestCase
 
 from cdd.json_schema.utils.emit_utils import param2json_schema_property
 from cdd.shared.ast_utils import set_value
+from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.ir import intermediate_repr_no_default_doc
 from cdd.tests.utils_for_tests import unittest_main
 
@@ -133,7 +134,7 @@ class TestEmitJsonSchemaUtils(TestCase):
         """
         Tests that `param2json_schema_property` with different type as `datetime`
         """
-        ir = deepcopy(intermediate_repr_no_default_doc)
+        ir: IntermediateRepr = deepcopy(intermediate_repr_no_default_doc)
         self.assertEqual(
             param2json_schema_property(
                 (

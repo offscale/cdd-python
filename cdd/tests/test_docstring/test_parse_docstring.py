@@ -6,6 +6,7 @@ from collections import OrderedDict
 from unittest import TestCase
 
 import cdd.docstring.parse
+from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.docstrings import (
     docstring_keras_rmsprop_class_str,
     docstring_keras_rmsprop_method_str,
@@ -37,7 +38,7 @@ class TestParseDocstring(TestCase):
         """
         Test that the nonmatching docstring doesn't fill out params
         """
-        ir = cdd.docstring.parse.docstring(docstring_reduction_v2_str)
+        ir: IntermediateRepr = cdd.docstring.parse.docstring(docstring_reduction_v2_str)
         self.assertEqual(ir["params"], OrderedDict())
         self.assertEqual(ir["returns"], None)
 

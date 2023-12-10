@@ -86,6 +86,7 @@ def sqlalchemy_table(call_or_name, parse_original_whitespace=False):
     assert_equal(call_or_name.func.id.rpartition(".")[2], "Table")
     assert len(call_or_name.args) > 2
 
+    # Partial[IntermediateRepr]
     merge_ir = {
         "params": OrderedDict(map(column_call_to_param, call_or_name.args[2:])),
         "returns": None,

@@ -10,6 +10,7 @@ from json import dump
 from os.path import extsep
 from shutil import rmtree
 from tempfile import TemporaryDirectory, mkdtemp
+from typing import Optional
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
@@ -115,7 +116,7 @@ class TestGen(TestCase):
     """Test class for gen.py"""
 
     sys_path = deepcopy(sys.path)
-    tempdir = None
+    tempdir: Optional[str] = None
 
     @classmethod
     def setUpClass(cls) -> None:

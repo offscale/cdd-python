@@ -7,6 +7,7 @@ from copy import deepcopy
 from unittest import TestCase
 
 import cdd.sqlalchemy.parse
+from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.ir import (
     intermediate_repr_no_default_sql_with_sql_types,
     intermediate_repr_node_pk,
@@ -57,7 +58,9 @@ class TestParseSqlAlchemy(TestCase):
             ),
             config_tbl_with_comments_str.replace("config_tbl =", "", 1).lstrip(),
         ):
-            ir = cdd.sqlalchemy.parse.sqlalchemy_table(ast.parse(variant).body[0])
+            ir: IntermediateRepr = cdd.sqlalchemy.parse.sqlalchemy_table(
+                ast.parse(variant).body[0]
+            )
             self.assertEqual(ir["name"], "config_tbl")
             ir["name"] = None
             self.assertDictEqual(ir, intermediate_repr_no_default_sql_with_sql_types)
@@ -90,7 +93,9 @@ class TestParseSqlAlchemy(TestCase):
             foreign_sqlalchemy_tbls_mod,
             gold=ast.parse(foreign_sqlalchemy_tbls_str),
         )
-        ir = cdd.sqlalchemy.parse.sqlalchemy_table(deepcopy(node_pk_tbl_ass))
+        ir: IntermediateRepr = cdd.sqlalchemy.parse.sqlalchemy_table(
+            deepcopy(node_pk_tbl_ass)
+        )
         self.assertDictEqual(ir, intermediate_repr_node_pk)
 
 

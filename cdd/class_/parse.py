@@ -268,7 +268,7 @@ def _class_from_memory(
         })
     :rtype: ```dict```
     """
-    ir = cdd.shared.parse.utils.parser_utils._inspect(
+    ir: IntermediateRepr = cdd.shared.parse.utils.parser_utils._inspect(
         class_def,
         class_name,
         parse_original_whitespace=parse_original_whitespace,
@@ -305,7 +305,7 @@ def _class_from_memory(
     }
     if class_name is None:
         class_name = parsed_body.name
-    body_ir = class_(
+    body_ir: IntermediateRepr = class_(
         class_def=parsed_body,
         class_name=class_name,
         merge_inner_function=merge_inner_function,
@@ -364,7 +364,7 @@ def _merge_inner_function(
         function_type = (
             "static" if not function_def.args.args else function_def.args.args[0].arg
         )
-        inner_ir = cdd.function.parse.function(
+        inner_ir: IntermediateRepr = cdd.function.parse.function(
             function_def,
             function_name=merge_inner_function,
             function_type=function_type,
