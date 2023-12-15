@@ -3,12 +3,14 @@ Docstring parse utils
 """
 
 import string
+import sys
 from collections import Counter
 from functools import partial
 from itertools import filterfalse, takewhile
 from keyword import iskeyword
 from operator import contains, itemgetter
 
+from cdd.shared.defaults_utils import extract_default
 from cdd.shared.pure_utils import count_iter_items, sliding_window
 
 adhoc_type_to_type = {
@@ -218,7 +220,8 @@ def parse_adhoc_doc_for_typ(doc, name):
     fst_sentence = "".join(words[:sentence_ends])
     sentence = None
 
-    type_in_fst_sentence = adhoc_type_to_type.get(next(filterfalse(str.isspace, words)))
+    # type_in_fst_sentence = adhoc_type_to_type.get(next(filterfalse(str.isspace, words)))
+    # pp({"type_in_fst_sentence": type_in_fst_sentence})
     if " or " in fst_sentence or " of " in fst_sentence:
         sentence = fst_sentence
     else:
@@ -233,6 +236,9 @@ def parse_adhoc_doc_for_typ(doc, name):
 
     if sentence is not None:
         wrap_type_with = "{}"
+        defaults_idx = sentence.rfind(", defaults")
+        if defaults_idx != -1:
+            sentence = sentence[:defaults_idx]
         if sentence.count("`") == 2:
             fst_tick = sentence.find("`")
             candidate_collection = next(
@@ -260,6 +266,13 @@ def parse_adhoc_doc_for_typ(doc, name):
     elif len(words) > 2 and "/" in words[2]:
         return "Union[{}]".format(",".join(sorted(words[2].split("/"))))
 
+    print(
+        "none found for",
+        name,
+        "extract_default(doc)",
+        extract_default(doc),
+        file=sys.stderr,
+    )
     return None
 
 

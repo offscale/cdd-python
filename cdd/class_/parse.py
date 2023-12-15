@@ -20,10 +20,10 @@ from operator import setitem
 
 import cdd.docstring.parse
 import cdd.function.parse
+import cdd.shared.docstring_parsers
 import cdd.shared.parse.utils.parser_utils
 from cdd.class_.utils.parse_utils import get_source
 from cdd.shared.ast_utils import NoneStr, find_ast_type, get_value, parse_to_scalar
-from cdd.shared.docstring_parsers import _set_name_and_type
 from cdd.shared.pure_utils import rpartial, simple_types
 from cdd.shared.source_transformer import to_code
 
@@ -192,7 +192,9 @@ def class_(
             "params": OrderedDict(
                 map(
                     partial(
-                        _set_name_and_type, infer_type=infer_type, word_wrap=word_wrap
+                        cdd.shared.docstring_parsers._set_name_and_type,
+                        infer_type=infer_type,
+                        word_wrap=word_wrap,
                     ),
                     intermediate_repr["params"].items(),
                 )

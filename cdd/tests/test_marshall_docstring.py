@@ -12,7 +12,7 @@ import cdd.docstring.parse
 import cdd.function.parse
 import cdd.shared.emit
 import cdd.shared.emit.utils.emitter_utils
-from cdd.shared.ast_utils import set_value
+from cdd.shared.ast_utils import NoneStr, set_value
 from cdd.shared.docstring_parsers import _set_name_and_type, parse_docstring
 from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.docstrings import (
@@ -262,15 +262,27 @@ class TestMarshallDocstring(TestCase):
             docstring_google_keras_squared_hinge_ir,
         )
 
+    maxDiff = None
+
     def test_from_docstring_google_keras_adam(self) -> None:
         """
         Tests whether `parse_docstring` produces the right IR
               from `docstring_google_tf_squared_hinge_str`
         """
+        ir: IntermediateRepr = parse_docstring(
+            docstring_google_keras_adam_str, emit_default_doc=True, infer_type=True
+        )
         self.assertDictEqual(
-            parse_docstring(
-                docstring_google_keras_adam_str, emit_default_doc=True, infer_type=True
-            ),
+            ir["params"]["clipvalue"],
+            {
+                "default": NoneStr,
+                "doc": "Float. If set, the gradient of each weight is clipped to be no "
+                "higher than this value.",
+                "typ": "Optional[float]",
+            },
+        )
+        self.assertDictEqual(
+            ir,
             docstring_google_keras_adam_ir,
         )
 

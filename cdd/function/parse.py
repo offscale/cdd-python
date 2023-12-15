@@ -12,10 +12,10 @@ from itertools import cycle, filterfalse, islice
 from types import FunctionType
 
 import cdd.docstring.parse
+import cdd.shared.docstring_parsers
 import cdd.shared.parse.utils.parser_utils
 from cdd.function.utils.parse_utils import _interpolate_return
 from cdd.shared.ast_utils import NoneStr, func_arg2param, get_function_type
-from cdd.shared.docstring_parsers import _set_name_and_type
 from cdd.shared.pure_utils import rpartial
 from cdd.shared.types import IntermediateRepr
 
@@ -203,7 +203,11 @@ def function(
     intermediate_repr["params"].update(params_to_append)
     intermediate_repr["params"] = OrderedDict(
         map(
-            partial(_set_name_and_type, infer_type=infer_type, word_wrap=word_wrap),
+            partial(
+                cdd.shared.docstring_parsers._set_name_and_type,
+                infer_type=infer_type,
+                word_wrap=word_wrap,
+            ),
             intermediate_repr["params"].items(),
         )
     )
@@ -213,7 +217,11 @@ def function(
     if "return_type" in (intermediate_repr.get("returns") or iter(())):
         intermediate_repr["returns"] = OrderedDict(
             map(
-                partial(_set_name_and_type, infer_type=infer_type, word_wrap=word_wrap),
+                partial(
+                    cdd.shared.docstring_parsers._set_name_and_type,
+                    infer_type=infer_type,
+                    word_wrap=word_wrap,
+                ),
                 intermediate_repr["returns"].items(),
             )
         )

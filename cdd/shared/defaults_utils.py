@@ -22,6 +22,16 @@ from cdd.shared.pure_utils import (
 from cdd.shared.types import IntermediateRepr
 
 NoneStr = "```(None)```" if PY_GTE_3_9 else "```None```"
+DEFAULTS_TO_VARIANTS = (  # could do a whole r"[dD]efault[s]?\s+[value is|to|is|:]" but this suffices for now
+    "defaults to ",
+    "defaults to\n",
+    "Default value is ",
+    "Default:",
+    "defaults\n to ",
+    "defaults\n to\n",
+    "Default value\n is ",
+    "Defaults\n            to",
+)
 
 
 def ast_parse_fix(s):
@@ -81,7 +91,7 @@ def extract_default(
     emit_default_doc=True,
 ):
     """
-    Extract the a tuple of (doc, default) from a doc line
+    Extract a tuple of (doc, default) from a doc line
 
     :param line: Example - "dataset. Defaults to mnist"
     :type line: ```str```
@@ -99,7 +109,7 @@ def extract_default(
     :type emit_default_doc: ```bool```
 
     :return: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
-    :rtype: Tuple[str, Optional[str]]
+    :rtype: ```Tuple[str, Optional[str]]```
     """
     if line is None:
         return line, line
@@ -110,7 +120,7 @@ def extract_default(
             _default_search_announce,
         )
     )(
-        ("defaults to ", "defaults to\n", "Default value is ", "Default:")
+        DEFAULTS_TO_VARIANTS
         if default_search_announce is None
         else (
             (default_search_announce,)
@@ -175,7 +185,7 @@ def type_default_from_default(default, typ):
     :param default: The default value; potentially `NoneStr`
     :type default: ```str```
 
-    :param typ: The type of the paramater
+    :param typ: The type of the parameter
     :type typ: ```str```
 
     :return: (Optional[typ], None) if default is NoneStr else (typ, default)
@@ -416,4 +426,5 @@ __all__ = [
     "needs_quoting",
     "remove_defaults_from_intermediate_repr",
     "set_default_doc",
+    "_remove_default_from_param",
 ]

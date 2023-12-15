@@ -19,7 +19,6 @@ import cdd.function.parse
 import cdd.shared.parse
 from cdd.class_.utils.parse_utils import get_source
 from cdd.shared.ast_utils import get_value
-from cdd.shared.docstring_parsers import _set_name_and_type
 from cdd.shared.pure_utils import lstrip_namespace, none_types, rpartial, simple_types
 from cdd.shared.types import IntermediateRepr
 
@@ -31,7 +30,7 @@ def ir_merge(target, other):
     Merge two intermediate_repr (IR) together. It doesn't do a `target.update(other)`,
      instead it carefully merges `params` and `returns`
 
-    :param target: The IR to use the values of. These values take precedence. IR is a dictionary consistent with `IntermediateRepr`, defined as:
+    :param target: The target IR to modify. These values take precedence. Dict is consistent with `IntermediateRepr`:
         ParamVal = TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
         IntermediateRepr = TypedDict("IntermediateRepr", {
             "name": Optional[str],
@@ -42,7 +41,7 @@ def ir_merge(target, other):
         })
     :type target: ```dict```
 
-    :param other: The IR to update. IR is a dictionary consistent with `IntermediateRepr`, defined as:
+    :param other: Read-only IR to use in update. IR is a dictionary consistent with `IntermediateRepr`, defined as:
         ParamVal = TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
         IntermediateRepr = TypedDict("IntermediateRepr", {
             "name": Optional[str],
@@ -61,24 +60,7 @@ def ir_merge(target, other):
     elif other["params"]:
         target_params, other_params = map(itemgetter("params"), (target, other))
 
-        for name in other_params.keys() & target_params.keys():
-            if not target_params[name].get("doc") and other_params[name].get("doc"):
-                target_params[name]["doc"] = other_params[name]["doc"]
-
-            if other_params[name].get("typ") is not None and (
-                target_params[name].get("typ") is None
-                or target_params[name]["typ"] in simple_types
-                and other_params[name]["typ"] not in simple_types
-            ):
-                target_params[name]["typ"] = other_params[name]["typ"]
-            if (
-                target_params[name].get("default") in none_types
-                and other_params[name].get("default") is not None
-            ):
-                target_params[name]["default"] = other_params[name]["default"]
-
-        for name in other_params.keys() - target_params.keys():
-            target_params[name] = other_params[name]
+        merge_params(other_params, target_params)
 
         target["params"] = target_params
 
@@ -102,6 +84,61 @@ def ir_merge(target, other):
             target["_internal"] = other_internal
 
     return target
+
+
+def merge_params(other_params, target_params):
+    """
+    Merge two ParamVal dicts together. It doesn't do a `target_params.update(other_params)`,
+     instead it carefully merges two collections of dicts.
+
+    :param other_params: Read-only params to use in update. Iterable of `dict`s consistent with `ParamVal`, defined as:
+        TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
+    :type other_params: ```Iterable[dict]```
+
+    :param target_params: The target params to modify. These values take precedence. Iterable of `dict`s consistent with
+      `ParamVal`, defined as:
+        TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
+    :type target_params: ```Iterable[dict]```
+
+    :return: IR of updated target. `target` is also updated in-place, and the memory of `other` is used.
+    :rtype: ```dict```
+    """
+    for name in other_params.keys() & target_params.keys():
+        merge_present_params(other_params[name], target_params[name])
+    for name in other_params.keys() - target_params.keys():
+        target_params[name] = other_params[name]
+
+
+def merge_present_params(other_param, target_param):
+    """
+    Merge two ParamVal dicts together. It doesn't do a `target_params.update(other_params)`,
+     instead it carefully merges two dicts.
+
+    :param other_param: Read-only param to use in update. Dict consistent with `ParamVal`, defined as:
+        TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
+    :type other_param: ```dict```
+
+    :param target_param: The target param to modify. These values take precedence. Dict consistent with
+      `ParamVal`, defined as:
+        TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
+    :type target_param: ```dict```
+
+    :return: IR of updated target. `target` is also updated in-place, and the memory of `other` is used.
+    :rtype: ```dict```
+    """
+    if not target_param.get("doc") and other_param.get("doc"):
+        target_param["doc"] = other_param["doc"]
+    if other_param.get("typ") is not None and (
+        target_param.get("typ") is None
+        or target_param["typ"] in simple_types
+        and other_param["typ"] not in simple_types
+    ):
+        target_param["typ"] = other_param["typ"]
+    if (
+        target_param.get("default") in none_types
+        and other_param.get("default") is not None
+    ):
+        target_param["default"] = other_param["default"]
 
 
 def _join_non_none(primacy, other):
@@ -332,7 +369,11 @@ def _inspect(obj, name, parse_original_whitespace, word_wrap):
     if "return_type" in (ir.get("returns") or iter(())):
         ir["returns"] = OrderedDict(
             map(
-                partial(_set_name_and_type, infer_type=False, word_wrap=word_wrap),
+                partial(
+                    cdd.shared.docstring_parsers._set_name_and_type,
+                    infer_type=False,
+                    word_wrap=word_wrap,
+                ),
                 ir["returns"].items(),
             )
         )

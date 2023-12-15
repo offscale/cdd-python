@@ -2,7 +2,7 @@
 Docstring parser
 """
 
-from cdd.shared.docstring_parsers import parse_docstring
+import cdd.shared.docstring_parsers
 
 
 def docstring(
@@ -45,7 +45,7 @@ def docstring(
     parsed = (
         doc_string
         if isinstance(doc_string, dict)
-        else parse_docstring(
+        else cdd.shared.docstring_parsers.parse_docstring(
             doc_string,
             infer_type=infer_type,
             emit_default_prop=emit_default_prop,

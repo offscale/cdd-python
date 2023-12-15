@@ -24,13 +24,18 @@ from typing import Dict, List, Tuple
 from cdd.docstring.utils.emit_utils import interpolate_defaults
 from cdd.docstring.utils.parse_utils import parse_adhoc_doc_for_typ
 from cdd.shared.ast_utils import NoneStr, get_value
-from cdd.shared.defaults_utils import _remove_default_from_param, needs_quoting
+from cdd.shared.defaults_utils import (
+    _remove_default_from_param,
+    extract_default,
+    needs_quoting,
+)
 from cdd.shared.docstring_utils import (
     ARG_TOKENS,
     RETURN_TOKENS,
     Style,
     derive_docstring_format,
 )
+from cdd.shared.parse.utils.parser_utils import merge_present_params
 from cdd.shared.pure_utils import (
     code_quoted,
     count_iter_items,
@@ -38,6 +43,7 @@ from cdd.shared.pure_utils import (
     location_within,
     none_types,
     paren_wrap_code,
+    pp,
     rpartial,
     unquote,
     update_d,
@@ -491,7 +497,7 @@ def _parse_phase(
 
 def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=False):
     """
-    Sanitise the name and set the type (iff default and no existing type) for the param
+    Sanitise the name and set the type (iff default and no existing type) for the param. Parses the default also.
 
     :param param: Name, dict with keys: 'typ', 'doc', 'default'
     :type param: ```Tuple[str, dict]```
@@ -510,6 +516,13 @@ def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=Fal
     """
     name, _param = param
     del param
+    was = deepcopy(_param)
+    was_none = was.get("default") in frozenset((NoneStr, "None"))
+    merge_present_params(
+        target_param=_param,
+        other_param=dict(zip(("doc", "default"), extract_default(_param["doc"]))),
+    )
+
     if name is not None and (name.endswith("kwargs") or name.startswith("**")):
         name = name.lstrip("*")
         if _param.get("typ", "dict") == "dict":
@@ -560,11 +573,14 @@ def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=Fal
                 print(e, file=sys.stderr)
 
         if (
-            _param["doc"].startswith(("(Optional)", "Optional"))
+            (_param["doc"].startswith(("(Optional)", "Optional")) or was_none)
             and "typ" in _param
             and not _param["typ"].startswith("Optional[")
         ):
             _param["typ"] = "Optional[{typ}]".format(typ=_param["typ"])
+
+    pp({"b4": was, "l8": _param})
+    print("*" * 100, file=sys.stderr)
     return name, _param
 
 
