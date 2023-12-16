@@ -31,6 +31,9 @@ simple_types: Dict[Optional[str], Union[int, float, complex, str, bool, None]] =
     "bool": False,
     None: None,
 }
+type_names = frozenset(
+    ("Int", "int", "Float", "float", "complex", "str", "Bool", "bool", "None")
+)
 
 line_length = environ.get("DOCTRANS_LINE_LENGTH", 100)
 fill = partial(_fill, width=line_length)

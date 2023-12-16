@@ -3,15 +3,15 @@ Docstring parse utils
 """
 
 import string
-import sys
 from collections import Counter
 from functools import partial
 from itertools import filterfalse, takewhile
 from keyword import iskeyword
 from operator import contains, itemgetter
+from typing import List, Union
 
 from cdd.shared.defaults_utils import extract_default
-from cdd.shared.pure_utils import count_iter_items, sliding_window
+from cdd.shared.pure_utils import count_iter_items, pp, sliding_window, type_names
 
 adhoc_type_to_type = {
     "bool": "bool",
@@ -136,15 +136,18 @@ def _union_literal_from_sentence(sentence):
     # checks if each var is keyword or digit or quoted
     if any(
         filter(
-            lambda e: iskeyword(e)
-            or e.isdigit()
-            or (
-                # could take care and use a customer scanner to handle escaped quotes; but this hack for now
-                lambda counter: counter["'"] & 1 == 1
-                and counter["'"] > 0
-                or counter['"'] & 1 == 1
-                and counter['"'] > 0
-            )(Counter(e)),
+            lambda e: e not in type_names
+            and (
+                iskeyword(e)
+                or e.isdigit()
+                or (
+                    # could take care and use a customer scanner to handle escaped quotes; but this hack for now
+                    lambda counter: counter["'"] & 1 == 1
+                    and counter["'"] > 0
+                    or counter['"'] & 1 == 1
+                    and counter['"'] > 0
+                )(Counter(e))
+            ),
             union,
         )
     ):
@@ -156,15 +159,32 @@ def _union_literal_from_sentence(sentence):
             map(itemgetter(0), union),
         )
     )
+    # binary-search or even interpolation search can be done? is it sorted here?
+    idx = next(
+        map(
+            itemgetter(0),
+            filter(lambda idx_elem: idx_elem[1] == "None", enumerate(union)),
+        ),
+        None,
+    )
+    if idx is not None:
+        del union[idx]
+        wrap = "Optional[{}]"
+    else:
+        wrap = "{}"
     if literals and len(union) > literals:
-        return "Union[{}, {}]".format(
-            "Literal[{}]".format(", ".join(union[:literals])),
-            ", ".join(union[literals:]),
+        return wrap.format(
+            "Union[{}, {}]".format(
+                "Literal[{}]".format(", ".join(union[:literals])),
+                ", ".join(union[literals:]),
+            )
         )
     elif literals:
-        return "Literal[{}]".format(", ".join(union[:literals]))
+        return wrap.format("Literal[{}]".format(", ".join(union[:literals])))
     elif union:
-        return "Union[{}]".format(", ".join(union)) if len(union) > 1 else union[0]
+        return wrap.format(
+            "Union[{}]".format(", ".join(union)) if len(union) > 1 else union[0]
+        )
     else:
         return None
 
@@ -188,7 +208,7 @@ def parse_adhoc_doc_for_typ(doc, name):
     if not doc:
         return None
 
-    words = [[]]  # type: List[List[str]]
+    words: List[Union[List[str], str]] = [[]]
     word_chars = "{0}{1}`'\"/|".format(string.digits, string.ascii_letters)
     sentence_ends = -1
     for i, ch in enumerate(doc):
@@ -236,7 +256,7 @@ def parse_adhoc_doc_for_typ(doc, name):
 
     if sentence is not None:
         wrap_type_with = "{}"
-        defaults_idx = sentence.rfind(", defaults")
+        defaults_idx = sentence.rfind(", default")
         if defaults_idx != -1:
             sentence = sentence[:defaults_idx]
         if sentence.count("`") == 2:
@@ -266,13 +286,7 @@ def parse_adhoc_doc_for_typ(doc, name):
     elif len(words) > 2 and "/" in words[2]:
         return "Union[{}]".format(",".join(sorted(words[2].split("/"))))
 
-    print(
-        "none found for",
-        name,
-        "extract_default(doc)",
-        extract_default(doc),
-        file=sys.stderr,
-    )
+    pp({"{}::extract_default".format(name): extract_default(doc)})
     return None
 
 

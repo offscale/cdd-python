@@ -26,6 +26,7 @@ from cdd.class_.utils.parse_utils import get_source
 from cdd.shared.ast_utils import NoneStr, find_ast_type, get_value, parse_to_scalar
 from cdd.shared.pure_utils import rpartial, simple_types
 from cdd.shared.source_transformer import to_code
+from cdd.shared.types import IntermediateRepr
 
 
 def class_(
