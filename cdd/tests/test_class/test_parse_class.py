@@ -12,6 +12,7 @@ import cdd.argparse_function.emit
 import cdd.class_.parse
 import cdd.json_schema.parse
 from cdd.shared.ast_utils import RewriteAtQuery
+from cdd.shared.pure_utils import pp
 from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.classes import (
     class_ast,
@@ -89,7 +90,6 @@ class TestParseClass(TestCase):
         )
         ir: IntermediateRepr = cdd.class_.parse.class_(Adadelta)
         del ir["_internal"]
-        # pp(ir)
         # self.assertDictEqual(ir, docstring_google_keras_adadelta_ir)
         self.assertEqual(
             *map(
@@ -104,8 +104,6 @@ class TestParseClass(TestCase):
             ir,
             docstring_google_keras_adadelta_function_ir,
         )
-
-    maxDiff = None
 
     def test_from_class_and_function(self) -> None:
         """
@@ -205,6 +203,7 @@ class TestParseClass(TestCase):
 
         del parsed_ir["_internal"]  # Not needed for this test
 
+        pp(parsed_ir)
         self.assertDictEqual(parsed_ir, class_torch_nn_l1loss_ir)
 
     def test_from_class_torch_nn_one_cycle_lr(self) -> None:

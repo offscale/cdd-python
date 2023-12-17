@@ -262,8 +262,6 @@ class TestMarshallDocstring(TestCase):
             docstring_google_keras_squared_hinge_ir,
         )
 
-    maxDiff = None
-
     def test_from_docstring_google_keras_adam(self) -> None:
         """
         Tests whether `parse_docstring` produces the right IR
@@ -311,14 +309,14 @@ class TestMarshallDocstring(TestCase):
         Tests whether `cdd.parse.function` emits the right docstring
               from `function_google_tf_mean_squared_error_ast`
         """
-
+        ir: IntermediateRepr = cdd.function.parse.function(
+            function_google_tf_mean_squared_error_ast,
+            # emit_default_doc=True,
+            infer_type=True,
+            parse_original_whitespace=True,
+        )
         gen = cdd.docstring.emit.docstring(
-            cdd.function.parse.function(
-                function_google_tf_mean_squared_error_ast,
-                # emit_default_doc=True,
-                infer_type=True,
-                parse_original_whitespace=True,
-            ),
+            ir,
             # indent_level=0,
             docstring_format="google",
             emit_types=True,
@@ -326,7 +324,6 @@ class TestMarshallDocstring(TestCase):
             # emit_separating_tab=False,
             word_wrap=False,
         )
-
         self.assertEqual(
             gen,
             docstring_google_tf_mean_squared_error_str.replace(
@@ -364,13 +361,14 @@ class TestMarshallDocstring(TestCase):
         Tests whether `parse_docstring` produces the right IR
               from `docstring_google_pytorch_lbfgs_str`
         """
+        ir: IntermediateRepr = parse_docstring(
+            docstring_google_pytorch_lbfgs_str,
+            emit_default_doc=False,
+            infer_type=True,
+            parse_original_whitespace=False,
+        )
         self.assertDictEqual(
-            parse_docstring(
-                docstring_google_pytorch_lbfgs_str,
-                emit_default_doc=False,
-                infer_type=True,
-                parse_original_whitespace=False,
-            ),
+            ir,
             docstring_google_pytorch_lbfgs_ir,
         )
 

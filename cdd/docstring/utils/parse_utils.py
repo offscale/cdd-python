@@ -10,8 +10,7 @@ from keyword import iskeyword
 from operator import contains, itemgetter
 from typing import List, Union
 
-from cdd.shared.defaults_utils import extract_default
-from cdd.shared.pure_utils import count_iter_items, pp, sliding_window, type_to_name
+from cdd.shared.pure_utils import count_iter_items, sliding_window, type_to_name
 
 adhoc_type_to_type = {
     "bool": "bool",
@@ -44,6 +43,7 @@ adhoc_3_tuple_to_type = {
     ("True", " ", "on"): "bool",
     ("called", " ", "at"): "collections.abc.Callable",
     ("directory", " ", "where"): "str",
+    ("floating", " ", "point"): "float",
 }
 
 adhoc_3_tuple_to_collection = {
@@ -192,7 +192,7 @@ def _union_literal_from_sentence(sentence):
         return None
 
 
-def parse_adhoc_doc_for_typ(doc, name):
+def parse_adhoc_doc_for_typ(doc, name, default_is_none):
     """
     Google's Keras and other frameworks have an adhoc syntax.
 
@@ -204,12 +204,17 @@ def parse_adhoc_doc_for_typ(doc, name):
     :param name: Name of argument; useful for debugging and if the name hints as to the type
     :type name: ```str```
 
+    :param default_is_none: Whether the default is `NoneStr`
+    :type default_is_none: ```bool```
+
     :return: The type (if determined) else `None`
     :rtype: ```Optional[str]```
     """
 
     if not doc:
         return None
+
+    wrap = "Optional[{}]" if default_is_none else "{}"
 
     words: List[Union[List[str], str]] = [[]]
     word_chars = "{0}{1}`'\"/|".format(string.digits, string.ascii_letters)
@@ -290,11 +295,21 @@ def parse_adhoc_doc_for_typ(doc, name):
             return whole_sentence_as_type
     if candidate_type is not None:
         return candidate_type
-    elif len(words) > 2 and "/" in words[2]:
-        return "Union[{}]".format(",".join(sorted(words[2].split("/"))))
+    elif len(words) > 2:
+        if "/" in words[2]:
+            return "Union[{}]".format(",".join(sorted(words[2].split("/"))))
+        candidate_type = next(
+            map(
+                adhoc_3_tuple_to_type.__getitem__,
+                filter(
+                    partial(contains, adhoc_3_tuple_to_type),
+                    sliding_window(words, 3),
+                ),
+            ),
+            None,
+        )
 
-    pp({"{}::extract_default".format(name): extract_default(doc)})
-    return None
+    return candidate_type if candidate_type is None else wrap.format(candidate_type)
 
 
 __all__ = ["parse_adhoc_doc_for_typ"]

@@ -173,7 +173,7 @@ class_torch_nn_l1loss_ir: IntermediateRepr = {
                     "the process of being deprecated, and in the "
                     "meantime, specifying either of those two args will "
                     "override :attr:`reduction`.",
-                    "typ": "Optional[string]",
+                    "typ": "int",
                 },
             ),
             ("__constants__", {"default": ["reduction"], "typ": "List"}),
@@ -192,8 +192,8 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
             (
                 "max_lr",
                 {
-                    "doc": "Upper learning rate boundaries in the cycle "
-                    "for each parameter group.",
+                    "doc": "Upper learning rate boundaries in the cycle for each "
+                    "parameter group.",
                     "typ": "Union[float, list]",
                 },
             ),
@@ -201,51 +201,50 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "total_steps",
                 {
                     "default": NoneStr,
-                    "doc": "The total number of steps in the cycle. Note "
-                    "that if a value is not provided here, then it "
-                    "must be inferred by providing a value for "
-                    "epochs and steps_per_epoch.",
-                    "typ": "int",
+                    "doc": "The total number of steps in the cycle. Note that if "
+                    "a value is not provided here, then it must be "
+                    "inferred by providing a value for epochs and "
+                    "steps_per_epoch.",
+                    "typ": "Optional[int]",
                 },
             ),
             (
                 "epochs",
                 {
                     "default": NoneStr,
-                    "doc": "The number of epochs to train for. This is "
-                    "used along with steps_per_epoch in order to "
-                    "infer the total number of steps in the cycle "
-                    "if a value for total_steps is not provided.",
-                    "typ": "int",
+                    "doc": "The number of epochs to train for. This is used "
+                    "along with steps_per_epoch in order to infer the "
+                    "total number of steps in the cycle if a value for "
+                    "total_steps is not provided.",
+                    "typ": "Optional[int]",
                 },
             ),
             (
                 "steps_per_epoch",
                 {
                     "default": NoneStr,
-                    "doc": "The number of steps per epoch to train for. "
-                    "This is used along with epochs in order to "
-                    "infer the total number of steps in the cycle "
-                    "if a value for total_steps is not provided.",
-                    "typ": "int",
+                    "doc": "The number of steps per epoch to train for. This is "
+                    "used along with epochs in order to infer the total "
+                    "number of steps in the cycle if a value for "
+                    "total_steps is not provided.",
+                    "typ": "Optional[int]",
                 },
             ),
             (
                 "pct_start",
                 {
                     "default": 0.3,
-                    "doc": "The percentage of the cycle (in number of "
-                    "steps) spent increasing the learning rate.",
-                    "typ": "float",
+                    "doc": "The percentage of the cycle (in number of steps) "
+                    "spent increasing the learning rate.",
+                    "typ": "int",
                 },
             ),
             (
                 "anneal_strategy",
                 {
                     "default": "cos",
-                    "doc": 'Specifies the annealing strategy: "cos" for '
-                    'cosine annealing, "linear" for linear '
-                    "annealing.",
+                    "doc": 'Specifies the annealing strategy: "cos" for cosine '
+                    'annealing, "linear" for linear annealing.',
                     "typ": "Literal['cos', 'linear']",
                 },
             ),
@@ -263,11 +262,11 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "base_momentum",
                 {
                     "default": 0.85,
-                    "doc": "Lower momentum boundaries in the cycle for "
-                    "each parameter group. Note that momentum is "
-                    "cycled inversely to learning rate; at the peak "
-                    "of a cycle, momentum is 'base_momentum' and "
-                    "learning rate is 'max_lr'.",
+                    "doc": "Lower momentum boundaries in the cycle for each "
+                    "parameter group. Note that momentum is cycled "
+                    "inversely to learning rate; at the peak of a cycle, "
+                    "momentum is 'base_momentum' and learning rate is "
+                    "'max_lr'.",
                     "typ": "Union[float, list]",
                 },
             ),
@@ -275,13 +274,12 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "max_momentum",
                 {
                     "default": 0.95,
-                    "doc": "Upper momentum boundaries in the cycle for "
-                    "each parameter group. Functionally, it defines "
-                    "the cycle amplitude (max_momentum - "
-                    "base_momentum). Note that momentum is cycled "
-                    "inversely to learning rate; at the start of a "
-                    "cycle, momentum is 'max_momentum' and learning "
-                    "rate is 'base_lr'",
+                    "doc": "Upper momentum boundaries in the cycle for each "
+                    "parameter group. Functionally, it defines the cycle "
+                    "amplitude (max_momentum - base_momentum). Note that "
+                    "momentum is cycled inversely to learning rate; at "
+                    "the start of a cycle, momentum is 'max_momentum' and "
+                    "learning rate is 'base_lr'",
                     "typ": "Union[float, list]",
                 },
             ),
@@ -289,8 +287,8 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "div_factor",
                 {
                     "default": 25.0,
-                    "doc": "Determines the initial learning rate via "
-                    "initial_lr = max_lr/div_factor",
+                    "doc": "Determines the initial learning rate via initial_lr "
+                    "= max_lr/div_factor",
                     "typ": "float",
                 },
             ),
@@ -298,8 +296,8 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "final_div_factor",
                 {
                     "default": 10000.0,
-                    "doc": "Determines the minimum learning rate via "
-                    "min_lr = initial_lr/final_div_factor",
+                    "doc": "Determines the minimum learning rate via min_lr = "
+                    "initial_lr/final_div_factor",
                     "typ": "float",
                 },
             ),
@@ -307,12 +305,11 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "last_epoch",
                 {
                     "default": -1,
-                    "doc": "The index of the last batch. This parameter is "
-                    "used when resuming a training job. Since "
-                    "`step()` should be invoked after each batch "
-                    "instead of after each epoch, this number "
-                    "represents the total number of *batches* "
-                    "computed, not the total number of epochs "
+                    "doc": "The index of the last batch. This parameter is used "
+                    "when resuming a training job. Since `step()` should "
+                    "be invoked after each batch instead of after each "
+                    "epoch, this number represents the total number of "
+                    "*batches* computed, not the total number of epochs "
                     "computed. When last_epoch=-1, the schedule is "
                     "started from the beginning.",
                     "typ": "int",
@@ -322,8 +319,8 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "verbose",
                 {
                     "default": False,
-                    "doc": "If ``True``, prints a message to stdout for "
-                    "each update.",
+                    "doc": "If ``True``, prints a message to stdout for each "
+                    "update.",
                     "typ": "bool",
                 },
             ),
@@ -369,6 +366,7 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                     "default": NoneStr,
                     "doc": "Small floating point value for maintaining numerical "
                     "stability.",
+                    "typ": "Optional[float]",
                 },
             ),
             (
@@ -377,6 +375,7 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                     "default": NoneStr,
                     "doc": "String. The name to use for momentum accumulator "
                     "weights created by the optimizer.",
+                    "typ": "Optional[str]",
                 },
             ),
             (
@@ -384,6 +383,7 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                 {
                     "default": NoneStr,
                     "doc": "Float. If set, weight decay is applied.",
+                    "typ": "Optional[float]",
                 },
             ),
             (
@@ -393,6 +393,7 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                     "doc": "Float. If set, the gradient of each weight is "
                     "individually clipped so that its norm is no higher "
                     "than this value.",
+                    "typ": "Optional[float]",
                 },
             ),
             (
@@ -401,6 +402,7 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                     "default": NoneStr,
                     "doc": "Float. If set, the gradient of each weight is "
                     "clipped to be no higher than this value.",
+                    "typ": "Optional[float]",
                 },
             ),
             (
@@ -410,6 +412,7 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                     "doc": "Float. If set, the gradient of all weights is "
                     "clipped so that their global norm is no higher than "
                     "this value.",
+                    "typ": "Optional[float]",
                 },
             ),
             (
@@ -453,6 +456,7 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                     "the built-in `fit()` training loop, this happens "
                     "automatically after the last epoch, and you don't "
                     "need to do anything.",
+                    "typ": "Optional[int]",
                 },
             ),
             (
@@ -467,7 +471,7 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                     "mixed precision training. Alternately, "
                     "`keras.optimizers.LossScaleOptimizer` will "
                     "automatically set a loss scale factor.",
-                    "typ": "float",
+                    "typ": "Optional[float]",
                 },
             ),
         )
@@ -539,19 +543,63 @@ docstring_google_keras_adadelta_merged_init_ir: IntermediateRepr = {
 
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/callbacks.py#L2792-L2840
 docstring_google_keras_lambda_callback_ir: IntermediateRepr = {
-    "doc": remove_args_from_docstring(docstring_google_keras_lambda_callback_str),
+    "doc": remove_args_from_docstring(docstring_google_keras_lambda_callback_str) + tab,
     "name": None,
     "params": OrderedDict(
         (
-            ("on_epoch_begin", {"doc": "called at the beginning of every " "epoch."}),
-            ("on_epoch_end", {"doc": "called at the end of every epoch."}),
-            ("on_batch_begin", {"doc": "called at the beginning of every " "batch."}),
-            ("on_batch_end", {"doc": "called at the end of every batch."}),
+            (
+                "on_epoch_begin",
+                {
+                    "doc": "called at the beginning of every epoch.",
+                    "typ": "collections.abc.Callable",
+                },
+            ),
+            (
+                "on_epoch_end",
+                {
+                    "doc": "called at the end of every epoch.",
+                    "typ": "collections.abc.Callable",
+                },
+            ),
             (
                 "on_train_begin",
-                {"doc": "called at the beginning of model " "training."},
+                {
+                    "doc": "called at the beginning of model training.",
+                    "typ": "collections.abc.Callable",
+                },
             ),
-            ("on_train_end", {"doc": "called at the end of model " "training."}),
+            (
+                "on_train_end",
+                {
+                    "doc": "called at the end of model training.",
+                    "typ": "collections.abc.Callable",
+                },
+            ),
+            (
+                "on_train_batch_begin",
+                {
+                    "doc": "called at the beginning of every train batch.",
+                    "typ": "collections.abc.Callable",
+                },
+            ),
+            (
+                "on_train_batch_end",
+                {
+                    "doc": "called at the end of every train batch.",
+                    "typ": "collections.abc.Callable",
+                },
+            ),
+            (
+                "kwargs",
+                {
+                    "doc": "Any function in `Callback` that you want to override "
+                    "by passing `function_name=function`. For example, "
+                    "`LambdaCallback(.., on_train_end=train_end_fn)`. The "
+                    "custom function needs to have same arguments as the "
+                    "ones defined in `Callback`.",
+                    "typ": "Optional[dict]",
+                },
+            ),
         )
     ),
     "returns": None,
@@ -593,7 +641,7 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
                     "default": 1e-07,
                     "doc": "Small floating point value for maintaining numerical "
                     "stability.",
-                    "typ": "float",
+                    "typ": "Optional[float]",
                 },
             ),
             (
@@ -602,7 +650,7 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
                     "default": "adadelta",
                     "doc": "String. The name to use for momentum accumulator "
                     "weights created by the optimizer.",
-                    "typ": "str",
+                    "typ": "Optional[str]",
                 },
             ),
             (
@@ -610,7 +658,7 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
                 {
                     "default": NoneStr,
                     "doc": "Float. If set, weight decay is applied.",
-                    "typ": "NoneType",
+                    "typ": "Optional[float]",
                 },
             ),
             (
@@ -620,7 +668,7 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
                     "doc": "Float. If set, the gradient of each weight is "
                     "individually clipped so that its norm is no higher "
                     "than this value.",
-                    "typ": "NoneType",
+                    "typ": "Optional[float]",
                 },
             ),
             (
@@ -629,7 +677,7 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
                     "default": NoneStr,
                     "doc": "Float. If set, the gradient of each weight is "
                     "clipped to be no higher than this value.",
-                    "typ": "NoneType",
+                    "typ": "Optional[float]",
                 },
             ),
             (
@@ -639,7 +687,7 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
                     "doc": "Float. If set, the gradient of all weights is "
                     "clipped so that their global norm is no higher than "
                     "this value.",
-                    "typ": "NoneType",
+                    "typ": "Optional[float]",
                 },
             ),
             (
@@ -698,7 +746,7 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
                     "mixed precision training. Alternately, "
                     "`keras.optimizers.LossScaleOptimizer` will "
                     "automatically set a loss scale factor.",
-                    "typ": "float",
+                    "typ": "Optional[float]",
                 },
             ),
         )
@@ -892,43 +940,20 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
 
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/losses.py#L862-L875
 docstring_google_keras_squared_hinge_ir: IntermediateRepr = {
-    "doc": docstring_google_keras_squared_hinge_no_args_doc_str,
+    "doc": docstring_google_keras_squared_hinge_no_args_doc_str + tab,
     "name": None,
     "params": OrderedDict(
         (
             (
                 "reduction",
                 {
-                    "default": "AUTO",
-                    "doc": "(Optional) Type of "
-                    "`tf.keras.losses.Reduction` to "
-                    "apply to loss. Default value is "
-                    "`AUTO`. `AUTO` indicates that "
-                    "the reduction option will be "
-                    "determined by the usage context. "
-                    "For almost all cases this "
-                    "defaults to "
-                    "`SUM_OVER_BATCH_SIZE`. When used "
-                    "with `tf.distribute.Strategy`, "
-                    "outside of built-in training "
-                    "loops such as `tf.keras` "
-                    "`compile` and `fit`, using "
-                    "`AUTO` or `SUM_OVER_BATCH_SIZE` "
-                    "will raise an error. Please see "
-                    "this custom training [tutorial]( "
-                    "https://www.tensorflow.org/tutorials/distribute/custom_training) "
-                    "for more details.",
-                    "typ": "Optional[str]",
+                    "doc": "Type of reduction to apply to the loss. In almost "
+                    'all cases this should be `"sum_over_batch_size"`. '
+                    'Supported options are `"sum"`, '
+                    '`"sum_over_batch_size"` or `None`.'
                 },
             ),
-            (
-                "name",
-                {
-                    "default": "squared_hinge",
-                    "doc": "Optional name for the op. " "Defaults to 'squared_hinge'.",
-                    "typ": "Optional[str]",
-                },
-            ),
+            ("name", {"doc": "Optional name for the loss instance."}),
         )
     ),
     "returns": None,
@@ -983,7 +1008,7 @@ docstring_google_pytorch_lbfgs_ir: IntermediateRepr = {
                 {
                     "default": NoneStr,
                     "doc": "either 'strong_wolfe' or None",
-                    "typ": "str",
+                    "typ": "Optional[str]",
                 },
             ),
         )

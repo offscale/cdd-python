@@ -9,6 +9,7 @@ Parses these formats into the cdd_python common IR format:
 """
 
 import ast
+import collections  # noqa
 import sys
 from ast import AST
 from collections import OrderedDict
@@ -43,7 +44,6 @@ from cdd.shared.pure_utils import (
     location_within,
     none_types,
     paren_wrap_code,
-    pp,
     rpartial,
     unquote,
     update_d,
@@ -231,7 +231,7 @@ def _scan_phase_numpydoc_and_google(
         scanned["doc"] = docstring
         return scanned
 
-    # Scan all lines so that that each element in `stacker` refers to one 'unit'
+    # Scan all lines so that each element in `stacker` refers to one 'unit'
     stacker, docstring_lines, line = [], docstring.splitlines(), None
     first_indent = (
         count_iter_items(takewhile(str.isspace, docstring_lines[0]))
@@ -565,12 +565,12 @@ def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=Fal
                 else _param["doc"]
             ).rstrip()
 
-        typ = parse_adhoc_doc_for_typ(_param["doc"], name)
+        typ = parse_adhoc_doc_for_typ(
+            _param["doc"], name, _param.get("default") == NoneStr
+        )
         if typ is not None:
             try:
-                Int, Float, String, Bool = (None,) * 4
                 eval(typ, globals(), locals())
-                del Int, Float, String, Bool
                 _param["typ"] = typ
             except (NameError, SyntaxError) as e:
                 print(e, file=sys.stderr)
@@ -582,8 +582,8 @@ def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=Fal
         ):
             _param["typ"] = "Optional[{typ}]".format(typ=_param["typ"])
 
-    pp({"b4": was, "l8": _param})
-    print("*" * 100, file=sys.stderr)
+    # pp({"b4": was, "l8": _param})
+    # print("*" * 100, file=sys.stderr)
     return name, _param
 
 

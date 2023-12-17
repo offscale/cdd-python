@@ -30,13 +30,13 @@ class TestParseDocstringUtils(TestCase):
         """
         Test that `parse_adhoc_doc_for_typ` works for various found-in-wild Keras variants
         """
-        self.assertEqual(
-            "Optional[str]", parse_adhoc_doc_for_typ(output_input[1], name="")
-        )
         deque(
             map(
                 lambda output_input: self.assertEqual(
-                    output_input[0], parse_adhoc_doc_for_typ(output_input[1], name="")
+                    output_input[0],
+                    parse_adhoc_doc_for_typ(
+                        output_input[1], name="", default_is_none=False
+                    ),
                 ),
                 (
                     (
@@ -75,7 +75,7 @@ class TestParseDocstringUtils(TestCase):
                         '`"epoch"`, integer, or `False`.'
                         'When set to `"epoch" the callback saves the checkpoint at the end of each epoch.',
                     ),
-                    ("Optional[Int]", "Int or None, defaults to None."),
+                    ("Optional[int]", "Int or None, defaults to None."),
                 ),
             ),
             maxlen=0,
