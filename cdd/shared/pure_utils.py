@@ -31,9 +31,18 @@ simple_types: Dict[Optional[str], Union[int, float, complex, str, bool, None]] =
     "bool": False,
     None: None,
 }
-type_names = frozenset(
-    ("Int", "int", "Float", "float", "complex", "str", "Bool", "bool", "None")
-)
+type_to_name = {
+    "Int": "int",
+    "int": "int",
+    "Float": "float",
+    "float": "float",
+    "complex": "complex",
+    "str": "str",
+    "String": "str",
+    "Bool": "bool",
+    "bool": "bool",
+    "None": "None",
+}
 
 line_length = environ.get("DOCTRANS_LINE_LENGTH", 100)
 fill = partial(_fill, width=line_length)
@@ -1316,9 +1325,11 @@ __all__ = [
     "set_attr",
     "set_item",
     "simple_types",
+    "sliding_window",
     "strip_split",
     "strip_starting",
     "tab",
+    "type_to_name",
     "unquote",
     "update_d",
     "upper_camelcase_to_pascal"

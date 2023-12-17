@@ -723,16 +723,17 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
 # https://github.com/keras-team/keras/blob/f889c1f/keras/optimizers/adam.py#L7-L40
 docstring_google_keras_adam_ir: IntermediateRepr = {
     "name": None,
-    "doc": remove_args_from_docstring(docstring_google_keras_adam_str),
+    "doc": remove_args_from_docstring(docstring_google_keras_adam_str) + tab,
     "params": OrderedDict(
         (
             (
                 "learning_rate",
                 {
                     "default": 0.001,
-                    "doc": "A float, a `keras.optimizers.schedules.LearningRateSchedule` "
-                    "instance, or a callable that takes no arguments and returns the "
-                    "actual value to use. The learning rate.",
+                    "doc": "A float, a "
+                    "`keras.optimizers.schedules.LearningRateSchedule` "
+                    "instance, or a callable that takes no arguments and "
+                    "returns the actual value to use. The learning rate.",
                     "typ": "float",
                 },
             ),
@@ -740,9 +741,10 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "beta_1",
                 {
                     "default": 0.9,
-                    "doc": "A float value or a constant float tensor, or a callable that takes "
-                    "no arguments and returns the actual value to use. The exponential "
-                    "decay rate for the 1st moment estimates.",
+                    "doc": "A float value or a constant float tensor, or a "
+                    "callable that takes no arguments and returns the "
+                    "actual value to use. The exponential decay rate for "
+                    "the 1st moment estimates.",
                     "typ": "float",
                 },
             ),
@@ -750,39 +752,41 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "beta_2",
                 {
                     "default": 0.999,
-                    "doc": "A float value or a constant float tensor, or a callable that takes "
-                    "no arguments and returns the actual value to use. The exponential "
-                    "decay rate for the 2nd moment estimates.",
+                    "doc": "A float value or a constant float tensor, or a "
+                    "callable that takes no arguments and returns the "
+                    "actual value to use. The exponential decay rate for "
+                    "the 2nd moment estimates.",
                     "typ": "float",
                 },
             ),
             (
                 "epsilon",
                 {
-                    "default": 1e-7,
+                    "default": 1e-07,
+                    "doc": "A small constant for numerical stability. This "
+                    'epsilon is "epsilon hat" in the Kingma and Ba paper '
+                    "(in the formula just before Section 2.1), not the "
+                    "epsilon in Algorithm 1 of the paper.",
                     "typ": "float",
-                    "doc": 'A small constant for numerical stability. This epsilon is "epsilon '
-                    'hat" in the Kingma and Ba paper (in the formula just before '
-                    "Section 2.1), not the epsilon in Algorithm 1 of the paper. "
-                    "Defaults to `1e-7`.",
                 },
             ),
             (
                 "amsgrad",
                 {
                     "default": False,
+                    "doc": "Boolean. Whether to apply AMSGrad variant of this "
+                    'algorithm from the paper "On the Convergence of Adam '
+                    'and beyond".',
                     "typ": "bool",
-                    "doc": "Boolean. Whether to apply AMSGrad variant of this algorithm from "
-                    'the paper "On the Convergence of Adam and beyond". Defaults to '
-                    "`False`.",
                 },
             ),
             (
                 "name",
                 {
                     "default": NoneStr,
-                    "doc": "String. The name to use for momentum accumulator weights created "
-                    "by the optimizer.",
+                    "doc": "String. The name to use for momentum accumulator "
+                    "weights created by the optimizer.",
+                    "typ": "Optional[str]",
                 },
             ),
             (
@@ -797,8 +801,9 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "clipnorm",
                 {
                     "default": NoneStr,
-                    "doc": "Float. If set, the gradient of each weight is individually clipped "
-                    "so that its norm is no higher than this value.",
+                    "doc": "Float. If set, the gradient of each weight is "
+                    "individually clipped so that its norm is no higher "
+                    "than this value.",
                     "typ": "Optional[float]",
                 },
             ),
@@ -806,8 +811,8 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "clipvalue",
                 {
                     "default": NoneStr,
-                    "doc": "Float. If set, the gradient of each weight is clipped to be no "
-                    "higher than this value.",
+                    "doc": "Float. If set, the gradient of each weight is "
+                    "clipped to be no higher than this value.",
                     "typ": "Optional[float]",
                 },
             ),
@@ -815,8 +820,9 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "global_clipnorm",
                 {
                     "default": NoneStr,
-                    "doc": "Float. If set, the gradient of all weights is clipped so that "
-                    "their global norm is no higher than this value.",
+                    "doc": "Float. If set, the gradient of all weights is "
+                    "clipped so that their global norm is no higher than "
+                    "this value.",
                     "typ": "Optional[float]",
                 },
             ),
@@ -824,11 +830,12 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "use_ema",
                 {
                     "default": False,
-                    "doc": "Boolean,If True, exponential moving average (EMA) is applied. EMA "
-                    "consists of computing an exponential moving average of the weights "
-                    "of the model (as the weight values change after each training "
-                    "batch), and periodically overwriting the weights with their moving "
-                    "average.",
+                    "doc": "Boolean,If True, exponential moving average (EMA) is "
+                    "applied. EMA consists of computing an exponential "
+                    "moving average of the weights of the model (as the "
+                    "weight values change after each training batch), and "
+                    "periodically overwriting the weights with their "
+                    "moving average.",
                     "typ": "bool",
                 },
             ),
@@ -836,9 +843,10 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "ema_momentum",
                 {
                     "default": 0.99,
-                    "doc": "Float,Only used if `use_ema=True`. This is the momentum to use "
-                    "when computing the EMA of the model's weights: `new_average = "
-                    "ema_momentum * old_average + (1 - ema_momentum) * "
+                    "doc": "Float,Only used if `use_ema=True`. This is the "
+                    "momentum to use when computing the EMA of the "
+                    "model's weights: `new_average = ema_momentum * "
+                    "old_average + (1 - ema_momentum) * "
                     "current_variable_value`.",
                     "typ": "float",
                 },
@@ -847,29 +855,33 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "ema_overwrite_frequency",
                 {
                     "default": NoneStr,
-                    "typ": "Optional[int]",
                     "doc": "Int or None,Only used if `use_ema=True`. Every "
-                    "`ema_overwrite_frequency` steps of iterations, we overwrite the "
-                    "model variable by its moving average. If None, the optimizer does "
-                    "not overwrite model variables in the middle of training, and you "
-                    "need to explicitly overwrite the variables at the end of training "
-                    "by calling `optimizer.finalize_variable_values()` (which updates "
-                    "the model variables in-place). When using the built-in `fit()` "
-                    "training loop, this happens automatically after the last epoch, "
-                    "and you don't need to do anything.",
+                    "`ema_overwrite_frequency` steps of iterations, we "
+                    "overwrite the model variable by its moving average. "
+                    "If None, the optimizer does not overwrite model "
+                    "variables in the middle of training, and you need to "
+                    "explicitly overwrite the variables at the end of "
+                    "training by calling "
+                    "`optimizer.finalize_variable_values()` (which "
+                    "updates the model variables in-place). When using "
+                    "the built-in `fit()` training loop, this happens "
+                    "automatically after the last epoch, and you don't "
+                    "need to do anything.",
                 },
             ),
             (
                 "loss_scale_factor",
                 {
                     "default": NoneStr,
-                    "doc": "Float or `None`. If a float, the scale factor will be multiplied "
-                    "the loss before computing gradients, and the inverse of the scale "
-                    "factor will be multiplied by the gradients before updating "
-                    "variables. Useful for preventing underflow during mixed precision "
-                    "training. Alternately, `keras.optimizers.LossScaleOptimizer` will "
+                    "doc": "Float or `None`. If a float, the scale factor will "
+                    "be multiplied the loss before computing gradients, "
+                    "and the inverse of the scale factor will be "
+                    "multiplied by the gradients before updating "
+                    "variables. Useful for preventing underflow during "
+                    "mixed precision training. Alternately, "
+                    "`keras.optimizers.LossScaleOptimizer` will "
                     "automatically set a loss scale factor.",
-                    "typ": "float",
+                    "typ": "Optional[float]",
                 },
             ),
         )

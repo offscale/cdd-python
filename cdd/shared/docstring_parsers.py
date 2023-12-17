@@ -518,10 +518,11 @@ def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=Fal
     del param
     was = deepcopy(_param)
     was_none = was.get("default") in frozenset((NoneStr, "None"))
-    merge_present_params(
-        target_param=_param,
-        other_param=dict(zip(("doc", "default"), extract_default(_param["doc"]))),
-    )
+    if "doc" in _param:
+        merge_present_params(
+            target_param=_param,
+            other_param=dict(zip(("doc", "default"), extract_default(_param["doc"]))),
+        )
 
     if name is not None and (name.endswith("kwargs") or name.startswith("**")):
         name = name.lstrip("*")
@@ -567,7 +568,9 @@ def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=Fal
         typ = parse_adhoc_doc_for_typ(_param["doc"], name)
         if typ is not None:
             try:
+                Int, Float, String, Bool = (None,) * 4
                 eval(typ, globals(), locals())
+                del Int, Float, String, Bool
                 _param["typ"] = typ
             except (NameError, SyntaxError) as e:
                 print(e, file=sys.stderr)

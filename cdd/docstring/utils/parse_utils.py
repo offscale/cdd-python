@@ -11,7 +11,7 @@ from operator import contains, itemgetter
 from typing import List, Union
 
 from cdd.shared.defaults_utils import extract_default
-from cdd.shared.pure_utils import count_iter_items, pp, sliding_window, type_names
+from cdd.shared.pure_utils import count_iter_items, pp, sliding_window, type_to_name
 
 adhoc_type_to_type = {
     "bool": "bool",
@@ -136,7 +136,7 @@ def _union_literal_from_sentence(sentence):
     # checks if each var is keyword or digit or quoted
     if any(
         filter(
-            lambda e: e not in type_names
+            lambda e: e not in type_to_name
             and (
                 iskeyword(e)
                 or e.isdigit()
@@ -172,6 +172,9 @@ def _union_literal_from_sentence(sentence):
         wrap = "Optional[{}]"
     else:
         wrap = "{}"
+
+    union = tuple(map(lambda typ: type_to_name.get(typ, typ), union))
+
     if literals and len(union) > literals:
         return wrap.format(
             "Union[{}, {}]".format(
@@ -281,6 +284,10 @@ def parse_adhoc_doc_for_typ(doc, name):
         if candidate_type is not None:
             return wrap_type_with.format(candidate_type)
 
+    if fst_sentence is not None:
+        whole_sentence_as_type = type_to_name.get(fst_sentence.rstrip("."))
+        if whole_sentence_as_type is not None:
+            return whole_sentence_as_type
     if candidate_type is not None:
         return candidate_type
     elif len(words) > 2 and "/" in words[2]:

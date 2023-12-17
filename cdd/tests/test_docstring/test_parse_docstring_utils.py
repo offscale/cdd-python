@@ -30,6 +30,9 @@ class TestParseDocstringUtils(TestCase):
         """
         Test that `parse_adhoc_doc_for_typ` works for various found-in-wild Keras variants
         """
+        self.assertEqual(
+            "Optional[str]", parse_adhoc_doc_for_typ(output_input[1], name="")
+        )
         deque(
             map(
                 lambda output_input: self.assertEqual(
