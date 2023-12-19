@@ -128,8 +128,9 @@ class_google_keras_tensorboard_ir: IntermediateRepr = {
     "type": "static",
 }
 
+# [2.1.2] https://github.com/pytorch/pytorch/blob/6c7013a3/torch/nn/modules/loss.py
 class_torch_nn_l1loss_ir: IntermediateRepr = {
-    "doc": deindent(remove_args_from_docstring(class_torch_nn_l1loss_docstring_str), 1),
+    "doc": remove_args_from_docstring(class_torch_nn_l1loss_docstring_str),
     "name": "L1Loss",
     "params": OrderedDict(
         (
@@ -143,7 +144,7 @@ class_torch_nn_l1loss_ir: IntermediateRepr = {
                     "elements per sample. If the field "
                     ":attr:`size_average` is set to ``False``, the losses "
                     "are instead summed for each minibatch. Ignored when "
-                    "reduce is ``False``.",
+                    ":attr:`reduce` is ``False``.",
                     "typ": "Optional[bool]",
                 },
             ),

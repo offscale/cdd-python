@@ -22,13 +22,10 @@ from ast import (
 )
 
 from cdd.shared.ast_utils import FALLBACK_TYP, maybe_type_comment, set_arg, set_value
-from cdd.shared.pure_utils import deindent, emit_separating_tabs, tab
-from cdd.tests.mocks.classes import (
-    class_torch_nn_l1loss_docstring_str,
-    tensorboard_doc_str_no_args_str,
-)
+from cdd.shared.pure_utils import emit_separating_tabs, tab
+from cdd.tests.mocks.classes import tensorboard_doc_str_no_args_str
 from cdd.tests.mocks.docstrings import docstring_header_no_nl_str, docstring_header_str
-from cdd.tests.utils_for_tests import remove_args_from_docstring
+from cdd.tests.mocks.ir import class_torch_nn_l1loss_ir
 
 argparse_add_argument_ast = Expr(
     Call(
@@ -841,166 +838,159 @@ argparse_function_google_keras_tensorboard_ast = FunctionDef(
 )
 
 argparse_func_torch_nn_l1loss_ast = FunctionDef(
+    name="set_cli_args",
     args=arguments(
-        args=[set_arg("argument_parser")],
-        defaults=[],
-        kw_defaults=[],
-        kwarg=None,
-        kwonlyargs=[],
         posonlyargs=[],
-        vararg=None,
-        arg=None,
+        args=[set_arg("argument_parser")],
+        kwonlyargs=[],
+        kw_defaults=[],
+        defaults=[],
     ),
     body=[
         _cli_doc_nosplit_expr,
         Assign(
             targets=[
                 Attribute(
-                    Name("argument_parser", Load()),
-                    "description",
-                    Store(),
+                    value=Name(id="argument_parser", ctx=Load()),
+                    attr="description",
+                    ctx=Store(),
                 )
             ],
             value=set_value(
-                deindent(
-                    remove_args_from_docstring(class_torch_nn_l1loss_docstring_str), 1
-                )
+                "Creates a criterion that measures the mean absolute error (MAE) between each element in\n"
+                "the input :math:`x` and target :math:`y`.\n"
+                "\n"
+                "The unreduced (i.e. with :attr:`reduction` set to ``'none'``) loss can be described as:\n"
+                "\n"
+                ".. math::\n"
+                "\\ell(x, y) = L = \\{l_1,\\dots,l_N\\}^\\top, \\quad\n"
+                "l_n = \\left| x_n - y_n \\right|,\n"
+                "\n"
+                "where :math:`N` is the batch size. If :attr:`reduction` is not ``'none'``\n"
+                "(default ``'mean'``), then:\n"
+                "\n"
+                ".. math::\n"
+                "\\ell(x, y) =\n"
+                "\\begin{cases}\n"
+                "    \\operatorname{mean}(L), & \\text{if reduction} = \\text{`mean';}\\\\\n"
+                "    \\operatorname{sum}(L),  & \\text{if reduction} = \\text{`sum'.}\n"
+                "\\end{cases}\n"
+                "\n"
+                ":math:`x` and :math:`y` are tensors of arbitrary shapes with a total\n"
+                "of :math:`n` elements each.\n"
+                "\n"
+                "The sum operation still operates over all the elements, and divides by :math:`n`.\n"
+                "\n"
+                "The division by :math:`n` can be avoided if one sets ``reduction = 'sum'``.\n"
+                "\n"
+                "Supports real-valued and complex-valued inputs.\n"
+                "\n"
+                "Shape:\n"
+                "- Input: :math:`(*)`, where :math:`*` means any number of dimensions.\n"
+                "- Target: :math:`(*)`, same shape as the input.\n"
+                "- Output: scalar. If :attr:`reduction` is ``'none'``, then\n"
+                "  :math:`(*)`, same shape as the input.\n"
+                "\n"
+                "Examples::\n"
+                "\n"
+                ">>> loss = nn.L1Loss()\n"
+                ">>> input = torch.randn(3, 5, requires_grad=True)\n"
+                ">>> target = torch.randn(3, 5)\n"
+                ">>> output = loss(input, target)\n"
+                ">>> output.backward()"
             ),
             lineno=None,
             expr=None,
             **maybe_type_comment
         ),
         Expr(
-            Call(
+            value=Call(
+                func=Attribute(
+                    value=Name(id="argument_parser", ctx=Load()),
+                    attr="add_argument",
+                    ctx=Load(),
+                ),
                 args=[set_value("--size_average")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
-                ),
                 keywords=[
-                    keyword(
-                        arg="type",
-                        value=Name(
-                            "bool",
-                            Load(),
-                        ),
-                        identifier=None,
-                    ),
+                    keyword(arg="type", value=Name(id="bool", ctx=Load())),
                     keyword(
                         arg="help",
                         value=set_value(
-                            "Deprecated (see :attr:`reduction`)."
-                            " By default, the losses are averaged over each loss element in the batch. Note that for"
-                            " some losses, there are multiple elements per sample. If the field :attr:`size_average`"
-                            " is set to ``False``, the losses are instead summed for each minibatch. Ignored when"
-                            " reduce is ``False``."
+                            class_torch_nn_l1loss_ir["params"]["size_average"]["doc"]
                         ),
-                        identifier=None,
                     ),
-                    keyword(arg="default", value=set_value(True), identifier=None),
+                    keyword(arg="default", value=set_value(True)),
                 ],
                 expr=None,
                 expr_func=None,
             )
         ),
         Expr(
-            Call(
+            value=Call(
+                func=Attribute(
+                    value=Name(id="argument_parser", ctx=Load()),
+                    attr="add_argument",
+                    ctx=Load(),
+                ),
                 args=[set_value("--reduce")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
-                ),
                 keywords=[
-                    keyword(arg="type", value=Name("bool", Load()), identifier=None),
+                    keyword(arg="type", value=Name(id="bool", ctx=Load())),
                     keyword(
                         arg="help",
                         value=set_value(
-                            "Deprecated (see :attr:`reduction`). "
-                            "By default, the losses are averaged or summed over observations for each minibatch "
-                            "depending on :attr:`size_average`. When :attr:`reduce` is ``False``, returns a loss "
-                            "per batch element instead and ignores :attr:`size_average`."
+                            class_torch_nn_l1loss_ir["params"]["reduce"]["doc"]
                         ),
-                        identifier=None,
                     ),
-                    keyword(arg="default", value=set_value(True), identifier=None),
+                    keyword(arg="default", value=set_value(True)),
                 ],
                 expr=None,
                 expr_func=None,
             )
         ),
         Expr(
-            Call(
+            value=Call(
+                func=Attribute(
+                    value=Name(id="argument_parser", ctx=Load()),
+                    attr="add_argument",
+                    ctx=Load(),
+                ),
                 args=[set_value("--reduction")],
-                func=Attribute(
-                    Name("argument_parser", Load()),
-                    "add_argument",
-                    Load(),
-                ),
                 keywords=[
                     keyword(
                         arg="help",
                         value=set_value(
-                            "Specifies the reduction to apply to the output:"
-                            " ``'none'`` | ``'mean'`` | ``'sum'``. "
-                            "``'none'``: no reduction will be applied, `"
-                            "`'mean'``: the sum of the output will be divided by the number of elements in the output,"
-                            " "
-                            "``'sum'``: the output will be summed. "
-                            "Note: :attr:`size_average` and :attr:`reduce` are in the process of being deprecated,"
-                            " and in the meantime, specifying either of those two args will"
-                            " override :attr:`reduction`."
+                            class_torch_nn_l1loss_ir["params"]["reduction"]["doc"]
                         ),
-                        identifier=None,
                     ),
-                    keyword(arg="default", value=set_value("mean"), identifier=None),
+                    keyword(arg="required", value=set_value(True)),
+                    keyword(arg="default", value=set_value("mean")),
                 ],
                 expr=None,
                 expr_func=None,
             )
         ),
         Expr(
-            Call(
-                args=[set_value("--__constants__")],
+            value=Call(
                 func=Attribute(
-                    Name(
-                        "argument_parser",
-                        Load(),
-                    ),
-                    "add_argument",
-                    Load(),
+                    value=Name(id="argument_parser", ctx=Load()),
+                    attr="add_argument",
+                    ctx=Load(),
                 ),
+                args=[set_value("--__constants__")],
                 keywords=[
-                    keyword(
-                        arg="type",
-                        value=Name(
-                            "str",
-                            Load(),
-                        ),
-                        identifier=None,
-                    ),
-                    keyword(arg="action", value=set_value("append"), identifier=None),
-                    keyword(arg="required", value=set_value(True), identifier=None),
-                    keyword(
-                        arg="default", value=set_value("reduction"), identifier=None
-                    ),
+                    keyword(arg="type", value=Name(id="str", ctx=Load())),
+                    keyword(arg="action", value=set_value("append")),
+                    keyword(arg="required", value=set_value(True)),
+                    keyword(arg="default", value=set_value("reduction")),
                 ],
                 expr=None,
                 expr_func=None,
             )
         ),
-        Return(
-            value=Name(
-                "argument_parser",
-                Load(),
-            ),
-            expr=None,
-        ),
+        Return(value=Name(id="argument_parser", ctx=Load())),
     ],
     decorator_list=[],
     type_params=[],
-    name="set_cli_args",
     returns=None,
     arguments_args=None,
     identifier_name=None,

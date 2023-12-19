@@ -1,7 +1,6 @@
 """
 Tests for `cdd.emit.argparse`
 """
-
 from copy import deepcopy
 from unittest import TestCase
 
@@ -15,6 +14,7 @@ import cdd.function.parse
 import cdd.json_schema.emit
 import cdd.shared.emit.file
 import cdd.sqlalchemy.emit
+from cdd.shared.pure_utils import deindent
 from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.argparse import (
     argparse_func_action_append_ast,
@@ -95,9 +95,10 @@ class TestEmitArgparse(TestCase):
 
     def test_from_torch_ir_to_argparse(self) -> None:
         """Tests if emission of class from torch IR is as expected"""
-
+        ir = deepcopy(class_torch_nn_l1loss_ir)
+        ir["doc"] = deindent(ir["doc"], 1)
         func = cdd.argparse_function.emit.argparse_function(
-            deepcopy(class_torch_nn_l1loss_ir),
+            ir,
             emit_default_doc=False,
             wrap_description=False,
             word_wrap=False,
