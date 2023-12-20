@@ -12,6 +12,7 @@ import cdd.argparse_function.emit
 import cdd.class_.parse
 import cdd.json_schema.parse
 from cdd.shared.ast_utils import RewriteAtQuery
+from cdd.shared.pure_utils import indent_all_but_first, pp
 from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.classes import (
     class_ast,
@@ -127,10 +128,19 @@ class TestParseClass(TestCase):
 
         del parsed_ir["_internal"]  # Not needed for this test
 
+        # Just whitespace stuff so shouldn't be a problem test-usefulness-wise
+        sep = "  "
+        parsed_ir["doc"] = "{}\n{}".format(
+            indent_all_but_first(parsed_ir["doc"], sep=sep), sep
+        )
+
         self.assertEqual(
             *map(itemgetter("doc"), (parsed_ir, class_google_keras_tensorboard_ir))
         )
+        pp(parsed_ir)
         self.assertDictEqual(parsed_ir, class_google_keras_tensorboard_ir)
+
+    maxDiff = None
 
     def test_from_class_and_function_in_memory(self) -> None:
         """

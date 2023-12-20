@@ -7,7 +7,7 @@ from copy import deepcopy
 
 from cdd.shared.ast_utils import NoneStr
 from cdd.shared.defaults_utils import remove_defaults_from_intermediate_repr
-from cdd.shared.pure_utils import deindent, paren_wrap_code, tab
+from cdd.shared.pure_utils import deindent, paren_wrap_code, tab, indent_all_but_first
 from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.classes import (
     class_torch_nn_l1loss_docstring_str,
@@ -36,7 +36,9 @@ class_google_keras_tensorboard_ir: IntermediateRepr = {
                 {
                     "default": "logs",
                     "doc": "the path of the directory where to save the log "
-                    "files to be parsed by TensorBoard.",
+                    "files to be parsed by TensorBoard. e.g., `log_dir = "
+                    "os.path.join(working_dir, 'logs')`. This directory "
+                    "should not be reused by any other callbacks.",
                     "typ": "str",
                 },
             ),
@@ -44,11 +46,11 @@ class_google_keras_tensorboard_ir: IntermediateRepr = {
                 "histogram_freq",
                 {
                     "default": 0,
-                    "doc": "frequency (in epochs) at which to compute activation "
-                    "and weight histograms for the layers of the model. "
-                    "If set to 0, histograms won't be computed. "
-                    "Validation data (or split) must be specified for "
-                    "histogram visualizations.",
+                    "doc": "frequency (in epochs) at which to compute weight "
+                    "histograms for the layers of the model. If set to 0, "
+                    "histograms won't be computed. Validation data (or "
+                    "split) must be specified for histogram "
+                    "visualizations.",
                     "typ": "int",
                 },
             ),
@@ -56,9 +58,10 @@ class_google_keras_tensorboard_ir: IntermediateRepr = {
                 "write_graph",
                 {
                     "default": True,
-                    "doc": "whether to visualize the graph in TensorBoard. The "
-                    "log file can become quite large when write_graph is "
-                    "set to True.",
+                    "doc": "(Not supported at this time) Whether to visualize "
+                    "the graph in TensorBoard. Note that the log file can "
+                    "become quite large when `write_graph` is set to "
+                    "`True`.",
                     "typ": "bool",
                 },
             ),
@@ -72,30 +75,48 @@ class_google_keras_tensorboard_ir: IntermediateRepr = {
                 },
             ),
             (
+                "write_steps_per_second",
+                {
+                    "default": False,
+                    "doc": "whether to log the training steps per second into "
+                    "TensorBoard. This supports both epoch and batch "
+                    "frequency logging.",
+                    "typ": "bool",
+                },
+            ),
+            (
                 "update_freq",
                 {
                     "default": "epoch",
-                    "doc": "`'batch'` or `'epoch'` or integer. When using "
-                    "`'batch'`, writes the losses and metrics to "
-                    "TensorBoard after each batch. The same applies for "
-                    "`'epoch'`. If using an integer, let's say `1000`, "
-                    "the callback will write the metrics and losses to "
-                    "TensorBoard every 1000 batches. Note that writing "
-                    "too frequently to TensorBoard can slow down your "
-                    "training.",
-                    "typ": "str",
+                    "doc": '`"batch"` or `"epoch"` or integer. When using '
+                    '`"epoch"`, writes the losses and metrics to '
+                    "TensorBoard after every epoch. If using an integer, "
+                    "let's say `1000`, all metrics and losses (including "
+                    "custom ones added by `Model.compile`) will be logged "
+                    'to TensorBoard every 1000 batches. `"batch"` is a '
+                    "synonym for 1, meaning that they will be written "
+                    "every batch. Note however that writing too "
+                    "frequently to TensorBoard can slow down your "
+                    "training, especially when used with distribution "
+                    "strategies as it will incur additional "
+                    "synchronization overhead. Batch-level summary "
+                    "writing is also available via `train_step` override. "
+                    "Please see [TensorBoard Scalars tutorial]( "
+                    "https://www.tensorflow.org/tensorboard/scalars_and_keras#batch-level_logging)  "
+                    "# noqa: E501 for more details.",
+                    "typ": 'Union[Literal["batch", "epoch"], int]',
                 },
             ),
             (
                 "profile_batch",
                 {
-                    "default": 2,
-                    "doc": "Profile the batch(es) to sample compute "
-                    "characteristics. profile_batch must be a "
-                    "non-negative integer or a tuple of integers. A pair "
-                    "of positive integers signify a range of batches to "
-                    "profile. By default, it will profile the second "
-                    "batch. Set profile_batch=0 to disable profiling.",
+                    "default": 0,
+                    "doc": "(Not supported at this time) Profile the batch(es) "
+                    "to sample compute characteristics. profile_batch "
+                    "must be a non-negative integer or a tuple of "
+                    "integers. A pair of positive integers signify a "
+                    "range of batches to profile. By default, profiling "
+                    "is disabled.",
                     "typ": "int",
                 },
             ),
@@ -112,14 +133,13 @@ class_google_keras_tensorboard_ir: IntermediateRepr = {
             (
                 "embeddings_metadata",
                 {
-                    "default": NoneStr,
-                    "doc": "a dictionary which maps layer name to a file name in "
-                    "which metadata for this embedding layer is saved. "
-                    "See the [details]( "
-                    "https://www.tensorflow.org/how_tos/embedding_viz/#metadata_optional) "
-                    "about metadata files format. In case if the same "
-                    "metadata file is used for all embedding layers, "
-                    "string can be passed.",
+                    "default": "```(None)```",
+                    "doc": "Dictionary which maps embedding layer names to the "
+                    "filename of a file in which to save metadata for the "
+                    "embedding layer. In case the same metadata file is "
+                    "to be used for all embedding layers, a single "
+                    "filename can be passed.",
+                    "typ": "str",
                 },
             ),
         )
@@ -128,7 +148,10 @@ class_google_keras_tensorboard_ir: IntermediateRepr = {
     "type": "static",
 }
 
-# [2.1.2] https://github.com/pytorch/pytorch/blob/6c7013a3/torch/nn/modules/loss.py
+# #################
+# # PyTorch 2.1.2 #
+# #################
+# https://github.com/pytorch/pytorch/blob/6c7013a3/torch/nn/modules/loss.py
 class_torch_nn_l1loss_ir: IntermediateRepr = {
     "doc": remove_args_from_docstring(class_torch_nn_l1loss_docstring_str),
     "name": "L1Loss",
@@ -331,6 +354,9 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
     "type": "static",
 }
 
+# #####################
+# # TensorFlow 2.15.0 #
+# #####################
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/optimizer_v2/adadelta.py#L27-L62
 docstring_google_keras_adadelta_ir: IntermediateRepr = {
     "doc": remove_args_from_docstring(docstring_google_keras_adadelta_str) + tab,
@@ -542,6 +568,9 @@ docstring_google_keras_adadelta_merged_init_ir: IntermediateRepr = {
     "type": "static",
 }
 
+# #####################
+# # TensorFlow 2.15.0 #
+# #####################
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/callbacks.py#L2792-L2840
 docstring_google_keras_lambda_callback_ir: IntermediateRepr = {
     "doc": remove_args_from_docstring(docstring_google_keras_lambda_callback_str) + tab,
@@ -607,6 +636,9 @@ docstring_google_keras_lambda_callback_ir: IntermediateRepr = {
     "type": "static",
 }
 
+# #####################
+# # TensorFlow 2.15.0 #
+# #####################
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/optimizer_v2/adadelta.py#L27-L62
 docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
     "name": "Adadelta",
@@ -769,6 +801,9 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
 #     "{{base_optimizer_keyword_args}}", base_optimizer_keyword_args)
 # cdd.class_.parse.class_(node)
 # ```
+# ###############
+# # Keras 3.0.1 #
+# ###############
 # https://github.com/keras-team/keras/blob/f889c1f/keras/optimizers/adam.py#L7-L40
 docstring_google_keras_adam_ir: IntermediateRepr = {
     "name": None,
@@ -939,6 +974,9 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
     "type": "static",
 }
 
+# #####################
+# # TensorFlow 2.15.0 #
+# #####################
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/losses.py#L862-L875
 docstring_google_keras_squared_hinge_ir: IntermediateRepr = {
     "doc": docstring_google_keras_squared_hinge_no_args_doc_str + tab,

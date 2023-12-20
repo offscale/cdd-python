@@ -569,6 +569,9 @@ class_squared_hinge_config_ast = ClassDef(
 #
 # ast.parse(inspect.getsource(keras.callbacks.TensorBoard)).body[0].body[0].value.value.splitlines()
 # ```
+# ###############
+# # Keras 3.0.1 #
+# ###############
 # https://github.com/keras-team/keras/blob/f889c1f/keras/callbacks/tensorboard.py#L20-L157 [- args]
 tensorboard_doc_str_no_args = (
     "Enable visualizations for TensorBoard.",

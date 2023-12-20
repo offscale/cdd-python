@@ -51,7 +51,7 @@ class TestParseDocstringUtils(TestCase):
                     ),
                     ("Union[list,tuple]", "A list/tuple"),
                     (
-                        "Union[Literal['batch', 'epoch'], int]",
+                        'Union[Literal["batch", "epoch"], int]',
                         class_google_keras_tensorboard_ir["params"]["update_freq"][
                             "doc"
                         ],

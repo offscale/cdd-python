@@ -49,6 +49,9 @@ Some comment
 #
 # ast.parse(inspect.getsource(keras.losses.SquaredHinge)).body[0].body[0].value.value.splitlines()
 # ```
+# ###############
+# # Keras 3.0.1 #
+# ###############
 # https://github.com/keras-team/keras/blob/f889c1f/keras/losses/losses.py#L282-L297
 docstring_google_keras_squared_hinge_no_args_doc_str = (
     "Initializes `SquaredHinge` instance."
@@ -82,6 +85,9 @@ docstring_google_keras_tensorboard_return_str = """
 # ast.parse(inspect.getsource(keras.optimizers.Adam)).body[0].body[0].value.value.replace(
 #     "{{base_optimizer_keyword_args}}", base_optimizer_keyword_args).splitlines()
 # ```
+# ###############
+# # Keras 3.0.1 #
+# ###############
 # https://github.com/keras-team/keras/blob/f889c1f/keras/optimizers/adam.py#L8-L40
 docstring_google_keras_adam = (
     "Optimizer that implements the Adam algorithm.",
@@ -168,6 +174,9 @@ docstring_google_keras_adam_str = "\n".join(docstring_google_keras_adam)
 # ast.parse(inspect.getsource(keras.optimizers.Adadelta)).body[0].body[0].value.value.replace(
 #     "{{base_optimizer_keyword_args}}", base_optimizer_keyword_args).splitlines()
 # ```
+# ###############
+# # Keras 3.0.1 #
+# ###############
 # https://github.com/keras-team/keras/blob/f889c1f/keras/optimizers/adadelta.py#L8-L37
 docstring_google_keras_adadelta = (
     "Optimizer that implements the Adadelta algorithm.",
@@ -247,6 +256,9 @@ docstring_google_keras_adadelta_str = "\n".join(docstring_google_keras_adadelta)
 #
 # ast.parse(inspect.getsource(keras.callbacks.LambdaCallback)).body[0].body[0].value.value.splitlines()
 # ```
+# ###############
+# # Keras 3.0.1 #
+# ###############
 # https://github.com/keras-team/keras/blob/f889c1f/keras/callbacks/lambda_callback.py#L7-L61
 docstring_google_keras_lambda_callback = (
     "Callback for creating simple, custom callbacks on-the-fly.",
@@ -318,6 +330,9 @@ docstring_google_keras_lambda_callback_str = "\n".join(
 #
 # ast.get_docstring(ast.parse(inspect.getsource(mean_squared_error)).body[0]).splitlines()
 # ```
+# #####################
+# # TensorFlow 2.15.0 #
+# #####################
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/ops/losses/losses_impl.py#L627-L755
 docstring_google_tf_mean_squared_error_header_tuple = (
     "Adds a Sum-of-Squares loss to the training procedure.",

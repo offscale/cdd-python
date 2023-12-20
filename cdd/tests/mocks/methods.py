@@ -822,6 +822,9 @@ method_complex_args_variety_ast = FunctionDef(
     stmt=None,
 )
 
+# #####################
+# # TensorFlow 2.15.0 #
+# #####################
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/keras/losses.py#L1433-L1454
 function_google_tf_squared_hinge_docstring = (
     "Computes the squared hinge loss between `y_true` and `y_pred`.",
@@ -919,9 +922,11 @@ function_google_tf_ops_losses__safe_mean_ast = FunctionDef(
 #
 # print(ast.dump(ast.parse(inspect.getsource(mean_squared_error)).body[0], indent=4)
 # ```
+# #####################
+# # TensorFlow 2.15.0 #
+# #####################
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/ops/losses/losses_impl.py#L627-L755
-#
-# minus non-docstring body and `decorator_list`
+# - (minus non-docstring body and `decorator_list`)
 function_google_tf_mean_squared_error_ast = FunctionDef(
     name="mean_squared_error",
     args=arguments(

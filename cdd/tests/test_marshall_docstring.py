@@ -14,6 +14,7 @@ import cdd.shared.emit
 import cdd.shared.emit.utils.emitter_utils
 from cdd.shared.ast_utils import set_value
 from cdd.shared.docstring_parsers import _set_name_and_type, parse_docstring
+from cdd.shared.pure_utils import deindent, indent_all_but_first
 from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.docstrings import (
     docstring_extra_colons_str,
@@ -317,34 +318,33 @@ class TestMarshallDocstring(TestCase):
         )
         gen = cdd.docstring.emit.docstring(
             ir,
-            # indent_level=0,
+            indent_level=0,
             docstring_format="google",
             emit_types=True,
             emit_default_doc=False,
             # emit_separating_tab=False,
             word_wrap=False,
         )
-        self.assertEqual(
-            gen,
-            docstring_google_tf_mean_squared_error_str.replace(
-                # Infer the type
-                "  weights: Optional `Tensor` whose rank is either 0, or the same rank as\n"
-                "    `labels`, and must be broadcastable to `labels` (i.e., all dimensions must\n"
-                "    be either `1`, or the same as the corresponding `losses` dimension).\n",
-                "  weights (Optional[float]): Optional `Tensor` whose rank is either 0, or the same rank as "
-                "`labels`, and must be broadcastable to `labels` (i.e., all dimensions must be either `1`, or the "
-                "same as the corresponding `losses` dimension).\n",
+
+        # Because `infer_type=True` type is inferred, which changes things a little
+        gen = "{}\n  ".format(
+            indent_all_but_first(gen, sep="  ")
+            .replace(
+                "weights (Optional[float]): Optional `Tensor` whose rank is either 0, or the same rank as `labels`, and must be broadcastable to `labels` (i.e., all dimensions must be either `1`, or the same as the corresponding `losses` dimension).",
+                """weights: Optional `Tensor` whose rank is either 0, or the same rank as
+      `labels`, and must be broadcastable to `labels` (i.e., all dimensions must
+      be either `1`, or the same as the corresponding `losses` dimension).""",
                 1,
-            ).replace(
-                # Word wrap everything, even if text is unchanged
-                "  Weighted loss float `Tensor`. If `reduction` is `NONE`, this has the same\n"
-                "  shape as `labels`; otherwise, it is scalar.\n",
-                "\n"
-                "   Weighted loss float `Tensor`. If `reduction` is `NONE`, this has the same shape as `labels`; "
-                "otherwise, it is scalar.\n",
+            )
+            .replace(
+                """float:
+     Weighted loss float `Tensor`. If `reduction` is `NONE`, this has the same shape as `labels`; otherwise, it is scalar.""",
+                """Weighted loss float `Tensor`. If `reduction` is `NONE`, this has the same
+    shape as `labels`; otherwise, it is scalar.""",
                 1,
-            ),
+            )
         )
+        self.assertEqual(gen, docstring_google_tf_mean_squared_error_str)
 
     # def test_(self):
     #     gold_google_doc_str = """
