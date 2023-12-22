@@ -18,7 +18,7 @@ class TestEmitJsonSchemaUtils(TestCase):
     """Tests cdd.emit.utils.json_schema_utils"""
 
     required: TList[str] = []
-    name = "param"
+    name: str = "param"
     default_ = tuple(range(5))
     default_elts = list(map(set_value, default_))
 

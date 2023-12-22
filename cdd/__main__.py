@@ -470,7 +470,7 @@ def main(cli_argv=None, return_args=False):
         require_file_existent(
             _parser, truth_file[0] if truth_file else truth_file, name="truth"
         )
-        truth_file = path.realpath(path.expanduser(truth_file[0]))
+        truth_file: str = path.realpath(path.expanduser(truth_file[0]))
 
         number_of_files = sum(
             len(val)

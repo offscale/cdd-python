@@ -32,7 +32,7 @@ class TestSetupPy(TestCase):
         :return: setup.py as a module
         :rtype: ```Union[module, ModuleSpec]```
         """
-        modname = "setup_py"
+        modname: str = "setup_py"
         loader = SourceFileLoader(
             modname,
             path.join(
@@ -54,7 +54,7 @@ class TestSetupPy(TestCase):
     def test_to_funcs(self) -> None:
         """Tests that `to_funcs` produces the right local and install dirs"""
         to_funcs = getattr(self.mod, "to_funcs")
-        args = "5", "6"
+        args: str = "5", "6"
         local_dir_join_func_resp, install_dir_join_func_resp = map(
             methodcaller("__call__"), to_funcs(*args)
         )

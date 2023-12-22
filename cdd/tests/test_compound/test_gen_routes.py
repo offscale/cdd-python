@@ -45,11 +45,11 @@ def populate_files(tempdir, init_with_crud):
     :return: model_path, routes_path
     :rtype: ```Tuple[str, str]```
     """
-    model_path = path.join(tempdir, "model{extsep}py".format(extsep=extsep))
-    routes_path = path.join(tempdir, "routes{extsep}py".format(extsep=extsep))
+    model_path: str = path.join(tempdir, "model{extsep}py".format(extsep=extsep))
+    routes_path: str = path.join(tempdir, "routes{extsep}py".format(extsep=extsep))
     open(path.join(tempdir, "__init__{extsep}py".format(extsep=extsep)), "a").close()
 
-    model = "\n".join(
+    model: str = "\n".join(
         (
             "Base = JSON = object",
             "def Column(a, doc, default, nullable, primary_key): pass",
@@ -60,7 +60,7 @@ def populate_files(tempdir, init_with_crud):
     with open(model_path, "wt") as f:
         f.write(model)
 
-    routes = "\n".join(
+    routes: str = "\n".join(
         filter(
             None,
             (

@@ -3,6 +3,7 @@ Docstring parser
 """
 
 import cdd.shared.docstring_parsers
+from cdd.shared.types import IntermediateRepr
 
 
 def docstring(
@@ -42,7 +43,7 @@ def docstring(
     ), "Expected `str` got `{doc_string_type!r}`".format(
         doc_string_type=type(doc_string).__name__
     )
-    parsed = (
+    parsed: IntermediateRepr = (
         doc_string
         if isinstance(doc_string, dict)
         else cdd.shared.docstring_parsers.parse_docstring(

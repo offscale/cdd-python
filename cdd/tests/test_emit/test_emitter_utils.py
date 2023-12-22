@@ -93,7 +93,7 @@ class TestEmitterUtils(TestCase):
 
     def test_interpolate_defaults(self) -> None:
         """Test that interpolate_defaults corrects sets the default property"""
-        param = "K", deepcopy(intermediate_repr["params"]["K"])
+        param: str = "K", deepcopy(intermediate_repr["params"]["K"])
         param_with_correct_default = deepcopy(param[1])
         del param[1]["default"]
         self.assertDictEqual(interpolate_defaults(param)[1], param_with_correct_default)

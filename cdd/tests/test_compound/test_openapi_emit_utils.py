@@ -32,9 +32,9 @@ class TestOpenApiEmitUtils(TestCase):
         ]
 
         with TemporaryDirectory() as temp_dir:
-            mod_dir = path.join(temp_dir, "table_name0")
+            mod_dir: str = path.join(temp_dir, "table_name0")
             mkdir(mod_dir)
-            init_path = path.join(mod_dir, "__init__{}py".format(path.extsep))
+            init_path: str = path.join(mod_dir, "__init__{}py".format(path.extsep))
             with open(init_path, "wt") as f:
                 f.write(to_code(sqlalchemy_cls))
             with patch(

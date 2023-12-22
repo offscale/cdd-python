@@ -14,7 +14,7 @@ import cdd.shared.emit
 import cdd.shared.emit.utils.emitter_utils
 from cdd.shared.ast_utils import set_value
 from cdd.shared.docstring_parsers import _set_name_and_type, parse_docstring
-from cdd.shared.pure_utils import deindent, indent_all_but_first
+from cdd.shared.pure_utils import indent_all_but_first
 from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.docstrings import (
     docstring_extra_colons_str,
@@ -327,7 +327,7 @@ class TestMarshallDocstring(TestCase):
         )
 
         # Because `infer_type=True` type is inferred, which changes things a little
-        gen = "{}\n  ".format(
+        gen: str = "{}\n  ".format(
             indent_all_but_first(gen, sep="  ")
             .replace(
                 "weights (Optional[float]): Optional `Tensor` whose rank is either 0, or the same rank as `labels`, and must be broadcastable to `labels` (i.e., all dimensions must be either `1`, or the same as the corresponding `losses` dimension).",
@@ -345,6 +345,8 @@ class TestMarshallDocstring(TestCase):
             )
         )
         self.assertEqual(gen, docstring_google_tf_mean_squared_error_str)
+
+    maxDiff = None
 
     # def test_(self):
     #     gold_google_doc_str = """

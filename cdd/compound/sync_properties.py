@@ -4,6 +4,7 @@ Functionality to synchronise properties
 
 import ast
 from os import path
+from typing import List
 
 import cdd.shared.emit.file
 from cdd.shared.ast_utils import (
@@ -105,7 +106,7 @@ def sync_property(
     :return: New AST derived from `output_ast`
     :rtype: ```AST```
     """
-    search = list(strip_split(output_param, "."))
+    search: List[str] = list(strip_split(output_param, "."))
     if input_eval:
         if input_param.count(".") != 0:
             raise NotImplementedError("Anything not on the top-level of the module")

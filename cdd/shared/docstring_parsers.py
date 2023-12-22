@@ -101,7 +101,7 @@ def parse_docstring(
     ), "Expected `Union[type(None), str]` got `{type_name}`".format(
         type_name=type(docstring).__name__
     )
-    style = derive_docstring_format(docstring)
+    style: Style = derive_docstring_format(docstring)
 
     ir: IntermediateRepr = {
         "name": None,
@@ -239,7 +239,7 @@ def _scan_phase_numpydoc_and_google(
         else 0
     )
     for line_no, line in enumerate(docstring_lines):
-        indent = count_iter_items(takewhile(str.isspace, line))
+        indent: int = count_iter_items(takewhile(str.isspace, line))
 
         if indent == first_indent:
             stacker.append([line])
@@ -251,10 +251,10 @@ def _scan_phase_numpydoc_and_google(
                 # return_token = return_tokens[0].splitlines()
                 # filter(rpartial(eq, docstring_lines[line_no + 1]), return_tokens)
             ):
-                return_indent = count_iter_items(
+                return_indent: int = count_iter_items(
                     takewhile(str.isspace, docstring_lines[line_no + 3])
                 )
-                next_smallest_indent = count_iter_items(
+                next_smallest_indent: int = count_iter_items(
                     takewhile(
                         partial(le, return_indent),
                         map(
@@ -282,10 +282,10 @@ def _scan_phase_numpydoc_and_google(
                 #     len(scanned_afterward) > 1
                 #     and scanned_afterward[0] == return_tokens[0]
                 # ):
-                #     return_indent = count_iter_items(
+                #     return_indent:int = count_iter_items(
                 #         takewhile(str.isspace, scanned_afterward[1])
                 #     )
-                #     next_smallest_indent = count_iter_items(
+                #     next_smallest_indent:int = count_iter_items(
                 #         takewhile(
                 #             partial(le, return_indent),
                 #             map(
@@ -409,7 +409,7 @@ def _scan_phase_rest(docstring, arg_tokens, return_tokens):
         stack_rev = stack[::-1]
 
         for token in rev_known_tokens_t:
-            token_len = len(token)
+            token_len: int = len(token)
             if tuple(stack_rev[:token_len]) == token:
                 scanned.append((bool(len(scanned)), "".join(stack[:-token_len])))
                 stack = stack[len(scanned[-1][1]) :][:token_len]

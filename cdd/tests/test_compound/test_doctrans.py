@@ -26,7 +26,7 @@ class TestDocTrans(TestCase):
                 "DocTrans", tuple(), {"visit": lambda *args: return_ast}
             )(),
         ):
-            filename = path.join(temp_dir, "foo")
+            filename: str = path.join(temp_dir, "foo")
             with open(filename, "wt") as f:
                 f.write("5*5")
             self.assertIsNone(
@@ -42,7 +42,9 @@ class TestDocTrans(TestCase):
         """Tests doctrans"""
 
         with TemporaryDirectory() as temp_dir:
-            filename = path.join(temp_dir, "fun{extsep}py".format(extsep=path.extsep))
+            filename: str = path.join(
+                temp_dir, "fun{extsep}py".format(extsep=path.extsep)
+            )
             original_node = annotate_ancestry(deepcopy(function_type_annotated))
             with open(filename, "wt") as f:
                 f.write(to_code(original_node))

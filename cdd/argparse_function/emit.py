@@ -18,6 +18,7 @@ from ast import (
 from collections import OrderedDict
 from functools import partial
 from itertools import chain
+from typing import Optional
 
 from cdd.docstring.emit import docstring
 from cdd.shared.ast_utils import (
@@ -75,8 +76,8 @@ def argparse_function(
     :return:  AST node for function definition which constructs argparse
     :rtype: ```FunctionDef```
     """
-    function_name = function_name or intermediate_repr["name"]
-    function_type = function_type or intermediate_repr["type"]
+    function_name: Optional[str] = function_name or intermediate_repr["name"]
+    function_type: Optional[str] = function_type or intermediate_repr["type"]
     internal_body = get_internal_body(
         target_name=function_name,
         target_type=function_type,

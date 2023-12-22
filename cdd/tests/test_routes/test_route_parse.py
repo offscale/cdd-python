@@ -16,7 +16,7 @@ class TestRoutesParse(TestCase):
 
     def test_routes_parse_root(self) -> None:
         """Confirm that route parser names are up-to-date"""
-        module_directory = path.join(
+        module_directory: str = path.join(
             path.dirname(path.dirname(path.dirname(__file__))), "routes", "parse"
         )
         self.assertListEqual(

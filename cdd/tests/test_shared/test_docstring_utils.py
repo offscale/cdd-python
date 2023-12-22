@@ -1,5 +1,7 @@
 """ Tests for docstring_utils """
 
+from functools import partial
+from operator import add
 from textwrap import indent
 from unittest import TestCase
 
@@ -22,12 +24,12 @@ from cdd.tests.utils_for_tests import unittest_main
 class TestDocstringUtils(TestCase):
     """Test class for emitter_utils"""
 
-    header = "Header\n\n"
-    footer = "Footer"
+    header: str = "Header\n\n"
+    footer: str = "Footer"
 
     def test_ensure_doc_args_whence_original(self) -> None:
         """Test that ensure_doc_args_whence_original moves the doc to the right place"""
-        original_doc_str = "\n".join(
+        original_doc_str: str = "\n".join(
             (
                 "\n{header}".format(header=self.header),
                 ":param a:",
@@ -36,7 +38,7 @@ class TestDocstringUtils(TestCase):
             )
         )
 
-        current_doc_str = "\n".join(
+        current_doc_str: str = "\n".join(
             (
                 "\n{header}\n\n".format(header=self.header),
                 self.footer,
@@ -54,7 +56,7 @@ class TestDocstringUtils(TestCase):
 
     def test_ensure_doc_args_whence_original_no_header(self) -> None:
         """Test that ensure_doc_args_whence_original moves the doc to the right place when no header exists"""
-        original_doc_str = "\n".join(
+        original_doc_str: str = "\n".join(
             (
                 "",
                 "",
@@ -65,7 +67,7 @@ class TestDocstringUtils(TestCase):
             )
         )
 
-        current_doc_str = "\n".join(
+        current_doc_str: str = "\n".join(
             (
                 self.footer,
                 "",
@@ -83,7 +85,7 @@ class TestDocstringUtils(TestCase):
 
     def test_ensure_doc_args_whence_original_no_footer(self) -> None:
         """Test that ensure_doc_args_whence_original moves the doc to the right place when no footer exists"""
-        original_doc_str = "\n".join(
+        original_doc_str: str = "\n".join(
             (
                 "\n{header}".format(header=self.header),
                 ":param a:",
@@ -91,7 +93,7 @@ class TestDocstringUtils(TestCase):
             )
         )
 
-        current_doc_str = "\n".join(
+        current_doc_str: str = "\n".join(
             (
                 "\n{header}".format(header=self.header),
                 ":param a:",
@@ -108,9 +110,9 @@ class TestDocstringUtils(TestCase):
 
     def test_ensure_doc_args_whence_original_no_header_or_footer(self) -> None:
         """Test that ensure_doc_args_whence_original moves the doc to the right place when no header|footer exists"""
-        original_doc_str = "\n".join((":param a:", ":type a: ```int```\n"))
+        original_doc_str: str = "\n".join((":param a:", ":type a: ```int```\n"))
 
-        current_doc_str = "\n".join(
+        current_doc_str: str = "\n".join(
             (
                 ":param a:",
                 ":type a: ```int```\n",
@@ -128,7 +130,7 @@ class TestDocstringUtils(TestCase):
         self,
     ) -> None:
         """Test that ensure_doc_args_whence_original moves the doc to the right place when no header|footer exists"""
-        original_doc_str = "\n".join(
+        original_doc_str: str = "\n".join(
             (
                 self.header.rstrip("\n"),
                 "",
@@ -142,7 +144,7 @@ class TestDocstringUtils(TestCase):
             )
         )
 
-        current_doc_str = "\n".join(
+        current_doc_str: str = "\n".join(
             (
                 "{header}\n".format(header=self.header.rstrip("\n")),
                 self.footer,
@@ -169,7 +171,7 @@ class TestDocstringUtils(TestCase):
         self,
     ) -> None:
         """Test that ensure_doc_args_whence_original moves the doc to the right place when no header|footer exists"""
-        original_doc_str = "\n".join(
+        original_doc_str: str = "\n".join(
             (
                 "{header}\n".format(header=self.header.rstrip("\n")),
                 ":param as_numpy: Convert to numpy ndarrays",
@@ -178,7 +180,7 @@ class TestDocstringUtils(TestCase):
             )
         )
 
-        current_doc_str = "\n".join(
+        current_doc_str: str = "\n".join(
             (
                 "Header\n",
                 self.footer,
@@ -224,8 +226,8 @@ class TestDocstringUtils(TestCase):
 
     def test_ensure_doc_args_whence_original_to_docstring_str(self) -> None:
         """Test that ensure_doc_args_whence_original reworks the header and args_returns whence indent"""
-        original_doc_str = class_doc_str
-        current_doc_str = docstring_no_nl_str
+        original_doc_str: str = class_doc_str
+        current_doc_str: str = docstring_no_nl_str
 
         self.assertEqual(
             ensure_doc_args_whence_original(
@@ -254,8 +256,15 @@ class TestDocstringUtils(TestCase):
             header,
             "\n".join(docstring_google_tf_mean_squared_error_header_tuple) + "\n",
         )
+        # One extra level of indentation added:
         self.assertEqual(
-            args_returns, "\n".join(docstring_google_tf_mean_squared_error_args_tuple)
+            args_returns,
+            "\n".join(
+                map(
+                    partial(add, "  "),
+                    docstring_google_tf_mean_squared_error_args_tuple,
+                )
+            ).rstrip(" "),
         )
         self.assertEqual(
             footer,

@@ -28,7 +28,7 @@ def extract_entities(openapi_str):
         if ch.isspace():
             space += 1
             add_then_clear_stack()
-            ticks = 0
+            ticks: int = 0
         elif ticks > 2:
             ticks, space = 0, 0
             stack and add_then_clear_stack()

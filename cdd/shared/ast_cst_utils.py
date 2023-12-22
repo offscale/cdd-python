@@ -1,11 +1,13 @@
 """
 Utils for working with AST (builtin) and cdd's CST
 """
+
 from copy import deepcopy
 from enum import Enum
 from itertools import takewhile
 from operator import attrgetter, ne
 from sys import stderr
+from typing import Optional
 
 from cdd.shared.ast_utils import cmp_ast, get_doc_str
 from cdd.shared.cst_utils import (
@@ -80,10 +82,10 @@ class Delta(Enum):
     Maybe Enum for what every `maybe_` function in `ast_cst_utils` can return
     """
 
-    added = 0
-    removed = 1
-    replaced = 2
-    nop = 255
+    added: int = 0
+    removed: int = 1
+    replaced: int = 2
+    nop: int = 255
 
 
 def maybe_replace_doc_str_in_function_or_class(node, cst_idx, cst_list):
@@ -102,16 +104,16 @@ def maybe_replace_doc_str_in_function_or_class(node, cst_idx, cst_list):
     :return: Delta value indicating what changed (if anything)
     :rtype: ```Delta```
     """
-    new_doc_str = get_doc_str(node) or ""
+    new_doc_str: str = get_doc_str(node) or ""
     cur_node_after_func = (
         cst_list[cst_idx + 1]
         if cst_idx + 1 < len(cst_list)
         else UnchangingLine(0, 0, "")
     )
-    existing_doc_str = (
+    existing_doc_str: bool = (
         isinstance(cur_node_after_func, TripleQuoted) and cur_node_after_func.is_docstr
     )
-    changed = Delta.nop
+    changed: Delta = Delta.nop
 
     def formatted_doc_str(doc_str, is_double_q=True):
         """
@@ -127,10 +129,10 @@ def maybe_replace_doc_str_in_function_or_class(node, cst_idx, cst_list):
         :rtype: ```str```
         """
         str_after_func_no_nl = cur_node_after_func.value.lstrip("\n")
-        indent_after_func_no_nl = count_iter_items(
+        indent_after_func_no_nl: int = count_iter_items(
             takewhile(str.isspace, str_after_func_no_nl)
         )
-        space = str_after_func_no_nl[:indent_after_func_no_nl]
+        space: str = str_after_func_no_nl[:indent_after_func_no_nl]
         return TripleQuoted(
             is_double_q=is_double_q,
             is_docstr=True,
@@ -198,7 +200,7 @@ def maybe_replace_function_return_type(new_node, cur_ast_node, cst_idx, cst_list
     """
     new_node = deepcopy(new_node)
     new_node.body = cur_ast_node.body
-    value = None
+    value: Optional[str] = None
 
     def remove_return_typ(statement):
         """
@@ -293,7 +295,7 @@ def maybe_replace_function_args(new_node, cur_ast_node, cst_idx, cst_list):
                     changed = Delta.replaced
                 break
 
-        def_len = len("def ")
+        def_len: int = len("def ")
         function_name_starts_at = (
             def_len
             if cst_list[cst_idx].value.startswith("def ")

@@ -10,6 +10,7 @@ from copy import deepcopy
 from functools import partial
 from itertools import takewhile
 from operator import contains, eq
+from typing import Dict
 
 from cdd.shared.pure_utils import (
     PY_GTE_3_9,
@@ -150,9 +151,9 @@ def extract_default(
             return line, None
 
     default = ""
-    par = {"{": 0, "[": 0, "(": 0, ")": 0, "]": 0, "}": 0}
-    sub_l = line[_end_idx:default_end_offset]
-    sub_l_len = len(sub_l)
+    par: Dict[str, int] = {"{": 0, "[": 0, "(": 0, ")": 0, "]": 0, "}": 0}
+    sub_l: str = line[_end_idx:default_end_offset]
+    sub_l_len: int = len(sub_l)
     for idx, ch in enumerate(sub_l):
         if (
             ch == "."
@@ -283,7 +284,7 @@ def _parse_out_default_and_doc(
         extra_offset = int(end[-1] in frozenset((" ", "\t", "\n", "\n")) if end else 0)
 
         if rstrip_default:
-            offset = count_iter_items(
+            offset: int = count_iter_items(
                 takewhile(
                     partial(contains, stop_tokens),
                     line[start_rest_offset:],

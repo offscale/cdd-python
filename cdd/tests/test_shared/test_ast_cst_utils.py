@@ -244,8 +244,8 @@ class TestAstCstUtils(TestCase):
         Tests that `maybe_replace_function_return_type` adds return type
         """
 
-        before = "\n\n    @staticmethod\n    def add1(foo):"
-        after = "\n\n    @staticmethod\n    def add1(foo) -> int:"
+        before: str = "\n\n    @staticmethod\n    def add1(foo):"
+        after: str = "\n\n    @staticmethod\n    def add1(foo) -> int:"
 
         new_func_node = deepcopy(self.func_node)
         new_func_node.returns = Name("int", Load())
@@ -269,8 +269,8 @@ class TestAstCstUtils(TestCase):
         Tests that `maybe_replace_function_return_type` removes return type
         """
 
-        before = "\n\n    @staticmethod\n    def add1(foo) -> int:"
-        after = "\n\n    @staticmethod\n    def add1(foo):"
+        before: str = "\n\n    @staticmethod\n    def add1(foo) -> int:"
+        after: str = "\n\n    @staticmethod\n    def add1(foo):"
 
         self.maybe_replace_function_return_type_test(
             ast_node_to_find=self.func_node,
@@ -291,8 +291,8 @@ class TestAstCstUtils(TestCase):
         Tests that `maybe_replace_function_return_type` replaces return type
         """
 
-        before = "\n\n    @staticmethod\n    def add1(foo) -> int:"
-        after = "\n\n    @staticmethod\n    def add1(foo) -> float:"
+        before: str = "\n\n    @staticmethod\n    def add1(foo) -> int:"
+        after: str = "\n\n    @staticmethod\n    def add1(foo) -> float:"
 
         new_func_node = deepcopy(self.func_node)
         new_func_node.returns = Name("float", Load())
@@ -316,7 +316,7 @@ class TestAstCstUtils(TestCase):
         Tests that `maybe_replace_function_args` does nothing on equal args
         """
 
-        func_src = "\n\n    @staticmethod\n    def add1(foo: int) -> int:"
+        func_src: str = "\n\n    @staticmethod\n    def add1(foo: int) -> int:"
 
         func_node = ast_parse(
             "{func_start} pass".format(func_start=func_src.strip().replace("  ", "")),

@@ -19,7 +19,7 @@ from ast import (
 
 from cdd.shared.ast_utils import maybe_type_comment, set_arg, set_value
 
-fastapi_post_create_config_str = """
+fastapi_post_create_config_str: str = """
 @app.post(
     "/api/config",
     response_model=Config,

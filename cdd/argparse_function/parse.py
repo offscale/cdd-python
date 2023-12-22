@@ -7,6 +7,7 @@ from collections import OrderedDict
 from functools import partial
 from itertools import filterfalse
 from operator import setitem
+from typing import Optional
 
 from cdd.argparse_function.utils.emit_utils import _parse_return, parse_out_param
 from cdd.shared.ast_utils import (
@@ -16,6 +17,7 @@ from cdd.shared.ast_utils import (
     is_argparse_description,
 )
 from cdd.shared.docstring_parsers import parse_docstring
+from cdd.shared.types import IntermediateRepr
 
 
 def argparse_ast(
@@ -60,8 +62,10 @@ def argparse_ast(
         node_name=type(function_def).__name__
     )
 
-    doc_string = get_docstring(function_def, clean=parse_original_whitespace)
-    intermediate_repr = {
+    doc_string: Optional[str] = get_docstring(
+        function_def, clean=parse_original_whitespace
+    )
+    intermediate_repr: IntermediateRepr = {
         "name": function_name or function_def.name,
         "type": function_type or get_function_type(function_def),
         "doc": "",

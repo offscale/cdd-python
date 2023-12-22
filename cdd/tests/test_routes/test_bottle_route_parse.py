@@ -21,7 +21,7 @@ from cdd.tests.utils_for_tests import inspectable_compile, unittest_main
 class TestBottleRouteParse(TestCase):
     """Tests `routes.parse`"""
 
-    route_id_url = "{route_config[route]}/{{{route_config[primary_key]}}}".format(
+    route_id_url: str = "{route_config[route]}/{{{route_config[primary_key]}}}".format(
         route_config=route_config
     )
 

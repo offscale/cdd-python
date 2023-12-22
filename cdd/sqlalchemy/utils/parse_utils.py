@@ -17,6 +17,7 @@ from ast import (
 )
 from itertools import chain, filterfalse
 from operator import attrgetter
+from typing import FrozenSet
 
 from cdd.shared.ast_utils import get_value
 from cdd.shared.pure_utils import append_to_dict, indent_all_but_first, rpartial, tab
@@ -24,7 +25,7 @@ from cdd.shared.source_transformer import to_code
 
 # SQLalchemy 1.14
 # `from sqlalchemy import __all__; sorted(filter(lambda s: any(filter(str.isupper, s)), __all__))`
-sqlalchemy_top_level_imports = frozenset(
+sqlalchemy_top_level_imports: FrozenSet[str] = frozenset(
     (
         "ARRAY",
         "BIGINT",

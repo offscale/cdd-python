@@ -263,13 +263,13 @@ class TestEmitSqlAlchemyUtils(TestCase):
         ```
         """
         with TemporaryDirectory() as tempdir:
-            mod_name = "test_update_with_imports_from_columns"
-            temp_mod_dir = path.join(tempdir, mod_name)
+            mod_name: str = "test_update_with_imports_from_columns"
+            temp_mod_dir: str = path.join(tempdir, mod_name)
             mkdir(temp_mod_dir)
-            node_filename = path.join(
+            node_filename: str = path.join(
                 temp_mod_dir, "Node{sep}py".format(sep=path.extsep)
             )
-            element_filename = path.join(
+            element_filename: str = path.join(
                 temp_mod_dir, "Element{sep}py".format(sep=path.extsep)
             )
             node_pk_with_phase1_fk = deepcopy(node_pk_tbl_class)
@@ -302,7 +302,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
             update_with_imports_from_columns(node_filename)
 
             with open(node_filename, "rt") as f:
-                node_filename_str = f.read()
+                node_filename_str: str = f.read()
             gen_mod = ast.parse(node_filename_str)
 
         gen_imports = tuple(
@@ -343,12 +343,12 @@ class TestEmitSqlAlchemyUtils(TestCase):
         """
         with TemporaryDirectory() as tempdir:
             mod_name = "test_update_with_imports_from_columns"
-            temp_mod_dir = path.join(tempdir, mod_name)
+            temp_mod_dir: str = path.join(tempdir, mod_name)
             mkdir(temp_mod_dir)
-            node_filename = path.join(
+            node_filename: str = path.join(
                 temp_mod_dir, "node{sep}py".format(sep=path.extsep)
             )
-            element_filename = path.join(
+            element_filename: str = path.join(
                 temp_mod_dir, "element{sep}py".format(sep=path.extsep)
             )
             node_pk_with_phase1_fk = deepcopy(node_pk_tbl_class)
@@ -412,7 +412,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
             update_fk_for_file(node_filename)
 
             with open(node_filename, "rt") as f:
-                node_filename_str = f.read()
+                node_filename_str: str = f.read()
             gen_mod = ast.parse(node_filename_str)
 
         run_ast_test(

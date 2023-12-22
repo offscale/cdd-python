@@ -145,7 +145,7 @@ def docstring(
         else "",
     )
 
-    original_doc_str = intermediate_repr.get("_internal", {}).get(
+    original_doc_str: str = intermediate_repr.get("_internal", {}).get(
         "original_doc_str", ""
     )
     if original_doc_str:
@@ -158,7 +158,7 @@ def docstring(
     else:
         header, footer = intermediate_repr.get("doc", ""), ""
 
-    candidate_doc_str = header_args_footer_to_str(
+    candidate_doc_str: str = header_args_footer_to_str(
         header=header,
         args_returns="" if candidate_args_returns.isspace() else candidate_args_returns,
         footer=footer,
@@ -172,7 +172,7 @@ def docstring(
 
     # One line only
     if next_nl == -1:
-        # current_indent = count_iter_items(takewhile(str.isspace, candidate_doc_str))
+        # current_indent:int = count_iter_items(takewhile(str.isspace, candidate_doc_str))
         # _sep = (indent_level - current_indent) * tab
         return (
             candidate_doc_str
@@ -188,7 +188,7 @@ def docstring(
             if not line.isspace():
                 break
             # prev_nl = next_nl
-            # current_indent = count_iter_items(takewhile(str.isspace, line))
+            # current_indent:int = count_iter_items(takewhile(str.isspace, line))
 
     if indent_level > current_indent:
         _tab = (indent_level - current_indent) * tab
@@ -199,7 +199,7 @@ def docstring(
             and candidate_doc_str[next_nl + 1] != "\n"
             else next_nl + 1 :
         ].splitlines()
-        candidate_doc_str = "\n".join(
+        candidate_doc_str: str = "\n".join(
             map(
                 lambda _line: "{_tab}{_line}".format(_tab=_tab, _line=_line)
                 if _line or emit_separating_tab
@@ -209,12 +209,14 @@ def docstring(
             )
         )
         if len(lines) > 1:
-            candidate_doc_str = "{maybe_nl}{candidate_doc_str}{maybe_nl_tab}".format(
-                maybe_nl="\n" if candidate_doc_str.startswith(_tab) else "",
-                candidate_doc_str=candidate_doc_str,
-                maybe_nl_tab=""
-                if candidate_doc_str[-1] == "\n"
-                else "\n{_tab}".format(_tab=_tab),
+            candidate_doc_str: str = (
+                "{maybe_nl}{candidate_doc_str}{maybe_nl_tab}".format(
+                    maybe_nl="\n" if candidate_doc_str.startswith(_tab) else "",
+                    candidate_doc_str=candidate_doc_str,
+                    maybe_nl_tab=""
+                    if candidate_doc_str[-1] == "\n"
+                    else "\n{_tab}".format(_tab=_tab),
+                )
             )
 
     return candidate_doc_str

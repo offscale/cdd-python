@@ -10,6 +10,7 @@ from functools import partial
 from inspect import getsource
 from itertools import cycle, filterfalse, islice
 from types import FunctionType
+from typing import Optional, cast
 
 import cdd.docstring.parse
 import cdd.shared.docstring_parsers
@@ -47,7 +48,7 @@ def function(
     :type function_type: ```Literal['self', 'cls', 'static']```
 
     :param function_name: name of function_def
-    :type function_name: ```str```
+    :type function_name: ```Optional[str]```
 
     :return: a dictionary consistent with `IntermediateRepr`, defined as:
         ParamVal = TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
@@ -68,11 +69,13 @@ def function(
             parse_original_whitespace=parse_original_whitespace,
             word_wrap=word_wrap,
         )
-        parsed_source = ast.parse(getsource(function_def).lstrip()).body[0]
-        original_doc_str = ast.get_docstring(
+        parsed_source: FunctionDef = cast(
+            FunctionDef, ast.parse(getsource(function_def).lstrip()).body[0]
+        )
+        original_doc_str: Optional[str] = ast.get_docstring(
             parsed_source, clean=parse_original_whitespace
         )
-        body = (
+        body: FunctionDef.body = (
             parsed_source.body if original_doc_str is None else parsed_source.body[1:]
         )
         ir["_internal"] = {
@@ -99,26 +102,26 @@ def function(
     found_type = get_function_type(function_def)
 
     # Read docstring
-    doc_str = (
+    doc_str: Optional[str] = (
         get_docstring(function_def, clean=parse_original_whitespace)
         if isinstance(function_def, FunctionDef)
         else None
     )
 
-    function_def = deepcopy(function_def)
+    function_def: FunctionDef = deepcopy(function_def)
     function_def.args.args = (
         function_def.args.args if found_type == "static" else function_def.args.args[1:]
     )
 
     if doc_str is None:
-        intermediate_repr = {
+        intermediate_repr: IntermediateRepr = {
             "name": function_name or function_def.name,
             "params": OrderedDict(),
             "returns": None,
             "_internal": {},
         }
     else:
-        intermediate_repr = cdd.docstring.parse.docstring(
+        intermediate_repr: IntermediateRepr = cdd.docstring.parse.docstring(
             doc_str.replace(":cvar", ":param"),
             parse_original_whitespace=parse_original_whitespace,
             infer_type=infer_type,
@@ -213,7 +216,9 @@ def function(
     )
 
     # Convention - the final top-level `return` is the default
-    intermediate_repr = _interpolate_return(function_def, intermediate_repr)
+    intermediate_repr: IntermediateRepr = _interpolate_return(
+        function_def, intermediate_repr
+    )
     if "return_type" in (intermediate_repr.get("returns") or iter(())):
         intermediate_repr["returns"] = OrderedDict(
             map(

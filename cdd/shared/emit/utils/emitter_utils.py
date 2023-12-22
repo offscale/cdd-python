@@ -49,7 +49,7 @@ def ast_parse_fix(s):
 
     :return: Value
     """
-    balanced = (s.count("[") + s.count("]")) & 1 == 0
+    balanced: bool = (s.count("[") + s.count("]")) & 1 == 0
     return ast.parse(s if balanced else "{}]".format(s)).body[0].value
 
 
@@ -97,7 +97,7 @@ def get_emitter(emit_name):
     :return: Function which returns intermediate_repr
     :rtype: ```Callable[[...], dict]````
     """
-    emit_name = {"class": "class_"}.get(emit_name, emit_name)
+    emit_name: str = {"class": "class_"}.get(emit_name, emit_name)
     return getattr(
         import_module(
             ".".join(

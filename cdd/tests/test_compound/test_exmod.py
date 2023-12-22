@@ -142,7 +142,7 @@ class TestExMod(TestCase):
                     dry_run=False,
                 )
 
-                new_module_dir_len = len(new_module_dir + path.sep)
+                new_module_dir_len: int = len(new_module_dir + path.sep)
                 gen, gold = map(
                     sorted,
                     (
@@ -208,7 +208,7 @@ class TestExMod(TestCase):
         """Tests `exmod` module whence directory does not exist"""
 
         with TemporaryDirectory() as tempdir, self.assertRaises(ModuleNotFoundError):
-            output_directory = path.join(tempdir, "stuff")
+            output_directory: str = path.join(tempdir, "stuff")
             self.assertFalse(path.isdir(output_directory))
             exmod(
                 module=output_directory,
@@ -288,7 +288,7 @@ class TestExMod(TestCase):
                     )
                 )
 
-                all_tests_running = len(result["write"]) == 1
+                all_tests_running: int = len(result["write"]) == 1
 
                 key_counts = (
                     (("mkdir", 4), ("touch", 1), ("write", 1))
@@ -331,9 +331,9 @@ class TestExMod(TestCase):
         :rtype: ```Tuple[str,str]```
         """
         self.package_root_name = path.basename(root)
-        existent_module_dir = path.join(root, self.package_root_name, "gen")
-        new_module_dir = path.join(root, self.package_root_name, "gold")
-        package_root_mod_dir = path.join(root, self.package_root_name)
+        existent_module_dir: str = path.join(root, self.package_root_name, "gen")
+        new_module_dir: str = path.join(root, self.package_root_name, "gold")
+        package_root_mod_dir: str = path.join(root, self.package_root_name)
         mkdir(package_root_mod_dir)
         with open(
             path.join(package_root_mod_dir, "__init__{extsep}py".format(extsep=extsep)),
@@ -427,7 +427,7 @@ class TestExMod(TestCase):
         :rtype: ```str```
         """
         self.module_name, self.gold_dir = path.basename(module_root), module_root
-        package_root = path.dirname(path.dirname(module_root))
+        package_root: str = path.dirname(path.dirname(module_root))
         self.module_root_name = self.module_name
 
         self.module_name = ".".join((self.package_root_name, self.module_name))
@@ -512,9 +512,9 @@ class TestExMod(TestCase):
             )
 
         for name, _folder in self.module_hierarchy:
-            folder = path.join(module_root, _folder)
+            folder: str = path.join(module_root, _folder)
             mkdir(folder)
-            cls_name = "{name}Class".format(name=name.title())
+            cls_name: str = "{name}Class".format(name=name.title())
             with open(
                 path.join(folder, "__init__{extsep}py".format(extsep=extsep)), "wt"
             ) as f:
@@ -555,16 +555,16 @@ class TestExMod(TestCase):
         :param dry_run: Show what would be created; don't actually write to the filesystem
         :type dry_run: ```bool```
         """
-        new_module_name = path.basename(tempdir)
+        new_module_name: str = path.basename(tempdir)
 
         for name, folder in self.module_hierarchy:
-            gen_folder = path.join(
+            gen_folder: str = path.join(
                 tempdir,
                 *(folder,)
                 if tempdir.rpartition(path.sep)[2] == new_module_name
                 else (new_module_name, folder),
             )
-            gold_folder = path.join(
+            gold_folder: str = path.join(
                 self.gold_dir,
                 *(folder,)
                 if self.gold_dir.endswith(self.module_name.replace(".", path.sep))
@@ -590,7 +590,7 @@ class TestExMod(TestCase):
                 path.isdir(gold_folder), "Expected {!r} to exist".format(gold_folder)
             )
 
-            gen_is_dir = path.isdir(gen_folder)
+            gen_is_dir: bool = path.isdir(gen_folder)
             if dry_run:
                 self.assertFalse(gen_is_dir)
             else:

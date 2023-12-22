@@ -5,6 +5,7 @@ JSON schema parser
 from collections import OrderedDict
 from copy import deepcopy
 from functools import partial
+from typing import FrozenSet
 
 from cdd.docstring.parse import docstring
 from cdd.json_schema.utils.parse_utils import json_schema_property_to_param
@@ -27,7 +28,9 @@ def json_schema(json_schema_dict, parse_original_whitespace=False):
     # I suppose a JSON-schema validation routine could be executed here
     schema = deepcopy(json_schema_dict)
 
-    required = frozenset(schema["required"]) if schema.get("required") else frozenset()
+    required: FrozenSet[str] = (
+        frozenset(schema["required"]) if schema.get("required") else frozenset()
+    )
     _json_schema_property_to_param = partial(
         json_schema_property_to_param, required=required
     )

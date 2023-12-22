@@ -5,6 +5,7 @@ Utility functions for `cdd.parse.function`
 import ast
 from ast import Return, Tuple
 from collections import OrderedDict
+from typing import Optional
 
 from cdd.shared.ast_utils import get_value
 from cdd.shared.pure_utils import rpartial
@@ -40,7 +41,7 @@ def _interpolate_return(function_def, intermediate_repr):
         })
     :rtype: ```dict```
     """
-    return_ast = next(
+    return_ast: Optional[Return] = next(
         filter(rpartial(isinstance, Return), function_def.body[::-1]), None
     )
     if return_ast is not None and return_ast.value is not None:

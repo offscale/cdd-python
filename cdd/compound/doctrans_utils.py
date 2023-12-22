@@ -1,6 +1,7 @@
 """
 Helpers to traverse the AST, extract the docstring out, parse and format to intended style
 """
+
 from ast import (
     AnnAssign,
     Assign,
@@ -349,7 +350,7 @@ def doctransify_cst(cst_list, node):
     :type node: ```AST```
     """
     for _node in filter(rpartial(hasattr, "_location"), walk(node)):
-        is_func = isinstance(_node, (AsyncFunctionDef, FunctionDef))
+        is_func: bool = isinstance(_node, (AsyncFunctionDef, FunctionDef))
         if isinstance(_node, ClassDef) or is_func:
             cst_idx, cst_node = cdd.shared.ast_cst_utils.find_cst_at_ast(
                 cst_list, _node

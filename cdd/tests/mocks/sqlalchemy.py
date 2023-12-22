@@ -35,12 +35,12 @@ from cdd.tests.mocks.docstrings import (
     docstring_repr_str,
 )
 
-_docstring_header_and_return_str = "\n{docstring}\n{tab}".format(
+_docstring_header_and_return_str: str = "\n{docstring}\n{tab}".format(
     docstring="\n".join(indent(docstring_header_and_return_str, tab).split("\n")),
     tab=tab,
 )
 
-sqlalchemy_imports_str = "\n".join(
+sqlalchemy_imports_str: str = "\n".join(
     map(
         "def {}(*args, **kwargs): pass\n".format,
         (
@@ -54,7 +54,7 @@ sqlalchemy_imports_str = "\n".join(
     )
 )
 
-config_tbl_with_comments_str = """
+config_tbl_with_comments_str: str = """
 config_tbl = Table(
     "config_tbl",
     metadata,
@@ -196,7 +196,7 @@ config_tbl_with_comments_ast = Assign(
     **maybe_type_comment,
 )
 
-config_decl_base_str = '''
+config_decl_base_str: str = '''
 class Config(Base):
     """{_docstring_header_and_return_str}"""
     __tablename__ = "config_tbl"
@@ -505,7 +505,7 @@ empty_with_inferred_pk_column_assign = Assign(
     **maybe_type_comment,
 )
 
-foreign_sqlalchemy_tbls_str = """node = Table(
+foreign_sqlalchemy_tbls_str: str = """node = Table(
     "node",
     metadata_obj,
     Column("node_id", Integer, primary_key=True),

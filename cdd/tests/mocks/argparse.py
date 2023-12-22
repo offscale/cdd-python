@@ -54,7 +54,7 @@ _argparse_doc_str_tuple = (
     ":type argument_parser: ```ArgumentParser```\n",
 )
 
-_cli_doc_str = "\n{tab}".format(tab=tab).join(
+_cli_doc_str: str = "\n{tab}".format(tab=tab).join(
     _argparse_doc_str_tuple
     + (
         ":return: argument_parser, Train and tests dataset splits.",
@@ -71,11 +71,11 @@ _argparse_doc_tuple = (
     ":return: argument_parser, Train and tests dataset splits.",
     ":rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray,",
     "np.ndarray]]]```",
-)
+)  # type: tuple[str, str, str, str, str, str, str]
 
-_argparse_doc_str = "\n".join(_argparse_doc_tuple)
+_argparse_doc_str: str = "\n".join(_argparse_doc_tuple)
 
-_argparse_description_str = emit_separating_tabs(
+_argparse_description_str: str = emit_separating_tabs(
     "\n{tab}".format(tab=tab).join(
         _argparse_doc_tuple[:-1]
         + (
@@ -85,13 +85,13 @@ _argparse_description_str = emit_separating_tabs(
         )
     )
 )
-_argparse_doc_stripped_str = _argparse_doc_str.replace(
+_argparse_doc_stripped_str: str = _argparse_doc_str.replace(
     "{tab}\n{tab}".format(tab=tab), ""
 )
 
 _cli_doc_expr = Expr(set_value(_argparse_description_str))
 
-_cli_doc_nosplit_str = emit_separating_tabs(
+_cli_doc_nosplit_str: str = emit_separating_tabs(
     "\n{tab}".format(tab=tab).join(
         _argparse_doc_str_tuple
         + (
@@ -285,7 +285,7 @@ _argparse_return = Return(
     expr=None,
 )
 
-argparse_func_str = '''
+argparse_func_str: str = '''
 def set_cli_args(argument_parser):
     """
     {_cli_doc_str}
@@ -326,7 +326,7 @@ def set_cli_args(argument_parser):
     description=docstring_header_str.strip(),
 )
 
-argparse_func_with_body_str = '''
+argparse_func_with_body_str: str = '''
 def set_cli_args(argument_parser):
     """
     {_cli_doc_str}
@@ -367,7 +367,7 @@ def set_cli_args(argument_parser):
     header_doc_str=docstring_header_str,
 )
 
-argparse_func_action_append_str = '''
+argparse_func_action_append_str: str = '''
 def set_cli_action_append(argument_parser):
     """
     {_cli_doc_str}

@@ -1,6 +1,7 @@
 """
 Tests for `cdd.emit.argparse`
 """
+
 from copy import deepcopy
 from unittest import TestCase
 

@@ -1,6 +1,7 @@
 """
 Tests for cdd.docstring.utils.parse_utils
 """
+
 from collections import deque
 from unittest import TestCase
 

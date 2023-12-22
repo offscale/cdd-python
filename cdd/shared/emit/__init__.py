@@ -1,6 +1,7 @@
 """
 Transform from string or AST representations of input, to AST, file, or str input_str.
 """
+from typing import List
 
 # from cdd.emit.argparse_function import argparse_function
 # from cdd.emit.class_ import class_
@@ -10,7 +11,7 @@ Transform from string or AST representations of input, to AST, file, or str inpu
 # from cdd.emit.json_schema import json_schema
 # from cdd.emit.sqlalchemy import sqlalchemy, sqlalchemy_table
 
-EMITTERS = [
+EMITTERS: List[str] = [
     "argparse_function",
     "class_",
     "docstring",

@@ -3,6 +3,7 @@ Functions which help the functions within the parser module
 """
 
 import ast
+import inspect
 from ast import AnnAssign, Assign, Call, ClassDef, FunctionDef, Module
 from collections import OrderedDict
 from contextlib import suppress
@@ -12,10 +13,12 @@ from inspect import _empty, getdoc, getsource, isfunction, signature
 from itertools import chain
 from operator import attrgetter, eq, itemgetter
 from types import FunctionType
+from typing import Optional
 
 import cdd.class_.parse
 import cdd.docstring.parse
 import cdd.function.parse
+import cdd.shared.docstring_parsers
 import cdd.shared.parse
 from cdd.class_.utils.parse_utils import get_source
 from cdd.shared.ast_utils import get_value
@@ -185,11 +188,11 @@ def _inspect_process_ir_param(param, sig):
     """
     name, _param = param
     del param
-    name = name.lstrip("*")
+    name: str = name.lstrip("*")
 
     if name not in sig.parameters:
         return name, _param
-    sig_param = sig.parameters[name]
+    sig_param: inspect.Parameter = sig.parameters[name]
     if sig_param.annotation is not _empty:
         _param["typ"] = lstrip_typings(
             "{annotation!s}".format(annotation=sig_param.annotation)
@@ -223,7 +226,7 @@ def infer(*args, **kwargs):
             "class_def", kwargs.get("function_def", kwargs.get("call_or_name"))
         )
     )
-    is_supported_ast_node = isinstance(
+    is_supported_ast_node: bool = isinstance(
         node, (Module, Assign, AnnAssign, Call, ClassDef, FunctionDef)
     )
     if not is_supported_ast_node and (
@@ -278,7 +281,7 @@ def _inspect(obj, name, parse_original_whitespace, word_wrap):
     :type obj: ```Any```
 
     :param name: Name of the object being inspected
-    :type name: ```str```
+    :type name: ```Optional[str]```
 
     :param parse_original_whitespace: Whether to parse original whitespace or strip it out
     :type parse_original_whitespace: ```bool```
@@ -298,7 +301,7 @@ def _inspect(obj, name, parse_original_whitespace, word_wrap):
     :rtype: ```dict```
     """
 
-    doc = getdoc(obj) or ""
+    doc: str = getdoc(obj) or ""
 
     # def is_builtin_class_instance(obj):
     #     builtin_types = tuple(
@@ -310,7 +313,7 @@ def _inspect(obj, name, parse_original_whitespace, word_wrap):
     #         obj, builtin_types
     #     )
 
-    is_function = isfunction(obj)
+    is_function: bool = isfunction(obj)
     ir: IntermediateRepr = (
         cdd.docstring.parse.docstring(
             doc,
@@ -347,7 +350,7 @@ def _inspect(obj, name, parse_original_whitespace, word_wrap):
             )
         )
 
-    src = get_source(obj)
+    src: Optional[str] = get_source(obj)
     if src is None:
         return ir
     parsed_body = ast.parse(src.lstrip()).body[0]

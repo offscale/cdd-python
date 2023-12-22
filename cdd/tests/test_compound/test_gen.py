@@ -3,7 +3,18 @@
 import ast
 import os
 import sys
-from ast import Assign, ClassDef, Dict, Expr, List, Load, Module, Name, Store
+from ast import (
+    Assign,
+    ClassDef,
+    Dict,
+    Expr,
+    FunctionDef,
+    List,
+    Load,
+    Module,
+    Name,
+    Store,
+)
 from copy import deepcopy
 from io import StringIO
 from json import dump
@@ -30,7 +41,7 @@ from cdd.tests.mocks.json_schema import server_error_schema
 from cdd.tests.mocks.methods import function_adder_ast
 from cdd.tests.utils_for_tests import run_ast_test, unittest_main
 
-method_adder_ast = deepcopy(function_adder_ast)
+method_adder_ast: FunctionDef = deepcopy(function_adder_ast)
 method_adder_ast.body[0] = Expr(set_value(" C class (mocked!) "))
 method_adder_ast.decorator_list = [Name("staticmethod", Load())]
 del function_adder_ast
@@ -50,7 +61,7 @@ def populate_files(tempdir, input_module_str=None):
     :rtype: ```Tuple[str, str, str, Module]```
     """
     input_filename = os.path.join(tempdir, "input{extsep}py".format(extsep=extsep))
-    input_class_name = "Foo"
+    input_class_name: str = "Foo"
     input_class_ast = cdd.class_.emit.class_(
         cdd.function.parse.function(deepcopy(method_adder_ast)),
         emit_call=False,
@@ -87,7 +98,7 @@ def populate_files(tempdir, input_module_str=None):
         stmt=None,
     )
 
-    input_module_str = input_module_str or to_code(input_module_ast)
+    input_module_str: str = input_module_str or to_code(input_module_ast)
     # expected_output_class_str = (
     #     "class FooConfig(object):\n"
     #     '    """\n'
@@ -167,7 +178,7 @@ class TestGen(TestCase):
                 )
             )
         with open(output_filename, "rt") as f:
-            gen_module_str = f.read()
+            gen_module_str: str = f.read()
         gen_module_ast = ast.parse(gen_module_str)
         run_ast_test(
             self,

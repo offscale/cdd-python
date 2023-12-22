@@ -7,7 +7,7 @@ from copy import deepcopy
 
 from cdd.shared.ast_utils import NoneStr
 from cdd.shared.defaults_utils import remove_defaults_from_intermediate_repr
-from cdd.shared.pure_utils import deindent, paren_wrap_code, tab, indent_all_but_first
+from cdd.shared.pure_utils import deindent, paren_wrap_code, tab
 from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.classes import (
     class_torch_nn_l1loss_docstring_str,
@@ -796,7 +796,7 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
 #
 # import cdd.class_.parse
 #
-# mod = ast.parse(inspect.getsource(keras.optimizers.Adam))
+# mod: Module = ast.parse(inspect.getsource(keras.optimizers.Adam))
 # mod.body[0].body[0].value.value = mod.body[0].body[0].value.value.replace(
 #     "{{base_optimizer_keyword_args}}", base_optimizer_keyword_args)
 # cdd.class_.parse.class_(node)

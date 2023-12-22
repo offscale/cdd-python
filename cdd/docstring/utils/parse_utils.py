@@ -8,7 +8,7 @@ from functools import partial
 from itertools import filterfalse, takewhile
 from keyword import iskeyword
 from operator import contains, itemgetter
-from typing import List, Union
+from typing import List, Optional, Tuple, Union, cast
 
 from cdd.shared.pure_utils import count_iter_items, sliding_window, type_to_name
 
@@ -62,8 +62,8 @@ def _union_literal_from_sentence(sentence):
     :return: Union and/or Literal from a given sentence (or None if not found)
     :rtype: ```Optional[str]```
     """
-    union = [[]]
-    i = 0
+    union: Union[List[List[str]], List[str], Tuple[str]] = [[]]
+    i: int = 0
     quotes = {"'": 0, '"': 0}
     while i < len(sentence):
         ch = sentence[i]
@@ -153,7 +153,7 @@ def _union_literal_from_sentence(sentence):
     ):
         return None
 
-    literals = count_iter_items(
+    literals: int = count_iter_items(
         takewhile(
             frozenset(string.digits + "'\"").__contains__,
             map(itemgetter(0), union),
@@ -173,7 +173,7 @@ def _union_literal_from_sentence(sentence):
     else:
         wrap = "{}"
 
-    union = tuple(map(lambda typ: type_to_name.get(typ, typ), union))
+    union = cast(Tuple[str], tuple(map(lambda typ: type_to_name.get(typ, typ), union)))
 
     if literals and len(union) > literals:
         return wrap.format(
@@ -214,11 +214,11 @@ def parse_adhoc_doc_for_typ(doc, name, default_is_none):
     if not doc:
         return None
 
-    wrap = "Optional[{}]" if default_is_none else "{}"
+    wrap: str = "Optional[{}]" if default_is_none else "{}"
 
     words: List[Union[List[str], str]] = [[]]
-    word_chars = "{0}{1}`'\"/|".format(string.digits, string.ascii_letters)
-    sentence_ends = -1
+    word_chars: str = "{0}{1}`'\"/|".format(string.digits, string.ascii_letters)
+    sentence_ends: int = -1
     for i, ch in enumerate(doc):
         if (
             ch in word_chars
@@ -233,11 +233,11 @@ def parse_adhoc_doc_for_typ(doc, name, default_is_none):
             words[-1] = "".join(words[-1])
             words.append(ch)
             if ch == "." and sentence_ends == -1:
-                sentence_ends = len(words)
+                sentence_ends: int = len(words)
             words.append([])
     words[-1] = "".join(words[-1])
 
-    candidate_type = next(
+    candidate_type: Optional[str] = next(
         map(
             adhoc_type_to_type.__getitem__,
             filter(partial(contains, adhoc_type_to_type), words),
@@ -245,31 +245,31 @@ def parse_adhoc_doc_for_typ(doc, name, default_is_none):
         None,
     )
 
-    fst_sentence = "".join(words[:sentence_ends])
-    sentence = None
+    fst_sentence: str = "".join(words[:sentence_ends])
+    sentence: Optional[str] = None
 
     # type_in_fst_sentence = adhoc_type_to_type.get(next(filterfalse(str.isspace, words)))
     # pp({"type_in_fst_sentence": type_in_fst_sentence})
     if " or " in fst_sentence or " of " in fst_sentence:
         sentence = fst_sentence
     else:
-        sentence_starts = sentence_ends
+        sentence_starts: int = sentence_ends
         for a, b in sliding_window(words[sentence_starts:], 2):
             sentence_ends += 1
             if a == "." and not b.isidentifier():
                 break
-        snd_sentence = "".join(words[sentence_starts:sentence_ends])
+        snd_sentence: str = "".join(words[sentence_starts:sentence_ends])
         if " or " in snd_sentence or " of " in snd_sentence:
-            sentence = snd_sentence
+            sentence: str = snd_sentence
 
     if sentence is not None:
-        wrap_type_with = "{}"
-        defaults_idx = sentence.rfind(", default")
+        wrap_type_with: str = "{}"
+        defaults_idx: int = sentence.rfind(", default")
         if defaults_idx != -1:
-            sentence = sentence[:defaults_idx]
+            sentence: str = sentence[:defaults_idx]
         if sentence.count("`") == 2:
-            fst_tick = sentence.find("`")
-            candidate_collection = next(
+            fst_tick: str = sentence.find("`")
+            candidate_collection: Optional[str] = next(
                 map(
                     adhoc_3_tuple_to_collection.__getitem__,
                     filter(
@@ -280,17 +280,21 @@ def parse_adhoc_doc_for_typ(doc, name, default_is_none):
                 None,
             )
             if candidate_collection is not None:
-                wrap_type_with = candidate_collection + "[{}]"
-            sentence = sentence[fst_tick : sentence.rfind("`")]
+                wrap_type_with: str = candidate_collection + "[{}]"
+            sentence: str = sentence[fst_tick : sentence.rfind("`")]
 
-        new_candidate_type = _union_literal_from_sentence(sentence)
+        new_candidate_type: Optional[str] = cast(
+            Optional[str], _union_literal_from_sentence(sentence)
+        )
         if new_candidate_type is not None:
-            candidate_type = new_candidate_type
+            candidate_type: Optional[str] = new_candidate_type
         if candidate_type is not None:
             return wrap_type_with.format(candidate_type)
 
     if fst_sentence is not None:
-        whole_sentence_as_type = type_to_name.get(fst_sentence.rstrip("."))
+        whole_sentence_as_type: Optional[str] = type_to_name.get(
+            fst_sentence.rstrip(".")
+        )
         if whole_sentence_as_type is not None:
             return whole_sentence_as_type
     if candidate_type is not None:
@@ -298,7 +302,7 @@ def parse_adhoc_doc_for_typ(doc, name, default_is_none):
     elif len(words) > 2:
         if "/" in words[2]:
             return "Union[{}]".format(",".join(sorted(words[2].split("/"))))
-        candidate_type = next(
+        candidate_type: Optional[str] = next(
             map(
                 adhoc_3_tuple_to_type.__getitem__,
                 filter(

@@ -8,6 +8,7 @@ from functools import partial
 from itertools import chain, takewhile
 from operator import contains, eq, itemgetter, ne
 from textwrap import indent
+from typing import List, Optional
 
 from cdd.shared.defaults_utils import set_default_doc
 from cdd.shared.pure_utils import (
@@ -182,10 +183,10 @@ def _get_token_start_idx(doc_str):
     :return: index of token start or -1 if not found
     :rtype: ```int```
     """
-    stack = []
+    stack: List[str] = []
     for idx, ch in enumerate(doc_str):
         if ch == "\n":
-            indent_amount = count_iter_items(takewhile(str.isspace, stack))
+            indent_amount: int = count_iter_items(takewhile(str.isspace, stack))
             line = "".join(stack[indent_amount:])
             if line in NUMPYDOC_TOKENS_SET:
                 i = indent_amount + idx + 1
@@ -241,9 +242,11 @@ def _get_start_of_last_found(last_found, doc_str):
     :return: _last_found index
     :rtype: ```Optional[int]```
     """
-    last_found_starts = None
+    last_found_starts: Optional[int] = None
 
-    for last_found_starts in range(last_found - 1, 0, -1):
+    for last_found_starts in range(
+        (0 if last_found is None else last_found) - 1, 0, -1
+    ):
         if doc_str[last_found_starts] == "\n":
             last_found_starts += 1
             break
@@ -267,8 +270,8 @@ def _get_end_of_last_found_numpydoc(last_found, last_found_starts, doc_str):
     :return: _last_found index
     :rtype: ```Optional[int]```
     """
-    countdown_from = last_found_starts - 1
-    new_last_found_starts = None
+    countdown_from: int = last_found_starts - 1
+    new_last_found_starts: Optional[int] = None
     for new_last_found_starts in range(countdown_from - 1, 0, -1):
         if doc_str[new_last_found_starts] == "\n":
             new_last_found_starts += 1
@@ -349,7 +352,7 @@ def _find_end_of_args_returns(last_found_ends, doc_str):
     :return: end of args_returns index
     :rtype: ```int```
     """
-    smallest_indent = count_iter_items(
+    smallest_indent: int = count_iter_items(
         takewhile(str.isspace, doc_str[last_found_ends:])
     )
 
@@ -381,7 +384,7 @@ def _get_token_last_idx_if_no_next_token(doc_str, last_found_starts):
     next_line = doc_str[last_found_starts:next_nl]
     if frozenset(next_line) == frozenset(("-",)):
         line_start = line_end = next_nl + 1
-        line_no = 0
+        line_no: int = 0
         # last_space = line_no, line_start, line_end
         PrevParam = namedtuple(
             "PrevParam", ("line_no", "indent", "line_start", "line_end")
@@ -400,7 +403,9 @@ def _get_token_last_idx_if_no_next_token(doc_str, last_found_starts):
             if line.isspace():
                 pass
             elif line_no - 2 == prev_param[0]:
-                starting_whitespace = count_iter_items(takewhile(str.isspace, line))
+                starting_whitespace: int = count_iter_items(
+                    takewhile(str.isspace, line)
+                )
                 if starting_whitespace >= prev_param[1]:
                     # Handle multiline description of param
                     prev_param = PrevParam(
@@ -423,8 +428,7 @@ def _get_token_last_idx_if_no_next_token(doc_str, last_found_starts):
         return prev_param.line_end + 1
 
         # if i_started_at == line_end:
-
-    if doc_str[last_found_starts:next_nl] == "Raises:":
+    if doc_str[last_found_starts:next_nl].lstrip() == "Raises:":
         # Don't treat this as anything special… short circuit
         return last_found_starts - 1
 
@@ -457,7 +461,7 @@ def _get_token_last_idx(doc_str):
     while idx != 0 and doc_str[idx] != "\n":
         idx -= 1
 
-    indent_amount = count_iter_items(takewhile(str.isspace, doc_str[idx + 1 :]))
+    indent_amount: int = count_iter_items(takewhile(str.isspace, doc_str[idx + 1 :]))
 
     i_started_at = i = indent_amount + idx + 1
     if any(filter(doc_str[i:].startswith, TOKENS_SET)):
@@ -520,19 +524,18 @@ def parse_docstring_into_header_args_footer(current_doc_str, original_doc_str):
     if original_doc_str:
         start_idx_original = _get_token_start_idx(original_doc_str)
         last_idx_original = _get_token_last_idx(original_doc_str)
-        footer_original = (
-            original_doc_str[last_idx_original:] if last_idx_original != -1 else None
-        )
         header_original = (
             original_doc_str[:start_idx_original] if start_idx_original > -1 else None
         )
-
         args_returns_original = original_doc_str[
             slice(
                 start_idx_original if start_idx_original > -1 else None,
                 last_idx_original if last_idx_original > -1 else None,
             )
         ]
+        footer_original = (
+            original_doc_str[last_idx_original:] if last_idx_original != -1 else None
+        )
 
     # Now we know where the args/returns were, and where they are now
     # To avoid whitespace issues, only copy across the args/returns portion, keep rest as original
@@ -554,7 +557,7 @@ def parse_docstring_into_header_args_footer(current_doc_str, original_doc_str):
         ),
     )
 
-    indent_args_returns_original = count_iter_items(
+    indent_args_returns_original: int = count_iter_items(
         takewhile(str.isspace, args_returns_original or iter(()))
     )
     if indent_args_returns_original > 1 and args_returns_current:
@@ -635,21 +638,23 @@ def header_args_footer_to_str(header, args_returns, footer):
         )
         # foot_end_has_nl = footer[-1] == "\n"
     else:
-        footer_start_nls = 0  # foot_end_has_nl
+        footer_start_nls: int = 0  # foot_end_has_nl
 
     # Match indent of args_returns to header or footer
     if args_returns:
-        header_or_footer = header if header else footer
-        indent_amount = count_iter_items(takewhile(str.isspace, header_or_footer))
-        newlines = (
+        header_or_footer: str = header if header else footer
+        indent_amount: int = count_iter_items(takewhile(str.isspace, header_or_footer))
+        newlines: int = (
             header_or_footer[:indent_amount].count("\n") if header_or_footer else 0
         )
-        indent_amount = indent_amount - newlines
-        current_indent_amount = count_iter_items(takewhile(str.isspace, args_returns))
+        indent_amount: int = indent_amount - newlines
+        current_indent_amount: int = count_iter_items(
+            takewhile(str.isspace, args_returns)
+        )
         if current_indent_amount != indent_amount:
-            _indent = indent_amount * " "
-            len_args_returns = len(args_returns)
-            args_returns = indent(args_returns, _indent, predicate=lambda _: _)
+            _indent: str = indent_amount * " "
+            len_args_returns: int = len(args_returns)
+            args_returns: str = indent(args_returns, _indent, predicate=lambda _: _)
             if args_returns[-1] == "\n" and len_args_returns > 1:
                 args_returns += _indent
 
@@ -686,10 +691,10 @@ class Style(Enum):
     Simple enum taken from the docstring_parser codebase
     """
 
-    rest = 1
-    google = 2
-    numpydoc = 3
-    auto = 255
+    rest: int = 1
+    google: int = 2
+    numpydoc: int = 3
+    auto: int = 255
 
 
 def derive_docstring_format(docstring):

@@ -63,11 +63,10 @@ from cdd.shared.pure_utils import (
     rpartial,
     simple_types,
 )
-from cdd.shared.types import IntermediateRepr
 
 # Was `"globals().__getitem__"`; this type is used for `Any` and any other unhandled
 
-FALLBACK_TYP = "str"
+FALLBACK_TYP: str = "str"
 
 # Was `Attribute(Call(args=[], func=Name("globals", Load()), keywords=[], expr=None, expr_func=None,),
 #                "__getitem__", Load(),)`; this type is used for `Any` and any other unhandled (for argparse `type=`)
@@ -1733,7 +1732,7 @@ def optimise_imports(imports):
     :return: `ImportFrom` nodes
     :rtype: ```List[ImportFrom]```
     """
-    seen_pair: IntermediateRepr = set()
+    seen_pair = set()
     return [
         ImportFrom(
             module=module_name,

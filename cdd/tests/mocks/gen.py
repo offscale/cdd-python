@@ -25,7 +25,7 @@ import_star_from_input_ast = ImportFrom(
     level=1,
     identifier=None,
 )
-import_star_from_input_str = to_code(import_star_from_input_ast)
+import_star_from_input_str: str = to_code(import_star_from_input_ast)
 import_gen_test_module_ast = Import(
     names=[
         alias(
@@ -37,7 +37,7 @@ import_gen_test_module_ast = Import(
     ],
     alias=None,
 )
-import_gen_test_module_str = "{}\n".format(
+import_gen_test_module_str: str = "{}\n".format(
     to_code(import_gen_test_module_ast).rstrip("\n")
 )
 

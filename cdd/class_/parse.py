@@ -17,6 +17,7 @@ from collections import OrderedDict, deque
 from functools import partial
 from itertools import filterfalse
 from operator import setitem
+from typing import Optional, cast
 
 import cdd.docstring.parse
 import cdd.function.parse
@@ -71,7 +72,7 @@ def class_(
     """
 
     assert not isinstance(class_def, FunctionDef), "Expected not `FunctionDef`"
-    is_supported_ast_node = isinstance(class_def, (Module, ClassDef))
+    is_supported_ast_node: bool = isinstance(class_def, (Module, ClassDef))
     if not is_supported_ast_node and isinstance(class_def, type):
         return _class_from_memory(
             class_def=class_def,
@@ -87,9 +88,9 @@ def class_(
     ), "Expected 'Union[Module, ClassDef]' got `{node_name!r}`".format(
         node_name=type(class_def).__name__
     )
-    class_def = find_ast_type(class_def, class_name)
-    doc_str = get_docstring(class_def, clean=parse_original_whitespace)
-    intermediate_repr = (
+    class_def: ClassDef = cast(ClassDef, find_ast_type(class_def, class_name))
+    doc_str: Optional[str] = get_docstring(class_def, clean=parse_original_whitespace)
+    intermediate_repr: IntermediateRepr = (
         {
             "name": class_name,
             "type": "static",
@@ -147,7 +148,7 @@ def class_(
                     break
 
             if typ_default:
-                k = "returns" if target_id == "return_type" else "params"
+                k: str = "returns" if target_id == "return_type" else "params"
                 if intermediate_repr.get(k) is None:
                     intermediate_repr[k] = OrderedDict()
                 intermediate_repr[k][target_id] = typ_default
@@ -242,11 +243,11 @@ def _class_from_memory(
     Merge the inner function if found within the class, with the class IR.
     Internal func just for internal memory. Uses `inspect`.
 
-    :param class_def: Class AST
-    :type class_def: ```ClassDef```
+    :param class_def: Class AST or a `type` in memory that is a `class`
+    :type class_def: ```Union[ClassDef, type]```
 
     :param class_name: Class name
-    :type class_name: ```str```
+    :type class_name: ```Optional[str]```
 
     :param infer_type: Whether to try inferring the typ (from the default)
     :type infer_type: ```bool```
@@ -277,11 +278,13 @@ def _class_from_memory(
         parse_original_whitespace=parse_original_whitespace,
         word_wrap=word_wrap,
     )
-    src = get_source(class_def)
+    src: Optional[str] = get_source(class_def)
     if src is None:
         return ir
-    parsed_body = ast.parse(src.lstrip()).body[0]
-    original_doc_str = get_docstring(parsed_body, clean=parse_original_whitespace)
+    parsed_body: ClassDef = cast(ClassDef, ast.parse(src.lstrip()).body[0])
+    original_doc_str: Optional[str] = get_docstring(
+        parsed_body, clean=parse_original_whitespace
+    )
     parsed_body.body = (
         parsed_body.body if original_doc_str is None else parsed_body.body[1:]
     )

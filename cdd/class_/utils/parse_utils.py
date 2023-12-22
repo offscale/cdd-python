@@ -13,7 +13,7 @@ def get_source(obj):
     :type obj: ```Any```
 
     :return: The source
-    :rtype: ```str```
+    :rtype: ```Optional[str]```
     """
     try:
         return getsource(obj)

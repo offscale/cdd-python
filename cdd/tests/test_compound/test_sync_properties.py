@@ -30,7 +30,7 @@ def populate_files(tempdir, input_str=None, output_str=None):
     """
     input_filename = os.path.join(tempdir, "class_{extsep}py".format(extsep=extsep))
     output_filename = os.path.join(tempdir, "method{extsep}py".format(extsep=extsep))
-    input_str = input_str or (
+    input_str: str = input_str or (
         "from {package} import Literal\n\n"
         "class Foo(object):\n"
         "{tab}def g(f: Literal['a']):\n"
@@ -38,7 +38,7 @@ def populate_files(tempdir, input_str=None, output_str=None):
             package="typing" if PY_GTE_3_8 else "typing_extensions", tab=tab
         )
     )
-    output_str = output_str or (
+    output_str: str = output_str or (
         "from {package} import Literal\n\n"
         "def f(h: Literal['b']):"
         "{tab}{tab}pass".format(
@@ -90,7 +90,7 @@ class TestSyncProperties(TestCase):
             ),
             "rt",
         ) as f:
-            eval_mock_str = f.read()
+            eval_mock_str: str = f.read()
 
         with TemporaryDirectory() as tempdir:
             (

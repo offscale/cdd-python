@@ -3,8 +3,13 @@ Utility functions for `cdd.emit.openapi`
 """
 
 from collections import namedtuple
+from typing import NamedTuple, Type
 
-NameModelRouteIdCrud = namedtuple(
+NameModelRouteType = NamedTuple(
+    "NameModelRoute",
+    [("name", str), ("model", str), ("route", str), ("id", str), ("crud", str)],
+)
+NameModelRouteIdCrud: Type[NameModelRouteType] = namedtuple(
     "NameModelRoute", ("name", "model", "route", "id", "crud")
 )
 

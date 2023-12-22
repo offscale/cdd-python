@@ -102,7 +102,7 @@ def gen(
         else:
             raise NotImplementedError("phase {}".format(phase))
     elif imports_from_file is None:
-        imports = ""
+        imports: str = ""
     else:
         if prepend:
             prepend_imports = get_at_root(
@@ -175,7 +175,7 @@ def gen(
             else getfile(get_module(imports_from_file, extra_symbols=extra_symbols)),
             "rt",
         ) as f:
-            imports = "".join(
+            imports: str = "".join(
                 map(to_code, get_at_root(ast.parse(f.read()), (Import, ImportFrom)))
             )
 

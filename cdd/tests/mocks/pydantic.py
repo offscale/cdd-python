@@ -6,7 +6,7 @@ from ast import AnnAssign, ClassDef, Index, Load, Name, Store, Subscript
 
 from cdd.shared.ast_utils import maybe_type_comment, set_value
 
-pydantic_class_str = """
+pydantic_class_str: str = """
 class Cat(BaseModel):
     pet_type: Literal['cat']
     cat_name: str

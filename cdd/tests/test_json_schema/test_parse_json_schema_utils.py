@@ -3,6 +3,7 @@ Tests for the Intermediate Representation produced by the JSON schema parser
 """
 
 from copy import deepcopy
+from typing import Tuple
 from unittest import TestCase
 
 import cdd.json_schema.utils.parse_utils
@@ -30,7 +31,7 @@ class TestParseJsonSchemaUtils(TestCase):
         Tests that `json_schema_property_to_param` works with `anyOf`
         """
 
-        mock = "address", {
+        mock: Tuple[str, dict] = "address", {
             "anyOf": [{"$ref": "#/components/schemas/address"}],
             "doc": "The customer's address.",
             "nullable": True,
@@ -50,7 +51,7 @@ class TestParseJsonSchemaUtils(TestCase):
         Tests that `json_schema_property_to_param` works with `$ref` as type
         """
 
-        mock = "tax", {"$ref": "#/components/schemas/customer_tax"}
+        mock: Tuple[str, dict] = "tax", {"$ref": "#/components/schemas/customer_tax"}
 
         res = cdd.json_schema.utils.parse_utils.json_schema_property_to_param(mock, {})
 

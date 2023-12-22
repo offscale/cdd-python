@@ -263,10 +263,10 @@ def cst_scan(scanned, stack):
                 expr.clear()
                 the_stack.clear()
 
-            expression_str = ""
+            expression_str: str = ""
             for idx, ch in enumerate(statement):
                 expression.append(ch)
-                expression_str = "".join(expression)
+                expression_str: str = "".join(expression)
                 expression_stripped = expression_str.strip()
 
                 if (

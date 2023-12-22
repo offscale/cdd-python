@@ -15,6 +15,7 @@ from os import path
 from os.path import extsep
 from sys import modules
 from tempfile import NamedTemporaryFile
+from typing import Optional
 from unittest import main
 from unittest.mock import MagicMock, patch
 
@@ -330,9 +331,9 @@ def reindent_docstring(node, indent_level=1, smart=True):
     :return: Node with reindent docstring
     :rtype: ```ast.AST```
     """
-    doc_str = ast.get_docstring(node, clean=True)
+    doc_str: Optional[str] = ast.get_docstring(node, clean=True)
     if doc_str is not None:
-        _sep = tab * abs(indent_level)
+        _sep: str = tab * abs(indent_level)
         node.body[0] = ast.Expr(
             set_value(
                 "\n{_sep}{s}\n{_sep}".format(

@@ -1,6 +1,7 @@
 """
 Utility functions for `cdd.parse.json_schema`
 """
+from typing import Dict
 
 from cdd.shared.ast_utils import NoneStr
 from cdd.shared.pure_utils import namespaced_pascal_to_upper_camelcase, none_types
@@ -105,7 +106,7 @@ def json_schema_property_to_param(param, required):
 
 
 # https://json-schema.org/draft/2019-09/json-schema-core.html#rfc.section.4.2.1
-json_type2typ = {
+json_type2typ: Dict[str, str] = {
     "boolean": "bool",
     "string": "str",
     "object": "dict",

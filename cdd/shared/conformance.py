@@ -7,6 +7,7 @@ from collections import OrderedDict
 from functools import partial
 from operator import itemgetter
 from os import path
+from typing import List
 
 import cdd.argparse_function.emit
 import cdd.argparse_function.parse
@@ -104,7 +105,7 @@ def ground_truth(args, truth_file):
     }
 
     parse_func, emit_func, type_wanted = arg2parse_emit_type[args.truth]
-    search = _get_name_from_namespace(args, args.truth).split(".")
+    search: List[str] = _get_name_from_namespace(args, args.truth).split(".")
 
     with open(truth_file, "rt") as f:
         true_ast = ast_parse(f.read(), filename=truth_file)
@@ -168,7 +169,7 @@ def _conform_filename(
     :return: filename, whether the file was modified
     :rtype: ```Tuple[str, bool]```
     """
-    filename = path.realpath(path.expanduser(filename))
+    filename: str = path.realpath(path.expanduser(filename))
 
     if not path.isfile(filename):
         cdd.shared.emit.file.file(

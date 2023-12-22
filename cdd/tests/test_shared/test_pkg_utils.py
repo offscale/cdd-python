@@ -11,7 +11,7 @@ class TestPkgUtils(TestCase):
 
     def test_relative_filename(self) -> None:
         """Tests relative_filename ident"""
-        expect = "gaffe"
+        expect: str = "gaffe"
         self.assertEqual(relative_filename(expect), expect)
 
 

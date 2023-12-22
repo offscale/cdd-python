@@ -23,7 +23,7 @@ def fastapi(fastapi_route):
         }
     :rtype: ```Tuple[str, dict]```
     """
-    method = fastapi_route.decorator_list[0].func.attr
+    method: str = fastapi_route.decorator_list[0].func.attr
     route = get_value(fastapi_route.decorator_list[0].args[0])
     return route, {
         method: {

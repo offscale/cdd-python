@@ -1,9 +1,11 @@
 """
 Source transformer module. Uses astor on Python < 3.9
 """
+
 from ast import AsyncFunctionDef, ClassDef, FunctionDef, Module, get_docstring, parse
 from importlib import import_module
 from sys import version_info
+from typing import Optional
 
 from cdd.shared.ast_utils import annotate_ancestry
 from cdd.shared.pure_utils import reindent, tab
@@ -65,7 +67,7 @@ def ast_parse(
     if not skip_docstring_remit and isinstance(
         parsed_ast, (Module, ClassDef, FunctionDef, AsyncFunctionDef)
     ):
-        docstring = get_docstring(parsed_ast, clean=True)
+        docstring: Optional[str] = get_docstring(parsed_ast, clean=True)
         if docstring is None:
             return parsed_ast
 

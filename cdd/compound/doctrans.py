@@ -5,6 +5,7 @@ Helper to traverse the AST of the input file, extract the docstring out, parse a
 from ast import fix_missing_locations
 from copy import deepcopy
 from operator import attrgetter
+from typing import List, NamedTuple
 
 from cdd.compound.doctrans_utils import DocTrans, doctransify_cst, has_type_annotations
 from cdd.shared.ast_utils import cmp_ast
@@ -44,7 +45,7 @@ def doctrans(filename, docstring_format, type_annotations, no_word_wrap):
     )
 
     if not cmp_ast(node, original_module):
-        cst_list = list(cst_parse(original_source))
+        cst_list: List[NamedTuple] = list(cst_parse(original_source))
 
         # Carefully replace only docstrings, function return annotations, assignment and annotation assignments.
         # Maintaining all other existing whitespace, comments, &etc.

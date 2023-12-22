@@ -90,7 +90,7 @@ def relative_filename(filename, remove_hints=tuple()):
     :return: Relative os.path (if derived) else original
     :rtype: ```str```
     """
-    _filename = filename.casefold()
+    _filename: str = filename.casefold()
     lib = get_python_lib(), get_python_lib(prefix="")
     for elem in remove_hints + lib:
         if _filename.startswith(elem.casefold()):

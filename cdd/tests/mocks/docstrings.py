@@ -9,32 +9,32 @@ from textwrap import indent
 
 from cdd.shared.pure_utils import identity, tab
 
-docstring_header_no_nl_str = (
+docstring_header_no_nl_str: str = (
     "Acquire from the official tensorflow_datasets model zoo,"
     " or the ophthalmology focussed ml-prepare"
 )
-docstring_header_str = "{docstring_header_no_nl_str}\n".format(
+docstring_header_str: str = "{docstring_header_no_nl_str}\n".format(
     docstring_header_no_nl_str=docstring_header_no_nl_str
 )
 
-_docstring_header_and_return_str = (
+_docstring_header_and_return_str: str = (
     ":return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))",
     ":rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```",
 )
 
-docstring_header_and_return_str = "\n".join(
+docstring_header_and_return_str: str = "\n".join(
     (docstring_header_str, *_docstring_header_and_return_str)
 )
 
-docstring_header_and_return_no_nl_str = "\n".join(
+docstring_header_and_return_no_nl_str: str = "\n".join(
     (docstring_header_no_nl_str, *_docstring_header_and_return_str)
 )
 
-docstring_header_and_return_two_nl_str = "\n".join(
+docstring_header_and_return_two_nl_str: str = "\n".join(
     (docstring_header_no_nl_str, "\n", *_docstring_header_and_return_str)
 )
 
-docstring_extra_colons_str = """
+docstring_extra_colons_str: str = """
 Some comment
 
 :param dataset_name: Example: foo
@@ -53,7 +53,7 @@ Some comment
 # # Keras 3.0.1 #
 # ###############
 # https://github.com/keras-team/keras/blob/f889c1f/keras/losses/losses.py#L282-L297
-docstring_google_keras_squared_hinge_no_args_doc_str = (
+docstring_google_keras_squared_hinge_no_args_doc_str: str = (
     "Initializes `SquaredHinge` instance."
 )
 docstring_google_keras_squared_hinge = (
@@ -65,11 +65,11 @@ docstring_google_keras_squared_hinge = (
     "        name: Optional name for the loss instance.",
     "    ",
 )
-docstring_google_keras_squared_hinge_str = "\n".join(
+docstring_google_keras_squared_hinge_str: str = "\n".join(
     docstring_google_keras_squared_hinge
 )
 
-docstring_google_keras_tensorboard_return_str = """
+docstring_google_keras_tensorboard_return_str: str = """
     Returns:
         True on success, or False if no summary was written because no default
         summary writer was available.
@@ -162,7 +162,7 @@ docstring_google_keras_adam = (
     "",
     "    ",
 )
-docstring_google_keras_adam_str = "\n".join(docstring_google_keras_adam)
+docstring_google_keras_adam_str: str = "\n".join(docstring_google_keras_adam)
 
 # ```py
 # import ast
@@ -247,7 +247,7 @@ docstring_google_keras_adadelta = (
     "    - [Zeiler, 2012](http://arxiv.org/abs/1212.5701)",
     "    ",
 )
-docstring_google_keras_adadelta_str = "\n".join(docstring_google_keras_adadelta)
+docstring_google_keras_adadelta_str: str = "\n".join(docstring_google_keras_adadelta)
 
 # ```py
 # import ast
@@ -319,7 +319,7 @@ docstring_google_keras_lambda_callback = (
     "    ```",
     "    ",
 )
-docstring_google_keras_lambda_callback_str = "\n".join(
+docstring_google_keras_lambda_callback_str: str = "\n".join(
     docstring_google_keras_lambda_callback
 )
 
@@ -470,7 +470,7 @@ docstring_google_tf_mean_squared_error_footer_tuple = (
     "  @end_compatibility",
     "  ",
 )
-docstring_google_tf_mean_squared_error_str = "\n".join(
+docstring_google_tf_mean_squared_error_str: str = "\n".join(
     chain.from_iterable(
         (
             docstring_google_tf_mean_squared_error_header_tuple,
@@ -498,9 +498,9 @@ docstring_google_pytorch_lbfgs = (
     "        history_size (int): update history size (default: 100).",
     "        line_search_fn (str): either 'strong_wolfe' or None (default: None).",
 )
-docstring_google_pytorch_lbfgs_str = "\n".join(docstring_google_pytorch_lbfgs)
+docstring_google_pytorch_lbfgs_str: str = "\n".join(docstring_google_pytorch_lbfgs)
 
-docstring_google_str = """{docstring_header_str}
+docstring_google_str: str = """{docstring_header_str}
 Args:
   dataset_name (str): name of dataset. Defaults to "mnist"
   tfds_dir (str): directory to look for models in. Defaults to "~/tensorflow_datasets"
@@ -515,7 +515,7 @@ Returns:
     docstring_header_str=docstring_header_str
 )
 
-docstring_no_default_doc_str = """
+docstring_no_default_doc_str: str = """
 {header_doc_str}
 :param dataset_name: name of dataset.
 :type dataset_name: ```str```
@@ -538,11 +538,11 @@ docstring_no_default_doc_str = """
     header_doc_str=docstring_header_str
 )
 
-docstring_no_default_doc_wrapped_str = docstring_no_default_doc_str.replace(
+docstring_no_default_doc_wrapped_str: str = docstring_no_default_doc_str.replace(
     " np.ndarray]]```", "\n{tab}np.ndarray]]```".format(tab=tab)
 )
 
-_docstring_no_default_str = """
+_docstring_no_default_str: str = """
 {header_doc_str}\n
 :param dataset_name: name of dataset.
 :type dataset_name: ```str```
@@ -563,21 +563,21 @@ _docstring_no_default_str = """
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """
 
-docstring_no_default_str = _docstring_no_default_str.format(
+docstring_no_default_str: str = _docstring_no_default_str.format(
     header_doc_str=docstring_header_str
 )
 
-docstring_no_default_no_nl_str = _docstring_no_default_str.format(
+docstring_no_default_no_nl_str: str = _docstring_no_default_str.format(
     header_doc_str=docstring_header_no_nl_str
 )
 
-docstring_numpydoc_only_doc_str = """
+docstring_numpydoc_only_doc_str: str = """
 {header_doc_str}
 """.format(
     header_doc_str=docstring_header_str
 )
 
-docstring_numpydoc_only_params_str = """
+docstring_numpydoc_only_params_str: str = """
 Parameters
 ----------
 dataset_name : str
@@ -592,14 +592,14 @@ data_loader_kwargs : Optional[dict]
     pass this as arguments to data_loader function
 """
 
-docstring_numpydoc_only_returns_str = """
+docstring_numpydoc_only_returns_str: str = """
 Returns
 -------
 Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]
     Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 """
 
-docstring_numpydoc_str = """{docstring_header_str}
+docstring_numpydoc_str: str = """{docstring_header_str}
 Parameters
 ----------
 dataset_name : str
@@ -620,7 +620,7 @@ data_loader_kwargs : Optional[dict]
     ),
 )
 
-docstring_only_return_type_str = """
+docstring_only_return_type_str: str = """
 Some comment
 
 :param dataset_name: Example: foo
@@ -629,7 +629,7 @@ Some comment
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """
 
-_docstring_str = """
+_docstring_str: str = """
 {header_doc_str}\n
 :param dataset_name: name of dataset. Defaults to "mnist"
 :type dataset_name: ```str```
@@ -650,17 +650,19 @@ _docstring_str = """
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """
 
-docstring_str = _docstring_str.format(header_doc_str=docstring_header_str)
+docstring_str: str = _docstring_str.format(header_doc_str=docstring_header_str)
 
-docstring_no_nl_str = _docstring_str.format(header_doc_str=docstring_header_no_nl_str)
+docstring_no_nl_str: str = _docstring_str.format(
+    header_doc_str=docstring_header_no_nl_str
+)
 
-docstring_no_nl_no_none_str = docstring_no_nl_str.replace(" Defaults to None", "")
+docstring_no_nl_no_none_str: str = docstring_no_nl_str.replace(" Defaults to None", "")
 
-docstring_wrapped_str = docstring_str.replace(
+docstring_wrapped_str: str = docstring_str.replace(
     " np.ndarray]]```", "\n{tab}np.ndarray]]```".format(tab=tab)
 )
 
-docstring_no_type_str = """
+docstring_no_type_str: str = """
 {header_doc_str}
 
 :param dataset_name: name of dataset. Defaults to "mnist"
@@ -678,7 +680,7 @@ docstring_no_type_str = """
     header_doc_str=docstring_header_str
 )
 
-docstring_no_type_no_default_tpl_str = """
+docstring_no_type_no_default_tpl_str: str = """
 {header_doc_str}
 :param dataset_name: name of dataset.
 
@@ -693,11 +695,11 @@ docstring_no_type_no_default_tpl_str = """
 :return: Train and tests dataset splits.
 """
 
-docstring_no_type_no_default_str = docstring_no_type_no_default_tpl_str.format(
+docstring_no_type_no_default_str: str = docstring_no_type_no_default_tpl_str.format(
     header_doc_str=docstring_header_str
 )
 
-docstring_repr_str = (
+docstring_repr_str: str = (
     indent(
         "\n".join(
             (
@@ -715,7 +717,7 @@ docstring_repr_str = (
     + tab * 2
 )
 
-docstring_create_from_attr_str = (
+docstring_create_from_attr_str: str = (
     indent(
         "\n".join(
             (
@@ -741,21 +743,21 @@ docstring_create_from_attr_str = (
 #     "   A new instance made from the input object's attributes\n"
 # )
 
-docstring_create_from_attr_google_str = (
+docstring_create_from_attr_google_str: str = (
     "\nEmit a string representation of the current instance\n\n\n\n\n"
     "Returns:\n"
     "  str:\n"
     "   String representation of instance\n"
 )
 
-docstring_repr_google_str = (
+docstring_repr_google_str: str = (
     "\nEmit a string representation of the current instance\n\n\n\n\n"
     "Returns:\n"
     "  str:\n"
     "   String representation of instance\n"
 )
 
-docstring_reduction_v2_str = (
+docstring_reduction_v2_str: str = (
     "Types of loss reduction."
     "\n"
     "\n"

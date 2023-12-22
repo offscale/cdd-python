@@ -38,7 +38,7 @@ def _make_call_meth(body, return_type, param_names, docstring_format, word_wrap)
     :return: Internal function for `__call__`
     :rtype: ```FunctionDef```
     """
-    body_len = len(body)
+    body_len: int = len(body)
     if body_len and isinstance(body, dict):
         body = list(
             filter(

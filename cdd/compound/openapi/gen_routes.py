@@ -54,7 +54,7 @@ def gen_routes(app, model_path, model_name, crud, route):
 
     assert path.isfile(model_path)
     with open(model_path, "rt") as f:
-        mod = ast.parse(f.read())
+        mod: Module = ast.parse(f.read())
 
     sqlalchemy_node = next(
         filter(
@@ -137,7 +137,7 @@ def upsert_routes(app, routes, routes_path, route, primary_key):
         return
 
     with open(routes_path, "rt") as f:
-        mod = ast.parse(f.read())
+        mod: Module = ast.parse(f.read())
 
     def get_names(functions):
         """

@@ -55,7 +55,7 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
     :return: fully-qualified module name to values (could be modules, classes, and whatever other symbols are exposed)
     :rtype: ```Dict[str,Generator[Any]]```
     """
-    module_root_dir_init = path.join(
+    module_root_dir_init: str = path.join(
         module_root_dir, "__init__{extsep}py".format(extsep=path.extsep)
     )
     # process_module_contents = partial(
@@ -66,7 +66,7 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
     # )
     if path.isfile(module_root_dir):
         with open(module_root_dir, "rt") as f:
-            mod = ast.parse(f.read())
+            mod: Module = ast.parse(f.read())
 
         # Bring in imported symbols that should be exposed based on `__all__`
         all_magic_var = next(
@@ -241,7 +241,7 @@ def emit_file_on_hierarchy(
     output_dir_is_module = output_directory.replace(path.sep, ".").endswith(
         new_module_name
     )
-    mod_path = path.join(
+    mod_path: str = path.join(
         output_directory,
         *()
         if output_dir_is_module
@@ -256,7 +256,7 @@ def emit_file_on_hierarchy(
         else:
             makedirs(mod_path)
 
-    init_filepath = path.join(path.dirname(mod_path), INIT_FILENAME)
+    init_filepath: str = path.join(path.dirname(mod_path), INIT_FILENAME)
     if dry_run:
         print(
             "touch\t{init_filepath!r}".format(init_filepath=init_filepath),
@@ -307,7 +307,7 @@ def emit_file_on_hierarchy(
             )
         )
     else:
-        emit_filename_dir = path.dirname(emit_filename)
+        emit_filename_dir: str = path.dirname(emit_filename)
         if not path.isdir(emit_filename_dir):
             print(
                 "mkdir\t{emit_filename_dir!r}".format(

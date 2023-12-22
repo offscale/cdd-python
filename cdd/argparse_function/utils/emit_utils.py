@@ -43,7 +43,7 @@ def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
         type_name=type(e).__name__
     )
 
-    typ = intermediate_repr["returns"]["return_type"]["typ"]
+    typ: str = intermediate_repr["returns"]["return_type"]["typ"]
     if "[" in intermediate_repr["returns"]["return_type"]["typ"]:
         typ = to_code(get_value(ast.parse(typ).body[0].value.slice).elts[1]).rstrip(
             "\n"

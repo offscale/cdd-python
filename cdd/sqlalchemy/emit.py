@@ -380,7 +380,7 @@ def sqlalchemy_hybrid(
     """
 
     if class_name is None and intermediate_repr["name"]:
-        class_name = intermediate_repr["name"]
+        class_name: str = intermediate_repr["name"]
     assert class_name is not None, "`class_name` is `None`"
 
     return ClassDef(

@@ -33,6 +33,7 @@ from ast import (
 from copy import deepcopy
 from itertools import repeat
 from os import extsep, path
+from typing import Optional
 from unittest import TestCase
 
 from cdd.shared.ast_utils import (
@@ -537,7 +538,7 @@ class TestAstUtils(TestCase):
 
     def test_get_value(self) -> None:
         """Tests get_value succeeds"""
-        val = "foo"
+        val: str = "foo"
         self.assertEqual(get_value(Str(s=val, constant_value=None, string=None)), val)
         self.assertEqual(
             get_value(Constant(value=val, constant_value=None, string=None)), val
@@ -581,14 +582,16 @@ class TestAstUtils(TestCase):
         """
         Tests that `set_docstring` sets the docstring
         """
-        with_doc_str = deepcopy(function_type_annotated)
-        doc_str = ast.get_docstring(ast.parse(function_adder_str), clean=True)
+        with_doc_str: FunctionDef = deepcopy(function_type_annotated)
+        doc_str: Optional[str] = ast.get_docstring(
+            ast.parse(function_adder_str), clean=True
+        )
         set_docstring(doc_str, False, with_doc_str)
         self.assertIsNone(ast.get_docstring(function_type_annotated, clean=True))
         self.assertEqual(ast.get_docstring(with_doc_str, clean=True), doc_str)
 
-        without_doc_str = deepcopy(function_type_annotated)
-        doc_str = "\t\n"
+        without_doc_str: FunctionDef = deepcopy(function_type_annotated)
+        doc_str: str = "\t\n"
         set_docstring(doc_str, False, without_doc_str)
         self.assertIsNone(ast.get_docstring(without_doc_str, clean=True), doc_str)
 
@@ -949,7 +952,7 @@ class TestAstUtils(TestCase):
           whence said default is an in-memory function
         """
 
-        function_str = (
+        function_str: str = (
             "from operator import add\n"
             "def adder(a, b):\n"
             "{tab}return add(a, b)".format(tab=tab)
@@ -1237,7 +1240,7 @@ class TestAstUtils(TestCase):
         """
         Test `merge_assignment_lists`
         """
-        src = "__all__ = [ 'a', 'b'];"
+        src: str = "__all__ = [ 'a', 'b'];"
         node = ast.parse("__all__ = ['alpha', 'beta']\n".join(repeat(src, 2)))
         merge_assignment_lists(node, "__all__")
         all__ = tuple(get_ass_where_name(node, "__all__"))

@@ -64,7 +64,7 @@ return_ast = Return(
     expr=None,
 )
 
-class_with_method_str = '''
+class_with_method_str: str = '''
 class C(object):
     """ C class (mocked!) """
 
@@ -104,7 +104,7 @@ class C(object):
     indent=" " * 12,
 )
 
-class_with_method_types_str = '''
+class_with_method_types_str: str = '''
 class C(object):
     """ C class (mocked!) """
 
@@ -135,7 +135,7 @@ class C(object):
     header_doc_str=indent(docstring_header_str, tab * 2)
 )
 
-class_with_method_and_body_types_str = '''
+class_with_method_and_body_types_str: str = '''
 class C(object):
     """ C class (mocked!) """
 
@@ -172,7 +172,7 @@ class C(object):
     header_doc_str=indent(docstring_header_str, tab * 2)
 )
 
-class_with_optional_arg_method_str = '''
+class_with_optional_arg_method_str: str = '''
 class C(object):
     """ C class (mocked!) """
 
@@ -616,7 +616,7 @@ class_with_optional_arg_method_ast = ClassDef(
     identifier_name=None,
 )
 
-function_adder_str = '''
+function_adder_str: str = '''
 def add_6_5(*, a=6, b=5):
     """
     :param a: first param
@@ -674,7 +674,7 @@ function_adder_ast = FunctionDef(
     returns=None,
 )
 
-function_default_complex_default_arg_str = (
+function_default_complex_default_arg_str: str = (
     "def call_peril(dataset_name: str='mnist', writer=stdout):\n\tpass"
 )
 
@@ -711,7 +711,7 @@ function_default_complex_default_arg_ast = FunctionDef(
     stmt=None,
 )
 
-method_complex_args_variety_str = '''
+method_complex_args_variety_str: str = '''
 def call_cliff(
     self,
     dataset_name,
@@ -851,7 +851,7 @@ function_google_tf_squared_hinge_docstring = (
     "     Squared hinge loss values. shape = `[batch_size, d0, .. dN-1]`.",
     "  ",
 )
-function_google_tf_squared_hinge_docstring_str = "\n".join(
+function_google_tf_squared_hinge_docstring_str: str = "\n".join(
     function_google_tf_squared_hinge_docstring
 )
 function_google_tf_squared_hinge = (
@@ -869,7 +869,7 @@ function_google_tf_squared_hinge = (
     ),
 )
 
-function_google_tf_squared_hinge_str = "\n".join(function_google_tf_squared_hinge)
+function_google_tf_squared_hinge_str: str = "\n".join(function_google_tf_squared_hinge)
 
 # `from tensorflow.python.ops.losses.losses_impl import _safe_mean` @ tf-nightly:2.7.0.dev20210908
 function_google_tf_ops_losses__safe_mean_ast = FunctionDef(
@@ -1067,7 +1067,7 @@ docstring_google_tf_adadelta_function = (
     "        )",
     "        return config",
 )
-docstring_google_keras_adadelta_function_str = "\n".join(
+docstring_google_keras_adadelta_function_str: str = "\n".join(
     docstring_google_tf_adadelta_function
 )
 

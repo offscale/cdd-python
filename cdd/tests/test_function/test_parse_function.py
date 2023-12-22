@@ -2,6 +2,7 @@
 Tests for the Intermediate Representation produced by the function parser
 """
 
+from ast import FunctionDef
 from collections import OrderedDict
 from copy import deepcopy
 from unittest import TestCase
@@ -143,7 +144,7 @@ class TestParseFunction(TestCase):
         - splat
         """
 
-        method_complex_args_variety_with_imports_str = (
+        method_complex_args_variety_with_imports_str: str = (
             "from sys import stdout\n"
             "from {package} import Literal\n"
             "{body}".format(
@@ -182,7 +183,7 @@ class TestParseFunction(TestCase):
         - kwonly args
         """
 
-        method_complex_args_variety_with_imports_str = (
+        method_complex_args_variety_with_imports_str: str = (
             "from sys import stdout\n"
             "from {package} import Literal\n"
             "{body}".format(
@@ -241,11 +242,11 @@ class TestParseFunction(TestCase):
         )
         self.assertDictEqual(ir, function_google_tf_ops_losses__safe_mean_ir)
 
-        no_body = deepcopy(function_google_tf_ops_losses__safe_mean_ast)
+        no_body: FunctionDef = deepcopy(function_google_tf_ops_losses__safe_mean_ast)
         del no_body.body[1:]
         ir: IntermediateRepr = cdd.function.parse.function(no_body)
         del ir["_internal"]
-        gold = deepcopy(function_google_tf_ops_losses__safe_mean_ir)
+        gold: IntermediateRepr = deepcopy(function_google_tf_ops_losses__safe_mean_ir)
         gold["returns"]["return_type"] = {
             "doc": function_google_tf_ops_losses__safe_mean_ir["returns"][
                 "return_type"

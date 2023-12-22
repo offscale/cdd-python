@@ -49,7 +49,7 @@ class TestEmitJsonSchema(TestCase):
         Tests that `emit.json_schema` with `intermediate_repr_no_default_doc` produces `config_schema`
         """
         with TemporaryDirectory() as temp_dir:
-            temp_file = path.join(temp_dir, "foo{}py".format(path.extsep))
+            temp_file: str = path.join(temp_dir, "foo{}py".format(path.extsep))
             cdd.json_schema.emit.json_schema_file(
                 get_input_mapping_from_path(
                     "function", "cdd.tests.test_compound", "test_gen_utils"

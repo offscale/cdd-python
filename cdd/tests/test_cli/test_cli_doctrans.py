@@ -45,7 +45,7 @@ class TestCliDocTrans(TestCase):
         """Tests CLI interface gets all the way to the doctrans call without error"""
 
         with TemporaryDirectory() as tempdir:
-            filename = path.join(tempdir, "foo")
+            filename: str = path.join(tempdir, "foo")
             open(filename, "a").close()
             with patch("cdd.__main__.doctrans", mock_function):
                 self.assertTrue(

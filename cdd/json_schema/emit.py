@@ -57,7 +57,7 @@ def json_schema(
     if "$id" in intermediate_repr and "params" not in intermediate_repr:
         return intermediate_repr  # Somehow this function got JSON schema as input
     if identifier is None:
-        identifier = intermediate_repr.get(
+        identifier: str = intermediate_repr.get(
             "$id",
             "https://offscale.io/{}.schema.json".format(
                 intermediate_repr.get("name", "INFERRED")

@@ -37,7 +37,7 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
         _param["typ"] = _param["typ"][len("Optional[") : -1]
         nullable = True
     if "Literal[" in _param["typ"]:
-        parsed_typ = get_value(ast.parse(_param["typ"]).body[0])
+        parsed_typ: Call = get_value(ast.parse(_param["typ"]).body[0])
         assert (
             parsed_typ.value.id == "Literal"
         ), "Only basic Literal support is implemented, not {}".format(

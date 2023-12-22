@@ -13,6 +13,7 @@ import ast
 from ast import AnnAssign, Assign, Call, ClassDef, Module
 from collections import OrderedDict
 from inspect import getsource
+from typing import Optional
 
 import cdd.shared.parse.utils.parser_utils
 from cdd.compound.openapi.utils.emit_utils import sqlalchemy_class_to_table
@@ -20,6 +21,7 @@ from cdd.docstring.parse import docstring
 from cdd.shared.ast_utils import get_value
 from cdd.shared.defaults_utils import extract_default
 from cdd.shared.pure_utils import assert_equal, rpartial
+from cdd.shared.types import IntermediateRepr
 from cdd.sqlalchemy.utils.parse_utils import column_call_to_param
 
 
@@ -56,7 +58,7 @@ def sqlalchemy_table(call_or_name, parse_original_whitespace=False):
     # Binding should be same name as table… I guess?
     assert_equal(get_value(call_or_name.args[0]), name)
 
-    comment = next(
+    comment: Optional[str] = next(
         map(
             get_value,
             map(
@@ -65,14 +67,14 @@ def sqlalchemy_table(call_or_name, parse_original_whitespace=False):
         ),
         None,
     )
-    doc = next(
+    doc: Optional[str] = next(
         map(
             get_value,
             map(get_value, filter(lambda kw: kw.arg == "doc", call_or_name.keywords)),
         ),
         None,
     )
-    intermediate_repr = (
+    intermediate_repr: IntermediateRepr = (
         {"type": None, "doc": "", "params": OrderedDict()}
         if comment is None and doc is None
         else docstring(

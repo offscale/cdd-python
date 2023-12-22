@@ -7,6 +7,7 @@ from ast import ClassDef, Expr, FunctionDef, Load, Name
 from collections import OrderedDict
 from functools import partial
 from itertools import chain
+from typing import FrozenSet, Optional
 
 from cdd.class_.utils.emit_utils import RewriteName
 from cdd.docstring.emit import docstring
@@ -50,7 +51,7 @@ def class_(
     :type class_bases: ```Iterable[str]```
 
     :param decorator_list: List of decorators
-    :type decorator_list: ```Optional[Union[List[Str], List[]]]```
+    :type decorator_list: ```Optional[List[Str]]```
 
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
@@ -74,7 +75,7 @@ def class_(
     )
     assert class_name or intermediate_repr["name"], "Class has no name"
 
-    returns = (
+    returns: OrderedDict = (
         intermediate_repr["returns"]
         if "return_type" in ((intermediate_repr or {}).get("returns") or iter(()))
         else OrderedDict()
@@ -83,18 +84,20 @@ def class_(
         intermediate_repr["params"].update(returns)
         del intermediate_repr["returns"]
 
-    internal_body = intermediate_repr.get("_internal", {}).get("body", [])
+    internal_body: ClassDef.body = intermediate_repr.get("_internal", {}).get(
+        "body", []
+    )
     # TODO: Add correct classmethod/staticmethod to decorate function using `annotate_ancestry` and first-field checks
     # Such that the `self.` or `cls.` rewrite only applies to non-staticmethods
     # assert internal_body, "Expected `internal_body` to have contents"
-    param_names = (
+    param_names: Optional[FrozenSet[str]] = (
         frozenset(intermediate_repr["params"].keys())
         if "params" in intermediate_repr
         else None
     )
     if param_names:
         if internal_body:
-            internal_body = list(
+            internal_body: ClassDef.body = list(
                 map(
                     ast.fix_missing_locations,
                     map(RewriteName(param_names).visit, internal_body),
@@ -103,7 +106,7 @@ def class_(
         elif (returns or {"return_type": None}).get("return_type") is not None:
             internal_body = returns["return_type"]
 
-    indent_level = 1
+    indent_level: int = 1
 
     _emit_docstring = partial(
         docstring,

@@ -8,6 +8,7 @@ from itertools import chain
 from json import load
 from operator import itemgetter
 from os import path
+from typing import Optional
 
 from cdd.shared.ast_utils import (
     infer_imports,
@@ -325,7 +326,7 @@ def gen_module(
     )
     parsed_ast = ast.parse(content)
     # TODO: Shebang line first, then docstring, then imports
-    doc_str = ast.get_docstring(parsed_ast, clean=True)
+    doc_str: Optional[str] = ast.get_docstring(parsed_ast, clean=True)
     whole = tuple(
         map(
             lambda node: (node, None)
@@ -434,7 +435,7 @@ def file_to_input_mapping(filepath, parse_name):
     ):
         with open(filepath, "rt") as f:
             json_contents = load(f)
-        name = path.basename(filepath)
+        name: str = path.basename(filepath)
         if "name" not in json_contents:
             json_contents["name"] = pascal_to_upper_camelcase(name)
         input_mapping = {name: json_contents}

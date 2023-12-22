@@ -42,8 +42,8 @@ def file(node, filename, mode="a", skip_black=False):
     :rtype: ```NoneType```
     """
     if not isinstance(node, Module):
-        node = Module(body=[node], type_ignores=[], stmt=None)
-    src = to_code(node)
+        node: Module = Module(body=[node], type_ignores=[], stmt=None)
+    src: str = to_code(node)
     if not skip_black:
         src = black.format_str(
             src,

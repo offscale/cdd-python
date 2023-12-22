@@ -116,7 +116,9 @@ def exmod(
     )
 
     try:
-        module_root_dir = path.dirname(find_module_filepath(module_root, submodule))
+        module_root_dir: str = path.dirname(
+            find_module_filepath(module_root, submodule)
+        )
     except AssertionError as e:
         raise ModuleNotFoundError(e)
 
@@ -233,7 +235,7 @@ def exmod(
         )
     )
 
-    init_filepath = path.join(
+    init_filepath: str = path.join(
         output_directory,
         *(INIT_FILENAME,)
         if output_directory.endswith(

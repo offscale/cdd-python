@@ -4,6 +4,7 @@ Function/method emitter
 
 import ast
 from ast import Expr, FunctionDef, Load, Name, Return, arguments
+from typing import Optional
 
 from cdd.docstring.emit import docstring
 from cdd.shared.ast_utils import maybe_type_comment, set_arg, set_value
@@ -78,8 +79,8 @@ def function(
         )
     )
 
-    function_name = function_name or intermediate_repr["name"]
-    function_type = function_type or intermediate_repr["type"]
+    function_name: Optional[str] = function_name or intermediate_repr["name"]
+    function_type: Optional[str] = function_type or intermediate_repr["type"]
 
     args = (
         [] if function_type in frozenset((None, "static")) else [set_arg(function_type)]

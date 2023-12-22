@@ -45,7 +45,7 @@ from cdd.tests.mocks.methods import (
 )
 from cdd.tests.utils_for_tests import remove_args_from_docstring
 
-class_doc_str = tab.join(
+class_doc_str: str = tab.join(
     (
         "\n",
         "{header_doc_str}{tab}\n".format(header_doc_str=docstring_header_str, tab=tab),
@@ -59,7 +59,7 @@ class_doc_str = tab.join(
 )
 class_doc_str_expr = Expr(set_value(class_doc_str))
 
-class_str = '''
+class_str: str = '''
 class ConfigClass(object):
     """
 {header_doc_str}{tab}
@@ -85,7 +85,7 @@ class ConfigClass(object):
     header_doc_str=indent(docstring_header_str, tab), tab=tab
 )
 
-class_nargs_str = '''
+class_nargs_str: str = '''
 class ConfigClass(object):
     """
     {header_doc_str}
@@ -672,7 +672,7 @@ tensorboard_doc_str_no_args = (
     "    ",
 )
 
-tensorboard_doc_str_no_args_str = "\n".join(
+tensorboard_doc_str_no_args_str: str = "\n".join(
     map(
         partial(strip_starting, str_to_strip="  "),
         tensorboard_doc_str_no_args,
@@ -730,7 +730,7 @@ tensorboard_doc_str_args = (
     "            used for all embedding layers, a single filename can be passed.",
 )
 
-tensorboard_doc_str = "\n".join(
+tensorboard_doc_str: str = "\n".join(
     map(
         partial(strip_starting, str_to_strip="  "),
         chain.from_iterable(
@@ -747,7 +747,7 @@ tensorboard_doc_str = "\n".join(
 del tensorboard_doc_str_no_args_examples_idx
 
 # Minus a lot of functions, just includes args and first line of `__init__` and `set_model`
-class_google_keras_tensorboard_str = '''
+class_google_keras_tensorboard_str: str = '''
 class TensorBoard(Callback):
     """{tensorboard_doc_str}"""
 
@@ -927,9 +927,9 @@ class_torch_nn_l1loss_docstring = (
     "    >>> output = loss(input, target)",
     "    >>> output.backward()",
 )
-class_torch_nn_l1loss_docstring_str = "\n".join(class_torch_nn_l1loss_docstring)
+class_torch_nn_l1loss_docstring_str: str = "\n".join(class_torch_nn_l1loss_docstring)
 
-class_torch_nn_l1loss_str = '''
+class_torch_nn_l1loss_str: str = '''
 class L1Loss(_Loss):
     r"""{class_torch_nn_l1loss_docstring_str!s}"""
     __constants__ = ['reduction']

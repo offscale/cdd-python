@@ -33,6 +33,7 @@ from json import dumps
 from operator import attrgetter, eq, methodcaller
 from os import path
 from platform import system
+from typing import Optional
 
 import cdd.sqlalchemy.utils.shared_utils
 from cdd.shared.ast_utils import (
@@ -118,9 +119,9 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
         nullable = False
 
     rstripped_dot_doc = _param.get("doc", "").rstrip(".")
-    doc_added_at = None
+    doc_added_at: Optional[int] = None
     if rstripped_dot_doc:
-        doc_added_at = len(keywords)
+        doc_added_at: int = len(keywords)
         keywords.append(
             ast.keyword(arg="doc", value=set_value(rstripped_dot_doc), identifier=None)
         )
@@ -479,7 +480,7 @@ def update_with_imports_from_columns(filename):
     :type filename: ```str```
     """
     with open(filename, "rt") as f:
-        mod = ast.parse(f.read())
+        mod: Module = ast.parse(f.read())
 
     candidates = sorted(
         frozenset(
@@ -515,7 +516,7 @@ def update_with_imports_from_columns(filename):
         )
     )
 
-    module = path.basename(path.dirname(filename))
+    module: str = path.basename(path.dirname(filename))
     mod.body = list(
         chain.from_iterable(
             (
@@ -570,7 +571,7 @@ def update_fk_for_file(filename):
     :type filename: ```str```
     """
     with open(filename, "rt") as f:
-        mod = ast.parse(f.read())
+        mod: Module = ast.parse(f.read())
 
     def handle_sqlalchemy_cls(symbol_to_module, sqlalchemy_class_def):
         """
@@ -702,7 +703,7 @@ def rewrite_fk(symbol_to_module, column_assign):
                 find_module_filepath(symbol_to_module[column_name.id], column_name.id),
                 "rt",
             ) as f:
-                mod = ast.parse(f.read())
+                mod: Module = ast.parse(f.read())
             matching_class = next(
                 filter(
                     lambda node: isinstance(node, ClassDef)
@@ -783,7 +784,9 @@ def sqlalchemy_class_to_table(class_def, parse_original_whitespace):
             )
         ).value
     )
-    doc_string = ast.get_docstring(class_def, clean=parse_original_whitespace)
+    doc_string: Optional[str] = ast.get_docstring(
+        class_def, clean=parse_original_whitespace
+    )
 
     def _merge_name_to_column(assign):
         """

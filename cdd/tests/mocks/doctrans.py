@@ -115,7 +115,7 @@ function_type_in_docstring = FunctionDef(
     lineno=None,
     returns=None,
 )
-function_type_in_docstring_only = deepcopy(function_type_in_docstring)
+function_type_in_docstring_only: FunctionDef = deepcopy(function_type_in_docstring)
 function_type_in_docstring_only.body[1].type_comment = None
 
 class_with_internal_annotated = ClassDef(

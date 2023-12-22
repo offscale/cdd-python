@@ -11,7 +11,7 @@ class TestDefaultUtils(TestCase):
 
     def test_extract_default(self) -> None:
         """Tests that `extract_default` produces the expected output"""
-        sample = "This defaults to foo."
+        sample: str = "This defaults to foo."
         self.assertTupleEqual(extract_default(sample), (sample, "foo"))
         self.assertTupleEqual(
             extract_default(sample, emit_default_doc=False), ("This", "foo")
@@ -19,8 +19,8 @@ class TestDefaultUtils(TestCase):
 
     def test_extract_default_middle(self) -> None:
         """Tests that `extract_default` produces the expected output"""
-        sample = "Why would you. Have this defaults to something. In the middle?"
-        default = "something"
+        sample: str = "Why would you. Have this defaults to something. In the middle?"
+        default: str = "something"
         self.assertTupleEqual(extract_default(sample), (sample, default))
 
         self.assertTupleEqual(
@@ -34,7 +34,7 @@ class TestDefaultUtils(TestCase):
 
     def test_extract_default_with_dot(self) -> None:
         """Tests that `extract_default` works when there is a `.` in the default"""
-        sample = "This. defaults to (np.empty(0), np.empty(0))"
+        sample: str = "This. defaults to (np.empty(0), np.empty(0))"
         self.assertTupleEqual(
             extract_default(sample, emit_default_doc=False),
             ("This.", "(np.empty(0), np.empty(0))"),
@@ -42,7 +42,7 @@ class TestDefaultUtils(TestCase):
 
     def test_extract_default_with_int(self) -> None:
         """Tests that `extract_default` works for an integer default"""
-        sample = "learning rate. Defaults to 0001."
+        sample: str = "learning rate. Defaults to 0001."
         self.assertTupleEqual(
             extract_default(sample, emit_default_doc=False),
             ("learning rate.", 1),
@@ -50,7 +50,7 @@ class TestDefaultUtils(TestCase):
 
     def test_extract_default_with_float(self) -> None:
         """Tests that `extract_default` works when there is a `.` in the default referring to a decimal place"""
-        sample = "learning rate. Defaults to 0.001."
+        sample: str = "learning rate. Defaults to 0.001."
         self.assertTupleEqual(
             extract_default(sample, emit_default_doc=False),
             ("learning rate.", 0.001),
@@ -69,7 +69,7 @@ class TestDefaultUtils(TestCase):
 
     def test_extract_default_with_parens(self) -> None:
         """Tests that `extract_default` works when wrapped in parentheses"""
-        sample = "learning rate (default: 1)"
+        sample: str = "learning rate (default: 1)"
         self.assertTupleEqual(
             extract_default(sample, emit_default_doc=True),
             (sample, 1),
@@ -86,11 +86,11 @@ class TestDefaultUtils(TestCase):
 
     def test_extract_default_with_many_parens(self) -> None:
         """Tests that `extract_default` works when default parses to an AST type"""
-        sample = (
+        sample: str = (
             "betas (Tuple[float, float], optional): coefficients used for computing\n"
             "        running averages of gradient and its square (default: (0.9, 0.999))"
         )
-        default = "(0.9, 0.999)"
+        default: str = "(0.9, 0.999)"
         self.assertTupleEqual(
             extract_default(sample, emit_default_doc=True),
             (sample, default),

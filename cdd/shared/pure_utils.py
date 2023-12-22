@@ -130,8 +130,8 @@ def parse_comment_from_line(line):
     :return: `line` without comments
     :rtype: ```str```
     """
-    double = 0
-    single = 0
+    double: int = 0
+    single: int = 0
     for col, ch in enumerate(line):
         if col > 3 and line[col - 1] == "\\" and ch in frozenset(('"', "'", "#")):
             pass  # Ignore the char
@@ -613,7 +613,7 @@ def diff(input_obj, op):
     :return: length of difference, response of operated input
     :rtype: ```Tuple[int, Any]```
     """
-    input_len = len(
+    input_len: int = len(
         input_obj
     )  # Separate line and binding, as `op` could mutate the `input`
     result = op(input_obj)
@@ -695,10 +695,10 @@ def location_within(container, iterable, cmp=eq):
     """
     if not hasattr(container, "__len__"):
         container = tuple(container)
-    container_len = len(container)
+    container_len: int = len(container)
 
     for elem in iterable:
-        elem_len = len(elem)
+        elem_len: int = len(elem)
         if elem_len > container_len:
             continue
         elif cmp(elem, container):
@@ -890,7 +890,7 @@ def find_module_filepath(module_name, submodule_name, none_when_no_spec=False):
             return module_spec
         raise AssertionError("spec not found for {}".format(module_name))
     module_origin = module_spec.origin
-    module_parent = path.dirname(module_origin)
+    module_parent: str = path.dirname(module_origin)
 
     return next(
         filter(
@@ -939,7 +939,7 @@ def count_chars_from(
     :return: Number of chars counted (until `ignore`)
     :rtype: ```int```
     """
-    char_count = 0
+    char_count: int = 0
 
     if char_f is None:
         char_f = rpartial(eq, char)
@@ -1075,7 +1075,7 @@ def emit_separating_tabs(s, indent_level=1, run_per_line=str.lstrip):
     :return: Original string with a separating tab between paragraphs, & possibly addition indentation on other lines
     :rtype: ```str```
     """
-    sep = tab * indent_level
+    sep: str = tab * indent_level
     return "\n{sep}{}\n{sep}".format(
         run_per_line(
             "\n".join(map(lambda line: sep if len(line) == 0 else line, s.splitlines()))

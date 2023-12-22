@@ -12,8 +12,9 @@ Transform from string or AST representations of input, to intermediate_repr, a d
 """
 
 from ast import AnnAssign, Assign, AsyncFunctionDef, ClassDef, FunctionDef
+from typing import List
 
-PARSERS = [
+PARSERS: List[str] = [
     "argparse_function",
     "class_",
     "docstring",

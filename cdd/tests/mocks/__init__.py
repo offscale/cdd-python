@@ -6,7 +6,7 @@ from ast import parse as ast_parse
 
 from cdd.shared.pure_utils import PY_GTE_3_8
 
-imports_header = """
+imports_header: str = """
 from {package} import Literal
 from typing import Optional, Tuple, Union
 
