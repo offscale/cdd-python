@@ -59,7 +59,7 @@ class TestEmitFunction(TestCase):
             )
         )
 
-        function_name = function_def.name
+        function_name: str = function_def.name
         function_type = get_function_type(function_def)
 
         gen_ast = cdd.function.emit.function(
@@ -129,7 +129,7 @@ class TestEmitFunction(TestCase):
                 )
             )
         )
-        function_name = function_def.name
+        function_name: str = function_def.name
         function_type = get_function_type(function_def)
         function_def.body[0].value = set_value(
             "\n{tab}{ds}{tab}".format(
@@ -184,7 +184,7 @@ class TestEmitFunction(TestCase):
                 )
             )
         )
-        function_name = function_def.name
+        function_name: str = function_def.name
         function_type = get_function_type(function_def)
 
         gen_ast = cdd.function.emit.function(

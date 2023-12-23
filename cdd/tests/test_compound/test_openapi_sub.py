@@ -34,8 +34,12 @@ class TestOpenApiBulk(TestCase):
             temp_dir_join = partial(path.join, tempdir)
             open(temp_dir_join("__init__{extsep}py".format(extsep=extsep)), "a").close()
 
-            models_filename = temp_dir_join("models{extsep}py".format(extsep=extsep))
-            routes_filename = temp_dir_join("routes{extsep}py".format(extsep=extsep))
+            models_filename: str = temp_dir_join(
+                "models{extsep}py".format(extsep=extsep)
+            )
+            routes_filename: str = temp_dir_join(
+                "routes{extsep}py".format(extsep=extsep)
+            )
 
             with open(models_filename, "wt") as f:
                 f.write(

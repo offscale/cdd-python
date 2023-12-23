@@ -28,8 +28,12 @@ def populate_files(tempdir, input_str=None, output_str=None):
     :return: input filename, input str, input_str filename
     :rtype: ```Tuple[str, str, str]```
     """
-    input_filename = os.path.join(tempdir, "class_{extsep}py".format(extsep=extsep))
-    output_filename = os.path.join(tempdir, "method{extsep}py".format(extsep=extsep))
+    input_filename: str = os.path.join(
+        tempdir, "class_{extsep}py".format(extsep=extsep)
+    )
+    output_filename: str = os.path.join(
+        tempdir, "method{extsep}py".format(extsep=extsep)
+    )
     input_str: str = input_str or (
         "from {package} import Literal\n\n"
         "class Foo(object):\n"
@@ -338,10 +342,10 @@ class TestSyncProperties(TestCase):
     def test_sync_properties_eval_fails(self) -> None:
         """Tests `sync_properties` fails with `call=True` and dots"""
         with TemporaryDirectory() as tempdir:
-            input_filename = os.path.join(
+            input_filename: str = os.path.join(
                 tempdir, "input_{extsep}py".format(extsep=extsep)
             )
-            output_filename = os.path.join(
+            output_filename: str = os.path.join(
                 tempdir, "input_str{extsep}py".format(extsep=extsep)
             )
 

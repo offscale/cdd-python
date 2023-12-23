@@ -167,6 +167,7 @@ PY3_8: bool = _python_major_minor == (3, 8)
 PY_GTE_3_8: bool = _python_major_minor >= (3, 8)
 PY_GTE_3_9: bool = _python_major_minor >= (3, 9)
 PY_GTE_3_10: bool = _python_major_minor >= (3, 10)
+PY_GTE_3_11: bool = _python_major_minor >= (3, 11)
 PY_GTE_3_12: bool = _python_major_minor >= (3, 12)
 
 ENCODING = "# -*- coding: utf-8 -*-"
@@ -1278,6 +1279,7 @@ __all__ = [
     "ENCODING",
     "INIT_FILENAME",
     "PY3_8",
+    "PY_GTE_3_11",
     "PY_GTE_3_12",
     "PY_GTE_3_8",
     "PY_GTE_3_9",

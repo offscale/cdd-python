@@ -399,7 +399,7 @@ def get_parser(node, parse_name):
     :rtype: ```Callable[[...], dict]````
     """
     if parse_name in (None, "infer"):
-        parse_name = infer(node)
+        parse_name: str = infer(node)
     parse_name = {
         "class": "class_",
         "sqlalchemy_hybrid": "sqlalchemy",

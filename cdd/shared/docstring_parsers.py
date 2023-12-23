@@ -525,7 +525,7 @@ def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=Fal
         )
 
     if name is not None and (name.endswith("kwargs") or name.startswith("**")):
-        name = name.lstrip("*")
+        name: str = name.lstrip("*")
         if _param.get("typ", "dict") == "dict":
             _param["typ"] = "Optional[dict]"
         # if (
@@ -535,7 +535,7 @@ def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=Fal
         # ) and none_default_for_kwargs:
         #     _param["default"] = NoneStr
     elif name is not None and name.startswith("*"):
-        name = name[1:]
+        name: str = name[1:]
         if _param.get("typ") is None:
             _param["typ"] = "tuple"
         if "default" not in _param:
@@ -969,16 +969,16 @@ def _parse_phase_rest(
                     )[1]
                 )
             else:
-                fst_space = line.find(" ")
-                nxt_colon = line.find(":", fst_space)
-                name = line[fst_space + 1 : nxt_colon]
+                fst_space: int = line.find(" ")
+                nxt_colon: int = line.find(":", fst_space)
+                name: str = line[fst_space + 1 : nxt_colon]
 
                 if param[0] is not None and not param[0] == name:
                     if not param[0][0] == "*":
                         intermediate_repr["params"][param[0]] = param[1]
                     param = [None, {}]
 
-                val = (lambda s_: s_ if parse_original_whitespace else s_.strip())(
+                val: str = (lambda s_: s_ if parse_original_whitespace else s_.strip())(
                     line[nxt_colon + 1 :]
                 )
 

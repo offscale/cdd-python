@@ -60,7 +60,7 @@ def populate_files(tempdir, input_module_str=None):
     :return: input filename, input str, expected_output
     :rtype: ```Tuple[str, str, str, Module]```
     """
-    input_filename = os.path.join(tempdir, "input{extsep}py".format(extsep=extsep))
+    input_filename: str = os.path.join(tempdir, "input{extsep}py".format(extsep=extsep))
     input_class_name: str = "Foo"
     input_class_ast = cdd.class_.emit.class_(
         cdd.function.parse.function(deepcopy(method_adder_ast)),
@@ -159,7 +159,7 @@ class TestGen(TestCase):
     def test_gen(self) -> None:
         """Tests `gen`"""
 
-        output_filename = os.path.join(
+        output_filename: str = os.path.join(
             self.tempdir, "test_gen_output{extsep}py".format(extsep=extsep)
         )
         with patch("sys.stdout", new_callable=StringIO), patch(
@@ -189,7 +189,7 @@ class TestGen(TestCase):
     def test_gen_with_imports_from_file(self) -> None:
         """Tests `gen` with `imports_from_file`"""
 
-        output_filename = os.path.join(
+        output_filename: str = os.path.join(
             self.tempdir,
             "test_gen_with_imports_from_file_output{extsep}py".format(extsep=extsep),
         )
@@ -237,7 +237,7 @@ class TestGen(TestCase):
     def test_gen_with_imports_from_file_and_prepended_import(self) -> None:
         """Tests `gen` with `imports_from_file` and `prepend`"""
 
-        output_filename = os.path.join(
+        output_filename: str = os.path.join(
             self.tempdir,
             "test_gen_with_imports_from_file_and_prepended_import_output{extsep}py".format(
                 extsep=extsep

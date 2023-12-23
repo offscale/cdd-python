@@ -310,7 +310,7 @@ def _class_from_memory(
         "from_type": "cls",
     }
     if class_name is None:
-        class_name = parsed_body.name
+        class_name: Optional[str] = parsed_body.name
     body_ir: IntermediateRepr = class_(
         class_def=parsed_body,
         class_name=class_name,
@@ -358,7 +358,7 @@ def _merge_inner_function(
         })
     :rtype: ```dict```
     """
-    function_def = next(
+    function_def: Optional[FunctionDef] = next(
         filter(
             lambda func: func.name == merge_inner_function,
             filter(rpartial(isinstance, FunctionDef), ast.walk(class_def)),
@@ -367,7 +367,7 @@ def _merge_inner_function(
     )
 
     if function_def is not None:
-        function_type = (
+        function_type: str = (
             "static" if not function_def.args.args else function_def.args.args[0].arg
         )
         inner_ir: IntermediateRepr = cdd.function.parse.function(

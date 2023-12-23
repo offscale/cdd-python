@@ -111,7 +111,7 @@ def parse_out_param(expr, require_default=False, emit_default_doc=True):
         ),
         "str",
     )
-    name = get_value(expr.value.args[0])[len("--") :]
+    name: str = get_value(expr.value.args[0])[len("--") :]
     default = next(
         (
             get_value(key_word.value)

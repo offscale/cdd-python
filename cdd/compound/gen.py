@@ -181,7 +181,7 @@ def gen(
 
     module_path, _, symbol_name = input_mapping.rpartition(".")
 
-    emit_name = sanitise_emit_name(emit_name)
+    emit_name: str = sanitise_emit_name(emit_name)
     if path.isfile(input_mapping):
         input_mapping = file_to_input_mapping(input_mapping, parse_name)
     elif path.isdir(input_mapping):

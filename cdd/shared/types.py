@@ -1,16 +1,22 @@
 """
 Shared types
 """
-from _ast import AnnAssign, Assign
 
-from cdd.shared.pure_utils import PY_GTE_3_8, PY_GTE_3_9
+from ast import AnnAssign, Assign
+
+from cdd.shared.pure_utils import PY_GTE_3_8, PY_GTE_3_9, PY_GTE_3_11
 
 if PY_GTE_3_8:
     if PY_GTE_3_9:
         from collections import OrderedDict
     else:
         from typing import OrderedDict
-    from typing import Any, List, Optional, Required, TypedDict, Union
+    from typing import Any, List, Optional, TypedDict, Union
+
+    if PY_GTE_3_11:
+        from typing import Required
+    else:
+        from typing_extensions import Required
 else:
     from typing_extensions import (
         Any,
@@ -33,15 +39,19 @@ else:
 
 
 ParamVal = TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
+Internal = TypedDict(
+    "Internal",
+    {
+        "original_doc_str": Optional[str],
+        "body": List[Union[AnnAssign, Assign]],
+    },
+)
 IntermediateRepr = TypedDict(
     "IntermediateRepr",
     {
         "name": Required[Optional[str]],
         "type": Optional[str],
-        "_internal": {
-            "original_doc_str": Optional[str],
-            "body": List[Union[AnnAssign, Assign]],
-        },
+        "_internal": Internal,
         "doc": Required[Optional[str]],
         "params": Required[OrderedDict[str, ParamVal]],
         "returns": Required[

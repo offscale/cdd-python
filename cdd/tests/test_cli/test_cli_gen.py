@@ -24,7 +24,7 @@ class TestCliGen(TestCase):
     def test_existent_file_fails(self) -> None:
         """Tests nonexistent file throws the right error"""
         with TemporaryDirectory() as tempdir:
-            filename = os.path.join(
+            filename: str = os.path.join(
                 tempdir,
                 "delete_this_1{__file___basename}".format(
                     __file___basename=os.path.basename(__file__)
@@ -55,7 +55,7 @@ class TestCliGen(TestCase):
     def test_gen(self) -> None:
         """Tests CLI interface gets all the way to the gen call without error"""
         with TemporaryDirectory() as tempdir:
-            output_filename = os.path.join(
+            output_filename: str = os.path.join(
                 tempdir, "classes{extsep}py".format(extsep=extsep)
             )
 

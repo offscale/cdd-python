@@ -257,9 +257,9 @@ def inspectable_compile(s, modname=None):
     :rtype: ```Any```
     """
     fh = NamedTemporaryFile(suffix="{extsep}py".format(extsep=extsep))
-    filename = fh.name
+    filename: str = fh.name
     try:
-        modname = modname or path.splitext(path.basename(filename))[0]
+        modname: str = modname or path.splitext(path.basename(filename))[0]
         assert modname not in modules
         # our loader is a dummy one which just spits out our source
         loader = ShowSourceLoader(modname, s)

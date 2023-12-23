@@ -89,15 +89,15 @@ def openapi_bulk(app_name, model_paths, routes_paths):
         """
         if ":" in route:
             path_dict["parameters"] = []
-            object_name = path_dict.get(
+            object_name: str = path_dict.get(
                 "get", path_dict.get("delete", {"summary": "`Object`"})
             )["summary"]
-            fst = object_name.find("`")
-            object_name = (
+            fst: int = object_name.find("`")
+            object_name: str = (
                 object_name[fst + 1 : object_name.find("`", fst + 1)] or "Object"
             )
 
-            route = "/".join(
+            route: str = "/".join(
                 map(
                     lambda r: (
                         lambda pk: (

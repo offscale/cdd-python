@@ -244,7 +244,7 @@ class TestConformance(TestCase):
         """Tests that _conform_filename returns the right result"""
 
         with TemporaryDirectory() as tempdir:
-            argparse_function_filename = os.path.realpath(
+            argparse_function_filename: str = os.path.realpath(
                 os.path.join(tempdir, "no_file_here{extsep}py".format(extsep=extsep))
             )
 
@@ -263,7 +263,7 @@ class TestConformance(TestCase):
         """Tests that _conform_filename returns the right result"""
 
         with TemporaryDirectory() as tempdir:
-            argparse_function_filename = os.path.realpath(
+            argparse_function_filename: str = os.path.realpath(
                 os.path.join(
                     tempdir, "correct_contents{extsep}py".format(extsep=extsep)
                 )
@@ -290,7 +290,7 @@ class TestConformance(TestCase):
         """Tests that _conform_filename returns the right result"""
 
         with TemporaryDirectory() as tempdir:
-            argparse_function_filename = os.path.realpath(
+            argparse_function_filename: str = os.path.realpath(
                 os.path.join(
                     tempdir, "do_not_touch_this{extsep}py".format(extsep=extsep)
                 )

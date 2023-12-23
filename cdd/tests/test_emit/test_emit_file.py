@@ -31,7 +31,7 @@ class TestEmitFile(TestCase):
         """
 
         with TemporaryDirectory() as tempdir:
-            filename = os.path.join(
+            filename: str = os.path.join(
                 tempdir, "delete_me{extsep}py".format(extsep=extsep)
             )
             try:

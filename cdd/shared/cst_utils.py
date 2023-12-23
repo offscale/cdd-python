@@ -456,7 +456,7 @@ def cst_parse_one_node(statement, state):
 
     if words:
         if len(words) > 1:
-            name = get_construct_name(words)
+            name: Optional[str] = get_construct_name(words)
             if name is not None:
                 return (
                     ClassDefinitionStart

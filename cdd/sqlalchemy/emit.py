@@ -8,6 +8,7 @@ from functools import partial
 from itertools import chain
 from operator import add
 from os import environ
+from typing import Optional
 
 import cdd.compound.openapi.utils.emit_utils
 from cdd.docstring.emit import docstring
@@ -225,7 +226,7 @@ def sqlalchemy(
     """
 
     if class_name is None and intermediate_repr["name"]:
-        class_name = intermediate_repr["name"]
+        class_name: Optional[str] = intermediate_repr["name"]
     assert class_name is not None, "`class_name` is `None`"
 
     return ClassDef(

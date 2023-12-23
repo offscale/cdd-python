@@ -8,6 +8,7 @@ from functools import partial, reduce
 from itertools import chain, groupby
 from operator import attrgetter, itemgetter
 from os import makedirs, path
+from typing import Optional
 
 import cdd.class_.parse
 import cdd.compound.exmod_utils
@@ -99,7 +100,7 @@ def exmod(
     elif not path.isdir(output_directory):
         makedirs(output_directory)
 
-    emit_name = (
+    emit_name: Optional[str] = (
         emit_name[0]
         if emit_name is not None
         and len(emit_name) == 1

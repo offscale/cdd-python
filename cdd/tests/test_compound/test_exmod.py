@@ -28,12 +28,12 @@ from cdd.tests.utils_for_tests import unittest_main
 class TestExMod(TestCase):
     """Test class for exmod.py"""
 
-    parent_name = ""
-    parent_dir = ""
-    child_name = ""
-    child_dir = ""
-    grandchild_name = ""
-    grandchild_dir = ""
+    parent_name: str = ""
+    parent_dir: str = ""
+    child_name: str = ""
+    child_dir: str = ""
+    grandchild_name: str = ""
+    grandchild_dir: str = ""
     module_hierarchy = ()
 
     @classmethod

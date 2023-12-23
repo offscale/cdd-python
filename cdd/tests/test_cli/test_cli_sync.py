@@ -28,7 +28,7 @@ class TestCliSync(TestCase):
     def test_args_example0(self) -> None:
         """Tests CLI interface sets namespace correctly"""
         with TemporaryDirectory() as tempdir:
-            filename = os.path.join(
+            filename: str = os.path.join(
                 os.path.realpath(tempdir),
                 "delete_this_0{}".format(os.path.basename(__file__)),
             )
@@ -70,15 +70,15 @@ class TestCliSync(TestCase):
         """Tests CLI interface sets namespace correctly"""
 
         with TemporaryDirectory() as tempdir:
-            argparse_filename = os.path.join(
+            argparse_filename: str = os.path.join(
                 os.path.realpath(tempdir),
                 "argparse{extsep}py".format(extsep=extsep),
             )
-            class_filename = os.path.join(
+            class_filename: str = os.path.join(
                 os.path.realpath(tempdir),
                 "class_{extsep}py".format(extsep=extsep),
             )
-            method_filename = os.path.join(
+            method_filename: str = os.path.join(
                 os.path.realpath(tempdir),
                 "method{extsep}py".format(extsep=extsep),
             )
@@ -125,7 +125,7 @@ class TestCliSync(TestCase):
     def test_non_existent_file_fails(self) -> None:
         """Tests nonexistent file throws the right error"""
         with TemporaryDirectory() as tempdir:
-            filename = os.path.join(
+            filename: str = os.path.join(
                 os.path.realpath(tempdir),
                 "delete_this_1{}".format(os.path.basename(__file__)),
             )
@@ -159,7 +159,7 @@ class TestCliSync(TestCase):
     def test_missing_argument_fails_insufficient_args(self) -> None:
         """Tests missing argument throws the right error"""
         with TemporaryDirectory() as tempdir:
-            filename = os.path.join(
+            filename: str = os.path.join(
                 os.path.realpath(tempdir),
                 "delete_this_2{}".format(os.path.basename(__file__)),
             )

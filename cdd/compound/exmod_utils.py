@@ -9,6 +9,7 @@ from itertools import chain
 from operator import attrgetter, eq
 from os import environ, extsep, makedirs, path
 from sys import stdout
+from typing import Optional
 
 import cdd.argparse_function.emit
 import cdd.class_
@@ -236,7 +237,7 @@ def emit_file_on_hierarchy(
     if relative_filename_path.startswith(module_name_as_path + path.sep):
         relative_filename_path = relative_filename_path[len(new_module_name_as_path) :]
     if not name and ir.get("name") is not None:
-        name = ir.get("name")
+        name: Optional[str] = ir.get("name")
 
     output_dir_is_module = output_directory.replace(path.sep, ".").endswith(
         new_module_name

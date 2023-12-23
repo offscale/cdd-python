@@ -1,7 +1,7 @@
 """
 Tests for the utils that is used by the SQLalchemy parsers
 """
-
+from _ast import ClassDef
 from ast import keyword
 from copy import deepcopy
 from unittest import TestCase
@@ -104,7 +104,7 @@ class TestParseSqlAlchemyUtils(TestCase):
         Tests `get_table_name`
         """
         self.assertEqual(get_table_name(config_decl_base_ast), "config_tbl")
-        no_table_name = deepcopy(config_decl_base_ast)
+        no_table_name: ClassDef = deepcopy(config_decl_base_ast)
         del no_table_name.body[1]
         self.assertEqual(get_table_name(no_table_name), "Config")
 

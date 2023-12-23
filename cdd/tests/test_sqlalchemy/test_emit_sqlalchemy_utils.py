@@ -4,6 +4,7 @@ Tests for `cdd.emit.sqlalchemy.utils.sqlalchemy_utils`
 
 import ast
 import json
+from _ast import ClassDef
 from ast import (
     Assign,
     Call,
@@ -293,7 +294,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
             with open(node_filename, "wt") as f:
                 f.write(to_code(node_pk_with_phase1_fk))
 
-            element_class = sqlalchemy_table_to_class(element_pk_fk_ass)
+            element_class: ClassDef = sqlalchemy_table_to_class(element_pk_fk_ass)
             element_class.name = "Element"
 
             with open(element_filename, "wt") as f:
@@ -342,7 +343,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
         ```
         """
         with TemporaryDirectory() as tempdir:
-            mod_name = "test_update_with_imports_from_columns"
+            mod_name: str = "test_update_with_imports_from_columns"
             temp_mod_dir: str = path.join(tempdir, mod_name)
             mkdir(temp_mod_dir)
             node_filename: str = path.join(

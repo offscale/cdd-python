@@ -7,7 +7,7 @@ setup.py implementation, interesting because it parsed the first __init__.py and
     extracts the `__author__` and `__version__`
 """
 
-from ast import Assign, set_value, Str, parse
+from ast import Assign, Constant, Str, parse
 from operator import attrgetter
 from os import path
 from os.path import extsep
@@ -30,9 +30,9 @@ def main():
         parsed_init = parse(f.read())
 
     __author__, __version__ = map(
-        lambda node: node.value if isinstance(node, set_value) else node.s,
+        lambda node: node.s if isinstance(node, Str) else node.value,
         filter(
-            lambda node: isinstance(node, (set_value, Str)),
+            lambda node: isinstance(node, (Constant, Str)),
             map(
                 attrgetter("value"),
                 filter(lambda node: isinstance(node, Assign), parsed_init.body),

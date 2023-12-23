@@ -25,7 +25,7 @@ class TestCliSyncProperties(TestCase):
     def test_non_existent_file_fails(self) -> None:
         """Tests nonexistent file throws the right error"""
         with TemporaryDirectory() as tempdir:
-            filename = os.path.join(
+            filename: str = os.path.join(
                 tempdir,
                 "delete_this_1{}".format(os.path.basename(__file__)),
             )
@@ -50,11 +50,11 @@ class TestCliSyncProperties(TestCase):
             )
 
         with TemporaryDirectory() as tempdir:
-            input_filename = os.path.join(
+            input_filename: str = os.path.join(
                 tempdir,
                 "input_filename{extsep}py".format(extsep=extsep),
             )
-            output_filename = os.path.join(
+            output_filename: str = os.path.join(
                 tempdir,
                 "output_filename{extsep}py".format(extsep=extsep),
             )
@@ -82,10 +82,10 @@ class TestCliSyncProperties(TestCase):
     def test_sync_properties(self) -> None:
         """Tests CLI interface gets all the way to the sync_properties call without error"""
         with TemporaryDirectory() as tempdir:
-            input_filename = os.path.join(
+            input_filename: str = os.path.join(
                 tempdir, "class_{extsep}py".format(extsep=extsep)
             )
-            output_filename = os.path.join(
+            output_filename: str = os.path.join(
                 tempdir, "method{extsep}py".format(extsep=extsep)
             )
             open(input_filename, "wt").close()
