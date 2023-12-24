@@ -37,7 +37,7 @@ def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
     :type emit_default_doc: ```bool```
 
     :return: Name, dict with keys: 'typ', 'doc', 'default'
-    :rtype: ```Tuple[str, dict]```
+    :rtype: ```tuple[str, dict]```
     """
     assert isinstance(e, Return), "Expected `Return` got `{type_name}`".format(
         type_name=type(e).__name__
@@ -87,7 +87,7 @@ def parse_out_param(expr, require_default=False, emit_default_doc=True):
     :type emit_default_doc: ```bool```
 
     :return: Name, dict with keys: 'typ', 'doc', 'default'
-    :rtype: ```Tuple[str, dict]```
+    :rtype: ```tuple[str, dict]```
     """
     # print("require_default:", require_default, ";")
     required = get_value(
@@ -226,9 +226,9 @@ def _handle_keyword(keyword, typ):
 
 def _handle_value(node):
     """
-    Handle keyword.value types, returning the correct one as a `str` or `Any`
+    Handle `keyword.value` types, returning the correct one as a `str` or `Any`
 
-    :param node: AST node from keyword.value
+    :param node: AST node from `keyword.value`
     :type node: ```Name```
 
     :return: `str` or `Any`, representing the type for argparse

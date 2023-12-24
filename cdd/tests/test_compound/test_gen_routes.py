@@ -4,6 +4,7 @@ import ast
 from ast import FunctionDef
 from binascii import crc32
 from itertools import tee
+from modulefinder import Module
 from os import path, remove
 from os.path import extsep
 from tempfile import TemporaryDirectory
@@ -43,7 +44,7 @@ def populate_files(tempdir, init_with_crud):
                      Literal['D', 'R', 'U'], Literal['D', 'U', 'C'], Literal['D', 'U', 'R']]```
 
     :return: model_path, routes_path
-    :rtype: ```Tuple[str, str]```
+    :rtype: ```tuple[str, str]```
     """
     model_path: str = path.join(tempdir, "model{extsep}py".format(extsep=extsep))
     routes_path: str = path.join(tempdir, "routes{extsep}py".format(extsep=extsep))
@@ -239,7 +240,7 @@ class TestGenRoutes(TestCase):
                 crc32(routes_bin),
                 "File after processing compared to initial file",
             )
-            parsed_routes = ast.parse(routes_bin)
+            parsed_routes: Module = ast.parse(routes_bin)
 
             further_tests(parsed_routes)
 

@@ -58,4 +58,4 @@ def json_schema(json_schema_dict, parse_original_whitespace=False):
     return ir
 
 
-__all__ = ["json_schema"]
+__all__ = ["json_schema"]  # type: list[str]

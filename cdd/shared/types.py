@@ -44,7 +44,10 @@ Internal = TypedDict(
     {
         "original_doc_str": Optional[str],
         "body": List[Union[AnnAssign, Assign]],
+        "from_name": str,
+        "from_type": str,
     },
+    total=False,
 )
 IntermediateRepr = TypedDict(
     "IntermediateRepr",
@@ -61,4 +64,4 @@ IntermediateRepr = TypedDict(
     total=False,
 )
 
-__all__ = ["IntermediateRepr"]
+__all__ = ["IntermediateRepr", "Internal"]  # type: list[str]

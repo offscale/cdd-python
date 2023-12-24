@@ -30,6 +30,7 @@ from cdd.shared.ast_utils import (
 )
 from cdd.shared.emit.utils.emitter_utils import get_internal_body
 from cdd.shared.pure_utils import code_quoted, fill, identity, none_types
+from cdd.shared.types import Internal
 
 
 def argparse_function(
@@ -78,7 +79,7 @@ def argparse_function(
     """
     function_name: Optional[str] = function_name or intermediate_repr["name"]
     function_type: Optional[str] = function_type or intermediate_repr["type"]
-    internal_body = get_internal_body(
+    internal_body: Internal = get_internal_body(
         target_name=function_name,
         target_type=function_type,
         intermediate_repr=intermediate_repr,

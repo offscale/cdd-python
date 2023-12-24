@@ -14,7 +14,7 @@ def interpolate_defaults(
     Correctly set the 'default' and 'doc' parameters
 
     :param param: Name, dict with keys: 'typ', 'doc', 'default'
-    :type param: ```Tuple[str, dict]```
+    :type param: ```tuple[str, dict]```
 
     :param default_search_announce: Default text(s) to look for. If None, uses default specified in default_utils.
     :type default_search_announce: ```Optional[Union[str, Iterable[str]]]```
@@ -26,7 +26,7 @@ def interpolate_defaults(
     :type emit_default_doc: ```bool```
 
     :return: Name, dict with keys: 'typ', 'doc', 'default'
-    :rtype: ```Tuple[str, dict]```
+    :rtype: ```tuple[str, dict]```
     """
     name, _param = param
     del param
@@ -56,4 +56,4 @@ def interpolate_defaults(
     return name, _param
 
 
-__all__ = ["interpolate_defaults"]
+__all__ = ["interpolate_defaults"]  # type: list[str]

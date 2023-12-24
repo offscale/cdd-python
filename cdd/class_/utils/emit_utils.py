@@ -38,4 +38,4 @@ class RewriteName(ast.NodeTransformer):
         )
 
 
-__all__ = ["RewriteName"]
+__all__ = ["RewriteName"]  # type: list[str]

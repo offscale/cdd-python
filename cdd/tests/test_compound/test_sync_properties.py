@@ -26,7 +26,7 @@ def populate_files(tempdir, input_str=None, output_str=None):
     :type output_str: ```Optional[str]```
 
     :return: input filename, input str, input_str filename
-    :rtype: ```Tuple[str, str, str]```
+    :rtype: ```tuple[str, str, str]```
     """
     input_filename: str = os.path.join(
         tempdir, "class_{extsep}py".format(extsep=extsep)

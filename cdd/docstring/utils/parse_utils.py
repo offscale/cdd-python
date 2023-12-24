@@ -316,4 +316,4 @@ def parse_adhoc_doc_for_typ(doc, name, default_is_none):
     return candidate_type if candidate_type is None else wrap.format(candidate_type)
 
 
-__all__ = ["parse_adhoc_doc_for_typ"]
+__all__ = ["parse_adhoc_doc_for_typ"]  # type: list[str]

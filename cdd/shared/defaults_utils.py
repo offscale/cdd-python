@@ -110,7 +110,7 @@ def extract_default(
     :type emit_default_doc: ```bool```
 
     :return: Example - ("dataset. Defaults to mnist", "mnist") if emit_default_doc else ("dataset", "mnist")
-    :rtype: ```Tuple[str, Optional[str]]```
+    :rtype: ```tuple[str, Optional[str]]```
     """
     if line is None:
         return line, line
@@ -190,7 +190,7 @@ def type_default_from_default(default, typ):
     :type typ: ```str```
 
     :return: (Optional[typ], None) if default is NoneStr else (typ, default)
-    :rtype: ```Tuple[Optional[str], str]```
+    :rtype: ```tuple[Optional[str], str]```
     """
     return (
         (
@@ -237,7 +237,7 @@ def _parse_out_default_and_doc(
     :param typ: The type of the default value, useful to disambiguate `25` the float from  `25` the float
     :type typ: ```Optional[str]```
 
-    :param default_end_offset: Set to -1 if one parenthesis, -2 if )., and 0 if none
+    :param default_end_offset: Set to `-1` if one parenthesis, `-2` if ')'., and `0` if none
     :type default_end_offset: ```int```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
@@ -352,13 +352,13 @@ def _remove_default_from_param(param, emit_default_prop=True):
     Remove default from param iff emit_default_prop is False
 
     :param param: Name, dict with keys: 'typ', 'doc', 'default'
-    :type param: ```Tuple[str, dict]```
+    :type param: ```tuple[str, dict]```
 
     :param emit_default_prop: Whether to emit default property
     :type emit_default_prop: ```bool```
 
     :return: Name, dict with keys: 'typ', 'doc', 'default'
-    :rtype: ```Tuple[str, dict]```
+    :rtype: ```tuple[str, dict]```
     """
     name, _param = param
     del param
@@ -374,7 +374,7 @@ def set_default_doc(param, emit_default_doc=True):
     Emit param with 'doc' set to include 'Defaults'
 
     :param param: Name, dict with keys: 'typ', 'doc', 'default'
-    :type param: ```Tuple[str, dict]```
+    :type param: ```tuple[str, dict]```
 
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
@@ -428,4 +428,4 @@ __all__ = [
     "remove_defaults_from_intermediate_repr",
     "set_default_doc",
     "_remove_default_from_param",
-]
+]  # type: list[str]

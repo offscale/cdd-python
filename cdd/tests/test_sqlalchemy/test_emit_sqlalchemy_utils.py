@@ -4,10 +4,10 @@ Tests for `cdd.emit.sqlalchemy.utils.sqlalchemy_utils`
 
 import ast
 import json
-from _ast import ClassDef
 from ast import (
     Assign,
     Call,
+    ClassDef,
     Import,
     ImportFrom,
     Load,
@@ -304,7 +304,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
 
             with open(node_filename, "rt") as f:
                 node_filename_str: str = f.read()
-            gen_mod = ast.parse(node_filename_str)
+            gen_mod: Module = ast.parse(node_filename_str)
 
         gen_imports = tuple(
             filter(rpartial(isinstance, (ImportFrom, Import)), gen_mod.body)
@@ -414,7 +414,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
 
             with open(node_filename, "rt") as f:
                 node_filename_str: str = f.read()
-            gen_mod = ast.parse(node_filename_str)
+            gen_mod: Module = ast.parse(node_filename_str)
 
         run_ast_test(
             self,

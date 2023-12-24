@@ -20,7 +20,7 @@ from operator import attrgetter, eq, le
 
 # This needs to be in `globals()` for `eval` below
 from typing import *  # noqa
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 from cdd.docstring.utils.emit_utils import interpolate_defaults
 from cdd.docstring.utils.parse_utils import parse_adhoc_doc_for_typ
@@ -164,7 +164,7 @@ def _scan_phase(docstring, parse_original_whitespace=False, style=Style.rest):
     :type style: ```Style```
 
     :return: List with each element a tuple of (whether value is a token, value)
-    :rtype: ```Union[Dict[str, str], List[Tuple[bool, str]]]```
+    :rtype: ```Union[dict[str, str], list[tuple[bool, str]]]```
     """
     arg_tokens, return_tokens = map(attrgetter(style.name), (ARG_TOKENS, RETURN_TOKENS))
     return (
@@ -191,10 +191,10 @@ def _scan_phase_numpydoc_and_google(
     :type parse_original_whitespace: ```bool```
 
     :param arg_tokens: Valid tokens like `"Parameters\n----------"`
-    :type arg_tokens: ```Tuple[str]```
+    :type arg_tokens: ```tuple[str]```
 
     :param return_tokens: Valid tokens like `"Returns\n-------"`
-    :type return_tokens: ```Tuple[str]```
+    :type return_tokens: ```tuple[str]```
 
     :param style: the style of docstring
     :type style: ```Style```
@@ -209,7 +209,9 @@ def _scan_phase_numpydoc_and_google(
         if s.isspace()
         else s.strip()
     )
-    scanned: Dict[str, List[List[str]]] = {
+    scanned: Dict[
+        str, List[Union[List[Union[LiteralString, str]], Union[LiteralString, str]]]
+    ] = {
         token: []
         for token in chain.from_iterable((("doc",), arg_tokens, return_tokens))
     }
@@ -271,7 +273,9 @@ def _scan_phase_numpydoc_and_google(
                 if len(scanned[return_tokens[0]]) > 1 and not scanned[return_tokens[0]][
                     0
                 ].endswith(":"):
-                    scanned[return_tokens[0]] = ["\n".join(scanned[return_tokens[0]])]
+                    scanned[return_tokens[0]] = [
+                        "\n".join(cast(List[str], scanned[return_tokens[0]]))
+                    ]
 
                 scanned_afterward = docstring_lines[
                     line_no + 3 + next_smallest_indent :
@@ -332,19 +336,19 @@ def _return_parse_phase_numpydoc_and_google(return_tokens, scanned, stacker, sty
     numpydoc and google scanner phase for return. Lexical analysis; to some degree…
 
     :param return_tokens: Valid tokens like `"Returns\n-------"`
-    :type return_tokens: ```Tuple[str]```
+    :type return_tokens: ```tuple[str]```
 
     :param scanned: List with each element a tuple of (whether value is a token, value)
-    :type scanned: ```Union[Dict[str, str], List[Tuple[bool, str]]]```
+    :type scanned: ```Union[dict[str, str], list[tuple[bool, str]]]```
 
     :param stacker: Stack of strings part that forms int scanned
-    :type stacker: ```List[List[str]]```
+    :type stacker: ```list[list[str]]```
 
     :param style: the style of docstring
     :type style: ```Style```
 
     :return: Whatever is left of `stacker`. This function may also set the return key of the `scanned`
-    :rtype: ```List[List[str]]```
+    :rtype: ```list[list[str]]```
     """
     _return_tokens = return_tokens[0].splitlines()
     rev_return_token = _return_tokens[::-1]
@@ -389,13 +393,13 @@ def _scan_phase_rest(docstring, arg_tokens, return_tokens):
     :type docstring: ```str```
 
     :param arg_tokens: Valid tokens like `":param"`
-    :type arg_tokens: ```Tuple[str]```
+    :type arg_tokens: ```tuple[str]```
 
     :param return_tokens: Valid tokens like `":rtype:"`
-    :type return_tokens: ```Tuple[str]```
+    :type return_tokens: ```tuple[str]```
 
     :return: List with each element a tuple of (whether value is a token, value)
-    :rtype: ```List[Tuple[bool, str]]```
+    :rtype: ```list[tuple[bool, str]]```
     """
 
     all_tokens = arg_tokens + return_tokens
@@ -500,7 +504,7 @@ def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=Fal
     Sanitise the name and set the type (iff default and no existing type) for the param. Parses the default also.
 
     :param param: Name, dict with keys: 'typ', 'doc', 'default'
-    :type param: ```Tuple[str, dict]```
+    :type param: ```tuple[str, dict]```
 
     :param infer_type: Whether to try inferring the typ (from the default)
     :type infer_type: ```bool```
@@ -512,7 +516,7 @@ def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=Fal
     :type none_default_for_kwargs: ```bool```
 
     :return: Name, dict with keys: 'typ', 'doc', 'default'
-    :rtype: ```Tuple[str, dict]```
+    :rtype: ```tuple[str, dict]```
     """
     name, _param = param
     del param
@@ -670,10 +674,10 @@ def _parse_phase_numpydoc_and_google(
     :type style: ```Style```
 
     :param arg_tokens: Valid tokens like `"Parameters\n----------"`
-    :type arg_tokens: ```Tuple[str]```
+    :type arg_tokens: ```tuple[str]```
 
     :param return_tokens: Valid tokens like `"Returns\n-------"`
-    :type return_tokens: ```Tuple[str]```
+    :type return_tokens: ```tuple[str]```
 
     :param parse_original_whitespace: Whether to parse original whitespace or strip it out
     :type parse_original_whitespace: ```bool```
@@ -684,7 +688,9 @@ def _parse_phase_numpydoc_and_google(
     :param emit_default_doc: Whether help/docstring should include 'With default' text
     :type emit_default_doc: ```bool```
     """
-    white_spacer = identity if parse_original_whitespace else str.lstrip
+    white_spacer: Callable[[str], str] = (
+        identity if parse_original_whitespace else str.lstrip
+    )
     if style is Style.numpydoc:
 
         def _parse(scan):
@@ -692,7 +698,7 @@ def _parse_phase_numpydoc_and_google(
             Parse the scanned input (numpydoc)
 
             :param scan: Scanned input
-            :type scan: ```List[str]```
+            :type scan: ```list[str]```
 
             :return: dict with keys: 'name', 'typ', 'doc'
             :rtype: ```dict```
@@ -714,7 +720,7 @@ def _parse_phase_numpydoc_and_google(
             Parse the scanned input (Google)
 
             :param scan: Scanned input
-            :type scan: ```List[str]```
+            :type scan: ```list[str]```
 
             :param partitioned: Prep-partitioned `scan`, if given doesn't partition on `scan`, just uses this
             :type partitioned: ```Optional[Tuple[str, str, str]]```
@@ -726,7 +732,8 @@ def _parse_phase_numpydoc_and_google(
             s = white_spacer(scan[0][:offset])
             name, delim, typ = partitioned or s.partition("(")
             name, typ = name.strip(), (delim + typ).rstrip()
-            cur = {"name": name}
+            CurParam = TypedDict("CurParam", {"name": str, "typ": str, "doc": str})
+            cur: CurParam = {"name": name}
             if typ:
                 assert typ.startswith("(") and typ.endswith(
                     ")"
@@ -739,13 +746,11 @@ def _parse_phase_numpydoc_and_google(
                 end = white_spacer(scan[0][offset + 1 :])
                 if len(end) > 3 and end.startswith("{") and end.endswith("}"):
                     # PyTorch invented their own syntax for this I guess?
-                    cur["typ"], scan[0] = (
-                        "Literal{literal_type_list}".format(
-                            literal_type_list=list(
-                                map(rpartial(str.strip, "'"), end[1:-1].split(", "))
-                            )
-                        ),
-                        "",
+                    scan[0] = ""
+                    cur["typ"] = "Literal{literal_type_list}".format(
+                        literal_type_list=list(
+                            map(rpartial(str.strip, "'"), end[1:-1].split(", "))
+                        )
                     )
             cur["doc"] = (lambda s_: s_ if parse_original_whitespace else s_.strip())(
                 "\n".join(
@@ -784,10 +789,10 @@ def _parse_phase_numpydoc_and_google(
         interpolate the defaults and force future default if current default is set
 
         :param name_param: Name, dict with keys: 'typ', 'doc', 'default'
-        :type name_param: ```Tuple[str, dict]```
+        :type name_param: ```tuple[str, dict]```
 
         :return: Name, dict with keys: 'typ', 'doc', 'default'
-        :rtype: ```Tuple[str, dict]```
+        :rtype: ```tuple[str, dict]```
         """
         name, param = interpolate_defaults(
             name_param,
@@ -924,7 +929,7 @@ def _parse_phase_rest(
     :type intermediate_repr: ```dict```
 
     :param scanned: List with each element a tuple of (whether value is a token, value)
-    :type scanned: ```List[Tuple[bool, str]]```
+    :type scanned: ```list[Tuple[bool, str]]```
 
     :param default_search_announce: Default text(s) to look for. If None, uses default specified in default_utils.
     :type default_search_announce: ```Optional[Union[str, Iterable[str]]]```
@@ -945,7 +950,7 @@ def _parse_phase_rest(
     :type emit_default_doc: ```bool```
 
     :param return_tokens: Valid tokens like `":rtype:"`
-    :type return_tokens: ```Tuple[str]```
+    :type return_tokens: ```tuple[str]```
     """
     param = [
         None,
@@ -1037,4 +1042,4 @@ def _set_param_values(input_str, val, sw=":type"):
     )
 
 
-__all__ = ["parse_docstring", "_set_name_and_type", "Style"]
+__all__ = ["parse_docstring", "_set_name_and_type", "Style"]  # type: list[str]

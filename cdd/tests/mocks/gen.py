@@ -6,7 +6,7 @@ from ast import Import, ImportFrom, alias
 
 from cdd.shared.source_transformer import to_code
 
-import_star_from_input_ast = ImportFrom(
+import_star_from_input_ast: ImportFrom = ImportFrom(
     module="input",
     names=[
         alias(
@@ -26,7 +26,7 @@ import_star_from_input_ast = ImportFrom(
     identifier=None,
 )
 import_star_from_input_str: str = to_code(import_star_from_input_ast)
-import_gen_test_module_ast = Import(
+import_gen_test_module_ast: Import = Import(
     names=[
         alias(
             name="gen_test_module",
@@ -46,4 +46,4 @@ __all__ = [
     "import_gen_test_module_str",
     "import_star_from_input_ast",
     "import_star_from_input_str",
-]
+]  # type: list[str]

@@ -222,4 +222,4 @@ def docstring(
     return candidate_doc_str
 
 
-__all__ = ["docstring"]
+__all__ = ["docstring"]  # type: list[str]

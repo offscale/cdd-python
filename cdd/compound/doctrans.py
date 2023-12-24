@@ -55,4 +55,4 @@ def doctrans(filename, docstring_format, type_annotations, no_word_wrap):
             f.write("".join(map(attrgetter("value"), cst_list)))
 
 
-__all__ = ["doctrans"]
+__all__ = ["doctrans"]  # type: list[str]

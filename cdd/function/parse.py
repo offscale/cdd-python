@@ -233,4 +233,4 @@ def function(
     return intermediate_repr
 
 
-__all__ = ["function"]
+__all__ = ["function"]  # type: list[str]

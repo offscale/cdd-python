@@ -490,10 +490,12 @@ def main(cli_argv=None, return_args=False):
         deque(
             (
                 setattr(
-                    args, fname, path.realpath(path.expanduser(getattr(args, fname)))
+                    args,
+                    filename,
+                    path.realpath(path.expanduser(getattr(args, filename))),
                 )
-                for fname in ("input_filename", "output_filename")
-                if path.isfile(getattr(args, fname))
+                for filename in ("input_filename", "output_filename")
+                if path.isfile(getattr(args, filename))
             ),
             maxlen=0,
         )
@@ -573,4 +575,4 @@ def require_file_existent(_parser, filename, name):
 if __name__ == "__main__":
     main()
 
-__all__ = ["main", "parse_emit_types"]
+__all__ = ["main", "parse_emit_types", "_build_parser"]  # type: list[str]

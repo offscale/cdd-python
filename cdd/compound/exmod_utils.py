@@ -197,10 +197,10 @@ def emit_file_on_hierarchy(
     Generate Java-package—or match input—style file hierarchy from fully-qualified module name
 
     :param name_orig_ir: FQ module name, original filename path, IR
-    :type name_orig_ir: ```Tuple[str, str, dict]```
+    :type name_orig_ir: ```tuple[str, str, dict]```
 
     :param emit_name: What type(s) to generate.
-    :type emit_name: ```List[Literal["argparse", "class", "function", "json_schema",
+    :type emit_name: ```list[Literal["argparse", "class", "function", "json_schema",
                                      "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]]```
 
     :param module_name: Name of [original] module
@@ -291,11 +291,11 @@ def emit_file_on_hierarchy(
         )
     )
     isfile_emit_filename = symbol_in_file = path.isfile(emit_filename)
-    existent_mod = None
+    existent_mod: Optional[Module] = None
     if isfile_emit_filename:
         with open(emit_filename, "rt") as f:
             emit_filename_contents = f.read()
-        existent_mod = ast.parse(
+        existent_mod: Module = ast.parse(
             emit_filename_contents
         )  # Also, useful as this catches syntax errors
         symbol_in_file = any(
@@ -370,10 +370,10 @@ def _emit_symbol(
     Emit symbol to file (or dry-run just print)
 
     :param name_orig_ir: FQ module name, original filename path, IR
-    :type name_orig_ir: ```Tuple[str, str, dict]```
+    :type name_orig_ir: ```tuple[str, str, dict]```
 
     :param emit_name: What type(s) to generate.
-    :type emit_name: ```List[Literal["argparse", "class", "function", "json_schema",
+    :type emit_name: ```list[Literal["argparse", "class", "function", "json_schema",
                                      "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]]```
 
     :param module_name: Name of [original] module
@@ -446,7 +446,7 @@ def _emit_symbol(
             **{"function_type": "static"} if emit_name == "function" else {}
         )
     )
-    __all___node = Assign(
+    __all___node: Assign = Assign(
         targets=[Name("__all__", Store())],
         value=List(
             ctx=Load(),
@@ -458,7 +458,7 @@ def _emit_symbol(
         **cdd.shared.ast_utils.maybe_type_comment
     )
     if not isinstance(gen_node, Module):
-        gen_node = Module(
+        gen_node: Module = Module(
             body=list(
                 chain.from_iterable(
                     (
@@ -554,7 +554,7 @@ def emit_files_from_module_and_return_imports(
     :type new_module_name: ```str```
 
     :param emit_name: What type(s) to generate.
-    :type emit_name: ```List[Literal["argparse", "class", "function", "json_schema",
+    :type emit_name: ```list[Literal["argparse", "class", "function", "json_schema",
                                      "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]]```
 
     :param module: Module itself
@@ -575,8 +575,8 @@ def emit_files_from_module_and_return_imports(
     :param filesystem_layout: Hierarchy of folder and file names generated. "java" is file per package per name.
     :type filesystem_layout: ```Literal["java", "as_input"]```
 
-    :return: List of `ImportFrom` refering to generated module
-    :rtype: ```List[ImportFrom]```
+    :return: List of `ImportFrom` referring to generated module
+    :rtype: ```list[ImportFrom]```
     """
     _emit_file_on_hierarchy = partial(
         emit_file_on_hierarchy,
@@ -633,7 +633,8 @@ def emit_files_from_module_and_return_imports(
 
 
 __all__ = [
-    "get_module_contents",
+    "_emit_symbol",
     "emit_file_on_hierarchy",
     "emit_files_from_module_and_return_imports",
-]
+    "get_module_contents",
+]  # type: list[str]

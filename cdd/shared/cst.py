@@ -13,11 +13,11 @@ def cst_parse(source):
     :type source: ```str```
 
     :return: List of `namedtuple`s with at least ("line_no_start", "line_no_end", "value") attributes
-    :rtype: ```List[Any]```
+    :rtype: ```list[Any]```
     """
     scanned = cst_scanner(source)
     parsed = cst_parser(scanned)
     return parsed
 
 
-__all__ = ["cst_parse"]
+__all__ = ["cst_parse"]  # type: list[str]

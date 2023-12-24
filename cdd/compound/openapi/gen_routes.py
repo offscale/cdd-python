@@ -226,4 +226,4 @@ def upsert_routes(app, routes, routes_path, route, primary_key):
         )
 
 
-__all__ = ["gen_routes", "upsert_routes"]
+__all__ = ["gen_routes", "upsert_routes"]  # type: list[str]

@@ -161,4 +161,7 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
 )
 
 
-__all__ = ["fastapi_post_create_config_str", "fastapi_post_create_config_async_func"]
+__all__ = [
+    "fastapi_post_create_config_str",
+    "fastapi_post_create_config_async_func",
+]  # type: list[str]

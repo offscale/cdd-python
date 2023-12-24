@@ -82,7 +82,7 @@ class TestEmitArgparse(TestCase):
         )
 
     def test_from_argparse_with_extra_body_to_argparse_with_extra_body(self) -> None:
-        """Tests if this can make the roundtrip from a full argparse function to a argparse full function"""
+        """Tests if this can make the roundtrip from a full argparse function to a full argparse function"""
 
         ir: IntermediateRepr = cdd.argparse_function.parse.argparse_ast(
             argparse_func_with_body_ast

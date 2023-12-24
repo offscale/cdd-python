@@ -2,6 +2,6 @@
 Module of route parsers
 """
 
-PARSERS = ["bottle", "fastapi"]
+PARSERS = ["bottle", "fastapi"]  # type: list[str]
 
-__all__ = ["PARSERS"]
+__all__ = ["PARSERS"]  # type: list[str]

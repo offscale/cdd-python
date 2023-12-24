@@ -29,4 +29,4 @@ def get_source(obj):
         raise
 
 
-__all__ = ["get_source"]
+__all__ = ["get_source"]  # type: list[str]

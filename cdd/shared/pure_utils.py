@@ -8,6 +8,7 @@ from ast import Name, Str
 from collections import deque
 from functools import partial
 from importlib import import_module
+from importlib.machinery import ModuleSpec
 from importlib.util import find_spec
 from inspect import getmodule
 from itertools import chain, count, filterfalse, islice, takewhile, tee, zip_longest
@@ -73,12 +74,12 @@ def rpartial(func, *args):
 
 def remove_whitespace_comments(source):
     """
-    Remove all nonsignficant whitespace and comments from source
+    Remove all insignificant whitespace and comments from source
 
     :param source: Python source string
     :type source: ```str```
 
-    :return: `source` without signficant whitespace and comments
+    :return: `source` without significant whitespace and comments
     :rtype: ```str```
     """
     return "\n".join(
@@ -99,7 +100,7 @@ def append_to_dict(d, keys, value):
     :type d: ```dict```
 
     :param keys: keys to append to d
-    :type keys: ```List[str]```
+    :type keys: ```list[str]```
 
     :param value: value to set keys[-1]
     :type value: ```any```
@@ -154,7 +155,7 @@ def identity(*args, **kwargs):
     Identity function
 
     :param args: Any values
-    :type args: ```Tuple[Any]```
+    :type args: ```tuple[Any]```
 
     :return: the input value
     :rtype: ```Any```
@@ -170,9 +171,13 @@ PY_GTE_3_10: bool = _python_major_minor >= (3, 10)
 PY_GTE_3_11: bool = _python_major_minor >= (3, 11)
 PY_GTE_3_12: bool = _python_major_minor >= (3, 12)
 
-ENCODING = "# -*- coding: utf-8 -*-"
+ENCODING: str = "# -*- coding: utf-8 -*-"
 
-none_types = None, "None", "```(None)```" if PY_GTE_3_9 else "```None```"
+none_types: Tuple[None, typing.Literal["None"], str] = (
+    None,
+    "None",
+    "```(None)```" if PY_GTE_3_9 else "```None```",
+)
 
 _ABERRANT_PLURAL_MAP: Dict[str, str] = {
     "appendix": "appendices",
@@ -216,7 +221,7 @@ def pluralise(singular):
 
     Note: For production you'd probably want to use nltk or an NLP AI model
 
-    :param singular: Non plural
+    :param singular: Non-plural
     :type singular: ```str```
 
     :return: Plural version
@@ -224,30 +229,32 @@ def pluralise(singular):
     """
     if not singular:
         return ""
-    plural = _ABERRANT_PLURAL_MAP.get(singular) or singular.endswith("es") and singular
+    plural: str = (
+        _ABERRANT_PLURAL_MAP.get(singular) or singular.endswith("es") and singular
+    )
     if plural:
         return plural
-    root = singular
+    root: str = singular
     try:
         if singular[-1] == "y" and singular[-2] not in VOWELS:
-            root = singular[:-1]
-            suffix = "ies"
+            root: str = singular[:-1]
+            suffix: str = "ies"
         elif singular[-1] == "s":
             if singular[-2] in VOWELS:
                 if singular[-3:] == "ius":
-                    root = singular[:-2]
-                    suffix = "i"
+                    root: str = singular[:-2]
+                    suffix: str = "i"
                 else:
-                    root = singular[:-1]
-                    suffix = "ses"
+                    root: str = singular[:-1]
+                    suffix: str = "ses"
             else:
-                suffix = "es"
+                suffix: str = "es"
         elif singular[-2:] in ("ch", "sh"):
-            suffix = "es"
+            suffix: str = "es"
         else:
-            suffix = "s"
+            suffix: str = "s"
     except IndexError:
-        suffix = "s"
+        suffix: str = "s"
 
     return root + suffix
 
@@ -263,7 +270,7 @@ def pluralise(singular):
 #     :type countdown_from: ```Optional[int]```
 #
 #     :return: Previous line range if found else None
-#     :rtype: ```Optional[Tuple[int, int]]```
+#     :rtype: ```Optional[tuple[int, int]]```
 #     """
 #     if countdown_from is None:
 #         countdown_from = len(s)
@@ -363,9 +370,9 @@ def indent_all_but_first(s, indent_level=1, wipe_indents=False, sep=tab):
     :return: input string indented (except first line)
     :rtype: ```str```
     """
-    lines = indent(deindent(s) if wipe_indents else s, sep * abs(indent_level)).split(
-        "\n"
-    )
+    lines: typing.List[str] = indent(
+        deindent(s) if wipe_indents else s, sep * abs(indent_level)
+    ).split("\n")
     return "\n".join([lines[0].lstrip()] + lines[1:])
 
 
@@ -384,7 +391,7 @@ def multiline(s, quote_with=("'", "'")):
     :type s: ```str```
 
     :param quote_with: What to quote with
-    :type quote_with: ```Tuple[str, str]```
+    :type quote_with: ```tuple[str, str]```
 
     :return: multine input string
     :rtype: ```str```
@@ -433,7 +440,7 @@ def strip_split(param, sep):
 
 def unquote(input_str):
     """
-    Unquote a string. Removes one set of leading quotes (' or ")
+    Unquote a string. Removes one set of leading quotes `'\''` or `'"'`
 
     :param input_str: Input string
     :type input_str: ```Optional[str]```
@@ -469,7 +476,7 @@ def quote(s, mark='"'):
     :rtype: ```Union[str, float, complex, int, None]```
     """
     very_simple_types = type(None), int, float, complex
-    s = (
+    s: str = (
         s
         if isinstance(s, (str, *very_simple_types))
         else s.s
@@ -512,7 +519,7 @@ def all_dunder_for_module(
     :type path_validator: ```Callable[[str], bool]```
 
     :return: list of strings matching the expected `__all__`
-    :rtype: ```List[str]```
+    :rtype: ```list[str]```
     """
     return sorted(
         chain.from_iterable(
@@ -590,13 +597,13 @@ def lstrip_namespace(s, namespaces):
     :type s: ```AnyStr```
 
     :param namespaces: namespaces to strip
-    :type namespaces: ```Union[List[str], Tuple[str], Generator[str], Iterator[str]]```
+    :type namespaces: ```Union[list[str], tuple[str], Generator[str], Iterator[str]]```
 
-    :return: `.lstrip`ped input (potentially just the original!)
+    :return: `str.lstrip`ped input (potentially just the original!)
     :rtype: ```AnyStr```
     """
     for namespace in namespaces:
-        s = s.lstrip(namespace)
+        s: str = s.lstrip(typing.cast(str, namespace))
     return s
 
 
@@ -612,7 +619,7 @@ def diff(input_obj, op):
     :type op: ```Callable[[Any], Any]```
 
     :return: length of difference, response of operated input
-    :rtype: ```Tuple[int, Any]```
+    :rtype: ```tuple[int, Any]```
     """
     input_len: int = len(
         input_obj
@@ -638,7 +645,7 @@ def balanced_parentheses(s):
     """
     open_parens, closed_parens = "([{", ")]}"
     counter = {paren: 0 for paren in open_parens + closed_parens}
-    quote_mark = None
+    quote_mark: Optional[typing.Literal["'", '"']] = None
     for idx, ch in enumerate(s):
         if (
             quote_mark is not None
@@ -648,7 +655,7 @@ def balanced_parentheses(s):
             quote_mark = None
         elif quote_mark is None:
             if ch in frozenset(("'", '"')):
-                quote_mark = ch
+                quote_mark = typing.cast(typing.Literal["'", '"'], ch)
             elif ch in counter:
                 counter[ch] += 1
     return all(
@@ -692,7 +699,7 @@ def location_within(container, iterable, cmp=eq):
     :type cmp: ```Callable[[str, str], bool]```
 
     :return: (Start index iff found else -1, End index iff found else -1, subset iff found else None)
-    :rtype: ```Tuple[int, int, Optional[Any]]```
+    :rtype: ```tuple[int, int, Optional[Any]]```
     """
     if not hasattr(container, "__len__"):
         container = tuple(container)
@@ -706,7 +713,7 @@ def location_within(container, iterable, cmp=eq):
             return 0, elem_len, elem
         else:
             for i in range(container_len):
-                end = i + elem_len
+                end: int = i + elem_len
                 if cmp(container[i:end], elem):
                     return i, end, elem
                 elif i + elem_len + 1 > container_len:
@@ -714,7 +721,7 @@ def location_within(container, iterable, cmp=eq):
     return -1, -1, None
 
 
-BUILTIN_TYPES = frozenset(
+BUILTIN_TYPES: FrozenSet[str] = frozenset(
     chain.from_iterable(
         (
             chain.from_iterable(
@@ -741,7 +748,7 @@ BUILTIN_TYPES = frozenset(
     )
 )
 
-DUNDERS = frozenset(
+DUNDERS: FrozenSet[str] = frozenset(
     filter(
         rpartial(str.startswith, "__"),
         frozenset(
@@ -793,12 +800,12 @@ DUNDERS = frozenset(
     )
 )
 
-INIT_FILENAME = "__init__{extsep}py".format(extsep=extsep)
+INIT_FILENAME: str = "__init__{extsep}py".format(extsep=extsep)
 
 
 def code_quoted(s):
     """
-    Internally user-provided `None` and non `literal_eval`uatable input is quoted with ```
+    Internally user-provided `None` and non `literal_eval`able input is quoted with ```
 
     This function checks if the input is quoted such
 
@@ -824,7 +831,7 @@ def count_iter_items(iterable):
     :return: Number of items in iterable
     :rtype: ```int```
     """
-    counter = count()
+    counter: count = count()
     deque(zip(iterable, counter), maxlen=0)
     return next(counter)
 
@@ -885,12 +892,13 @@ def find_module_filepath(module_name, submodule_name, none_when_no_spec=False):
     """
     assert module_name is not None
     assert submodule_name is not None
-    module_spec = find_spec(module_name)
+    module_spec: Optional[ModuleSpec] = find_spec(module_name)
     if module_spec is None:
         if none_when_no_spec:
             return module_spec
         raise AssertionError("spec not found for {}".format(module_name))
-    module_origin = module_spec.origin
+    module_origin: Optional[str] = module_spec.origin
+    assert module_origin is not None
     module_parent: str = path.dirname(module_origin)
 
     return next(
@@ -935,7 +943,7 @@ def count_chars_from(
     :type start_idx: ```int```
 
     :param char_f: char function, if `True` adds 1 to count. Overrides `char` if provided.
-    :type char_f: ```Optional[Callable[str, [bool]]```
+    :type char_f: ```Optional[Callable[[str], bool]]```
 
     :return: Number of chars counted (until `ignore`)
     :rtype: ```int```
@@ -943,7 +951,7 @@ def count_chars_from(
     char_count: int = 0
 
     if char_f is None:
-        char_f = rpartial(eq, char)
+        char_f: Callable[[str], bool] = rpartial(eq, char)
 
     for i in range(*((s_len(s) - 1, start_idx, -1) if end else (start_idx, s_len(s)))):
         if char_f(s[i]):
@@ -953,7 +961,9 @@ def count_chars_from(
     return char_count
 
 
-num_of_nls = partial(count_chars_from, sentinel_char_unseen=str.isspace, char="\n")
+num_of_nls: Callable[[str], int] = partial(
+    count_chars_from, sentinel_char_unseen=str.isspace, char="\n"
+)
 
 
 def is_triple_quoted(s):
@@ -1100,8 +1110,10 @@ def ensure_valid_identifier(s):
     elif iskeyword(s):
         return "{}_".format(s)
     elif s[0].isdigit():
-        s = "_{}".format(s)
-    valid = frozenset("_{}{}".format(string.ascii_letters, string.digits))
+        s: str = "_{}".format(s)
+    valid: FrozenSet[str] = frozenset(
+        "_{}{}".format(string.ascii_letters, string.digits)
+    )
     return "".join(filter(valid.__contains__, s)) or "_"
 
 
@@ -1162,7 +1174,7 @@ def sliding_window(iterable, n):
     :type n: ```int```
 
     :return: sliding window
-    :rtype: ```Generator[Tuple]```
+    :rtype: ```Generator[tuple]```
     """
     # sliding_window('ABCDEFG', 4) --> ABCD BCDE CDEF DEFG
     it = iter(iterable)
@@ -1257,9 +1269,11 @@ def namespaced_upper_camelcase_to_pascal(s, sep="__"):
     return "{}{}{}".format(first.lower(), sep, upper_camelcase_to_pascal(last))
 
 
-omit_whitespace = rpartial(str.translate, str.maketrans({" ": "", "\n": "", "\t": ""}))
+omit_whitespace: Callable[[str], str] = rpartial(
+    str.translate, str.maketrans({" ": "", "\n": "", "\t": ""})
+)
 
-sanitise_emit_name = dict(
+sanitise_emit_name: Callable[[str], str] = dict(
     **{
         typ: typ
         for typ in (
@@ -1270,7 +1284,7 @@ sanitise_emit_name = dict(
             "sqlalchemy_table",
         )
     },
-    **{"class": "class_", "argparse": "argparse_function"}
+    **{"class": "class_", "argparse": "argparse_function"},
 ).__getitem__
 
 __all__ = [
@@ -1295,6 +1309,7 @@ __all__ = [
     "deindent",
     "diff",
     "emit_separating_tabs",
+    "ensure_valid_identifier",
     "filename_from_mod_or_filename",
     "fill",
     "find_module_filepath",
@@ -1334,6 +1349,6 @@ __all__ = [
     "type_to_name",
     "unquote",
     "update_d",
-    "upper_camelcase_to_pascal"
+    "upper_camelcase_to_pascal",
     # "previous_line_range",
-]
+]  # type: list[str]

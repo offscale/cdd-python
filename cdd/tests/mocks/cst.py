@@ -162,7 +162,7 @@ cstify_cst = (
     ),
     ReturnStatement(line_no_start=71, line_no_end=72, value="\n    return 1"),
     UnchangingLine(line_no_start=72, line_no_end=73, value="\n"),
-)
+)  # type: tuple[CstTypes, ...]
 
 
-__all__ = ["cstify_cst"]
+__all__ = ["cstify_cst"]  # type: list[str]

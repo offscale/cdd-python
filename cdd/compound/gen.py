@@ -8,6 +8,7 @@ from collections import deque
 from functools import partial
 from inspect import getfile
 from os import listdir, path
+from typing import Union
 
 import cdd.compound.openapi.utils.emit_utils
 import cdd.json_schema.emit
@@ -77,7 +78,7 @@ def gen(
     :type emit_default_doc: ```bool```
 
     :param decorator_list: List of decorators
-    :type decorator_list: ```Optional[Union[List[Str], List[]]]```
+    :type decorator_list: ```Optional[Union[List[str], List[]]]```
 
     :param phase: Which phase to run through. E.g., SQLalchemy may require multiple phases to resolve foreign keys
     :type phase: ```int```
@@ -105,7 +106,7 @@ def gen(
         imports: str = ""
     else:
         if prepend:
-            prepend_imports = get_at_root(
+            prepend_imports: Union[Import, ImportFrom] = get_at_root(
                 ast.parse(prepend.strip()), (Import, ImportFrom)
             )
 
@@ -245,4 +246,4 @@ def gen(
     )
 
 
-__all__ = ["gen"]
+__all__ = ["gen"]  # type: list[str]

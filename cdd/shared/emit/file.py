@@ -58,4 +58,4 @@ def file(node, filename, mode="a", skip_black=False):
         f.write(src)
 
 
-__all__ = ["file"]
+__all__ = ["file"]  # type: list[str]

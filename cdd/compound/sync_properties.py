@@ -36,14 +36,14 @@ def sync_properties(
 
     :param input_params: Locations within file of properties.
        Can be top level like `['a']` for `a=5` or with the `.` syntax as in `output_params`.
-    :type input_params: ```List[str]```
+    :type input_params: ```list[str]```
 
     :param output_filename: Filename that will be edited in place, the property within this file (to update)
      is selected by `output_param`
     :type output_filename: ```str```
 
     :param output_params: Parameters to update. E.g., `['A.F']` for `class A: F = None`, `['f.g']` for `def f(g): pass`
-    :type output_params: ```List[str]```
+    :type output_params: ```list[str]```
 
     :param output_param_wrap: Wrap all input_str params with this. E.g., `Optional[Union[{output_param}, str]]`
     :param output_param_wrap: ```Optional[str]```
@@ -86,7 +86,7 @@ def sync_property(
 
     :param input_param: Location within file of property.
        Can be top level like `'a'` for `a=5` or with the `.` syntax as in `output_params`.
-    :type input_param: ```List[str]```
+    :type input_param: ```list[str]```
 
     :param input_ast: AST of the input file
     :type input_ast: ```AST```
@@ -152,7 +152,7 @@ def sync_property(
         else:
             raise NotImplementedError(type(replacement_node).__name__)
 
-    rewrite_at_query = RewriteAtQuery(
+    rewrite_at_query: RewriteAtQuery = RewriteAtQuery(
         search=search,
         replacement_node=replacement_node,
     )
@@ -167,4 +167,4 @@ def sync_property(
     return gen_ast
 
 
-__all__ = ["sync_property", "sync_properties"]
+__all__ = ["sync_property", "sync_properties"]  # type: list[str]

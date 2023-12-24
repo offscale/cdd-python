@@ -1622,4 +1622,4 @@ __all__ = [
     "intermediate_repr_only_return_type",
     "method_complex_args_variety_ir",
     "pydantic_ir",
-]
+]  # type: list[str]

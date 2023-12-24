@@ -184,7 +184,7 @@ Traverse the AST, and emit the modifications, such that each "format" can conver
 Type asymmetries are added to the docstrings, e.g., "primary_key" has no equivalent in a regular python func argument,
 so is added as `":param my_id: [PK] The unique identifier"`.
 
-The following are the different formats supported, all of which can convert betwixt eachother:
+The following are the different formats supported, all of which can convert betwixt each-other:
 
 #### Docstring
 
@@ -474,7 +474,7 @@ class Config(Base):
 ## Minor other use-cases this facilitates
 
 - Switch between having types in the docstring and having the types
-  inline ([PEP484](https://python.org/dev/peps/pep-0484)–style))
+  inline ([PEP484](https://python.org/dev/peps/pep-0484)–style)
 - Switch between docstring formats (to/from {numpy, ReST, google})
 - Desktop GUI with wxWidgets, from the argparse layer through [Gooey](https://github.com/chriskiehl/Gooey) [one liner]
 

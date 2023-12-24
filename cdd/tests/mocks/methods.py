@@ -42,7 +42,7 @@ from cdd.tests.mocks.docstrings import (
     docstring_str,
 )
 
-return_ast = Return(
+return_ast: Return = Return(
     value=Tuple(
         ctx=Load(),
         elts=[
@@ -196,7 +196,7 @@ class C(object):
 )
 
 
-returns_subscript = Subscript(
+returns_subscript: Subscript = Subscript(
     Name("Union", Load()),
     set_slice(
         Tuple(
@@ -249,7 +249,7 @@ returns_subscript = Subscript(
 )
 
 
-class_with_method_and_body_types_ast = fix_missing_locations(
+class_with_method_and_body_types_ast: ClassDef = fix_missing_locations(
     ClassDef(
         name="C",
         bases=[Name("object", Load())],
@@ -380,7 +380,7 @@ class_with_method_and_body_types_ast = fix_missing_locations(
     )
 )
 
-class_with_method_ast = fix_missing_locations(
+class_with_method_ast: ClassDef = fix_missing_locations(
     ClassDef(
         bases=[Name("object", Load())],
         body=[
@@ -436,7 +436,7 @@ class_with_method_ast = fix_missing_locations(
     )
 )
 
-class_with_method_types_ast = fix_missing_locations(
+class_with_method_types_ast: ClassDef = fix_missing_locations(
     ClassDef(
         bases=[Name("object", Load())],
         body=[
@@ -532,7 +532,7 @@ class_with_method_types_ast = fix_missing_locations(
     )
 )
 
-class_with_optional_arg_method_ast = ClassDef(
+class_with_optional_arg_method_ast: ClassDef = ClassDef(
     bases=[Name("object", Load())],
     body=[
         Expr(
@@ -631,7 +631,7 @@ def add_6_5(*, a=6, b=5):
     return operator.add(a, b)
 '''
 
-function_adder_ast = FunctionDef(
+function_adder_ast: FunctionDef = FunctionDef(
     name="add_6_5",
     args=arguments(
         vararg=None,
@@ -678,7 +678,7 @@ function_default_complex_default_arg_str: str = (
     "def call_peril(dataset_name: str='mnist', writer=stdout):\n\tpass"
 )
 
-function_default_complex_default_arg_ast = FunctionDef(
+function_default_complex_default_arg_ast: FunctionDef = FunctionDef(
     name="call_peril",
     args=arguments(
         args=[
@@ -742,7 +742,7 @@ def call_cliff(
     return K
 '''
 
-method_complex_args_variety_ast = FunctionDef(
+method_complex_args_variety_ast: FunctionDef = FunctionDef(
     name="call_cliff",
     args=arguments(
         posonlyargs=[],
@@ -872,7 +872,7 @@ function_google_tf_squared_hinge = (
 function_google_tf_squared_hinge_str: str = "\n".join(function_google_tf_squared_hinge)
 
 # `from tensorflow.python.ops.losses.losses_impl import _safe_mean` @ tf-nightly:2.7.0.dev20210908
-function_google_tf_ops_losses__safe_mean_ast = FunctionDef(
+function_google_tf_ops_losses__safe_mean_ast: FunctionDef = FunctionDef(
     name="_safe_mean",
     args=arguments(
         args=list(map(set_arg, ("losses", "num_present"))),
@@ -927,7 +927,7 @@ function_google_tf_ops_losses__safe_mean_ast = FunctionDef(
 # #####################
 # https://github.com/tensorflow/tensorflow/blob/5a56eb1/tensorflow/python/ops/losses/losses_impl.py#L627-L755
 # - (minus non-docstring body and `decorator_list`)
-function_google_tf_mean_squared_error_ast = FunctionDef(
+function_google_tf_mean_squared_error_ast: FunctionDef = FunctionDef(
     name="mean_squared_error",
     args=arguments(
         posonlyargs=[],
@@ -1087,7 +1087,9 @@ __all__ = [
     "function_default_complex_default_arg_str",
     "function_google_tf_mean_squared_error_ast",
     "function_google_tf_ops_losses__safe_mean_ast",
+    "function_google_tf_squared_hinge_docstring_str",
     "function_google_tf_squared_hinge_str",
     "method_complex_args_variety_ast",
     "method_complex_args_variety_str",
-]
+    "returns_subscript",
+]  # type: list[str]

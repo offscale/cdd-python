@@ -12,7 +12,7 @@ class Cat(BaseModel):
     cat_name: str
 """
 
-pydantic_class_cls_def = ClassDef(
+pydantic_class_cls_def: ClassDef = ClassDef(
     bases=[Name(ctx=Load(), id="BaseModel")],
     body=[
         AnnAssign(
@@ -48,4 +48,4 @@ pydantic_class_cls_def = ClassDef(
     name="Cat",
 )
 
-__all__ = ["pydantic_class_str", "pydantic_class_cls_def"]
+__all__ = ["pydantic_class_str", "pydantic_class_cls_def"]  # type: list[str]

@@ -198,7 +198,7 @@ def sqlalchemy(
     :type class_bases: ```Iterable[str]```
 
     :param decorator_list: List of decorators
-    :type decorator_list: ```Optional[Union[List[Str], List[]]]```
+    :type decorator_list: ```Optional[Union[List[str], List[]]]```
 
     :param table_name: Table name, defaults to `class_name`
     :type table_name: ```str```
@@ -353,7 +353,7 @@ def sqlalchemy_hybrid(
     :type class_bases: ```Iterable[str]```
 
     :param decorator_list: List of decorators
-    :type decorator_list: ```Optional[Union[List[Str], List[]]]```
+    :type decorator_list: ```Optional[Union[List[str], List[]]]```
 
     :param table_name: Table name, defaults to `class_name`
     :type table_name: ```str```

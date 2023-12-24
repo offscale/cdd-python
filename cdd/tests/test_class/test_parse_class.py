@@ -168,7 +168,7 @@ class TestParseClass(TestCase):
                                 "doc": "Search query, e.g., "
                                 "['node_name', 'function_name', "
                                 "'arg_name']",
-                                "typ": "List[str]",
+                                "typ": "list[str]",
                             },
                         ),
                         (

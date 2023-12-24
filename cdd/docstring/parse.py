@@ -65,4 +65,4 @@ def docstring(
     return parsed
 
 
-__all__ = ["docstring"]
+__all__ = ["docstring"]  # type: list[str]

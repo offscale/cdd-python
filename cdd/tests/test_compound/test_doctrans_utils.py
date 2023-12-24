@@ -200,10 +200,10 @@ class TestDocTransUtils(TestCase):
 
     def test_module_docstring(self) -> None:
         """Tests that module gets the right new docstring"""
-        module_node = Module(
+        module_node: Module = Module(
             body=[Expr(set_value("\nModule\n"))], stmt=None, type_ignores=[]
         )
-        original = deepcopy(module_node)
+        original: Module = deepcopy(module_node)
         DocTrans(
             docstring_format="rest",
             word_wrap=True,
@@ -215,7 +215,7 @@ class TestDocTransUtils(TestCase):
 
     def test_empty_types(self) -> None:
         """Tests function_google_tf_ops_losses__safe_mean_ast (which has empty arg types)"""
-        original = Module(
+        original: Module = Module(
             body=[
                 fix_missing_locations(
                     deepcopy(function_google_tf_ops_losses__safe_mean_ast)

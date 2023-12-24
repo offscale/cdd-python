@@ -6,7 +6,7 @@ from ast import Assign, Call, Load, Name, Store, keyword
 
 from cdd.shared.ast_utils import set_value
 
-column_fk = Assign(
+column_fk: Assign = Assign(
     targets=[Name(id="column_name", ctx=Store())],
     value=Call(
         func=Name(id="Column", ctx=Load()),
@@ -25,7 +25,7 @@ column_fk = Assign(
     lineno=None,
 )
 
-column_fk_gold = Assign(
+column_fk_gold: Assign = Assign(
     targets=[Name(id="column_name", ctx=Store())],
     value=Call(
         func=Name(id="Column", ctx=Load()),
@@ -44,7 +44,7 @@ column_fk_gold = Assign(
     lineno=None,
 )
 
-id_column = Assign(
+id_column: Assign = Assign(
     targets=[Name(id="id", ctx=Store())],
     value=Call(
         func=Name(id="Column", ctx=Load()),
@@ -66,4 +66,4 @@ id_column = Assign(
     lineno=None,
 )
 
-__all__ = ["column_fk", "column_fk_gold", "id_column"]
+__all__ = ["column_fk", "column_fk_gold", "id_column"]  # type: list[str]

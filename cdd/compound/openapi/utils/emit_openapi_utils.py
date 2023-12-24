@@ -151,4 +151,7 @@ def components_paths_from_name_model_route_id_crud(
         }
 
 
-__all__ = ["components_paths_from_name_model_route_id_crud", "NameModelRouteIdCrud"]
+__all__ = [
+    "components_paths_from_name_model_route_id_crud",
+    "NameModelRouteIdCrud",
+]  # type: list[str]

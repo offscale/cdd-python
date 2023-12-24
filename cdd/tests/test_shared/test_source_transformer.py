@@ -19,7 +19,7 @@ class TestSourceTransformer(TestCase):
         """
         Tests to_source in Python 3.9 and < 3.9
         """
-        func_def = FunctionDef(
+        func_def: FunctionDef = FunctionDef(
             name="funcy",
             args=arguments(
                 posonlyargs=[],

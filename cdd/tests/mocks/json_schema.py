@@ -4,9 +4,10 @@ Mocks for JSON Schema
 
 from copy import deepcopy
 
+from cdd.json_schema.utils.shared_utils import JSON_schema
 from cdd.tests.mocks.docstrings import docstring_header_and_return_no_nl_str
 
-config_schema = {
+config_schema: JSON_schema = {
     "$id": "https://offscale.io/config.schema.json",
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "description": docstring_header_and_return_no_nl_str,
@@ -40,7 +41,7 @@ config_schema = {
     "required": ["dataset_name", "tfds_dir", "K"],
 }
 
-config_schema_with_sql_types = deepcopy(config_schema)
+config_schema_with_sql_types: JSON_schema = deepcopy(config_schema)
 for param, typ in (
     ("dataset_name", "String"),
     ("tfds_dir", "String"),
@@ -50,7 +51,7 @@ for param, typ in (
     config_schema_with_sql_types["properties"][param]["x_typ"] = {"sql": {"type": typ}}
 
 
-server_error_schema = {
+server_error_schema: JSON_schema = {
     "$id": "https://offscale.io/error_json.schema.json",
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "description": "Error schema",
@@ -74,4 +75,8 @@ server_error_schema = {
 }
 
 
-__all__ = ["config_schema", "server_error_schema", "config_schema_with_sql_types"]
+__all__ = [
+    "config_schema",
+    "server_error_schema",
+    "config_schema_with_sql_types",
+]  # type: list[str]

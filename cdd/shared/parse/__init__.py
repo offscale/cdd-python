@@ -41,4 +41,4 @@ kind2instance_type = {
     "sqlalchemy": (ClassDef,),
 }
 
-__all__ = ["PARSERS", "kind2instance_type"]
+__all__ = ["PARSERS", "kind2instance_type"]  # type: list[str]

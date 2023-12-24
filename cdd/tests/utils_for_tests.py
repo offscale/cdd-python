@@ -150,7 +150,7 @@ def run_cli_test(
     :type test_case_instance: ```unittest.TestCase```
 
     :param cli_argv: cli_argv, can be sys.argv or proxy
-    :type cli_argv: ```List[str]```
+    :type cli_argv: ```list[str]```
 
     :param exit_code: exit code
     :type exit_code: ```Optional[int]```
@@ -168,7 +168,7 @@ def run_cli_test(
     :type return_args: ```bool```
 
     :return: input_str
-    :rtype: ```Tuple[str, Optional[Namespace]]```
+    :rtype: ```tuple[str, Optional[Namespace]]```
     """
     argparse_mock, args = MagicMock(), None
     with patch("argparse.ArgumentParser._print_message", argparse_mock), patch(
@@ -205,7 +205,7 @@ def run_cli_test(
 
 
 def unittest_main():
-    """Runs unittest.main if __main__"""
+    """Runs `unittest.main` if __main__"""
     if __name__ == "__main__":
         main()
 
@@ -422,9 +422,10 @@ __all__ = [
     "inspectable_compile",
     "mock_function",
     # "module_from_file",
-    "remove_args_from_docstring",
     "reindent_docstring",
+    "remove_args_from_docstring",
+    "replace_docstring",
     "run_ast_test",
     "run_cli_test",
     "unittest_main",
-]
+]  # type: list[str]

@@ -4,6 +4,7 @@ OpenAPI mocks
 
 from copy import deepcopy
 
+from cdd.sqlalchemy.utils.shared_utils import OpenApiType
 from cdd.tests.mocks.json_schema import (
     config_schema,
     config_schema_with_sql_types,
@@ -11,7 +12,7 @@ from cdd.tests.mocks.json_schema import (
 )
 from cdd.tests.mocks.routes import route_config
 
-openapi_dict = {
+openapi_dict: OpenApiType = {
     "openapi": "3.0.0",
     "info": {"title": "REST API", "version": "0.0.1"},
     "components": {
@@ -123,7 +124,7 @@ openapi_dict = {
     },
 }
 
-openapi_dict_with_sql_types = deepcopy(openapi_dict)
+openapi_dict_with_sql_types: OpenApiType = deepcopy(openapi_dict)
 openapi_dict_with_sql_types["components"]["schemas"] = {
     name: {k: v for k, v in schema.items() if not k.startswith("$")}
     for name, schema in {
@@ -133,4 +134,4 @@ openapi_dict_with_sql_types["components"]["schemas"] = {
 }
 
 
-__all__ = ["openapi_dict", "openapi_dict_with_sql_types"]
+__all__ = ["openapi_dict", "openapi_dict_with_sql_types"]  # type: list[str]

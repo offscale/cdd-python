@@ -5,6 +5,7 @@ Shared utility functions for SQLalchemy
 import ast
 from ast import Call, Expr, Load, Name, Subscript, Tuple, keyword
 from operator import attrgetter
+from typing import TypedDict, cast
 
 import cdd.compound.openapi.utils.emit_utils
 from cdd.shared.ast_utils import NoneStr, get_value, set_value
@@ -18,7 +19,7 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
     :type _param: ```dict```
 
     :param args:
-    :type args: ```List```
+    :type args: ```list```
 
     :param name:
     :type name: ```str```
@@ -59,7 +60,7 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
         if "struct" in after_generic:  # "," in after_generic or
             name = Name(id="JSON", ctx=Load())
         else:
-            list_typ = ast.parse(_param["typ"]).body[0]
+            list_typ: Expr = cast(Expr, ast.parse(_param["typ"]).body[0])
             assert isinstance(
                 list_typ, Expr
             ), "Expected `Expr` got `{type_name}`".format(
@@ -115,7 +116,7 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
         )
     elif _param.get("typ").startswith("Union["):
         # Hack to remove the union type. Enum parse seems to be incorrect?
-        union_typ = ast.parse(_param["typ"]).body[0]
+        union_typ: Subscript = cast(Subscript, ast.parse(_param["typ"]).body[0])
         assert isinstance(
             union_typ.value, Subscript
         ), "Expected `Subscript` got `{type_name}`".format(
@@ -170,4 +171,22 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
     return nullable
 
 
-__all__ = ["update_args_infer_typ_sqlalchemy"]
+# TODO: Finish writing these types
+OpenAPI_info = TypedDict("OpenAPI_info", {"title": str, "version": str})
+OpenAPI_components = TypedDict(
+    "OpenAPI_components", {"requestBodies": dict, "schemas": dict}
+)
+JSON_ref = TypedDict("JSON_ref", {"$ref": str, "required": bool})
+OpenAPI_paths = dict
+OpenApiType = TypedDict(
+    "OpenApiType",
+    {
+        "openapi": str,
+        "info": OpenAPI_info,
+        "components": OpenAPI_components,
+        "paths": OpenAPI_paths,
+    },
+)
+
+
+__all__ = ["update_args_infer_typ_sqlalchemy", "OpenApiType"]

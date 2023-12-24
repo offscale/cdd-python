@@ -80,12 +80,12 @@ class TestConformance(TestCase):
                     range(10),
                 )
             )
-            # Test if can create missing file
+            # Test if one can create missing file
             argparse_functions.append(
                 tempdir_join("argparse_missing{extsep}py".format(extsep=extsep))
             )
 
-            # Test if can fill in empty file
+            # Test if one can fill in empty file
             argparse_functions.append(
                 tempdir_join("argparse_empty{extsep}py".format(extsep=extsep))
             )
@@ -198,7 +198,7 @@ class TestConformance(TestCase):
         :type _class_with_method_ast: ```ClassDef```
 
         :return: OrderedDict of filenames and whether they were changed, Args
-        :rtype: ```Tuple[OrderedDict, Namespace]```
+        :rtype: ```tuple[OrderedDict, Namespace]```
         """
         argparse_function = os.path.join(
             tempdir, "argparse{extsep}py".format(extsep=extsep)

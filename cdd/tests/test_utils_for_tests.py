@@ -82,7 +82,7 @@ class TestUtilsForTests(TestCase):
         )
         test_case_module.assertTrue(True)
 
-        module = Module(body=[], type_ignores=[], stmt=None)
+        module: Module = Module(body=[], type_ignores=[], stmt=None)
 
         import cdd.tests.utils_for_tests
 

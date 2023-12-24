@@ -1,9 +1,9 @@
 """
-Utility functions for cdd.gen
+Utility functions for `cdd.gen`
 """
 
 import ast
-from ast import Assign, ClassDef, FunctionDef, Import, ImportFrom, Name, Store
+from ast import Assign, ClassDef, FunctionDef, Import, ImportFrom, Module, Name, Store
 from itertools import chain
 from json import load
 from operator import itemgetter
@@ -47,7 +47,7 @@ def get_input_mapping_from_path(emit_name, module_path, symbol_name):
     """
     module_filepath = find_module_filepath(module_path, symbol_name)
     with open(module_filepath, "rt") as f:
-        input_ast_mod = ast.parse(f.read())
+        input_ast_mod: Module = ast.parse(f.read())
     type_instance_must_be = kind2instance_type.get(emit_name, (FunctionDef, ClassDef))
     input_mapping = dict(
         map(
@@ -74,7 +74,7 @@ def get_emit_kwarg(decorator_list, emit_call, emit_name, name_tpl, name):
     Determine correct one, and always include the name.
 
     :param decorator_list: List of decorators
-    :type decorator_list: ```Optional[Union[List[Str], List[]]]```
+    :type decorator_list: ```Optional[Union[List[str], List[]]]```
 
     :param emit_name: Which type to generate.
     :type emit_name: ```Literal["argparse", "class", "function", "json_schema",
@@ -135,7 +135,7 @@ def gen_file(
     :type name_tpl: ```str```
 
     :param input_mapping_it: Import location of mapping/2-tuple collection.
-    :type input_mapping_it: ```Iterator[Tuple[str,AST]]```
+    :type input_mapping_it: ```Iterator[tuple[str, AST]]```
 
     :param parse_name: Which type to parse.
     :type parse_name: ```Literal["argparse", "class", "function", "json_schema",
@@ -161,7 +161,7 @@ def gen_file(
     :type emit_default_doc: ```bool```
 
     :param decorator_list: List of decorators
-    :type decorator_list: ```Optional[Union[List[Str], List[]]]```
+    :type decorator_list: ```Optional[Union[List[str], List[]]]```
 
     :param no_word_wrap: Whether word-wrap is disabled (on emission).
     :type no_word_wrap: ```Optional[Literal[True]]```
@@ -170,7 +170,7 @@ def gen_file(
     :type imports: ```str```
 
     :param functions_and_classes: Functions and classes that have been preparsed
-    :type functions_and_classes: ```Optional[Tuple[AST]]```
+    :type functions_and_classes: ```Optional[tuple[AST]]```
     """
     parsed_ast = gen_module(
         decorator_list,
@@ -222,7 +222,7 @@ def gen_module(
     :type name_tpl: ```str```
 
     :param input_mapping_it: Import location of mapping/2-tuple collection.
-    :type input_mapping_it: ```Iterator[Tuple[str,AST]]```
+    :type input_mapping_it: ```Iterator[tuple[str, AST]]```
 
     :param parse_name: Which type to parse.
     :type parse_name: ```Literal["argparse", "class", "function", "json_schema",
@@ -245,7 +245,7 @@ def gen_module(
     :type emit_default_doc: ```bool```
 
     :param decorator_list: List of decorators
-    :type decorator_list: ```Optional[Union[List[Str], List[]]]```
+    :type decorator_list: ```Optional[Union[List[str], List[]]]```
 
     :param no_word_wrap: Whether word-wrap is disabled (on emission).
     :type no_word_wrap: ```Optional[Literal[True]]```
@@ -257,13 +257,13 @@ def gen_module(
     :type functions_and_classes: ```Optional[Tuple[AST]]```
 
     :param global__all__: `__all__` symbols for that magic
-    :type global__all__: ```List[str]```
+    :type global__all__: ```list[str]```
 
     :return: Module with everything contained inside, e.g., all the imports, parsed out functions and classes
     :rtype: ```Module```
     """
     if global__all__ is None:
-        global__all__ = []
+        global__all__ = []  # type: list[str]
     if functions_and_classes is None:
         functions_and_classes = get_functions_and_classes(
             decorator_list,
@@ -275,9 +275,9 @@ def gen_module(
             name_tpl,
             no_word_wrap,
             parse_name,
-        )
+        )  # type: tuple[Union[FunctionDef, ClassDef]]
     if emit_and_infer_imports:
-        imports = "{}{}".format(
+        imports: str = "{}{}".format(
             imports or "",
             " ".join(
                 map(
@@ -299,7 +299,7 @@ def gen_module(
         parse_name,
     )
 
-    content = "{prepend}{imports}\n{functions_and_classes}\n{__all__}".format(
+    content: str = "{prepend}{imports}\n{functions_and_classes}\n{__all__}".format(
         prepend="" if prepend is None else prepend,
         imports=imports,  # TODO: Optimize imports programmatically (akin to `autoflake --remove-all-unused-imports`)
         functions_and_classes="\n\n".join(map(to_code, functions_and_classes)),
@@ -324,7 +324,7 @@ def gen_module(
             )
         ),
     )
-    parsed_ast = ast.parse(content)
+    parsed_ast: Module = ast.parse(content)
     # TODO: Shebang line first, then docstring, then imports
     doc_str: Optional[str] = ast.get_docstring(parsed_ast, clean=True)
     whole = tuple(
@@ -367,8 +367,10 @@ def get_functions_and_classes(
     parse_name,
 ):
     """
+    Emitted functions and/or classes
+
     :param decorator_list: List of decorators
-    :type decorator_list: ```Optional[Union[List[Str], List[]]]```
+    :type decorator_list: ```Optional[Union[List[str], List[]]]```
 
     :param emit_call: Whether to emit a `__call__` method from the `_internal` IR subdict
     :type emit_call: ```bool```
@@ -382,7 +384,7 @@ def get_functions_and_classes(
 
 
     :param global__all__: `__all__` symbols for that magic
-    :type global__all__: ```List[str]```
+    :type global__all__: ```list[str]```
 
     :param input_mapping_it: Import location of mapping/2-tuple collection.
     :type input_mapping_it: ```Iterator[Tuple[str,AST]]```
@@ -398,7 +400,7 @@ def get_functions_and_classes(
                                  "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]```
 
     :return: Side-effect of appending `__all__`, this returns emitted values out of `input_mapping_it`
-    :rtype: ```Tuple[AST]```
+    :rtype: ```tuple[Union[FunctionDef, ClassDef]]```
     """
     emitter = get_emitter(emit_name)
     return tuple(
@@ -438,7 +440,7 @@ def file_to_input_mapping(filepath, parse_name):
         name: str = path.basename(filepath)
         if "name" not in json_contents:
             json_contents["name"] = pascal_to_upper_camelcase(name)
-        input_mapping = {name: json_contents}
+        input_mapping = {name: json_contents}  # type: dict[str, Union[str, AST]]
     else:
         with open(filepath, "rt") as f:
             mod = ast_parse(f.read())

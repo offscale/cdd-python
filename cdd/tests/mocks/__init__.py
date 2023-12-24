@@ -2,7 +2,9 @@
 Shared by the mocks. Currently unused, but has some imports mocked for later use…
 """
 
+from ast import AST
 from ast import parse as ast_parse
+from typing import List
 
 from cdd.shared.pure_utils import PY_GTE_3_8
 
@@ -20,6 +22,6 @@ except ImportError:
     package="typing" if PY_GTE_3_8 else "typing_extensions"
 )
 
-imports_header_ast = ast_parse(imports_header).body
+imports_header_ast: List[AST] = ast_parse(imports_header).body
 
-__all__ = ["imports_header", "imports_header_ast"]
+__all__ = ["imports_header", "imports_header_ast"]  # type: list[str]

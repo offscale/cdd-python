@@ -150,7 +150,7 @@ def param2ast(param):
     Converts a param to an AnnAssign
 
     :param param: Name, dict with keys: 'typ', 'doc', 'default'
-    :type param: ```Tuple[str, dict]```
+    :type param: ```tuple[str, dict]```
 
     :return: AST node for assignment
     :rtype: ```Union[AnnAssign, Assign]```
@@ -243,7 +243,7 @@ def _generic_param2ast(param):
     Expected to be used only inside `param2ast`.
 
     :param param: Name, dict with keys: 'typ', 'doc', 'default'
-    :type param: ```Tuple[str, dict]```
+    :type param: ```tuple[str, dict]```
 
     :return: AST node for assignment
     :rtype: ```AnnAssign```
@@ -346,7 +346,7 @@ def param2argparse_param(param, word_wrap=True, emit_default_doc=True):
     Converts a param to an Expr `argparse.add_argument` call
 
     :param param: Name, dict with keys: 'typ', 'doc', 'default'
-    :type param: ```Tuple[str, Dict[str, Any]]```
+    :type param: ```tuple[str, Dict[str, Any]]```
 
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
@@ -471,7 +471,7 @@ def _resolve_arg(action, choices, param, required, typ):
     :type choices: ```Optional[List[str]]```
 
     :param param: Name, dict with keys: 'typ', 'doc', 'default'
-    :type param: ```Tuple[str, dict]```
+    :type param: ```tuple[str, dict]```
 
     :param required: Whether to require the argument
     :type required: ```bool```
@@ -480,7 +480,7 @@ def _resolve_arg(action, choices, param, required, typ):
     :type typ: ```Optional[str]```
 
     :return: action, choices, required, typ, (Name, dict with keys: 'typ', 'doc', 'default')
-    :rtype: ```Tuple[Optional[str], Optional[List[str]], bool, Optional[str], Tuple[str, dict]]```
+    :rtype: ```tuple[Optional[str], Optional[list[str]], bool, Optional[str], tuple[str, dict]]```
     """
     (name, _param), _required = param, None
     del param
@@ -531,7 +531,7 @@ def _parse_node_for_arg(_required, action, choices, node, typ):
     :type typ: ```Optional[str]```
 
     :return: _required, action, choices, typ
-    :rtype: ```Tuple[bool, Optional[str], Optional[List[str]], Optional[str]]```
+    :rtype: ```tuple[bool, Optional[str], Optional[List[str]], Optional[str]]```
     """
     if isinstance(node, Tuple):
         maybe_choices = tuple(
@@ -562,7 +562,7 @@ def func_arg2param(func_arg, default=None):
     :type default: ```Optional[Any]```
 
     :return: Name, dict with keys: 'typ', 'doc', 'default'
-    :rtype: ```Tuple[str, dict]```
+    :rtype: ```tuple[str, dict]```
     """
     return func_arg.arg, dict(
         doc=getattr(func_arg, "type_comment", None),
@@ -639,10 +639,10 @@ def get_at_root(node, types):
     :type node: ```AST```
 
     :param types: The types to search for (uses in an `isinstance` check)
-    :type types: ```Tuple[str,...]````
+    :type types: ```tuple[str,...]````
 
     :return: List of imports. Doesn't handle those within a try/except, condition, or not in root scope
-    :rtype: ```List[Union[]]```
+    :rtype: ```list[Union[]]```
     """
     assert hasattr(node, "body") and isinstance(node.body, (list, tuple))
     return list(filter(rpartial(isinstance, types), node.body))
@@ -794,7 +794,7 @@ def find_in_ast(search, node):
 
     :param search: Location within AST of property.
        Can be top level like `['a']` for `a=5` or E.g., `['A', 'F']` for `class A: F`, `['f', 'g']` for `def f(g): ...`
-    :type search: ```List[str]```
+    :type search: ```list[str]```
 
     :param node: AST node (must have a `body`)
     :type node: ```AST```
@@ -896,7 +896,7 @@ def annotate_ancestry(node, filename=None):
                 def set_index_and_location(idx_arg):
                     """
                     :param idx_arg: Index and Any; probably out of `enumerate`
-                    :type idx_arg: ```Tuple[int, Any]```
+                    :type idx_arg: ```tuple[int, Any]```
 
                     :return: Second element, with _idx set with value of first
                     :rtype: ```Any```
@@ -943,7 +943,7 @@ class RewriteAtQuery(NodeTransformer):
     def __init__(self, search, replacement_node):
         """
         :param search: Search query, e.g., ['node_name', 'function_name', 'arg_name']
-        :type search: ```List[str]```
+        :type search: ```list[str]```
 
         :param replacement_node: Node to replace this search
         :type replacement_node: ```AST```
@@ -1129,7 +1129,7 @@ def it2literal(it):
     Convert a collection of constants into a type annotation
 
     :param it: collection of constants
-    :type it: ```Union[Tuple[Union[str, int, float], ...], List[Union[str, int, float], ...]]```
+    :type it: ```Union[tuple[Union[str, int, float], ...], list[Union[str, int, float], ...]]```
 
     :return: Subscript Literal for annotation
     :rtype: ```Subscript```
@@ -1162,7 +1162,7 @@ def infer_type_and_default(action, default, typ, required):
     :type required: ```bool```
 
     :return: action (e.g., for `argparse.Action`), default, whether its required, inferred type str
-    :rtype: ```Tuple[str, Any, bool, str]```
+    :rtype: ```tuple[str, Any, bool, str]```
     """
     if code_quoted(default):
         return _infer_type_and_default_from_quoted(action, default, required, typ)
@@ -1269,7 +1269,7 @@ def _infer_type_and_default_for_list_or_tuple(action, default, required):
     :type required: ```bool```
 
     :return: action (e.g., for `argparse.Action`), default, whether its required, inferred type str
-    :rtype: ```Tuple[Union[Literal["append"], Literal["loads"]], Any, bool, str]```
+    :rtype: ```tuple[Union[Literal["append"], Literal["loads"]], Any, bool, str]```
     """
     if len(default) == 0:
         action, default, required, typ = "append", None, False, None
@@ -1302,7 +1302,7 @@ def _infer_type_and_default_from_quoted(action, default, required, typ):
     :type typ: ```Optional[str]```
 
     :return: action, default, required, typ
-    :rtype: ```Tuple[Optional[str], Optional[List[str]], bool, Optional[str]]```
+    :rtype: ```tuple[Optional[str], Optional[List[str]], bool, Optional[str]]```
     """
     default = get_value(get_value(ast.parse(default.strip("`")).body[0]))
     # Sometimes `default` is a string like `(-1)`
@@ -1332,7 +1332,7 @@ def _parse_default_from_ast(action, default, required, typ):
     :type typ: ```Optional[str]```
 
     :return: action, default, required, typ
-    :rtype: ```Tuple[Optional[str], Optional[List[str]], bool, Optional[str]]```
+    :rtype: ```tuple[Optional[str], Optional[List[str]], bool, Optional[str]]```
     """
 
     if isinstance(default, (Constant, Expr, Str, Num)):
@@ -1403,7 +1403,7 @@ def _to_code(node):
     )(node)
 
 
-class Undedined:
+class Undefined:
     """Null class"""
 
 
@@ -1455,8 +1455,8 @@ def cmp_ast(node0, node1):
 
     elif isinstance(node0, AST):
         for field in node0._fields:
-            left = getattr(node0, field, Undedined)
-            right = getattr(node1, field, Undedined)
+            left = getattr(node0, field, Undefined)
+            right = getattr(node1, field, Undefined)
 
             if not cmp_ast(left, right):
                 return False
@@ -1524,7 +1524,7 @@ def get_ass_where_name(node, name):
     :type name: ```str```
 
     :return: Generator of all matches names (.value)
-    :rtype: ```Generator[Any]```
+    :rtype: ```Generator[Union[Assign, AnnAssign]]```
     """
     return (
         get_value(_node)
@@ -1730,7 +1730,7 @@ def optimise_imports(imports):
     :type imports: ```Iterable[ImportFrom]```
 
     :return: `ImportFrom` nodes
-    :rtype: ```List[ImportFrom]```
+    :rtype: ```list[ImportFrom]```
     """
     seen_pair = set()
     return [
@@ -1804,16 +1804,16 @@ def infer_imports(module):
     """
     Infer imports
 
-    :param module: Module
-    :type module: ```Module```
+    :param module: Module, ClassDef, FunctionDef, AsyncFunctionDef, Assign
+    :type module: ```Union[ClassDef, FunctionDef, AsyncFunctionDef, Assign]```
 
-    :return: Iterable of imports
-    :rtype: ```List[Union[Import, ImportFrom]]```
+    :return: List of imports
+    :rtype: ```list[Union[Import, ImportFrom]]```
     """
     import cdd.sqlalchemy.utils.parse_utils  # Should this be a function param instead?
 
     if isinstance(module, (ClassDef, FunctionDef, AsyncFunctionDef, Assign)):
-        module = Module(body=[module], type_ignores=[], stmt=None)
+        module: Module = Module(body=[module], type_ignores=[], stmt=None)
     assert isinstance(module, Module), "Expected `Module` got `{type_name}`".format(
         type_name=type(module).__name__
     )
@@ -1855,21 +1855,25 @@ __all__ = [
     "RewriteAtQuery",
     "Set_to_set",
     "Tuple_to_tuple",
+    "_parse_default_from_ast",
     "annotate_ancestry",
     "ast_type_to_python_type",
     "cmp_ast",
     "code_quoted",
     "construct_module_with_symbols",
+    "del_ass_where_name",
     "emit_ann_assign",
     "emit_arg",
     "find_ast_type",
     "find_in_ast",
     "func_arg2param",
+    "get_ass_where_name",
     "get_at_root",
     "get_doc_str",
     "get_function_type",
     "get_value",
     "infer_imports",
+    "infer_type_and_default",
     "is_argparse_add_argument",
     "is_argparse_description",
     "it2literal",

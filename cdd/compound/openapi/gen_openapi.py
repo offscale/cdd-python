@@ -29,10 +29,10 @@ def openapi_bulk(app_name, model_paths, routes_paths):
     :type app_name: ```str```
 
     :param model_paths: The path/module-resolution(s) whence the model(s) can be found
-    :type model_paths: ```List[str]```
+    :type model_paths: ```list[str]```
 
     :param routes_paths: The path/module-resolution(s) whence the route(s) can be found
-    :type routes_paths: ```List[str]```
+    :type routes_paths: ```list[str]```
 
     :return: OpenAPI dictionary
     :rtype: ```dict```
@@ -45,10 +45,10 @@ def openapi_bulk(app_name, model_paths, routes_paths):
         :type filename: ```str```
 
         :return: Iterable of tuples of the found kind
-        :rtype: ```Iterable[Tuple[AST, ...], ...]```
+        :rtype: ```Iterable[tuple[AST, ...], ...]```
         """
         with open(filename, "rb") as f:
-            parsed_ast = ast.parse(f.read())
+            parsed_ast: Module = ast.parse(f.read())
 
         return filter(
             lambda node: (infer(node) or "").startswith("sqlalchemy"),
@@ -61,10 +61,10 @@ def openapi_bulk(app_name, model_paths, routes_paths):
         :type filename: ```str```
 
         :return: Iterable of tuples of the found kind
-        :rtype: ```Iterable[Tuple[AST, ...], ...]```
+        :rtype: ```Iterable[tuple[AST, ...], ...]```
         """
         with open(filename, "rb") as f:
-            parsed_ast = ast.parse(f.read())
+            parsed_ast: Module = ast.parse(f.read())
 
         return filter(
             lambda node: next(
@@ -85,7 +85,7 @@ def openapi_bulk(app_name, model_paths, routes_paths):
         :type path_dict: ```dict```
 
         :return: (route, path_dict) with `"parameters"` key potentially set
-        :rtype: ```Tuple[str, dict]```
+        :rtype: ```tuple[str, dict]```
         """
         if ":" in route:
             path_dict["parameters"] = []
@@ -208,4 +208,4 @@ def openapi_bulk(app_name, model_paths, routes_paths):
     }
 
 
-__all__ = ["openapi_bulk"]
+__all__ = ["openapi_bulk"]  # type: list[str]

@@ -1,6 +1,7 @@
 """
 Utility functions for `cdd.parse.json_schema`
 """
+
 from typing import Dict
 
 from cdd.shared.ast_utils import NoneStr
@@ -12,13 +13,13 @@ def json_schema_property_to_param(param, required):
     Convert a JSON schema property to a param
 
     :param param: Name, dict with keys: 'typ', 'doc', 'default'
-    :type param: ```Tuple[str, dict]```
+    :type param: ```tuple[str, dict]```
 
     :param required: Names of all required parameters
     :type required: ```FrozenSet[str]```
 
     :return: Name, dict with keys: 'typ', 'doc', 'default'
-    :rtype: ```Tuple[str, dict]```
+    :rtype: ```tuple[str, dict]```
     """
     name, _param = param
     del param
@@ -119,4 +120,4 @@ json_type2typ: Dict[str, str] = {
 }
 
 
-__all__ = ["json_schema_property_to_param"]
+__all__ = ["json_schema_property_to_param", "json_type2typ"]

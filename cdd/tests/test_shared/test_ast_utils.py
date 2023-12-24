@@ -33,7 +33,7 @@ from ast import (
 from copy import deepcopy
 from itertools import repeat
 from os import extsep, path
-from typing import Optional
+from typing import Optional, Union
 from unittest import TestCase
 
 from cdd.shared.ast_utils import (
@@ -91,7 +91,7 @@ class TestAstUtils(TestCase):
 
     def test_annotate_ancestry(self) -> None:
         """Tests that `annotate_ancestry` properly decorates"""
-        node = Module(
+        node: Module = Module(
             body=[
                 AnnAssign(
                     annotation=Name(
@@ -201,13 +201,13 @@ class TestAstUtils(TestCase):
         self.assertIsInstance(
             emit_arg(class_with_method_and_body_types_ast.body[1].args.args[1]), arg
         )
-        assign = Assign(
+        assign: Assign = Assign(
             targets=[Name("yup", Store())],
             value=set_value("nup"),
             expr=None,
             **maybe_type_comment
         )
-        gen_ast = emit_arg(assign)
+        gen_ast: arg = emit_arg(assign)
         self.assertIsInstance(gen_ast, arg)
         run_ast_test(
             self,
@@ -243,9 +243,9 @@ class TestAstUtils(TestCase):
     def test_find_in_ast_self(self) -> None:
         """Tests that `find_in_ast` successfully finds itself in AST"""
         run_ast_test(self, find_in_ast(["ConfigClass"], class_ast), class_ast)
-        module = Module(body=[], type_ignores=[], stmt=None)
+        module: Module = Module(body=[], type_ignores=[], stmt=None)
         run_ast_test(self, find_in_ast([], module), module)
-        module_with_fun = Module(
+        module_with_fun: Module = Module(
             body=[
                 FunctionDef(
                     name="call_peril",
@@ -327,18 +327,20 @@ class TestAstUtils(TestCase):
         """Tests that `get_at_root` successfully gets the imports"""
         with open(
             path.join(
-                path.dirname(__file__),
-                "../mocks",
+                path.dirname(path.dirname(__file__)),
+                "mocks",
                 "eval{extsep}py".format(extsep=extsep),
             )
         ) as f:
-            imports = get_at_root(ast.parse(f.read()), (Import, ImportFrom))
+            imports: Union[Import, ImportFrom] = get_at_root(
+                ast.parse(f.read()), (Import, ImportFrom)
+            )
         self.assertIsInstance(imports, list)
-        self.assertEqual(len(imports), 1)
+        self.assertEqual(len(imports), 2)
 
         self.assertTrue(
             cmp_ast(
-                imports[0],
+                imports[1],
                 ast.Import(
                     names=[
                         ast.alias(
@@ -357,7 +359,9 @@ class TestAstUtils(TestCase):
         """
         Test that `infer_imports` can infer imports for SQLalchemy
         """
-        imports = infer_imports(config_decl_base_ast)
+        imports = infer_imports(
+            config_decl_base_ast
+        )  # type: list[Union[Import, ImportFrom]]
         self.assertEqual(len(imports), 1)
         run_ast_test(
             self,
@@ -398,7 +402,7 @@ class TestAstUtils(TestCase):
         Tests that `RewriteAtQuery` can actually replace a node at given location
         """
         parsed_ast = ast_parse(class_with_method_and_body_types_str)
-        rewrite_at_query = RewriteAtQuery(
+        rewrite_at_query: RewriteAtQuery = RewriteAtQuery(
             search="C.function_name.dataset_name".split("."),
             replacement_node=AnnAssign(
                 annotation=Name("int", Load()),
@@ -428,7 +432,7 @@ class TestAstUtils(TestCase):
         Tests that `RewriteAtQuery` can actually replace a node at given location
         """
         parsed_ast = ast_parse(class_str)
-        rewrite_at_query = RewriteAtQuery(
+        rewrite_at_query: RewriteAtQuery = RewriteAtQuery(
             search="ConfigClass.dataset_name".split("."),
             replacement_node=AnnAssign(
                 annotation=Name("int", Load()),
@@ -552,7 +556,7 @@ class TestAstUtils(TestCase):
         """Tests that `set_value` returns the right type for the right Python version"""
         import cdd.shared.ast_utils
 
-        _cdd_ast_utils_PY3_8_orig = PY3_8
+        _cdd_ast_utils_PY3_8_orig: bool = PY3_8
         # patch stopped working, getattr failed also ^
         try:
             cdd.shared.ast_utils.PY3_8 = True
@@ -598,7 +602,7 @@ class TestAstUtils(TestCase):
     def test_find_ast_type(self) -> None:
         """Test that `find_ast_type` gives the wrapped class back"""
 
-        class_def = ClassDef(
+        class_def: ClassDef = ClassDef(
             name="",
             bases=tuple(),
             keywords=tuple(),
@@ -637,7 +641,7 @@ class TestAstUtils(TestCase):
     def test_to_named_class_def(self) -> None:
         """Test that find_ast_type gives the wrapped named class back"""
 
-        class_def = ClassDef(
+        class_def: ClassDef = ClassDef(
             name="foo",
             bases=tuple(),
             keywords=tuple(),
@@ -1205,7 +1209,7 @@ class TestAstUtils(TestCase):
         """
         Test `get_ass_where_name`
         """
-        _mock = ast.parse("foo = 'bar';can = 5;haz: int = 5")
+        _mock: Module = ast.parse("foo = 'bar';can = 5;haz: int = 5")
         self.assertTupleEqual(
             tuple(map(get_value, get_ass_where_name(_mock, "foo"))), ("bar",)
         )
@@ -1217,7 +1221,7 @@ class TestAstUtils(TestCase):
         """
         Test `del_ass_where_name`
         """
-        _mock = ast.parse("foo = 'bar';can = 5;haz: int = 5")
+        _mock: Module = ast.parse("foo = 'bar';can = 5;haz: int = 5")
         _mock.body.append(
             Assign(
                 targets=[Name("yup", Store())],
@@ -1241,9 +1245,11 @@ class TestAstUtils(TestCase):
         Test `merge_assignment_lists`
         """
         src: str = "__all__ = [ 'a', 'b'];"
-        node = ast.parse("__all__ = ['alpha', 'beta']\n".join(repeat(src, 2)))
+        node: Module = ast.parse("__all__ = ['alpha', 'beta']\n".join(repeat(src, 2)))
         merge_assignment_lists(node, "__all__")
-        all__ = tuple(get_ass_where_name(node, "__all__"))
+        all__ = tuple(
+            get_ass_where_name(node, "__all__")
+        )  # type: tuple[Union[Assign, AnnAssign]]
         self.assertEqual(len(all__), 1)
         self.assertTupleEqual(
             tuple(map(get_value, all__[0].elts)), ("a", "alpha", "b", "beta")
@@ -1253,8 +1259,10 @@ class TestAstUtils(TestCase):
         """
         Test `merge_modules`
         """
-        import_line = "\nfrom string import ascii_uppercase"
-        src = """\"\"\"\nCool mod\"\"\"{import_line}""".format(import_line=import_line)
+        import_line: str = "\nfrom string import ascii_uppercase"
+        src: str = """\"\"\"\nCool mod\"\"\"{import_line}""".format(
+            import_line=import_line
+        )
         self.assertTrue(
             cmp_ast(
                 ast.parse(src),

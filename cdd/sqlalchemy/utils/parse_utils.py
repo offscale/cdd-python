@@ -102,7 +102,7 @@ def column_parse_extra_sql(idx_arg):
     Parse Column arg into extra sql type information
 
     :param idx_arg: argument number, node
-    :type idx_arg: ```Tuple[int, AST]```
+    :type idx_arg: ```tuple[int, AST]```
 
     :rtype: ```Optional[Tuple[str, dict]]```
     """
@@ -117,7 +117,7 @@ def column_parse_arg(idx_arg):
     Parse Column arg
 
     :param idx_arg: argument number, node
-    :type idx_arg: ```Tuple[int, AST]```
+    :type idx_arg: ```tuple[int, AST]```
 
     :rtype: ```Optional[Tuple[str, AST]]```
     """
@@ -147,7 +147,7 @@ def column_parse_kwarg(key_word):
     :param key_word: The keyword argument
     :type key_word: ```ast.keyword```
 
-    :rtype: ```Tuple[str, Any]```
+    :rtype: ```tuple[str, Any]```
     """
     val = get_value(key_word.value)
 
@@ -166,7 +166,7 @@ def column_call_to_param(call):
     :type call: ```Call```
 
     :return: Name, dict with keys: 'typ', 'doc', 'default'
-    :rtype: ```Tuple[str, dict]```
+    :rtype: ```tuple[str, dict]```
     """
     assert call.func.id == "Column", "{} != Column".format(call.func.id)
     assert (
@@ -323,7 +323,7 @@ def imports_from(sqlalchemy_asts):
     Generate `from sqlalchemy import <>` from the body of SQLalchemy `class`es
 
     :param sqlalchemy_asts: SQLalchemy `class`es with base class of `Base`
-    :type sqlalchemy_asts: ```ClassDef```
+    :type sqlalchemy_asts: ```Generator[ClassDef]```
 
     :return: `from sqlalchemy import <>` where <> is what was inferred from `sqlalchemy_classes`
     :rtype: ```ImportFrom```
@@ -365,7 +365,7 @@ def get_pk_and_type(sqlalchemy_class):
     :type sqlalchemy_class: ```ClassDef```
 
     :return: Primary key and its type
-    :rtype: ```Tuple[str, str]```
+    :rtype: ```tuple[str, str]```
     """
     assert isinstance(
         sqlalchemy_class, ClassDef

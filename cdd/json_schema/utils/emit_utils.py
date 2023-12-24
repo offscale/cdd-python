@@ -16,12 +16,12 @@ def param2json_schema_property(param, required):
     Turn a param into a JSON schema property
 
     :param param: Name, dict with keys: 'typ', 'doc', 'default'
-    :type param: ```Tuple[str, dict]```
+    :type param: ```tuple[str, dict]```
 
     :param required: Required parameters. This function may push to the list.
-    :type required: ```List[str]```
+    :type required: ```list[str]```
 
-    :return: JSON schema property. Also may push to `required`.
+    :return: JSON schema property. Also, may push to `required`.
     :rtype: ```dict```
     """
     name, _param = param

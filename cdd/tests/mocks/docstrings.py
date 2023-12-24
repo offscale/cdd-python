@@ -17,10 +17,10 @@ docstring_header_str: str = "{docstring_header_no_nl_str}\n".format(
     docstring_header_no_nl_str=docstring_header_no_nl_str
 )
 
-_docstring_header_and_return_str: str = (
+_docstring_header_and_return_str = (
     ":return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))",
     ":rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```",
-)
+)  # type: tuple[str, str]
 
 docstring_header_and_return_str: str = "\n".join(
     (docstring_header_str, *_docstring_header_and_return_str)
@@ -64,7 +64,7 @@ docstring_google_keras_squared_hinge = (
     '            Supported options are `"sum"`, `"sum_over_batch_size"` or `None`.',
     "        name: Optional name for the loss instance.",
     "    ",
-)
+)  # type: tuple[str, ...]
 docstring_google_keras_squared_hinge_str: str = "\n".join(
     docstring_google_keras_squared_hinge
 )
@@ -161,7 +161,7 @@ docstring_google_keras_adam = (
     "          automatically set a loss scale factor.",
     "",
     "    ",
-)
+)  # type: tuple[str, ...]
 docstring_google_keras_adam_str: str = "\n".join(docstring_google_keras_adam)
 
 # ```py
@@ -246,7 +246,7 @@ docstring_google_keras_adadelta = (
     "",
     "    - [Zeiler, 2012](http://arxiv.org/abs/1212.5701)",
     "    ",
-)
+)  # type: tuple[str, ...]
 docstring_google_keras_adadelta_str: str = "\n".join(docstring_google_keras_adadelta)
 
 # ```py
@@ -925,10 +925,15 @@ docstring_sum_tuple = (
 )
 
 __all__ = [
+    "docstring_create_from_attr_google_str",
+    "docstring_create_from_attr_str",
     "docstring_extra_colons_str",
+    "docstring_google_keras_adadelta",
     "docstring_google_keras_adadelta_str",
     "docstring_google_keras_adam_str",
     "docstring_google_keras_lambda_callback_str",
+    "docstring_google_keras_squared_hinge_no_args_doc_str",
+    "docstring_google_keras_squared_hinge_no_args_doc_str",
     "docstring_google_keras_squared_hinge_str",
     "docstring_google_keras_tensorboard_return_str",
     "docstring_google_pytorch_lbfgs_str",
@@ -946,10 +951,13 @@ __all__ = [
     "docstring_keras_rmsprop_class_str",
     "docstring_keras_rmsprop_method_str",
     "docstring_no_default_doc_str",
+    "docstring_no_default_doc_wrapped_str",
     "docstring_no_default_no_nl_str",
     "docstring_no_default_str",
     "docstring_no_nl_no_none_str",
     "docstring_no_nl_str",
+    "docstring_no_type_no_default_str",
+    "docstring_no_type_no_default_tpl_str",
     "docstring_numpydoc_only_doc_str",
     "docstring_numpydoc_only_params_str",
     "docstring_numpydoc_only_returns_str",
@@ -960,4 +968,4 @@ __all__ = [
     "docstring_repr_str",
     "docstring_str",
     "docstring_sum_tuple",
-]
+]  # type: list[str]

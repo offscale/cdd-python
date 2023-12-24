@@ -18,4 +18,9 @@ __description__ = (
 root_logger = get_logger()
 logging.getLogger("blib2to3").setLevel(logging.WARNING)
 
-__all__ = ["get_logger", "root_logger", "__description__", "__version__"]
+__all__ = [
+    "get_logger",
+    "root_logger",
+    "__description__",
+    "__version__",
+]  # type: list[str]

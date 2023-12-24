@@ -105,4 +105,4 @@ def destroy(app, name, route, primary_key, variant=0):
     )
 
 
-__all__ = ["create", "create_util", "read", "destroy"]
+__all__ = ["create", "create_util", "read", "destroy"]  # type: list[str]

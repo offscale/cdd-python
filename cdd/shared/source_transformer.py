@@ -47,7 +47,7 @@ def ast_parse(
     :param filename: Filename being parsed
     :type filename: ```str```
 
-    :param mode: 'exec' to compile a module, 'single' to compile a, single (interactive) statement,
+    :param mode: 'exec' to compile a module, 'single' to compile a single (interactive) statement,
       or 'eval' to compile an expression.
     :type mode: ```Literal['exec', 'single', 'eval']```
 
@@ -58,7 +58,7 @@ def ast_parse(
     :type skip_docstring_remit: ```bool```
 
     :return: AST node
-    :rtype: node: ```AST```
+    :rtype: ```AST```
     """
     parsed_ast = parse(source, filename=filename, mode=mode)
     if not skip_annotate:
@@ -78,4 +78,4 @@ def ast_parse(
     return parsed_ast
 
 
-__all__ = ["ast_parse", "to_code"]
+__all__ = ["ast_parse", "to_code"]  # type: list[str]

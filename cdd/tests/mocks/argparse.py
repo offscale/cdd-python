@@ -27,7 +27,7 @@ from cdd.tests.mocks.classes import tensorboard_doc_str_no_args_str
 from cdd.tests.mocks.docstrings import docstring_header_no_nl_str, docstring_header_str
 from cdd.tests.mocks.ir import class_torch_nn_l1loss_ir
 
-argparse_add_argument_ast = Expr(
+argparse_add_argument_ast: Expr = Expr(
     Call(
         args=[set_value("--num")],
         func=Attribute(
@@ -52,7 +52,7 @@ _argparse_doc_str_tuple = (
     "Set CLI arguments\n",
     ":param argument_parser: argument parser",
     ":type argument_parser: ```ArgumentParser```\n",
-)
+)  # type: tuple[str, str, str]
 
 _cli_doc_str: str = "\n{tab}".format(tab=tab).join(
     _argparse_doc_str_tuple
@@ -89,7 +89,7 @@ _argparse_doc_stripped_str: str = _argparse_doc_str.replace(
     "{tab}\n{tab}".format(tab=tab), ""
 )
 
-_cli_doc_expr = Expr(set_value(_argparse_description_str))
+_cli_doc_expr: Expr = Expr(set_value(_argparse_description_str))
 
 _cli_doc_nosplit_str: str = emit_separating_tabs(
     "\n{tab}".format(tab=tab).join(
@@ -101,7 +101,7 @@ _cli_doc_nosplit_str: str = emit_separating_tabs(
     )
 ).strip(" \n")
 
-_cli_doc_nosplit_expr = Expr(
+_cli_doc_nosplit_expr: Expr = Expr(
     set_value(
         "\n{tab}{_cli_doc_nosplit_str}\n{tab}".format(
             _cli_doc_nosplit_str=_cli_doc_nosplit_str, tab=tab
@@ -109,7 +109,7 @@ _cli_doc_nosplit_expr = Expr(
     )
 )
 
-as_numpy_argparse_call = Expr(
+as_numpy_argparse_call: Expr = Expr(
     Call(
         args=[set_value("--as_numpy")],
         func=Attribute(
@@ -254,9 +254,9 @@ _argparse_add_arguments = (
             expr_func=None,
         )
     ),
-)
+)  # type: tuple[Expr, ...]
 
-_argparse_return = Return(
+_argparse_return: Return = Return(
     value=Tuple(
         ctx=Load(),
         elts=[
@@ -400,7 +400,7 @@ def set_cli_action_append(argument_parser):
     _cli_doc_str=_cli_doc_str, header_doc_str=docstring_header_str
 )
 
-argparse_func_ast = fix_missing_locations(
+argparse_func_ast: FunctionDef = fix_missing_locations(
     FunctionDef(
         args=arguments(
             args=[set_arg("argument_parser")],
@@ -440,7 +440,7 @@ argparse_func_ast = fix_missing_locations(
     )
 )
 
-argparse_func_with_body_ast = fix_missing_locations(
+argparse_func_with_body_ast: FunctionDef = fix_missing_locations(
     FunctionDef(
         args=arguments(
             args=[set_arg("argument_parser")],
@@ -516,7 +516,7 @@ argparse_func_with_body_ast = fix_missing_locations(
     )
 )
 
-argparse_func_action_append_ast = fix_missing_locations(
+argparse_func_action_append_ast: FunctionDef = fix_missing_locations(
     FunctionDef(
         name="set_cli_action_append",
         args=arguments(
@@ -609,7 +609,7 @@ argparse_func_action_append_ast = fix_missing_locations(
     )
 )
 
-argparse_function_google_keras_tensorboard_ast = FunctionDef(
+argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
     name="set_cli_args",
     args=arguments(
         posonlyargs=[],
@@ -837,7 +837,7 @@ argparse_function_google_keras_tensorboard_ast = FunctionDef(
     **maybe_type_comment
 )
 
-argparse_func_torch_nn_l1loss_ast = FunctionDef(
+argparse_func_torch_nn_l1loss_ast: FunctionDef = FunctionDef(
     name="set_cli_args",
     args=arguments(
         posonlyargs=[],
@@ -999,7 +999,7 @@ argparse_func_torch_nn_l1loss_ast = FunctionDef(
     **maybe_type_comment
 )
 
-argparse_add_argument_expr = Expr(
+argparse_add_argument_expr: Expr = Expr(
     Call(
         args=[set_value("--byo")],
         func=Attribute(
@@ -1029,4 +1029,4 @@ __all__ = [
     "argparse_func_with_body_ast",
     "argparse_func_with_body_str",
     "argparse_function_google_keras_tensorboard_ast",
-]
+]  # type: list[str]

@@ -10,6 +10,7 @@ from os.path import extsep
 from subprocess import run
 from sys import executable, platform
 from tempfile import TemporaryDirectory
+from typing import Tuple
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -17,7 +18,7 @@ import cdd.class_.parse
 from cdd.compound.exmod import exmod
 from cdd.shared.ast_utils import maybe_type_comment, set_value
 from cdd.shared.pkg_utils import relative_filename
-from cdd.shared.pure_utils import ENCODING, INIT_FILENAME, rpartial, unquote
+from cdd.shared.pure_utils import ENCODING, INIT_FILENAME, pp, rpartial, unquote
 from cdd.shared.source_transformer import ast_parse, to_code
 from cdd.tests.mocks import imports_header
 from cdd.tests.mocks.classes import class_str
@@ -60,7 +61,7 @@ class TestExMod(TestCase):
         This fixes that issue, and also safe to work on non-Windows
 
         :param dictionaries: Dictionaries
-        :type dictionaries: ```Tuple[dictionaries]```
+        :type dictionaries: ```tuple[dictionaries]```
 
         :return: `map` of normalised `dictionaries`
         :rtype: ```map```
@@ -288,12 +289,22 @@ class TestExMod(TestCase):
                     )
                 )
 
-                all_tests_running: int = len(result["write"]) == 1
+                all_tests_running: bool = len(result["mkdir"]) != 7
+                pp(
+                    {
+                        "all_tests_running": all_tests_running,
+                        "key_counts": {k: len(c) for k, c in result.items()},
+                    }
+                )
 
-                key_counts = (
-                    (("mkdir", 4), ("touch", 1), ("write", 1))
+                key_counts: Tuple[
+                    Tuple[str, int],
+                    Tuple[str, int],
+                    Tuple[str, int],
+                ] = (
+                    (("mkdir", 7), ("touch", 3), ("write", 1))
                     if all_tests_running
-                    else (("mkdir", 7), ("touch", 4), ("write", 4))
+                    else (("mkdir", 7), ("touch", 3), ("write", 1))
                 )
 
                 for key, count in key_counts:
@@ -314,6 +325,8 @@ class TestExMod(TestCase):
                         }.items()
                     },
                 )
+                pp({"result": tuple(self.normalise_double_paths(result))})
+                pp({"gold  ": tuple(self.normalise_double_paths(gold))})
                 self.assertDictEqual(*self.normalise_double_paths(result, gold))
 
                 self._check_emission(new_module_dir, dry_run=True)
@@ -328,7 +341,7 @@ class TestExMod(TestCase):
         :type root: ```str```
 
         :return: existent_module_dir, new_module_dir
-        :rtype: ```Tuple[str,str]```
+        :rtype: ```tuple[str,str]```
         """
         self.package_root_name = path.basename(root)
         existent_module_dir: str = path.join(root, self.package_root_name, "gen")
@@ -448,7 +461,7 @@ class TestExMod(TestCase):
         ).close()
         mkdir(module_root)
 
-        mod = Module(
+        mod: Module = Module(
             body=list(
                 chain.from_iterable(
                     (
@@ -619,10 +632,10 @@ class TestExMod(TestCase):
     def _pip(self, pip_args, cwd=None):
         """
         Run `pip` with given args (and assert success).
-        [Not using InstallCommand from pip anymore as its been deprecated (and now removed).]
+        [Not using InstallCommand from pip anymore as it's been deprecated (and now removed).]
 
         :param pip_args: Arguments to give pip
-        :type pip_args: ```List[str]```
+        :type pip_args: ```list[str]```
 
         :param cwd: Current working directory to run the command from. Defaults to current dir.
         :type cwd: ```Optional[str]```

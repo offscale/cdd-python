@@ -23,7 +23,7 @@ from cdd.shared.pure_utils import tab
 from cdd.tests.mocks.docstrings import docstring_sum_tuple
 from cdd.tests.utils_for_tests import reindent_docstring, replace_docstring
 
-_class_doc_str_expr = Expr(
+_class_doc_str_expr: Expr = Expr(
     set_value(
         tab.join(
             (
@@ -40,8 +40,8 @@ _class_doc_str_expr = Expr(
     )
 )
 
-_assign_type = Name("int", Load())
-assign_with_type_comment = Assign(
+_assign_type: Name = Name("int", Load())
+assign_with_type_comment: Assign = Assign(
     targets=[Name("res", Store())],
     value=BinOp(
         left=Name("a", Load()),
@@ -51,7 +51,7 @@ assign_with_type_comment = Assign(
     type_comment=_assign_type.id,
     lineno=None,
 )
-ann_assign_with_annotation = AnnAssign(
+ann_assign_with_annotation: AnnAssign = AnnAssign(
     annotation=_assign_type,
     value=assign_with_type_comment.value,
     simple=1,
@@ -63,7 +63,7 @@ ann_assign_with_annotation = AnnAssign(
     **maybe_type_comment
 )
 
-function_type_annotated = FunctionDef(
+function_type_annotated: FunctionDef = FunctionDef(
     name="sum",
     args=arguments(
         posonlyargs=[],
@@ -87,7 +87,7 @@ function_type_annotated = FunctionDef(
     returns=Name("int", Load()),
 )
 
-function_type_in_docstring = FunctionDef(
+function_type_in_docstring: FunctionDef = FunctionDef(
     name="sum",
     args=arguments(
         posonlyargs=[],
@@ -118,7 +118,7 @@ function_type_in_docstring = FunctionDef(
 function_type_in_docstring_only: FunctionDef = deepcopy(function_type_in_docstring)
 function_type_in_docstring_only.body[1].type_comment = None
 
-class_with_internal_annotated = ClassDef(
+class_with_internal_annotated: ClassDef = ClassDef(
     name="ClassMock",
     bases=tuple(),
     keywords=tuple(),
@@ -158,7 +158,7 @@ class_with_internal_annotated = ClassDef(
     identifier_name=None,
 )
 
-class_with_internal_type_commented_and_docstring_typed = ClassDef(
+class_with_internal_type_commented_and_docstring_typed: ClassDef = ClassDef(
     name="ClassMock",
     bases=tuple(),
     keywords=tuple(),
@@ -206,4 +206,4 @@ __all__ = [
     "function_type_annotated",
     "function_type_in_docstring",
     "function_type_in_docstring_only",
-]
+]  # type: list[str]

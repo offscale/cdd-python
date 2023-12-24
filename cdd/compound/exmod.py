@@ -43,17 +43,17 @@ def exmod(
     Expose module as `emit` types into `output_directory`
 
     :param emit_name: What type(s) to generate.
-    :type emit_name: ```List[Literal["argparse", "class", "function", "json_schema",
+    :type emit_name: ```list[Literal["argparse", "class", "function", "json_schema",
                                      "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]]```
 
     :param module: Module name or path
     :type module: ```str```
 
     :param blacklist: Modules/FQN to omit. If unspecified will emit all (unless whitelist).
-    :type blacklist: ```Union[List[str],Tuple[str]]```
+    :type blacklist: ```Union[list[str], tuple[str]]```
 
     :param whitelist: Modules/FQN to emit. If unspecified will emit all (minus blacklist).
-    :type whitelist: ```Union[List[str],Tuple[str]]```
+    :type whitelist: ```Union[list[str], tuple[str]]```
 
     :param output_directory: Where to place the generated exposed interfaces to the given `--module`.
     :type output_directory: ```str```
@@ -313,4 +313,4 @@ def exmod(
         )
 
 
-__all__ = ["exmod"]
+__all__ = ["exmod"]  # type: list[str]

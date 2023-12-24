@@ -30,7 +30,7 @@ def _default_options(node, search, type_wanted):
     :type node: ```AST```
 
     :param search: Search query, e.g., ['node_name', 'function_name', 'arg_name']
-    :type search: ```List[str]```
+    :type search: ```list[str]```
 
     :param type_wanted: AST instance
     :type type_wanted: ```AST```
@@ -158,7 +158,7 @@ def _conform_filename(
     :type filename: ```str```
 
     :param search: Search query, e.g., ['node_name', 'function_name', 'arg_name']
-    :type search: ```List[str]```
+    :type search: ```list[str]```
 
     :param replacement_node_ir: Replace what is found with the contents of this param
     :type replacement_node_ir: ```dict```
@@ -167,7 +167,7 @@ def _conform_filename(
     :type type_wanted: ```AST```
 
     :return: filename, whether the file was modified
-    :rtype: ```Tuple[str, bool]```
+    :rtype: ```tuple[str, bool]```
     """
     filename: str = path.realpath(path.expanduser(filename))
 
@@ -209,7 +209,7 @@ def _conform_filename(
 
     replaced = False
     if not cmp_ast(original_node, replacement_node):
-        rewrite_at_query = RewriteAtQuery(
+        rewrite_at_query: RewriteAtQuery = RewriteAtQuery(
             search=search,
             replacement_node=replacement_node,
         )
@@ -226,4 +226,8 @@ def _conform_filename(
     return filename, replaced
 
 
-__all__ = ["ground_truth"]
+__all__ = [
+    "ground_truth",
+    "_conform_filename",
+    "_get_name_from_namespace",
+]  # type: list[str]

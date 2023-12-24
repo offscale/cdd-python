@@ -7,7 +7,7 @@ from ast import FunctionDef
 from importlib import import_module
 from inspect import getsource
 from types import FunctionType
-from typing import FrozenSet, Optional
+from typing import FrozenSet, Optional, cast
 
 import cdd.compound.openapi.parse
 from cdd.shared.ast_utils import get_value
@@ -37,7 +37,9 @@ def bottle(function_def):
     """
     if isinstance(function_def, FunctionType):
         # Dynamic function, i.e., this isn't source code; and is in your memory
-        function_def = ast.parse(getsource(function_def)).body[0]
+        function_def: FunctionDef = cast(
+            FunctionDef, ast.parse(getsource(function_def)).body[0]
+        )
 
     assert isinstance(
         function_def, FunctionDef
@@ -74,4 +76,4 @@ def bottle(function_def):
     # return route_dict
 
 
-__all__ = ["bottle", "methods"]
+__all__ = ["bottle", "methods"]  # type: list[str]

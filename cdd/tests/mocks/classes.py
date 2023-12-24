@@ -57,7 +57,7 @@ class_doc_str: str = tab.join(
         ":cvar return_type: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))",
     )
 )
-class_doc_str_expr = Expr(set_value(class_doc_str))
+class_doc_str_expr: Expr = Expr(set_value(class_doc_str))
 
 class_str: str = '''
 class ConfigClass(object):
@@ -116,7 +116,7 @@ class ConfigClass(object):
     header_doc_str=indent(docstring_header_str, tab)
 )
 
-class_ast = ClassDef(
+class_ast: ClassDef = ClassDef(
     bases=[Name("object", Load())],
     body=[
         class_doc_str_expr,
@@ -241,7 +241,7 @@ class_ast = ClassDef(
     identifier_name=None,
 )
 
-class_ast_no_default_doc = deepcopy(class_ast)
+class_ast_no_default_doc: ClassDef = deepcopy(class_ast)
 class_ast_no_default_doc.body[0] = Expr(
     set_value(
         "\n".join(
@@ -256,7 +256,7 @@ class_ast_no_default_doc.body[0] = Expr(
     )
 )
 
-class_ast_with_none = deepcopy(class_ast)
+class_ast_with_none: ClassDef = deepcopy(class_ast)
 assert (
     isinstance(class_ast_with_none.body[4], AnnAssign)
     and class_ast_with_none.body[4].target.id == "as_numpy"
@@ -265,7 +265,7 @@ class_ast_with_none.body[4].value = set_value(
     None
 )  # E.g., because argparse has a default set to `None`
 
-class_nargs_ast = ClassDef(
+class_nargs_ast: ClassDef = ClassDef(
     bases=[Name("object", Load())],
     body=[
         Expr(
@@ -336,7 +336,7 @@ class_nargs_ast = ClassDef(
     identifier_name=None,
 )
 
-class_squared_hinge_config_ast = ClassDef(
+class_squared_hinge_config_ast: ClassDef = ClassDef(
     bases=[Name("object", Load())],
     body=[
         Expr(
@@ -670,7 +670,7 @@ tensorboard_doc_str_no_args = (
     "    model.fit(x_train, y_train, epochs=2, callbacks=[tensorboard_callback])",
     "    ```",
     "    ",
-)
+)  # type: tuple[str, ...]
 
 tensorboard_doc_str_no_args_str: str = "\n".join(
     map(
@@ -771,7 +771,7 @@ class TensorBoard(Callback):
     tensorboard_doc_str=tensorboard_doc_str
 )
 
-class_google_keras_tensorboard_ast = ClassDef(
+class_google_keras_tensorboard_ast: ClassDef = ClassDef(
     name="TensorBoard",
     bases=[Name(id="Callback", ctx=Load())],
     keywords=[],
@@ -943,7 +943,7 @@ class L1Loss(_Loss):
     class_torch_nn_l1loss_docstring_str=class_torch_nn_l1loss_docstring_str
 )
 
-class_torch_nn_l1loss_ast = ClassDef(
+class_torch_nn_l1loss_ast: ClassDef = ClassDef(
     bases=[
         Name(
             "_Loss",
@@ -1201,7 +1201,7 @@ class_torch_nn_one_cycle_lr = (
 class_torch_nn_one_cycle_lr_str = "\n".join(class_torch_nn_one_cycle_lr)
 
 
-class_torch_nn_one_cycle_lr_ast = ClassDef(
+class_torch_nn_one_cycle_lr_ast: ClassDef = ClassDef(
     bases=[Name("_LRScheduler", Load())],
     body=[
         Expr(set_value(class_torch_nn_one_cycle_lr_docstring_str)),
@@ -1279,7 +1279,7 @@ class_torch_nn_one_cycle_lr_ast = ClassDef(
 )
 
 # From `tf.keras.losses.Reduction` @ tf-nightly:2.7.0.dev20210908, minus methods and decorator
-class_reduction_v2 = ClassDef(
+class_reduction_v2: ClassDef = ClassDef(
     name="ReductionV2",
     bases=[],
     keywords=[],
@@ -1298,7 +1298,9 @@ class_reduction_v2 = ClassDef(
 
 __all__ = [
     "class_ast",
+    "class_ast_no_default_doc",
     "class_ast_with_none",
+    "class_doc_str",
     "class_google_keras_tensorboard_ast",
     "class_google_keras_tensorboard_str",
     "class_nargs_ast",
@@ -1310,7 +1312,8 @@ __all__ = [
     "class_torch_nn_l1loss_docstring_str",
     "class_torch_nn_l1loss_str",
     "class_torch_nn_one_cycle_lr_ast",
+    "class_torch_nn_one_cycle_lr_docstring_str",
     "class_torch_nn_one_cycle_lr_str",
-    "tensorboard_doc_str_no_args_str",
     "tensorboard_doc_str",
-]
+    "tensorboard_doc_str_no_args_str",
+]  # type: list[str]

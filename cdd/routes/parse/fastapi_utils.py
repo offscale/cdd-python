@@ -24,7 +24,7 @@ def model_handler(key, model_name, location, mime_type):
     :type mime_type: ```str```
 
     :return: Tuple["content", JSON ref to model name, of form `{"$ref": string}`]
-    :rtype: ```Tuple[Union[str,"content"], dict]```
+    :rtype: ```tuple[Union[str,"content"], dict]```
     """
     return (
         (key, model_name)
@@ -69,4 +69,4 @@ def parse_fastapi_responses(responses):
     }
 
 
-__all__ = ["parse_fastapi_responses"]
+__all__ = ["parse_fastapi_responses"]  # type: list[str]

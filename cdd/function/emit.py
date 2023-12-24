@@ -10,6 +10,7 @@ from cdd.docstring.emit import docstring
 from cdd.shared.ast_utils import maybe_type_comment, set_arg, set_value
 from cdd.shared.emit.utils.emitter_utils import get_internal_body
 from cdd.shared.pure_utils import PY3_8, none_types, simple_types
+from cdd.shared.types import Internal
 
 
 def function(
@@ -116,7 +117,7 @@ def function(
         kwonlyargs, kw_defaults, defaults = [], [], defaults_from_params
         args += args_from_params
 
-    internal_body = get_internal_body(
+    internal_body: Internal = get_internal_body(
         target_name=function_name,
         target_type=function_type,
         intermediate_repr=intermediate_repr,
@@ -204,4 +205,4 @@ def function(
     )
 
 
-__all__ = ["function"]
+__all__ = ["function"]  # type: list[str]

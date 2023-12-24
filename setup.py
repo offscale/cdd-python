@@ -103,7 +103,7 @@ def to_funcs(*paths):
     :type paths: ```*paths```
 
     :return: 2 functions
-    :rtype: ```Tuple[Callable[Optional[List[str]], str], Callable[Optional[List[str]], str]]```
+    :rtype: ```tuple[Callable[Optional[List[str]], str], Callable[Optional[List[str]], str]]```
     """
     return (
         partial(path.join, path.dirname(__file__), package_name, *paths),

@@ -2,6 +2,6 @@
 Module of route emitters
 """
 
-EMITTERS = ["bottle"]
+EMITTERS = ["bottle"]  # type: list[str]
 
-__all__ = ["EMITTERS"]
+__all__ = ["EMITTERS"]  # type: list[str]

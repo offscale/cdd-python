@@ -128,7 +128,7 @@ create_helper_variants = tuple(
     :type body: ```dict```
 
     :return: Status code, created (as a dict) or error dict
-    :rtype: ```Tuple[int, dict]```
+    :rtype: ```tuple[int, dict]```
     """
     try:
         orm_instance = orm_class(**body)
@@ -222,4 +222,4 @@ __all__ = [
     "create_helper_variants",
     "read_route_variants",
     "delete_route_variants",
-]
+]  # type: list[str]

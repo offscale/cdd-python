@@ -70,7 +70,7 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
     Turn a param into a `Column(…)`
 
     :param name_param: Name, dict with keys: 'typ', 'doc', 'default'
-    :type name_param: ```Tuple[str, dict]```
+    :type name_param: ```tuple[str, dict]```
 
     :param include_name: Whether to include the name (exclude in declarative base)
     :type include_name: ```bool```
@@ -684,7 +684,7 @@ def rewrite_fk(symbol_to_module, column_assign):
         :type foreign_key_call: ```Call```
 
         :return:
-        :rtype: ```Tuple[Name, Call]```
+        :rtype: ```tuple[Name, Call]```
         """
         assert isinstance(
             column_name, Name
@@ -744,7 +744,7 @@ def sqlalchemy_class_to_table(class_def, parse_original_whitespace):
     :param parse_original_whitespace: Whether to parse original whitespace or strip it out
     :type parse_original_whitespace: ```bool```
 
-    :return: SQLalchemy Talbe expression
+    :return: SQLalchemy `Table` expression
     :rtype: ```Call```
     """
     assert isinstance(
@@ -923,4 +923,4 @@ __all__ = [
     "typ2column_type",
     "update_fk_for_file",
     "update_with_imports_from_columns",
-]
+]  # type: list[str]

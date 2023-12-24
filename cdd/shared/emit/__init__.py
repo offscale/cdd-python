@@ -1,6 +1,7 @@
 """
 Transform from string or AST representations of input, to AST, file, or str input_str.
 """
+
 from typing import List
 
 # from cdd.emit.argparse_function import argparse_function
@@ -26,4 +27,4 @@ EMITTERS: List[str] = [
     "sqlalchemy_table",
 ]
 
-__all__ = ["EMITTERS"]
+__all__ = ["EMITTERS"]  # type: list[str]

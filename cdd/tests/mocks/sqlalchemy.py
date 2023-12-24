@@ -97,7 +97,7 @@ config_tbl = Table(
     comment=docstring_header_and_return_two_nl_str
 )
 
-config_tbl_with_comments_ast = Assign(
+config_tbl_with_comments_ast: Assign = Assign(
     targets=[Name(ctx=Store(), id="config_tbl")],
     value=Call(
         args=[
@@ -250,7 +250,7 @@ class Config(Base):
 """,
 )
 
-dataset_primary_key_column_assign = Assign(
+dataset_primary_key_column_assign: Assign = Assign(
     targets=[Name("dataset_name", Store())],
     value=Call(
         func=Name("Column", Load()),
@@ -272,7 +272,7 @@ dataset_primary_key_column_assign = Assign(
     **maybe_type_comment,
 )
 
-config_decl_base_ast = ClassDef(
+config_decl_base_ast: ClassDef = ClassDef(
     name="Config",
     bases=[Name("Base", Load())],
     keywords=[],
@@ -477,7 +477,7 @@ config_hybrid_ast.body = list(
 )
 config_hybrid_ast.body[-1].targets[0].id = "__table__"
 
-empty_with_inferred_pk_column_assign = Assign(
+empty_with_inferred_pk_column_assign: Assign = Assign(
     targets=[Name(id="empty_with_inferred_pk_tbl", ctx=Store())],
     value=Call(
         func=Name(id="Table", ctx=Load()),
@@ -519,7 +519,7 @@ element = Table(
     Column("parent_node_id", Integer)
 )"""
 
-node_fk_call = Call(
+node_fk_call: Call = Call(
     func=Name(id="Column", ctx=Load()),
     args=[
         set_value("primary_element"),
@@ -533,7 +533,7 @@ node_fk_call = Call(
     keywords=[],
 )
 
-node_pk_tbl_call = Call(
+node_pk_tbl_call: Call = Call(
     func=Name(id="Table", ctx=Load()),
     args=[
         set_value("node"),
@@ -548,7 +548,7 @@ node_pk_tbl_call = Call(
     keywords=[],
 )
 
-node_pk_tbl_ass = Assign(
+node_pk_tbl_ass: Assign = Assign(
     targets=[Name(id="node", ctx=Store())],
     value=node_pk_tbl_call,
     expr=None,
@@ -556,7 +556,7 @@ node_pk_tbl_ass = Assign(
     **maybe_type_comment,
 )
 
-node_pk_tbl_class = ClassDef(
+node_pk_tbl_class: ClassDef = ClassDef(
     name="node",
     bases=[Name(id="Base", ctx=Load())],
     keywords=[],
@@ -599,7 +599,7 @@ node_pk_tbl_class = ClassDef(
     type_params=[],
 )
 
-element_pk_fk_tbl = Call(
+element_pk_fk_tbl: Call = Call(
     func=Name(id="Table", ctx=Load()),
     args=[
         set_value("element"),
@@ -621,7 +621,7 @@ element_pk_fk_tbl = Call(
     keywords=[],
 )
 
-element_pk_fk_ass = Assign(
+element_pk_fk_ass: Assign = Assign(
     targets=[Name(id="element", ctx=Store())],
     value=element_pk_fk_tbl,
     expr=None,
@@ -629,12 +629,12 @@ element_pk_fk_ass = Assign(
     **maybe_type_comment,
 )
 
-foreign_sqlalchemy_tbls_mod = Module(
+foreign_sqlalchemy_tbls_mod: Module = Module(
     body=[node_pk_tbl_ass, element_pk_fk_ass],
     type_ignores=[],
 )
 
-create_from_attr_mock = FunctionDef(
+create_from_attr_mock: FunctionDef = FunctionDef(
     name="create_from_attr",
     args=arguments(
         posonlyargs=[],
@@ -744,4 +744,5 @@ __all__ = [
     "node_pk_tbl_ass",
     "node_pk_tbl_call",
     "node_pk_tbl_class",
-]
+    "sqlalchemy_imports_str",
+]  # type: list[str]

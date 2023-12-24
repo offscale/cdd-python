@@ -178,13 +178,13 @@ def _inspect_process_ir_param(param, sig):
     Merge signature with param
 
     :param param: Name, dict with keys: 'typ', 'doc', 'default'
-    :type param: ```Tuple[str, dict]```
+    :type param: ```tuple[str, dict]```
 
     :param sig: The Signature
     :type sig: ```inspect.Signature```
 
     :return: dict with keys: 'typ', 'doc', 'default'
-    :rtype: ```Tuple[str, dict]```
+    :rtype: ```tuple[str, dict]```
     """
     name, _param = param
     del param
@@ -211,7 +211,7 @@ def infer(*args, **kwargs):
     Infer the `parse` type
 
     :param args: The arguments
-    :type args: ```Tuple[args]```
+    :type args: ```tuple[args]```
 
     :param kwargs: Keyword arguments
     :type kwargs: ```dict```
@@ -400,7 +400,7 @@ def get_parser(node, parse_name):
     """
     if parse_name in (None, "infer"):
         parse_name: str = infer(node)
-    parse_name = {
+    parse_name: str = {
         "class": "class_",
         "sqlalchemy_hybrid": "sqlalchemy",
         "sqlalchemy_table": "sqlalchemy",
@@ -408,4 +408,11 @@ def get_parser(node, parse_name):
     return getattr(import_module(".".join(("cdd", parse_name, "parse"))), parse_name)
 
 
-__all__ = ["get_parser", "ir_merge", "infer", "lstrip_typings", "_inspect"]
+__all__ = [
+    "_inspect",
+    "get_parser",
+    "infer",
+    "ir_merge",
+    "lstrip_typings",
+    "merge_present_params",
+]  # type: list[str]

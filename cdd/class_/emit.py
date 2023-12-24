@@ -51,7 +51,7 @@ def class_(
     :type class_bases: ```Iterable[str]```
 
     :param decorator_list: List of decorators
-    :type decorator_list: ```Optional[List[Str]]```
+    :type decorator_list: ```Optional[List[str]]```
 
     :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
     :type word_wrap: ```bool```
@@ -186,4 +186,4 @@ def class_(
     )
 
 
-__all__ = ["class_"]
+__all__ = ["class_"]  # type: list[str]

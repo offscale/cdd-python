@@ -48,4 +48,4 @@ def openapi(name_model_route_id_cruds):
     }
 
 
-__all__ = ["openapi"]
+__all__ = ["openapi"]  # type: list[str]

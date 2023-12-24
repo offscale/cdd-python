@@ -20,8 +20,8 @@ def _make_call_meth(body, return_type, param_names, docstring_format, word_wrap)
     """
     Construct a `__call__` method from the provided `body`
 
-    :param body: The body, probably from a FunctionDef.body
-    :type body: ```List[AST]```
+    :param body: The body, probably from a `FunctionDef.body`
+    :type body: ```list[AST]```
 
     :param return_type: The return type of the parent symbol (probably class). Used to fill in `__call__` return.
     :type return_type: ```Optional[str]```
@@ -105,4 +105,4 @@ def _make_call_meth(body, return_type, param_names, docstring_format, word_wrap)
     )
 
 
-__all__ = ["_make_call_meth"]
+__all__ = ["_make_call_meth"]  # type: list[str]

@@ -344,7 +344,7 @@ def doctransify_cst(cst_list, node):
     (maintaining all other existing whitespace, comments, &etc.); and only when cdd has changed them
 
     :param cst_list: List of `namedtuple`s with at least ("line_no_start", "line_no_end", "value") attributes
-    :type cst_list: ```List[NamedTuple]```
+    :type cst_list: ```list[NamedTuple]```
 
     :param node: AST node with a `.body`, probably the `ast.Module`
     :type node: ```AST```
@@ -392,4 +392,9 @@ def doctransify_cst(cst_list, node):
         #     print_ast(_node)
 
 
-__all__ = ["DocTrans", "clear_annotation", "doctransify_cst", "has_type_annotations"]
+__all__ = [
+    "DocTrans",
+    "clear_annotation",
+    "doctransify_cst",
+    "has_type_annotations",
+]  # type: list[str]

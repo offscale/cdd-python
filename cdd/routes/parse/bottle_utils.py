@@ -17,7 +17,7 @@ def get_route_meta(mod):
     :type mod: ```Module```
 
     :return: Iterator of tuples of (func_name, app_name, route_path, http_method)
-    :rtype: ```Iterator[Tuple[str, str, str, str]]```
+    :rtype: ```Iterator[tuple[str, str, str, str]]```
     """
     return map(
         lambda func: (
@@ -40,4 +40,4 @@ def get_route_meta(mod):
     )
 
 
-__all__ = ["get_route_meta"]
+__all__ = ["get_route_meta"]  # type: list[str]

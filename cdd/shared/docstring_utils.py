@@ -37,7 +37,7 @@ def emit_param_str(
     Produce the docstring param/return lines
 
     :param param: Name, dict with keys: 'typ', 'doc', 'default'
-    :type param: ```Tuple[str, dict]```
+    :type param: ```tuple[str, dict]```
 
     :param style: the style of docstring
     :type style: ```Literal['rest', 'numpydoc', 'google']```
@@ -496,7 +496,7 @@ def parse_docstring_into_header_args_footer(current_doc_str, original_doc_str):
     :type original_doc_str: ```str```
 
     :return: Header, args|returns, footer
-    :rtype: ```Tuple[Optional[str], Optional[str], Optional[str]]```
+    :rtype: ```tuple[Optional[str], Optional[str], Optional[str]]```
     """
     # if not current_doc_str and not original_doc_str: return None, None, None
 
@@ -758,5 +758,6 @@ __all__ = [
     "derive_docstring_format",
     "emit_param_str",
     "ensure_doc_args_whence_original",
+    "header_args_footer_to_str",
     "parse_docstring_into_header_args_footer",
-]
+]  # type: list[str]

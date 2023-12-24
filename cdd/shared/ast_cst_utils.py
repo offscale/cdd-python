@@ -51,13 +51,13 @@ def find_cst_at_ast(cst_list, node):
     (uses `_location` from `annotate_ancestry`)
 
     :param cst_list: List of `namedtuple`s with at least ("line_no_start", "line_no_end", "value") attributes
-    :type cst_list: ```List[NamedTuple]```
+    :type cst_list: ```list[NamedTuple]```
 
     :param node: AST node
     :type node: ```AST```
 
     :return: Matching idx and element from cst_list if found else (None, None)
-    :rtype: ```Tuple[Optional[int], Optional[NamedTuple]]````
+    :rtype: ```tuple[Optional[int], Optional[NamedTuple]]````
     """
     cst_node_found, cst_node_no = None, None
     node_type = type(node).__name__
@@ -99,7 +99,7 @@ def maybe_replace_doc_str_in_function_or_class(node, cst_idx, cst_list):
     :type cst_idx: ```int```
 
     :param cst_list: List of `namedtuple`s with at least ("line_no_start", "line_no_end", "value") attributes
-    :type cst_list: ```List[NamedTuple]```
+    :type cst_list: ```list[NamedTuple]```
 
     :return: Delta value indicating what changed (if anything)
     :rtype: ```Delta```
@@ -117,12 +117,12 @@ def maybe_replace_doc_str_in_function_or_class(node, cst_idx, cst_list):
 
     def formatted_doc_str(doc_str, is_double_q=True):
         """
-        Correctly indent, pre and post space the doc_str
+        Correctly indent, pre- and post-space the doc_str
 
         :param doc_str: Input doc string
         :type doc_str: ```str```
 
-        :param is_double_q: Whether the doc_str should be double quoted
+        :param is_double_q: Whether the doc_str should be double-quoted
         :type is_double_q: ```bool```
 
         :return: Correctly formatted `doc_str`
@@ -193,7 +193,7 @@ def maybe_replace_function_return_type(new_node, cur_ast_node, cst_idx, cst_list
     :type cst_idx: ```int```
 
     :param cst_list: List of `namedtuple`s with at least ("line_no_start", "line_no_end", "value") attributes
-    :type cst_list: ```List[NamedTuple]```
+    :type cst_list: ```list[NamedTuple]```
 
     :return: Delta value indicating what changed (if anything)
     :rtype: ```Delta```
@@ -273,7 +273,7 @@ def maybe_replace_function_args(new_node, cur_ast_node, cst_idx, cst_list):
     :type cst_idx: ```int```
 
     :param cst_list: List of `namedtuple`s with at least ("line_no_start", "line_no_end", "value") attributes
-    :type cst_list: ```List[NamedTuple]```
+    :type cst_list: ```list[NamedTuple]```
 
     :return: Delta value indicating what changed (if anything)
     :rtype: ```Delta```
@@ -360,7 +360,7 @@ def maybe_replace_function_args(new_node, cur_ast_node, cst_idx, cst_list):
 #     :type cst_idx: ```int```
 #
 #     :param cst_list: List of `namedtuple`s with at least ("line_no_start", "line_no_end", "value") attributes
-#     :type cst_list: ```List[NamedTuple]```
+#     :type cst_list: ```list[NamedTuple]```
 #
 #     :return: Delta value indicating what changed (if anything)
 #     :rtype: ```Delta```
@@ -424,4 +424,4 @@ __all__ = [
     "maybe_replace_doc_str_in_function_or_class",
     "maybe_replace_function_args",
     "maybe_replace_function_return_type",
-]
+]  # type: list[str]

@@ -21,7 +21,7 @@ def fastapi(fastapi_route):
              "summary": string
            }
         }
-    :rtype: ```Tuple[str, dict]```
+    :rtype: ```tuple[str, dict]```
     """
     method: str = fastapi_route.decorator_list[0].func.attr
     route = get_value(fastapi_route.decorator_list[0].args[0])
@@ -39,4 +39,4 @@ def fastapi(fastapi_route):
     }
 
 
-__all__ = ["fastapi"]
+__all__ = ["fastapi"]  # type: list[str]

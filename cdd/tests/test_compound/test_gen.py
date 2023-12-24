@@ -58,7 +58,7 @@ def populate_files(tempdir, input_module_str=None):
     :type input_module_str: ```Optional[str]```
 
     :return: input filename, input str, expected_output
-    :rtype: ```Tuple[str, str, str, Module]```
+    :rtype: ```tuple[str, str, str, Module]```
     """
     input_filename: str = os.path.join(tempdir, "input{extsep}py".format(extsep=extsep))
     input_class_name: str = "Foo"
@@ -68,7 +68,7 @@ def populate_files(tempdir, input_module_str=None):
         class_name=input_class_name,
     )
 
-    input_module_ast = Module(
+    input_module_ast: Module = Module(
         body=[
             input_class_ast,
             Assign(
@@ -179,7 +179,7 @@ class TestGen(TestCase):
             )
         with open(output_filename, "rt") as f:
             gen_module_str: str = f.read()
-        gen_module_ast = ast.parse(gen_module_str)
+        gen_module_ast: Module = ast.parse(gen_module_str)
         run_ast_test(
             self,
             gen_ast=next(filter(rpartial(isinstance, ClassDef), gen_module_ast.body)),
@@ -209,7 +209,7 @@ class TestGen(TestCase):
                 )
             )
         with open(output_filename, "rt") as f:
-            gen_ast = ast.parse(f.read())
+            gen_ast: Module = ast.parse(f.read())
         run_ast_test(
             self,
             gen_ast=gen_ast,
@@ -261,8 +261,8 @@ class TestGen(TestCase):
             )
 
         with open(output_filename, "rt") as f:
-            gen_ast = ast.parse(f.read())
-        gold = Module(
+            gen_ast: Module = ast.parse(f.read())
+        gold: Module = Module(
             body=[
                 import_gen_test_module_ast,
                 import_star_from_input_ast,
@@ -351,7 +351,7 @@ class TestGen(TestCase):
 
 
 unittest_main()
-# mock_class = ClassDef(
+# mock_class: ClassDef = ClassDef(
 #             name="ClassyB",
 #             bases=tuple(),
 #             decorator_list=[],

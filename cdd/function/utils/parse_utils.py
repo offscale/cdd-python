@@ -76,4 +76,4 @@ def _interpolate_return(function_def, intermediate_repr):
     return intermediate_repr
 
 
-__all__ = ["_interpolate_return"]
+__all__ = ["_interpolate_return"]  # type: list[str]

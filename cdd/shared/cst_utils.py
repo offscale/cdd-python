@@ -6,7 +6,7 @@ from collections import OrderedDict, deque, namedtuple
 from dataclasses import make_dataclass
 from functools import partial, wraps
 from keyword import kwlist
-from typing import Optional
+from typing import Optional, Union
 
 from cdd.shared.pure_utils import balanced_parentheses, is_triple_quoted, tab
 
@@ -164,7 +164,7 @@ def get_construct_name(words):
     - ClassDef
 
     :param words: Tuple of words (no whitespace)
-    :type words: ```Tuple[str]```
+    :type words: ```tuple[str]```
 
     :return: Name of construct if found else None
     :rtype: ```Optional[str]```
@@ -191,7 +191,7 @@ def cst_scanner(source):
     :type source: ```str```
 
     :return: List of scanned source code
-    :rtype: ```List[str]```
+    :rtype: ```list[str]```
     """
     scanned, stack = [], []
     for idx, ch in enumerate(source):
@@ -210,10 +210,10 @@ def cst_scan(scanned, stack):
     Add then clear stack if ready else do nothing with both
 
     :param scanned: List of statements observed
-    :type scanned: ```List[str]```
+    :type scanned: ```list[str]```
 
     :param stack: List of characters observed
-    :type stack: ```List[str]```
+    :type stack: ```list[str]```
     """
     statement = "".join(stack)
     statement_stripped = statement.strip()
@@ -250,13 +250,13 @@ def cst_scan(scanned, stack):
                 :type the_expression_str: ```str```
 
                 :param expr: The expression
-                :type expr: ```List[str]```
+                :type expr: ```list[str]```
 
                 :param scanned_tokens: Scanned tokens
-                :type scanned_tokens: ```List[str]```
+                :type scanned_tokens: ```list[str]```
 
                 :param the_stack: The current stack
-                :type the_stack: ```List[str]```
+                :type the_stack: ```list[str]```
 
                 """
                 scanned_tokens.append(the_expression_str)
@@ -315,10 +315,10 @@ def cst_parser(scanned):
     Add then clear stack if ready else do nothing with both
 
     :param scanned: List of statements observed
-    :type scanned: ```List[str]```
+    :type scanned: ```list[str]```
 
     :return: Parse of scanned statements. One dimensional.
-    :rtype: ```Tuple[NamedTuple]```
+    :rtype: ```tuple[NamedTuple]```
     """
     state = {
         "acc": 1,
@@ -338,7 +338,7 @@ def infer_cst_type(statement_stripped, words):
     :type statement_stripped: ```str```
 
     :param words: List of whitespace stripped and empty-str removed words from original statement
-    :type words: ```List[str]```
+    :type words: ```Iterable[str]```
 
     :return: CST type… a NamedTuple with at least ("line_no_start", "line_no_end", "value") attributes
     :rtype: ```NamedTuple```
@@ -489,6 +489,32 @@ def reindent_block_with_pass_body(s):
     )
 
 
+CstTypes = Union[
+    AnnAssignment,
+    Assignment,
+    AugAssignment,
+    CallStatement,
+    ClassDefinitionStart,
+    CommentStatement,
+    DictExprStatement,
+    ElifStatement,
+    ElseStatement,
+    ExprStatement,
+    FalseStatement,
+    FromStatement,
+    FunctionDefinitionStart,
+    GenExprStatement,
+    IfStatement,
+    ListCompStatement,
+    NoneStatement,
+    PassStatement,
+    ReturnStatement,
+    SetExprStatement,
+    TripleQuoted,
+    TrueStatement,
+    UnchangingLine,
+]
+
 __all__ = [
     "AnnAssignment",
     "Assignment",
@@ -496,16 +522,21 @@ __all__ = [
     "CallStatement",
     "ClassDefinitionStart",
     "CommentStatement",
+    "CstTypes",
+    "DictExprStatement",
     "ElifStatement",
     "ElseStatement",
     "ExprStatement",
     "FalseStatement",
     "FromStatement",
     "FunctionDefinitionStart",
+    "GenExprStatement",
     "IfStatement",
+    "ListCompStatement",
     "NoneStatement",
     "PassStatement",
     "ReturnStatement",
+    "SetExprStatement",
     "TripleQuoted",
     "TrueStatement",
     "UnchangingLine",
@@ -515,4 +546,4 @@ __all__ = [
     "infer_cst_type",
     "kwset",
     "reindent_block_with_pass_body",
-]
+]  # type: list[str]

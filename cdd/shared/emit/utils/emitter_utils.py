@@ -88,7 +88,7 @@ def ast_parse_fix(s):
 
 def get_emitter(emit_name):
     """
-    Get emiter function specialised for output `node`
+    Get emitter function specialised for output `node`
 
     :param emit_name: Which type to emit.
     :type emit_name: ```Literal["argparse", "class", "function", "json_schema",
@@ -119,4 +119,4 @@ __all__ = [
     "get_internal_body",
     "get_emitter"
     # "normalise_intermediate_representation",
-]
+]  # type: list[str]

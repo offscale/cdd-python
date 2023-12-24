@@ -126,7 +126,7 @@ class TestParserUtils(TestCase):
 
     def test_infer_argparse_ast(self) -> None:
         """
-        Test `infer` can figure out the right parser name when its expected to be `argparse_ast`
+        Test `infer` can figure out the right parser name when It's expected to be `argparse_ast`
         """
         self.assertEqual(
             cdd.shared.parse.utils.parser_utils.infer(argparse_func_ast), "argparse_ast"
@@ -134,7 +134,7 @@ class TestParserUtils(TestCase):
 
     def test_infer_memory_argparse_ast(self) -> None:
         """
-        Test `infer` can figure out the right parser name when its expected to be `argparse_ast`
+        Test `infer` can figure out the right parser name when It's expected to be `argparse_ast`
         """
         set_cli_args = getattr(
             inspectable_compile(argparse_func_str),
@@ -146,7 +146,7 @@ class TestParserUtils(TestCase):
 
     def test_infer_docstring(self) -> None:
         """
-        Test `infer` can figure out the right parser name when its expected to be `docstring`
+        Test `infer` can figure out the right parser name when it's expected to be `docstring`
         """
         self.assertEqual(cdd.shared.parse.utils.parser_utils.infer(""), "docstring")
         self.assertEqual(
@@ -155,13 +155,13 @@ class TestParserUtils(TestCase):
 
     def test_infer_class(self) -> None:
         """
-        Test `infer` can figure out the right parser name when its expected to be `class_`
+        Test `infer` can figure out the right parser name when it's expected to be `class_`
         """
         self.assertEqual(cdd.shared.parse.utils.parser_utils.infer(class_ast), "class_")
 
     def test_infer_memory_class(self) -> None:
         """
-        Test `infer` can figure out the right parser name when its expected to be `class_`
+        Test `infer` can figure out the right parser name when it's expected to be `class_`
         """
         set_cli_args = getattr(
             inspectable_compile(imports_header + class_str),
@@ -173,7 +173,7 @@ class TestParserUtils(TestCase):
 
     def test_infer_function(self) -> None:
         """
-        Test `infer` can figure out the right parser name when its expected to be `function`
+        Test `infer` can figure out the right parser name when it's expected to be `function`
         """
         self.assertEqual(
             cdd.shared.parse.utils.parser_utils.infer(
@@ -184,7 +184,7 @@ class TestParserUtils(TestCase):
 
     def test_infer_memory_function(self) -> None:
         """
-        Test `infer` can figure out the right parser name when its expected to be `function`
+        Test `infer` can figure out the right parser name when it's expected to be `function`
         """
         call_cliff = getattr(
             inspectable_compile(
@@ -200,7 +200,7 @@ class TestParserUtils(TestCase):
 
     def test_infer_sqlalchemy_table(self) -> None:
         """
-        Test `infer` can figure out the right parser name when its expected to be `sqlalchemy_table`
+        Test `infer` can figure out the right parser name when it's expected to be `sqlalchemy_table`
         """
         self.assertEqual(
             cdd.shared.parse.utils.parser_utils.infer(config_tbl_with_comments_ast),
@@ -209,7 +209,7 @@ class TestParserUtils(TestCase):
 
     # def test_infer_memory_sqlalchemy_table(self) -> None:
     #     """
-    #     Test `infer` can figure out the right parser name when its expected to be `sqlalchemy_table`
+    #     Test `infer` can figure out the right parser name when it's expected to be `sqlalchemy_table`
     #     """
     #     config_tbl = getattr(
     #         inspectable_compile("\n".join((
@@ -222,7 +222,7 @@ class TestParserUtils(TestCase):
 
     def test_infer_sqlalchemy(self) -> None:
         """
-        Test `infer` can figure out the right parser name when its expected to be `sqlalchemy`
+        Test `infer` can figure out the right parser name when it's expected to be `sqlalchemy`
         """
         self.assertEqual(
             cdd.shared.parse.utils.parser_utils.infer(config_decl_base_ast),
@@ -231,7 +231,7 @@ class TestParserUtils(TestCase):
 
     def test_infer_memory_sqlalchemy(self) -> None:
         """
-        Test `infer` can figure out the right parser name when its expected to be `sqlalchemy`
+        Test `infer` can figure out the right parser name when it's expected to be `sqlalchemy`
         """
         Config = getattr(
             inspectable_compile(

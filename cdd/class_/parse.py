@@ -383,4 +383,4 @@ def _merge_inner_function(
     return intermediate_repr
 
 
-__all__ = ["class_"]
+__all__ = ["class_"]  # type: list[str]

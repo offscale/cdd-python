@@ -36,7 +36,7 @@ class TestParseDocstring(TestCase):
 
     def test_from_docstring_docstring_reduction_v2_str(self) -> None:
         """
-        Test that the nonmatching docstring doesn't fill out params
+        Test that the non-matching docstring doesn't fill out params
         """
         ir: IntermediateRepr = cdd.docstring.parse.docstring(docstring_reduction_v2_str)
         self.assertEqual(ir["params"], OrderedDict())

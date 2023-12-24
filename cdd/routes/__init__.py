@@ -1,3 +1,3 @@
 """
-Routes for parsing/emitting. Currently Bottle, and aimed for OpenAPI.
+Routes for parsing/emitting. Currently, Bottle, and aimed for OpenAPI.
 """

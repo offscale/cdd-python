@@ -13,7 +13,7 @@ import cdd.function.parse
 import cdd.json_schema.parse
 from cdd.shared.ast_utils import get_value
 from cdd.shared.pure_utils import PY_GTE_3_8, paren_wrap_code
-from cdd.shared.types import IntermediateRepr
+from cdd.shared.types import IntermediateRepr, Internal
 from cdd.tests.mocks.ir import (
     function_adder_ir,
     function_google_tf_ops_losses__safe_mean_ir,
@@ -108,8 +108,8 @@ class TestParseFunction(TestCase):
             """
             the foo function
 
-            :param a: the a value
-            :param b: the b value
+            :param a: the `a` value
+            :param b: the `b` value
 
             """
 
@@ -124,8 +124,8 @@ class TestParseFunction(TestCase):
                 "name": "TestParseFunction.test_from_function_in_memory.<locals>.foo",
                 "params": OrderedDict(
                     (
-                        ("a", {"default": 5, "doc": "the a value", "typ": "int"}),
-                        ("b", {"default": 6, "doc": "the b value", "typ": "int"}),
+                        ("a", {"default": 5, "doc": "the `a` value", "typ": "int"}),
+                        ("b", {"default": 6, "doc": "the `b` value", "typ": "int"}),
                     )
                 ),
                 "returns": None,
@@ -228,9 +228,9 @@ class TestParseFunction(TestCase):
         ir: IntermediateRepr = cdd.function.parse.function(
             function_google_tf_ops_losses__safe_mean_ast
         )
-        _internal = ir.pop("_internal")
-        for key in "original_doc_str", "body":
-            del _internal[key]
+        _internal: Internal = ir.pop("_internal")
+        del _internal["body"]
+        del _internal["original_doc_str"]
         self.assertDictEqual(
             _internal, {"from_name": "_safe_mean", "from_type": "static"}
         )

@@ -1,8 +1,8 @@
 """
 Tests for the utils that is used by the SQLalchemy parsers
 """
-from _ast import ClassDef
-from ast import keyword
+
+from ast import ClassDef, keyword
 from copy import deepcopy
 from unittest import TestCase
 

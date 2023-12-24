@@ -11,13 +11,13 @@ def extract_entities(openapi_str):
     :type openapi_str: ```str```
 
     :return: Entities
-    :rtype: ```List[str]```
+    :rtype: ```list[str]```
     """
     entities, ticks, space, stack = [], 0, 0, []
 
     def add_then_clear_stack():
         """
-        Join entity, if non empty add to entities. Clear stack.
+        Join entity, if non-empty add to entities. Clear stack.
         """
         entity = "".join(stack)
         if entity:
@@ -41,4 +41,4 @@ def extract_entities(openapi_str):
     return entities
 
 
-__all__ = ["extract_entities"]
+__all__ = ["extract_entities"]  # type: list[str]

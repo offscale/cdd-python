@@ -55,4 +55,4 @@ def openapi(openapi_str, routes_dict, summary):
     return openapi_d
 
 
-__all__ = ["openapi"]
+__all__ = ["openapi"]  # type: list[str]
