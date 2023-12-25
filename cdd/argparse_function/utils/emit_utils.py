@@ -4,7 +4,7 @@ Utility functions for `cdd.emit.argparse_function`
 
 import ast
 from ast import Name, Return
-from typing import Any
+from typing import Any, Callable, Dict, Optional, Union, cast
 
 from cdd.shared.ast_utils import NoneStr, get_value, set_value
 from cdd.shared.defaults_utils import extract_default, set_default_doc
@@ -45,9 +45,9 @@ def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
 
     typ: str = intermediate_repr["returns"]["return_type"]["typ"]
     if "[" in intermediate_repr["returns"]["return_type"]["typ"]:
-        typ = to_code(get_value(ast.parse(typ).body[0].value.slice).elts[1]).rstrip(
-            "\n"
-        )
+        typ: str = to_code(
+            get_value(ast.parse(typ).body[0].value.slice).elts[1]
+        ).rstrip("\n")
 
     return set_default_doc(
         (
@@ -90,7 +90,7 @@ def parse_out_param(expr, require_default=False, emit_default_doc=True):
     :rtype: ```tuple[str, dict]```
     """
     # print("require_default:", require_default, ";")
-    required = get_value(
+    required: bool = get_value(
         get_value(
             next(
                 (
@@ -103,7 +103,7 @@ def parse_out_param(expr, require_default=False, emit_default_doc=True):
         )
     )
 
-    typ = next(
+    typ: str = next(
         (
             _handle_value(get_value(key_word))
             for key_word in expr.value.keywords
@@ -112,7 +112,7 @@ def parse_out_param(expr, require_default=False, emit_default_doc=True):
         "str",
     )
     name: str = get_value(expr.value.args[0])[len("--") :]
-    default = next(
+    default: Optional[Any] = next(
         (
             get_value(key_word.value)
             for key_word in expr.value.keywords
@@ -120,7 +120,7 @@ def parse_out_param(expr, require_default=False, emit_default_doc=True):
         ),
         None,
     )
-    doc = (
+    doc: Optional[str] = (
         lambda help_: help_
         if help_ is None
         else (
@@ -152,12 +152,16 @@ def parse_out_param(expr, require_default=False, emit_default_doc=True):
             # if name.endswith("kwargs"):
             #    default = NoneStr
             # else:
-            default = simple_types[typ] if typ in simple_types else NoneStr
+            default: Optional[
+                Dict[Optional[str], Union[int, float, complex, str, bool, None]]
+            ] = (simple_types[typ] if typ in simple_types else NoneStr)
 
         elif require_default:  # or typ.startswith("Optional"):
-            default = NoneStr
+            default: Optional[
+                Dict[Optional[str], Union[int, float, complex, str, bool, None]]
+            ] = NoneStr
 
-    action = next(
+    action: Optional[Any] = next(
         (
             get_value(key_word.value)
             for key_word in expr.value.keywords
@@ -166,7 +170,7 @@ def parse_out_param(expr, require_default=False, emit_default_doc=True):
         None,
     )
 
-    typ = next(
+    typ: Optional[Any] = next(
         (
             _handle_keyword(keyword, typ)
             for keyword in expr.value.keywords
@@ -175,10 +179,10 @@ def parse_out_param(expr, require_default=False, emit_default_doc=True):
         typ,
     )
     if action == "append":
-        typ = "List[{typ}]".format(typ=typ)
+        typ: str = "List[{typ}]".format(typ=typ)
 
     if not required and "Optional" not in typ:
-        typ = "Optional[{typ}]".format(typ=typ)
+        typ: str = "Optional[{typ}]".format(typ=typ)
 
     return name, dict(
         doc=doc, typ=typ, **({} if default is None else {"default": default})
@@ -198,9 +202,9 @@ def _handle_keyword(keyword, typ):
     :return: string representation of type
     :rtype: ```str```
     """
-    quote_f = identity
+    quote_f: Callable[[str], str] = cast(Callable[[str], str], identity)
 
-    type_ = "Union"
+    type_: str = "Union"
     if typ == Any or typ in simple_types:
         if typ in ("str", Any):
 
@@ -216,7 +220,7 @@ def _handle_keyword(keyword, typ):
                 """
                 return "'{}'".format(s)
 
-        type_ = "Literal"
+        type_: str = "Literal"
 
     return "{type}[{types}]".format(
         type=type_,

@@ -51,7 +51,7 @@ def components_paths_from_name_model_route_id_crud(
                          Literal['D', 'C', 'R'], Literal['D', 'C', 'U'], Literal['D', 'R', 'C'],
                          Literal['D', 'R', 'U'], Literal['D', 'U', 'C'], Literal['D', 'U', 'R']]```
     """
-    _request_body = False
+    _request_body: bool = False
     if "C" in crud:
         paths[route] = {
             "post": {
@@ -84,9 +84,9 @@ def components_paths_from_name_model_route_id_crud(
                 },
             }
         }
-        _request_body = True
+        _request_body: bool = True
     if not frozenset(crud) - frozenset("CRUD"):
-        _route = "{route}/{{{id}}}".format(route=route, id=_id)
+        _route: str = "{route}/{{{id}}}".format(route=route, id=_id)
         paths[_route] = {
             "parameters": [
                 {

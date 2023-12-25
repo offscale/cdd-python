@@ -274,4 +274,4 @@ def argparse_function(
     )
 
 
-__all__ = ["argparse_function"]
+__all__ = ["argparse_function"]  # type: list[str]

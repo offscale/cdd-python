@@ -19,7 +19,7 @@ class TestCli(TestCase):
 
     def test_build_parser(self) -> None:
         """Test that `_build_parser` produces a parser object"""
-        parser = _build_parser()
+        parser: ArgumentParser = _build_parser()
         self.assertIsInstance(parser, ArgumentParser)
         self.assertEqual(parser.description, __description__)
 
@@ -36,9 +36,9 @@ class TestCli(TestCase):
     def test_name_main(self) -> None:
         """Test the `if __name__ == '__main___'` block"""
 
-        argparse_mock = MagicMock()
+        argparse_mock: MagicMock = MagicMock()
 
-        loader = SourceFileLoader(
+        loader: SourceFileLoader = SourceFileLoader(
             "__main__",
             os.path.join(
                 os.path.dirname(os.path.dirname(os.path.dirname(__file__))),

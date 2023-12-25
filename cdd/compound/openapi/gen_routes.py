@@ -4,9 +4,11 @@ Generate routes
 
 import ast
 from ast import Attribute, Call, ClassDef, FunctionDef, Module, Name
+from collections.abc import dict_keys
 from itertools import chain
 from operator import attrgetter, itemgetter
 from os import path
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import cdd.routes.emit.bottle
 import cdd.sqlalchemy.parse
@@ -50,18 +52,20 @@ def gen_routes(app, model_path, model_name, crud, route):
     :return: Iterator of functions representing relevant CRUD operations
     :rtype: ```Iterator[FunctionDef]```
     """
-    model_path = filename_from_mod_or_filename(model_path)
+    model_path: str = filename_from_mod_or_filename(model_path)
 
     assert path.isfile(model_path)
     with open(model_path, "rt") as f:
         mod: Module = ast.parse(f.read())
 
-    sqlalchemy_node = next(
+    sqlalchemy_node: Optional[ClassDef] = next(
         filter(
             lambda node: isinstance(node, ClassDef)
-            and node.name == model_name
-            or isinstance(node, Name)
-            and node.id == model_name,
+            and (
+                node.name == model_name
+                or isinstance(node.name, Name)
+                and node.name.id == model_name
+            ),
             ast.walk(mod),
         ),
         None,
@@ -69,7 +73,7 @@ def gen_routes(app, model_path, model_name, crud, route):
     sqlalchemy_ir: IntermediateRepr = cdd.sqlalchemy.parse.sqlalchemy(
         Module(body=[sqlalchemy_node], stmt=None, type_ignores=[])
     )
-    primary_key = next(
+    primary_key: str = next(
         map(
             itemgetter(0),
             filter(
@@ -79,13 +83,18 @@ def gen_routes(app, model_path, model_name, crud, route):
         ),
         next(iter(sqlalchemy_ir["params"].keys())),
     )
-    _route_config = {"app": app, "name": model_name, "route": route, "variant": -1}
-    routes = []
+    _route_config: dict[str, Union[str, int]] = {
+        "app": app,
+        "name": model_name,
+        "route": route,
+        "variant": -1,
+    }
+    routes: List[str] = []
     if "C" in crud:
         routes.append(cdd.routes.emit.bottle.create(**_route_config))
     _route_config["primary_key"] = primary_key
 
-    funcs = {
+    funcs: dict[str, Optional[Callable[[str, str, str, Any, int], str]]] = {
         "R": cdd.routes.emit.bottle.read,
         "U": None,
         "D": cdd.routes.emit.bottle.destroy,
@@ -116,7 +125,7 @@ def upsert_routes(app, routes, routes_path, route, primary_key):
     :param routes_path: The path/module-resolution whence the routes are / will be
     :type routes_path: ```str```
     """
-    routes_path = filename_from_mod_or_filename(routes_path)
+    routes_path: str = filename_from_mod_or_filename(routes_path)
 
     if not path.isfile(routes_path):
         with open(routes_path, "wt") as f:
@@ -172,8 +181,8 @@ def upsert_routes(app, routes, routes_path, route, primary_key):
             )
         )
 
-    routes_required = get_names(routes)
-    routes_existing = get_names(
+    routes_required: Dict[str, FunctionDef] = get_names(routes)
+    routes_existing: Dict[str, FunctionDef] = get_names(
         filter(
             lambda node: any(
                 filter(
@@ -197,7 +206,7 @@ def upsert_routes(app, routes, routes_path, route, primary_key):
             filter(rpartial(isinstance, FunctionDef), ast.walk(mod)),
         )
     )
-    missing_routes = (
+    missing_routes: dict_keys[str, str] = (
         routes_required.keys() & routes_existing.keys() ^ routes_required.keys()
     )
 

@@ -1,6 +1,8 @@
 """ Exmod utils """
 
 import ast
+import sys
+from _ast import AST
 from ast import Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias
 from collections import OrderedDict, defaultdict, deque
 from functools import partial
@@ -8,8 +10,7 @@ from inspect import getfile, ismodule
 from itertools import chain
 from operator import attrgetter, eq
 from os import environ, extsep, makedirs, path
-from sys import stdout
-from typing import Optional
+from typing import Any, Dict, Optional, TextIO, cast
 
 import cdd.argparse_function.emit
 import cdd.class_
@@ -34,7 +35,7 @@ from cdd.shared.pure_utils import (
 from cdd.shared.source_transformer import ast_parse
 from cdd.tests.mocks import imports_header_ast
 
-EXMOD_OUT_STREAM = environ.get("EXMOD_OUT_STREAM", stdout)
+EXMOD_OUT_STREAM: TextIO = getattr(sys, environ.get("EXMOD_OUT_STREAM", "stdout"))
 
 
 def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
@@ -83,8 +84,8 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
                 ),
             ),
             iter(()),
-        )
-        mod_to_symbol = defaultdict(list)
+        )  # type: Union[list[str], Iterator]
+        mod_to_symbol: defaultdict[Any, list] = defaultdict(list)
         deque(
             (
                 mod_to_symbol[import_from.module].append(name.name)
@@ -98,7 +99,7 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
             ),
             maxlen=0,
         )
-        res = {
+        res: Dict[str, AST] = {
             "{module_name}.{submodule_name}.{node_name}".format(
                 module_name=module_name,
                 submodule_name=submodule_name,
@@ -162,11 +163,11 @@ def _process_module_contents(_result, current_module, module_root_dir, name, sym
     :param symbol: Symbol—second value—from `dir(module)`
     :type symbol: ```type```
     """
-    fq = "{current_module}.{name}".format(current_module=current_module, name=name)
+    fq: str = "{current_module}.{name}".format(current_module=current_module, name=name)
     try:
-        symbol_location = getfile(symbol)
+        symbol_location: Optional[str] = getfile(symbol)
     except TypeError:
-        symbol_location = None
+        symbol_location: Optional[str] = None
     if symbol_location is not None and symbol_location.startswith(module_root_dir):
         if isinstance(symbol, type):
             _result[fq] = symbol
@@ -231,15 +232,17 @@ def emit_file_on_hierarchy(
     original_relative_filename_path, ir = name_orig_ir[1], name_orig_ir[2]
     assert original_relative_filename_path
 
-    relative_filename_path = original_relative_filename_path
-    module_name_as_path = module_name.replace(".", path.sep)
-    new_module_name_as_path = new_module_name.replace(".", path.sep)
+    relative_filename_path: str = original_relative_filename_path
+    module_name_as_path: str = module_name.replace(".", path.sep)
+    new_module_name_as_path: str = new_module_name.replace(".", path.sep)
     if relative_filename_path.startswith(module_name_as_path + path.sep):
-        relative_filename_path = relative_filename_path[len(new_module_name_as_path) :]
+        relative_filename_path: str = relative_filename_path[
+            len(new_module_name_as_path) :
+        ]
     if not name and ir.get("name") is not None:
         name: Optional[str] = ir.get("name")
 
-    output_dir_is_module = output_directory.replace(path.sep, ".").endswith(
+    output_dir_is_module: bool = output_directory.replace(path.sep, ".").endswith(
         new_module_name
     )
     mod_path: str = path.join(
@@ -290,15 +293,16 @@ def emit_file_on_hierarchy(
             ),
         )
     )
-    isfile_emit_filename = symbol_in_file = path.isfile(emit_filename)
+    symbol_in_file: bool = path.isfile(emit_filename)
+    isfile_emit_filename: bool = symbol_in_file
     existent_mod: Optional[Module] = None
     if isfile_emit_filename:
         with open(emit_filename, "rt") as f:
-            emit_filename_contents = f.read()
+            emit_filename_contents: str = f.read()
         existent_mod: Module = ast.parse(
             emit_filename_contents
         )  # Also, useful as this catches syntax errors
-        symbol_in_file = any(
+        symbol_in_file: bool = any(
             filter(
                 partial(eq, name),
                 map(
@@ -481,7 +485,10 @@ def _emit_symbol(
             type_ignores=[],
         )
     if isfile_emit_filename:
-        gen_node = cdd.shared.ast_utils.merge_modules(existent_mod, gen_node)
+        if existent_mod is not None:
+            gen_node: Module = cdd.shared.ast_utils.merge_modules(
+                cast(Module, existent_mod), gen_node
+            )
         cdd.shared.ast_utils.merge_assignment_lists(gen_node, "__all__")
     if dry_run:
         print(

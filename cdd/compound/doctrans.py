@@ -1,7 +1,7 @@
 """
 Helper to traverse the AST of the input file, extract the docstring out, parse and format to intended style, and emit
 """
-
+from _ast import Module
 from ast import fix_missing_locations
 from copy import deepcopy
 from operator import attrgetter
@@ -30,11 +30,11 @@ def doctrans(filename, docstring_format, type_annotations, no_word_wrap):
     :type no_word_wrap: ```Optional[Literal[True]]```
     """
     with open(filename, "rt") as f:
-        original_source = f.read()
-    node = ast_parse(original_source, skip_docstring_remit=False)
-    original_module = deepcopy(node)
+        original_source: str = f.read()
+    node: Module = ast_parse(original_source, skip_docstring_remit=False)
+    original_module: Module = deepcopy(node)
 
-    node = fix_missing_locations(
+    node: Module = fix_missing_locations(
         DocTrans(
             docstring_format=docstring_format,
             word_wrap=no_word_wrap is None,

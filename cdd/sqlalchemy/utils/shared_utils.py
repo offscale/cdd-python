@@ -173,8 +173,9 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
 
 # TODO: Finish writing these types
 OpenAPI_info = TypedDict("OpenAPI_info", {"title": str, "version": str})
+OpenAPI_requestBodies = dict
 OpenAPI_components = TypedDict(
-    "OpenAPI_components", {"requestBodies": dict, "schemas": dict}
+    "OpenAPI_components", {"requestBodies": OpenAPI_requestBodies, "schemas": dict}
 )
 JSON_ref = TypedDict("JSON_ref", {"$ref": str, "required": bool})
 OpenAPI_paths = dict

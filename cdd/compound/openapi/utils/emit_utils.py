@@ -33,7 +33,7 @@ from json import dumps
 from operator import attrgetter, eq, methodcaller
 from os import path
 from platform import system
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 import cdd.sqlalchemy.utils.shared_utils
 from cdd.shared.ast_utils import (
@@ -51,6 +51,7 @@ from cdd.shared.pure_utils import (
     tab,
 )
 from cdd.shared.source_transformer import to_code
+from cdd.shared.types import ParamVal
 from cdd.sqlalchemy.utils.parse_utils import (
     column_type2typ,
     get_pk_and_type,
@@ -88,25 +89,27 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
     if include_name:
         args.append(set_value(name))
 
-    x_typ_sql = _param.get("x_typ", {}).get("sql", {})
+    x_typ_sql = _param.get("x_typ", {}).get("sql", {})  # type: dict
 
     if "typ" in _param:
-        nullable = cdd.sqlalchemy.utils.shared_utils.update_args_infer_typ_sqlalchemy(
-            _param, args, name, nullable, x_typ_sql
+        nullable: bool = (
+            cdd.sqlalchemy.utils.shared_utils.update_args_infer_typ_sqlalchemy(
+                _param, args, name, nullable, x_typ_sql
+            )
         )
 
     default = x_typ_sql.get("default", _param.get("default", ast))
-    has_default = default is not ast
-    pk = _param.get("doc", "").startswith("[PK]")
-    fk = _param.get("doc", "").startswith("[FK")
+    has_default: bool = default is not ast
+    pk: bool = _param.get("doc", "").startswith("[PK]")
+    fk: bool = _param.get("doc", "").startswith("[FK")
     if pk:
         _param["doc"] = _param["doc"][4:].lstrip()
         keywords.append(
             ast.keyword(arg="primary_key", value=set_value(True), identifier=None),
         )
     elif fk:
-        end = _param["doc"].find("]") + 1
-        fk_val = _param["doc"][len("[FK(") : end - len(")]")]
+        end: int = _param["doc"].find("]") + 1
+        fk_val: str = _param["doc"][len("[FK(") : end - len(")]")]
         _param["doc"] = _param["doc"][end:].lstrip()
         args.append(
             Call(
@@ -116,9 +119,9 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
             )
         )
     elif has_default and default not in none_types:
-        nullable = False
+        nullable: bool = False
 
-    rstripped_dot_doc = _param.get("doc", "").rstrip(".")
+    rstripped_dot_doc: str = _param.get("doc", "").rstrip(".")
     doc_added_at: Optional[int] = None
     if rstripped_dot_doc:
         doc_added_at: int = len(keywords)
@@ -195,7 +198,7 @@ def generate_repr_method(params, cls_name, docstring_format):
     :return: `__repr__` method
     :rtype: ```FunctionDef```
     """
-    keys = tuple(params.keys())
+    keys = tuple(params.keys())  # type: tuple[str, ...]
     return FunctionDef(
         name="__repr__",
         args=arguments(
@@ -280,7 +283,7 @@ def generate_create_from_attr_staticmethod(params, cls_name, docstring_format):
     :return: `__repr__` method
     :rtype: ```FunctionDef```
     """
-    keys = tuple(params.keys())
+    keys = tuple(params.keys())  # type: tuple[str, ...]
     return FunctionDef(
         name="create_from_attr",
         args=arguments(
@@ -399,7 +402,7 @@ def ensure_has_primary_key(intermediate_repr, force_pk_id=False):
         })
     :rtype: ```dict```
     """
-    params = (
+    params: OrderedDict[str, ParamVal] = (
         intermediate_repr
         if isinstance(intermediate_repr, OrderedDict)
         else intermediate_repr["params"]
@@ -413,7 +416,7 @@ def ensure_has_primary_key(intermediate_repr, force_pk_id=False):
             ),
         )
     ):
-        candidate_pks = []
+        candidate_pks: List[str] = []
         deque(
             map(
                 candidate_pks.append,
@@ -607,7 +610,7 @@ def update_fk_for_file(filename):
         )
         return sqlalchemy_class_def
 
-    symbol2module = dict(
+    symbol2module: Dict[str, Any] = dict(
         chain.from_iterable(
             map(
                 lambda import_from: map(
@@ -704,14 +707,14 @@ def rewrite_fk(symbol_to_module, column_assign):
                 "rt",
             ) as f:
                 mod: Module = ast.parse(f.read())
-            matching_class = next(
+            matching_class: ClassDef = next(
                 filter(
                     lambda node: isinstance(node, ClassDef)
                     and node.name == column_name.id,
                     mod.body,
                 )
             )
-            pk_typ = get_pk_and_type(matching_class)
+            pk_typ = get_pk_and_type(matching_class)  # type: tuple[str, str]
             assert pk_typ is not None
             pk, typ = pk_typ
             del pk_typ
@@ -754,7 +757,7 @@ def sqlalchemy_class_to_table(class_def, parse_original_whitespace):
     )
 
     # Hybrid SQLalchemy class/table handler
-    table_dunder = next(
+    table_dunder: Optional[Call] = next(
         filter(
             lambda assign: any(
                 filter(
@@ -771,7 +774,7 @@ def sqlalchemy_class_to_table(class_def, parse_original_whitespace):
 
     # Parse into the same format that `sqlalchemy_table` can read, then return with a call to it
 
-    name = get_value(
+    name: str = get_value(
         next(
             filter(
                 lambda assign: any(
@@ -898,7 +901,7 @@ def sqlalchemy_table_to_class(table_expr_ass):
     )
 
 
-typ2column_type = {v: k for k, v in column_type2typ.items()}
+typ2column_type: Dict[str, str] = {v: k for k, v in column_type2typ.items()}
 typ2column_type.update(
     {
         "bool": "Boolean",

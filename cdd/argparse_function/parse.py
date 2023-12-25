@@ -1,13 +1,13 @@
 """
 Argparse function parser
 """
-
+from _ast import Call
 from ast import Assign, FunctionDef, Return, Tuple, get_docstring
 from collections import OrderedDict
 from functools import partial
 from itertools import filterfalse
 from operator import setitem
-from typing import Optional
+from typing import List, Optional, cast
 
 from cdd.argparse_function.utils.emit_utils import _parse_return, parse_out_param
 from cdd.shared.ast_utils import (
@@ -82,7 +82,9 @@ def argparse_ast(
     require_default = False
 
     # Parse all relevant nodes from function body
-    body = function_def.body if doc_string is None else function_def.body[1:]
+    body: FunctionDef.body = (
+        function_def.body if doc_string is None else function_def.body[1:]
+    )
     for node in body:
         if is_argparse_add_argument(node):
             name, _param = parse_out_param(
@@ -95,7 +97,7 @@ def argparse_ast(
                 else partial(setitem, intermediate_repr["params"], name)
             )(_param)
             if not require_default and _param.get("default") is not None:
-                require_default = True
+                require_default: bool = True
         elif isinstance(node, Assign) and is_argparse_description(node):
             intermediate_repr["doc"] = get_value(node.value)
         elif isinstance(node, Return) and isinstance(node.value, Tuple):
@@ -110,11 +112,14 @@ def argparse_ast(
                 )
             )
 
-    inner_body = list(
-        filterfalse(
-            is_argparse_description,
-            filterfalse(is_argparse_add_argument, body),
-        )
+    inner_body: List[Call] = cast(
+        List[Call],
+        list(
+            filterfalse(
+                is_argparse_description,
+                filterfalse(is_argparse_add_argument, body),
+            )
+        ),
     )
     if inner_body:
         intermediate_repr["_internal"] = {
@@ -129,4 +134,4 @@ def argparse_ast(
     return intermediate_repr
 
 
-__all__ = ["argparse_ast"]
+__all__ = ["argparse_ast"]  # type: list[str]

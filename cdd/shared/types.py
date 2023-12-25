@@ -1,8 +1,7 @@
 """
 Shared types
 """
-
-from ast import AnnAssign, Assign
+from _ast import AST
 
 from cdd.shared.pure_utils import PY_GTE_3_8, PY_GTE_3_9, PY_GTE_3_11
 
@@ -11,22 +10,14 @@ if PY_GTE_3_8:
         from collections import OrderedDict
     else:
         from typing import OrderedDict
-    from typing import Any, List, Optional, TypedDict, Union
+    from typing import Any, List, Optional, TypedDict
 
     if PY_GTE_3_11:
         from typing import Required
     else:
         from typing_extensions import Required
 else:
-    from typing_extensions import (
-        Any,
-        List,
-        Optional,
-        OrderedDict,
-        Required,
-        TypedDict,
-        Union,
-    )
+    from typing_extensions import Any, List, Optional, OrderedDict, Required, TypedDict
 
 
 # class Parse(Protocol):
@@ -43,8 +34,8 @@ Internal = TypedDict(
     "Internal",
     {
         "original_doc_str": Optional[str],
-        "body": List[Union[AnnAssign, Assign]],
-        "from_name": str,
+        "body": List[AST],
+        "from_name": Optional[str],
         "from_type": str,
     },
     total=False,

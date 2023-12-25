@@ -18,6 +18,7 @@ from cdd.routes.parse.bottle_utils import get_route_meta
 from cdd.shared.ast_utils import get_value
 from cdd.shared.parse.utils.parser_utils import infer
 from cdd.shared.pure_utils import rpartial, update_d
+from cdd.sqlalchemy.utils.shared_utils import OpenAPI_requestBodies
 from cdd.tests.mocks.json_schema import server_error_schema
 
 
@@ -37,7 +38,7 @@ def openapi_bulk(app_name, model_paths, routes_paths):
     :return: OpenAPI dictionary
     :rtype: ```dict```
     """
-    request_bodies = {}
+    request_bodies: OpenAPI_requestBodies = {}
 
     def parse_model(filename):
         """

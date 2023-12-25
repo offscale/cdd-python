@@ -19,7 +19,7 @@ def extract_entities(openapi_str):
         """
         Join entity, if non-empty add to entities. Clear stack.
         """
-        entity = "".join(stack)
+        entity: str = "".join(stack)
         if entity:
             entities.append(entity)
         stack.clear()

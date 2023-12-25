@@ -32,7 +32,7 @@ simple_types: Dict[Optional[str], Union[int, float, complex, str, bool, None]] =
     "bool": False,
     None: None,
 }
-type_to_name = {
+type_to_name: Dict[str, str] = {
     "Int": "int",
     "int": "int",
     "Float": "float",
@@ -45,8 +45,8 @@ type_to_name = {
     "None": "None",
 }
 
-line_length = environ.get("DOCTRANS_LINE_LENGTH", 100)
-fill = partial(_fill, width=line_length)
+line_length: int = int(environ.get("DOCTRANS_LINE_LENGTH", 100))
+fill: Callable[[str], str] = partial(_fill, width=line_length)
 
 
 def read_file_to_str(filename, mode="rt"):
@@ -297,7 +297,7 @@ def deindent(s, level=None, sep=tab):
     :rtype: ```AnyStr```
     """
     if level is None:
-        process_line = str.lstrip
+        process_line: Callable[[str], str] = str.lstrip
     else:
         sep *= level
 
@@ -475,7 +475,12 @@ def quote(s, mark='"'):
     :return: Quoted string or input (if input is not str)
     :rtype: ```Union[str, float, complex, int, None]```
     """
-    very_simple_types = type(None), int, float, complex
+    very_simple_types = (
+        type(None),
+        int,
+        float,
+        complex,
+    )  # type: tuple[Type[None], Type[int], Type[float], Type[complex]]
     s: str = (
         s
         if isinstance(s, (str, *very_simple_types))
@@ -583,7 +588,7 @@ def update_d(d, arg=None, **kwargs):
     :rtype: ```dict```
     """
     if arg:
-        d.update(arg)
+        d.update(typing.cast(dict, arg))
     if kwargs:
         d.update(kwargs)
     return d
@@ -616,7 +621,7 @@ def diff(input_obj, op):
     :type input_obj: ```Any```
 
     :param op: The operation to run
-    :type op: ```Callable[[Any], Any]```
+    :type op: ```Callable[[Any], Sized]```
 
     :return: length of difference, response of operated input
     :rtype: ```tuple[int, Any]```
@@ -624,13 +629,13 @@ def diff(input_obj, op):
     input_len: int = len(
         input_obj
     )  # Separate line and binding, as `op` could mutate the `input`
-    result = op(input_obj)
+    result: typing.Sized = op(input_obj)
     return input_len - len(result), result
 
 
-strip_diff = partial(diff, op=str.strip)
-lstrip_diff = partial(diff, op=str.lstrip)
-rstrip_diff = partial(diff, op=str.rstrip)
+strip_diff: Callable[[str], tuple[int, typing.Any]] = partial(diff, op=str.strip)
+lstrip_diff: Callable[[str], tuple[int, typing.Any]] = partial(diff, op=str.lstrip)
+rstrip_diff: Callable[[str], tuple[int, typing.Any]] = partial(diff, op=str.rstrip)
 
 
 def balanced_parentheses(s):
@@ -643,8 +648,9 @@ def balanced_parentheses(s):
     :return: Whether the parens are balanced
     :rtype: ```bool```
     """
-    open_parens, closed_parens = "([{", ")]}"
-    counter = {paren: 0 for paren in open_parens + closed_parens}
+    open_parens: str = "([{"
+    closed_parens: str = ")]}"
+    counter: Dict[str, int] = {paren: 0 for paren in open_parens + closed_parens}
     quote_mark: Optional[typing.Literal["'", '"']] = None
     for idx, ch in enumerate(s):
         if (
@@ -652,10 +658,12 @@ def balanced_parentheses(s):
             and ch == quote_mark
             and (idx == 0 or s[idx - 1] != "\\")
         ):
-            quote_mark = None
+            quote_mark: Optional[typing.Literal["'", '"']] = None
         elif quote_mark is None:
             if ch in frozenset(("'", '"')):
-                quote_mark = typing.cast(typing.Literal["'", '"'], ch)
+                quote_mark: Optional[typing.Literal["'", '"']] = typing.cast(
+                    typing.Literal["'", '"'], ch
+                )
             elif ch in counter:
                 counter[ch] += 1
     return all(
@@ -702,7 +710,7 @@ def location_within(container, iterable, cmp=eq):
     :rtype: ```tuple[int, int, Optional[Any]]```
     """
     if not hasattr(container, "__len__"):
-        container = tuple(container)
+        container: Tuple[typing.Any] = tuple(container)
     container_len: int = len(container)
 
     for elem in iterable:
@@ -1052,6 +1060,10 @@ def paren_wrap_code(code):
     )
 
 
+class FilenameProtocol(typing.Protocol):
+    origin: str
+
+
 def filename_from_mod_or_filename(mod_or_filename):
     """
     Resolve filename from module name or filename
@@ -1062,7 +1074,9 @@ def filename_from_mod_or_filename(mod_or_filename):
     :return: Filename
     :rtype: ```str```
     """
-    filename = type("", tuple(), {"origin": mod_or_filename})
+    filename: FilenameProtocol = typing.cast(
+        FilenameProtocol, type("", tuple(), {"origin": mod_or_filename})
+    )
     return (
         filename
         if path.sep in mod_or_filename or path.isfile(mod_or_filename)

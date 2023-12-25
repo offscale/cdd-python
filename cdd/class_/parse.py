@@ -111,10 +111,10 @@ def class_(
             (("return_type", intermediate_repr["params"].pop("return_type")),)
         )
 
-    body = class_def.body if doc_str is None else class_def.body[1:]
+    body: ClassDef.body = class_def.body if doc_str is None else class_def.body[1:]
     for e in body:
         if isinstance(e, AnnAssign):
-            typ = to_code(e.annotation).rstrip("\n")
+            typ: str = to_code(e.annotation).rstrip("\n")
             # print(ast.dump(e, indent=4))
             val = (
                 (
@@ -137,14 +137,16 @@ def class_(
             )
 
             # if 'str' in typ and val: val["default"] = val["default"].strip("'")  # Unquote?
-            typ_default = {"typ": typ} if val is None else dict(typ=typ, **val)
+            typ_default = (
+                {"typ": typ} if val is None else dict(typ=typ, **val)
+            )  # type: Union[bool, dict[str, Any]]
 
-            target_id = e.target.id.lstrip("*")
+            target_id: str = e.target.id.lstrip("*")
 
             for key in "params", "returns":
                 if target_id in (intermediate_repr[key] or iter(())):
                     intermediate_repr[key][target_id].update(typ_default)
-                    typ_default = False
+                    typ_default: bool = False
                     break
 
             if typ_default:
@@ -281,16 +283,16 @@ def _class_from_memory(
     src: Optional[str] = get_source(class_def)
     if src is None:
         return ir
-    parsed_body: ClassDef = cast(ClassDef, ast.parse(src.lstrip()).body[0])
+    parsed_class: ClassDef = cast(ClassDef, ast.parse(src.lstrip()).body[0])
     original_doc_str: Optional[str] = get_docstring(
-        parsed_body, clean=parse_original_whitespace
+        parsed_class, clean=parse_original_whitespace
     )
-    parsed_body.body = (
-        parsed_body.body if original_doc_str is None else parsed_body.body[1:]
+    parsed_class.body = (
+        parsed_class.body if original_doc_str is None else parsed_class.body[1:]
     )
     if merge_inner_function is not None:
         _merge_inner_function(
-            parsed_body,
+            parsed_class,
             infer_type=infer_type,
             intermediate_repr=ir,
             merge_inner_function=merge_inner_function,
@@ -299,20 +301,20 @@ def _class_from_memory(
     ir["_internal"] = {
         "original_doc_str": original_doc_str
         if parse_original_whitespace
-        else get_docstring(parsed_body, clean=False),
+        else get_docstring(parsed_class, clean=False),
         "body": list(
             filterfalse(
                 rpartial(isinstance, (AnnAssign, Assign)),
-                parsed_body.body,
+                parsed_class.body,
             )
         ),
-        "from_name": class_name,
+        "from_name": cast(str, class_name),
         "from_type": "cls",
     }
     if class_name is None:
-        class_name: Optional[str] = parsed_body.name
+        class_name: Optional[str] = parsed_class.name
     body_ir: IntermediateRepr = class_(
-        class_def=parsed_body,
+        class_def=parsed_class,
         class_name=class_name,
         merge_inner_function=merge_inner_function,
     )

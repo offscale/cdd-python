@@ -3,7 +3,7 @@ OpenAPI parsers
 """
 
 from json import loads
-from typing import Optional
+from typing import List, Optional
 
 from yaml import safe_load
 
@@ -25,7 +25,7 @@ def openapi(openapi_str, routes_dict, summary):
 
     :return: OpenAPI dictionary
     """
-    entities = extract_entities(openapi_str)
+    entities: List[str] = extract_entities(openapi_str)
 
     non_error_entity: Optional[str] = None
 
@@ -35,7 +35,7 @@ def openapi(openapi_str, routes_dict, summary):
             "{{'$ref': '#/components/schemas/{entity}'}}".format(entity=entity),
         )
         if entity != "ServerError":
-            non_error_entity = entity
+            non_error_entity: str = entity
     openapi_d: dict = (loads if openapi_str.startswith("{") else safe_load)(openapi_str)
     if non_error_entity is not None:
         openapi_d["summary"] = "{located} `{entity}` object.".format(

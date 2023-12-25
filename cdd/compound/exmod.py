@@ -8,7 +8,7 @@ from functools import partial, reduce
 from itertools import chain, groupby
 from operator import attrgetter, itemgetter
 from os import makedirs, path
-from typing import Optional
+from typing import Optional, Tuple, cast
 
 import cdd.class_.parse
 import cdd.compound.exmod_utils
@@ -123,7 +123,7 @@ def exmod(
     except AssertionError as e:
         raise ModuleNotFoundError(e)
 
-    mod_path = (
+    mod_path: str = (
         module_name
         if module_name.startswith(module_root + ".")
         else ".".join((module_root, module_name))
@@ -131,7 +131,7 @@ def exmod(
     blacklist, whitelist = map(
         frozenset, (blacklist or iter(()), whitelist or iter(()))
     )
-    proceed = any(
+    proceed: bool = any(
         (
             sum(map(len, (blacklist, whitelist))) == 0,
             mod_path not in blacklist and (mod_path in whitelist or not whitelist),
@@ -153,7 +153,7 @@ def exmod(
 
     imports = _emit_files_from_module_and_return_imports(
         module_name=module_name, module=module, module_root_dir=module_root_dir
-    )
+    )  # type: Optional[list[ImportFrom]]
     if not imports:
         # Case: no obvious folder hierarchy, so parse the `__init__` file in root
         with open(
@@ -214,26 +214,29 @@ def exmod(
                     ),
                 )
             )
-        )
+        )  # type: list[ImportFrom]
 
     assert imports, "Module contents are empty"
-    modules_names = tuple(
-        map(
-            lambda name_module: (
-                name_module[0],
-                tuple(map(itemgetter(1), name_module[1])),
-            ),
-            groupby(
-                map(
-                    lambda node_mod: (
-                        node_mod[0],
-                        node_mod[2].module,
-                    ),
-                    imports,
+    modules_names: Tuple[str, ...] = cast(
+        Tuple[str, ...],
+        tuple(
+            map(
+                lambda name_module: (
+                    name_module[0],
+                    tuple(map(itemgetter(1), name_module[1])),
                 ),
-                itemgetter(0),
-            ),
-        )
+                groupby(
+                    map(
+                        lambda node_mod: (
+                            node_mod[0],
+                            node_mod[2].module,
+                        ),
+                        imports,
+                    ),
+                    itemgetter(0),
+                ),
+            )
+        ),
     )
 
     init_filepath: str = path.join(
