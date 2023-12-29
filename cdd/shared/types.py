@@ -1,7 +1,9 @@
 """
 Shared types
 """
-from _ast import AST
+
+from ast import AST
+from typing import Any, List, Optional
 
 from cdd.shared.pure_utils import PY_GTE_3_8, PY_GTE_3_9, PY_GTE_3_11
 
@@ -10,14 +12,14 @@ if PY_GTE_3_8:
         from collections import OrderedDict
     else:
         from typing import OrderedDict
-    from typing import Any, List, Optional, TypedDict
+    from typing import TypedDict
 
     if PY_GTE_3_11:
         from typing import Required
     else:
         from typing_extensions import Required
 else:
-    from typing_extensions import Any, List, Optional, OrderedDict, Required, TypedDict
+    from typing_extensions import OrderedDict, Required, TypedDict
 
 
 # class Parse(Protocol):

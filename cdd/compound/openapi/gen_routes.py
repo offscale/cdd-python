@@ -4,7 +4,6 @@ Generate routes
 
 import ast
 from ast import Attribute, Call, ClassDef, FunctionDef, Module, Name
-from collections.abc import dict_keys
 from itertools import chain
 from operator import attrgetter, itemgetter
 from os import path
@@ -206,9 +205,9 @@ def upsert_routes(app, routes, routes_path, route, primary_key):
             filter(rpartial(isinstance, FunctionDef), ast.walk(mod)),
         )
     )
-    missing_routes: dict_keys[str, str] = (
+    missing_routes = (
         routes_required.keys() & routes_existing.keys() ^ routes_required.keys()
-    )
+    )  # type: dict_keys[str, str]
 
     if not missing_routes:
         return

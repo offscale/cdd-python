@@ -143,8 +143,8 @@ class TestPureUtils(TestCase):
 
         mock_str: str = "foocanhaz"
 
-        can_res: Tuple[int, int, str] = 3, 6, "can"
-        none_res: Tuple[int, int, None] = -1, -1, None
+        can_res = 3, 6, "can"  # type: tuple[int, int, str]
+        none_res = -1, -1, None  # type: tuple[int, int, None]
 
         self.assertTupleEqual(location_within(mock_str, ("can",)), can_res)
         self.assertTupleEqual(location_within(mock_str, ("bar",)), none_res)
@@ -157,7 +157,7 @@ class TestPureUtils(TestCase):
     def test_location_within1(self) -> None:
         """Tests `location_within` responds with correct `start_idx`, `end_idx` and `found` elements"""
 
-        none_res: Tuple[int, int, None] = -1, -1, None
+        none_res = -1, -1, None  # type: tuple[int, int, None]
 
         self.assertTupleEqual(location_within("a", ("bar", "con", "bon")), none_res)
         self.assertTupleEqual(location_within("can", ("can",)), (0, 3, "can"))

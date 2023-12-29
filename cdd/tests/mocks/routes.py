@@ -2,17 +2,16 @@
 Mock routes
 """
 
-from typing import Union
 
 import cdd.routes.emit.bottle
 from cdd.shared.pure_utils import tab
 
-route_config: dict[str, Union[str, int]] = {
+route_config = {
     "app": "rest_api",
     "name": "Config",
     "route": "/api/config",
     "variant": -1,
-}
+}  # type: dict[str, Union[str, int]]
 
 create_route: str = cdd.routes.emit.bottle.create(**route_config)
 

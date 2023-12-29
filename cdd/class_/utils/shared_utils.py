@@ -3,14 +3,15 @@ Shared utility functions for `cdd.class_`
 """
 
 from ast import ClassDef, Module
+from typing import List, Optional, Tuple, Union
 
 from cdd.shared.pure_utils import PY_GTE_3_8
 from cdd.shared.types import IntermediateRepr
 
 if PY_GTE_3_8:
-    from typing import List, Literal, Optional, Protocol, Tuple, Union
+    from typing import Literal, Protocol
 else:
-    from typing_extensions import Protocol
+    from typing_extensions import Literal, Protocol
 
 
 class ClassEmitProtocol(Protocol):

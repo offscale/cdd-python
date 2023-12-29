@@ -2,8 +2,7 @@
 
 import ast
 import sys
-from _ast import AST
-from ast import Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias
+from ast import AST, Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias
 from collections import OrderedDict, defaultdict, deque
 from functools import partial
 from inspect import getfile, ismodule

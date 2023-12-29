@@ -2,7 +2,14 @@
 Shared utility functions for JSON schema
 """
 
-from typing import Any, Dict, List, Literal, TypedDict
+from typing import Any, Dict, List
+
+from cdd.shared.pure_utils import PY_GTE_3_8
+
+if PY_GTE_3_8:
+    from typing import Literal, TypedDict
+else:
+    from typing_extensions import Literal, TypedDict
 
 JSON_property = TypedDict(
     "JSON_property",

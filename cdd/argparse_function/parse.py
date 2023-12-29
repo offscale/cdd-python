@@ -1,8 +1,7 @@
 """
 Argparse function parser
 """
-from _ast import Call
-from ast import Assign, FunctionDef, Return, Tuple, get_docstring
+from ast import Assign, Call, FunctionDef, Return, Tuple, get_docstring
 from collections import OrderedDict
 from functools import partial
 from itertools import filterfalse

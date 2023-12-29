@@ -4,7 +4,7 @@
 `__main__` implementation, can be run directly or with `python -m cdd`
 """
 
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, Namespace, _SubParsersAction
 from codecs import decode
 from collections import deque
 from itertools import chain, filterfalse
@@ -31,7 +31,7 @@ parse_emit_types = (
     "sqlalchemy",
     "sqlalchemy_hybrid",
     "sqlalchemy_table",
-)
+)  # type: tuple[str, ...]
 
 
 def _build_parser():
@@ -51,7 +51,7 @@ def _build_parser():
         version="%(prog)s {__version__}".format(__version__=__version__),
     )
 
-    subparsers = parser.add_subparsers()
+    subparsers: _SubParsersAction[ArgumentParser] = parser.add_subparsers()
     subparsers.required = True
     subparsers.dest = "command"
 
@@ -120,7 +120,7 @@ def _build_parser():
     ########
     # Sync #
     ########
-    sync_parser = subparsers.add_parser(
+    sync_parser: ArgumentParser = subparsers.add_parser(
         "sync", help="Force argparse, classes, and/or methods to be equivalent"
     )
 
@@ -195,7 +195,7 @@ def _build_parser():
     #######
     # Gen #
     #######
-    gen_parser = subparsers.add_parser(
+    gen_parser: ArgumentParser = subparsers.add_parser(
         "gen",
         help=(
             "Generate classes, functions, argparse function, sqlalchemy tables and/or sqlalchemy classes"
@@ -275,7 +275,7 @@ def _build_parser():
     ##############
     # gen_routes #
     ##############
-    routes_parser = subparsers.add_parser(
+    routes_parser: ArgumentParser = subparsers.add_parser(
         "gen_routes", help="Generate per model route(s)"
     )
 
@@ -311,7 +311,7 @@ def _build_parser():
     ###########
     # openapi #
     ###########
-    openapi_parser = subparsers.add_parser(
+    openapi_parser: ArgumentParser = subparsers.add_parser(
         "openapi", help="Generate OpenAPI schema from specified project(s)"
     )
 
@@ -335,7 +335,7 @@ def _build_parser():
     ############
     # doctrans #
     ############
-    doctrans_parser = subparsers.add_parser(
+    doctrans_parser: ArgumentParser = subparsers.add_parser(
         "doctrans",
         help=(
             "Convert docstring format of all classes and functions within target file"
@@ -378,7 +378,7 @@ def _build_parser():
     #########
     # exmod #
     #########
-    exmod_parser = subparsers.add_parser(
+    exmod_parser: ArgumentParser = subparsers.add_parser(
         "exmod",
         help=(
             "Expose module hierarchy->{functions,classes,vars} for parameterisation "
@@ -450,12 +450,12 @@ def main(cli_argv=None, return_args=False):
     :return: the args if `return_args`, else None
     :rtype: ```Optional[Namespace]```
     """
-    _parser = _build_parser()
-    args = _parser.parse_args(args=cli_argv)
-    command = args.command
+    _parser: ArgumentParser = _build_parser()
+    args: Namespace = _parser.parse_args(args=cli_argv)
+    command: str = args.command
     args_dict = {k: v for k, v in vars(args).items() if k != "command"}
     if command == "sync":
-        args = Namespace(
+        args: Namespace = Namespace(
             **{
                 k: v
                 if k in frozenset(("truth", "no_word_wrap"))
@@ -466,13 +466,13 @@ def main(cli_argv=None, return_args=False):
             }
         )
 
-        truth_file = getattr(args, pluralise(args.truth))
+        truth_file: str = getattr(args, pluralise(args.truth))
         require_file_existent(
             _parser, truth_file[0] if truth_file else truth_file, name="truth"
         )
         truth_file: str = path.realpath(path.expanduser(truth_file[0]))
 
-        number_of_files = sum(
+        number_of_files: int = sum(
             len(val)
             for key, val in vars(args).items()
             if isinstance(val, list) and not key.endswith("_names")

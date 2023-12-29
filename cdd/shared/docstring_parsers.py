@@ -22,6 +22,9 @@ from operator import attrgetter, eq, le
 from typing import *  # noqa
 from typing import Dict, List, Tuple, Union
 
+if sys.version_info[:2] < (3, 8):
+    from typing_extensions import TypedDict
+
 from cdd.docstring.utils.emit_utils import interpolate_defaults
 from cdd.docstring.utils.parse_utils import parse_adhoc_doc_for_typ
 from cdd.shared.ast_utils import NoneStr, get_value

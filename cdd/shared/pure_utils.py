@@ -20,9 +20,22 @@ from pprint import PrettyPrinter
 from sys import stderr, version_info
 from textwrap import fill as _fill
 from textwrap import indent
-from typing import Callable, Dict, FrozenSet, Optional, Tuple, Union
+from typing import Any, Callable, Dict, FrozenSet, Optional, Sized, Tuple, Union, cast
 
-pp: Callable[[object], None] = PrettyPrinter(indent=4, width=100, stream=stderr).pprint
+_python_major_minor: Tuple[int, int] = version_info[:2]
+PY3_8: bool = _python_major_minor == (3, 8)
+PY_GTE_3_8: bool = _python_major_minor >= (3, 8)
+PY_GTE_3_9: bool = _python_major_minor >= (3, 9)
+PY_GTE_3_10: bool = _python_major_minor >= (3, 10)
+PY_GTE_3_11: bool = _python_major_minor >= (3, 11)
+PY_GTE_3_12: bool = _python_major_minor >= (3, 12)
+
+if PY_GTE_3_8:
+    from typing import Literal, Protocol
+else:
+    from typing_extensions import Literal, Protocol
+
+pp: Callable[[Any], None] = PrettyPrinter(indent=4, width=100, stream=stderr).pprint
 tab: str = environ.get("DOCTRANS_TAB", " " * 4)
 simple_types: Dict[Optional[str], Union[int, float, complex, str, bool, None]] = {
     "int": 0,
@@ -47,6 +60,49 @@ type_to_name: Dict[str, str] = {
 
 line_length: int = int(environ.get("DOCTRANS_LINE_LENGTH", 100))
 fill: Callable[[str], str] = partial(_fill, width=line_length)
+
+ENCODING: str = "# -*- coding: utf-8 -*-"
+
+none_types: Tuple[None, Literal["None"], str] = (
+    None,
+    "None",
+    "```(None)```" if PY_GTE_3_9 else "```None```",
+)
+
+_ABERRANT_PLURAL_MAP: Dict[str, str] = {
+    "appendix": "appendices",
+    "barracks": "barracks",
+    "cactus": "cacti",
+    "child": "children",
+    "criterion": "criteria",
+    "deer": "deer",
+    "echo": "echoes",
+    "elf": "elves",
+    "embargo": "embargoes",
+    "focus": "foci",
+    "fungus": "fungi",
+    "goose": "geese",
+    "hero": "heroes",
+    "hoof": "hooves",
+    "index": "indices",
+    "knife": "knives",
+    "leaf": "leaves",
+    "life": "lives",
+    "man": "men",
+    "mouse": "mice",
+    "nucleus": "nuclei",
+    "person": "people",
+    "phenomenon": "phenomena",
+    "potato": "potatoes",
+    "self": "selves",
+    "syllabus": "syllabi",
+    "tomato": "tomatoes",
+    "torpedo": "torpedoes",
+    "veto": "vetoes",
+    "woman": "women",
+}
+
+VOWELS: FrozenSet[str] = frozenset("aeiou")
 
 
 def read_file_to_str(filename, mode="rt"):
@@ -161,58 +217,6 @@ def identity(*args, **kwargs):
     :rtype: ```Any```
     """
     return args[0] if len(args) == 1 else args
-
-
-_python_major_minor: Tuple[int, int] = version_info[:2]
-PY3_8: bool = _python_major_minor == (3, 8)
-PY_GTE_3_8: bool = _python_major_minor >= (3, 8)
-PY_GTE_3_9: bool = _python_major_minor >= (3, 9)
-PY_GTE_3_10: bool = _python_major_minor >= (3, 10)
-PY_GTE_3_11: bool = _python_major_minor >= (3, 11)
-PY_GTE_3_12: bool = _python_major_minor >= (3, 12)
-
-ENCODING: str = "# -*- coding: utf-8 -*-"
-
-none_types: Tuple[None, typing.Literal["None"], str] = (
-    None,
-    "None",
-    "```(None)```" if PY_GTE_3_9 else "```None```",
-)
-
-_ABERRANT_PLURAL_MAP: Dict[str, str] = {
-    "appendix": "appendices",
-    "barracks": "barracks",
-    "cactus": "cacti",
-    "child": "children",
-    "criterion": "criteria",
-    "deer": "deer",
-    "echo": "echoes",
-    "elf": "elves",
-    "embargo": "embargoes",
-    "focus": "foci",
-    "fungus": "fungi",
-    "goose": "geese",
-    "hero": "heroes",
-    "hoof": "hooves",
-    "index": "indices",
-    "knife": "knives",
-    "leaf": "leaves",
-    "life": "lives",
-    "man": "men",
-    "mouse": "mice",
-    "nucleus": "nuclei",
-    "person": "people",
-    "phenomenon": "phenomena",
-    "potato": "potatoes",
-    "self": "selves",
-    "syllabus": "syllabi",
-    "tomato": "tomatoes",
-    "torpedo": "torpedoes",
-    "veto": "vetoes",
-    "woman": "women",
-}
-
-VOWELS: FrozenSet[str] = frozenset("aeiou")
 
 
 def pluralise(singular):
@@ -370,7 +374,7 @@ def indent_all_but_first(s, indent_level=1, wipe_indents=False, sep=tab):
     :return: input string indented (except first line)
     :rtype: ```str```
     """
-    lines: typing.List[str] = indent(
+    lines: List[str] = indent(
         deindent(s) if wipe_indents else s, sep * abs(indent_level)
     ).split("\n")
     return "\n".join([lines[0].lstrip()] + lines[1:])
@@ -588,7 +592,7 @@ def update_d(d, arg=None, **kwargs):
     :rtype: ```dict```
     """
     if arg:
-        d.update(typing.cast(dict, arg))
+        d.update(cast(dict, arg))
     if kwargs:
         d.update(kwargs)
     return d
@@ -608,7 +612,7 @@ def lstrip_namespace(s, namespaces):
     :rtype: ```AnyStr```
     """
     for namespace in namespaces:
-        s: str = s.lstrip(typing.cast(str, namespace))
+        s: str = s.lstrip(cast(str, namespace))
     return s
 
 
@@ -629,13 +633,13 @@ def diff(input_obj, op):
     input_len: int = len(
         input_obj
     )  # Separate line and binding, as `op` could mutate the `input`
-    result: typing.Sized = op(input_obj)
+    result: Sized = op(input_obj)
     return input_len - len(result), result
 
 
-strip_diff: Callable[[str], tuple[int, typing.Any]] = partial(diff, op=str.strip)
-lstrip_diff: Callable[[str], tuple[int, typing.Any]] = partial(diff, op=str.lstrip)
-rstrip_diff: Callable[[str], tuple[int, typing.Any]] = partial(diff, op=str.rstrip)
+strip_diff: Callable[[str], Tuple[int, Any]] = partial(diff, op=str.strip)
+lstrip_diff: Callable[[str], Tuple[int, Any]] = partial(diff, op=str.lstrip)
+rstrip_diff: Callable[[str], Tuple[int, Any]] = partial(diff, op=str.rstrip)
 
 
 def balanced_parentheses(s):
@@ -651,19 +655,17 @@ def balanced_parentheses(s):
     open_parens: str = "([{"
     closed_parens: str = ")]}"
     counter: Dict[str, int] = {paren: 0 for paren in open_parens + closed_parens}
-    quote_mark: Optional[typing.Literal["'", '"']] = None
+    quote_mark: Optional[Literal["'", '"']] = None
     for idx, ch in enumerate(s):
         if (
             quote_mark is not None
             and ch == quote_mark
             and (idx == 0 or s[idx - 1] != "\\")
         ):
-            quote_mark: Optional[typing.Literal["'", '"']] = None
+            quote_mark: Optional[Literal["'", '"']] = None
         elif quote_mark is None:
             if ch in frozenset(("'", '"')):
-                quote_mark: Optional[typing.Literal["'", '"']] = typing.cast(
-                    typing.Literal["'", '"'], ch
-                )
+                quote_mark: Optional[Literal["'", '"']] = cast(Literal["'", '"'], ch)
             elif ch in counter:
                 counter[ch] += 1
     return all(
@@ -710,7 +712,7 @@ def location_within(container, iterable, cmp=eq):
     :rtype: ```tuple[int, int, Optional[Any]]```
     """
     if not hasattr(container, "__len__"):
-        container: Tuple[typing.Any] = tuple(container)
+        container: Tuple[Any] = tuple(container)
     container_len: int = len(container)
 
     for elem in iterable:
@@ -734,7 +736,7 @@ BUILTIN_TYPES: FrozenSet[str] = frozenset(
         (
             chain.from_iterable(
                 map(
-                    lambda s: (s, "typing.{}".format(s), "_extensions.{}".format(s)),
+                    lambda s: (s, "{}".format(s), "_extensions.{}".format(s)),
                     filter(lambda s: s[0].isupper() and not s.isupper(), dir(typing)),
                 )
             ),
@@ -1060,7 +1062,7 @@ def paren_wrap_code(code):
     )
 
 
-class FilenameProtocol(typing.Protocol):
+class FilenameProtocol(Protocol):
     origin: str
 
 
@@ -1074,7 +1076,7 @@ def filename_from_mod_or_filename(mod_or_filename):
     :return: Filename
     :rtype: ```str```
     """
-    filename: FilenameProtocol = typing.cast(
+    filename: FilenameProtocol = cast(
         FilenameProtocol, type("", tuple(), {"origin": mod_or_filename})
     )
     return (

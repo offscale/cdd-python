@@ -5,12 +5,17 @@ Shared utility functions for SQLalchemy
 import ast
 from ast import Call, Expr, Load, Name, Subscript, Tuple, keyword
 from operator import attrgetter
-from typing import TypedDict, cast
+from typing import cast
 
 import cdd.compound.openapi.utils.emit_utils
 from cdd.shared.ast_utils import NoneStr, get_value, set_value
-from cdd.shared.pure_utils import PY_GTE_3_9, rpartial
+from cdd.shared.pure_utils import PY_GTE_3_8, PY_GTE_3_9, rpartial
 from cdd.shared.source_transformer import to_code
+
+if PY_GTE_3_8:
+    from typing import TypedDict
+else:
+    from typing_extensions import TypedDict
 
 
 def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):

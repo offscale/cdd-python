@@ -3,7 +3,6 @@ Tests for the Intermediate Representation produced by the JSON schema parser
 """
 
 from copy import deepcopy
-from typing import Tuple
 from unittest import TestCase
 
 import cdd.json_schema.utils.parse_utils
@@ -31,15 +30,15 @@ class TestParseJsonSchemaUtils(TestCase):
         Tests that `json_schema_property_to_param` works with `anyOf`
         """
 
-        mock: Tuple[str, dict] = "address", {
+        mock = "address", {
             "anyOf": [{"$ref": "#/components/schemas/address"}],
             "doc": "The customer's address.",
             "nullable": True,
-        }
+        }  # type: tuple[str, dict]
 
         res = cdd.json_schema.utils.parse_utils.json_schema_property_to_param(
             mock, {mock[0]: False}
-        )
+        )  # type: tuple[str, dict]
 
         self.assertEqual(res[0], "address")
         self.assertDictEqual(
@@ -51,9 +50,13 @@ class TestParseJsonSchemaUtils(TestCase):
         Tests that `json_schema_property_to_param` works with `$ref` as type
         """
 
-        mock: Tuple[str, dict] = "tax", {"$ref": "#/components/schemas/customer_tax"}
+        mock = "tax", {
+            "$ref": "#/components/schemas/customer_tax"
+        }  # type: tuple[str, dict]
 
-        res = cdd.json_schema.utils.parse_utils.json_schema_property_to_param(mock, {})
+        res = cdd.json_schema.utils.parse_utils.json_schema_property_to_param(
+            mock, {}
+        )  # type: tuple[str, dict]
 
         self.assertEqual(res[0], "tax")
         self.assertDictEqual(
@@ -72,12 +75,14 @@ class TestParseJsonSchemaUtils(TestCase):
 
         res = cdd.json_schema.utils.parse_utils.json_schema_property_to_param(
             mock, {mock[0]: True}
-        )
+        )  # type: tuple[str, dict]
 
         self.assertEqual(res[0], mock[0])
         self.assertDictEqual(res[1], mock[1])
 
-        res = cdd.json_schema.utils.parse_utils.json_schema_property_to_param(mock, {})
+        res = cdd.json_schema.utils.parse_utils.json_schema_property_to_param(
+            mock, {}
+        )  # type: tuple[str, dict]
         self.assertEqual(res[0], mock[0])
         self.assertDictEqual(res[1], mock[1])
 

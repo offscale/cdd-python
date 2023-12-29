@@ -617,6 +617,9 @@ argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
         kwonlyargs=[],
         kw_defaults=[],
         defaults=[],
+        vararg=None,
+        kwarg=None,
+        arg=None,
     ),
     body=[
         _cli_doc_nosplit_expr,
@@ -845,6 +848,9 @@ argparse_func_torch_nn_l1loss_ast: FunctionDef = FunctionDef(
         kwonlyargs=[],
         kw_defaults=[],
         defaults=[],
+        vararg=None,
+        kwarg=None,
+        arg=None,
     ),
     body=[
         _cli_doc_nosplit_expr,

@@ -1,8 +1,7 @@
 """
 Helper to traverse the AST of the input file, extract the docstring out, parse and format to intended style, and emit
 """
-from _ast import Module
-from ast import fix_missing_locations
+from ast import Module, fix_missing_locations
 from copy import deepcopy
 from operator import attrgetter
 from typing import List, NamedTuple
