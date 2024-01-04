@@ -133,7 +133,7 @@ class_google_keras_tensorboard_ir: IntermediateRepr = {
             (
                 "embeddings_metadata",
                 {
-                    "default": "```(None)```",
+                    "default": NoneStr,
                     "doc": "Dictionary which maps embedding layer names to the "
                     "filename of a file in which to save metadata for the "
                     "embedding layer. In case the same metadata file is "

@@ -134,15 +134,16 @@ def main():
     )
 
     setup(
-        name="python-" + package_name,
+        name="python-{}".format(package_name),
         author=__author__,
         author_email="807580+SamuelMarks@users.noreply.github.com",
         version=__version__,
         description=__description__,
         long_description=long_description,
         long_description_content_type="text/markdown",
+        url="https://github.com/offscale/{}-python".format(package_name),
         install_requires=["pyyaml"],
-        test_suite=package_name + ".tests",
+        test_suite="{}{}tests".format(package_name, path.extsep),
         packages=find_packages(),
         package_dir={package_name: package_name},
         classifiers=[
@@ -172,7 +173,6 @@ def main():
             "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
         ],
         python_requires=">=3.6",
-        url="https://github.com/offscale/cdd-python",
     )
 
 
