@@ -83,7 +83,11 @@ class TestEmitSqlAlchemyUtils(TestCase):
                 "sql": {
                     "constraints": {
                         "server_default": Call(
-                            args=[], func=Name(ctx=Load(), id="Identity"), keywords=[]
+                            args=[],
+                            func=Name(
+                                ctx=Load(), id="Identity", lineno=None, col_offset=None
+                            ),
+                            keywords=[],
                         )
                     }
                 }

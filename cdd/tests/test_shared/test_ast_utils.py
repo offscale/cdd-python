@@ -94,21 +94,20 @@ class TestAstUtils(TestCase):
         node: Module = Module(
             body=[
                 AnnAssign(
-                    annotation=Name(
-                        "str",
-                        Load(),
-                    ),
+                    annotation=Name("str", Load(), lineno=None, col_offset=None),
                     simple=1,
-                    target=Name("dataset_name", Store()),
+                    target=Name("dataset_name", Store(), lineno=None, col_offset=None),
                     value=set_value("~/tensorflow_datasets"),
                     expr=None,
                     expr_target=None,
                     expr_annotation=None,
+                    col_offset=None,
+                    lineno=None,
                 ),
                 Assign(
                     annotation=None,
                     simple=1,
-                    targets=[Name("epochs", Store())],
+                    targets=[Name("epochs", Store(), lineno=None, col_offset=None)],
                     value=set_value("333"),
                     expr=None,
                     expr_target=None,
@@ -129,7 +128,10 @@ class TestAstUtils(TestCase):
         vals = (5,)
         self.assertEqual(ast_type_to_python_type(Num(n=vals[0])), vals[0])
         self.assertEqual(ast_type_to_python_type(Constant(value=vals[0])), vals[0])
-        self.assertEqual(ast_type_to_python_type(Str(s=str(vals[0]))), str(vals[0]))
+        self.assertEqual(
+            ast_type_to_python_type(Str(s=str(vals[0]), col_offset=None, lineno=None)),
+            str(vals[0]),
+        )
         self.assertRaises(NotImplementedError, ast_type_to_python_type, set_arg("foo"))
 
     def test_cmp_ast(self) -> None:
@@ -175,16 +177,15 @@ class TestAstUtils(TestCase):
             self,
             gen_ast,
             AnnAssign(
-                annotation=Name(
-                    "str",
-                    Load(),
-                ),
+                annotation=Name("str", Load(), lineno=None, col_offset=None),
                 simple=1,
-                target=Name("dataset_name", Store()),
+                target=Name("dataset_name", Store(), lineno=None, col_offset=None),
                 value=set_value("~/tensorflow_datasets"),
                 expr=None,
                 expr_target=None,
                 expr_annotation=None,
+                col_offset=None,
+                lineno=None,
             ),
         )
 
@@ -202,7 +203,7 @@ class TestAstUtils(TestCase):
             emit_arg(class_with_method_and_body_types_ast.body[1].args.args[1]), arg
         )
         assign: Assign = Assign(
-            targets=[Name("yup", Store())],
+            targets=[Name("yup", Store(), lineno=None, col_offset=None)],
             value=set_value("nup"),
             expr=None,
             **maybe_type_comment
@@ -227,16 +228,15 @@ class TestAstUtils(TestCase):
             self,
             find_in_ast("ConfigClass.dataset_name".split("."), class_ast),
             AnnAssign(
-                annotation=Name(
-                    "str",
-                    Load(),
-                ),
+                annotation=Name("str", Load(), lineno=None, col_offset=None),
                 simple=1,
                 target=Name("dataset_name", Store()),
                 value=set_value("mnist"),
                 expr=None,
                 expr_target=None,
                 expr_annotation=None,
+                col_offset=None,
+                lineno=None,
             ),
         )
 
@@ -412,6 +412,8 @@ class TestAstUtils(TestCase):
                 expr=None,
                 expr_annotation=None,
                 expr_target=None,
+                col_offset=None,
+                lineno=None,
             ),
         )
         gen_ast = rewrite_at_query.visit(parsed_ast)
@@ -442,6 +444,8 @@ class TestAstUtils(TestCase):
                 expr=None,
                 expr_target=None,
                 expr_annotation=None,
+                col_offset=None,
+                lineno=None,
             ),
         )
         gen_ast = rewrite_at_query.visit(parsed_ast)
@@ -543,7 +547,18 @@ class TestAstUtils(TestCase):
     def test_get_value(self) -> None:
         """Tests get_value succeeds"""
         val: str = "foo"
-        self.assertEqual(get_value(Str(s=val, constant_value=None, string=None)), val)
+        self.assertEqual(
+            get_value(
+                Str(
+                    s=val,
+                    constant_value=None,
+                    string=None,
+                    col_offset=None,
+                    lineno=None,
+                )
+            ),
+            val,
+        )
         self.assertEqual(
             get_value(Constant(value=val, constant_value=None, string=None)), val
         )
@@ -611,6 +626,8 @@ class TestAstUtils(TestCase):
             body=[],
             expr=None,
             identifier_name=None,
+            lineno=None,
+            col_offset=None,
         )
         run_ast_test(
             self,
@@ -630,8 +647,18 @@ class TestAstUtils(TestCase):
             lambda: find_ast_type(
                 Module(
                     body=[
-                        ClassDef(expr=None, identifier_name=None),
-                        ClassDef(expr=None, identifier_name=None),
+                        ClassDef(
+                            expr=None,
+                            identifier_name=None,
+                            lineno=None,
+                            col_offset=None,
+                        ),
+                        ClassDef(
+                            expr=None,
+                            identifier_name=None,
+                            lineno=None,
+                            col_offset=None,
+                        ),
                     ],
                     stmt=None,
                 )
@@ -650,6 +677,8 @@ class TestAstUtils(TestCase):
             body=[],
             expr=None,
             identifier_name=None,
+            lineno=None,
+            col_offset=None,
         )
         run_ast_test(
             self,
@@ -665,6 +694,8 @@ class TestAstUtils(TestCase):
                             body=[],
                             expr=None,
                             identifier_name=None,
+                            lineno=None,
+                            col_offset=None,
                         ),
                         class_def,
                     ],
@@ -692,6 +723,8 @@ class TestAstUtils(TestCase):
                 expr_target=None,
                 expr_annotation=None,
                 value=None,
+                col_offset=None,
+                lineno=None,
             ),
         )
 
@@ -711,6 +744,8 @@ class TestAstUtils(TestCase):
                 expr=None,
                 expr_target=None,
                 expr_annotation=None,
+                col_offset=None,
+                lineno=None,
             ),
         )
 
@@ -733,6 +768,8 @@ class TestAstUtils(TestCase):
                 expr=None,
                 expr_annotation=None,
                 expr_target=None,
+                col_offset=None,
+                lineno=None,
             ),
         )
 
@@ -752,6 +789,8 @@ class TestAstUtils(TestCase):
                 expr=None,
                 expr_target=None,
                 expr_annotation=None,
+                col_offset=None,
+                lineno=None,
             ),
         )
 

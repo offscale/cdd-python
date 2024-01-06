@@ -72,31 +72,33 @@ def json_schema(
     return {
         "$id": identifier,
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": deindent(
-            add(
-                *map(
-                    partial(
-                        docstring,
-                        emit_default_doc=True,
-                        emit_original_whitespace=emit_original_whitespace,
-                        emit_types=True,
-                    ),
-                    (
-                        {
-                            "doc": intermediate_repr["doc"],
-                            "params": OrderedDict(),
-                            "returns": None,
-                        },
-                        {
-                            "doc": "",
-                            "params": OrderedDict(),
-                            "returns": intermediate_repr["returns"],
-                        },
-                    ),
+        "description": (
+            deindent(
+                add(
+                    *map(
+                        partial(
+                            docstring,
+                            emit_default_doc=True,
+                            emit_original_whitespace=emit_original_whitespace,
+                            emit_types=True,
+                        ),
+                        (
+                            {
+                                "doc": intermediate_repr["doc"],
+                                "params": OrderedDict(),
+                                "returns": None,
+                            },
+                            {
+                                "doc": "",
+                                "params": OrderedDict(),
+                                "returns": intermediate_repr["returns"],
+                            },
+                        ),
+                    )
                 )
-            )
-        ).lstrip("\n")
-        or None,
+            ).lstrip("\n")
+            or None
+        ),
         "type": "object",
         "properties": properties,
         "required": required,

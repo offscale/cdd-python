@@ -92,12 +92,14 @@ def function(
         map(
             lambda param: set_arg(
                 annotation=(
-                    Name(param[1]["typ"], Load())
-                    if param[1]["typ"] in simple_types
-                    else ast_parse_fix(param[1]["typ"])
-                )
-                if type_annotations and "typ" in param[1]
-                else None,
+                    (
+                        Name(param[1]["typ"], Load())
+                        if param[1]["typ"] in simple_types
+                        else ast_parse_fix(param[1]["typ"])
+                    )
+                    if type_annotations and "typ" in param[1]
+                    else None
+                ),
                 arg=param[0],
             ),
             params_no_kwargs,
@@ -105,9 +107,11 @@ def function(
     )
     defaults_from_params = list(
         map(
-            lambda param: set_value(None)
-            if param[1].get("default") in none_types
-            else set_value(param[1].get("default")),
+            lambda param: (
+                set_value(None)
+                if param[1].get("default") in none_types
+                else set_value(param[1].get("default"))
+            ),
             params_no_kwargs,
         )
     )

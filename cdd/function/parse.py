@@ -79,9 +79,11 @@ def function(
             parsed_source.body if original_doc_str is None else parsed_source.body[1:]
         )
         ir["_internal"] = {
-            "original_doc_str": original_doc_str
-            if parse_original_whitespace
-            else ast.get_docstring(parsed_source, clean=False),
+            "original_doc_str": (
+                original_doc_str
+                if parse_original_whitespace
+                else ast.get_docstring(parsed_source, clean=False)
+            ),
             "body": list(filterfalse(rpartial(isinstance, (AnnAssign, Assign)), body)),
             "from_name": parsed_source.name,
             "from_type": "cls",
@@ -130,9 +132,11 @@ def function(
             "original_doc_str": (
                 doc_str
                 if parse_original_whitespace
-                else get_docstring(function_def, clean=False)
-                if isinstance(function_def, FunctionDef)
-                else None
+                else (
+                    get_docstring(function_def, clean=False)
+                    if isinstance(function_def, FunctionDef)
+                    else None
+                )
             )
         }
 

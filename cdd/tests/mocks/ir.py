@@ -35,10 +35,12 @@ class_google_keras_tensorboard_ir: IntermediateRepr = {
                 "log_dir",
                 {
                     "default": "logs",
-                    "doc": "the path of the directory where to save the log "
-                    "files to be parsed by TensorBoard. e.g., `log_dir = "
-                    "os.path.join(working_dir, 'logs')`. This directory "
-                    "should not be reused by any other callbacks.",
+                    "doc": (
+                        "the path of the directory where to save the log "
+                        "files to be parsed by TensorBoard. e.g., `log_dir = "
+                        "os.path.join(working_dir, 'logs')`. This directory "
+                        "should not be reused by any other callbacks."
+                    ),
                     "typ": "str",
                 },
             ),
@@ -46,11 +48,13 @@ class_google_keras_tensorboard_ir: IntermediateRepr = {
                 "histogram_freq",
                 {
                     "default": 0,
-                    "doc": "frequency (in epochs) at which to compute weight "
-                    "histograms for the layers of the model. If set to 0, "
-                    "histograms won't be computed. Validation data (or "
-                    "split) must be specified for histogram "
-                    "visualizations.",
+                    "doc": (
+                        "frequency (in epochs) at which to compute weight "
+                        "histograms for the layers of the model. If set to 0, "
+                        "histograms won't be computed. Validation data (or "
+                        "split) must be specified for histogram "
+                        "visualizations."
+                    ),
                     "typ": "int",
                 },
             ),
@@ -58,10 +62,12 @@ class_google_keras_tensorboard_ir: IntermediateRepr = {
                 "write_graph",
                 {
                     "default": True,
-                    "doc": "(Not supported at this time) Whether to visualize "
-                    "the graph in TensorBoard. Note that the log file can "
-                    "become quite large when `write_graph` is set to "
-                    "`True`.",
+                    "doc": (
+                        "(Not supported at this time) Whether to visualize "
+                        "the graph in TensorBoard. Note that the log file can "
+                        "become quite large when `write_graph` is set to "
+                        "`True`."
+                    ),
                     "typ": "bool",
                 },
             ),
@@ -69,8 +75,10 @@ class_google_keras_tensorboard_ir: IntermediateRepr = {
                 "write_images",
                 {
                     "default": False,
-                    "doc": "whether to write model weights to visualize as image "
-                    "in TensorBoard.",
+                    "doc": (
+                        "whether to write model weights to visualize as image "
+                        "in TensorBoard."
+                    ),
                     "typ": "bool",
                 },
             ),
@@ -78,9 +86,11 @@ class_google_keras_tensorboard_ir: IntermediateRepr = {
                 "write_steps_per_second",
                 {
                     "default": False,
-                    "doc": "whether to log the training steps per second into "
-                    "TensorBoard. This supports both epoch and batch "
-                    "frequency logging.",
+                    "doc": (
+                        "whether to log the training steps per second into "
+                        "TensorBoard. This supports both epoch and batch "
+                        "frequency logging."
+                    ),
                     "typ": "bool",
                 },
             ),
@@ -88,22 +98,24 @@ class_google_keras_tensorboard_ir: IntermediateRepr = {
                 "update_freq",
                 {
                     "default": "epoch",
-                    "doc": '`"batch"` or `"epoch"` or integer. When using '
-                    '`"epoch"`, writes the losses and metrics to '
-                    "TensorBoard after every epoch. If using an integer, "
-                    "let's say `1000`, all metrics and losses (including "
-                    "custom ones added by `Model.compile`) will be logged "
-                    'to TensorBoard every 1000 batches. `"batch"` is a '
-                    "synonym for 1, meaning that they will be written "
-                    "every batch. Note however that writing too "
-                    "frequently to TensorBoard can slow down your "
-                    "training, especially when used with distribution "
-                    "strategies as it will incur additional "
-                    "synchronization overhead. Batch-level summary "
-                    "writing is also available via `train_step` override. "
-                    "Please see [TensorBoard Scalars tutorial]( "
-                    "https://www.tensorflow.org/tensorboard/scalars_and_keras#batch-level_logging)  "
-                    "# noqa: E501 for more details.",
+                    "doc": (
+                        '`"batch"` or `"epoch"` or integer. When using '
+                        '`"epoch"`, writes the losses and metrics to '
+                        "TensorBoard after every epoch. If using an integer, "
+                        "let's say `1000`, all metrics and losses (including "
+                        "custom ones added by `Model.compile`) will be logged "
+                        'to TensorBoard every 1000 batches. `"batch"` is a '
+                        "synonym for 1, meaning that they will be written "
+                        "every batch. Note however that writing too "
+                        "frequently to TensorBoard can slow down your "
+                        "training, especially when used with distribution "
+                        "strategies as it will incur additional "
+                        "synchronization overhead. Batch-level summary "
+                        "writing is also available via `train_step` override. "
+                        "Please see [TensorBoard Scalars tutorial]( "
+                        "https://www.tensorflow.org/tensorboard/scalars_and_keras#batch-level_logging)  "
+                        "# noqa: E501 for more details."
+                    ),
                     "typ": 'Union[Literal["batch", "epoch"], int]',
                 },
             ),
@@ -111,12 +123,14 @@ class_google_keras_tensorboard_ir: IntermediateRepr = {
                 "profile_batch",
                 {
                     "default": 0,
-                    "doc": "(Not supported at this time) Profile the batch(es) "
-                    "to sample compute characteristics. profile_batch "
-                    "must be a non-negative integer or a tuple of "
-                    "integers. A pair of positive integers signify a "
-                    "range of batches to profile. By default, profiling "
-                    "is disabled.",
+                    "doc": (
+                        "(Not supported at this time) Profile the batch(es) "
+                        "to sample compute characteristics. profile_batch "
+                        "must be a non-negative integer or a tuple of "
+                        "integers. A pair of positive integers signify a "
+                        "range of batches to profile. By default, profiling "
+                        "is disabled."
+                    ),
                     "typ": "int",
                 },
             ),
@@ -124,9 +138,11 @@ class_google_keras_tensorboard_ir: IntermediateRepr = {
                 "embeddings_freq",
                 {
                     "default": 0,
-                    "doc": "frequency (in epochs) at which embedding layers will "
-                    "be visualized. If set to 0, embeddings won't be "
-                    "visualized.",
+                    "doc": (
+                        "frequency (in epochs) at which embedding layers will "
+                        "be visualized. If set to 0, embeddings won't be "
+                        "visualized."
+                    ),
                     "typ": "int",
                 },
             ),
@@ -134,11 +150,13 @@ class_google_keras_tensorboard_ir: IntermediateRepr = {
                 "embeddings_metadata",
                 {
                     "default": NoneStr,
-                    "doc": "Dictionary which maps embedding layer names to the "
-                    "filename of a file in which to save metadata for the "
-                    "embedding layer. In case the same metadata file is "
-                    "to be used for all embedding layers, a single "
-                    "filename can be passed.",
+                    "doc": (
+                        "Dictionary which maps embedding layer names to the "
+                        "filename of a file in which to save metadata for the "
+                        "embedding layer. In case the same metadata file is "
+                        "to be used for all embedding layers, a single "
+                        "filename can be passed."
+                    ),
                     "typ": "str",
                 },
             ),
@@ -161,13 +179,15 @@ class_torch_nn_l1loss_ir: IntermediateRepr = {
                 "size_average",
                 {
                     "default": True,
-                    "doc": "Deprecated (see :attr:`reduction`). By default, the "
-                    "losses are averaged over each loss element in the "
-                    "batch. Note that for some losses, there are multiple "
-                    "elements per sample. If the field "
-                    ":attr:`size_average` is set to ``False``, the losses "
-                    "are instead summed for each minibatch. Ignored when "
-                    ":attr:`reduce` is ``False``.",
+                    "doc": (
+                        "Deprecated (see :attr:`reduction`). By default, the "
+                        "losses are averaged over each loss element in the "
+                        "batch. Note that for some losses, there are multiple "
+                        "elements per sample. If the field "
+                        ":attr:`size_average` is set to ``False``, the losses "
+                        "are instead summed for each minibatch. Ignored when "
+                        ":attr:`reduce` is ``False``."
+                    ),
                     "typ": "Optional[bool]",
                 },
             ),
@@ -175,12 +195,14 @@ class_torch_nn_l1loss_ir: IntermediateRepr = {
                 "reduce",
                 {
                     "default": True,
-                    "doc": "Deprecated (see :attr:`reduction`). By default, the "
-                    "losses are averaged or summed over observations for "
-                    "each minibatch depending on :attr:`size_average`. "
-                    "When :attr:`reduce` is ``False``, returns a loss per "
-                    "batch element instead and ignores "
-                    ":attr:`size_average`.",
+                    "doc": (
+                        "Deprecated (see :attr:`reduction`). By default, the "
+                        "losses are averaged or summed over observations for "
+                        "each minibatch depending on :attr:`size_average`. "
+                        "When :attr:`reduce` is ``False``, returns a loss per "
+                        "batch element instead and ignores "
+                        ":attr:`size_average`."
+                    ),
                     "typ": "Optional[bool]",
                 },
             ),
@@ -188,15 +210,17 @@ class_torch_nn_l1loss_ir: IntermediateRepr = {
                 "reduction",
                 {
                     "default": "mean",
-                    "doc": "Specifies the reduction to apply to the output: "
-                    "``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no "
-                    "reduction will be applied, ``'mean'``: the sum of "
-                    "the output will be divided by the number of elements "
-                    "in the output, ``'sum'``: the output will be summed. "
-                    "Note: :attr:`size_average` and :attr:`reduce` are in "
-                    "the process of being deprecated, and in the "
-                    "meantime, specifying either of those two args will "
-                    "override :attr:`reduction`.",
+                    "doc": (
+                        "Specifies the reduction to apply to the output: "
+                        "``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no "
+                        "reduction will be applied, ``'mean'``: the sum of "
+                        "the output will be divided by the number of elements "
+                        "in the output, ``'sum'``: the output will be summed. "
+                        "Note: :attr:`size_average` and :attr:`reduce` are in "
+                        "the process of being deprecated, and in the "
+                        "meantime, specifying either of those two args will "
+                        "override :attr:`reduction`."
+                    ),
                     "typ": "int",
                 },
             ),
@@ -216,8 +240,10 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
             (
                 "max_lr",
                 {
-                    "doc": "Upper learning rate boundaries in the cycle for each "
-                    "parameter group.",
+                    "doc": (
+                        "Upper learning rate boundaries in the cycle for each "
+                        "parameter group."
+                    ),
                     "typ": "Union[float, list]",
                 },
             ),
@@ -225,10 +251,12 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "total_steps",
                 {
                     "default": NoneStr,
-                    "doc": "The total number of steps in the cycle. Note that if "
-                    "a value is not provided here, then it must be "
-                    "inferred by providing a value for epochs and "
-                    "steps_per_epoch.",
+                    "doc": (
+                        "The total number of steps in the cycle. Note that if "
+                        "a value is not provided here, then it must be "
+                        "inferred by providing a value for epochs and "
+                        "steps_per_epoch."
+                    ),
                     "typ": "Optional[int]",
                 },
             ),
@@ -236,10 +264,12 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "epochs",
                 {
                     "default": NoneStr,
-                    "doc": "The number of epochs to train for. This is used "
-                    "along with steps_per_epoch in order to infer the "
-                    "total number of steps in the cycle if a value for "
-                    "total_steps is not provided.",
+                    "doc": (
+                        "The number of epochs to train for. This is used "
+                        "along with steps_per_epoch in order to infer the "
+                        "total number of steps in the cycle if a value for "
+                        "total_steps is not provided."
+                    ),
                     "typ": "Optional[int]",
                 },
             ),
@@ -247,10 +277,12 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "steps_per_epoch",
                 {
                     "default": NoneStr,
-                    "doc": "The number of steps per epoch to train for. This is "
-                    "used along with epochs in order to infer the total "
-                    "number of steps in the cycle if a value for "
-                    "total_steps is not provided.",
+                    "doc": (
+                        "The number of steps per epoch to train for. This is "
+                        "used along with epochs in order to infer the total "
+                        "number of steps in the cycle if a value for "
+                        "total_steps is not provided."
+                    ),
                     "typ": "Optional[int]",
                 },
             ),
@@ -258,8 +290,10 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "pct_start",
                 {
                     "default": 0.3,
-                    "doc": "The percentage of the cycle (in number of steps) "
-                    "spent increasing the learning rate.",
+                    "doc": (
+                        "The percentage of the cycle (in number of steps) "
+                        "spent increasing the learning rate."
+                    ),
                     "typ": "int",
                 },
             ),
@@ -267,8 +301,10 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "anneal_strategy",
                 {
                     "default": "cos",
-                    "doc": 'Specifies the annealing strategy: "cos" for cosine '
-                    'annealing, "linear" for linear annealing.',
+                    "doc": (
+                        'Specifies the annealing strategy: "cos" for cosine '
+                        'annealing, "linear" for linear annealing.'
+                    ),
                     "typ": "Literal['cos', 'linear']",
                 },
             ),
@@ -276,9 +312,11 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "cycle_momentum",
                 {
                     "default": True,
-                    "doc": "If ``True``, momentum is cycled inversely to "
-                    "learning rate between 'base_momentum' and "
-                    "'max_momentum'.",
+                    "doc": (
+                        "If ``True``, momentum is cycled inversely to "
+                        "learning rate between 'base_momentum' and "
+                        "'max_momentum'."
+                    ),
                     "typ": "bool",
                 },
             ),
@@ -286,11 +324,13 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "base_momentum",
                 {
                     "default": 0.85,
-                    "doc": "Lower momentum boundaries in the cycle for each "
-                    "parameter group. Note that momentum is cycled "
-                    "inversely to learning rate; at the peak of a cycle, "
-                    "momentum is 'base_momentum' and learning rate is "
-                    "'max_lr'.",
+                    "doc": (
+                        "Lower momentum boundaries in the cycle for each "
+                        "parameter group. Note that momentum is cycled "
+                        "inversely to learning rate; at the peak of a cycle, "
+                        "momentum is 'base_momentum' and learning rate is "
+                        "'max_lr'."
+                    ),
                     "typ": "Union[float, list]",
                 },
             ),
@@ -298,12 +338,14 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "max_momentum",
                 {
                     "default": 0.95,
-                    "doc": "Upper momentum boundaries in the cycle for each "
-                    "parameter group. Functionally, it defines the cycle "
-                    "amplitude (max_momentum - base_momentum). Note that "
-                    "momentum is cycled inversely to learning rate; at "
-                    "the start of a cycle, momentum is 'max_momentum' and "
-                    "learning rate is 'base_lr'",
+                    "doc": (
+                        "Upper momentum boundaries in the cycle for each "
+                        "parameter group. Functionally, it defines the cycle "
+                        "amplitude (max_momentum - base_momentum). Note that "
+                        "momentum is cycled inversely to learning rate; at "
+                        "the start of a cycle, momentum is 'max_momentum' and "
+                        "learning rate is 'base_lr'"
+                    ),
                     "typ": "Union[float, list]",
                 },
             ),
@@ -311,8 +353,10 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "div_factor",
                 {
                     "default": 25.0,
-                    "doc": "Determines the initial learning rate via initial_lr "
-                    "= max_lr/div_factor",
+                    "doc": (
+                        "Determines the initial learning rate via initial_lr "
+                        "= max_lr/div_factor"
+                    ),
                     "typ": "float",
                 },
             ),
@@ -320,8 +364,10 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "final_div_factor",
                 {
                     "default": 10000.0,
-                    "doc": "Determines the minimum learning rate via min_lr = "
-                    "initial_lr/final_div_factor",
+                    "doc": (
+                        "Determines the minimum learning rate via min_lr = "
+                        "initial_lr/final_div_factor"
+                    ),
                     "typ": "float",
                 },
             ),
@@ -329,13 +375,15 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "last_epoch",
                 {
                     "default": -1,
-                    "doc": "The index of the last batch. This parameter is used "
-                    "when resuming a training job. Since `step()` should "
-                    "be invoked after each batch instead of after each "
-                    "epoch, this number represents the total number of "
-                    "*batches* computed, not the total number of epochs "
-                    "computed. When last_epoch=-1, the schedule is "
-                    "started from the beginning.",
+                    "doc": (
+                        "The index of the last batch. This parameter is used "
+                        "when resuming a training job. Since `step()` should "
+                        "be invoked after each batch instead of after each "
+                        "epoch, this number represents the total number of "
+                        "*batches* computed, not the total number of epochs "
+                        "computed. When last_epoch=-1, the schedule is "
+                        "started from the beginning."
+                    ),
                     "typ": "int",
                 },
             ),
@@ -343,8 +391,9 @@ class_torch_nn_one_cycle_lr_ir: IntermediateRepr = {
                 "verbose",
                 {
                     "default": False,
-                    "doc": "If ``True``, prints a message to stdout for each "
-                    "update.",
+                    "doc": (
+                        "If ``True``, prints a message to stdout for each " "update."
+                    ),
                     "typ": "bool",
                 },
             ),
@@ -367,14 +416,16 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                 "learning_rate",
                 {
                     "default": 0.001,
-                    "doc": "A float, a "
-                    "`keras.optimizers.schedules.LearningRateSchedule` "
-                    "instance, or a callable that takes no arguments and "
-                    "returns the actual value to use. The learning rate. "
-                    "Defaults to `0.001`. Note that `Adadelta` tends to "
-                    "benefit from higher initial learning rate values "
-                    "compared to other optimizers. To match the exact "
-                    "form in the original paper, use 1.0.",
+                    "doc": (
+                        "A float, a "
+                        "`keras.optimizers.schedules.LearningRateSchedule` "
+                        "instance, or a callable that takes no arguments and "
+                        "returns the actual value to use. The learning rate. "
+                        "Defaults to `0.001`. Note that `Adadelta` tends to "
+                        "benefit from higher initial learning rate values "
+                        "compared to other optimizers. To match the exact "
+                        "form in the original paper, use 1.0."
+                    ),
                     "typ": "float",
                 },
             ),
@@ -382,8 +433,9 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                 "rho",
                 {
                     "default": 0.95,
-                    "doc": "A floating point value. The decay rate. Defaults to "
-                    "`0.95`.",
+                    "doc": (
+                        "A floating point value. The decay rate. Defaults to " "`0.95`."
+                    ),
                     "typ": "float",
                 },
             ),
@@ -391,8 +443,10 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                 "epsilon",
                 {
                     "default": NoneStr,
-                    "doc": "Small floating point value for maintaining numerical "
-                    "stability.",
+                    "doc": (
+                        "Small floating point value for maintaining numerical "
+                        "stability."
+                    ),
                     "typ": "Optional[float]",
                 },
             ),
@@ -400,8 +454,10 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                 "name",
                 {
                     "default": NoneStr,
-                    "doc": "String. The name to use for momentum accumulator "
-                    "weights created by the optimizer.",
+                    "doc": (
+                        "String. The name to use for momentum accumulator "
+                        "weights created by the optimizer."
+                    ),
                     "typ": "Optional[str]",
                 },
             ),
@@ -417,9 +473,11 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                 "clipnorm",
                 {
                     "default": NoneStr,
-                    "doc": "Float. If set, the gradient of each weight is "
-                    "individually clipped so that its norm is no higher "
-                    "than this value.",
+                    "doc": (
+                        "Float. If set, the gradient of each weight is "
+                        "individually clipped so that its norm is no higher "
+                        "than this value."
+                    ),
                     "typ": "Optional[float]",
                 },
             ),
@@ -427,8 +485,10 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                 "clipvalue",
                 {
                     "default": NoneStr,
-                    "doc": "Float. If set, the gradient of each weight is "
-                    "clipped to be no higher than this value.",
+                    "doc": (
+                        "Float. If set, the gradient of each weight is "
+                        "clipped to be no higher than this value."
+                    ),
                     "typ": "Optional[float]",
                 },
             ),
@@ -436,9 +496,11 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                 "global_clipnorm",
                 {
                     "default": NoneStr,
-                    "doc": "Float. If set, the gradient of all weights is "
-                    "clipped so that their global norm is no higher than "
-                    "this value.",
+                    "doc": (
+                        "Float. If set, the gradient of all weights is "
+                        "clipped so that their global norm is no higher than "
+                        "this value."
+                    ),
                     "typ": "Optional[float]",
                 },
             ),
@@ -446,12 +508,14 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                 "use_ema",
                 {
                     "default": False,
-                    "doc": "Boolean, defaults to False. If True, exponential "
-                    "moving average (EMA) is applied. EMA consists of "
-                    "computing an exponential moving average of the "
-                    "weights of the model (as the weight values change "
-                    "after each training batch), and periodically "
-                    "overwriting the weights with their moving average.",
+                    "doc": (
+                        "Boolean, defaults to False. If True, exponential "
+                        "moving average (EMA) is applied. EMA consists of "
+                        "computing an exponential moving average of the "
+                        "weights of the model (as the weight values change "
+                        "after each training batch), and periodically "
+                        "overwriting the weights with their moving average."
+                    ),
                     "typ": "bool",
                 },
             ),
@@ -459,11 +523,13 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                 "ema_momentum",
                 {
                     "default": 0.99,
-                    "doc": "Float, defaults to 0.99. Only used if "
-                    "`use_ema=True`. This is the momentum to use when "
-                    "computing the EMA of the model's weights: "
-                    "`new_average = ema_momentum * old_average + (1 - "
-                    "ema_momentum) * current_variable_value`.",
+                    "doc": (
+                        "Float, defaults to 0.99. Only used if "
+                        "`use_ema=True`. This is the momentum to use when "
+                        "computing the EMA of the model's weights: "
+                        "`new_average = ema_momentum * old_average + (1 - "
+                        "ema_momentum) * current_variable_value`."
+                    ),
                     "typ": "float",
                 },
             ),
@@ -471,18 +537,20 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                 "ema_overwrite_frequency",
                 {
                     "default": NoneStr,
-                    "doc": "Int or None, defaults to None. Only used if "
-                    "`use_ema=True`. Every `ema_overwrite_frequency` "
-                    "steps of iterations, we overwrite the model variable "
-                    "by its moving average. If None, the optimizer does "
-                    "not overwrite model variables in the middle of "
-                    "training, and you need to explicitly overwrite the "
-                    "variables at the end of training by calling "
-                    "`optimizer.finalize_variable_values()` (which "
-                    "updates the model variables in-place). When using "
-                    "the built-in `fit()` training loop, this happens "
-                    "automatically after the last epoch, and you don't "
-                    "need to do anything.",
+                    "doc": (
+                        "Int or None, defaults to None. Only used if "
+                        "`use_ema=True`. Every `ema_overwrite_frequency` "
+                        "steps of iterations, we overwrite the model variable "
+                        "by its moving average. If None, the optimizer does "
+                        "not overwrite model variables in the middle of "
+                        "training, and you need to explicitly overwrite the "
+                        "variables at the end of training by calling "
+                        "`optimizer.finalize_variable_values()` (which "
+                        "updates the model variables in-place). When using "
+                        "the built-in `fit()` training loop, this happens "
+                        "automatically after the last epoch, and you don't "
+                        "need to do anything."
+                    ),
                     "typ": "Optional[int]",
                 },
             ),
@@ -490,14 +558,16 @@ docstring_google_keras_adadelta_ir: IntermediateRepr = {
                 "loss_scale_factor",
                 {
                     "default": NoneStr,
-                    "doc": "Float or `None`. If a float, the scale factor will "
-                    "be multiplied the loss before computing gradients, "
-                    "and the inverse of the scale factor will be "
-                    "multiplied by the gradients before updating "
-                    "variables. Useful for preventing underflow during "
-                    "mixed precision training. Alternately, "
-                    "`keras.optimizers.LossScaleOptimizer` will "
-                    "automatically set a loss scale factor.",
+                    "doc": (
+                        "Float or `None`. If a float, the scale factor will "
+                        "be multiplied the loss before computing gradients, "
+                        "and the inverse of the scale factor will be "
+                        "multiplied by the gradients before updating "
+                        "variables. Useful for preventing underflow during "
+                        "mixed precision training. Alternately, "
+                        "`keras.optimizers.LossScaleOptimizer` will "
+                        "automatically set a loss scale factor."
+                    ),
                     "typ": "Optional[float]",
                 },
             ),
@@ -515,13 +585,15 @@ docstring_google_keras_adadelta_merged_init_ir: IntermediateRepr = {
                 "learning_rate",
                 {
                     "default": 0.001,
-                    "doc": "Initial value for the learning rate: either a "
-                    "floating point value, or a "
-                    "`tf.keras.optimizers.schedules.LearningRateSchedule` "
-                    "instance. Defaults to 0.001. Note that `Adadelta` "
-                    "tends to benefit from higher initial learning rate "
-                    "values compared to other optimizers. To match the "
-                    "exact form in the original paper, use 1.0.",
+                    "doc": (
+                        "Initial value for the learning rate: either a "
+                        "floating point value, or a "
+                        "`tf.keras.optimizers.schedules.LearningRateSchedule` "
+                        "instance. Defaults to 0.001. Note that `Adadelta` "
+                        "tends to benefit from higher initial learning rate "
+                        "values compared to other optimizers. To match the "
+                        "exact form in the original paper, use 1.0."
+                    ),
                     "typ": "float",
                 },
             ),
@@ -536,16 +608,20 @@ docstring_google_keras_adadelta_merged_init_ir: IntermediateRepr = {
                 "epsilon",
                 {
                     "default": NoneStr,
-                    "doc": "Small floating point value used to maintain "
-                    "numerical stability.",
+                    "doc": (
+                        "Small floating point value used to maintain "
+                        "numerical stability."
+                    ),
                 },
             ),
             (
                 "name",
                 {
                     "default": "Adadelta",
-                    "doc": "Optional name prefix for the operations created when "
-                    'applying gradients.  Defaults to `"Adadelta"`.',
+                    "doc": (
+                        "Optional name prefix for the operations created when "
+                        'applying gradients.  Defaults to `"Adadelta"`.'
+                    ),
                     "typ": "Optional[str]",
                 },
             ),
@@ -553,12 +629,14 @@ docstring_google_keras_adadelta_merged_init_ir: IntermediateRepr = {
                 "kwargs",
                 {
                     "default": NoneStr,
-                    "doc": 'Keyword arguments. Allowed to be one of `"clipnorm"` '
-                    'or `"clipvalue"`. `"clipnorm"` (float) clips '
-                    "gradients by norm and represents the maximum norm of "
-                    'each parameter; `"clipvalue"` (float) clips gradient '
-                    "by value and represents the maximum absolute value "
-                    "of each parameter.",
+                    "doc": (
+                        'Keyword arguments. Allowed to be one of `"clipnorm"` '
+                        'or `"clipvalue"`. `"clipnorm"` (float) clips '
+                        "gradients by norm and represents the maximum norm of "
+                        'each parameter; `"clipvalue"` (float) clips gradient '
+                        "by value and represents the maximum absolute value "
+                        "of each parameter."
+                    ),
                     "typ": "Optional[dict]",
                 },
             ),
@@ -622,11 +700,13 @@ docstring_google_keras_lambda_callback_ir: IntermediateRepr = {
             (
                 "kwargs",
                 {
-                    "doc": "Any function in `Callback` that you want to override "
-                    "by passing `function_name=function`. For example, "
-                    "`LambdaCallback(.., on_train_end=train_end_fn)`. The "
-                    "custom function needs to have same arguments as the "
-                    "ones defined in `Callback`.",
+                    "doc": (
+                        "Any function in `Callback` that you want to override "
+                        "by passing `function_name=function`. For example, "
+                        "`LambdaCallback(.., on_train_end=train_end_fn)`. The "
+                        "custom function needs to have same arguments as the "
+                        "ones defined in `Callback`."
+                    ),
                     "typ": "Optional[dict]",
                 },
             ),
@@ -649,14 +729,16 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
                 "learning_rate",
                 {
                     "default": 0.001,
-                    "doc": "A float, a "
-                    "`keras.optimizers.schedules.LearningRateSchedule` "
-                    "instance, or a callable that takes no arguments and "
-                    "returns the actual value to use. The learning "
-                    "rate.Note that `Adadelta` tends to benefit from "
-                    "higher initial learning rate values compared to "
-                    "other optimizers. To match the exact form in the "
-                    "original paper, use 1.0.",
+                    "doc": (
+                        "A float, a "
+                        "`keras.optimizers.schedules.LearningRateSchedule` "
+                        "instance, or a callable that takes no arguments and "
+                        "returns the actual value to use. The learning "
+                        "rate.Note that `Adadelta` tends to benefit from "
+                        "higher initial learning rate values compared to "
+                        "other optimizers. To match the exact form in the "
+                        "original paper, use 1.0."
+                    ),
                     "typ": "float",
                 },
             ),
@@ -672,8 +754,10 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
                 "epsilon",
                 {
                     "default": 1e-07,
-                    "doc": "Small floating point value for maintaining numerical "
-                    "stability.",
+                    "doc": (
+                        "Small floating point value for maintaining numerical "
+                        "stability."
+                    ),
                     "typ": "Optional[float]",
                 },
             ),
@@ -681,8 +765,10 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
                 "name",
                 {
                     "default": "adadelta",
-                    "doc": "String. The name to use for momentum accumulator "
-                    "weights created by the optimizer.",
+                    "doc": (
+                        "String. The name to use for momentum accumulator "
+                        "weights created by the optimizer."
+                    ),
                     "typ": "Optional[str]",
                 },
             ),
@@ -698,9 +784,11 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
                 "clipnorm",
                 {
                     "default": NoneStr,
-                    "doc": "Float. If set, the gradient of each weight is "
-                    "individually clipped so that its norm is no higher "
-                    "than this value.",
+                    "doc": (
+                        "Float. If set, the gradient of each weight is "
+                        "individually clipped so that its norm is no higher "
+                        "than this value."
+                    ),
                     "typ": "Optional[float]",
                 },
             ),
@@ -708,8 +796,10 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
                 "clipvalue",
                 {
                     "default": NoneStr,
-                    "doc": "Float. If set, the gradient of each weight is "
-                    "clipped to be no higher than this value.",
+                    "doc": (
+                        "Float. If set, the gradient of each weight is "
+                        "clipped to be no higher than this value."
+                    ),
                     "typ": "Optional[float]",
                 },
             ),
@@ -717,9 +807,11 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
                 "global_clipnorm",
                 {
                     "default": NoneStr,
-                    "doc": "Float. If set, the gradient of all weights is "
-                    "clipped so that their global norm is no higher than "
-                    "this value.",
+                    "doc": (
+                        "Float. If set, the gradient of all weights is "
+                        "clipped so that their global norm is no higher than "
+                        "this value."
+                    ),
                     "typ": "Optional[float]",
                 },
             ),
@@ -727,12 +819,14 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
                 "use_ema",
                 {
                     "default": False,
-                    "doc": "Boolean,If True, exponential moving average (EMA) is "
-                    "applied. EMA consists of computing an exponential "
-                    "moving average of the weights of the model (as the "
-                    "weight values change after each training batch), and "
-                    "periodically overwriting the weights with their "
-                    "moving average.",
+                    "doc": (
+                        "Boolean,If True, exponential moving average (EMA) is "
+                        "applied. EMA consists of computing an exponential "
+                        "moving average of the weights of the model (as the "
+                        "weight values change after each training batch), and "
+                        "periodically overwriting the weights with their "
+                        "moving average."
+                    ),
                     "typ": "bool",
                 },
             ),
@@ -740,11 +834,13 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
                 "ema_momentum",
                 {
                     "default": 0.99,
-                    "doc": "Float,Only used if `use_ema=True`. This is the "
-                    "momentum to use when computing the EMA of the "
-                    "model's weights: `new_average = ema_momentum * "
-                    "old_average + (1 - ema_momentum) * "
-                    "current_variable_value`.",
+                    "doc": (
+                        "Float,Only used if `use_ema=True`. This is the "
+                        "momentum to use when computing the EMA of the "
+                        "model's weights: `new_average = ema_momentum * "
+                        "old_average + (1 - ema_momentum) * "
+                        "current_variable_value`."
+                    ),
                     "typ": "float",
                 },
             ),
@@ -752,18 +848,20 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
                 "ema_overwrite_frequency",
                 {
                     "default": NoneStr,
-                    "doc": "Int or None,Only used if `use_ema=True`. Every "
-                    "`ema_overwrite_frequency` steps of iterations, we "
-                    "overwrite the model variable by its moving average. "
-                    "If None, the optimizer does not overwrite model "
-                    "variables in the middle of training, and you need to "
-                    "explicitly overwrite the variables at the end of "
-                    "training by calling "
-                    "`optimizer.finalize_variable_values()` (which "
-                    "updates the model variables in-place). When using "
-                    "the built-in `fit()` training loop, this happens "
-                    "automatically after the last epoch, and you don't "
-                    "need to do anything.",
+                    "doc": (
+                        "Int or None,Only used if `use_ema=True`. Every "
+                        "`ema_overwrite_frequency` steps of iterations, we "
+                        "overwrite the model variable by its moving average. "
+                        "If None, the optimizer does not overwrite model "
+                        "variables in the middle of training, and you need to "
+                        "explicitly overwrite the variables at the end of "
+                        "training by calling "
+                        "`optimizer.finalize_variable_values()` (which "
+                        "updates the model variables in-place). When using "
+                        "the built-in `fit()` training loop, this happens "
+                        "automatically after the last epoch, and you don't "
+                        "need to do anything."
+                    ),
                     "typ": "NoneType",
                 },
             ),
@@ -771,14 +869,16 @@ docstring_google_keras_adadelta_function_ir: IntermediateRepr = {
                 "loss_scale_factor",
                 {
                     "default": NoneStr,
-                    "doc": "Float or `None`. If a float, the scale factor will "
-                    "be multiplied the loss before computing gradients, "
-                    "and the inverse of the scale factor will be "
-                    "multiplied by the gradients before updating "
-                    "variables. Useful for preventing underflow during "
-                    "mixed precision training. Alternately, "
-                    "`keras.optimizers.LossScaleOptimizer` will "
-                    "automatically set a loss scale factor.",
+                    "doc": (
+                        "Float or `None`. If a float, the scale factor will "
+                        "be multiplied the loss before computing gradients, "
+                        "and the inverse of the scale factor will be "
+                        "multiplied by the gradients before updating "
+                        "variables. Useful for preventing underflow during "
+                        "mixed precision training. Alternately, "
+                        "`keras.optimizers.LossScaleOptimizer` will "
+                        "automatically set a loss scale factor."
+                    ),
                     "typ": "Optional[float]",
                 },
             ),
@@ -814,10 +914,12 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "learning_rate",
                 {
                     "default": 0.001,
-                    "doc": "A float, a "
-                    "`keras.optimizers.schedules.LearningRateSchedule` "
-                    "instance, or a callable that takes no arguments and "
-                    "returns the actual value to use. The learning rate.",
+                    "doc": (
+                        "A float, a "
+                        "`keras.optimizers.schedules.LearningRateSchedule` "
+                        "instance, or a callable that takes no arguments and "
+                        "returns the actual value to use. The learning rate."
+                    ),
                     "typ": "float",
                 },
             ),
@@ -825,10 +927,12 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "beta_1",
                 {
                     "default": 0.9,
-                    "doc": "A float value or a constant float tensor, or a "
-                    "callable that takes no arguments and returns the "
-                    "actual value to use. The exponential decay rate for "
-                    "the 1st moment estimates.",
+                    "doc": (
+                        "A float value or a constant float tensor, or a "
+                        "callable that takes no arguments and returns the "
+                        "actual value to use. The exponential decay rate for "
+                        "the 1st moment estimates."
+                    ),
                     "typ": "float",
                 },
             ),
@@ -836,10 +940,12 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "beta_2",
                 {
                     "default": 0.999,
-                    "doc": "A float value or a constant float tensor, or a "
-                    "callable that takes no arguments and returns the "
-                    "actual value to use. The exponential decay rate for "
-                    "the 2nd moment estimates.",
+                    "doc": (
+                        "A float value or a constant float tensor, or a "
+                        "callable that takes no arguments and returns the "
+                        "actual value to use. The exponential decay rate for "
+                        "the 2nd moment estimates."
+                    ),
                     "typ": "float",
                 },
             ),
@@ -847,10 +953,12 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "epsilon",
                 {
                     "default": 1e-07,
-                    "doc": "A small constant for numerical stability. This "
-                    'epsilon is "epsilon hat" in the Kingma and Ba paper '
-                    "(in the formula just before Section 2.1), not the "
-                    "epsilon in Algorithm 1 of the paper.",
+                    "doc": (
+                        "A small constant for numerical stability. This "
+                        'epsilon is "epsilon hat" in the Kingma and Ba paper '
+                        "(in the formula just before Section 2.1), not the "
+                        "epsilon in Algorithm 1 of the paper."
+                    ),
                     "typ": "float",
                 },
             ),
@@ -858,9 +966,11 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "amsgrad",
                 {
                     "default": False,
-                    "doc": "Boolean. Whether to apply AMSGrad variant of this "
-                    'algorithm from the paper "On the Convergence of Adam '
-                    'and beyond".',
+                    "doc": (
+                        "Boolean. Whether to apply AMSGrad variant of this "
+                        'algorithm from the paper "On the Convergence of Adam '
+                        'and beyond".'
+                    ),
                     "typ": "bool",
                 },
             ),
@@ -868,8 +978,10 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "name",
                 {
                     "default": NoneStr,
-                    "doc": "String. The name to use for momentum accumulator "
-                    "weights created by the optimizer.",
+                    "doc": (
+                        "String. The name to use for momentum accumulator "
+                        "weights created by the optimizer."
+                    ),
                     "typ": "Optional[str]",
                 },
             ),
@@ -885,9 +997,11 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "clipnorm",
                 {
                     "default": NoneStr,
-                    "doc": "Float. If set, the gradient of each weight is "
-                    "individually clipped so that its norm is no higher "
-                    "than this value.",
+                    "doc": (
+                        "Float. If set, the gradient of each weight is "
+                        "individually clipped so that its norm is no higher "
+                        "than this value."
+                    ),
                     "typ": "Optional[float]",
                 },
             ),
@@ -895,8 +1009,10 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "clipvalue",
                 {
                     "default": NoneStr,
-                    "doc": "Float. If set, the gradient of each weight is "
-                    "clipped to be no higher than this value.",
+                    "doc": (
+                        "Float. If set, the gradient of each weight is "
+                        "clipped to be no higher than this value."
+                    ),
                     "typ": "Optional[float]",
                 },
             ),
@@ -904,9 +1020,11 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "global_clipnorm",
                 {
                     "default": NoneStr,
-                    "doc": "Float. If set, the gradient of all weights is "
-                    "clipped so that their global norm is no higher than "
-                    "this value.",
+                    "doc": (
+                        "Float. If set, the gradient of all weights is "
+                        "clipped so that their global norm is no higher than "
+                        "this value."
+                    ),
                     "typ": "Optional[float]",
                 },
             ),
@@ -914,12 +1032,14 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "use_ema",
                 {
                     "default": False,
-                    "doc": "Boolean,If True, exponential moving average (EMA) is "
-                    "applied. EMA consists of computing an exponential "
-                    "moving average of the weights of the model (as the "
-                    "weight values change after each training batch), and "
-                    "periodically overwriting the weights with their "
-                    "moving average.",
+                    "doc": (
+                        "Boolean,If True, exponential moving average (EMA) is "
+                        "applied. EMA consists of computing an exponential "
+                        "moving average of the weights of the model (as the "
+                        "weight values change after each training batch), and "
+                        "periodically overwriting the weights with their "
+                        "moving average."
+                    ),
                     "typ": "bool",
                 },
             ),
@@ -927,11 +1047,13 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "ema_momentum",
                 {
                     "default": 0.99,
-                    "doc": "Float,Only used if `use_ema=True`. This is the "
-                    "momentum to use when computing the EMA of the "
-                    "model's weights: `new_average = ema_momentum * "
-                    "old_average + (1 - ema_momentum) * "
-                    "current_variable_value`.",
+                    "doc": (
+                        "Float,Only used if `use_ema=True`. This is the "
+                        "momentum to use when computing the EMA of the "
+                        "model's weights: `new_average = ema_momentum * "
+                        "old_average + (1 - ema_momentum) * "
+                        "current_variable_value`."
+                    ),
                     "typ": "float",
                 },
             ),
@@ -939,32 +1061,36 @@ docstring_google_keras_adam_ir: IntermediateRepr = {
                 "ema_overwrite_frequency",
                 {
                     "default": NoneStr,
-                    "doc": "Int or None,Only used if `use_ema=True`. Every "
-                    "`ema_overwrite_frequency` steps of iterations, we "
-                    "overwrite the model variable by its moving average. "
-                    "If None, the optimizer does not overwrite model "
-                    "variables in the middle of training, and you need to "
-                    "explicitly overwrite the variables at the end of "
-                    "training by calling "
-                    "`optimizer.finalize_variable_values()` (which "
-                    "updates the model variables in-place). When using "
-                    "the built-in `fit()` training loop, this happens "
-                    "automatically after the last epoch, and you don't "
-                    "need to do anything.",
+                    "doc": (
+                        "Int or None,Only used if `use_ema=True`. Every "
+                        "`ema_overwrite_frequency` steps of iterations, we "
+                        "overwrite the model variable by its moving average. "
+                        "If None, the optimizer does not overwrite model "
+                        "variables in the middle of training, and you need to "
+                        "explicitly overwrite the variables at the end of "
+                        "training by calling "
+                        "`optimizer.finalize_variable_values()` (which "
+                        "updates the model variables in-place). When using "
+                        "the built-in `fit()` training loop, this happens "
+                        "automatically after the last epoch, and you don't "
+                        "need to do anything."
+                    ),
                 },
             ),
             (
                 "loss_scale_factor",
                 {
                     "default": NoneStr,
-                    "doc": "Float or `None`. If a float, the scale factor will "
-                    "be multiplied the loss before computing gradients, "
-                    "and the inverse of the scale factor will be "
-                    "multiplied by the gradients before updating "
-                    "variables. Useful for preventing underflow during "
-                    "mixed precision training. Alternately, "
-                    "`keras.optimizers.LossScaleOptimizer` will "
-                    "automatically set a loss scale factor.",
+                    "doc": (
+                        "Float or `None`. If a float, the scale factor will "
+                        "be multiplied the loss before computing gradients, "
+                        "and the inverse of the scale factor will be "
+                        "multiplied by the gradients before updating "
+                        "variables. Useful for preventing underflow during "
+                        "mixed precision training. Alternately, "
+                        "`keras.optimizers.LossScaleOptimizer` will "
+                        "automatically set a loss scale factor."
+                    ),
                     "typ": "Optional[float]",
                 },
             ),
@@ -986,10 +1112,12 @@ docstring_google_keras_squared_hinge_ir: IntermediateRepr = {
             (
                 "reduction",
                 {
-                    "doc": "Type of reduction to apply to the loss. In almost "
-                    'all cases this should be `"sum_over_batch_size"`. '
-                    'Supported options are `"sum"`, '
-                    '`"sum_over_batch_size"` or `None`.'
+                    "doc": (
+                        "Type of reduction to apply to the loss. In almost "
+                        'all cases this should be `"sum_over_batch_size"`. '
+                        'Supported options are `"sum"`, '
+                        '`"sum_over_batch_size"` or `None`.'
+                    )
                 },
             ),
             ("name", {"doc": "Optional name for the loss instance."}),
@@ -1017,8 +1145,10 @@ docstring_google_pytorch_lbfgs_ir: IntermediateRepr = {
                 "max_eval",
                 {
                     "default": "```max_iter * 1.25```",
-                    "doc": "maximal number of function evaluations per "
-                    "optimization step",
+                    "doc": (
+                        "maximal number of function evaluations per "
+                        "optimization step"
+                    ),
                 },
             ),
             (
@@ -1033,8 +1163,9 @@ docstring_google_pytorch_lbfgs_ir: IntermediateRepr = {
                 "tolerance_change",
                 {
                     "default": 1e-09,
-                    "doc": "termination tolerance on function value/parameter "
-                    "changes",
+                    "doc": (
+                        "termination tolerance on function value/parameter " "changes"
+                    ),
                     "typ": "float",
                 },
             ),
@@ -1059,8 +1190,10 @@ docstring_google_pytorch_lbfgs_ir: IntermediateRepr = {
 start_args_idx = docstring_keras_rmsprop_class_str.find("  Args:\n")
 end_args_idx = docstring_keras_rmsprop_class_str.find("\n\n", start_args_idx) + 2
 docstring_keras_rmsprop_class_ir: IntermediateRepr = {
-    "doc": docstring_keras_rmsprop_class_str[:start_args_idx]
-    + docstring_keras_rmsprop_class_str[end_args_idx:],
+    "doc": (
+        docstring_keras_rmsprop_class_str[:start_args_idx]
+        + docstring_keras_rmsprop_class_str[end_args_idx:]
+    ),
     "name": None,
     "params": OrderedDict(
         (
@@ -1068,12 +1201,14 @@ docstring_keras_rmsprop_class_ir: IntermediateRepr = {
                 "learning_rate",
                 {
                     "default": 0.001,
-                    "doc": "A `Tensor`, floating point value, or a schedule that "
-                    "is a "
-                    "`tf.keras.optimizers.schedules.LearningRateSchedule`, "
-                    "or a callable that takes no arguments and returns "
-                    "the actual value to use. The learning rate. Defaults "
-                    "to 0.001.",
+                    "doc": (
+                        "A `Tensor`, floating point value, or a schedule that "
+                        "is a "
+                        "`tf.keras.optimizers.schedules.LearningRateSchedule`, "
+                        "or a callable that takes no arguments and returns "
+                        "the actual value to use. The learning rate. Defaults "
+                        "to 0.001."
+                    ),
                     "typ": "float",
                 },
             ),
@@ -1081,8 +1216,10 @@ docstring_keras_rmsprop_class_ir: IntermediateRepr = {
                 "rho",
                 {
                     "default": 0.9,
-                    "doc": "Discounting factor for the history/coming gradient. "
-                    "Defaults to 0.9.",
+                    "doc": (
+                        "Discounting factor for the history/coming gradient. "
+                        "Defaults to 0.9."
+                    ),
                     "typ": "float",
                 },
             ),
@@ -1098,11 +1235,13 @@ docstring_keras_rmsprop_class_ir: IntermediateRepr = {
                 "epsilon",
                 {
                     "default": 1e-07,
-                    "doc": "A small constant for numerical stability. This "
-                    'epsilon is "epsilon hat" in the Kingma and Ba paper '
-                    "(in the formula just before Section 2.1), not the "
-                    "epsilon in Algorithm 1 of the paper. Defaults to "
-                    "1e-7.",
+                    "doc": (
+                        "A small constant for numerical stability. This "
+                        'epsilon is "epsilon hat" in the Kingma and Ba paper '
+                        "(in the formula just before Section 2.1), not the "
+                        "epsilon in Algorithm 1 of the paper. Defaults to "
+                        "1e-7."
+                    ),
                     "typ": "float",
                 },
             ),
@@ -1110,12 +1249,14 @@ docstring_keras_rmsprop_class_ir: IntermediateRepr = {
                 "centered",
                 {
                     "default": False,
-                    "doc": "Boolean. If `True`, gradients are normalized by the "
-                    "estimated variance of the gradient; if False, by the "
-                    "uncentered second moment. Setting this to `True` may "
-                    "help with training, but is slightly more expensive "
-                    "in terms of computation and memory. Defaults to "
-                    "`False`.",
+                    "doc": (
+                        "Boolean. If `True`, gradients are normalized by the "
+                        "estimated variance of the gradient; if False, by the "
+                        "uncentered second moment. Setting this to `True` may "
+                        "help with training, but is slightly more expensive "
+                        "in terms of computation and memory. Defaults to "
+                        "`False`."
+                    ),
                     "typ": "bool",
                 },
             ),
@@ -1123,8 +1264,10 @@ docstring_keras_rmsprop_class_ir: IntermediateRepr = {
                 "name",
                 {
                     "default": "RMSprop",
-                    "doc": "Optional name prefix for the operations created when "
-                    'applying gradients. Defaults to `"RMSprop"`.',
+                    "doc": (
+                        "Optional name prefix for the operations created when "
+                        'applying gradients. Defaults to `"RMSprop"`.'
+                    ),
                     "typ": "Optional[str]",
                 },
             ),
@@ -1132,10 +1275,12 @@ docstring_keras_rmsprop_class_ir: IntermediateRepr = {
                 "kwargs",
                 {
                     "default": NoneStr,
-                    "doc": 'Keyword arguments. Allowed to be one of `"clipnorm"` '
-                    'or `"clipvalue"`. `"clipnorm"` (float) clips '
-                    'gradients by norm; `"clipvalue"` (float) clips '
-                    "gradients by value.",
+                    "doc": (
+                        'Keyword arguments. Allowed to be one of `"clipnorm"` '
+                        'or `"clipvalue"`. `"clipnorm"` (float) clips '
+                        'gradients by norm; `"clipvalue"` (float) clips '
+                        "gradients by value."
+                    ),
                     "typ": "Optional[dict]",
                 },
             ),
@@ -1151,8 +1296,10 @@ start_args_idx = docstring_keras_rmsprop_method_str.find("  Args:\n")
 end_args_idx = docstring_keras_rmsprop_method_str.find("\n\n", start_args_idx + 1) + 4
 
 docstring_keras_rmsprop_method_ir: IntermediateRepr = {
-    "doc": docstring_keras_rmsprop_method_str[:start_args_idx]
-    + docstring_keras_rmsprop_method_str[end_args_idx:],
+    "doc": (
+        docstring_keras_rmsprop_method_str[:start_args_idx]
+        + docstring_keras_rmsprop_method_str[end_args_idx:]
+    ),
     "name": None,
     "params": OrderedDict(
         (
@@ -1160,12 +1307,14 @@ docstring_keras_rmsprop_method_ir: IntermediateRepr = {
                 "learning_rate",
                 {
                     "default": 0.001,
-                    "doc": "A `Tensor`, floating point value, or a schedule that "
-                    "is a "
-                    "`tf.keras.optimizers.schedules.LearningRateSchedule`, "
-                    "or a callable that takes no arguments and returns "
-                    "the actual value to use. The learning rate. Defaults "
-                    "to 0.001.",
+                    "doc": (
+                        "A `Tensor`, floating point value, or a schedule that "
+                        "is a "
+                        "`tf.keras.optimizers.schedules.LearningRateSchedule`, "
+                        "or a callable that takes no arguments and returns "
+                        "the actual value to use. The learning rate. Defaults "
+                        "to 0.001."
+                    ),
                     "typ": "float",
                 },
             ),
@@ -1173,8 +1322,10 @@ docstring_keras_rmsprop_method_ir: IntermediateRepr = {
                 "rho",
                 {
                     "default": 0.9,
-                    "doc": "Discounting factor for the history/coming gradient. "
-                    "Defaults to 0.9.",
+                    "doc": (
+                        "Discounting factor for the history/coming gradient. "
+                        "Defaults to 0.9."
+                    ),
                     "typ": "float",
                 },
             ),
@@ -1190,11 +1341,13 @@ docstring_keras_rmsprop_method_ir: IntermediateRepr = {
                 "epsilon",
                 {
                     "default": 1e-07,
-                    "doc": "A small constant for numerical stability. This "
-                    'epsilon is "epsilon hat" in the Kingma and Ba paper '
-                    "(in the formula just before Section 2.1), not the "
-                    "epsilon in Algorithm 1 of the paper. Defaults to "
-                    "1e-7.",
+                    "doc": (
+                        "A small constant for numerical stability. This "
+                        'epsilon is "epsilon hat" in the Kingma and Ba paper '
+                        "(in the formula just before Section 2.1), not the "
+                        "epsilon in Algorithm 1 of the paper. Defaults to "
+                        "1e-7."
+                    ),
                     "typ": "float",
                 },
             ),
@@ -1202,12 +1355,14 @@ docstring_keras_rmsprop_method_ir: IntermediateRepr = {
                 "centered",
                 {
                     "default": False,
-                    "doc": "Boolean. If `True`, gradients are normalized by the "
-                    "estimated variance of the gradient; if False, by the "
-                    "uncentered second moment. Setting this to `True` may "
-                    "help with training, but is slightly more expensive "
-                    "in terms of computation and memory. Defaults to "
-                    "`False`.",
+                    "doc": (
+                        "Boolean. If `True`, gradients are normalized by the "
+                        "estimated variance of the gradient; if False, by the "
+                        "uncentered second moment. Setting this to `True` may "
+                        "help with training, but is slightly more expensive "
+                        "in terms of computation and memory. Defaults to "
+                        "`False`."
+                    ),
                     "typ": "bool",
                 },
             ),
@@ -1215,8 +1370,10 @@ docstring_keras_rmsprop_method_ir: IntermediateRepr = {
                 "name",
                 {
                     "default": "RMSprop",
-                    "doc": "Optional name prefix for the operations created when "
-                    'applying gradients. Defaults to "RMSprop".',
+                    "doc": (
+                        "Optional name prefix for the operations created when "
+                        'applying gradients. Defaults to "RMSprop".'
+                    ),
                     "typ": "Optional[str]",
                 },
             ),
@@ -1224,14 +1381,16 @@ docstring_keras_rmsprop_method_ir: IntermediateRepr = {
                 "kwargs",
                 {
                     "default": NoneStr,
-                    "doc": "keyword arguments. Allowed to be {`clipnorm`, "
-                    "`clipvalue`, `lr`, `decay`}. `clipnorm` is clip "
-                    "gradients by norm; `clipvalue` is clip gradients by "
-                    "value, `decay` is included for backward "
-                    "compatibility to allow time inverse decay of "
-                    "learning rate. `lr` is included for backward "
-                    "compatibility, recommended to use `learning_rate` "
-                    "instead.",
+                    "doc": (
+                        "keyword arguments. Allowed to be {`clipnorm`, "
+                        "`clipvalue`, `lr`, `decay`}. `clipnorm` is clip "
+                        "gradients by norm; `clipvalue` is clip gradients by "
+                        "value, `decay` is included for backward "
+                        "compatibility to allow time inverse decay of "
+                        "learning rate. `lr` is included for backward "
+                        "compatibility, recommended to use `learning_rate` "
+                        "instead."
+                    ),
                     "typ": "Optional[dict]",
                 },
             ),
@@ -1274,8 +1433,10 @@ function_google_tf_ops_losses__safe_mean_ir: IntermediateRepr = {
             (
                 "losses",
                 {
-                    "doc": "`Tensor` whose elements contain individual loss "
-                    "measurements."
+                    "doc": (
+                        "`Tensor` whose elements contain individual loss "
+                        "measurements."
+                    )
                 },
             ),
             (
@@ -1289,10 +1450,14 @@ function_google_tf_ops_losses__safe_mean_ir: IntermediateRepr = {
             (
                 "return_type",
                 {
-                    "default": "```math_ops.div_no_nan(total_loss, num_present, "
-                    "name='value')```",
-                    "doc": "A scalar representing the mean of `losses`. If `num_present` is "
-                    "zero, then zero is returned.",
+                    "default": (
+                        "```math_ops.div_no_nan(total_loss, num_present, "
+                        "name='value')```"
+                    ),
+                    "doc": (
+                        "A scalar representing the mean of `losses`. If `num_present` is "
+                        "zero, then zero is returned."
+                    ),
                 },
             ),
         )
@@ -1427,10 +1592,12 @@ intermediate_repr_no_default_doc: IntermediateRepr = {
                 {
                     "default": "(np.empty(0), np.empty(0))",
                     "doc": "Train and tests dataset splits.",
-                    "typ": "Union[Tuple[tf.data.Dataset, "
-                    "tf.data.Dataset], "
-                    "Tuple[np.ndarray, "
-                    "np.ndarray]]",
+                    "typ": (
+                        "Union[Tuple[tf.data.Dataset, "
+                        "tf.data.Dataset], "
+                        "Tuple[np.ndarray, "
+                        "np.ndarray]]"
+                    ),
                 },
             ),
         )
@@ -1442,10 +1609,10 @@ for param in "data_loader_kwargs", "as_numpy":
     intermediate_repr_no_default_with_nones_doc["params"][param]["default"] = NoneStr
 
 intermediate_repr_no_default_sql_doc = deepcopy(intermediate_repr_no_default_doc)
-intermediate_repr_no_default_sql_doc["params"]["dataset_name"][
-    "doc"
-] = "[PK] {}".format(
-    intermediate_repr_no_default_sql_doc["params"]["dataset_name"]["doc"]
+intermediate_repr_no_default_sql_doc["params"]["dataset_name"]["doc"] = (
+    "[PK] {}".format(
+        intermediate_repr_no_default_sql_doc["params"]["dataset_name"]["doc"]
+    )
 )
 
 intermediate_repr_no_default_sql_with_nones_doc = deepcopy(
@@ -1491,8 +1658,10 @@ intermediate_repr_only_return_type: IntermediateRepr = {
                 "return_type",
                 {
                     "doc": "Train and tests dataset splits.",
-                    "typ": "Union[Tuple[tf.data.Dataset, tf.data.Dataset], "
-                    "Tuple[np.ndarray, np.ndarray]]",
+                    "typ": (
+                        "Union[Tuple[tf.data.Dataset, tf.data.Dataset], "
+                        "Tuple[np.ndarray, np.ndarray]]"
+                    ),
                 },
             ),
         ),
@@ -1517,9 +1686,11 @@ intermediate_repr: IntermediateRepr = {
                 "tfds_dir",
                 {
                     "default": "~/tensorflow_datasets",
-                    "doc": "directory to look for models in. "
-                    "Defaults to "
-                    '"~/tensorflow_datasets"',
+                    "doc": (
+                        "directory to look for models in. "
+                        "Defaults to "
+                        '"~/tensorflow_datasets"'
+                    ),
                     "typ": "str",
                 },
             ),
@@ -1553,13 +1724,17 @@ intermediate_repr: IntermediateRepr = {
                 "return_type",
                 {
                     "default": "(np.empty(0), np.empty(0))",
-                    "doc": "Train and tests dataset splits. "
-                    "Defaults to (np.empty(0), "
-                    "np.empty(0))",
-                    "typ": "Union[Tuple[tf.data.Dataset, "
-                    "tf.data.Dataset], "
-                    "Tuple[np.ndarray, "
-                    "np.ndarray]]",
+                    "doc": (
+                        "Train and tests dataset splits. "
+                        "Defaults to (np.empty(0), "
+                        "np.empty(0))"
+                    ),
+                    "typ": (
+                        "Union[Tuple[tf.data.Dataset, "
+                        "tf.data.Dataset], "
+                        "Tuple[np.ndarray, "
+                        "np.ndarray]]"
+                    ),
                 },
             ),
         )

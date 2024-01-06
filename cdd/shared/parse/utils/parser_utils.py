@@ -344,7 +344,7 @@ def _inspect(obj, name, parse_original_whitespace, word_wrap):
                 map(
                     partial(_inspect_process_ir_param, sig=sig),
                     ir.get("params", {}).items(),
-                )
+                ),
                 # if ir.get("params")
                 # else map(_inspect_process_sig, sig.parameters.items()),
             )

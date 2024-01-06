@@ -1,6 +1,7 @@
 """
 Helper to traverse the AST of the input file, extract the docstring out, parse and format to intended style, and emit
 """
+
 from ast import Module, fix_missing_locations
 from copy import deepcopy
 from operator import attrgetter

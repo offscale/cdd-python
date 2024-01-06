@@ -51,7 +51,12 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
     name="create_config",
     args=arguments(
         posonlyargs=[],
-        args=[set_arg(arg="config", annotation=Name(id="Config", ctx=Load()))],
+        args=[
+            set_arg(
+                arg="config",
+                annotation=Name(id="Config", ctx=Load(), lineno=None, col_offset=None),
+            )
+        ],
         kwonlyargs=[],
         kw_defaults=[],
         defaults=[],
@@ -62,14 +67,16 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
     body=[
         If(
             test=Compare(
-                left=Name(id="config", ctx=Load()),
+                left=Name(id="config", ctx=Load(), lineno=None, col_offset=None),
                 ops=[Is()],
                 comparators=[set_value(None)],
             ),
             body=[
                 Return(
                     value=Call(
-                        func=Name(id="JSONResponse", ctx=Load()),
+                        func=Name(
+                            id="JSONResponse", ctx=Load(), lineno=None, col_offset=None
+                        ),
                         args=[],
                         keywords=[
                             keyword(
@@ -105,13 +112,15 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
         ),
         Return(
             value=Call(
-                func=Name(id="JSONResponse", ctx=Load()),
+                func=Name(id="JSONResponse", ctx=Load(), lineno=None, col_offset=None),
                 args=[],
                 keywords=[
                     keyword(arg="status_code", value=set_value(201), identifier=None),
                     keyword(
                         arg="content",
-                        value=Name(id="config", ctx=Load()),
+                        value=Name(
+                            id="config", ctx=Load(), lineno=None, col_offset=None
+                        ),
                         identifier=None,
                     ),
                 ],
@@ -120,12 +129,16 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
     ],
     decorator_list=[
         Call(
-            func=Attribute(value=Name(id="app", ctx=Load()), attr="post", ctx=Load()),
+            func=Attribute(
+                value=Name(id="app", ctx=Load(), lineno=None, col_offset=None),
+                attr="post",
+                ctx=Load(),
+            ),
             args=[set_value("/api/config")],
             keywords=[
                 keyword(
                     arg="response_model",
-                    value=Name(id="Config", ctx=Load()),
+                    value=Name(id="Config", ctx=Load(), lineno=None, col_offset=None),
                     identifier=None,
                 ),
                 keyword(
@@ -136,14 +149,24 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
                             Dict(
                                 keys=[set_value("model"), set_value("description")],
                                 values=[
-                                    Name(id="Config", ctx=Load()),
+                                    Name(
+                                        id="Config",
+                                        ctx=Load(),
+                                        lineno=None,
+                                        col_offset=None,
+                                    ),
                                     set_value("A `Config` object."),
                                 ],
                             ),
                             Dict(
                                 keys=[set_value("model"), set_value("description")],
                                 values=[
-                                    Name(id="ServerError", ctx=Load()),
+                                    Name(
+                                        id="ServerError",
+                                        ctx=Load(),
+                                        lineno=None,
+                                        col_offset=None,
+                                    ),
                                     set_value("A `ServerError` object."),
                                 ],
                             ),

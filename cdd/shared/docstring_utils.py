@@ -86,19 +86,24 @@ def emit_param_str(
                     filter(
                         None,
                         (
-                            ":{key}: {doc}".format(
-                                key=key,
-                                doc=set_default_doc(
-                                    (name, _param), emit_default_doc=emit_default_doc
-                                )[1]["doc"].lstrip(),
-                            )
-                            if emit_doc and _param.get("doc")
-                            else None,
-                            ":{key_typ}: ```{typ}```".format(
-                                key_typ=key_typ, typ=_param["typ"]
-                            )
-                            if emit_type and _param.get("typ")
-                            else None,
+                            (
+                                ":{key}: {doc}".format(
+                                    key=key,
+                                    doc=set_default_doc(
+                                        (name, _param),
+                                        emit_default_doc=emit_default_doc,
+                                    )[1]["doc"].lstrip(),
+                                )
+                                if emit_doc and _param.get("doc")
+                                else None
+                            ),
+                            (
+                                ":{key_typ}: ```{typ}```".format(
+                                    key_typ=key_typ, typ=_param["typ"]
+                                )
+                                if emit_type and _param.get("typ")
+                                else None
+                            ),
                         ),
                     ),
                 ),
@@ -109,28 +114,34 @@ def emit_param_str(
             filter(
                 None,
                 (
-                    _fill(
-                        (_param["typ"] if _param.get("typ") else None)
-                        if name == "return_type"
-                        else "{name} :{typ}".format(
-                            name=name,
-                            typ=" {typ}".format(typ=_param["typ"])
-                            if _param.get("typ")
-                            else "",
+                    (
+                        _fill(
+                            (_param["typ"] if _param.get("typ") else None)
+                            if name == "return_type"
+                            else "{name} :{typ}".format(
+                                name=name,
+                                typ=(
+                                    " {typ}".format(typ=_param["typ"])
+                                    if _param.get("typ")
+                                    else ""
+                                ),
+                            )
                         )
-                    )
-                    if emit_type and _param.get("typ")
-                    else None,
-                    _fill(
-                        indent(
-                            set_default_doc(
-                                (name, _param), emit_default_doc=emit_default_doc
-                            )[1]["doc"],
-                            tab,
+                        if emit_type and _param.get("typ")
+                        else None
+                    ),
+                    (
+                        _fill(
+                            indent(
+                                set_default_doc(
+                                    (name, _param), emit_default_doc=emit_default_doc
+                                )[1]["doc"],
+                                tab,
+                            )
                         )
-                    )
-                    if emit_doc and _param.get("doc")
-                    else None,
+                        if emit_doc and _param.get("doc")
+                        else None
+                    ),
                 ),
             )
         )
@@ -140,29 +151,39 @@ def emit_param_str(
                 None,
                 (
                     (
-                        "  {typ}:".format(typ=_param["typ"])
-                        if _param.get("typ")
-                        else None
-                    )
-                    if name == "return_type"
-                    else "  {name} ({typ}): ".format(
-                        name=name,
-                        typ="{typ!s}".format(typ=_param["typ"])
-                        if _param.get("typ")
-                        else "",
-                    )
-                    if _param.get("typ")
-                    else "  {name}: ".format(name=name),
-                    "{nl}{tab}{doc}".format(
-                        doc=set_default_doc(
-                            (name, _param), emit_default_doc=emit_default_doc
-                        )[1]["doc"],
-                        **{"nl": "\n", "tab": " " * 3}
+                        (
+                            "  {typ}:".format(typ=_param["typ"])
+                            if _param.get("typ")
+                            else None
+                        )
                         if name == "return_type"
-                        else {"nl": "", "tab": ""}
-                    )
-                    if emit_doc and _param.get("doc")
-                    else None,
+                        else (
+                            "  {name} ({typ}): ".format(
+                                name=name,
+                                typ=(
+                                    "{typ!s}".format(typ=_param["typ"])
+                                    if _param.get("typ")
+                                    else ""
+                                ),
+                            )
+                            if _param.get("typ")
+                            else "  {name}: ".format(name=name)
+                        )
+                    ),
+                    (
+                        "{nl}{tab}{doc}".format(
+                            doc=set_default_doc(
+                                (name, _param), emit_default_doc=emit_default_doc
+                            )[1]["doc"],
+                            **(
+                                {"nl": "\n", "tab": " " * 3}
+                                if name == "return_type"
+                                else {"nl": "", "tab": ""}
+                            )
+                        )
+                        if emit_doc and _param.get("doc")
+                        else None
+                    ),
                 ),
             )
         )
@@ -543,12 +564,16 @@ def parse_docstring_into_header_args_footer(current_doc_str, original_doc_str):
     args_returns_current, args_returns_original = map(
         lambda doc_start_end: doc_start_end[0][
             slice(
-                doc_start_end[1]
-                if doc_start_end[1] is not None and doc_start_end[1] > -1
-                else None,
-                doc_start_end[2]
-                if doc_start_end[2] is not None and doc_start_end[2] > -1
-                else None,
+                (
+                    doc_start_end[1]
+                    if doc_start_end[1] is not None and doc_start_end[1] > -1
+                    else None
+                ),
+                (
+                    doc_start_end[2]
+                    if doc_start_end[2] is not None and doc_start_end[2] > -1
+                    else None
+                ),
             )
         ],
         (
@@ -621,9 +646,11 @@ def header_args_footer_to_str(header, args_returns, footer):
         args_returns_start_nls = num_of_nls(args_returns, end=False)
         args_returns_ends_nls = num_of_nls(args_returns, end=True)
         args_returns = "{maybe_nls0}{args_returns}{maybe_nl1}".format(
-            maybe_nls0="\n" * (args_returns_start_nls or 2)
-            if args_returns_start_nls < 2 and header and not header_end_nls
-            else "",
+            maybe_nls0=(
+                "\n" * (args_returns_start_nls or 2)
+                if args_returns_start_nls < 2 and header and not header_end_nls
+                else ""
+            ),
             args_returns=args_returns,
             maybe_nl1="\n" if not args_returns_ends_nls else "",
         )
@@ -662,11 +689,7 @@ def header_args_footer_to_str(header, args_returns, footer):
     nls_needed_after_header = (
         0
         if (nls_after_header > 1 or not header or not args_returns)
-        else 1
-        if nls_after_header == 1
-        else 2
-        if nls_after_header == 0
-        else 0
+        else 1 if nls_after_header == 1 else 2 if nls_after_header == 0 else 0
     )
 
     return "{header}{maybe_nl0}{args_returns}{maybe_nl1}{footer}{maybe_nl2}".format(

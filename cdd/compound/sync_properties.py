@@ -126,6 +126,8 @@ def sync_property(
             expr=None,
             expr_annotation=None,
             expr_target=None,
+            col_offset=None,
+            lineno=None,
         )
     else:
         assert isinstance(

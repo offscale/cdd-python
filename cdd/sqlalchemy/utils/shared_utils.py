@@ -143,10 +143,14 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
         left, right = map(attrgetter("id"), union_typ_tuple.elts)
         args.append(
             Name(
-                cdd.compound.openapi.utils.emit_utils.typ2column_type.get(right, right)
-                if left in cdd.compound.openapi.utils.emit_utils.typ2column_type
-                else cdd.compound.openapi.utils.emit_utils.typ2column_type.get(
-                    left, left
+                (
+                    cdd.compound.openapi.utils.emit_utils.typ2column_type.get(
+                        right, right
+                    )
+                    if left in cdd.compound.openapi.utils.emit_utils.typ2column_type
+                    else cdd.compound.openapi.utils.emit_utils.typ2column_type.get(
+                        left, left
+                    )
                 ),
                 Load(),
             )

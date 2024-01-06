@@ -32,7 +32,9 @@ class RewriteName(ast.NodeTransformer):
         :rtype: ```Union[Name, Attribute]```
         """
         return (
-            Attribute(Name("self", Load()), node.id, Load())
+            Attribute(
+                Name("self", Load(), lineno=None, col_offset=None), node.id, Load()
+            )
             if not self.node_ids or node.id in self.node_ids
             else ast.NodeTransformer.generic_visit(self, node)
         )

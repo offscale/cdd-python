@@ -135,18 +135,20 @@ def parse_docstring(
     if style is Style.rest:
         ir.update(
             {
-                k: OrderedDict(
-                    map(
-                        partial(
-                            interpolate_defaults,
-                            emit_default_doc=emit_default_doc,
-                            require_default=False,
-                        ),
-                        ir[k].items(),
+                k: (
+                    OrderedDict(
+                        map(
+                            partial(
+                                interpolate_defaults,
+                                emit_default_doc=emit_default_doc,
+                                require_default=False,
+                            ),
+                            ir[k].items(),
+                        )
                     )
+                    if ir[k]
+                    else ir[k]
                 )
-                if ir[k]
-                else ir[k]
                 for k in ("params", "returns")
             }
         )
@@ -208,9 +210,7 @@ def _scan_phase_numpydoc_and_google(
     white_spacer = (
         identity
         if parse_original_whitespace
-        else lambda s: s
-        if s.isspace()
-        else s.strip()
+        else lambda s: s if s.isspace() else s.strip()
     )
     scanned: Dict[
         str, List[Union[List[Union[LiteralString, str]], Union[LiteralString, str]]]
@@ -222,9 +222,9 @@ def _scan_phase_numpydoc_and_google(
 
     # First doc, if present
     _start_idx, _end_idx, _found = (
-        lambda _loc: location_within(docstring, return_tokens)
-        if _loc[0] == -1
-        else _loc
+        lambda _loc: (
+            location_within(docstring, return_tokens) if _loc[0] == -1 else _loc
+        )
     )(location_within(docstring, arg_tokens))
     # _leading_whitespace = "".join(takewhile(str.isspace, docstring[:_start_idx][::-1]))
 
@@ -829,50 +829,71 @@ def _parse_phase_numpydoc_and_google(
                     ),
                 ),
             ),
-            "returns": OrderedDict(
-                (
-                    _interpolate_defaults_and_force_future_default(
-                        _set_name_and_type(
-                            (
-                                "return_type",
+            "returns": (
+                OrderedDict(
+                    (
+                        _interpolate_defaults_and_force_future_default(
+                            _set_name_and_type(
                                 (
-                                    {
-                                        "typ": scanned[return_tokens[0]][0][
-                                            :-1
-                                        ].lstrip(),
-                                        "doc": white_spacer(
-                                            scanned[return_tokens[0]][1]
-                                        ),
-                                    }
-                                    if len(scanned[return_tokens[0]]) == 2
-                                    and isinstance(scanned[return_tokens[0]][1], str)
-                                    else {}
-                                    if isinstance(scanned[return_tokens[0]][0], str)
-                                    and scanned[return_tokens[0]][0].isspace()
-                                    else {
-                                        "doc": white_spacer(
-                                            scanned[return_tokens[0]][0]
+                                    "return_type",
+                                    (
+                                        (
+                                            {
+                                                "typ": scanned[return_tokens[0]][0][
+                                                    :-1
+                                                ].lstrip(),
+                                                "doc": white_spacer(
+                                                    scanned[return_tokens[0]][1]
+                                                ),
+                                            }
+                                            if len(scanned[return_tokens[0]]) == 2
+                                            and isinstance(
+                                                scanned[return_tokens[0]][1], str
+                                            )
+                                            else (
+                                                {}
+                                                if isinstance(
+                                                    scanned[return_tokens[0]][0], str
+                                                )
+                                                and scanned[return_tokens[0]][
+                                                    0
+                                                ].isspace()
+                                                else {
+                                                    "doc": (
+                                                        white_spacer(
+                                                            scanned[return_tokens[0]][0]
+                                                        )
+                                                        if isinstance(
+                                                            scanned[return_tokens[0]][
+                                                                0
+                                                            ],
+                                                            str,
+                                                        )
+                                                        else scanned[return_tokens[0]][
+                                                            0
+                                                        ]
+                                                    )
+                                                }
+                                            )
                                         )
-                                        if isinstance(scanned[return_tokens[0]][0], str)
-                                        else scanned[return_tokens[0]][0]
-                                    }
-                                )
-                                if style is Style.google
-                                else {
-                                    "typ": scanned[return_tokens[0]][0][0],
-                                    "doc": white_spacer(
-                                        scanned[return_tokens[0]][0][1]
+                                        if style is Style.google
+                                        else {
+                                            "typ": scanned[return_tokens[0]][0][0],
+                                            "doc": white_spacer(
+                                                scanned[return_tokens[0]][0][1]
+                                            ),
+                                        }
                                     ),
-                                },
+                                ),
+                                infer_type=infer_type,
+                                word_wrap=word_wrap,
                             ),
-                            infer_type=infer_type,
-                            word_wrap=word_wrap,
                         ),
                     ),
-                ),
-            )
-            if scanned[return_tokens[0]]
-            else None,
+                )
+                if scanned[return_tokens[0]]
+                else None
+            ),
         }
     )
 
@@ -901,9 +922,12 @@ def _fill_doc_with_afterward(scanned):
         del scanned["scanned_afterward"]
     else:
         scanned["doc"] += "{maybe_nl}{scanned_afterward_str}".format(
-            maybe_nl="\n"
-            if scanned["scanned_afterward"] and scanned["scanned_afterward"][0] == ""
-            else "",
+            maybe_nl=(
+                "\n"
+                if scanned["scanned_afterward"]
+                and scanned["scanned_afterward"][0] == ""
+                else ""
+            ),
             scanned_afterward_str="\n".join(scanned["scanned_afterward"]),
         )
 

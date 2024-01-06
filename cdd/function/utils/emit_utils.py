@@ -44,33 +44,37 @@ def _make_call_meth(body, return_type, param_names, docstring_format, word_wrap)
             filter(
                 None,
                 (
-                    None
-                    if body.get("doc") in none_types
-                    else Expr(
-                        set_value(
-                            emit_param_str(
-                                (
-                                    "return_type",
-                                    {
-                                        "doc": multiline(
-                                            indent_all_but_first(body["doc"])
-                                        )
-                                    },
-                                ),
-                                style=docstring_format,
-                                word_wrap=word_wrap,
-                                purpose="function",
+                    (
+                        None
+                        if body.get("doc") in none_types
+                        else Expr(
+                            set_value(
+                                emit_param_str(
+                                    (
+                                        "return_type",
+                                        {
+                                            "doc": multiline(
+                                                indent_all_but_first(body["doc"])
+                                            )
+                                        },
+                                    ),
+                                    style=docstring_format,
+                                    word_wrap=word_wrap,
+                                    purpose="function",
+                                )
                             )
                         )
                     ),
-                    RewriteName(param_names).visit(
-                        Return(
-                            get_value(ast.parse(return_type.strip("`")).body[0]),
-                            expr=None,
+                    (
+                        RewriteName(param_names).visit(
+                            Return(
+                                get_value(ast.parse(return_type.strip("`")).body[0]),
+                                expr=None,
+                            )
                         )
-                    )
-                    if code_quoted(body["default"])
-                    else Return(set_value(body["default"]), expr=None),
+                        if code_quoted(body["default"])
+                        else Return(set_value(body["default"]), expr=None)
+                    ),
                 ),
             )
         )

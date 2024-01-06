@@ -123,41 +123,56 @@ def argparse_function(
                                                 (
                                                     (
                                                         "return_type",
-                                                        {
-                                                            "doc": "argument_parser, {returns_doc}".format(
-                                                                returns_doc=intermediate_repr[
-                                                                    "returns"
-                                                                ][
-                                                                    "return_type"
-                                                                ][
-                                                                    "doc"
-                                                                ]
+                                                        (
+                                                            {
+                                                                "doc": (
+                                                                    "argument_parser, {returns_doc}".format(
+                                                                        returns_doc=intermediate_repr[
+                                                                            "returns"
+                                                                        ][
+                                                                            "return_type"
+                                                                        ][
+                                                                            "doc"
+                                                                        ]
+                                                                    )
+                                                                    if intermediate_repr[
+                                                                        "returns"
+                                                                    ][
+                                                                        "return_type"
+                                                                    ].get(
+                                                                        "doc"
+                                                                    )
+                                                                    else "argument_parser"
+                                                                ),
+                                                                "typ": "Tuple[ArgumentParser, {typ}]".format(
+                                                                    typ=intermediate_repr[
+                                                                        "returns"
+                                                                    ][
+                                                                        "return_type"
+                                                                    ][
+                                                                        "typ"
+                                                                    ]
+                                                                ),
+                                                            }
+                                                            if "return_type"
+                                                            in (
+                                                                (
+                                                                    intermediate_repr
+                                                                    or {}
+                                                                ).get("returns")
+                                                                or iter(())
                                                             )
-                                                            if intermediate_repr[
+                                                            and intermediate_repr[
                                                                 "returns"
-                                                            ]["return_type"].get("doc")
-                                                            else "argument_parser",
-                                                            "typ": "Tuple[ArgumentParser, {typ}]".format(
-                                                                typ=intermediate_repr[
-                                                                    "returns"
-                                                                ]["return_type"]["typ"]
-                                                            ),
-                                                        }
-                                                        if "return_type"
-                                                        in (
-                                                            (
-                                                                intermediate_repr or {}
-                                                            ).get("returns")
-                                                            or iter(())
-                                                        )
-                                                        and intermediate_repr[
-                                                            "returns"
-                                                        ]["return_type"].get("typ")
-                                                        not in none_types
-                                                        else {
-                                                            "doc": "argument_parser",
-                                                            "typ": "ArgumentParser",
-                                                        },
+                                                            ]["return_type"].get("typ")
+                                                            not in none_types
+                                                            else {
+                                                                "doc": (
+                                                                    "argument_parser"
+                                                                ),
+                                                                "typ": "ArgumentParser",
+                                                            }
+                                                        ),
                                                     ),
                                                 ),
                                             ),
@@ -206,55 +221,62 @@ def argparse_function(
                             ),
                             *(
                                 internal_body[
-                                    2
-                                    if len(internal_body) > 1
-                                    and isinstance(internal_body[1], Assign)
-                                    and internal_body[1].targets[0].id
-                                    == "argument_parser"
-                                    else 1 :
+                                    (
+                                        2
+                                        if len(internal_body) > 1
+                                        and isinstance(internal_body[1], Assign)
+                                        and internal_body[1].targets[0].id
+                                        == "argument_parser"
+                                        else 1
+                                    ) :
                                 ]
                                 if internal_body
                                 and isinstance(internal_body[0], Expr)
                                 and isinstance(get_value(internal_body[0].value), str)
                                 else internal_body
                             ),
-                            None
-                            if internal_body and isinstance(internal_body[-1], Return)
-                            else (
-                                Return(
-                                    value=Tuple(
-                                        ctx=Load(),
-                                        elts=[
-                                            Name("argument_parser", Load()),
-                                            set_value(
-                                                intermediate_repr["returns"][
-                                                    "return_type"
-                                                ]["default"]
-                                            )
-                                            if code_quoted(
-                                                intermediate_repr["returns"][
-                                                    "return_type"
-                                                ]["default"]
-                                            )
-                                            else ast.parse(
-                                                intermediate_repr["returns"][
-                                                    "return_type"
-                                                ]["default"]
-                                            )
-                                            .body[0]
-                                            .value,
-                                        ],
+                            (
+                                None
+                                if internal_body
+                                and isinstance(internal_body[-1], Return)
+                                else (
+                                    Return(
+                                        value=Tuple(
+                                            ctx=Load(),
+                                            elts=[
+                                                Name("argument_parser", Load()),
+                                                (
+                                                    set_value(
+                                                        intermediate_repr["returns"][
+                                                            "return_type"
+                                                        ]["default"]
+                                                    )
+                                                    if code_quoted(
+                                                        intermediate_repr["returns"][
+                                                            "return_type"
+                                                        ]["default"]
+                                                    )
+                                                    else ast.parse(
+                                                        intermediate_repr["returns"][
+                                                            "return_type"
+                                                        ]["default"]
+                                                    )
+                                                    .body[0]
+                                                    .value
+                                                ),
+                                            ],
+                                            expr=None,
+                                        ),
                                         expr=None,
-                                    ),
-                                    expr=None,
-                                )
-                                if "default"
-                                in (
-                                    intermediate_repr.get("returns")
-                                    or {"return_type": iter(())}
-                                )["return_type"]
-                                else Return(
-                                    value=Name("argument_parser", Load()), expr=None
+                                    )
+                                    if "default"
+                                    in (
+                                        intermediate_repr.get("returns")
+                                        or {"return_type": iter(())}
+                                    )["return_type"]
+                                    else Return(
+                                        value=Name("argument_parser", Load()), expr=None
+                                    )
                                 )
                             ),
                         ),

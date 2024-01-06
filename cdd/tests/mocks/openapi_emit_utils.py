@@ -7,13 +7,13 @@ from ast import Assign, Call, Load, Name, Store, keyword
 from cdd.shared.ast_utils import set_value
 
 column_fk: Assign = Assign(
-    targets=[Name(id="column_name", ctx=Store())],
+    targets=[Name(id="column_name", ctx=Store(), lineno=None, col_offset=None)],
     value=Call(
-        func=Name(id="Column", ctx=Load()),
+        func=Name(id="Column", ctx=Load(), lineno=None, col_offset=None),
         args=[
-            Name(id="TableName0", ctx=Load()),
+            Name(id="TableName0", ctx=Load(), lineno=None, col_offset=None),
             Call(
-                func=Name(id="ForeignKey", ctx=Load()),
+                func=Name(id="ForeignKey", ctx=Load(), lineno=None, col_offset=None),
                 args=[set_value("TableName0")],
                 keywords=[],
             ),
@@ -26,13 +26,13 @@ column_fk: Assign = Assign(
 )
 
 column_fk_gold: Assign = Assign(
-    targets=[Name(id="column_name", ctx=Store())],
+    targets=[Name(id="column_name", ctx=Store(), lineno=None, col_offset=None)],
     value=Call(
-        func=Name(id="Column", ctx=Load()),
+        func=Name(id="Column", ctx=Load(), lineno=None, col_offset=None),
         args=[
-            Name(id="Integer", ctx=Load()),
+            Name(id="Integer", ctx=Load(), lineno=None, col_offset=None),
             Call(
-                func=Name(id="ForeignKey", ctx=Load()),
+                func=Name(id="ForeignKey", ctx=Load(), lineno=None, col_offset=None),
                 args=[set_value("table_name0.id")],
                 keywords=[],
             ),
@@ -45,16 +45,16 @@ column_fk_gold: Assign = Assign(
 )
 
 id_column: Assign = Assign(
-    targets=[Name(id="id", ctx=Store())],
+    targets=[Name(id="id", ctx=Store(), lineno=None, col_offset=None)],
     value=Call(
-        func=Name(id="Column", ctx=Load()),
-        args=[Name(id="Integer", ctx=Load())],
+        func=Name(id="Column", ctx=Load(), lineno=None, col_offset=None),
+        args=[Name(id="Integer", ctx=Load(), lineno=None, col_offset=None)],
         keywords=[
             keyword(arg="primary_key", value=set_value(True)),
             keyword(
                 arg="server_default",
                 value=Call(
-                    func=Name(id="Identity", ctx=Load()),
+                    func=Name(id="Identity", ctx=Load(), lineno=None, col_offset=None),
                     args=[],
                     keywords=[],
                 ),

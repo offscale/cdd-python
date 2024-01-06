@@ -16,7 +16,9 @@ black = (
         tuple(),
         {
             "format_str": lambda src_contents, mode: src_contents,
-            "Mode": lambda target_versions, line_length, is_pyi, string_normalization: None,
+            "Mode": (
+                lambda target_versions, line_length, is_pyi, string_normalization: None
+            ),
         },
     )
 )

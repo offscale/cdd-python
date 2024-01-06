@@ -40,13 +40,13 @@ _class_doc_str_expr: Expr = Expr(
     )
 )
 
-_assign_type: Name = Name("int", Load())
+_assign_type: Name = Name("int", Load(), lineno=None, col_offset=None)
 assign_with_type_comment: Assign = Assign(
-    targets=[Name("res", Store())],
+    targets=[Name("res", Store(), lineno=None, col_offset=None)],
     value=BinOp(
-        left=Name("a", Load()),
+        left=Name("a", Load(), lineno=None, col_offset=None),
         op=Add(),
-        right=Name("b", Load()),
+        right=Name("b", Load(), lineno=None, col_offset=None),
     ),
     type_comment=_assign_type.id,
     lineno=None,
@@ -60,6 +60,7 @@ ann_assign_with_annotation: AnnAssign = AnnAssign(
     expr_target=None,
     expr_annotation=None,
     lineno=None,
+    col_offset=None,
     **maybe_type_comment
 )
 
@@ -68,8 +69,12 @@ function_type_annotated: FunctionDef = FunctionDef(
     args=arguments(
         posonlyargs=[],
         args=[
-            set_arg(arg="a", annotation=Name("int", Load())),
-            set_arg(arg="b", annotation=Name("int", Load())),
+            set_arg(
+                arg="a", annotation=Name("int", Load(), lineno=None, col_offset=None)
+            ),
+            set_arg(
+                arg="b", annotation=Name("int", Load(), lineno=None, col_offset=None)
+            ),
         ],
         kwonlyargs=[],
         kw_defaults=[],
@@ -79,12 +84,12 @@ function_type_annotated: FunctionDef = FunctionDef(
     ),
     body=[
         ann_assign_with_annotation,
-        Return(value=Name("res", Load())),
+        Return(value=Name("res", Load(), lineno=None, col_offset=None)),
     ],
     decorator_list=[],
     type_params=[],
     lineno=None,
-    returns=Name("int", Load()),
+    returns=Name("int", Load(), lineno=None, col_offset=None),
 )
 
 function_type_in_docstring: FunctionDef = FunctionDef(
@@ -108,7 +113,7 @@ function_type_in_docstring: FunctionDef = FunctionDef(
             )
         ),
         assign_with_type_comment,
-        Return(value=Name("res", Load())),
+        Return(value=Name("res", Load(), lineno=None, col_offset=None)),
     ],
     decorator_list=[],
     type_params=[],
@@ -127,35 +132,33 @@ class_with_internal_annotated: ClassDef = ClassDef(
     body=[
         _class_doc_str_expr,
         AnnAssign(
-            annotation=Name(
-                "int",
-                Load(),
-            ),
+            annotation=Name("int", Load(), lineno=None, col_offset=None),
             simple=1,
-            target=Name("a", Store()),
+            target=Name("a", Store(), lineno=None, col_offset=None),
             value=set_value(5),
             expr=None,
             expr_target=None,
             expr_annotation=None,
             lineno=None,
+            col_offset=None,
         ),
         AnnAssign(
-            annotation=Name(
-                "float",
-                Load(),
-            ),
+            annotation=Name("float", Load(), lineno=None, col_offset=None),
             simple=1,
-            target=Name("b", Store()),
+            target=Name("b", Store(), lineno=None, col_offset=None),
             value=set_value(0.0),
             expr=None,
             expr_target=None,
             expr_annotation=None,
             lineno=None,
+            col_offset=None,
         ),
         reindent_docstring(function_type_annotated, indent_level=3, smart=False),
     ],
     expr=None,
     identifier_name=None,
+    lineno=None,
+    col_offset=None,
 )
 
 class_with_internal_type_commented_and_docstring_typed: ClassDef = ClassDef(
@@ -167,7 +170,7 @@ class_with_internal_type_commented_and_docstring_typed: ClassDef = ClassDef(
     body=[
         _class_doc_str_expr,
         Assign(
-            targets=[Name("a", Store())],
+            targets=[Name("a", Store(), lineno=None, col_offset=None)],
             value=set_value(5),
             type_comment=Name(
                 "int",
@@ -196,6 +199,8 @@ class_with_internal_type_commented_and_docstring_typed: ClassDef = ClassDef(
     ],
     expr=None,
     identifier_name=None,
+    lineno=None,
+    col_offset=None,
 )
 
 __all__ = [

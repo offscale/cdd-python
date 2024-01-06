@@ -59,6 +59,7 @@ from cdd.shared.pure_utils import (
     identity,
     none_types,
     paren_wrap_code,
+    pp,
     quote,
     rpartial,
     simple_types,
@@ -70,10 +71,7 @@ FALLBACK_TYP: str = "str"
 
 # Was `Attribute(Call(args=[], func=Name("globals", Load()), keywords=[], expr=None, expr_func=None,),
 #                "__getitem__", Load(),)`; this type is used for `Any` and any other unhandled (for argparse `type=`)
-FALLBACK_ARGPARSE_TYP = Name(
-    "str",
-    Load(),
-)
+FALLBACK_ARGPARSE_TYP = Name("str", Load(), lineno=None, col_offset=None)
 
 
 def Dict_to_dict(d):
@@ -157,84 +155,108 @@ def param2ast(param):
     """
     name, _param = param
     del param
-    if _param.get("typ") is None and "default" in _param and "[" not in _param:
-        _param["typ"] = type(_param["default"]).__name__
-    if "default" in _param:
-        if isinstance(_param["default"], (Constant, Str)):
-            _param["default"] = get_value(_param["default"])
-            if _param["default"] in none_types:
-                _param["default"] = None
-            if _param["typ"] in frozenset(("Constant", "Str", "NamedConstant")):
-                _param["typ"] = "object"
-        # elif _param["default"] == NoneStr: _param["default"] = None
-    if _param.get("typ") in (None, NoneStr):
-        return AnnAssign(
-            annotation=Name("object", Load()),
-            simple=1,
-            target=Name(name, Store()),
-            expr=None,
-            expr_target=None,
-            expr_annotation=None,
-            value=None
-            if _param.get("default") in (None, NoneStr)
-            else set_value(_param["default"]),
-        )
-        # return Assign(
-        #     annotation=None,
-        #     simple=1,
-        #     targets=[Name(name, Store())],
-        #     value=set_value(_param.get("default")),
-        #     expr=None,
-        #     expr_target=None,
-        #     expr_annotation=None,
-        #     **maybe_type_comment
-        # )
-    elif needs_quoting(_param["typ"]):
-        val = (
-            _param.get("default")
-            if _param.get("default") in (None, NoneStr)
-            else quote(_param["default"])
-        )
-        if val in (None, NoneStr) and _param["typ"] == "str":
-            _param["typ"] = "Optional[Any]"
 
-        return AnnAssign(
-            annotation=Name(_param["typ"], Load())
-            if _param["typ"] in simple_types
-            else get_value(ast.parse(_param["typ"]).body[0]),
-            simple=1,
-            target=Name(name, Store()),
-            expr=None,
-            expr_target=None,
-            expr_annotation=None,
-            value=None if val is None else set_value(None if val == NoneStr else val),
-        )
-    elif _param["typ"] in simple_types:
-        return AnnAssign(
-            annotation=Name(_param["typ"], Load()),
-            simple=1,
-            target=Name(name, Store()),
-            value=set_value(
-                None
-                if _param.get("default") == NoneStr
-                else (_param.get("default") or simple_types[_param["typ"]])
-            ),
-            expr=None,
-            expr_target=None,
-            expr_annotation=None,
-        )
-    elif _param["typ"] == "dict" or _param["typ"].startswith("*"):
-        return AnnAssign(
-            annotation=set_slice(Name("dict", Load())),
-            simple=1,
-            target=Name(name, Store()),
-            value=Dict(keys=[], values=_param.get("default", []), expr=None),
-            expr=None,
-            expr_target=None,
-            expr_annotation=None,
-        )
-    else:
-        return _generic_param2ast((name, _param))
+    def get_default_val(val):
+        return None if val in (None, NoneStr) else set_value(val)
+
+    def ret():
+        if _param.get("typ") is None and "default" in _param and "[" not in _param:
+            _param["typ"] = type(_param["default"]).__name__
+        if "default" in _param:
+            if isinstance(_param["default"], (Constant, Str)):
+                _param["default"] = get_value(_param["default"])
+                if _param["default"] in none_types:
+                    _param["default"] = None
+                if _param["typ"] in frozenset(("Constant", "Str", "NamedConstant")):
+                    _param["typ"] = {"Str": "str"}.get(_param["typ"], "object")
+            # elif _param["default"] == NoneStr: _param["default"] = None
+        if _param.get("typ") in (None, NoneStr):
+            return AnnAssign(
+                annotation=Name("object", Load(), lineno=None, col_offset=None),
+                simple=1,
+                target=Name(name, Store(), lineno=None, col_offset=None),
+                expr=None,
+                expr_target=None,
+                expr_annotation=None,
+                value=get_default_val(_param.get("default")),
+                col_offset=None,
+                lineno=None,
+            )
+            # return Assign(
+            #     annotation=None,
+            #     simple=1,
+            #     targets=[Name(name, Store(), lineno=None, col_offset=None)],
+            #     value=set_value(_param.get("default")),
+            #     expr=None,
+            #     expr_target=None,
+            #     expr_annotation=None,
+            #     **maybe_type_comment
+            # )
+        elif needs_quoting(_param["typ"]):
+            val = (
+                _param.get("default")
+                if _param.get("default") in (None, NoneStr)
+                else quote(_param["default"])
+            )
+            # if (
+            #     val in (None, NoneStr)
+            #     and "Optional" not in _param["typ"]
+            #     and "None" not in _param["typ"]
+            # ):
+            #     _param["typ"] = "Optional[{}]".format(
+            #         "str"
+            #         if _param["typ"] == "str" and name.endswith(("name", "_dir"))
+            #         else "Any"
+            #     )
+
+            return AnnAssign(
+                annotation=(
+                    Name(_param["typ"], Load(), lineno=None, col_offset=None)
+                    if _param["typ"] in simple_types
+                    else get_value(ast.parse(_param["typ"]).body[0])
+                ),
+                simple=1,
+                target=Name(name, Store(), lineno=None, col_offset=None),
+                expr=None,
+                expr_target=None,
+                expr_annotation=None,
+                col_offset=None,
+                lineno=None,
+                value=get_default_val(val),
+            )
+        elif _param["typ"] in simple_types:
+            return AnnAssign(
+                annotation=Name(_param["typ"], Load(), lineno=None, col_offset=None),
+                simple=1,
+                target=Name(name, Store(), lineno=None, col_offset=None),
+                expr=None,
+                expr_target=None,
+                expr_annotation=None,
+                col_offset=None,
+                lineno=None,
+                value=get_default_val(_param.get("default")),
+            )
+        elif _param["typ"] == "dict" or _param["typ"].startswith("*"):
+            return AnnAssign(
+                annotation=set_slice(
+                    Name("dict", Load(), lineno=None, col_offset=None)
+                ),
+                simple=1,
+                target=Name(name, Store(), lineno=None, col_offset=None),
+                value=Dict(keys=[], values=_param.get("default", []), expr=None),
+                expr=None,
+                expr_target=None,
+                expr_annotation=None,
+                col_offset=None,
+                lineno=None,
+            )
+        else:
+            return _generic_param2ast((name, _param))
+
+    pp({"b4:{}".format(name): _param})
+    r = ret()
+    pp({"l8:{}".format(name): _param})
+    return r
 
 
 def _generic_param2ast(param):
@@ -283,20 +305,20 @@ def _generic_param2ast(param):
             value = (
                 parsed_default.body[0].value
                 if hasattr(parsed_default, "body")
-                else parsed_default
-                if "default" in _param
-                else None
+                else parsed_default if "default" in _param else None
             )
     # else:
     #     value = set_value(None)
     return AnnAssign(
         annotation=annotation,
         simple=1,
-        target=Name(name, Store()),
+        target=Name(name, Store(), lineno=None, col_offset=None),
         expr=None,
         expr_target=None,
         expr_annotation=None,
+        col_offset=None,
         value=value,
+        lineno=None,
     )
 
 
@@ -377,7 +399,7 @@ def param2argparse_param(param, word_wrap=True, emit_default_doc=True):
         action,
         _param.get("default", _default),
         typ,
-        required=required
+        required=required,
         # _default, _param, action, required, typ#
     )
     if default is None and _param.get("default") == NoneStr:
@@ -395,7 +417,7 @@ def param2argparse_param(param, word_wrap=True, emit_default_doc=True):
         Call(
             args=[set_value("--{name}".format(name=name))],
             func=Attribute(
-                Name("argument_parser", Load()),
+                Name("argument_parser", Load(), lineno=None, col_offset=None),
                 "add_argument",
                 Load(),
             ),
@@ -403,53 +425,67 @@ def param2argparse_param(param, word_wrap=True, emit_default_doc=True):
                 filter(
                     None,
                     (
-                        typ
-                        if typ is None
-                        else keyword(
-                            arg="type",
-                            value=FALLBACK_ARGPARSE_TYP
-                            if typ == "globals().__getitem__"
-                            else Name(typ, Load()),
-                            identifier=None,
+                        (
+                            typ
+                            if typ is None
+                            else keyword(
+                                arg="type",
+                                value=(
+                                    FALLBACK_ARGPARSE_TYP
+                                    if typ == "globals().__getitem__"
+                                    else Name(typ, Load(), lineno=None, col_offset=None)
+                                ),
+                                identifier=None,
+                            )
                         ),
-                        choices
-                        if choices is None
-                        else keyword(
-                            arg="choices",
-                            value=Tuple(
-                                ctx=Load(),
-                                elts=list(map(set_value, choices)),
-                                expr=None,
-                            ),
-                            identifier=None,
+                        (
+                            choices
+                            if choices is None
+                            else keyword(
+                                arg="choices",
+                                value=Tuple(
+                                    ctx=Load(),
+                                    elts=list(map(set_value, choices)),
+                                    expr=None,
+                                ),
+                                identifier=None,
+                            )
                         ),
-                        action
-                        if action is None
-                        else keyword(
-                            arg="action",
-                            value=set_value(action),
-                            identifier=None,
+                        (
+                            action
+                            if action is None
+                            else keyword(
+                                arg="action",
+                                value=set_value(action),
+                                identifier=None,
+                            )
                         ),
-                        keyword(
-                            arg="help",
-                            value=set_value((fill if word_wrap else identity)(doc)),
-                            identifier=None,
-                        )
-                        if doc
-                        else None,
-                        keyword(
-                            arg="required",
-                            value=set_value(True),
-                            identifier=None,
-                        )
-                        if required is True
-                        else None,
-                        default
-                        if default is None
-                        else keyword(
-                            arg="default",
-                            value=set_value(default),
-                            identifier=None,
+                        (
+                            keyword(
+                                arg="help",
+                                value=set_value((fill if word_wrap else identity)(doc)),
+                                identifier=None,
+                            )
+                            if doc
+                            else None
+                        ),
+                        (
+                            keyword(
+                                arg="required",
+                                value=set_value(True),
+                                identifier=None,
+                            )
+                            if required is True
+                            else None
+                        ),
+                        (
+                            default
+                            if default is None
+                            else keyword(
+                                arg="default",
+                                value=set_value(default),
+                                identifier=None,
+                            )
                         ),
                     ),
                 )
@@ -567,9 +603,11 @@ def func_arg2param(func_arg, default=None):
     return func_arg.arg, dict(
         doc=getattr(func_arg, "type_comment", None),
         **dict(
-            typ=None
-            if func_arg.annotation is None
-            else _to_code(func_arg.annotation).rstrip("\n"),
+            typ=(
+                None
+                if func_arg.annotation is None
+                else _to_code(func_arg.annotation).rstrip("\n")
+            ),
             **({} if default is None else {"default": default}),
         ),
     )
@@ -606,7 +644,7 @@ def get_value(node):
     Get the value from a Constant or a Str… or anything with a `.value`
 
     :param node: AST node
-    :type node: ```Union[Constant, Str]```
+    :type node: ```Union[Bytes, Constant, Name, Str, UnaryOp]```
 
     :return: Probably a string, but could be any constant value
     :rtype: ```Optional[Union[str, int, float, bool]]```
@@ -672,11 +710,14 @@ def set_value(value, kind=None):
         Constant(kind=kind, value=value, constant_value=None, string=None)
         if PY_GTE_3_8
         else (
-            Str(s=value, constant_value=None, string=None)
+            Str(s=value, constant_value=None, string=None, col_offset=None, lineno=None)
             if isinstance(value, str)
-            else Num(n=value, constant_value=None, string=None)
-            if not isinstance(value, bool) and isinstance(value, (int, float, complex))
-            else NameConstant(value=value, constant_value=None, string=None)
+            else (
+                Num(n=value, constant_value=None, string=None)
+                if not isinstance(value, bool)
+                and isinstance(value, (int, float, complex))
+                else NameConstant(value=value, constant_value=None, string=None)
+            )
         )
     )
 
@@ -882,7 +923,10 @@ def annotate_ancestry(node, filename=None):
             elif isinstance(child_node, (Constant, Str)):
                 child_node._location = parent_location + [get_value(child_node)]
             elif isinstance(child_node, Assign) and all(
-                map(rpartial(isinstance, Name), child_node.targets)
+                map(
+                    rpartial(isinstance, Name),
+                    child_node.targets,
+                )
             ):
                 for target in child_node.targets:
                     child_node._location = name + [target.id]
@@ -910,11 +954,13 @@ def annotate_ancestry(node, filename=None):
                         set_index_and_location,
                         enumerate(
                             child_node.args.args,
-                            -1
-                            if len(child_node.args.args) > 0
-                            and child_node.args.args[0].arg
-                            in frozenset(("self", "cls"))
-                            else 0,
+                            (
+                                -1
+                                if len(child_node.args.args) > 0
+                                and child_node.args.args[0].arg
+                                in frozenset(("self", "cls"))
+                                else 0
+                            ),
                         ),
                     )
                 )
@@ -1060,14 +1106,14 @@ def emit_ann_assign(node):
         return AnnAssign(
             annotation=node.annotation,
             simple=1,
-            target=Name(node.arg, Store()),
-            lineno=None,
+            target=Name(node.arg, Store(), lineno=None, col_offset=None),
             col_offset=getattr(node, "col_offset", None),
             end_lineno=getattr(node, "end_lineno", None),
             end_col_offset=getattr(node, "end_col_offset", None),
             expr=None,
             expr_target=None,
             expr_annotation=None,
+            lineno=None,
             value=node.default if getattr(node, "default", None) is not None else None,
         )
     else:
@@ -1135,13 +1181,17 @@ def it2literal(it):
     :rtype: ```Subscript```
     """
     return Subscript(
-        Name("Literal", Load()),
+        Name("Literal", Load(), lineno=None, col_offset=None),
         Index(
-            value=Tuple(ctx=Load(), elts=list(map(set_value, it)), expr=None)
-            if len(it) > 1
-            else set_value(it[0])
+            value=(
+                Tuple(ctx=Load(), elts=list(map(set_value, it)), expr=None)
+                if len(it) > 1
+                else set_value(it[0])
+            )
         ),
         Load(),
+        lineno=None,
+        col_offset=None,
     )
 
 
@@ -1419,9 +1469,11 @@ def node_to_dict(node):
     """
     return {
         attr: (
-            lambda val: type(val)(map(get_value, val))
-            if isinstance(val, (tuple, list))
-            else get_value(val)
+            lambda val: (
+                type(val)(map(get_value, val))
+                if isinstance(val, (tuple, list))
+                else get_value(val)
+            )
         )(getattr(node, attr))
         for attr in dir(node)
         if not attr.startswith("_") and not attr.endswith(("lineno", "offset"))
@@ -1481,14 +1533,16 @@ def to_annotation(typ):
     return (
         None
         if typ in none_types
-        else Name(typ, Load())
-        if typ in simple_types
-        else get_value(
-            (
-                lambda parsed: parsed.body[0]
-                if getattr(parsed, "body", None)
-                else parsed
-            )(ast.parse(typ))
+        else (
+            Name(typ, Load(), lineno=None, col_offset=None)
+            if typ in simple_types
+            else get_value(
+                (
+                    lambda parsed: (
+                        parsed.body[0] if getattr(parsed, "body", None) else parsed
+                    )
+                )(ast.parse(typ))
+            )
         )
     )
 
@@ -1506,9 +1560,11 @@ def to_type_comment(node):
     return (
         node.id
         if isinstance(node, Name)
-        else node
-        if isinstance(node, str) or not hasattr(node, "annotation")
-        else _to_code(node.annotation).strip()
+        else (
+            node
+            if isinstance(node, str) or not hasattr(node, "annotation")
+            else _to_code(node.annotation).strip()
+        )
     )
 
 
@@ -1554,18 +1610,20 @@ def del_ass_where_name(node, name):
         filter(
             None,
             (
-                None
-                if isinstance(_node, Assign)
-                and name
-                in frozenset(
-                    map(
-                        attrgetter("id"),
-                        filter(rpartial(isinstance, Name), _node.targets),
+                (
+                    None
+                    if isinstance(_node, Assign)
+                    and name
+                    in frozenset(
+                        map(
+                            attrgetter("id"),
+                            filter(rpartial(isinstance, Name), _node.targets),
+                        )
                     )
+                    or isinstance(_node, AnnAssign)
+                    and _node.target == name
+                    else _node
                 )
-                or isinstance(_node, AnnAssign)
-                and _node.target == name
-                else _node
                 for _node in node.body
             ),
         )
@@ -1620,7 +1678,7 @@ def merge_assignment_lists(node, name, unique_sort=True):
     )
     node.body.append(
         Assign(
-            targets=[Name("__all__", Store())],
+            targets=[Name("__all__", Store(), lineno=None, col_offset=None)],
             value=List(
                 ctx=Load(),
                 elts=list(
@@ -1747,23 +1805,27 @@ def optimise_imports(imports):
                     map(
                         lambda node: (
                             lambda filtered: (
-                                namedtuple("_", ("level",))(node.level),
-                                filtered,
+                                (
+                                    namedtuple("_", ("level",))(node.level),
+                                    filtered,
+                                )
+                                if filtered
+                                else None
                             )
-                            if filtered
-                            else None
                         )(
                             tuple(
                                 filter(
                                     None,
                                     map(
-                                        lambda name_asname_key: None
-                                        if name_asname_key.key in seen_pair
-                                        else (
-                                            seen_pair.add(name_asname_key.key)
-                                            or namedtuple("_", ("name", "asname"))(
-                                                name_asname_key.name,
-                                                name_asname_key.asname,
+                                        lambda name_asname_key: (
+                                            None
+                                            if name_asname_key.key in seen_pair
+                                            else (
+                                                seen_pair.add(name_asname_key.key)
+                                                or namedtuple("_", ("name", "asname"))(
+                                                    name_asname_key.name,
+                                                    name_asname_key.asname,
+                                                )
                                             )
                                         ),
                                         map(
@@ -1819,15 +1881,17 @@ def infer_imports(module):
     )
 
     sqlalchemy_class_or_assigns = filter(
-        lambda class_or_assign_def: any(
-            filter(
-                lambda base: isinstance(base, Name) and base.id == "Base",
-                class_or_assign_def.bases,
+        lambda class_or_assign_def: (
+            any(
+                filter(
+                    lambda base: isinstance(base, Name) and base.id == "Base",
+                    class_or_assign_def.bases,
+                )
             )
-        )
-        if isinstance(class_or_assign_def, ClassDef)
-        else isinstance(class_or_assign_def.value, Call)
-        and class_or_assign_def.value.func.id.endswith("Table"),
+            if isinstance(class_or_assign_def, ClassDef)
+            else isinstance(class_or_assign_def.value, Call)
+            and class_or_assign_def.value.func.id.endswith("Table")
+        ),
         filter(rpartial(isinstance, (ClassDef, Assign)), module.body),
     )
 

@@ -58,9 +58,9 @@ def parse_fastapi_responses(responses):
         key: dict(
             (
                 (
-                    lambda _v: (parse_handlers[k](k, _v))
-                    if k in parse_handlers
-                    else (k, _v)
+                    lambda _v: (
+                        (parse_handlers[k](k, _v)) if k in parse_handlers else (k, _v)
+                    )
                 )(get_value(v))
             )
             for k, v in Dict_to_dict(val).items()

@@ -93,19 +93,20 @@ config_tbl = Table(
     ),
     comment={comment!r},
 )
-""".format(
-    comment=docstring_header_and_return_two_nl_str
-)
+""".format(comment=docstring_header_and_return_two_nl_str)
 
 config_tbl_with_comments_ast: Assign = Assign(
-    targets=[Name(ctx=Store(), id="config_tbl")],
+    targets=[Name(ctx=Store(), id="config_tbl", lineno=None, col_offset=None)],
     value=Call(
         args=[
             set_value("config_tbl"),
-            Name(ctx=Load(), id="metadata"),
+            Name(ctx=Load(), id="metadata", lineno=None, col_offset=None),
             Call(
-                args=[set_value("dataset_name"), Name(ctx=Load(), id="String")],
-                func=Name(ctx=Load(), id="Column"),
+                args=[
+                    set_value("dataset_name"),
+                    Name(ctx=Load(), id="String", lineno=None, col_offset=None),
+                ],
+                func=Name(ctx=Load(), id="Column", lineno=None, col_offset=None),
                 keywords=[
                     keyword(
                         arg="comment",
@@ -117,8 +118,11 @@ config_tbl_with_comments_ast: Assign = Assign(
                 ],
             ),
             Call(
-                args=[set_value("tfds_dir"), Name(ctx=Load(), id="String")],
-                func=Name(ctx=Load(), id="Column"),
+                args=[
+                    set_value("tfds_dir"),
+                    Name(ctx=Load(), id="String", lineno=None, col_offset=None),
+                ],
+                func=Name(ctx=Load(), id="Column", lineno=None, col_offset=None),
                 keywords=[
                     keyword(
                         arg="comment",
@@ -138,13 +142,13 @@ config_tbl_with_comments_ast: Assign = Assign(
                     set_value("K"),
                     Call(
                         args=[set_value("np"), set_value("tf")],
-                        func=Name(ctx=Load(), id="Enum"),
+                        func=Name(ctx=Load(), id="Enum", lineno=None, col_offset=None),
                         keywords=[
                             keyword(arg="name", value=set_value("K"), identifier=None)
                         ],
                     ),
                 ],
-                func=Name(ctx=Load(), id="Column"),
+                func=Name(ctx=Load(), id="Column", lineno=None, col_offset=None),
                 keywords=[
                     keyword(
                         arg="comment",
@@ -156,8 +160,11 @@ config_tbl_with_comments_ast: Assign = Assign(
                 ],
             ),
             Call(
-                args=[set_value("as_numpy"), Name(ctx=Load(), id="Boolean")],
-                func=Name(ctx=Load(), id="Column"),
+                args=[
+                    set_value("as_numpy"),
+                    Name(ctx=Load(), id="Boolean", lineno=None, col_offset=None),
+                ],
+                func=Name(ctx=Load(), id="Column", lineno=None, col_offset=None),
                 keywords=[
                     keyword(
                         arg="comment",
@@ -168,8 +175,11 @@ config_tbl_with_comments_ast: Assign = Assign(
                 ],
             ),
             Call(
-                args=[set_value("data_loader_kwargs"), Name(ctx=Load(), id="JSON")],
-                func=Name(ctx=Load(), id="Column"),
+                args=[
+                    set_value("data_loader_kwargs"),
+                    Name(ctx=Load(), id="JSON", lineno=None, col_offset=None),
+                ],
+                func=Name(ctx=Load(), id="Column", lineno=None, col_offset=None),
                 keywords=[
                     keyword(
                         arg="comment",
@@ -182,7 +192,7 @@ config_tbl_with_comments_ast: Assign = Assign(
                 ],
             ),
         ],
-        func=Name(ctx=Load(), id="Table"),
+        func=Name(ctx=Load(), id="Table", lineno=None, col_offset=None),
         keywords=[
             keyword(
                 arg="comment",
@@ -251,7 +261,7 @@ class Config(Base):
 )
 
 dataset_primary_key_column_assign: Assign = Assign(
-    targets=[Name("dataset_name", Store())],
+    targets=[Name("dataset_name", Store(), lineno=None, col_offset=None)],
     value=Call(
         func=Name("Column", Load()),
         args=[Name("String", Load())],
@@ -597,6 +607,8 @@ node_pk_tbl_class: ClassDef = ClassDef(
     ],
     decorator_list=[],
     type_params=[],
+    lineno=None,
+    col_offset=None,
 )
 
 element_pk_fk_tbl: Call = Call(

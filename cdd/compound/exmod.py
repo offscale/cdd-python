@@ -241,11 +241,13 @@ def exmod(
 
     init_filepath: str = path.join(
         output_directory,
-        *(INIT_FILENAME,)
-        if output_directory.endswith(
-            "{}{}".format(path.sep, new_module_name.replace(".", path.sep))
+        *(
+            (INIT_FILENAME,)
+            if output_directory.endswith(
+                "{}{}".format(path.sep, new_module_name.replace(".", path.sep))
+            )
+            else (new_module_name, INIT_FILENAME)
         )
-        else (new_module_name, INIT_FILENAME)
     )
     if dry_run:
         print(

@@ -152,9 +152,11 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
         keywords.append(
             ast.keyword(
                 arg="default",
-                value=default
-                if isinstance(default, AST)
-                else set_value(None if default == NoneStr else default),
+                value=(
+                    default
+                    if isinstance(default, AST)
+                    else set_value(None if default == NoneStr else default)
+                ),
                 identifier=None,
             )
         )
@@ -591,20 +593,22 @@ def update_fk_for_file(filename):
         """
         sqlalchemy_class_def.body = list(
             map(
-                lambda outer_node: rewrite_fk(symbol_to_module, outer_node)
-                if isinstance(outer_node, Assign)
-                and isinstance(outer_node.value, Call)
-                and isinstance(outer_node.value.func, Name)
-                and outer_node.value.func.id == "Column"
-                and any(
-                    filter(
-                        lambda node: isinstance(node, Call)
-                        and isinstance(node.func, Name)
-                        and node.func.id == "ForeignKey",
-                        outer_node.value.args,
+                lambda outer_node: (
+                    rewrite_fk(symbol_to_module, outer_node)
+                    if isinstance(outer_node, Assign)
+                    and isinstance(outer_node.value, Call)
+                    and isinstance(outer_node.value.func, Name)
+                    and outer_node.value.func.id == "Column"
+                    and any(
+                        filter(
+                            lambda node: isinstance(node, Call)
+                            and isinstance(node.func, Name)
+                            and node.func.id == "ForeignKey",
+                            outer_node.value.args,
+                        )
                     )
-                )
-                else outer_node,
+                    else outer_node
+                ),
                 sqlalchemy_class_def.body,
             )
         )
@@ -629,15 +633,17 @@ def update_fk_for_file(filename):
 
     mod.body = list(
         map(
-            lambda node: handle_sqlalchemy_cls(symbol2module, node)
-            if isinstance(node, ClassDef)
-            and any(
-                filter(
-                    lambda base: isinstance(base, Name) and base.id == "Base",
-                    node.bases,
+            lambda node: (
+                handle_sqlalchemy_cls(symbol2module, node)
+                if isinstance(node, ClassDef)
+                and any(
+                    filter(
+                        lambda base: isinstance(base, Name) and base.id == "Base",
+                        node.bases,
+                    )
                 )
-            )
-            else node,
+                else node
+            ),
             mod.body,
         )
     )
@@ -828,9 +834,11 @@ def sqlalchemy_class_to_table(class_def, parse_original_whitespace):
                 )
             )
         ),
-        keywords=[]
-        if doc_string is None
-        else [keyword(arg="comment", value=set_value(doc_string), identifier=None)],
+        keywords=(
+            []
+            if doc_string is None
+            else [keyword(arg="comment", value=set_value(doc_string), identifier=None)]
+        ),
         expr=None,
         expr_func=None,
     )
@@ -869,9 +877,11 @@ def sqlalchemy_table_to_class(table_expr_ass):
                             targets=[Name(get_value(column_call.args[0]), Store())],
                             value=Call(
                                 func=column_call.func,
-                                args=column_call.args[1:]
-                                if len(column_call.args) > 1
-                                else [],
+                                args=(
+                                    column_call.args[1:]
+                                    if len(column_call.args) > 1
+                                    else []
+                                ),
                                 keywords=column_call.keywords,
                                 expr=None,
                                 expr_func=None,

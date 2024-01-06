@@ -171,9 +171,11 @@ def gen(
             # This leaks to the global scope
             globals().update(extra_symbols)
         with open(
-            imports_from_file
-            if path.isfile(imports_from_file)
-            else getfile(get_module(imports_from_file, extra_symbols=extra_symbols)),
+            (
+                imports_from_file
+                if path.isfile(imports_from_file)
+                else getfile(get_module(imports_from_file, extra_symbols=extra_symbols))
+            ),
             "rt",
         ) as f:
             imports: str = "".join(

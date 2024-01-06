@@ -108,50 +108,56 @@ def sqlalchemy_table(
                 )
             ),
             keywords=(
-                lambda val: [
-                    keyword(
-                        arg="comment",
-                        value=set_value(val),
-                        identifier=None,
-                        expr=None,
-                        lineno=None,
-                        **maybe_type_comment,
+                (
+                    lambda val: (
+                        [
+                            keyword(
+                                arg="comment",
+                                value=set_value(val),
+                                identifier=None,
+                                expr=None,
+                                lineno=None,
+                                **maybe_type_comment,
+                            )
+                        ]
+                        if val
+                        else []
                     )
-                ]
-                if val
-                else []
-            )(
-                deindent(
-                    add(
-                        *map(
-                            partial(
-                                docstring,
-                                emit_default_doc=emit_default_doc,
-                                docstring_format=docstring_format,
-                                word_wrap=word_wrap,
-                                emit_original_whitespace=emit_original_whitespace,
-                                emit_types=True,
-                            ),
-                            (
-                                {
-                                    "doc": intermediate_repr["doc"].lstrip() + "\n\n"
-                                    if intermediate_repr["returns"]
-                                    else "",
-                                    "params": OrderedDict(),
-                                    "returns": None,
-                                },
-                                {
-                                    "doc": "",
-                                    "params": OrderedDict(),
-                                    "returns": intermediate_repr["returns"],
-                                },
-                            ),
-                        )
-                    ).strip()
+                )(
+                    deindent(
+                        add(
+                            *map(
+                                partial(
+                                    docstring,
+                                    emit_default_doc=emit_default_doc,
+                                    docstring_format=docstring_format,
+                                    word_wrap=word_wrap,
+                                    emit_original_whitespace=emit_original_whitespace,
+                                    emit_types=True,
+                                ),
+                                (
+                                    {
+                                        "doc": (
+                                            intermediate_repr["doc"].lstrip() + "\n\n"
+                                            if intermediate_repr["returns"]
+                                            else ""
+                                        ),
+                                        "params": OrderedDict(),
+                                        "returns": None,
+                                    },
+                                    {
+                                        "doc": "",
+                                        "params": OrderedDict(),
+                                        "returns": intermediate_repr["returns"],
+                                    },
+                                ),
+                            )
+                        ).strip()
+                    )
                 )
-            )
-            if intermediate_repr.get("doc")
-            else [],
+                if intermediate_repr.get("doc")
+                else []
+            ),
             expr=None,
             expr_func=None,
         ),
@@ -239,41 +245,43 @@ def sqlalchemy(
             filter(
                 None,
                 (
-                    Expr(
-                        set_value(
-                            concat_with_whitespace(
-                                *map(
-                                    partial(
-                                        docstring,
-                                        docstring_format=docstring_format,
-                                        emit_default_doc=emit_default_doc,
-                                        emit_original_whitespace=emit_original_whitespace,
-                                        emit_separating_tab=True,
-                                        emit_types=True,
-                                        indent_level=1,
-                                        word_wrap=word_wrap,
-                                    ),
-                                    (
-                                        {
-                                            "doc": intermediate_repr["doc"],
-                                            "params": OrderedDict(),
-                                            "returns": None,
-                                        },
-                                        {
-                                            "doc": "",
-                                            "params": OrderedDict(),
-                                            "returns": intermediate_repr["returns"],
-                                        },
-                                    ),
+                    (
+                        Expr(
+                            set_value(
+                                concat_with_whitespace(
+                                    *map(
+                                        partial(
+                                            docstring,
+                                            docstring_format=docstring_format,
+                                            emit_default_doc=emit_default_doc,
+                                            emit_original_whitespace=emit_original_whitespace,
+                                            emit_separating_tab=True,
+                                            emit_types=True,
+                                            indent_level=1,
+                                            word_wrap=word_wrap,
+                                        ),
+                                        (
+                                            {
+                                                "doc": intermediate_repr["doc"],
+                                                "params": OrderedDict(),
+                                                "returns": None,
+                                            },
+                                            {
+                                                "doc": "",
+                                                "params": OrderedDict(),
+                                                "returns": intermediate_repr["returns"],
+                                            },
+                                        ),
+                                    )
                                 )
                             )
                         )
-                    )
-                    if intermediate_repr.get("doc")
-                    or (intermediate_repr["returns"] or {})
-                    .get("return_type", {})
-                    .get("doc")
-                    else None,
+                        if intermediate_repr.get("doc")
+                        or (intermediate_repr["returns"] or {})
+                        .get("return_type", {})
+                        .get("doc")
+                        else None
+                    ),
                     Assign(
                         targets=[Name("__tablename__", Store())],
                         value=set_value(table_name or class_name),
@@ -295,16 +303,20 @@ def sqlalchemy(
                             intermediate_repr["params"], force_pk_id
                         ).items(),
                     ),
-                    cdd.compound.openapi.utils.emit_utils.generate_repr_method(
-                        intermediate_repr["params"], class_name, docstring_format
-                    )
-                    if emit_repr
-                    else None,
+                    (
+                        cdd.compound.openapi.utils.emit_utils.generate_repr_method(
+                            intermediate_repr["params"], class_name, docstring_format
+                        )
+                        if emit_repr
+                        else None
+                    ),
                 ),
             )
         ),
         expr=None,
         identifier_name=None,
+        lineno=None,
+        col_offset=None,
     )
 
 
@@ -394,41 +406,43 @@ def sqlalchemy_hybrid(
             filter(
                 None,
                 (
-                    Expr(
-                        set_value(
-                            concat_with_whitespace(
-                                *map(
-                                    partial(
-                                        docstring,
-                                        docstring_format=docstring_format,
-                                        emit_default_doc=emit_default_doc,
-                                        emit_original_whitespace=emit_original_whitespace,
-                                        emit_separating_tab=True,
-                                        emit_types=True,
-                                        indent_level=1,
-                                        word_wrap=word_wrap,
-                                    ),
-                                    (
-                                        {
-                                            "doc": intermediate_repr["doc"],
-                                            "params": OrderedDict(),
-                                            "returns": None,
-                                        },
-                                        {
-                                            "doc": "",
-                                            "params": OrderedDict(),
-                                            "returns": intermediate_repr["returns"],
-                                        },
-                                    ),
+                    (
+                        Expr(
+                            set_value(
+                                concat_with_whitespace(
+                                    *map(
+                                        partial(
+                                            docstring,
+                                            docstring_format=docstring_format,
+                                            emit_default_doc=emit_default_doc,
+                                            emit_original_whitespace=emit_original_whitespace,
+                                            emit_separating_tab=True,
+                                            emit_types=True,
+                                            indent_level=1,
+                                            word_wrap=word_wrap,
+                                        ),
+                                        (
+                                            {
+                                                "doc": intermediate_repr["doc"],
+                                                "params": OrderedDict(),
+                                                "returns": None,
+                                            },
+                                            {
+                                                "doc": "",
+                                                "params": OrderedDict(),
+                                                "returns": intermediate_repr["returns"],
+                                            },
+                                        ),
+                                    )
                                 )
                             )
                         )
-                    )
-                    if intermediate_repr.get("doc")
-                    or (intermediate_repr["returns"] or {})
-                    .get("return_type", {})
-                    .get("doc")
-                    else None,
+                        if intermediate_repr.get("doc")
+                        or (intermediate_repr["returns"] or {})
+                        .get("return_type", {})
+                        .get("doc")
+                        else None
+                    ),
                     Assign(
                         targets=[Name("__tablename__", Store())],
                         value=set_value(table_name or class_name),
@@ -446,21 +460,27 @@ def sqlalchemy_hybrid(
                         emit_original_whitespace=emit_original_whitespace,
                         emit_default_doc=emit_default_doc,
                     ),
-                    cdd.compound.openapi.utils.emit_utils.generate_repr_method(
-                        intermediate_repr["params"], class_name, docstring_format
-                    )
-                    if emit_repr
-                    else None,
-                    cdd.compound.openapi.utils.emit_utils.generate_create_from_attr_staticmethod(
-                        intermediate_repr["params"], class_name, docstring_format
-                    )
-                    if emit_create_from_attr
-                    else None,
+                    (
+                        cdd.compound.openapi.utils.emit_utils.generate_repr_method(
+                            intermediate_repr["params"], class_name, docstring_format
+                        )
+                        if emit_repr
+                        else None
+                    ),
+                    (
+                        cdd.compound.openapi.utils.emit_utils.generate_create_from_attr_staticmethod(
+                            intermediate_repr["params"], class_name, docstring_format
+                        )
+                        if emit_create_from_attr
+                        else None
+                    ),
                 ),
             )
         ),
         expr=None,
         identifier_name=None,
+        lineno=None,
+        col_offset=None,
     )
 
 

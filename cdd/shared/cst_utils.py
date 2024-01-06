@@ -175,9 +175,9 @@ def get_construct_name(words):
                 return words[idx + 1][: words[idx + 1].find("(")]
             elif word == "class":
                 end_idx = (
-                    lambda _end_idx: words[idx + 1].find(":")
-                    if _end_idx == -1
-                    else _end_idx
+                    lambda _end_idx: (
+                        words[idx + 1].find(":") if _end_idx == -1 else _end_idx
+                    )
                 )(words[idx + 1].find("("))
                 return words[idx + 1][:end_idx]
 

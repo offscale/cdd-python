@@ -488,11 +488,11 @@ def quote(s, mark='"'):
     s: str = (
         s
         if isinstance(s, (str, *very_simple_types))
-        else s.s
-        if isinstance(s, Str)
-        else s.id
-        if isinstance(s, Name)
-        else getattr(s, "value", s)
+        else (
+            s.s
+            if isinstance(s, Str)
+            else s.id if isinstance(s, Name) else getattr(s, "value", s)
+        )
     )
     # ^ Poor man's `get_value`
     if (

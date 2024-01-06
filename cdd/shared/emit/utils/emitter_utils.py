@@ -103,9 +103,12 @@ def get_emitter(emit_name):
             ".".join(
                 (
                     "cdd",
-                    "sqlalchemy"
-                    if emit_name in frozenset(("sqlalchemy_hybrid", "sqlalchemy_table"))
-                    else emit_name,
+                    (
+                        "sqlalchemy"
+                        if emit_name
+                        in frozenset(("sqlalchemy_hybrid", "sqlalchemy_table"))
+                        else emit_name
+                    ),
                     "emit",
                 )
             )
@@ -117,6 +120,6 @@ def get_emitter(emit_name):
 __all__ = [
     "ast_parse_fix",
     "get_internal_body",
-    "get_emitter"
+    "get_emitter",
     # "normalise_intermediate_representation",
 ]  # type: list[str]

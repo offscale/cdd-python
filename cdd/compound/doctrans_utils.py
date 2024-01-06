@@ -226,9 +226,11 @@ class DocTrans(NodeTransformer):
             (
                 lambda parent: (
                     (
-                        lambda doc_str: None
-                        if doc_str is None
-                        else cdd.docstring.parse.docstring(doc_str)
+                        lambda doc_str: (
+                            None
+                            if doc_str is None
+                            else cdd.docstring.parse.docstring(doc_str)
+                        )
                     )(get_docstring(parent, clean=False))
                     if isinstance(parent, (ClassDef, AsyncFunctionDef, FunctionDef))
                     else {"params": OrderedDict()}
@@ -278,10 +280,12 @@ class DocTrans(NodeTransformer):
                 del node.body[0]
         else:
             set_docstring(
-                original_doc_str
-                if original_doc_str
-                and eq(*map(omit_whitespace, (original_doc_str, doc_str)))
-                else doc_str,
+                (
+                    original_doc_str
+                    if original_doc_str
+                    and eq(*map(omit_whitespace, (original_doc_str, doc_str)))
+                    else doc_str
+                ),
                 False,
                 node,
             )
@@ -300,9 +304,11 @@ class DocTrans(NodeTransformer):
                             ),
                             identifier_arg=None,
                             end_col_offset=getattr(_arg, "end_col_offset", None),
-                            **dict(expr=None, **maybe_type_comment)
-                            if PY_GTE_3_8
-                            else {},
+                            **(
+                                dict(expr=None, **maybe_type_comment)
+                                if PY_GTE_3_8
+                                else {}
+                            ),
                         ),
                         node.args.args,
                     )

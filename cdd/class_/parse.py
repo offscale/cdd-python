@@ -118,19 +118,23 @@ def class_(
             # print(ast.dump(e, indent=4))
             val = (
                 (
-                    lambda v: {"default": NoneStr}
-                    if v is None
-                    else {
-                        "default": v
-                        if type(v).__name__ in simple_types
-                        else (
-                            lambda value: {
-                                "{}": {} if isinstance(v, Dict) else set(),
-                                "[]": [],
-                                "()": (),
-                            }.get(value, parse_to_scalar(value))
-                        )(to_code(v).rstrip("\n"))
-                    }
+                    lambda v: (
+                        {"default": NoneStr}
+                        if v is None
+                        else {
+                            "default": (
+                                v
+                                if type(v).__name__ in simple_types
+                                else (
+                                    lambda value: {
+                                        "{}": {} if isinstance(v, Dict) else set(),
+                                        "[]": [],
+                                        "()": (),
+                                    }.get(value, parse_to_scalar(value))
+                                )(to_code(v).rstrip("\n"))
+                            )
+                        }
+                    )
                 )(get_value(get_value(e)))
                 if hasattr(e, "value") and e.value is not None
                 else {}
@@ -165,18 +169,22 @@ def class_(
                             *(
                                 (
                                     lambda _target_id: (
-                                        intermediate_repr["params"][_target_id],
-                                        "default",
-                                        val,
-                                    )
-                                    if isinstance(target, Name)
-                                    and _target_id in intermediate_repr["params"]
-                                    else (
-                                        intermediate_repr["params"],
-                                        _target_id
+                                        (
+                                            intermediate_repr["params"][_target_id],
+                                            "default",
+                                            val,
+                                        )
                                         if isinstance(target, Name)
-                                        else get_value(get_value(target)),
-                                        {"default": val},
+                                        and _target_id in intermediate_repr["params"]
+                                        else (
+                                            intermediate_repr["params"],
+                                            (
+                                                _target_id
+                                                if isinstance(target, Name)
+                                                else get_value(get_value(target))
+                                            ),
+                                            {"default": val},
+                                        )
                                     )
                                 )(
                                     target.id.lstrip("*")
@@ -204,9 +212,11 @@ def class_(
                 )
             ),
             "_internal": {
-                "original_doc_str": doc_str
-                if parse_original_whitespace
-                else get_docstring(class_def, clean=False),
+                "original_doc_str": (
+                    doc_str
+                    if parse_original_whitespace
+                    else get_docstring(class_def, clean=False)
+                ),
                 "body": list(
                     filterfalse(rpartial(isinstance, (AnnAssign, Assign)), body)
                 ),
@@ -299,9 +309,11 @@ def _class_from_memory(
         )
         return ir
     ir["_internal"] = {
-        "original_doc_str": original_doc_str
-        if parse_original_whitespace
-        else get_docstring(parsed_class, clean=False),
+        "original_doc_str": (
+            original_doc_str
+            if parse_original_whitespace
+            else get_docstring(parsed_class, clean=False)
+        ),
         "body": list(
             filterfalse(
                 rpartial(isinstance, (AnnAssign, Assign)),

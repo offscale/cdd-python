@@ -107,9 +107,13 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
             for module_name, submodule_names in mod_to_symbol.items()
             for submodule_name in submodule_names
             for node in (
-                lambda module_filepath: iter(())
-                if module_filepath is None
-                else ast_parse(read_file_to_str(module_filepath), module_filepath).body
+                lambda module_filepath: (
+                    iter(())
+                    if module_filepath is None
+                    else ast_parse(
+                        read_file_to_str(module_filepath), module_filepath
+                    ).body
+                )
             )(
                 cdd.shared.pure_utils.find_module_filepath(
                     module_name, submodule_name, none_when_no_spec=True
@@ -246,9 +250,11 @@ def emit_file_on_hierarchy(
     )
     mod_path: str = path.join(
         output_directory,
-        *()
-        if output_dir_is_module
-        else (new_module_name, mod_name.replace(".", path.sep))
+        *(
+            ()
+            if output_dir_is_module
+            else (new_module_name, mod_name.replace(".", path.sep))
+        )
     )
     # print("mkdir\t{mod_path!r}".format(mod_path=mod_path), file=EXMOD_OUT_STREAM)
     if not path.isdir(mod_path):
@@ -313,12 +319,16 @@ def emit_file_on_hierarchy(
     else:
         emit_filename_dir: str = path.dirname(emit_filename)
         if not path.isdir(emit_filename_dir):
-            print(
-                "mkdir\t{emit_filename_dir!r}".format(
-                    emit_filename_dir=emit_filename_dir
-                ),
-                file=EXMOD_OUT_STREAM,
-            ) if dry_run else makedirs(emit_filename_dir)
+            (
+                print(
+                    "mkdir\t{emit_filename_dir!r}".format(
+                        emit_filename_dir=emit_filename_dir
+                    ),
+                    file=EXMOD_OUT_STREAM,
+                )
+                if dry_run
+                else makedirs(emit_filename_dir)
+            )
 
     if not symbol_in_file and (ir.get("name") or ir["params"] or ir["returns"]):
         _emit_symbol(
@@ -425,10 +435,12 @@ def _emit_symbol(
             getattr(
                 getattr(
                     cdd,
-                    "sqlalchemy"
-                    if sanitised_emit_name
-                    in frozenset(("sqlalchemy_hybrid", "sqlalchemy_table"))
-                    else sanitised_emit_name,
+                    (
+                        "sqlalchemy"
+                        if sanitised_emit_name
+                        in frozenset(("sqlalchemy_hybrid", "sqlalchemy_table"))
+                        else sanitised_emit_name
+                    ),
                 ),
                 "emit",
             ),
@@ -441,9 +453,11 @@ def _emit_symbol(
         **dict(
             **{
                 "{emit_name}_name".format(
-                    emit_name="function"
-                    if emit_name == "argparse"
-                    else emit_name.replace("sqlalchemy_table", "table")
+                    emit_name=(
+                        "function"
+                        if emit_name == "argparse"
+                        else emit_name.replace("sqlalchemy_table", "table")
+                    )
                 ): name
             },
             **{"function_type": "static"} if emit_name == "function" else {}
@@ -603,26 +617,34 @@ def emit_files_from_module_and_return_imports(
             map(
                 lambda name_source: (
                     name_source[0],
-                    path.join(output_directory, path.basename(module_root_dir))
-                    if path.isfile(module_root_dir)
-                    else (
-                        lambda filename: filename[len(module_name) + 1 :]
-                        if filename.startswith(module_name)
-                        else filename
-                    )(
-                        relative_filename(
-                            name_source[1].__file__
-                            if hasattr(name_source[1], "__file__")
-                            else getfile(name_source[1])
+                    (
+                        path.join(output_directory, path.basename(module_root_dir))
+                        if path.isfile(module_root_dir)
+                        else (
+                            lambda filename: (
+                                filename[len(module_name) + 1 :]
+                                if filename.startswith(module_name)
+                                else filename
+                            )
+                        )(
+                            relative_filename(
+                                name_source[1].__file__
+                                if hasattr(name_source[1], "__file__")
+                                else getfile(name_source[1])
+                            )
                         )
                     ),
-                    {"params": OrderedDict(), "returns": OrderedDict()}
-                    if dry_run
-                    else (
-                        lambda parser: partial(parser, merge_inner_function="__init__")
-                        if parser is cdd.class_.parse.class_
-                        else parser
-                    )(get_parser(name_source[1], "infer"))(name_source[1]),
+                    (
+                        {"params": OrderedDict(), "returns": OrderedDict()}
+                        if dry_run
+                        else (
+                            lambda parser: (
+                                partial(parser, merge_inner_function="__init__")
+                                if parser is cdd.class_.parse.class_
+                                else parser
+                            )
+                        )(get_parser(name_source[1], "infer"))(name_source[1])
+                    ),
                 ),
                 map(
                     lambda name_source: (

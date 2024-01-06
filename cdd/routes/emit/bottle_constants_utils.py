@@ -6,8 +6,7 @@ from string import Template
 
 from cdd.shared.pure_utils import indent_all_but_first
 
-_create_route_desc: str = indent_all_but_first(
-    '''"""Create `{name}`
+_create_route_desc: str = indent_all_but_first('''"""Create `{name}`
 
 ```yml
 responses:
@@ -27,8 +26,7 @@ responses:
 
 :return: Created ```{name}``` instance (as a dict), or an error
 :rtype: ```dict```
-"""'''
-)
+"""''')
 _create_helper_desc: str = "Create / handle-errors with Bottle and SQLalchemy"
 
 create_route_variants = tuple(

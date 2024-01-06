@@ -329,9 +329,9 @@ def gen_module(
     doc_str: Optional[str] = ast.get_docstring(parsed_ast, clean=True)
     whole = tuple(
         map(
-            lambda node: (node, None)
-            if isinstance(node, (Import, ImportFrom))
-            else (None, node),
+            lambda node: (
+                (node, None) if isinstance(node, (Import, ImportFrom)) else (None, node)
+            ),
             parsed_ast.body,
         )
     )
@@ -451,9 +451,11 @@ def file_to_input_mapping(filepath, parse_name):
                 filter(
                     rpartial(
                         isinstance,
-                        tuple(kind2instance_type.values())
-                        if parse_name == "infer"
-                        else kind2instance_type[parse_name],
+                        (
+                            tuple(kind2instance_type.values())
+                            if parse_name == "infer"
+                            else kind2instance_type[parse_name]
+                        ),
                     ),
                     mod.body,
                 ),

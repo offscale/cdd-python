@@ -32,7 +32,9 @@ black = (
         tuple(),
         {
             "format_str": lambda src_contents, mode: None,
-            "Mode": lambda target_versions, line_length, is_pyi, string_normalization: None,
+            "Mode": (
+                lambda target_versions, line_length, is_pyi, string_normalization: None
+            ),
         },
     )
 )
@@ -114,16 +116,18 @@ def run_ast_test(test_case_instance, gen_ast, gold, skip_black=False):
     test_case_instance.assertEqual(*coded_gold_gen)
     test_case_instance.assertEqual(
         *map(
-            identity
-            if skip_black
-            else partial(
-                black.format_str,
-                mode=black.Mode(
-                    target_versions=set(),
-                    line_length=60,
-                    is_pyi=False,
-                    string_normalization=False,
-                ),
+            (
+                identity
+                if skip_black
+                else partial(
+                    black.format_str,
+                    mode=black.Mode(
+                        target_versions=set(),
+                        line_length=60,
+                        is_pyi=False,
+                        string_normalization=False,
+                    ),
+                )
             ),
             coded_gold_gen,
         )
@@ -184,9 +188,11 @@ def run_cli_test(
                 args = main_f()
     if exit_code is not None:
         test_case_instance.assertEqual(
-            *(e.exception.code, exception(exit_code).code)
-            if exception is SystemExit
-            else (str(e.exception), output)
+            *(
+                (e.exception.code, exception(exit_code).code)
+                if exception is SystemExit
+                else (str(e.exception), output)
+            )
         )
     if exception is not SystemExit:
         pass
@@ -338,24 +344,31 @@ def reindent_docstring(node, indent_level=1, smart=True):
             set_value(
                 "\n{_sep}{s}\n{_sep}".format(
                     _sep=_sep,
-                    s="\n".join(
-                        map(
-                            lambda line: "{sep}{line}".format(
-                                sep=tab * 2, line=line.lstrip()
+                    s=(
+                        "\n".join(
+                            map(
+                                lambda line: (
+                                    "{sep}{line}".format(
+                                        sep=tab * 2, line=line.lstrip()
+                                    )
+                                    if line.startswith(tab)
+                                    and len(line) > len(tab)
+                                    and line[
+                                        len(tab) : line.lstrip().find(" ") + len(tab)
+                                    ].rstrip(":s")
+                                    not in frozenset((False,) + TOKENS.rest)
+                                    else line
+                                ),
+                                reindent(doc_str).splitlines(),
                             )
-                            if line.startswith(tab)
-                            and len(line) > len(tab)
-                            and line[
-                                len(tab) : line.lstrip().find(" ") + len(tab)
-                            ].rstrip(":s")
-                            not in frozenset((False,) + TOKENS.rest)
-                            else line,
-                            reindent(doc_str).splitlines(),
                         )
-                    )
-                    if smart
-                    else "\n".join(
-                        map(partial(add, _sep), map(str.lstrip, doc_str.splitlines()))
+                        if smart
+                        else "\n".join(
+                            map(
+                                partial(add, _sep),
+                                map(str.lstrip, doc_str.splitlines()),
+                            )
+                        )
                     ),
                 )
             )

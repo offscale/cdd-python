@@ -49,7 +49,7 @@ return_ast: Return = Return(
             Call(
                 args=[set_value(0)],
                 func=Attribute(
-                    Name("np", Load()),
+                    Name("np", Load(), lineno=None, col_offset=None),
                     "empty",
                     Load(),
                 ),
@@ -131,9 +131,7 @@ class C(object):
         :return: Train and tests dataset splits.
         """
         return np.empty(0), np.empty(0)
-'''.format(
-    header_doc_str=indent(docstring_header_str, tab * 2)
-)
+'''.format(header_doc_str=indent(docstring_header_str, tab * 2))
 
 class_with_method_and_body_types_str: str = '''
 class C(object):
@@ -168,9 +166,7 @@ class C(object):
             print(True)
             return 5
         return np.empty(0), np.empty(0)
-'''.format(
-    header_doc_str=indent(docstring_header_str, tab * 2)
-)
+'''.format(header_doc_str=indent(docstring_header_str, tab * 2))
 
 class_with_optional_arg_method_str: str = '''
 class C(object):
@@ -191,24 +187,24 @@ class C(object):
         :return: Train and tests dataset splits.
         """
         return np.empty(0), np.empty(0)
-'''.format(
-    header_doc_str=indent(docstring_header_str, tab * 2)
-)
+'''.format(header_doc_str=indent(docstring_header_str, tab * 2))
 
 
 returns_subscript: Subscript = Subscript(
-    Name("Union", Load()),
+    Name("Union", Load(), lineno=None, col_offset=None),
     set_slice(
         Tuple(
             [
                 Subscript(
-                    Name("Tuple", Load()),
+                    Name("Tuple", Load(), lineno=None, col_offset=None),
                     set_slice(
                         Tuple(
                             [
                                 Attribute(
                                     Attribute(
-                                        Name("tf", Load()),
+                                        Name(
+                                            "tf", Load(), lineno=None, col_offset=None
+                                        ),
                                         "data",
                                         Load(),
                                     ),
@@ -222,14 +218,16 @@ returns_subscript: Subscript = Subscript(
                         )
                     ),
                     Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
                 Subscript(
-                    Name("Tuple", Load()),
+                    Name("Tuple", Load(), lineno=None, col_offset=None),
                     set_slice(
                         Tuple(
                             [
                                 Attribute(
-                                    Name("np", Load()),
+                                    Name("np", Load(), lineno=None, col_offset=None),
                                     "ndarray",
                                     Load(),
                                 )
@@ -240,19 +238,23 @@ returns_subscript: Subscript = Subscript(
                         )
                     ),
                     Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
             ],
             Load(),
         )
     ),
     Load(),
+    lineno=None,
+    col_offset=None,
 )
 
 
 class_with_method_and_body_types_ast: ClassDef = fix_missing_locations(
     ClassDef(
         name="C",
-        bases=[Name("object", Load())],
+        bases=[Name("object", Load(), lineno=None, col_offset=None)],
         keywords=[],
         body=[
             Expr(set_value(" C class (mocked!) ")),
@@ -263,19 +265,28 @@ class_with_method_and_body_types_ast: ClassDef = fix_missing_locations(
                     vararg=None,
                     args=[
                         set_arg("self"),
-                        set_arg(arg="dataset_name", annotation=Name("str", Load())),
+                        set_arg(
+                            arg="dataset_name",
+                            annotation=Name(
+                                "str", Load(), lineno=None, col_offset=None
+                            ),
+                        ),
                         set_arg(
                             arg="tfds_dir",
                             annotation=Subscript(
-                                Name("Optional", Load()),
-                                set_slice(Name("str", Load())),
+                                Name("Optional", Load(), lineno=None, col_offset=None),
+                                set_slice(
+                                    Name("str", Load(), lineno=None, col_offset=None)
+                                ),
                                 Load(),
+                                lineno=None,
+                                col_offset=None,
                             ),
                         ),
                         set_arg(
                             arg="K",
                             annotation=Subscript(
-                                Name("Literal", Load()),
+                                Name("Literal", Load(), lineno=None, col_offset=None),
                                 set_slice(
                                     Tuple(
                                         elts=list(map(set_value, ("np", "tf"))),
@@ -284,14 +295,20 @@ class_with_method_and_body_types_ast: ClassDef = fix_missing_locations(
                                     )
                                 ),
                                 Load(),
+                                lineno=None,
+                                col_offset=None,
                             ),
                         ),
                         set_arg(
                             arg="as_numpy",
                             annotation=Subscript(
-                                Name("Optional", Load()),
-                                set_slice(Name("bool", Load())),
+                                Name("Optional", Load(), lineno=None, col_offset=None),
+                                set_slice(
+                                    Name("bool", Load(), lineno=None, col_offset=None)
+                                ),
                                 Load(),
+                                lineno=None,
+                                col_offset=None,
                             ),
                         ),
                     ],
@@ -311,7 +328,7 @@ class_with_method_and_body_types_ast: ClassDef = fix_missing_locations(
                     ),
                     Expr(
                         Call(
-                            func=Name("print", Load()),
+                            func=Name("print", Load(), lineno=None, col_offset=None),
                             args=[
                                 BinOp(
                                     set_value(5),
@@ -329,7 +346,9 @@ class_with_method_and_body_types_ast: ClassDef = fix_missing_locations(
                         body=[
                             Expr(
                                 Call(
-                                    func=Name("print", Load()),
+                                    func=Name(
+                                        "print", Load(), lineno=None, col_offset=None
+                                    ),
                                     args=[set_value(True)],
                                     keywords=[],
                                     expr=None,
@@ -349,7 +368,13 @@ class_with_method_and_body_types_ast: ClassDef = fix_missing_locations(
                         value=Tuple(
                             elts=[
                                 Call(
-                                    func=Attribute(Name("np", Load()), "empty", Load()),
+                                    func=Attribute(
+                                        Name(
+                                            "np", Load(), lineno=None, col_offset=None
+                                        ),
+                                        "empty",
+                                        Load(),
+                                    ),
                                     args=[set_value(0)],
                                     keywords=[],
                                     expr=None,
@@ -377,6 +402,8 @@ class_with_method_and_body_types_ast: ClassDef = fix_missing_locations(
         type_params=[],
         expr=None,
         identifier_name=None,
+        lineno=None,
+        col_offset=None,
     )
 )
 
@@ -433,6 +460,8 @@ class_with_method_ast: ClassDef = fix_missing_locations(
         name="C",
         expr=None,
         identifier_name=None,
+        lineno=None,
+        col_offset=None,
     )
 )
 
@@ -484,6 +513,8 @@ class_with_method_types_ast: ClassDef = fix_missing_locations(
                                     )
                                 ),
                                 Load(),
+                                lineno=None,
+                                col_offset=None,
                             ),
                             arg="K",
                         ),
@@ -495,6 +526,8 @@ class_with_method_types_ast: ClassDef = fix_missing_locations(
                                 ),
                                 Index(value=Name("bool", Load())),
                                 Load(),
+                                lineno=None,
+                                col_offset=None,
                             ),
                             arg="as_numpy",
                         ),
@@ -529,6 +562,8 @@ class_with_method_types_ast: ClassDef = fix_missing_locations(
         name="C",
         expr=None,
         identifier_name=None,
+        lineno=None,
+        col_offset=None,
     )
 )
 
@@ -579,9 +614,13 @@ class_with_optional_arg_method_ast: ClassDef = ClassDef(
                                         )
                                     ),
                                     Load(),
+                                    lineno=None,
+                                    col_offset=None,
                                 )
                             ),
                             Load(),
+                            lineno=None,
+                            col_offset=None,
                         ),
                         arg="K",
                     ),
@@ -614,6 +653,8 @@ class_with_optional_arg_method_ast: ClassDef = ClassDef(
     name="C",
     expr=None,
     identifier_name=None,
+    lineno=None,
+    col_offset=None,
 )
 
 function_adder_str: str = '''
@@ -767,6 +808,8 @@ method_complex_args_variety_ast: FunctionDef = FunctionDef(
                         expr=None,
                     ),
                     Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
             ),
             set_arg("tfds_dir"),
@@ -816,6 +859,8 @@ method_complex_args_variety_ast: FunctionDef = FunctionDef(
             expr=None,
         ),
         Load(),
+        lineno=None,
+        col_offset=None,
     ),
     arguments_args=None,
     identifier_name=None,

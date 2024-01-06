@@ -66,12 +66,14 @@ def json_schema_property_to_param(param, required):
         _param["typ"] = list(
             map(
                 lambda typ: (
-                    transform_ref_fk_set(typ["$ref"], fk)
-                    if "$ref" in typ
-                    else typ["type"]
-                )
-                if isinstance(typ, dict)
-                else typ,
+                    (
+                        transform_ref_fk_set(typ["$ref"], fk)
+                        if "$ref" in typ
+                        else typ["type"]
+                    )
+                    if isinstance(typ, dict)
+                    else typ
+                ),
                 _param.pop("anyOf"),
             )
         )
@@ -114,7 +116,9 @@ json_type2typ: Dict[str, str] = {
     "array": "list",
     "int": "integer",
     "integer": "int",
-    "float": "number",  # <- Actually a problem, maybe `literal_eval` on default then `type()` or just `type(default)`?
+    "float": (
+        "number"
+    ),  # <- Actually a problem, maybe `literal_eval` on default then `type()` or just `type(default)`?
     "number": "float",
     "null": "NoneType",
 }

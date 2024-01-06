@@ -192,9 +192,13 @@ def upsert_routes(app, routes, routes_path, route, primary_key):
                             get_value(call.args[0])
                             == "{route}{rest}".format(
                                 route=route,
-                                rest=""
-                                if call.func.attr == "post"
-                                else "/:{primary_key}".format(primary_key=primary_key),
+                                rest=(
+                                    ""
+                                    if call.func.attr == "post"
+                                    else "/:{primary_key}".format(
+                                        primary_key=primary_key
+                                    )
+                                ),
                             ),
                             call.func.value.id == app,
                         )

@@ -161,7 +161,7 @@ class TestDocTransUtils(TestCase):
         del original_node._location
         self.assertEqual(
             doc_trans._get_ass_typ(original_node),
-            Name("int", Load()).id,
+            Name("int", Load(), lineno=None, col_offset=None).id,
         )
 
     def test_class_with_internal_converts_to_annotated(self) -> None:

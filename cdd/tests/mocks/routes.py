@@ -2,7 +2,6 @@
 Mock routes
 """
 
-
 import cdd.routes.emit.bottle
 from cdd.shared.pure_utils import tab
 

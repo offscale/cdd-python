@@ -64,7 +64,9 @@ class TestEmitterUtils(TestCase):
                     Call(
                         args=[set_value("--num")],
                         func=Attribute(
-                            Name("argument_parser", Load()),
+                            Name(
+                                "argument_parser", Load(), lineno=None, col_offset=None
+                            ),
                             "add_argument",
                             Load(),
                         ),
@@ -75,6 +77,8 @@ class TestEmitterUtils(TestCase):
                                     expr_context_ctx=None,
                                     expr_slice=None,
                                     expr_value=None,
+                                    lineno=None,
+                                    col_offset=None,
                                 ),
                                 identifier=None,
                             ),

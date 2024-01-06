@@ -328,10 +328,12 @@ def maybe_replace_function_args(new_node, cur_ast_node, cst_idx, cst_list):
                 end=cst_list[cst_idx].value[func_end - 1 :],
                 args=", ".join(
                     "{arg_name}{annotation}".format(
-                        annotation=""
-                        if arg.annotation is None
-                        else ": {annotation_unparsed}".format(
-                            annotation_unparsed=to_code(arg.annotation).rstrip("\n")
+                        annotation=(
+                            ""
+                            if arg.annotation is None
+                            else ": {annotation_unparsed}".format(
+                                annotation_unparsed=to_code(arg.annotation).rstrip("\n")
+                            )
                         ),
                         arg_name=arg.arg,
                     )

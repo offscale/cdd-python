@@ -118,7 +118,12 @@ def class_(
         word_wrap=word_wrap,
     )
     return ClassDef(
-        bases=list(map(rpartial(Name, Load()), class_bases)),
+        bases=list(
+            map(
+                rpartial(partial(Name, lineno=None, col_offset=None), Load()),
+                class_bases,
+            )
+        ),
         body=list(
             filter(
                 None,
@@ -145,24 +150,29 @@ def class_(
                         iter(
                             (
                                 (
-                                    internal_body[0]
-                                    if len(internal_body) == 1
-                                    and isinstance(internal_body[0], FunctionDef)
-                                    and internal_body[0].name == "__call__"
-                                    else _make_call_meth(
-                                        internal_body,
-                                        returns["return_type"]["default"]
-                                        if "default"
-                                        in (
-                                            (returns or {"return_type": iter(())}).get(
-                                                "return_type"
-                                            )
-                                            or iter(())
+                                    (
+                                        internal_body[0]
+                                        if len(internal_body) == 1
+                                        and isinstance(internal_body[0], FunctionDef)
+                                        and internal_body[0].name == "__call__"
+                                        else _make_call_meth(
+                                            internal_body,
+                                            (
+                                                returns["return_type"]["default"]
+                                                if "default"
+                                                in (
+                                                    (
+                                                        returns
+                                                        or {"return_type": iter(())}
+                                                    ).get("return_type")
+                                                    or iter(())
+                                                )
+                                                else None
+                                            ),
+                                            param_names,
+                                            docstring_format=docstring_format,
+                                            word_wrap=word_wrap,
                                         )
-                                        else None,
-                                        param_names,
-                                        docstring_format=docstring_format,
-                                        word_wrap=word_wrap,
                                     ),
                                 )
                                 or iter(())
@@ -175,14 +185,23 @@ def class_(
             )
         )
         or [Expr(set_value(""))],  # empty body will cause syntax error
-        decorator_list=list(map(rpartial(Name, Load()), decorator_list))
-        if decorator_list
-        else [],
+        decorator_list=(
+            list(
+                map(
+                    rpartial(partial(Name, lineno=None, col_offset=None), Load()),
+                    decorator_list,
+                )
+            )
+            if decorator_list
+            else []
+        ),
         type_params=[],
         keywords=[],
         name=class_name or intermediate_repr["name"],
         expr=None,
         identifier_name=None,
+        lineno=None,
+        col_offset=None,
     )
 
 

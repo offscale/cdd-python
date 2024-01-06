@@ -32,11 +32,12 @@ class TestUtilsForTests(TestCase):
             import cdd.tests.utils_for_tests
 
             cdd.tests.utils_for_tests.unittest_main()
-
-        # Python >=3.12 has:
-        # if self.result.testsRun == 0: where `_NO_TESTS_EXITCODE` is `5`
-        self.assertEqual(e.exception.code, 5) if PY_GTE_3_12 else self.assertIsInstance(
-            e.exception.code, bool
+        (
+            # Python >=3.12 has:
+            # if self.result.testsRun == 0: where `_NO_TESTS_EXITCODE` is `5`
+            self.assertEqual(e.exception.code, 5)
+            if PY_GTE_3_12
+            else self.assertIsInstance(e.exception.code, bool)
         )
         self.assertIsNone(argparse_mock.call_args)
         self.assertIsNone(cdd.tests.utils_for_tests.unittest_main())

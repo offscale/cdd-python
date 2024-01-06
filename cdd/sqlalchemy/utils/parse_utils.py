@@ -373,11 +373,13 @@ def get_pk_and_type(sqlalchemy_class):
         type_name=type(sqlalchemy_class).__name__
     )
     return (
-        lambda assign: assign
-        if assign is None
-        else (
-            assign.targets[0].id,
-            assign.value.args[0].id,  # First arg is type
+        lambda assign: (
+            assign
+            if assign is None
+            else (
+                assign.targets[0].id,
+                assign.value.args[0].id,  # First arg is type
+            )
         )
     )(
         next(

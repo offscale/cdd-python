@@ -248,7 +248,7 @@ class TestAstCstUtils(TestCase):
         after: str = "\n\n    @staticmethod\n    def add1(foo) -> int:"
 
         new_func_node = deepcopy(self.func_node)
-        new_func_node.returns = Name("int", Load())
+        new_func_node.returns = Name("int", Load(), lineno=None, col_offset=None)
 
         self.maybe_replace_function_return_type_test(
             ast_node_to_find=self.func_node,
@@ -295,7 +295,7 @@ class TestAstCstUtils(TestCase):
         after: str = "\n\n    @staticmethod\n    def add1(foo) -> float:"
 
         new_func_node = deepcopy(self.func_node)
-        new_func_node.returns = Name("float", Load())
+        new_func_node.returns = Name("float", Load(), lineno=None, col_offset=None)
 
         self.maybe_replace_function_return_type_test(
             ast_node_to_find=self.func_node,

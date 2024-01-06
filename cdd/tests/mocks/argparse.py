@@ -31,12 +31,16 @@ argparse_add_argument_ast: Expr = Expr(
     Call(
         args=[set_value("--num")],
         func=Attribute(
-            Name("argument_parser", Load()),
+            Name("argument_parser", Load(), lineno=None, col_offset=None),
             "add_argument",
             Load(),
         ),
         keywords=[
-            keyword(arg="type", value=Name("int", Load()), identifier=None),
+            keyword(
+                arg="type",
+                value=Name("int", Load(), lineno=None, col_offset=None),
+                identifier=None,
+            ),
             keyword(
                 arg="required",
                 value=set_value(True),
@@ -113,12 +117,16 @@ as_numpy_argparse_call: Expr = Expr(
     Call(
         args=[set_value("--as_numpy")],
         func=Attribute(
-            Name("argument_parser", Load()),
+            Name("argument_parser", Load(), lineno=None, col_offset=None),
             "add_argument",
             Load(),
         ),
         keywords=[
-            keyword(arg="type", value=Name("bool", Load()), identifier=None),
+            keyword(
+                arg="type",
+                value=Name("bool", Load(), lineno=None, col_offset=None),
+                identifier=None,
+            ),
             keyword(
                 arg="help",
                 value=set_value(
@@ -137,7 +145,7 @@ _argparse_add_arguments = (
         Call(
             args=[set_value("--dataset_name")],
             func=Attribute(
-                Name("argument_parser", Load()),
+                Name("argument_parser", Load(), lineno=None, col_offset=None),
                 "add_argument",
                 Load(),
             ),
@@ -166,7 +174,7 @@ _argparse_add_arguments = (
         Call(
             args=[set_value("--tfds_dir")],
             func=Attribute(
-                Name("argument_parser", Load()),
+                Name("argument_parser", Load(), lineno=None, col_offset=None),
                 "add_argument",
                 Load(),
             ),
@@ -195,7 +203,7 @@ _argparse_add_arguments = (
         Call(
             args=[set_value("--K")],
             func=Attribute(
-                Name("argument_parser", Load()),
+                Name("argument_parser", Load(), lineno=None, col_offset=None),
                 "add_argument",
                 Load(),
             ),
@@ -236,12 +244,16 @@ _argparse_add_arguments = (
         Call(
             args=[set_value("--data_loader_kwargs")],
             func=Attribute(
-                Name("argument_parser", Load()),
+                Name("argument_parser", Load(), lineno=None, col_offset=None),
                 "add_argument",
                 Load(),
             ),
             keywords=[
-                keyword(arg="type", value=Name("loads", Load()), identifier=None),
+                keyword(
+                    arg="type",
+                    value=Name("loads", Load(), lineno=None, col_offset=None),
+                    identifier=None,
+                ),
                 keyword(
                     arg="help",
                     value=set_value(
@@ -260,14 +272,14 @@ _argparse_return: Return = Return(
     value=Tuple(
         ctx=Load(),
         elts=[
-            Name("argument_parser", Load()),
+            Name("argument_parser", Load(), lineno=None, col_offset=None),
             Tuple(
                 ctx=Load(),
                 elts=[
                     Call(
                         args=[set_value(0)],
                         func=Attribute(
-                            Name("np", Load()),
+                            Name("np", Load(), lineno=None, col_offset=None),
                             "empty",
                             Load(),
                         ),
@@ -396,9 +408,7 @@ def set_cli_action_append(argument_parser):
         help="Collection of callables that are run inside the training loop",
     )
     return argument_parser
-'''.format(
-    _cli_doc_str=_cli_doc_str, header_doc_str=docstring_header_str
-)
+'''.format(_cli_doc_str=_cli_doc_str, header_doc_str=docstring_header_str)
 
 argparse_func_ast: FunctionDef = fix_missing_locations(
     FunctionDef(
@@ -417,7 +427,7 @@ argparse_func_ast: FunctionDef = fix_missing_locations(
             Assign(
                 targets=[
                     Attribute(
-                        Name("argument_parser", Load()),
+                        Name("argument_parser", Load(), lineno=None, col_offset=None),
                         "description",
                         Store(),
                     )

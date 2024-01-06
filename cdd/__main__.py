@@ -457,11 +457,13 @@ def main(cli_argv=None, return_args=False):
     if command == "sync":
         args: Namespace = Namespace(
             **{
-                k: v
-                if k in frozenset(("truth", "no_word_wrap"))
-                or isinstance(v, list)
-                or v is None
-                else [v]
+                k: (
+                    v
+                    if k in frozenset(("truth", "no_word_wrap"))
+                    or isinstance(v, list)
+                    or v is None
+                    else [v]
+                )
                 for k, v in args_dict.items()
             }
         )

@@ -194,11 +194,11 @@ def type_default_from_default(default, typ):
     """
     return (
         (
-            typ
-            if typ == "None"
-            else "Optional[typ]".format(typ)
-            if typ != "None"
-            else typ,
+            (
+                typ
+                if typ == "None"
+                else "Optional[typ]".format(typ) if typ != "None" else typ
+            ),
             None,
         )
         if default is NoneStr
@@ -294,9 +294,11 @@ def _parse_out_default_and_doc(
 
         fst = line[: _start_idx - 1 - extra_offset]
         rest = line[
-            start_rest_offset : (-extra_offset if extra_offset > 0 else None)
-            if default_end_offset is None
-            else default_end_offset
+            start_rest_offset : (
+                (-extra_offset if extra_offset > 0 else None)
+                if default_end_offset is None
+                else default_end_offset
+            )
         ]
         return (
             fst + rest,

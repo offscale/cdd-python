@@ -1,6 +1,7 @@
 """
 Argparse function parser
 """
+
 from ast import Assign, Call, FunctionDef, Return, Tuple, get_docstring
 from collections import OrderedDict
 from functools import partial
@@ -122,9 +123,11 @@ def argparse_ast(
     )
     if inner_body:
         intermediate_repr["_internal"] = {
-            "original_doc_str": doc_string
-            if parse_original_whitespace
-            else get_docstring(function_def, clean=False),
+            "original_doc_str": (
+                doc_string
+                if parse_original_whitespace
+                else get_docstring(function_def, clean=False)
+            ),
             "body": inner_body,
             "from_name": function_def.name,
             "from_type": "static",

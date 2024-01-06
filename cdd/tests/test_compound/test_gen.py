@@ -43,7 +43,9 @@ from cdd.tests.utils_for_tests import run_ast_test, unittest_main
 
 method_adder_ast: FunctionDef = deepcopy(function_adder_ast)
 method_adder_ast.body[0] = Expr(set_value(" C class (mocked!) "))
-method_adder_ast.decorator_list = [Name("staticmethod", Load())]
+method_adder_ast.decorator_list = [
+    Name("staticmethod", Load(), lineno=None, col_offset=None)
+]
 del function_adder_ast
 
 
@@ -72,10 +74,12 @@ def populate_files(tempdir, input_module_str=None):
         body=[
             input_class_ast,
             Assign(
-                targets=[Name("input_map", Store())],
+                targets=[Name("input_map", Store(), lineno=None, col_offset=None)],
                 value=Dict(
                     keys=[set_value(input_class_name)],
-                    values=[Name(input_class_name, Load())],
+                    values=[
+                        Name(input_class_name, Load(), lineno=None, col_offset=None)
+                    ],
                     expr=None,
                 ),
                 expr=None,
@@ -83,7 +87,7 @@ def populate_files(tempdir, input_module_str=None):
                 **maybe_type_comment
             ),
             Assign(
-                targets=[Name("__all__", Store())],
+                targets=[Name("__all__", Store(), lineno=None, col_offset=None)],
                 value=List(
                     ctx=Load(),
                     elts=[set_value(input_class_name), set_value("input_map")],
@@ -218,7 +222,9 @@ class TestGen(TestCase):
                     import_star_from_input_ast,
                     self.expected_class_ast,
                     Assign(
-                        targets=[Name("__all__", Store())],
+                        targets=[
+                            Name("__all__", Store(), lineno=None, col_offset=None)
+                        ],
                         value=List(
                             ctx=Load(),
                             elts=[set_value("FooConfig")],
@@ -269,7 +275,7 @@ class TestGen(TestCase):
                 self.expected_class_ast,
                 # self.input_module_ast.body[1],
                 Assign(
-                    targets=[Name("__all__", Store())],
+                    targets=[Name("__all__", Store(), lineno=None, col_offset=None)],
                     value=List(
                         ctx=Load(),
                         elts=[set_value("FooConfig")],
@@ -393,6 +399,8 @@ unittest_main()
 #     arguments_args=None,
 #     identifier_name=None,
 #     stmt=None,
+#     lineno=None,
+#     col_offset = None,
 # )],
 #             keywords=tuple(),
 #             identifier_name=None,

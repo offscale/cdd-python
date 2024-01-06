@@ -62,7 +62,7 @@ def _parse_return(e, intermediate_repr, function_def, emit_default_doc):
                     emit_default_doc=emit_default_doc,
                 )[0],
                 "default": to_code(e.value.elts[1]).rstrip("\n"),
-                "typ": typ
+                "typ": typ,
                 # 'Tuple[ArgumentParser, {typ}]'.format(typ=intermediate_repr['returns']['typ'])
             },
         ),
@@ -121,18 +121,20 @@ def parse_out_param(expr, require_default=False, emit_default_doc=True):
         None,
     )
     doc: Optional[str] = (
-        lambda help_: help_
-        if help_ is None
-        else (
+        lambda help_: (
             help_
-            if default is None
-            or emit_default_doc is False
-            or (hasattr(default, "__len__") and len(default) == 0)
-            or "defaults to" in help_
-            or "Defaults to" in help_
-            else "{help} Defaults to {default}".format(
-                help=help_ if help_.endswith(".") else "{}.".format(help_),
-                default=default,
+            if help_ is None
+            else (
+                help_
+                if default is None
+                or emit_default_doc is False
+                or (hasattr(default, "__len__") and len(default) == 0)
+                or "defaults to" in help_
+                or "Defaults to" in help_
+                else "{help} Defaults to {default}".format(
+                    help=help_ if help_.endswith(".") else "{}.".format(help_),
+                    default=default,
+                )
             )
         )
     )(

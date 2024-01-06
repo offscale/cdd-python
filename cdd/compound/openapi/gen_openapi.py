@@ -101,23 +101,27 @@ def openapi_bulk(app_name, model_paths, routes_paths):
             route: str = "/".join(
                 map(
                     lambda r: (
-                        lambda pk: (
-                            path_dict["parameters"].append(
-                                {
-                                    "description": "Primary key of target `{}`".format(
-                                        object_name
-                                    ),
-                                    "in": "path",
-                                    "name": pk,
-                                    "required": True,
-                                    "schema": {"type": "string"},
-                                }
+                        (
+                            lambda pk: (
+                                path_dict["parameters"].append(
+                                    {
+                                        "description": (
+                                            "Primary key of target `{}`".format(
+                                                object_name
+                                            )
+                                        ),
+                                        "in": "path",
+                                        "name": pk,
+                                        "required": True,
+                                        "schema": {"type": "string"},
+                                    }
+                                )
+                                or "{{{}}}".format(pk)
                             )
-                            or "{{{}}}".format(pk)
-                        )
-                    )(r[1:])
-                    if r.startswith(":")
-                    else r,
+                        )(r[1:])
+                        if r.startswith(":")
+                        else r
+                    ),
                     route.split("/"),
                 )
             )
@@ -175,9 +179,11 @@ def openapi_bulk(app_name, model_paths, routes_paths):
                             cdd.json_schema.emit.json_schema(table),
                         ),
                         map(
-                            lambda node: cdd.sqlalchemy.parse.sqlalchemy_table(node)
-                            if isinstance(node, (AnnAssign, Assign, Call))
-                            else cdd.sqlalchemy.parse.sqlalchemy(node),
+                            lambda node: (
+                                cdd.sqlalchemy.parse.sqlalchemy_table(node)
+                                if isinstance(node, (AnnAssign, Assign, Call))
+                                else cdd.sqlalchemy.parse.sqlalchemy(node)
+                            ),
                             chain.from_iterable(map(parse_model, model_paths)),
                         ),
                     ),

@@ -511,9 +511,7 @@ Args:
 Returns:
   Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
    Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
-""".format(
-    docstring_header_str=docstring_header_str
-)
+""".format(docstring_header_str=docstring_header_str)
 
 docstring_no_default_doc_str: str = """
 {header_doc_str}
@@ -534,9 +532,7 @@ docstring_no_default_doc_str: str = """
 
 :return: Train and tests dataset splits.
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
-""".format(
-    header_doc_str=docstring_header_str
-)
+""".format(header_doc_str=docstring_header_str)
 
 docstring_no_default_doc_wrapped_str: str = docstring_no_default_doc_str.replace(
     " np.ndarray]]```", "\n{tab}np.ndarray]]```".format(tab=tab)
@@ -573,9 +569,7 @@ docstring_no_default_no_nl_str: str = _docstring_no_default_str.format(
 
 docstring_numpydoc_only_doc_str: str = """
 {header_doc_str}
-""".format(
-    header_doc_str=docstring_header_str
-)
+""".format(header_doc_str=docstring_header_str)
 
 docstring_numpydoc_only_params_str: str = """
 Parameters
@@ -676,9 +670,7 @@ docstring_no_type_str: str = """
 :param data_loader_kwargs: pass this as arguments to data_loader function
 
 :return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
-""".format(
-    header_doc_str=docstring_header_str
-)
+""".format(header_doc_str=docstring_header_str)
 
 docstring_no_type_no_default_tpl_str: str = """
 {header_doc_str}

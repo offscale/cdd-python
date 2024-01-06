@@ -18,9 +18,7 @@ try:
 except ImportError:
     tf = type('TensorFlow', tuple(), {{ 'data': type('Dataset', tuple(), {{ "Dataset": None }}) }} )
     np = type('numpy', tuple(), {{ 'ndarray': None, 'empty': lambda _: _ }})
-""".format(
-    package="typing" if PY_GTE_3_8 else "typing_extensions"
-)
+""".format(package="typing" if PY_GTE_3_8 else "typing_extensions")
 
 imports_header_ast: List[AST] = ast_parse(imports_header).body
 

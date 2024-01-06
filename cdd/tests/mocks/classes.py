@@ -81,9 +81,7 @@ class ConfigClass(object):
         np.empty(0),
         np.empty(0),
     )
-'''.format(
-    header_doc_str=indent(docstring_header_str, tab), tab=tab
-)
+'''.format(header_doc_str=indent(docstring_header_str, tab), tab=tab)
 
 class_nargs_str: str = '''
 class ConfigClass(object):
@@ -112,46 +110,39 @@ class ConfigClass(object):
             ]
         ]
     ] = None
-'''.format(
-    header_doc_str=indent(docstring_header_str, tab)
-)
+'''.format(header_doc_str=indent(docstring_header_str, tab))
 
 class_ast: ClassDef = ClassDef(
-    bases=[Name("object", Load())],
+    bases=[Name("object", Load(), lineno=None, col_offset=None)],
     body=[
         class_doc_str_expr,
         AnnAssign(
-            annotation=Name(
-                "str",
-                Load(),
-            ),
+            annotation=Name("str", Load(), lineno=None, col_offset=None),
             simple=1,
-            target=Name("dataset_name", Store()),
+            target=Name("dataset_name", Store(), lineno=None, col_offset=None),
             value=set_value("mnist"),
             expr=None,
             expr_annotation=None,
             expr_target=None,
+            col_offset=None,
+            lineno=None,
         ),
         AnnAssign(
-            annotation=Name(
-                "str",
-                Load(),
-            ),
+            annotation=Name("str", Load(), lineno=None, col_offset=None),
             simple=1,
-            target=Name("tfds_dir", Store()),
+            target=Name("tfds_dir", Store(), lineno=None, col_offset=None),
             value=set_value(
                 "~/tensorflow_datasets",
             ),
             expr=None,
             expr_annotation=None,
             expr_target=None,
+            col_offset=None,
+            lineno=None,
         ),
         AnnAssign(
             annotation=Subscript(
-                Name(
-                    "Literal",
-                    Load(),
-                ),
+                Name("Literal", Load(), lineno=None, col_offset=None),
                 Index(
                     value=Tuple(
                         elts=list(
@@ -168,55 +159,63 @@ class_ast: ClassDef = ClassDef(
                     )
                 ),
                 Load(),
+                lineno=None,
+                col_offset=None,
             ),
             simple=1,
-            target=Name("K", Store()),
+            target=Name("K", Store(), lineno=None, col_offset=None),
             value=set_value("np"),
             expr=None,
             expr_target=None,
             expr_annotation=None,
+            col_offset=None,
+            lineno=None,
         ),
         AnnAssign(
             annotation=Subscript(
-                Name(
-                    "Optional",
-                    Load(),
-                ),
-                Index(value=Name("bool", Load())),
+                Name("Optional", Load(), lineno=None, col_offset=None),
+                Index(value=Name("bool", Load(), lineno=None, col_offset=None)),
                 Load(),
+                lineno=None,
+                col_offset=None,
             ),
             simple=1,
-            target=Name("as_numpy", Store()),
+            target=Name("as_numpy", Store(), lineno=None, col_offset=None),
             value=None,
             expr=None,
             expr_target=None,
             expr_annotation=None,
+            col_offset=None,
+            lineno=None,
         ),
         AnnAssign(
             annotation=Subscript(
-                Name("Optional", Load()), set_slice(Name("dict", Load())), Load()
+                Name("Optional", Load(), lineno=None, col_offset=None),
+                set_slice(Name("dict", Load(), lineno=None, col_offset=None)),
+                Load(),
+                lineno=None,
+                col_offset=None,
             ),
             simple=1,
-            target=Name(
-                "data_loader_kwargs",
-                Store(),
-            ),
+            target=Name("data_loader_kwargs", Store(), lineno=None, col_offset=None),
             value=None,
             expr=None,
             expr_target=None,
             expr_annotation=None,
+            col_offset=None,
+            lineno=None,
         ),
         AnnAssign(
             annotation=returns_subscript,
             simple=1,
-            target=Name("return_type", Store()),
+            target=Name("return_type", Store(), lineno=None, col_offset=None),
             value=Tuple(
                 ctx=Load(),
                 elts=[
                     Call(
                         args=[set_value(0)],
                         func=Attribute(
-                            Name("np", Load()),
+                            Name("np", Load(), lineno=None, col_offset=None),
                             "empty",
                             Load(),
                         ),
@@ -231,6 +230,8 @@ class_ast: ClassDef = ClassDef(
             expr=None,
             expr_target=None,
             expr_annotation=None,
+            col_offset=None,
+            lineno=None,
         ),
     ],
     decorator_list=[],
@@ -239,6 +240,8 @@ class_ast: ClassDef = ClassDef(
     name="ConfigClass",
     expr=None,
     identifier_name=None,
+    lineno=None,
+    col_offset=None,
 )
 
 class_ast_no_default_doc: ClassDef = deepcopy(class_ast)
@@ -313,12 +316,18 @@ class_nargs_ast: ClassDef = ClassDef(
                                     )
                                 ),
                                 Load(),
+                                lineno=None,
+                                col_offset=None,
                             )
                         ),
                         Load(),
+                        lineno=None,
+                        col_offset=None,
                     )
                 ),
                 Load(),
+                lineno=None,
+                col_offset=None,
             ),
             simple=1,
             target=Name("callbacks", Store()),
@@ -326,6 +335,8 @@ class_nargs_ast: ClassDef = ClassDef(
             expr=None,
             expr_annotation=None,
             expr_target=None,
+            col_offset=None,
+            lineno=None,
         ),
     ],
     decorator_list=[],
@@ -334,6 +345,8 @@ class_nargs_ast: ClassDef = ClassDef(
     name="ConfigClass",
     expr=None,
     identifier_name=None,
+    lineno=None,
+    col_offset=None,
 )
 
 class_squared_hinge_config_ast: ClassDef = ClassDef(
@@ -369,6 +382,8 @@ class_squared_hinge_config_ast: ClassDef = ClassDef(
             expr=None,
             expr_target=None,
             expr_annotation=None,
+            col_offset=None,
+            lineno=None,
         ),
         AnnAssign(
             annotation=Name("object", Load()),
@@ -378,6 +393,8 @@ class_squared_hinge_config_ast: ClassDef = ClassDef(
             expr=None,
             expr_target=None,
             expr_annotation=None,
+            col_offset=None,
+            lineno=None,
         ),
         AnnAssign(
             annotation=Name("str", Load()),
@@ -389,6 +406,8 @@ class_squared_hinge_config_ast: ClassDef = ClassDef(
             expr=None,
             expr_target=None,
             expr_annotation=None,
+            col_offset=None,
+            lineno=None,
         ),
         FunctionDef(
             args=arguments(
@@ -559,6 +578,8 @@ class_squared_hinge_config_ast: ClassDef = ClassDef(
     expr=None,
     identifier_name=None,
     name="SquaredHingeConfig",
+    lineno=None,
+    col_offset=None,
 )
 
 # ```py
@@ -767,9 +788,7 @@ class TensorBoard(Callback):
 
     def set_model(self, model):
         """Sets Keras model and writes graph if specified."""
-'''.format(
-    tensorboard_doc_str=tensorboard_doc_str
-)
+'''.format(tensorboard_doc_str=tensorboard_doc_str)
 
 class_google_keras_tensorboard_ast: ClassDef = ClassDef(
     name="TensorBoard",
@@ -858,6 +877,8 @@ class_google_keras_tensorboard_ast: ClassDef = ClassDef(
     type_params=[],
     expr=None,
     identifier_name=None,
+    lineno=None,
+    col_offset=None,
 )
 
 # #################
@@ -939,9 +960,7 @@ class L1Loss(_Loss):
 
     def forward(self, input: Tensor, target: Tensor) -> Tensor:
         return F.l1_loss(input, target, reduction=self.reduction)
-'''.format(
-    class_torch_nn_l1loss_docstring_str=class_torch_nn_l1loss_docstring_str
-)
+'''.format(class_torch_nn_l1loss_docstring_str=class_torch_nn_l1loss_docstring_str)
 
 class_torch_nn_l1loss_ast: ClassDef = ClassDef(
     bases=[
@@ -1077,6 +1096,8 @@ class_torch_nn_l1loss_ast: ClassDef = ClassDef(
     name="L1Loss",
     expr=None,
     identifier_name=None,
+    lineno=None,
+    col_offset=None,
 )
 
 class_torch_nn_one_cycle_lr_docstring = (
@@ -1276,6 +1297,8 @@ class_torch_nn_one_cycle_lr_ast: ClassDef = ClassDef(
     expr=None,
     identifier_name=None,
     name="OneCycleLR",
+    lineno=None,
+    col_offset=None,
 )
 
 # From `tf.keras.losses.Reduction` @ tf-nightly:2.7.0.dev20210908, minus methods and decorator
@@ -1294,6 +1317,8 @@ class_reduction_v2: ClassDef = ClassDef(
         ),
     ],
     decorator_list=[],
+    lineno=None,
+    col_offset=None,
 )
 
 __all__ = [

@@ -165,9 +165,11 @@ class TestParseClass(TestCase):
                         (
                             "search",
                             {
-                                "doc": "Search query, e.g., "
-                                "['node_name', 'function_name', "
-                                "'arg_name']",
+                                "doc": (
+                                    "Search query, e.g., "
+                                    "['node_name', 'function_name', "
+                                    "'arg_name']"
+                                ),
                                 "typ": "list[str]",
                             },
                         ),
@@ -178,9 +180,11 @@ class TestParseClass(TestCase):
                         (
                             "replaced",
                             {
-                                "doc": "Whether a node has been replaced "
-                                "(only replaces first "
-                                "occurrence)"
+                                "doc": (
+                                    "Whether a node has been replaced "
+                                    "(only replaces first "
+                                    "occurrence)"
+                                )
                             },
                         ),
                     )

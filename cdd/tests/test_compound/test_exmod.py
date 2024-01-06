@@ -258,14 +258,16 @@ class TestExMod(TestCase):
                                                 relative_filename,
                                                 remove_hints=(
                                                     (
-                                                        lambda directory: "{directory}{sep}".format(
-                                                            directory=unquote(
-                                                                repr(directory)
-                                                            ),
-                                                            sep=path.sep,
+                                                        lambda directory: (
+                                                            "{directory}{sep}".format(
+                                                                directory=unquote(
+                                                                    repr(directory)
+                                                                ),
+                                                                sep=path.sep,
+                                                            )
+                                                            if platform == "win32"
+                                                            else directory
                                                         )
-                                                        if platform == "win32"
-                                                        else directory
                                                     )(
                                                         path.join(
                                                             new_module_dir,
@@ -373,7 +375,14 @@ class TestExMod(TestCase):
                                     identifier=None,
                                 ),
                                 Assign(
-                                    targets=[Name("__author__", Store())],
+                                    targets=[
+                                        Name(
+                                            "__author__",
+                                            Store(),
+                                            lineno=None,
+                                            col_offset=None,
+                                        )
+                                    ],
                                     value=set_value(
                                         environ.get("CDD_AUTHOR", "Samuel Marks")
                                     ),
@@ -382,7 +391,14 @@ class TestExMod(TestCase):
                                     **maybe_type_comment,
                                 ),
                                 Assign(
-                                    targets=[Name("__version__", Store())],
+                                    targets=[
+                                        Name(
+                                            "__version__",
+                                            Store(),
+                                            lineno=None,
+                                            col_offset=None,
+                                        )
+                                    ],
                                     value=set_value(
                                         environ.get("CDD_VERSION", "0.0.0")
                                     ),
@@ -391,7 +407,14 @@ class TestExMod(TestCase):
                                     **maybe_type_comment,
                                 ),
                                 Assign(
-                                    targets=[Name("__all__", Store())],
+                                    targets=[
+                                        Name(
+                                            "__all__",
+                                            Store(),
+                                            lineno=None,
+                                            col_offset=None,
+                                        )
+                                    ],
                                     value=List(
                                         ctx=Load(),
                                         elts=list(
@@ -489,7 +512,11 @@ class TestExMod(TestCase):
                         ),
                         (
                             Assign(
-                                targets=[Name("__all__", Store())],
+                                targets=[
+                                    Name(
+                                        "__all__", Store(), lineno=None, col_offset=None
+                                    )
+                                ],
                                 value=List(
                                     ctx=Load(),
                                     elts=list(
@@ -573,15 +600,19 @@ class TestExMod(TestCase):
         for name, folder in self.module_hierarchy:
             gen_folder: str = path.join(
                 tempdir,
-                *(folder,)
-                if tempdir.rpartition(path.sep)[2] == new_module_name
-                else (new_module_name, folder),
+                *(
+                    (folder,)
+                    if tempdir.rpartition(path.sep)[2] == new_module_name
+                    else (new_module_name, folder)
+                ),
             )
             gold_folder: str = path.join(
                 self.gold_dir,
-                *(folder,)
-                if self.gold_dir.endswith(self.module_name.replace(".", path.sep))
-                else (self.module_name, folder),
+                *(
+                    (folder,)
+                    if self.gold_dir.endswith(self.module_name.replace(".", path.sep))
+                    else (self.module_name, folder)
+                ),
             )
 
             def _open(_folder):

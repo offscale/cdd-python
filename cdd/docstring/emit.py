@@ -78,9 +78,11 @@ def docstring(
         maybe_nl="\n" if docstring_format == "rest" and purpose != "class" else ""
     ).join(
         (
-            lambda param_lines: [getattr(ARG_TOKENS, docstring_format)[0]] + param_lines
-            if param_lines and docstring_format != "rest"
-            else param_lines
+            lambda param_lines: (
+                [getattr(ARG_TOKENS, docstring_format)[0]] + param_lines
+                if param_lines and docstring_format != "rest"
+                else param_lines
+            )
         )(
             list(
                 map(
@@ -100,19 +102,23 @@ def docstring(
 
     returns = (
         (
-            lambda line_: "".join(
-                "{maybe_nl0_and_token}{maybe_nl1}{returns_doc}".format(
-                    maybe_nl0_and_token=""
-                    if docstring_format == "rest"
-                    else "\n{return_token}".format(
-                        return_token=getattr(RETURN_TOKENS, docstring_format)[0]
-                    ),
-                    maybe_nl1="" if not params or params[-1] == "\n" else "\n",
-                    returns_doc=line_,
+            lambda line_: (
+                "".join(
+                    "{maybe_nl0_and_token}{maybe_nl1}{returns_doc}".format(
+                        maybe_nl0_and_token=(
+                            ""
+                            if docstring_format == "rest"
+                            else "\n{return_token}".format(
+                                return_token=getattr(RETURN_TOKENS, docstring_format)[0]
+                            )
+                        ),
+                        maybe_nl1="" if not params or params[-1] == "\n" else "\n",
+                        returns_doc=line_,
+                    )
                 )
+                if line_
+                else ""
             )
-            if line_
-            else ""
         )(
             next(
                 map(
@@ -140,9 +146,11 @@ def docstring(
         params=params,
         maybe_nl0="\n" if params_end_nls < 2 and returns else "",
         returns=returns,
-        maybe_nl1="\n"
-        if not returns and params_end_nls > 0 or returns and returns_end_nls == 0
-        else "",
+        maybe_nl1=(
+            "\n"
+            if not returns and params_end_nls > 0 or returns and returns_end_nls == 0
+            else ""
+        ),
     )
 
     original_doc_str: str = intermediate_repr.get("_internal", {}).get(
@@ -193,18 +201,22 @@ def docstring(
     if indent_level > current_indent:
         _tab = (indent_level - current_indent) * tab
         lines = ([line] if line else []) + candidate_doc_str[
-            next_nl
-            if len(candidate_doc_str) == next_nl
-            or next_nl + 1 < len(candidate_doc_str)
-            and candidate_doc_str[next_nl + 1] != "\n"
-            else next_nl + 1 :
+            (
+                next_nl
+                if len(candidate_doc_str) == next_nl
+                or next_nl + 1 < len(candidate_doc_str)
+                and candidate_doc_str[next_nl + 1] != "\n"
+                else next_nl + 1
+            ) :
         ].splitlines()
         candidate_doc_str: str = "\n".join(
             map(
-                lambda _line: "{_tab}{_line}".format(_tab=_tab, _line=_line)
-                if _line or emit_separating_tab
-                # and not _line.startswith(_tab)
-                else _line,
+                lambda _line: (
+                    "{_tab}{_line}".format(_tab=_tab, _line=_line)
+                    if _line or emit_separating_tab
+                    # and not _line.startswith(_tab)
+                    else _line
+                ),
                 lines,
             )
         )
@@ -213,9 +225,11 @@ def docstring(
                 "{maybe_nl}{candidate_doc_str}{maybe_nl_tab}".format(
                     maybe_nl="\n" if candidate_doc_str.startswith(_tab) else "",
                     candidate_doc_str=candidate_doc_str,
-                    maybe_nl_tab=""
-                    if candidate_doc_str[-1] == "\n"
-                    else "\n{_tab}".format(_tab=_tab),
+                    maybe_nl_tab=(
+                        ""
+                        if candidate_doc_str[-1] == "\n"
+                        else "\n{_tab}".format(_tab=_tab)
+                    ),
                 )
             )
 
