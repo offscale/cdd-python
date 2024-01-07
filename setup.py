@@ -6,7 +6,7 @@ setup.py implementation, interesting because it parsed the first __init__.py and
 """
 
 import sys
-from ast import Assign, Constant, Str, parse
+from ast import Assign, Constant, parse
 from functools import partial
 from operator import attrgetter
 from os import path
@@ -16,6 +16,7 @@ from setuptools import find_packages, setup
 
 if sys.version_info[:2] >= (3, 12):
     import os
+    from ast import Del as Str
     from sysconfig import _BASE_EXEC_PREFIX as BASE_EXEC_PREFIX
     from sysconfig import _BASE_PREFIX as BASE_PREFIX
     from sysconfig import _EXEC_PREFIX as EXEC_PREFIX
@@ -83,6 +84,7 @@ if sys.version_info[:2] >= (3, 12):
             )
 
 else:
+    from ast import Str
     from distutils.sysconfig import get_python_lib
 
 package_name = "cdd"

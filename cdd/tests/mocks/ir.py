@@ -1609,10 +1609,10 @@ for param in "data_loader_kwargs", "as_numpy":
     intermediate_repr_no_default_with_nones_doc["params"][param]["default"] = NoneStr
 
 intermediate_repr_no_default_sql_doc = deepcopy(intermediate_repr_no_default_doc)
-intermediate_repr_no_default_sql_doc["params"]["dataset_name"]["doc"] = (
-    "[PK] {}".format(
-        intermediate_repr_no_default_sql_doc["params"]["dataset_name"]["doc"]
-    )
+intermediate_repr_no_default_sql_doc["params"]["dataset_name"][
+    "doc"
+] = "[PK] {}".format(
+    intermediate_repr_no_default_sql_doc["params"]["dataset_name"]["doc"]
 )
 
 intermediate_repr_no_default_sql_with_nones_doc = deepcopy(

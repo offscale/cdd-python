@@ -137,7 +137,9 @@ class C(object):
         :return: Train and tests dataset splits.
         """
         return np.empty(0), np.empty(0)
-'''.format(header_doc_str=indent(docstring_header_str, tab * 2))
+'''.format(
+    header_doc_str=indent(docstring_header_str, tab * 2)
+)
 
 class_with_method_and_body_types_str: str = '''
 class C(object):
@@ -172,7 +174,9 @@ class C(object):
             print(True)
             return 5
         return np.empty(0), np.empty(0)
-'''.format(header_doc_str=indent(docstring_header_str, tab * 2))
+'''.format(
+    header_doc_str=indent(docstring_header_str, tab * 2)
+)
 
 class_with_optional_arg_method_str: str = '''
 class C(object):
@@ -193,7 +197,9 @@ class C(object):
         :return: Train and tests dataset splits.
         """
         return np.empty(0), np.empty(0)
-'''.format(header_doc_str=indent(docstring_header_str, tab * 2))
+'''.format(
+    header_doc_str=indent(docstring_header_str, tab * 2)
+)
 
 
 returns_subscript: Subscript = Subscript(

@@ -4,7 +4,7 @@ Pure utils for pure functions. For the same input will always produce the same i
 
 import string
 import typing
-from ast import Name, Str
+from ast import Name
 from collections import deque
 from functools import partial
 from importlib import import_module
@@ -31,8 +31,11 @@ PY_GTE_3_11: bool = _python_major_minor >= (3, 11)
 PY_GTE_3_12: bool = _python_major_minor >= (3, 12)
 
 if PY_GTE_3_8:
+    from ast import Del as Str
     from typing import Literal, Protocol
 else:
+    from ast import Str
+
     from typing_extensions import Literal, Protocol
 
 pp: Callable[[Any], None] = PrettyPrinter(indent=4, width=100, stream=stderr).pprint
@@ -491,7 +494,9 @@ def quote(s, mark='"'):
         else (
             s.s
             if isinstance(s, Str)
-            else s.id if isinstance(s, Name) else getattr(s, "value", s)
+            else s.id
+            if isinstance(s, Name)
+            else getattr(s, "value", s)
         )
     )
     # ^ Poor man's `get_value`

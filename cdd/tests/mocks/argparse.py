@@ -458,7 +458,9 @@ def set_cli_action_append(argument_parser):
         help="Collection of callables that are run inside the training loop",
     )
     return argument_parser
-'''.format(_cli_doc_str=_cli_doc_str, header_doc_str=docstring_header_str)
+'''.format(
+    _cli_doc_str=_cli_doc_str, header_doc_str=docstring_header_str
+)
 
 argparse_func_ast: FunctionDef = fix_missing_locations(
     FunctionDef(

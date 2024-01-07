@@ -93,7 +93,9 @@ config_tbl = Table(
     ),
     comment={comment!r},
 )
-""".format(comment=docstring_header_and_return_two_nl_str)
+""".format(
+    comment=docstring_header_and_return_two_nl_str
+)
 
 config_tbl_with_comments_ast: Assign = Assign(
     targets=[Name(ctx=Store(), id="config_tbl", lineno=None, col_offset=None)],

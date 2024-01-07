@@ -81,7 +81,9 @@ class ConfigClass(object):
         np.empty(0),
         np.empty(0),
     )
-'''.format(header_doc_str=indent(docstring_header_str, tab), tab=tab)
+'''.format(
+    header_doc_str=indent(docstring_header_str, tab), tab=tab
+)
 
 class_nargs_str: str = '''
 class ConfigClass(object):
@@ -110,7 +112,9 @@ class ConfigClass(object):
             ]
         ]
     ] = None
-'''.format(header_doc_str=indent(docstring_header_str, tab))
+'''.format(
+    header_doc_str=indent(docstring_header_str, tab)
+)
 
 class_ast: ClassDef = ClassDef(
     bases=[Name("object", Load(), lineno=None, col_offset=None)],
@@ -882,7 +886,9 @@ class TensorBoard(Callback):
 
     def set_model(self, model):
         """Sets Keras model and writes graph if specified."""
-'''.format(tensorboard_doc_str=tensorboard_doc_str)
+'''.format(
+    tensorboard_doc_str=tensorboard_doc_str
+)
 
 class_google_keras_tensorboard_ast: ClassDef = ClassDef(
     name="TensorBoard",
@@ -1072,7 +1078,9 @@ class L1Loss(_Loss):
 
     def forward(self, input: Tensor, target: Tensor) -> Tensor:
         return F.l1_loss(input, target, reduction=self.reduction)
-'''.format(class_torch_nn_l1loss_docstring_str=class_torch_nn_l1loss_docstring_str)
+'''.format(
+    class_torch_nn_l1loss_docstring_str=class_torch_nn_l1loss_docstring_str
+)
 
 class_torch_nn_l1loss_ast: ClassDef = ClassDef(
     bases=[

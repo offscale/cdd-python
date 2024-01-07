@@ -210,7 +210,9 @@ def _scan_phase_numpydoc_and_google(
     white_spacer = (
         identity
         if parse_original_whitespace
-        else lambda s: s if s.isspace() else s.strip()
+        else lambda s: s
+        if s.isspace()
+        else s.strip()
     )
     scanned: Dict[
         str, List[Union[List[Union[LiteralString, str]], Union[LiteralString, str]]]
