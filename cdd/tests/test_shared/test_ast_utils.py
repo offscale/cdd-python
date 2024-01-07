@@ -114,7 +114,7 @@ class TestAstUtils(TestCase):
                     expr=None,
                     expr_target=None,
                     expr_annotation=None,
-                    **maybe_type_comment
+                    **maybe_type_comment,
                 ),
             ],
             stmt=None,
@@ -208,7 +208,7 @@ class TestAstUtils(TestCase):
             targets=[Name("yup", Store(), lineno=None, col_offset=None)],
             value=set_value("nup"),
             expr=None,
-            **maybe_type_comment
+            **maybe_type_comment,
         )
         gen_ast: arg = emit_arg(assign)
         self.assertIsInstance(gen_ast, arg)
@@ -395,7 +395,7 @@ class TestAstUtils(TestCase):
                 annotation="int",
                 arg="a",
                 identifier_arg=None,
-                **{"expr": None, "type_comment": None} if PY_GTE_3_8 else {}
+                **{"expr": None, "type_comment": None} if PY_GTE_3_8 else {},
             ),
         )
 
@@ -721,16 +721,17 @@ class TestAstUtils(TestCase):
             param2ast(
                 ("zion", {"typ": None}),
             ),
-            gold=AnnAssign(
-                annotation=Name("object", Load(), lineno=None, col_offset=None),
+            gold=Assign(
+                annotation=None,
                 simple=1,
-                target=Name("zion", Store(), lineno=None, col_offset=None),
+                targets=[Name("zion", Store(), lineno=None, col_offset=None)],
+                value=set_value(None),
                 expr=None,
                 expr_target=None,
                 expr_annotation=None,
-                value=None,
-                col_offset=None,
                 lineno=None,
+                col_offset=None,
+                **maybe_type_comment,
             ),
         )
 
@@ -1334,7 +1335,7 @@ class TestAstUtils(TestCase):
                 targets=[Name("yup", Store(), lineno=None, col_offset=None)],
                 value=set_value("nup"),
                 expr=None,
-                **maybe_type_comment
+                **maybe_type_comment,
             )
         )
         del_ass_where_name(_mock, "yup")

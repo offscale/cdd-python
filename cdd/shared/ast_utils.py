@@ -187,7 +187,7 @@ def param2ast(param):
             _param["typ"] = "str"
         elif _param["typ"] in frozenset(("Constant", "NameConstant", "Num")):
             _param["typ"] = "object"
-    if needs_quoting(_param["typ"]):
+    if "typ" in _param and needs_quoting(_param["typ"]):
         default = (
             _param.get("default")
             if _param.get("default") in (None, NoneStr)
@@ -207,6 +207,21 @@ def param2ast(param):
             expr_annotation=None,
             col_offset=None,
             lineno=None,
+        )
+    if _param.get("typ") is None:
+        return Assign(
+            annotation=None,
+            simple=1,
+            targets=[Name(name, Store(), lineno=None, col_offset=None)],
+            value=(lambda val: set_value(val) if val is None else val)(
+                get_default_val(_param.get("default"))
+            ),
+            expr=None,
+            expr_target=None,
+            expr_annotation=None,
+            lineno=None,
+            col_offset=None,
+            **maybe_type_comment,
         )
     elif _param["typ"] in simple_types:
         return AnnAssign(

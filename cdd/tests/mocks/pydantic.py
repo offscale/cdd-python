@@ -4,7 +4,7 @@ Pydantic mocks
 
 from ast import AnnAssign, ClassDef, Index, Load, Name, Store, Subscript
 
-from cdd.shared.ast_utils import maybe_type_comment, set_slice, set_value
+from cdd.shared.ast_utils import maybe_type_comment, set_value
 
 pydantic_class_str: str = """
 class Cat(BaseModel):
@@ -34,13 +34,7 @@ pydantic_class_cls_def: ClassDef = ClassDef(
             **maybe_type_comment
         ),
         AnnAssign(
-            annotation=Subscript(
-                Name("Optional", Load(), lineno=None, col_offset=None),
-                set_slice(Name("str", Load(), lineno=None, col_offset=None)),
-                Load(),
-                lineno=None,
-                col_offset=None,
-            ),
+            annotation=Name("str", Load(), lineno=None, col_offset=None),
             simple=1,
             target=Name(ctx=Store(), id="cat_name", lineno=None, col_offset=None),
             value=None,
