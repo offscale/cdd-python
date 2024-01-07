@@ -85,14 +85,14 @@ def sqlalchemy_table(
             )
         ],
         value=Call(
-            func=Name("Table", Load()),
+            func=Name("Table", Load(), lineno=None, col_offset=None),
             args=list(
                 chain.from_iterable(
                     (
                         iter(
                             (
                                 set_value(name if table_name is None else table_name),
-                                Name("metadata", Load()),
+                                Name("metadata", Load(), lineno=None, col_offset=None),
                             )
                         ),
                         map(
@@ -160,6 +160,8 @@ def sqlalchemy_table(
             ),
             expr=None,
             expr_func=None,
+            lineno=None,
+            col_offset=None,
         ),
         lineno=None,
         expr=None,
@@ -237,7 +239,14 @@ def sqlalchemy(
 
     return ClassDef(
         name=class_name,
-        bases=list(map(lambda class_base: Name(class_base, Load()), class_bases)),
+        bases=list(
+            map(
+                lambda class_base: Name(
+                    class_base, Load(), lineno=None, col_offset=None
+                ),
+                class_bases,
+            )
+        ),
         decorator_list=decorator_list or [],
         type_params=[],
         keywords=[],
@@ -274,7 +283,9 @@ def sqlalchemy(
                                         ),
                                     )
                                 )
-                            )
+                            ),
+                            lineno=None,
+                            col_offset=None,
                         )
                         if intermediate_repr.get("doc")
                         or (intermediate_repr["returns"] or {})
@@ -283,7 +294,9 @@ def sqlalchemy(
                         else None
                     ),
                     Assign(
-                        targets=[Name("__tablename__", Store())],
+                        targets=[
+                            Name("__tablename__", Store(), lineno=None, col_offset=None)
+                        ],
                         value=set_value(table_name or class_name),
                         expr=None,
                         lineno=None,
@@ -291,7 +304,11 @@ def sqlalchemy(
                     ),
                     *map(
                         lambda name_param: Assign(
-                            targets=[Name(name_param[0], Store())],
+                            targets=[
+                                Name(
+                                    name_param[0], Store(), lineno=None, col_offset=None
+                                )
+                            ],
                             value=cdd.compound.openapi.utils.emit_utils.param_to_sqlalchemy_column_call(
                                 name_param, include_name=False
                             ),
@@ -398,7 +415,14 @@ def sqlalchemy_hybrid(
 
     return ClassDef(
         name=class_name,
-        bases=list(map(lambda class_base: Name(class_base, Load()), class_bases)),
+        bases=list(
+            map(
+                lambda class_base: Name(
+                    class_base, Load(), lineno=None, col_offset=None
+                ),
+                class_bases,
+            )
+        ),
         decorator_list=decorator_list or [],
         type_params=[],
         keywords=[],
@@ -435,7 +459,9 @@ def sqlalchemy_hybrid(
                                         ),
                                     )
                                 )
-                            )
+                            ),
+                            lineno=None,
+                            col_offset=None,
                         )
                         if intermediate_repr.get("doc")
                         or (intermediate_repr["returns"] or {})
@@ -444,7 +470,9 @@ def sqlalchemy_hybrid(
                         else None
                     ),
                     Assign(
-                        targets=[Name("__tablename__", Store())],
+                        targets=[
+                            Name("__tablename__", Store(), lineno=None, col_offset=None)
+                        ],
                         value=set_value(table_name or class_name),
                         expr=None,
                         lineno=None,

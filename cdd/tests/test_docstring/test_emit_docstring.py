@@ -123,7 +123,7 @@ class TestEmitDocstring(TestCase):
                             vararg=None,
                             kwarg=None,
                         ),
-                        body=[Expr(doc_str)],
+                        body=[Expr(doc_str, lineno=None, col_offset=None)],
                         decorator_list=[],
                         type_params=[],
                         lineno=None,

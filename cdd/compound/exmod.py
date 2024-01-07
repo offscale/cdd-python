@@ -260,7 +260,13 @@ def exmod(
                 body=list(
                     chain.from_iterable(
                         (
-                            (Expr(set_value("\nExport internal imports\n")),),
+                            (
+                                Expr(
+                                    set_value("\nExport internal imports\n"),
+                                    lineno=None,
+                                    col_offset=None,
+                                ),
+                            ),
                             map(
                                 lambda module_names: ImportFrom(
                                     module=module_names[0],
@@ -282,7 +288,14 @@ def exmod(
                             ),
                             (
                                 Assign(
-                                    targets=[Name("__all__", Store())],
+                                    targets=[
+                                        Name(
+                                            "__all__",
+                                            Store(),
+                                            lineno=None,
+                                            col_offset=None,
+                                        )
+                                    ],
                                     value=List(
                                         ctx=Load(),
                                         elts=list(

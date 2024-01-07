@@ -122,7 +122,9 @@ class TestAstCstUtils(TestCase):
 
         func_node = deepcopy(self.func_node)
         func_node.body[0] = (
-            Pass() if new_doc_str is None else Expr(set_value(new_doc_str))
+            Pass()
+            if new_doc_str is None
+            else Expr(set_value(new_doc_str), lineno=None, col_offset=None)
         )
 
         with patch("cdd.shared.ast_cst_utils.debug_doctrans", identity):

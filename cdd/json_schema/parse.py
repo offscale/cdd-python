@@ -26,7 +26,7 @@ def json_schema(json_schema_dict, parse_original_whitespace=False):
     :rtype: ```dict```
     """
     # I suppose a JSON-schema validation routine could be executed here
-    schema = deepcopy(json_schema_dict)
+    schema: dict = deepcopy(json_schema_dict)
 
     required: FrozenSet[str] = (
         frozenset(schema["required"]) if schema.get("required") else frozenset()

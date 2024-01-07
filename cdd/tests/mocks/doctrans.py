@@ -37,7 +37,9 @@ _class_doc_str_expr: Expr = Expr(
             )
         )
         + tab
-    )
+    ),
+    lineno=None,
+    col_offset=None,
 )
 
 _assign_type: Name = Name("int", Load(), lineno=None, col_offset=None)
@@ -110,7 +112,9 @@ function_type_in_docstring: FunctionDef = FunctionDef(
                     tab=tab,
                     body="\n{tab}".format(tab=tab).join(docstring_sum_tuple),
                 )
-            )
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         assign_with_type_comment,
         Return(value=Name("res", Load(), lineno=None, col_offset=None)),
@@ -180,7 +184,7 @@ class_with_internal_type_commented_and_docstring_typed: ClassDef = ClassDef(
             lineno=None,
         ),
         Assign(
-            targets=[Name("b", Store())],
+            targets=[Name("b", Store(), lineno=None, col_offset=None)],
             value=set_value(0.0),
             type_comment=Name(
                 "float",

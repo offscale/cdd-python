@@ -33,7 +33,11 @@ class RewriteName(ast.NodeTransformer):
         """
         return (
             Attribute(
-                Name("self", Load(), lineno=None, col_offset=None), node.id, Load()
+                Name("self", Load(), lineno=None, col_offset=None),
+                node.id,
+                Load(),
+                lineno=None,
+                col_offset=None,
             )
             if not self.node_ids or node.id in self.node_ids
             else ast.NodeTransformer.generic_visit(self, node)

@@ -116,6 +116,8 @@ config_tbl_with_comments_ast: Assign = Assign(
                     keyword(arg="default", value=set_value("mnist"), identifier=None),
                     keyword(arg="primary_key", value=set_value(True), identifier=None),
                 ],
+                lineno=None,
+                col_offset=None,
             ),
             Call(
                 args=[
@@ -136,6 +138,8 @@ config_tbl_with_comments_ast: Assign = Assign(
                     ),
                     keyword(arg="nullable", value=set_value(False), identifier=None),
                 ],
+                lineno=None,
+                col_offset=None,
             ),
             Call(
                 args=[
@@ -146,6 +150,8 @@ config_tbl_with_comments_ast: Assign = Assign(
                         keywords=[
                             keyword(arg="name", value=set_value("K"), identifier=None)
                         ],
+                        lineno=None,
+                        col_offset=None,
                     ),
                 ],
                 func=Name(ctx=Load(), id="Column", lineno=None, col_offset=None),
@@ -158,6 +164,8 @@ config_tbl_with_comments_ast: Assign = Assign(
                     keyword(arg="default", value=set_value("np"), identifier=None),
                     keyword(arg="nullable", value=set_value(False), identifier=None),
                 ],
+                lineno=None,
+                col_offset=None,
             ),
             Call(
                 args=[
@@ -173,6 +181,8 @@ config_tbl_with_comments_ast: Assign = Assign(
                     ),
                     keyword(arg="nullable", value=set_value(True), identifier=None),
                 ],
+                lineno=None,
+                col_offset=None,
             ),
             Call(
                 args=[
@@ -190,6 +200,8 @@ config_tbl_with_comments_ast: Assign = Assign(
                     ),
                     keyword(arg="nullable", value=set_value(True)),
                 ],
+                lineno=None,
+                col_offset=None,
             ),
         ],
         func=Name(ctx=Load(), id="Table", lineno=None, col_offset=None),
@@ -200,6 +212,8 @@ config_tbl_with_comments_ast: Assign = Assign(
                 identifier=None,
             )
         ],
+        lineno=None,
+        col_offset=None,
     ),
     expr=None,
     lineno=None,
@@ -263,8 +277,8 @@ class Config(Base):
 dataset_primary_key_column_assign: Assign = Assign(
     targets=[Name("dataset_name", Store(), lineno=None, col_offset=None)],
     value=Call(
-        func=Name("Column", Load()),
-        args=[Name("String", Load())],
+        func=Name("Column", Load(), lineno=None, col_offset=None),
+        args=[Name("String", Load(), lineno=None, col_offset=None)],
         keywords=[
             keyword(
                 arg="comment",
@@ -276,6 +290,8 @@ dataset_primary_key_column_assign: Assign = Assign(
         ],
         expr=None,
         expr_func=None,
+        lineno=None,
+        col_offset=None,
     ),
     expr=None,
     lineno=None,
@@ -284,12 +300,16 @@ dataset_primary_key_column_assign: Assign = Assign(
 
 config_decl_base_ast: ClassDef = ClassDef(
     name="Config",
-    bases=[Name("Base", Load())],
+    bases=[Name("Base", Load(), lineno=None, col_offset=None)],
     keywords=[],
     body=[
-        Expr(set_value(reindent(_docstring_header_and_return_str))),
+        Expr(
+            set_value(reindent(_docstring_header_and_return_str)),
+            lineno=None,
+            col_offset=None,
+        ),
         Assign(
-            targets=[Name("__tablename__", Store())],
+            targets=[Name("__tablename__", Store(), lineno=None, col_offset=None)],
             value=set_value("config_tbl"),
             expr=None,
             lineno=None,
@@ -297,10 +317,10 @@ config_decl_base_ast: ClassDef = ClassDef(
         ),
         dataset_primary_key_column_assign,
         Assign(
-            targets=[Name("tfds_dir", Store())],
+            targets=[Name("tfds_dir", Store(), lineno=None, col_offset=None)],
             value=Call(
-                func=Name("Column", Load()),
-                args=[Name("String", Load())],
+                func=Name("Column", Load(), lineno=None, col_offset=None),
+                args=[Name("String", Load(), lineno=None, col_offset=None)],
                 keywords=[
                     keyword(
                         arg="comment",
@@ -316,24 +336,28 @@ config_decl_base_ast: ClassDef = ClassDef(
                 ],
                 expr=None,
                 expr_func=None,
+                lineno=None,
+                col_offset=None,
             ),
             expr=None,
             lineno=None,
             **maybe_type_comment,
         ),
         Assign(
-            targets=[Name("K", Store())],
+            targets=[Name("K", Store(), lineno=None, col_offset=None)],
             value=Call(
-                func=Name("Column", Load()),
+                func=Name("Column", Load(), lineno=None, col_offset=None),
                 args=[
                     Call(
-                        func=Name("Enum", Load()),
+                        func=Name("Enum", Load(), lineno=None, col_offset=None),
                         args=[set_value("np"), set_value("tf")],
                         keywords=[
                             keyword(arg="name", value=set_value("K"), identifier=None)
                         ],
                         expr=None,
                         expr_func=None,
+                        lineno=None,
+                        col_offset=None,
                     )
                 ],
                 keywords=[
@@ -347,16 +371,19 @@ config_decl_base_ast: ClassDef = ClassDef(
                 ],
                 expr=None,
                 expr_func=None,
+                lineno=None,
+                col_offset=None,
             ),
             expr=None,
             lineno=None,
+            col_offset=None,
             **maybe_type_comment,
         ),
         Assign(
-            targets=[Name("as_numpy", Store())],
+            targets=[Name("as_numpy", Store(), lineno=None, col_offset=None)],
             value=Call(
-                func=Name("Column", Load()),
-                args=[Name("Boolean", Load())],
+                func=Name("Column", Load(), lineno=None, col_offset=None),
+                args=[Name("Boolean", Load(), lineno=None, col_offset=None)],
                 keywords=[
                     keyword(
                         arg="comment",
@@ -367,16 +394,18 @@ config_decl_base_ast: ClassDef = ClassDef(
                 ],
                 expr=None,
                 expr_func=None,
+                lineno=None,
+                col_offset=None,
             ),
             expr=None,
             lineno=None,
             **maybe_type_comment,
         ),
         Assign(
-            targets=[Name("data_loader_kwargs", Store())],
+            targets=[Name("data_loader_kwargs", Store(), lineno=None, col_offset=None)],
             value=Call(
-                func=Name("Column", Load()),
-                args=[Name("JSON", Load())],
+                func=Name("Column", Load(), lineno=None, col_offset=None),
+                args=[Name("JSON", Load(), lineno=None, col_offset=None)],
                 keywords=[
                     keyword(
                         arg="comment",
@@ -389,6 +418,8 @@ config_decl_base_ast: ClassDef = ClassDef(
                 ],
                 expr=None,
                 expr_func=None,
+                lineno=None,
+                col_offset=None,
             ),
             expr=None,
             lineno=None,
@@ -406,7 +437,11 @@ config_decl_base_ast: ClassDef = ClassDef(
                 kwarg=None,
             ),
             body=[
-                Expr(set_value(docstring_repr_str.lstrip(" "))),
+                Expr(
+                    set_value(docstring_repr_str.lstrip(" ")),
+                    lineno=None,
+                    col_offset=None,
+                ),
                 Return(
                     value=Call(
                         func=Attribute(
@@ -416,45 +451,71 @@ config_decl_base_ast: ClassDef = ClassDef(
                             ),
                             "format",
                             Load(),
+                            lineno=None,
+                            col_offset=None,
                         ),
                         args=[],
                         keywords=[
                             keyword(
                                 arg="dataset_name",
                                 value=Attribute(
-                                    Name("self", Load()), "dataset_name", Load()
+                                    Name("self", Load(), lineno=None, col_offset=None),
+                                    "dataset_name",
+                                    Load(),
+                                    lineno=None,
+                                    col_offset=None,
                                 ),
                                 identifier=None,
                             ),
                             keyword(
                                 arg="tfds_dir",
                                 value=Attribute(
-                                    Name("self", Load()), "tfds_dir", Load()
+                                    Name("self", Load(), lineno=None, col_offset=None),
+                                    "tfds_dir",
+                                    Load(),
+                                    lineno=None,
+                                    col_offset=None,
                                 ),
                                 identifier=None,
                             ),
                             keyword(
                                 arg="K",
-                                value=Attribute(Name("self", Load()), "K", Load()),
+                                value=Attribute(
+                                    Name("self", Load(), lineno=None, col_offset=None),
+                                    "K",
+                                    Load(),
+                                    lineno=None,
+                                    col_offset=None,
+                                ),
                                 identifier=None,
                             ),
                             keyword(
                                 arg="as_numpy",
                                 value=Attribute(
-                                    Name("self", Load()), "as_numpy", Load()
+                                    Name("self", Load(), lineno=None, col_offset=None),
+                                    "as_numpy",
+                                    Load(),
+                                    lineno=None,
+                                    col_offset=None,
                                 ),
                                 identifier=None,
                             ),
                             keyword(
                                 arg="data_loader_kwargs",
                                 value=Attribute(
-                                    Name("self", Load()), "data_loader_kwargs", Load()
+                                    Name("self", Load(), lineno=None, col_offset=None),
+                                    "data_loader_kwargs",
+                                    Load(),
+                                    lineno=None,
+                                    col_offset=None,
                                 ),
                                 identifier=None,
                             ),
                         ],
                         expr=None,
                         expr_func=None,
+                        lineno=None,
+                        col_offset=None,
                     ),
                     expr=None,
                 ),
@@ -488,27 +549,42 @@ config_hybrid_ast.body = list(
 config_hybrid_ast.body[-1].targets[0].id = "__table__"
 
 empty_with_inferred_pk_column_assign: Assign = Assign(
-    targets=[Name(id="empty_with_inferred_pk_tbl", ctx=Store())],
+    targets=[
+        Name(id="empty_with_inferred_pk_tbl", ctx=Store(), lineno=None, col_offset=None)
+    ],
     value=Call(
-        func=Name(id="Table", ctx=Load()),
+        func=Name(id="Table", ctx=Load(), lineno=None, col_offset=None),
         args=[
             set_value("empty_with_inferred_pk_tbl"),
-            Name(id="metadata", ctx=Load()),
+            Name(id="metadata", ctx=Load(), lineno=None, col_offset=None),
             Call(
-                func=Name(id="Column", ctx=Load()),
-                args=[set_value("id"), Name(id="Integer", ctx=Load())],
+                func=Name(id="Column", ctx=Load(), lineno=None, col_offset=None),
+                args=[
+                    set_value("id"),
+                    Name(id="Integer", ctx=Load(), lineno=None, col_offset=None),
+                ],
                 keywords=[
                     keyword(arg="primary_key", value=set_value(True)),
                     keyword(
                         arg="server_default",
                         value=Call(
-                            func=Name(id="Identity", ctx=Load()), args=[], keywords=[]
+                            func=Name(
+                                id="Identity", ctx=Load(), lineno=None, col_offset=None
+                            ),
+                            args=[],
+                            keywords=[],
+                            lineno=None,
+                            col_offset=None,
                         ),
                     ),
                 ],
+                lineno=None,
+                col_offset=None,
             ),
         ],
         keywords=[],
+        lineno=None,
+        col_offset=None,
     ),
     expr=None,
     lineno=None,
@@ -530,27 +606,34 @@ element = Table(
 )"""
 
 node_fk_call: Call = Call(
-    func=Name(id="Column", ctx=Load()),
+    func=Name(id="Column", ctx=Load(), lineno=None, col_offset=None),
     args=[
         set_value("primary_element"),
-        Name(id="Integer", ctx=Load()),
+        Name(id="Integer", ctx=Load(), lineno=None, col_offset=None),
         Call(
-            func=Name(id="ForeignKey", ctx=Load()),
+            func=Name(id="ForeignKey", ctx=Load(), lineno=None, col_offset=None),
             args=[set_value("element.element_id")],
             keywords=[],
+            lineno=None,
+            col_offset=None,
         ),
     ],
     keywords=[],
+    lineno=None,
+    col_offset=None,
 )
 
 node_pk_tbl_call: Call = Call(
-    func=Name(id="Table", ctx=Load()),
+    func=Name(id="Table", ctx=Load(), lineno=None, col_offset=None),
     args=[
         set_value("node"),
-        Name(id="metadata_obj", ctx=Load()),
+        Name(id="metadata_obj", ctx=Load(), lineno=None, col_offset=None),
         Call(
-            func=Name(id="Column", ctx=Load()),
-            args=[set_value("node_id"), Name(id="Integer", ctx=Load())],
+            func=Name(id="Column", ctx=Load(), lineno=None, col_offset=None),
+            args=[
+                set_value("node_id"),
+                Name(id="Integer", ctx=Load(), lineno=None, col_offset=None),
+            ],
             keywords=[keyword(arg="primary_key", value=set_value(True))],
         ),
         node_fk_call,
@@ -559,7 +642,7 @@ node_pk_tbl_call: Call = Call(
 )
 
 node_pk_tbl_ass: Assign = Assign(
-    targets=[Name(id="node", ctx=Store())],
+    targets=[Name(id="node", ctx=Store(), lineno=None, col_offset=None)],
     value=node_pk_tbl_call,
     expr=None,
     lineno=None,
@@ -568,33 +651,39 @@ node_pk_tbl_ass: Assign = Assign(
 
 node_pk_tbl_class: ClassDef = ClassDef(
     name="node",
-    bases=[Name(id="Base", ctx=Load())],
+    bases=[Name(id="Base", ctx=Load(), lineno=None, col_offset=None)],
     keywords=[],
     body=[
         Assign(
-            targets=[Name(id="__tablename__", ctx=Store())],
+            targets=[
+                Name(id="__tablename__", ctx=Store(), lineno=None, col_offset=None)
+            ],
             value=set_value("node"),
             lineno=None,
             **maybe_type_comment,
         ),
         Assign(
-            targets=[Name(id="node_id", ctx=Store())],
+            targets=[Name(id="node_id", ctx=Store(), lineno=None, col_offset=None)],
             value=Call(
-                func=Name(id="Column", ctx=Load()),
-                args=[Name(id="Integer", ctx=Load())],
+                func=Name(id="Column", ctx=Load(), lineno=None, col_offset=None),
+                args=[Name(id="Integer", ctx=Load(), lineno=None, col_offset=None)],
                 keywords=[keyword(arg="primary_key", value=set_value(True))],
             ),
             lineno=None,
             **maybe_type_comment,
         ),
         Assign(
-            targets=[Name(id="primary_element", ctx=Store())],
+            targets=[
+                Name(id="primary_element", ctx=Store(), lineno=None, col_offset=None)
+            ],
             value=Call(
-                func=Name(id="Column", ctx=Load()),
+                func=Name(id="Column", ctx=Load(), lineno=None, col_offset=None),
                 args=[
-                    Name(id="Integer", ctx=Load()),
+                    Name(id="Integer", ctx=Load(), lineno=None, col_offset=None),
                     Call(
-                        func=Name(id="ForeignKey", ctx=Load()),
+                        func=Name(
+                            id="ForeignKey", ctx=Load(), lineno=None, col_offset=None
+                        ),
                         args=[set_value("element.element_id")],
                         keywords=[],
                     ),
@@ -612,20 +701,23 @@ node_pk_tbl_class: ClassDef = ClassDef(
 )
 
 element_pk_fk_tbl: Call = Call(
-    func=Name(id="Table", ctx=Load()),
+    func=Name(id="Table", ctx=Load(), lineno=None, col_offset=None),
     args=[
         set_value("element"),
-        Name(id="metadata_obj", ctx=Load()),
+        Name(id="metadata_obj", ctx=Load(), lineno=None, col_offset=None),
         Call(
-            func=Name(id="Column", ctx=Load()),
-            args=[set_value("element_id"), Name(id="Integer", ctx=Load())],
+            func=Name(id="Column", ctx=Load(), lineno=None, col_offset=None),
+            args=[
+                set_value("element_id"),
+                Name(id="Integer", ctx=Load(), lineno=None, col_offset=None),
+            ],
             keywords=[keyword(arg="primary_key", value=set_value(True))],
         ),
         Call(
-            func=Name(id="Column", ctx=Load()),
+            func=Name(id="Column", ctx=Load(), lineno=None, col_offset=None),
             args=[
                 set_value("parent_node_id"),
-                Name(id="Integer", ctx=Load()),
+                Name(id="Integer", ctx=Load(), lineno=None, col_offset=None),
             ],
             keywords=[],
         ),
@@ -634,7 +726,7 @@ element_pk_fk_tbl: Call = Call(
 )
 
 element_pk_fk_ass: Assign = Assign(
-    targets=[Name(id="element", ctx=Store())],
+    targets=[Name(id="element", ctx=Store(), lineno=None, col_offset=None)],
     value=element_pk_fk_tbl,
     expr=None,
     lineno=None,
@@ -674,39 +766,70 @@ create_from_attr_mock: FunctionDef = FunctionDef(
                         ),
                     )
                 )
-            )
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         Return(
             value=Call(
-                func=Name(id="foo", ctx=Load()),
+                func=Name(id="foo", ctx=Load(), lineno=None, col_offset=None),
                 args=[],
                 keywords=[
                     keyword(
                         arg=None,
                         value=DictComp(
-                            key=Name(id="attr", ctx=Load()),
+                            key=Name(
+                                id="attr", ctx=Load(), lineno=None, col_offset=None
+                            ),
                             value=Call(
-                                func=Name(id="getattr", ctx=Load()),
+                                func=Name(
+                                    id="getattr",
+                                    ctx=Load(),
+                                    lineno=None,
+                                    col_offset=None,
+                                ),
                                 args=[
-                                    Name(id="node", ctx=Load()),
-                                    Name(id="attr", ctx=Load()),
+                                    Name(
+                                        id="node",
+                                        ctx=Load(),
+                                        lineno=None,
+                                        col_offset=None,
+                                    ),
+                                    Name(
+                                        id="attr",
+                                        ctx=Load(),
+                                        lineno=None,
+                                        col_offset=None,
+                                    ),
                                 ],
                                 keywords=[],
                             ),
                             generators=[
                                 comprehension(
-                                    target=Name(id="attr", ctx=Store()),
+                                    target=Name(
+                                        id="attr",
+                                        ctx=Store(),
+                                        lineno=None,
+                                        col_offset=None,
+                                    ),
                                     iter=Tuple(
                                         elts=[
                                             set_value("id"),
                                             set_value("not_pk_id"),
                                         ],
                                         ctx=Load(),
+                                        lineno=None,
+                                        col_offset=None,
                                     ),
                                     ifs=[
                                         Compare(
                                             left=Call(
-                                                func=Name(id="getattr", ctx=Load()),
+                                                func=Name(
+                                                    id="getattr",
+                                                    ctx=Load(),
+                                                    lineno=None,
+                                                    col_offset=None,
+                                                ),
                                                 args=[
                                                     Name(
                                                         id="node",
@@ -722,11 +845,15 @@ create_from_attr_mock: FunctionDef = FunctionDef(
                                             ),
                                             ops=[IsNot()],
                                             comparators=[set_value(None)],
+                                            lineno=None,
+                                            col_offset=None,
                                         )
                                     ],
                                     is_async=0,
                                 )
                             ],
+                            lineno=None,
+                            col_offset=None,
                         ),
                     )
                 ],
@@ -736,7 +863,7 @@ create_from_attr_mock: FunctionDef = FunctionDef(
     lineno=None,
     returns=None,
     type_comment=None,
-    decorator_list=[Name(id="staticmethod", ctx=Load())],
+    decorator_list=[Name(id="staticmethod", ctx=Load(), lineno=None, col_offset=None)],
 )
 
 __all__ = [

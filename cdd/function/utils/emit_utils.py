@@ -62,7 +62,9 @@ def _make_call_meth(body, return_type, param_names, docstring_format, word_wrap)
                                     word_wrap=word_wrap,
                                     purpose="function",
                                 )
-                            )
+                            ),
+                            lineno=None,
+                            col_offset=None,
                         )
                     ),
                     (

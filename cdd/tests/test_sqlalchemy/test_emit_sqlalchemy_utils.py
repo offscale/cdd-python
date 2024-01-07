@@ -88,6 +88,8 @@ class TestEmitSqlAlchemyUtils(TestCase):
                                 ctx=Load(), id="Identity", lineno=None, col_offset=None
                             ),
                             keywords=[],
+                            lineno=None,
+                            col_offset=None,
                         )
                     }
                 }
@@ -150,9 +152,11 @@ class TestEmitSqlAlchemyUtils(TestCase):
                 include_name=False,
             ),
             gold=Call(
-                func=Name(id="Column", ctx=Load()),
-                args=[Name(id="String", ctx=Load())],
+                func=Name(id="Column", ctx=Load(), lineno=None, col_offset=None),
+                args=[Name(id="String", ctx=Load(), lineno=None, col_offset=None)],
                 keywords=[keyword(arg="index", value=set_value(True), identifier=None)],
+                lineno=None,
+                col_offset=None,
             ),
         )
 
@@ -188,8 +192,8 @@ class TestEmitSqlAlchemyUtils(TestCase):
                 include_name=False,
             ),
             gold=Call(
-                func=Name(id="Column", ctx=Load()),
-                args=[Name(id="JSON", ctx=Load())],
+                func=Name(id="Column", ctx=Load(), lineno=None, col_offset=None),
+                args=[Name(id="JSON", ctx=Load(), lineno=None, col_offset=None)],
                 keywords=[
                     keyword(
                         arg="comment",
@@ -201,6 +205,8 @@ class TestEmitSqlAlchemyUtils(TestCase):
                         identifier=None,
                     )
                 ],
+                lineno=None,
+                col_offset=None,
             ),
         )
 
@@ -215,11 +221,13 @@ class TestEmitSqlAlchemyUtils(TestCase):
             self,
             args[0],
             gold=Call(
-                func=Name(id="ARRAY", ctx=Load()),
-                args=[Name(id="String", ctx=Load())],
+                func=Name(id="ARRAY", ctx=Load(), lineno=None, col_offset=None),
+                args=[Name(id="String", ctx=Load(), lineno=None, col_offset=None)],
                 keywords=[],
                 expr=None,
                 expr_func=None,
+                lineno=None,
+                col_offset=None,
             ),
         )
 
@@ -232,11 +240,13 @@ class TestEmitSqlAlchemyUtils(TestCase):
             self,
             args[0],
             gold=Call(
-                func=Name(id="ARRAY", ctx=Load()),
-                args=[Name(id="String", ctx=Load())],
+                func=Name(id="ARRAY", ctx=Load(), lineno=None, col_offset=None),
+                args=[Name(id="String", ctx=Load(), lineno=None, col_offset=None)],
                 keywords=[],
                 expr=None,
                 expr_func=None,
+                lineno=None,
+                col_offset=None,
             ),
         )
 
@@ -250,7 +260,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
         run_ast_test(
             self,
             args[0],
-            gold=Name(id="Small", ctx=Load()),
+            gold=Name(id="Small", ctx=Load(), lineno=None, col_offset=None),
         )
 
     def test_update_with_imports_from_columns(self) -> None:
@@ -277,20 +287,33 @@ class TestEmitSqlAlchemyUtils(TestCase):
             element_filename: str = path.join(
                 temp_mod_dir, "Element{sep}py".format(sep=path.extsep)
             )
-            node_pk_with_phase1_fk = deepcopy(node_pk_tbl_class)
+            node_pk_with_phase1_fk: ClassDef = deepcopy(node_pk_tbl_class)
             node_pk_with_phase1_fk.body[2] = Assign(
-                targets=[Name(id="primary_element", ctx=Store())],
+                targets=[
+                    Name(
+                        id="primary_element", ctx=Store(), lineno=None, col_offset=None
+                    )
+                ],
                 value=Call(
-                    func=Name(id="Column", ctx=Load()),
+                    func=Name(id="Column", ctx=Load(), lineno=None, col_offset=None),
                     args=[
-                        Name(id="Element", ctx=Load()),
+                        Name(id="Element", ctx=Load(), lineno=None, col_offset=None),
                         Call(
-                            func=Name(id="ForeignKey", ctx=Load()),
+                            func=Name(
+                                id="ForeignKey",
+                                ctx=Load(),
+                                lineno=None,
+                                col_offset=None,
+                            ),
                             args=[set_value("element.not_the_right_primary_key")],
                             keywords=[],
+                            lineno=None,
+                            col_offset=None,
                         ),
                     ],
                     keywords=[],
+                    lineno=None,
+                    col_offset=None,
                 ),
                 lineno=None,
             )
@@ -312,7 +335,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
 
         gen_imports = tuple(
             filter(rpartial(isinstance, (ImportFrom, Import)), gen_mod.body)
-        )
+        )  # type: tuple[Union[ImportFrom, Import]]
         self.assertEqual(len(gen_imports), 1)
 
         run_ast_test(
@@ -356,20 +379,33 @@ class TestEmitSqlAlchemyUtils(TestCase):
             element_filename: str = path.join(
                 temp_mod_dir, "element{sep}py".format(sep=path.extsep)
             )
-            node_pk_with_phase1_fk = deepcopy(node_pk_tbl_class)
+            node_pk_with_phase1_fk: ClassDef = deepcopy(node_pk_tbl_class)
             node_pk_with_phase1_fk.body[2] = Assign(
-                targets=[Name(id="primary_element", ctx=Store())],
+                targets=[
+                    Name(
+                        id="primary_element", ctx=Store(), lineno=None, col_offset=None
+                    )
+                ],
                 value=Call(
-                    func=Name(id="Column", ctx=Load()),
+                    func=Name(id="Column", ctx=Load(), lineno=None, col_offset=None),
                     args=[
-                        Name(id="element", ctx=Load()),
+                        Name(id="element", ctx=Load(), lineno=None, col_offset=None),
                         Call(
-                            func=Name(id="ForeignKey", ctx=Load()),
+                            func=Name(
+                                id="ForeignKey",
+                                ctx=Load(),
+                                lineno=None,
+                                col_offset=None,
+                            ),
                             args=[set_value("element.not_the_right_primary_key")],
                             keywords=[],
+                            lineno=None,
+                            col_offset=None,
                         ),
                     ],
                     keywords=[],
+                    lineno=None,
+                    col_offset=None,
                 ),
                 lineno=None,
             )

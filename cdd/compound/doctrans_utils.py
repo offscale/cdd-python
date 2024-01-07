@@ -304,6 +304,8 @@ class DocTrans(NodeTransformer):
                             ),
                             identifier_arg=None,
                             end_col_offset=getattr(_arg, "end_col_offset", None),
+                            lineno=None,
+                            col_offset=None,
                             **(
                                 dict(expr=None, **maybe_type_comment)
                                 if PY_GTE_3_8

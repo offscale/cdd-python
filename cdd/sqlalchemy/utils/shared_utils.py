@@ -51,19 +51,21 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
         )
         args.append(
             Call(
-                func=Name("Enum", Load()),
+                func=Name("Enum", Load(), lineno=None, col_offset=None),
                 args=get_value(parsed_typ.slice).elts,
                 keywords=[
                     ast.keyword(arg="name", value=set_value(name), identifier=None)
                 ],
                 expr=None,
                 expr_func=None,
+                lineno=None,
+                col_offset=None,
             )
         )
     elif _param["typ"].startswith("List["):
         after_generic = _param["typ"][len("List[") :]
         if "struct" in after_generic:  # "," in after_generic or
-            name = Name(id="JSON", ctx=Load())
+            name = Name(id="JSON", ctx=Load(), lineno=None, col_offset=None)
         else:
             list_typ: Expr = cast(Expr, ast.parse(_param["typ"]).body[0])
             assert isinstance(
@@ -84,7 +86,7 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
             )
         args.append(
             Call(
-                func=Name(id="ARRAY", ctx=Load()),
+                func=Name(id="ARRAY", ctx=Load(), lineno=None, col_offset=None),
                 args=[
                     Name(
                         id=cdd.compound.openapi.utils.emit_utils.typ2column_type.get(
@@ -96,6 +98,8 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
                 keywords=[],
                 expr=None,
                 expr_func=None,
+                lineno=None,
+                col_offset=None,
             )
         )
     elif (
@@ -105,7 +109,7 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
     ):
         args.append(
             Call(
-                func=Name(id="ARRAY", ctx=Load()),
+                func=Name(id="ARRAY", ctx=Load(), lineno=None, col_offset=None),
                 args=[
                     Name(
                         id=cdd.compound.openapi.utils.emit_utils.typ2column_type[
@@ -117,6 +121,8 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
                 keywords=[],
                 expr=None,
                 expr_func=None,
+                lineno=None,
+                col_offset=None,
             )
         )
     elif _param.get("typ").startswith("Union["):
@@ -165,7 +171,7 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
         )
         args.append(
             Call(
-                func=Name(type_name, Load()),
+                func=Name(type_name, Load(), lineno=None, col_offset=None),
                 args=list(map(set_value, x_typ_sql.get("type_args", iter(())))),
                 keywords=[
                     keyword(arg=arg, value=set_value(val), identifier=None)
@@ -173,9 +179,11 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
                 ],
                 expr=None,
                 expr_func=None,
+                lineno=None,
+                col_offset=None,
             )
             if "type_args" in x_typ_sql or "type_kwargs" in x_typ_sql
-            else Name(type_name, Load())
+            else Name(type_name, Load(), lineno=None, col_offset=None)
         )
     return nullable
 

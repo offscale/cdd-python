@@ -464,7 +464,7 @@ def _emit_symbol(
         )
     )
     __all___node: Assign = Assign(
-        targets=[Name("__all__", Store())],
+        targets=[Name("__all__", Store(), lineno=None, col_offset=None)],
         value=List(
             ctx=Load(),
             elts=[cdd.shared.ast_utils.set_value(name)],
@@ -486,7 +486,9 @@ def _emit_symbol(
                                         module_name=module_name,
                                         name=name_orig_ir[0],
                                     )
-                                )
+                                ),
+                                lineno=None,
+                                col_offset=None,
                             ),
                         ),
                         imports_header_ast if mock_imports else iter(()),
@@ -523,7 +525,9 @@ def _emit_symbol(
                         Expr(
                             cdd.shared.ast_utils.set_value(
                                 "\n__init__ to expose internals of this module\n"
-                            )
+                            ),
+                            lineno=None,
+                            col_offset=None,
                         ),
                         ImportFrom(
                             module=name,

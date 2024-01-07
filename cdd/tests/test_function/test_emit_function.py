@@ -22,7 +22,7 @@ import cdd.json_schema.emit
 import cdd.shared.emit.file
 import cdd.sqlalchemy.emit
 from cdd.shared.ast_utils import get_function_type, set_value
-from cdd.shared.pure_utils import none_types, rpartial, tab
+from cdd.shared.pure_utils import PY_GTE_3_8, none_types, rpartial, tab
 from cdd.shared.types import IntermediateRepr
 from cdd.tests.mocks.classes import class_squared_hinge_config_ast
 from cdd.tests.mocks.docstrings import (
@@ -38,6 +38,11 @@ from cdd.tests.mocks.methods import (
     function_google_tf_squared_hinge_str,
 )
 from cdd.tests.utils_for_tests import reindent_docstring, run_ast_test, unittest_main
+
+if PY_GTE_3_8:
+    from typing import Literal
+else:
+    from typing_extensions import Literal
 
 
 class TestEmitFunction(TestCase):
@@ -122,7 +127,7 @@ class TestEmitFunction(TestCase):
         """
         Tests that `function` can generate a function_def with inline types
         """
-        function_def = deepcopy(
+        function_def: FunctionDef = deepcopy(
             next(
                 filter(
                     rpartial(isinstance, FunctionDef), class_with_method_types_ast.body
@@ -130,7 +135,9 @@ class TestEmitFunction(TestCase):
             )
         )
         function_name: str = function_def.name
-        function_type = get_function_type(function_def)
+        function_type: Literal["self", "cls", "static"] = get_function_type(
+            function_def
+        )
         function_def.body[0].value = set_value(
             "\n{tab}{ds}{tab}".format(
                 tab=tab,

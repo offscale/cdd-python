@@ -181,14 +181,23 @@ def argparse_function(
                                         word_wrap=word_wrap,
                                         indent_level=1,
                                     )
-                                )
+                                ),
+                                lineno=None,
+                                col_offset=None,
                             ),
                             Assign(
                                 targets=[
                                     Attribute(
-                                        Name("argument_parser", Load()),
+                                        Name(
+                                            "argument_parser",
+                                            Load(),
+                                            lineno=None,
+                                            col_offset=None,
+                                        ),
                                         "description",
                                         Store(),
+                                        lineno=None,
+                                        col_offset=None,
                                     )
                                 ],
                                 value=set_value(
@@ -244,7 +253,12 @@ def argparse_function(
                                         value=Tuple(
                                             ctx=Load(),
                                             elts=[
-                                                Name("argument_parser", Load()),
+                                                Name(
+                                                    "argument_parser",
+                                                    Load(),
+                                                    lineno=None,
+                                                    col_offset=None,
+                                                ),
                                                 (
                                                     set_value(
                                                         intermediate_repr["returns"][
@@ -266,6 +280,8 @@ def argparse_function(
                                                 ),
                                             ],
                                             expr=None,
+                                            lineno=None,
+                                            col_offset=None,
                                         ),
                                         expr=None,
                                     )
@@ -275,7 +291,13 @@ def argparse_function(
                                         or {"return_type": iter(())}
                                     )["return_type"]
                                     else Return(
-                                        value=Name("argument_parser", Load()), expr=None
+                                        value=Name(
+                                            "argument_parser",
+                                            Load(),
+                                            lineno=None,
+                                            col_offset=None,
+                                        ),
+                                        expr=None,
                                     )
                                 )
                             ),

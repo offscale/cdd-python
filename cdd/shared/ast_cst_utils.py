@@ -235,15 +235,15 @@ def maybe_replace_function_return_type(new_node, cur_ast_node, cst_idx, cst_list
         )
 
     if cmp_ast(cur_ast_node.returns, new_node.returns):
-        changed = Delta.nop
+        changed: Delta = Delta.nop
     elif cur_ast_node.returns and new_node.returns:
-        changed = Delta.replaced
+        changed: Delta = Delta.replaced
         value = add_return_typ(remove_return_typ(cst_list[cst_idx].value))
     elif cur_ast_node.returns and not new_node.returns:
-        changed = Delta.removed
+        changed: Delta = Delta.removed
         value = remove_return_typ(cst_list[cst_idx].value)
     else:  # not cur_ast_node.returns and new_node.returns:
-        changed = Delta.added
+        changed: Delta = Delta.added
         value = add_return_typ(cst_list[cst_idx].value)
     if value is not None:
         cst_list[cst_idx] = FunctionDefinitionStart(
@@ -280,7 +280,7 @@ def maybe_replace_function_args(new_node, cur_ast_node, cst_idx, cst_list):
     """
     new_node = deepcopy(new_node)
     new_node.body = cur_ast_node.body
-    changed = Delta.nop
+    changed: Delta = Delta.nop
     if not cmp_ast(cur_ast_node.args, new_node.args):
         new_args, cur_args = map(attrgetter("args.args"), (new_node, cur_ast_node))
 
@@ -288,15 +288,15 @@ def maybe_replace_function_args(new_node, cur_ast_node, cst_idx, cst_list):
             if cur_args[i].annotation != new_args[i].annotation:
                 # Approximation, obviously you could have intermixed annotation and to-be (un)annotated
                 if cur_args[i].annotation is None:
-                    changed = Delta.added
+                    changed: Delta = Delta.added
                 elif new_args[i].annotation is None:
-                    changed = Delta.removed
+                    changed: Delta = Delta.removed
                 else:
-                    changed = Delta.replaced
+                    changed: Delta = Delta.replaced
                 break
 
         def_len: int = len("def ")
-        function_name_starts_at = (
+        function_name_starts_at: int = (
             def_len
             if cst_list[cst_idx].value.startswith("def ")
             else (lambda i: cst_list[cst_idx].value.find(")def ") if i == -1 else i)(
@@ -305,9 +305,9 @@ def maybe_replace_function_args(new_node, cur_ast_node, cst_idx, cst_list):
             + def_len
             + 1
         )
-        arg_start_idx = cst_list[cst_idx].value.find("(", function_name_starts_at)
-        func_end = cst_list[cst_idx].value.rfind(":")
-        return_type = cst_list[cst_idx].value.rfind("->", None, func_end)
+        arg_start_idx: int = cst_list[cst_idx].value.find("(", function_name_starts_at)
+        func_end: int = cst_list[cst_idx].value.rfind(":")
+        return_type: Optional[int] = cst_list[cst_idx].value.rfind("->", None, func_end)
         if return_type > -1:
             last_col = func_end
             func_end = return_type

@@ -130,7 +130,15 @@ def class_(
                 chain.from_iterable(
                     (
                         (
-                            (lambda ds: None if ds is None else Expr(set_value(ds)))(
+                            (
+                                lambda ds: (
+                                    None
+                                    if ds is None
+                                    else Expr(
+                                        set_value(ds), lineno=None, col_offset=None
+                                    )
+                                )
+                            )(
                                 _emit_docstring(
                                     {
                                         k: intermediate_repr[k]
@@ -184,7 +192,9 @@ def class_(
                 ),
             )
         )
-        or [Expr(set_value(""))],  # empty body will cause syntax error
+        or [
+            Expr(set_value(""), lineno=None, col_offset=None)
+        ],  # empty body will cause syntax error
         decorator_list=(
             list(
                 map(

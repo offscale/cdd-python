@@ -48,7 +48,15 @@ class TestEmitJsonSchemaUtils(TestCase):
             param2json_schema_property(
                 (
                     self.name,
-                    {"default": Tuple(elts=self.default_elts, ctx=Load(), expr=None)},
+                    {
+                        "default": Tuple(
+                            elts=self.default_elts,
+                            ctx=Load(),
+                            expr=None,
+                            lineno=None,
+                            col_offset=None,
+                        )
+                    },
                 ),
                 required=self.required,
             ),

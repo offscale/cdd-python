@@ -57,7 +57,7 @@ class_doc_str: str = tab.join(
         ":cvar return_type: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))",
     )
 )
-class_doc_str_expr: Expr = Expr(set_value(class_doc_str))
+class_doc_str_expr: Expr = Expr(set_value(class_doc_str), lineno=None, col_offset=None)
 
 class_str: str = '''
 class ConfigClass(object):
@@ -156,6 +156,8 @@ class_ast: ClassDef = ClassDef(
                         ),
                         ctx=Load(),
                         expr=None,
+                        lineno=None,
+                        col_offset=None,
                     )
                 ),
                 Load(),
@@ -218,14 +220,20 @@ class_ast: ClassDef = ClassDef(
                             Name("np", Load(), lineno=None, col_offset=None),
                             "empty",
                             Load(),
+                            lineno=None,
+                            col_offset=None,
                         ),
                         keywords=[],
                         expr=None,
                         expr_func=None,
+                        lineno=None,
+                        col_offset=None,
                     )
                 ]
                 * 2,
                 expr=None,
+                lineno=None,
+                col_offset=None,
             ),
             expr=None,
             expr_target=None,
@@ -256,7 +264,9 @@ class_ast_no_default_doc.body[0] = Expr(
                 ),
             )
         )
-    )
+    ),
+    lineno=None,
+    col_offset=None,
 )
 
 class_ast_with_none: ClassDef = deepcopy(class_ast)
@@ -269,7 +279,7 @@ class_ast_with_none.body[4].value = set_value(
 )  # E.g., because argparse has a default set to `None`
 
 class_nargs_ast: ClassDef = ClassDef(
-    bases=[Name("object", Load())],
+    bases=[Name("object", Load(), lineno=None, col_offset=None)],
     body=[
         Expr(
             set_value(
@@ -277,17 +287,19 @@ class_nargs_ast: ClassDef = ClassDef(
                 ":cvar callbacks: Collection of callables that are run inside the training loop".format(
                     tab=tab, header_doc_str=docstring_header_str
                 ),
-            )
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         AnnAssign(
             annotation=Subscript(
-                Name("Optional", Load()),
+                Name("Optional", Load(), lineno=None, col_offset=None),
                 Index(
                     value=Subscript(
-                        Name("List", Load()),
+                        Name("List", Load(), lineno=None, col_offset=None),
                         Index(
                             value=Subscript(
-                                Name("Literal", Load()),
+                                Name("Literal", Load(), lineno=None, col_offset=None),
                                 Index(
                                     value=Tuple(
                                         ctx=Load(),
@@ -313,6 +325,8 @@ class_nargs_ast: ClassDef = ClassDef(
                                             )
                                         ),
                                         expr=None,
+                                        lineno=None,
+                                        col_offset=None,
                                     )
                                 ),
                                 Load(),
@@ -350,7 +364,7 @@ class_nargs_ast: ClassDef = ClassDef(
 )
 
 class_squared_hinge_config_ast: ClassDef = ClassDef(
-    bases=[Name("object", Load())],
+    bases=[Name("object", Load(), lineno=None, col_offset=None)],
     body=[
         Expr(
             set_value(
@@ -372,10 +386,12 @@ class_squared_hinge_config_ast: ClassDef = ClassDef(
                         )
                     ),
                 ),
-            )
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         AnnAssign(
-            annotation=Name("object", Load()),
+            annotation=Name("object", Load(), lineno=None, col_offset=None),
             simple=1,
             target=Name("y_true", Store()),
             value=set_value(None),
@@ -386,7 +402,7 @@ class_squared_hinge_config_ast: ClassDef = ClassDef(
             lineno=None,
         ),
         AnnAssign(
-            annotation=Name("object", Load()),
+            annotation=Name("object", Load(), lineno=None, col_offset=None),
             simple=1,
             target=Name("y_pred", Store()),
             value=set_value(None),
@@ -397,7 +413,7 @@ class_squared_hinge_config_ast: ClassDef = ClassDef(
             lineno=None,
         ),
         AnnAssign(
-            annotation=Name("str", Load()),
+            annotation=Name("str", Load(), lineno=None, col_offset=None),
             simple=1,
             target=Name("return_type", Store()),
             value=set_value(
@@ -424,53 +440,35 @@ class_squared_hinge_config_ast: ClassDef = ClassDef(
                 Assign(
                     targets=[
                         Attribute(
-                            Name("self", Load()),
+                            Name("self", Load(), lineno=None, col_offset=None),
                             "y_pred",
                             Load(),
+                            lineno=None,
+                            col_offset=None,
                         )
                     ],
                     value=Call(
-                        args=[Attribute(Name("self", Load()), "y_pred", Load())],
-                        func=Attribute(
-                            Name("ops", Load()),
-                            "convert_to_tensor_v2",
-                            Load(),
-                        ),
-                        keywords=[],
-                        expr=None,
-                        expr_func=None,
-                    ),
-                    expr=None,
-                    lineno=None,
-                    **maybe_type_comment,
-                ),
-                Assign(
-                    targets=[Attribute(Name("self", Load()), "y_true", Load())],
-                    value=Call(
                         args=[
                             Attribute(
-                                Name("self", Load()),
-                                "y_true",
+                                Name("self", Load(), lineno=None, col_offset=None),
+                                "y_pred",
                                 Load(),
-                            ),
-                            Attribute(
-                                Attribute(
-                                    Name("self", Load()),
-                                    "y_pred",
-                                    Load(),
-                                ),
-                                "dtype",
-                                Load(),
-                            ),
+                                lineno=None,
+                                col_offset=None,
+                            )
                         ],
                         func=Attribute(
-                            Name("math_ops", Load()),
-                            "cast",
+                            Name("ops", Load(), lineno=None, col_offset=None),
+                            "convert_to_tensor_v2",
                             Load(),
+                            lineno=None,
+                            col_offset=None,
                         ),
                         keywords=[],
                         expr=None,
                         expr_func=None,
+                        lineno=None,
+                        col_offset=None,
                     ),
                     expr=None,
                     lineno=None,
@@ -479,23 +477,82 @@ class_squared_hinge_config_ast: ClassDef = ClassDef(
                 Assign(
                     targets=[
                         Attribute(
-                            Name("self", Load()),
+                            Name("self", Load(), lineno=None, col_offset=None),
                             "y_true",
                             Load(),
+                            lineno=None,
+                            col_offset=None,
                         )
                     ],
                     value=Call(
                         args=[
                             Attribute(
-                                Name("self", Load()),
+                                Name("self", Load(), lineno=None, col_offset=None),
                                 "y_true",
                                 Load(),
-                            )
+                                lineno=None,
+                                col_offset=None,
+                            ),
+                            Attribute(
+                                Attribute(
+                                    Name("self", Load(), lineno=None, col_offset=None),
+                                    "y_pred",
+                                    Load(),
+                                    lineno=None,
+                                    col_offset=None,
+                                ),
+                                "dtype",
+                                Load(),
+                            ),
                         ],
-                        func=Name("_maybe_convert_labels", Load()),
+                        func=Attribute(
+                            Name("math_ops", Load(), lineno=None, col_offset=None),
+                            "cast",
+                            Load(),
+                            lineno=None,
+                            col_offset=None,
+                        ),
                         keywords=[],
                         expr=None,
                         expr_func=None,
+                        lineno=None,
+                        col_offset=None,
+                    ),
+                    expr=None,
+                    lineno=None,
+                    **maybe_type_comment,
+                ),
+                Assign(
+                    targets=[
+                        Attribute(
+                            Name("self", Load(), lineno=None, col_offset=None),
+                            "y_true",
+                            Load(),
+                            lineno=None,
+                            col_offset=None,
+                        )
+                    ],
+                    value=Call(
+                        args=[
+                            Attribute(
+                                Name("self", Load(), lineno=None, col_offset=None),
+                                "y_true",
+                                Load(),
+                                lineno=None,
+                                col_offset=None,
+                            )
+                        ],
+                        func=Name(
+                            "_maybe_convert_labels",
+                            Load(),
+                            lineno=None,
+                            col_offset=None,
+                        ),
+                        keywords=[],
+                        expr=None,
+                        expr_func=None,
+                        lineno=None,
+                        col_offset=None,
                     ),
                     expr=None,
                     lineno=None,
@@ -513,41 +570,76 @@ class_squared_hinge_config_ast: ClassDef = ClassDef(
                                                 Sub(),
                                                 BinOp(
                                                     Attribute(
-                                                        Name("self", Load()),
+                                                        Name(
+                                                            "self",
+                                                            Load(),
+                                                            lineno=None,
+                                                            col_offset=None,
+                                                        ),
                                                         "y_true",
                                                         Load(),
+                                                        lineno=None,
+                                                        col_offset=None,
                                                     ),
                                                     Mult(),
                                                     Attribute(
-                                                        Name("self", Load()),
+                                                        Name(
+                                                            "self",
+                                                            Load(),
+                                                            lineno=None,
+                                                            col_offset=None,
+                                                        ),
                                                         "y_pred",
                                                         Load(),
+                                                        lineno=None,
+                                                        col_offset=None,
                                                     ),
                                                 ),
                                             ),
                                             set_value(0.0),
                                         ],
                                         func=Attribute(
-                                            Name("math_ops", Load()),
+                                            Name(
+                                                "math_ops",
+                                                Load(),
+                                                lineno=None,
+                                                col_offset=None,
+                                            ),
                                             "maximum",
                                             Load(),
+                                            lineno=None,
+                                            col_offset=None,
                                         ),
                                         keywords=[],
                                         expr=None,
                                         expr_func=None,
+                                        lineno=None,
+                                        col_offset=None,
                                     )
                                 ],
                                 func=Attribute(
-                                    Name("math_ops", Load()),
+                                    Name(
+                                        "math_ops", Load(), lineno=None, col_offset=None
+                                    ),
                                     "square",
                                     Load(),
+                                    lineno=None,
+                                    col_offset=None,
                                 ),
                                 keywords=[],
                                 expr=None,
                                 expr_func=None,
+                                lineno=None,
+                                col_offset=None,
                             )
                         ],
-                        func=Attribute(Name("K", Load()), "mean", Load()),
+                        func=Attribute(
+                            Name("K", Load(), lineno=None, col_offset=None),
+                            "mean",
+                            Load(),
+                            lineno=None,
+                            col_offset=None,
+                        ),
                         keywords=[
                             keyword(
                                 arg="axis",
@@ -557,6 +649,8 @@ class_squared_hinge_config_ast: ClassDef = ClassDef(
                         ],
                         expr=None,
                         expr_func=None,
+                        lineno=None,
+                        col_offset=None,
                     ),
                     expr=None,
                 ),
@@ -792,10 +886,10 @@ class TensorBoard(Callback):
 
 class_google_keras_tensorboard_ast: ClassDef = ClassDef(
     name="TensorBoard",
-    bases=[Name(id="Callback", ctx=Load())],
+    bases=[Name(id="Callback", ctx=Load(), lineno=None, col_offset=None)],
     keywords=[],
     body=[
-        Expr(set_value(tensorboard_doc_str)),
+        Expr(set_value(tensorboard_doc_str), lineno=None, col_offset=None),
         FunctionDef(
             name="__init__",
             args=arguments(
@@ -831,14 +925,26 @@ class_google_keras_tensorboard_ast: ClassDef = ClassDef(
                     value=Call(
                         func=Attribute(
                             value=Call(
-                                func=Name(id="super", ctx=Load()), args=[], keywords=[]
+                                func=Name(
+                                    id="super", ctx=Load(), lineno=None, col_offset=None
+                                ),
+                                args=[],
+                                keywords=[],
+                                lineno=None,
+                                col_offset=None,
                             ),
                             attr="__init__",
                             ctx=Load(),
+                            lineno=None,
+                            col_offset=None,
                         ),
                         args=[],
                         keywords=[],
-                    )
+                        lineno=None,
+                        col_offset=None,
+                    ),
+                    lineno=None,
+                    col_offset=None,
                 ),
             ],
             decorator_list=[],
@@ -862,7 +968,13 @@ class_google_keras_tensorboard_ast: ClassDef = ClassDef(
                 vararg=None,
                 arg=None,
             ),
-            body=[Expr(set_value("Sets Keras model and writes graph if specified."))],
+            body=[
+                Expr(
+                    set_value("Sets Keras model and writes graph if specified."),
+                    lineno=None,
+                    col_offset=None,
+                )
+            ],
             decorator_list=[],
             type_params=[],
             arguments_args=None,
@@ -970,10 +1082,12 @@ class_torch_nn_l1loss_ast: ClassDef = ClassDef(
         )
     ],
     body=[
-        Expr(set_value(class_torch_nn_l1loss_docstring_str)),
+        Expr(
+            set_value(class_torch_nn_l1loss_docstring_str), lineno=None, col_offset=None
+        ),
         Assign(
             targets=[Name("__constants__", Store())],
-            value=List([set_value("reduction")], Load()),
+            value=List([set_value("reduction")], Load(), lineno=None, col_offset=None),
             expr=None,
             lineno=None,
             **maybe_type_comment,
@@ -984,7 +1098,10 @@ class_torch_nn_l1loss_ast: ClassDef = ClassDef(
                     set_arg("self"),
                     set_arg("size_average"),
                     set_arg("reduce"),
-                    set_arg(annotation=Name("str", Load()), arg="reduction"),
+                    set_arg(
+                        annotation=Name("str", Load(), lineno=None, col_offset=None),
+                        arg="reduction",
+                    ),
                 ],
                 defaults=list(map(set_value, (None, None, "mean"))),
                 kw_defaults=[],
@@ -1002,7 +1119,7 @@ class_torch_nn_l1loss_ast: ClassDef = ClassDef(
                                 "size_average",
                                 Load(),
                             ),
-                            Name("reduce", Load()),
+                            Name("reduce", Load(), lineno=None, col_offset=None),
                             Name(
                                 "reduction",
                                 Load(),
@@ -1011,18 +1128,26 @@ class_torch_nn_l1loss_ast: ClassDef = ClassDef(
                         func=Attribute(
                             Call(
                                 args=[],
-                                func=Name("super", Load()),
+                                func=Name(
+                                    "super", Load(), lineno=None, col_offset=None
+                                ),
                                 keywords=[],
                                 expr=None,
                                 expr_func=None,
                             ),
                             "__init__",
                             Load(),
+                            lineno=None,
+                            col_offset=None,
                         ),
                         keywords=[],
                         expr=None,
                         expr_func=None,
-                    )
+                        lineno=None,
+                        col_offset=None,
+                    ),
+                    lineno=None,
+                    col_offset=None,
                 )
             ],
             decorator_list=[],
@@ -1039,8 +1164,14 @@ class_torch_nn_l1loss_ast: ClassDef = ClassDef(
             args=arguments(
                 args=[
                     set_arg("self"),
-                    set_arg(annotation=Name("Tensor", Load()), arg="input"),
-                    set_arg(annotation=Name("Tensor", Load()), arg="target"),
+                    set_arg(
+                        annotation=Name("Tensor", Load(), lineno=None, col_offset=None),
+                        arg="input",
+                    ),
+                    set_arg(
+                        annotation=Name("Tensor", Load(), lineno=None, col_offset=None),
+                        arg="target",
+                    ),
                 ],
                 defaults=[],
                 kw_defaults=[],
@@ -1053,19 +1184,26 @@ class_torch_nn_l1loss_ast: ClassDef = ClassDef(
             body=[
                 Return(
                     value=Call(
-                        args=[Name("input", Load()), Name("target", Load())],
+                        args=[
+                            Name("input", Load(), lineno=None, col_offset=None),
+                            Name("target", Load(), lineno=None, col_offset=None),
+                        ],
                         func=Attribute(
-                            Name("F", Load()),
+                            Name("F", Load(), lineno=None, col_offset=None),
                             "l1_loss",
                             Load(),
+                            lineno=None,
+                            col_offset=None,
                         ),
                         keywords=[
                             keyword(
                                 arg="reduction",
                                 value=Attribute(
-                                    Name("self", Load()),
+                                    Name("self", Load(), lineno=None, col_offset=None),
                                     "reduction",
                                     Load(),
+                                    lineno=None,
+                                    col_offset=None,
                                 ),
                                 identifier=None,
                             )
@@ -1223,9 +1361,13 @@ class_torch_nn_one_cycle_lr_str = "\n".join(class_torch_nn_one_cycle_lr)
 
 
 class_torch_nn_one_cycle_lr_ast: ClassDef = ClassDef(
-    bases=[Name("_LRScheduler", Load())],
+    bases=[Name("_LRScheduler", Load(), lineno=None, col_offset=None)],
     body=[
-        Expr(set_value(class_torch_nn_one_cycle_lr_docstring_str)),
+        Expr(
+            set_value(class_torch_nn_one_cycle_lr_docstring_str),
+            lineno=None,
+            col_offset=None,
+        ),
         FunctionDef(
             args=arguments(
                 args=list(
@@ -1307,7 +1449,7 @@ class_reduction_v2: ClassDef = ClassDef(
     bases=[],
     keywords=[],
     body=[
-        Expr(value=set_value(docstring_reduction_v2_str)),
+        Expr(value=set_value(docstring_reduction_v2_str), lineno=None, col_offset=None),
         Assign(targets=[Name(id="AUTO", ctx=Store())], value=set_value("auto")),
         Assign(targets=[Name(id="NONE", ctx=Store())], value=set_value("none")),
         Assign(targets=[Name(id="SUM", ctx=Store())], value=set_value("sum")),

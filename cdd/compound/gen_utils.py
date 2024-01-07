@@ -305,7 +305,7 @@ def gen_module(
         functions_and_classes="\n\n".join(map(to_code, functions_and_classes)),
         __all__=to_code(
             Assign(
-                targets=[Name("__all__", Store())],
+                targets=[Name("__all__", Store(), lineno=None, col_offset=None)],
                 value=ast.parse(  # `TypeError: Type List cannot be instantiated; use list() instead`
                     str(
                         list(

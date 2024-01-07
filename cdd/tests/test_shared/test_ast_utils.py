@@ -2,6 +2,7 @@
 
 import ast
 import pickle
+from _ast import Subscript
 from ast import (
     AnnAssign,
     Assign,
@@ -15,6 +16,7 @@ from ast import (
     FunctionDef,
     Import,
     ImportFrom,
+    Index,
     List,
     Load,
     Module,
@@ -230,7 +232,7 @@ class TestAstUtils(TestCase):
             AnnAssign(
                 annotation=Name("str", Load(), lineno=None, col_offset=None),
                 simple=1,
-                target=Name("dataset_name", Store()),
+                target=Name("dataset_name", Store(), lineno=None, col_offset=None),
                 value=set_value("mnist"),
                 expr=None,
                 expr_target=None,
@@ -405,9 +407,9 @@ class TestAstUtils(TestCase):
         rewrite_at_query: RewriteAtQuery = RewriteAtQuery(
             search="C.function_name.dataset_name".split("."),
             replacement_node=AnnAssign(
-                annotation=Name("int", Load()),
+                annotation=Name("int", Load(), lineno=None, col_offset=None),
                 simple=1,
-                target=Name("dataset_name", Store()),
+                target=Name("dataset_name", Store(), lineno=None, col_offset=None),
                 value=set_value(15),
                 expr=None,
                 expr_annotation=None,
@@ -437,9 +439,9 @@ class TestAstUtils(TestCase):
         rewrite_at_query: RewriteAtQuery = RewriteAtQuery(
             search="ConfigClass.dataset_name".split("."),
             replacement_node=AnnAssign(
-                annotation=Name("int", Load()),
+                annotation=Name("int", Load(), lineno=None, col_offset=None),
                 simple=1,
-                target=Name("dataset_name", Store()),
+                target=Name("dataset_name", Store(), lineno=None, col_offset=None),
                 value=set_value(15),
                 expr=None,
                 expr_target=None,
@@ -562,8 +564,12 @@ class TestAstUtils(TestCase):
         self.assertEqual(
             get_value(Constant(value=val, constant_value=None, string=None)), val
         )
-        self.assertIsInstance(get_value(Tuple(expr=None)), Tuple)
-        self.assertIsInstance(get_value(Tuple(expr=None)), Tuple)
+        self.assertIsInstance(
+            get_value(Tuple(expr=None, lineno=None, col_offset=None)), Tuple
+        )
+        self.assertIsInstance(
+            get_value(Tuple(expr=None, lineno=None, col_offset=None)), Tuple
+        )
         self.assertIsNone(get_value(Name(None, None)))
         self.assertEqual(get_value(get_value(ast.parse("-5").body[0])), -5)
 
@@ -716,9 +722,9 @@ class TestAstUtils(TestCase):
                 ("zion", {"typ": None}),
             ),
             gold=AnnAssign(
-                annotation=Name("object", Load()),
+                annotation=Name("object", Load(), lineno=None, col_offset=None),
                 simple=1,
-                target=Name("zion", Store()),
+                target=Name("zion", Store(), lineno=None, col_offset=None),
                 expr=None,
                 expr_target=None,
                 expr_annotation=None,
@@ -739,7 +745,7 @@ class TestAstUtils(TestCase):
             gold=AnnAssign(
                 annotation=set_slice(Name("dict", Load())),
                 simple=1,
-                target=Name("menthol", Store()),
+                target=Name("menthol", Store(), lineno=None, col_offset=None),
                 value=Dict(keys=[], values=[], expr=None),
                 expr=None,
                 expr_target=None,
@@ -761,9 +767,9 @@ class TestAstUtils(TestCase):
                 ),
             ),
             gold=AnnAssign(
-                annotation=Name("NoneType", Load()),
+                annotation=Name("NoneType", Load(), lineno=None, col_offset=None),
                 simple=1,
-                target=Name("stateful_metrics", Store()),
+                target=Name("stateful_metrics", Store(), lineno=None, col_offset=None),
                 value=set_value("```the `Model`'s metrics```"),
                 expr=None,
                 expr_annotation=None,
@@ -782,9 +788,15 @@ class TestAstUtils(TestCase):
                 ("zion", {"typ": None, "default": set_value(NoneStr)}),
             ),
             gold=AnnAssign(
-                annotation=Name("object", Load()),
+                annotation=Subscript(
+                    ctx=Load(),
+                    slice=Index(value=Name(ctx=Load(), id="Any")),
+                    value=Name(ctx=Load(), id="Optional", lineno=None, col_offset=None),
+                    lineno=None,
+                    col_offset=None,
+                ),
                 simple=1,
-                target=Name("zion", Store()),
+                target=Name("zion", Store(), lineno=None, col_offset=None),
                 value=set_value(None),
                 expr=None,
                 expr_target=None,
@@ -804,14 +816,20 @@ class TestAstUtils(TestCase):
                 Call(
                     args=[set_value("--yup")],
                     func=Attribute(
-                        Name("argument_parser", Load()),
+                        Name("argument_parser", Load(), lineno=None, col_offset=None),
                         "add_argument",
                         Load(),
+                        lineno=None,
+                        col_offset=None,
                     ),
                     keywords=[],
                     expr=None,
                     expr_func=None,
-                )
+                    lineno=None,
+                    col_offset=None,
+                ),
+                lineno=None,
+                col_offset=None,
             ),
             test_case_instance=self,
         )
@@ -828,18 +846,28 @@ class TestAstUtils(TestCase):
                 Call(
                     args=[set_value("--byo")],
                     func=Attribute(
-                        Name("argument_parser", Load()),
+                        Name("argument_parser", Load(), lineno=None, col_offset=None),
                         "add_argument",
                         Load(),
+                        lineno=None,
+                        col_offset=None,
                     ),
                     keywords=[
-                        keyword(arg="type", value=Name("int", Load()), identifier=None),
+                        keyword(
+                            arg="type",
+                            value=Name("int", Load(), lineno=None, col_offset=None),
+                            identifier=None,
+                        ),
                         keyword(arg="required", value=set_value(True), identifier=None),
                         keyword(arg="default", value=set_value(5), identifier=None),
                     ],
                     expr=None,
                     expr_func=None,
-                )
+                    lineno=None,
+                    col_offset=None,
+                ),
+                lineno=None,
+                col_offset=None,
             ),
             test_case_instance=self,
         )
@@ -868,9 +896,7 @@ class TestAstUtils(TestCase):
                     "byo",
                     {
                         "default": Tuple(
-                            elts=[],
-                            ctx=Load(),
-                            expr=None,
+                            elts=[], ctx=Load(), expr=None, lineno=None, col_offset=None
                         ),
                         "typ": "str",
                     },
@@ -880,20 +906,28 @@ class TestAstUtils(TestCase):
                 Call(
                     args=[set_value("--byo")],
                     func=Attribute(
-                        Name("argument_parser", Load()),
+                        Name("argument_parser", Load(), lineno=None, col_offset=None),
                         "add_argument",
                         Load(),
+                        lineno=None,
+                        col_offset=None,
                     ),
                     keywords=[
                         keyword(
-                            arg="type", value=Name("loads", Load()), identifier=None
+                            arg="type",
+                            value=Name("loads", Load(), lineno=None, col_offset=None),
+                            identifier=None,
                         ),
                         keyword(arg="required", value=set_value(True), identifier=None),
                         keyword(arg="default", value=set_value("()"), identifier=None),
                     ],
                     expr=None,
                     expr_func=None,
-                )
+                    lineno=None,
+                    col_offset=None,
+                ),
+                lineno=None,
+                col_offset=None,
             ),
             test_case_instance=self,
         )
@@ -938,6 +972,8 @@ class TestAstUtils(TestCase):
                                 expr=None,
                             ),
                             expr_value=None,
+                            lineno=None,
+                            col_offset=None,
                         ),
                         "typ": "str",
                     },
@@ -970,9 +1006,11 @@ class TestAstUtils(TestCase):
                 Call(
                     args=[set_value("--byo")],
                     func=Attribute(
-                        Name("argument_parser", Load()),
+                        Name("argument_parser", Load(), lineno=None, col_offset=None),
                         "add_argument",
                         Load(),
+                        lineno=None,
+                        col_offset=None,
                     ),
                     keywords=[
                         keyword(arg="required", value=set_value(True), identifier=None),
@@ -984,7 +1022,11 @@ class TestAstUtils(TestCase):
                     ],
                     expr=None,
                     expr_func=None,
-                )
+                    lineno=None,
+                    col_offset=None,
+                ),
+                lineno=None,
+                col_offset=None,
             ),
             test_case_instance=self,
         )
@@ -1020,14 +1062,18 @@ class TestAstUtils(TestCase):
                 Call(
                     args=[set_value("--byo")],
                     func=Attribute(
-                        Name("argument_parser", Load()),
+                        Name("argument_parser", Load(), lineno=None, col_offset=None),
                         "add_argument",
                         Load(),
+                        lineno=None,
+                        col_offset=None,
                     ),
                     keywords=[
                         keyword(
                             arg="type",
-                            value=Name("pickle.loads", Load()),
+                            value=Name(
+                                "pickle.loads", Load(), lineno=None, col_offset=None
+                            ),
                             identifier=None,
                         ),
                         keyword(
@@ -1038,7 +1084,11 @@ class TestAstUtils(TestCase):
                     ],
                     expr=None,
                     expr_func=None,
-                )
+                    lineno=None,
+                    col_offset=None,
+                ),
+                lineno=None,
+                col_offset=None,
             ),
             test_case_instance=self,
         )
@@ -1064,18 +1114,28 @@ class TestAstUtils(TestCase):
                 Call(
                     args=[set_value("--byo")],
                     func=Attribute(
-                        Name("argument_parser", Load()),
+                        Name("argument_parser", Load(), lineno=None, col_offset=None),
                         "add_argument",
                         Load(),
+                        lineno=None,
+                        col_offset=None,
                     ),
                     keywords=[
-                        keyword(arg="type", value=Name("int", Load()), identifier=None),
+                        keyword(
+                            arg="type",
+                            value=Name("int", Load(), lineno=None, col_offset=None),
+                            identifier=None,
+                        ),
                         keyword(arg="required", value=set_value(True), identifier=None),
                         keyword(arg="default", value=set_value(4), identifier=None),
                     ],
                     expr=None,
                     expr_func=None,
-                )
+                    lineno=None,
+                    col_offset=None,
+                ),
+                lineno=None,
+                col_offset=None,
             ),
             test_case_instance=self,
         )
@@ -1112,21 +1172,29 @@ class TestAstUtils(TestCase):
                 Call(
                     args=[set_value("--byo")],
                     func=Attribute(
-                        Name("argument_parser", Load()),
+                        Name("argument_parser", Load(), lineno=None, col_offset=None),
                         "add_argument",
                         Load(),
+                        lineno=None,
+                        col_offset=None,
                     ),
                     keywords=[
                         keyword(
                             arg="type",
-                            value=Name(FakeTorch.__name__, Load()),
+                            value=Name(
+                                FakeTorch.__name__, Load(), lineno=None, col_offset=None
+                            ),
                             identifier=None,
                         ),
                         keyword(arg="required", value=set_value(True), identifier=None),
                     ],
                     expr=None,
                     expr_func=None,
-                )
+                    lineno=None,
+                    col_offset=None,
+                ),
+                lineno=None,
+                col_offset=None,
             ),
             test_case_instance=self,
         )
@@ -1182,7 +1250,7 @@ class TestAstUtils(TestCase):
             (5, 5),
             ("5", "5"),
             (set_value(5), 5),
-            (ast.Expr(None), NoneStr),
+            (ast.Expr(None, lineno=None, col_offset=None), NoneStr),
         ):
             self.assertEqual(parse_to_scalar(fst), snd)
 
@@ -1192,7 +1260,7 @@ class TestAstUtils(TestCase):
         self.assertTrue(
             cmp_ast(
                 parse_to_scalar(ast.parse("[5]").body[0]),
-                List([set_value(5)], Load()),
+                List([set_value(5)], Load(), lineno=None, col_offset=None),
             )
         )
 
@@ -1263,7 +1331,7 @@ class TestAstUtils(TestCase):
         _mock: Module = ast.parse("foo = 'bar';can = 5;haz: int = 5")
         _mock.body.append(
             Assign(
-                targets=[Name("yup", Store())],
+                targets=[Name("yup", Store(), lineno=None, col_offset=None)],
                 value=set_value("nup"),
                 expr=None,
                 **maybe_type_comment
@@ -1276,7 +1344,7 @@ class TestAstUtils(TestCase):
         """
         Test `to_annotation`
         """
-        for res in "str", Name("str", Load()):
+        for res in "str", Name("str", Load(), lineno=None, col_offset=None):
             self.assertTrue(cmp_ast(to_annotation(res), Name("str", Load())))
 
     def test_merge_assignment_lists(self) -> None:

@@ -42,7 +42,9 @@ from cdd.tests.mocks.methods import function_adder_ast
 from cdd.tests.utils_for_tests import run_ast_test, unittest_main
 
 method_adder_ast: FunctionDef = deepcopy(function_adder_ast)
-method_adder_ast.body[0] = Expr(set_value(" C class (mocked!) "))
+method_adder_ast.body[0] = Expr(
+    set_value(" C class (mocked!) "), lineno=None, col_offset=None
+)
 method_adder_ast.decorator_list = [
     Name("staticmethod", Load(), lineno=None, col_offset=None)
 ]
@@ -382,12 +384,12 @@ unittest_main()
 #                 ":type b: ```int```\n\n    "
 #                 ":return: Aggregated summation of `a` and `b`.\n    "
 #                 ":rtype: ```int```\n    ",
-#             )
+#             ), lineno=None, col_offset=None
 #         ),
 #         Return(
 #             value=Call(
-#                 func=Attribute(Name("operator", Load()), "add", Load()),
-#                 args=[Name("a", Load()), Name("b", Load())],
+#                 func=Attribute(Name("operator", Load(), lineno=None, col_offset=None), "add", Load(), lineno=None, col_offset=None),
+#                 args=[Name("a", Load(), lineno=None, col_offset=None), Name("b", Load(), lineno=None, col_offset=None)],
 #                 keywords=[],
 #                 expr=None,
 #                 expr_func=None,

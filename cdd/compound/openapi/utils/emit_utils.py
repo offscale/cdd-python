@@ -113,9 +113,11 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
         _param["doc"] = _param["doc"][end:].lstrip()
         args.append(
             Call(
-                func=Name(id="ForeignKey", ctx=Load()),
+                func=Name(id="ForeignKey", ctx=Load(), lineno=None, col_offset=None),
                 args=[set_value(fk_val)],
                 keywords=[],
+                lineno=None,
+                col_offset=None,
             )
         )
     elif has_default and default not in none_types:
@@ -175,11 +177,13 @@ def param_to_sqlalchemy_column_call(name_param, include_name):
     #     )
 
     return Call(
-        func=Name("Column", Load()),
+        func=Name("Column", Load(), lineno=None, col_offset=None),
         args=args,
         keywords=sorted(keywords, key=attrgetter("arg")),
         expr=None,
         expr_func=None,
+        lineno=None,
+        col_offset=None,
     )
 
 
@@ -224,7 +228,9 @@ def generate_repr_method(params, cls_name, docstring_format):
                             else docstring_repr_google_str
                         ).lstrip(),
                     )
-                )
+                ),
+                lineno=None,
+                col_offset=None,
             ),
             Return(
                 value=Call(
@@ -239,13 +245,21 @@ def generate_repr_method(params, cls_name, docstring_format):
                         ),
                         "format",
                         Load(),
+                        lineno=None,
+                        col_offset=None,
                     ),
                     args=[],
                     keywords=list(
                         map(
                             lambda key: ast.keyword(
                                 arg=key,
-                                value=Attribute(Name("self", Load()), key, Load()),
+                                value=Attribute(
+                                    Name("self", Load(), lineno=None, col_offset=None),
+                                    key,
+                                    Load(),
+                                    lineno=None,
+                                    col_offset=None,
+                                ),
                                 identifier=None,
                             ),
                             keys,
@@ -253,6 +267,8 @@ def generate_repr_method(params, cls_name, docstring_format):
                     ),
                     expr=None,
                     expr_func=None,
+                    lineno=None,
+                    col_offset=None,
                 ),
                 expr=None,
             ),
@@ -311,61 +327,114 @@ def generate_create_from_attr_staticmethod(params, cls_name, docstring_format):
                         .replace("self", cls_name)
                         .lstrip(),
                     )
-                )
+                ),
+                lineno=None,
+                col_offset=None,
             ),
             Return(
                 value=Call(
-                    func=Name(id=cls_name, ctx=Load()),
+                    func=Name(id=cls_name, ctx=Load(), lineno=None, col_offset=None),
                     args=[],
                     keywords=[
                         keyword(
                             arg=None,
                             value=DictComp(
-                                key=Name(id="attr", ctx=Load()),
+                                key=Name(
+                                    id="attr", ctx=Load(), lineno=None, col_offset=None
+                                ),
                                 value=Call(
-                                    func=Name(id="getattr", ctx=Load()),
+                                    func=Name(
+                                        id="getattr",
+                                        ctx=Load(),
+                                        lineno=None,
+                                        col_offset=None,
+                                    ),
                                     args=[
-                                        Name(id="node", ctx=Load()),
-                                        Name(id="attr", ctx=Load()),
+                                        Name(
+                                            id="node",
+                                            ctx=Load(),
+                                            lineno=None,
+                                            col_offset=None,
+                                        ),
+                                        Name(
+                                            id="attr",
+                                            ctx=Load(),
+                                            lineno=None,
+                                            col_offset=None,
+                                        ),
                                     ],
                                     keywords=[],
+                                    lineno=None,
+                                    col_offset=None,
                                 ),
                                 generators=[
                                     comprehension(
-                                        target=Name(id="attr", ctx=Store()),
+                                        target=Name(
+                                            id="attr",
+                                            ctx=Store(),
+                                            lineno=None,
+                                            col_offset=None,
+                                        ),
                                         iter=Tuple(
                                             elts=list(map(set_value, keys)),
                                             ctx=Load(),
+                                            lineno=None,
+                                            col_offset=None,
                                         ),
                                         ifs=[
                                             Compare(
                                                 left=Call(
-                                                    func=Name(id="getattr", ctx=Load()),
+                                                    func=Name(
+                                                        id="getattr",
+                                                        ctx=Load(),
+                                                        lineno=None,
+                                                        col_offset=None,
+                                                    ),
                                                     args=[
-                                                        Name(id="node", ctx=Load()),
-                                                        Name(id="attr", ctx=Load()),
+                                                        Name(
+                                                            id="node",
+                                                            ctx=Load(),
+                                                            lineno=None,
+                                                            col_offset=None,
+                                                        ),
+                                                        Name(
+                                                            id="attr",
+                                                            ctx=Load(),
+                                                            lineno=None,
+                                                            col_offset=None,
+                                                        ),
                                                         set_value(None),
                                                     ],
                                                     keywords=[],
+                                                    lineno=None,
+                                                    col_offset=None,
                                                 ),
                                                 ops=[IsNot()],
                                                 comparators=[set_value(None)],
+                                                lineno=None,
+                                                col_offset=None,
                                             )
                                         ],
                                         is_async=0,
                                     )
                                 ],
+                                lineno=None,
+                                col_offset=None,
                             ),
                             identifier=None,
                         )
                     ],
                     expr=None,
                     expr_func=None,
+                    lineno=None,
+                    col_offset=None,
                 ),
                 expr=None,
             ),
         ],
-        decorator_list=[Name(id="staticmethod", ctx=Load())],
+        decorator_list=[
+            Name(id="staticmethod", ctx=Load(), lineno=None, col_offset=None)
+        ],
         arguments_args=None,
         identifier_name=None,
         stmt=None,
@@ -455,6 +524,8 @@ def ensure_has_primary_key(intermediate_repr, force_pk_id=False):
                                 args=[],
                                 func=Name(ctx=Load(), id="Identity"),
                                 keywords=[],
+                                lineno=None,
+                                col_offset=None,
                             )
                         }
                     }
@@ -724,10 +795,12 @@ def rewrite_fk(symbol_to_module, column_assign):
             assert pk_typ is not None
             pk, typ = pk_typ
             del pk_typ
-            return Name(id=typ, ctx=Load()), Call(
-                func=Name(id="ForeignKey", ctx=Load()),
+            return Name(id=typ, ctx=Load(), lineno=None, col_offset=None), Call(
+                func=Name(id="ForeignKey", ctx=Load(), lineno=None, col_offset=None),
                 args=[set_value(".".join((get_table_name(matching_class), pk)))],
                 keywords=[],
+                lineno=None,
+                col_offset=None,
             )
         return column_name, foreign_key_call
 
@@ -811,7 +884,7 @@ def sqlalchemy_class_to_table(class_def, parse_original_whitespace):
         return assign.value
 
     return Call(
-        func=Name("Table", Load()),
+        func=Name("Table", Load(), lineno=None, col_offset=None),
         args=list(
             chain.from_iterable(
                 (
@@ -841,6 +914,8 @@ def sqlalchemy_class_to_table(class_def, parse_original_whitespace):
         ),
         expr=None,
         expr_func=None,
+        lineno=None,
+        col_offset=None,
     )
 
 
@@ -858,14 +933,21 @@ def sqlalchemy_table_to_class(table_expr_ass):
 
     return ClassDef(
         name=table_expr_ass.targets[0].id,
-        bases=[Name("Base", Load())],
+        bases=[Name("Base", Load(), lineno=None, col_offset=None)],
         keywords=[],
         body=list(
             chain.from_iterable(
                 (
                     (
                         Assign(
-                            targets=[Name("__tablename__", Store())],
+                            targets=[
+                                Name(
+                                    "__tablename__",
+                                    Store(),
+                                    lineno=None,
+                                    col_offset=None,
+                                )
+                            ],
                             value=set_value(get_value(table_expr_ass.value.args[0])),
                             expr=None,
                             lineno=None,
@@ -874,7 +956,14 @@ def sqlalchemy_table_to_class(table_expr_ass):
                     ),
                     map(
                         lambda column_call: Assign(
-                            targets=[Name(get_value(column_call.args[0]), Store())],
+                            targets=[
+                                Name(
+                                    get_value(column_call.args[0]),
+                                    Store(),
+                                    lineno=None,
+                                    col_offset=None,
+                                )
+                            ],
                             value=Call(
                                 func=column_call.func,
                                 args=(

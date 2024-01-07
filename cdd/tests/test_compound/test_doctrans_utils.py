@@ -201,7 +201,9 @@ class TestDocTransUtils(TestCase):
     def test_module_docstring(self) -> None:
         """Tests that module gets the right new docstring"""
         module_node: Module = Module(
-            body=[Expr(set_value("\nModule\n"))], stmt=None, type_ignores=[]
+            body=[Expr(set_value("\nModule\n"), lineno=None, col_offset=None)],
+            stmt=None,
+            type_ignores=[],
         )
         original: Module = deepcopy(module_node)
         DocTrans(
@@ -235,7 +237,9 @@ class TestDocTransUtils(TestCase):
         # Reindent docstrings
         for body in original.body[0], doc_trans.whole_ast.body[0]:
             body.body[0] = Expr(
-                set_value(omit_whitespace(get_docstring(body, clean=True)))
+                set_value(omit_whitespace(get_docstring(body, clean=True))),
+                lineno=None,
+                col_offset=None,
             )
 
         run_ast_test(self, gen_ast=doc_trans.whole_ast, gold=original)

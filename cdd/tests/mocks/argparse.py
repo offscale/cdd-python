@@ -34,6 +34,8 @@ argparse_add_argument_ast: Expr = Expr(
             Name("argument_parser", Load(), lineno=None, col_offset=None),
             "add_argument",
             Load(),
+            lineno=None,
+            col_offset=None,
         ),
         keywords=[
             keyword(
@@ -49,7 +51,11 @@ argparse_add_argument_ast: Expr = Expr(
         ],
         expr=None,
         expr_func=None,
-    )
+        lineno=None,
+        col_offset=None,
+    ),
+    lineno=None,
+    col_offset=None,
 )
 
 _argparse_doc_str_tuple = (
@@ -93,7 +99,9 @@ _argparse_doc_stripped_str: str = _argparse_doc_str.replace(
     "{tab}\n{tab}".format(tab=tab), ""
 )
 
-_cli_doc_expr: Expr = Expr(set_value(_argparse_description_str))
+_cli_doc_expr: Expr = Expr(
+    set_value(_argparse_description_str), lineno=None, col_offset=None
+)
 
 _cli_doc_nosplit_str: str = emit_separating_tabs(
     "\n{tab}".format(tab=tab).join(
@@ -110,7 +118,9 @@ _cli_doc_nosplit_expr: Expr = Expr(
         "\n{tab}{_cli_doc_nosplit_str}\n{tab}".format(
             _cli_doc_nosplit_str=_cli_doc_nosplit_str, tab=tab
         )
-    )
+    ),
+    lineno=None,
+    col_offset=None,
 )
 
 as_numpy_argparse_call: Expr = Expr(
@@ -120,6 +130,8 @@ as_numpy_argparse_call: Expr = Expr(
             Name("argument_parser", Load(), lineno=None, col_offset=None),
             "add_argument",
             Load(),
+            lineno=None,
+            col_offset=None,
         ),
         keywords=[
             keyword(
@@ -137,7 +149,11 @@ as_numpy_argparse_call: Expr = Expr(
         ],
         expr=None,
         expr_func=None,
-    )
+        lineno=None,
+        col_offset=None,
+    ),
+    lineno=None,
+    col_offset=None,
 )
 
 _argparse_add_arguments = (
@@ -148,6 +164,8 @@ _argparse_add_arguments = (
                 Name("argument_parser", Load(), lineno=None, col_offset=None),
                 "add_argument",
                 Load(),
+                lineno=None,
+                col_offset=None,
             ),
             keywords=[
                 keyword(
@@ -168,7 +186,11 @@ _argparse_add_arguments = (
             ],
             expr=None,
             expr_func=None,
-        )
+            lineno=None,
+            col_offset=None,
+        ),
+        lineno=None,
+        col_offset=None,
     ),
     Expr(
         Call(
@@ -177,6 +199,8 @@ _argparse_add_arguments = (
                 Name("argument_parser", Load(), lineno=None, col_offset=None),
                 "add_argument",
                 Load(),
+                lineno=None,
+                col_offset=None,
             ),
             keywords=[
                 keyword(
@@ -197,7 +221,11 @@ _argparse_add_arguments = (
             ],
             expr=None,
             expr_func=None,
-        )
+            lineno=None,
+            col_offset=None,
+        ),
+        lineno=None,
+        col_offset=None,
     ),
     Expr(
         Call(
@@ -206,6 +234,8 @@ _argparse_add_arguments = (
                 Name("argument_parser", Load(), lineno=None, col_offset=None),
                 "add_argument",
                 Load(),
+                lineno=None,
+                col_offset=None,
             ),
             keywords=[
                 keyword(
@@ -214,6 +244,8 @@ _argparse_add_arguments = (
                         ctx=Load(),
                         elts=list(map(set_value, ("np", "tf"))),
                         expr=None,
+                        lineno=None,
+                        col_offset=None,
                     ),
                     identifier=None,
                 ),
@@ -237,7 +269,11 @@ _argparse_add_arguments = (
             ],
             expr=None,
             expr_func=None,
-        )
+            lineno=None,
+            col_offset=None,
+        ),
+        lineno=None,
+        col_offset=None,
     ),
     as_numpy_argparse_call,
     Expr(
@@ -247,6 +283,8 @@ _argparse_add_arguments = (
                 Name("argument_parser", Load(), lineno=None, col_offset=None),
                 "add_argument",
                 Load(),
+                lineno=None,
+                col_offset=None,
             ),
             keywords=[
                 keyword(
@@ -264,7 +302,11 @@ _argparse_add_arguments = (
             ],
             expr=None,
             expr_func=None,
-        )
+            lineno=None,
+            col_offset=None,
+        ),
+        lineno=None,
+        col_offset=None,
     ),
 )  # type: tuple[Expr, ...]
 
@@ -282,17 +324,25 @@ _argparse_return: Return = Return(
                             Name("np", Load(), lineno=None, col_offset=None),
                             "empty",
                             Load(),
+                            lineno=None,
+                            col_offset=None,
                         ),
                         keywords=[],
                         expr=None,
                         expr_func=None,
+                        lineno=None,
+                        col_offset=None,
                     )
                 ]
                 * 2,
                 expr=None,
+                lineno=None,
+                col_offset=None,
             ),
         ],
         expr=None,
+        lineno=None,
+        col_offset=None,
     ),
     expr=None,
 )
@@ -430,6 +480,8 @@ argparse_func_ast: FunctionDef = fix_missing_locations(
                         Name("argument_parser", Load(), lineno=None, col_offset=None),
                         "description",
                         Store(),
+                        lineno=None,
+                        col_offset=None,
                     )
                 ],
                 value=set_value(docstring_header_no_nl_str),
@@ -467,9 +519,11 @@ argparse_func_with_body_ast: FunctionDef = fix_missing_locations(
             Assign(
                 targets=[
                     Attribute(
-                        Name("argument_parser", Load()),
+                        Name("argument_parser", Load(), lineno=None, col_offset=None),
                         "description",
                         Store(),
+                        lineno=None,
+                        col_offset=None,
                     )
                 ],
                 value=set_value(_argparse_description_str),
@@ -486,22 +540,30 @@ argparse_func_with_body_ast: FunctionDef = fix_missing_locations(
                             set_value(5),
                         )
                     ],
-                    func=Name("print", Load()),
+                    func=Name("print", Load(), lineno=None, col_offset=None),
                     keywords=[],
                     expr=None,
                     expr_func=None,
-                )
+                    lineno=None,
+                    col_offset=None,
+                ),
+                lineno=None,
+                col_offset=None,
             ),
             If(
                 body=[
                     Expr(
                         Call(
                             args=[set_value(True)],
-                            func=Name("print", Load()),
+                            func=Name("print", Load(), lineno=None, col_offset=None),
                             keywords=[],
                             expr=None,
                             expr_func=None,
-                        )
+                            lineno=None,
+                            col_offset=None,
+                        ),
+                        lineno=None,
+                        col_offset=None,
                     ),
                     Return(
                         value=set_value(5),
@@ -543,7 +605,13 @@ argparse_func_action_append_ast: FunctionDef = fix_missing_locations(
             _cli_doc_nosplit_expr,
             Assign(
                 targets=[
-                    Attribute(Name("argument_parser", Load()), "description", Store())
+                    Attribute(
+                        Name("argument_parser", Load(), lineno=None, col_offset=None),
+                        "description",
+                        Store(),
+                        lineno=None,
+                        col_offset=None,
+                    )
                 ],
                 value=set_value(docstring_header_no_nl_str),
                 expr=None,
@@ -552,13 +620,17 @@ argparse_func_action_append_ast: FunctionDef = fix_missing_locations(
             Expr(
                 Call(
                     func=Attribute(
-                        Name("argument_parser", Load()), "add_argument", Load()
+                        Name("argument_parser", Load(), lineno=None, col_offset=None),
+                        "add_argument",
+                        Load(),
+                        lineno=None,
+                        col_offset=None,
                     ),
                     args=[set_value("--callbacks")],
                     keywords=[
                         keyword(
                             arg="type",
-                            value=Name("str", Load()),
+                            value=Name("str", Load(), lineno=None, col_offset=None),
                             identifier=None,
                         ),
                         keyword(
@@ -587,6 +659,8 @@ argparse_func_action_append_ast: FunctionDef = fix_missing_locations(
                                 ),
                                 ctx=Load(),
                                 expr=None,
+                                lineno=None,
+                                col_offset=None,
                             ),
                             identifier=None,
                         ),
@@ -605,9 +679,16 @@ argparse_func_action_append_ast: FunctionDef = fix_missing_locations(
                     ],
                     expr=None,
                     expr_func=None,
-                )
+                    lineno=None,
+                    col_offset=None,
+                ),
+                lineno=None,
+                col_offset=None,
             ),
-            Return(value=Name("argument_parser", Load()), expr=None),
+            Return(
+                value=Name("argument_parser", Load(), lineno=None, col_offset=None),
+                expr=None,
+            ),
         ],
         decorator_list=[],
         type_params=[],
@@ -636,9 +717,13 @@ argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
         Assign(
             targets=[
                 Attribute(
-                    value=Name(id="argument_parser", ctx=Load()),
+                    value=Name(
+                        id="argument_parser", ctx=Load(), lineno=None, col_offset=None
+                    ),
                     attr="description",
                     ctx=Store(),
+                    lineno=None,
+                    col_offset=None,
                 )
             ],
             value=set_value(tensorboard_doc_str_no_args_str.rstrip(" ")),
@@ -649,9 +734,13 @@ argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
         Expr(
             value=Call(
                 func=Attribute(
-                    value=Name(id="argument_parser", ctx=Load()),
+                    value=Name(
+                        id="argument_parser", ctx=Load(), lineno=None, col_offset=None
+                    ),
                     attr="add_argument",
                     ctx=Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
                 args=[set_value("--log_dir")],
                 keywords=[
@@ -666,14 +755,22 @@ argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
                     keyword(arg="required", value=set_value(True)),
                     keyword(arg="default", value=set_value("logs")),
                 ],
-            )
+                lineno=None,
+                col_offset=None,
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         Expr(
             value=Call(
                 func=Attribute(
-                    value=Name(id="argument_parser", ctx=Load()),
+                    value=Name(
+                        id="argument_parser", ctx=Load(), lineno=None, col_offset=None
+                    ),
                     attr="add_argument",
                     ctx=Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
                 args=[set_value("--histogram_freq")],
                 keywords=[
@@ -687,14 +784,22 @@ argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
                     keyword(arg="required", value=set_value(True)),
                     keyword(arg="default", value=set_value(0)),
                 ],
-            )
+                lineno=None,
+                col_offset=None,
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         Expr(
             value=Call(
                 func=Attribute(
-                    value=Name(id="argument_parser", ctx=Load()),
+                    value=Name(
+                        id="argument_parser", ctx=Load(), lineno=None, col_offset=None
+                    ),
                     attr="add_argument",
                     ctx=Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
                 args=[set_value("--write_graph")],
                 keywords=[
@@ -708,14 +813,22 @@ argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
                     keyword(arg="required", value=set_value(True)),
                     keyword(arg="default", value=set_value(True)),
                 ],
-            )
+                lineno=None,
+                col_offset=None,
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         Expr(
             value=Call(
                 func=Attribute(
-                    value=Name(id="argument_parser", ctx=Load()),
+                    value=Name(
+                        id="argument_parser", ctx=Load(), lineno=None, col_offset=None
+                    ),
                     attr="add_argument",
                     ctx=Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
                 args=[set_value("--write_images")],
                 keywords=[
@@ -729,14 +842,22 @@ argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
                     keyword(arg="required", value=set_value(True)),
                     keyword(arg="default", value=set_value(False)),
                 ],
-            )
+                lineno=None,
+                col_offset=None,
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         Expr(
             value=Call(
                 func=Attribute(
-                    value=Name(id="argument_parser", ctx=Load()),
+                    value=Name(
+                        id="argument_parser", ctx=Load(), lineno=None, col_offset=None
+                    ),
                     attr="add_argument",
                     ctx=Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
                 args=[set_value("--write_steps_per_second")],
                 keywords=[
@@ -750,21 +871,32 @@ argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
                     keyword(arg="required", value=set_value(True)),
                     keyword(arg="default", value=set_value(False)),
                 ],
-            )
+                lineno=None,
+                col_offset=None,
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         Expr(
             value=Call(
                 func=Attribute(
-                    value=Name(id="argument_parser", ctx=Load()),
+                    value=Name(
+                        id="argument_parser", ctx=Load(), lineno=None, col_offset=None
+                    ),
                     attr="add_argument",
                     ctx=Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
                 args=[set_value("--update_freq")],
                 keywords=[
                     keyword(
                         arg="choices",
                         value=Tuple(
-                            elts=[set_value("batch"), set_value("epoch")], ctx=Load()
+                            elts=[set_value("batch"), set_value("epoch")],
+                            ctx=Load(),
+                            lineno=None,
+                            col_offset=None,
                         ),
                     ),
                     keyword(
@@ -776,14 +908,22 @@ argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
                     keyword(arg="required", value=set_value(True)),
                     keyword(arg="default", value=set_value("epoch")),
                 ],
-            )
+                lineno=None,
+                col_offset=None,
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         Expr(
             value=Call(
                 func=Attribute(
-                    value=Name(id="argument_parser", ctx=Load()),
+                    value=Name(
+                        id="argument_parser", ctx=Load(), lineno=None, col_offset=None
+                    ),
                     attr="add_argument",
                     ctx=Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
                 args=[set_value("--profile_batch")],
                 keywords=[
@@ -797,14 +937,22 @@ argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
                     keyword(arg="required", value=set_value(True)),
                     keyword(arg="default", value=set_value(0)),
                 ],
-            )
+                lineno=None,
+                col_offset=None,
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         Expr(
             value=Call(
                 func=Attribute(
-                    value=Name(id="argument_parser", ctx=Load()),
+                    value=Name(
+                        id="argument_parser", ctx=Load(), lineno=None, col_offset=None
+                    ),
                     attr="add_argument",
                     ctx=Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
                 args=[set_value("--embeddings_freq")],
                 keywords=[
@@ -818,14 +966,22 @@ argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
                     keyword(arg="required", value=set_value(True)),
                     keyword(arg="default", value=set_value(0)),
                 ],
-            )
+                lineno=None,
+                col_offset=None,
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         Expr(
             value=Call(
                 func=Attribute(
-                    value=Name(id="argument_parser", ctx=Load()),
+                    value=Name(
+                        id="argument_parser", ctx=Load(), lineno=None, col_offset=None
+                    ),
                     attr="add_argument",
                     ctx=Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
                 args=[set_value("--embeddings_metadata")],
                 keywords=[
@@ -836,7 +992,9 @@ argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
                         ),
                     )
                 ],
-            )
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         Return(value=Name(id="argument_parser", ctx=Load())),
     ],
@@ -867,9 +1025,13 @@ argparse_func_torch_nn_l1loss_ast: FunctionDef = FunctionDef(
         Assign(
             targets=[
                 Attribute(
-                    value=Name(id="argument_parser", ctx=Load()),
+                    value=Name(
+                        id="argument_parser", ctx=Load(), lineno=None, col_offset=None
+                    ),
                     attr="description",
                     ctx=Store(),
+                    lineno=None,
+                    col_offset=None,
                 )
             ],
             value=set_value(
@@ -922,9 +1084,13 @@ argparse_func_torch_nn_l1loss_ast: FunctionDef = FunctionDef(
         Expr(
             value=Call(
                 func=Attribute(
-                    value=Name(id="argument_parser", ctx=Load()),
+                    value=Name(
+                        id="argument_parser", ctx=Load(), lineno=None, col_offset=None
+                    ),
                     attr="add_argument",
                     ctx=Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
                 args=[set_value("--size_average")],
                 keywords=[
@@ -939,14 +1105,20 @@ argparse_func_torch_nn_l1loss_ast: FunctionDef = FunctionDef(
                 ],
                 expr=None,
                 expr_func=None,
-            )
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         Expr(
             value=Call(
                 func=Attribute(
-                    value=Name(id="argument_parser", ctx=Load()),
+                    value=Name(
+                        id="argument_parser", ctx=Load(), lineno=None, col_offset=None
+                    ),
                     attr="add_argument",
                     ctx=Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
                 args=[set_value("--reduce")],
                 keywords=[
@@ -961,14 +1133,20 @@ argparse_func_torch_nn_l1loss_ast: FunctionDef = FunctionDef(
                 ],
                 expr=None,
                 expr_func=None,
-            )
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         Expr(
             value=Call(
                 func=Attribute(
-                    value=Name(id="argument_parser", ctx=Load()),
+                    value=Name(
+                        id="argument_parser", ctx=Load(), lineno=None, col_offset=None
+                    ),
                     attr="add_argument",
                     ctx=Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
                 args=[set_value("--reduction")],
                 keywords=[
@@ -983,14 +1161,20 @@ argparse_func_torch_nn_l1loss_ast: FunctionDef = FunctionDef(
                 ],
                 expr=None,
                 expr_func=None,
-            )
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         Expr(
             value=Call(
                 func=Attribute(
-                    value=Name(id="argument_parser", ctx=Load()),
+                    value=Name(
+                        id="argument_parser", ctx=Load(), lineno=None, col_offset=None
+                    ),
                     attr="add_argument",
                     ctx=Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
                 args=[set_value("--__constants__")],
                 keywords=[
@@ -1001,7 +1185,9 @@ argparse_func_torch_nn_l1loss_ast: FunctionDef = FunctionDef(
                 ],
                 expr=None,
                 expr_func=None,
-            )
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         Return(value=Name(id="argument_parser", ctx=Load())),
     ],
@@ -1019,18 +1205,26 @@ argparse_add_argument_expr: Expr = Expr(
     Call(
         args=[set_value("--byo")],
         func=Attribute(
-            Name("argument_parser", Load()),
+            Name("argument_parser", Load(), lineno=None, col_offset=None),
             "add_argument",
             Load(),
+            lineno=None,
+            col_offset=None,
         ),
         keywords=[
-            keyword(arg="type", value=Name("str", Load()), identifier=None),
+            keyword(
+                arg="type",
+                value=Name("str", Load(), lineno=None, col_offset=None),
+                identifier=None,
+            ),
             keyword(arg="action", value=set_value("append"), identifier=None),
             keyword(arg="required", value=set_value(True), identifier=None),
         ],
         expr=None,
         expr_func=None,
-    )
+    ),
+    lineno=None,
+    col_offset=None,
 )
 
 __all__ = [

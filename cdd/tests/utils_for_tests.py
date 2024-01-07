@@ -371,7 +371,9 @@ def reindent_docstring(node, indent_level=1, smart=True):
                         )
                     ),
                 )
-            )
+            ),
+            lineno=None,
+            col_offset=None,
         )
     return node
 
@@ -396,7 +398,7 @@ def replace_docstring(node, new_docstring):
         and isinstance(node.body[0], Expr)
         and isinstance(get_value(get_value(node.body[0])), str)
     )
-    node.body[0] = Expr(value=set_value(new_docstring))
+    node.body[0] = Expr(value=set_value(new_docstring), lineno=None, col_offset=None)
     return node
 
 

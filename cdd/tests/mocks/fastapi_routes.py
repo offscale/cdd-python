@@ -70,6 +70,8 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
                 left=Name(id="config", ctx=Load(), lineno=None, col_offset=None),
                 ops=[Is()],
                 comparators=[set_value(None)],
+                lineno=None,
+                col_offset=None,
             ),
             body=[
                 Return(
@@ -105,6 +107,8 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
                                 identifier=None,
                             ),
                         ],
+                        lineno=None,
+                        col_offset=None,
                     )
                 )
             ],
@@ -124,6 +128,8 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
                         identifier=None,
                     ),
                 ],
+                lineno=None,
+                col_offset=None,
             )
         ),
     ],
@@ -133,6 +139,8 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
                 value=Name(id="app", ctx=Load(), lineno=None, col_offset=None),
                 attr="post",
                 ctx=Load(),
+                lineno=None,
+                col_offset=None,
             ),
             args=[set_value("/api/config")],
             keywords=[
@@ -175,6 +183,8 @@ fastapi_post_create_config_async_func = AsyncFunctionDef(
                     identifier=None,
                 ),
             ],
+            lineno=None,
+            col_offset=None,
         )
     ],
     type_params=[],

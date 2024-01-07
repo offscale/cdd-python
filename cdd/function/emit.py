@@ -93,7 +93,7 @@ def function(
             lambda param: set_arg(
                 annotation=(
                     (
-                        Name(param[1]["typ"], Load())
+                        Name(param[1]["typ"], Load(), lineno=None, col_offset=None)
                         if param[1]["typ"] in simple_types
                         else ast_parse_fix(param[1]["typ"])
                     )
@@ -177,7 +177,9 @@ def function(
                                 indent_level=indent_level,
                                 word_wrap=word_wrap,
                             )
-                        )
+                        ),
+                        lineno=None,
+                        col_offset=None,
                     ),
                     *(
                         internal_body[:-1]

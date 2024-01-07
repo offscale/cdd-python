@@ -69,6 +69,8 @@ class TestEmitterUtils(TestCase):
                             ),
                             "add_argument",
                             Load(),
+                            lineno=None,
+                            col_offset=None,
                         ),
                         keywords=[
                             keyword(
@@ -90,7 +92,11 @@ class TestEmitterUtils(TestCase):
                         ],
                         expr=None,
                         expr_func=None,
-                    )
+                        lineno=None,
+                        col_offset=None,
+                    ),
+                    lineno=None,
+                    col_offset=None,
                 )
             ),
         )

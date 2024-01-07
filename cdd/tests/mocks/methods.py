@@ -52,14 +52,20 @@ return_ast: Return = Return(
                     Name("np", Load(), lineno=None, col_offset=None),
                     "empty",
                     Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
                 keywords=[],
                 expr=None,
                 expr_func=None,
+                lineno=None,
+                col_offset=None,
             )
         ]
         * 2,
         expr=None,
+        lineno=None,
+        col_offset=None,
     ),
     expr=None,
 )
@@ -207,14 +213,20 @@ returns_subscript: Subscript = Subscript(
                                         ),
                                         "data",
                                         Load(),
+                                        lineno=None,
+                                        col_offset=None,
                                     ),
                                     "Dataset",
                                     Load(),
+                                    lineno=None,
+                                    col_offset=None,
                                 )
                             ]
                             * 2,
                             Load(),
                             expr=None,
+                            lineno=None,
+                            col_offset=None,
                         )
                     ),
                     Load(),
@@ -230,11 +242,15 @@ returns_subscript: Subscript = Subscript(
                                     Name("np", Load(), lineno=None, col_offset=None),
                                     "ndarray",
                                     Load(),
+                                    lineno=None,
+                                    col_offset=None,
                                 )
                             ]
                             * 2,
                             Load(),
                             expr=None,
+                            lineno=None,
+                            col_offset=None,
                         )
                     ),
                     Load(),
@@ -243,6 +259,8 @@ returns_subscript: Subscript = Subscript(
                 ),
             ],
             Load(),
+            lineno=None,
+            col_offset=None,
         )
     ),
     Load(),
@@ -257,7 +275,7 @@ class_with_method_and_body_types_ast: ClassDef = fix_missing_locations(
         bases=[Name("object", Load(), lineno=None, col_offset=None)],
         keywords=[],
         body=[
-            Expr(set_value(" C class (mocked!) ")),
+            Expr(set_value(" C class (mocked!) "), lineno=None, col_offset=None),
             FunctionDef(
                 name="function_name",
                 args=arguments(
@@ -292,6 +310,8 @@ class_with_method_and_body_types_ast: ClassDef = fix_missing_locations(
                                         elts=list(map(set_value, ("np", "tf"))),
                                         ctx=Load(),
                                         expr=None,
+                                        lineno=None,
+                                        col_offset=None,
                                     )
                                 ),
                                 Load(),
@@ -324,7 +344,9 @@ class_with_method_and_body_types_ast: ClassDef = fix_missing_locations(
                     Expr(
                         set_value(
                             docstring_no_type_no_default_str,
-                        )
+                        ),
+                        lineno=None,
+                        col_offset=None,
                     ),
                     Expr(
                         Call(
@@ -339,7 +361,11 @@ class_with_method_and_body_types_ast: ClassDef = fix_missing_locations(
                             keywords=[],
                             expr=None,
                             expr_func=None,
-                        )
+                            lineno=None,
+                            col_offset=None,
+                        ),
+                        lineno=None,
+                        col_offset=None,
                     ),
                     If(
                         test=set_value(True),
@@ -353,7 +379,11 @@ class_with_method_and_body_types_ast: ClassDef = fix_missing_locations(
                                     keywords=[],
                                     expr=None,
                                     expr_func=None,
-                                )
+                                    lineno=None,
+                                    col_offset=None,
+                                ),
+                                lineno=None,
+                                col_offset=None,
                             ),
                             Return(
                                 value=set_value(5),
@@ -374,16 +404,22 @@ class_with_method_and_body_types_ast: ClassDef = fix_missing_locations(
                                         ),
                                         "empty",
                                         Load(),
+                                        lineno=None,
+                                        col_offset=None,
                                     ),
                                     args=[set_value(0)],
                                     keywords=[],
                                     expr=None,
                                     expr_func=None,
+                                    lineno=None,
+                                    col_offset=None,
                                 )
                             ]
                             * 2,
                             ctx=Load(),
                             expr=None,
+                            lineno=None,
+                            col_offset=None,
                         ),
                         expr=None,
                     ),
@@ -409,12 +445,14 @@ class_with_method_and_body_types_ast: ClassDef = fix_missing_locations(
 
 class_with_method_ast: ClassDef = fix_missing_locations(
     ClassDef(
-        bases=[Name("object", Load())],
+        bases=[Name("object", Load(), lineno=None, col_offset=None)],
         body=[
             Expr(
                 set_value(
                     " C class (mocked!) ",
-                )
+                ),
+                lineno=None,
+                col_offset=None,
             ),
             FunctionDef(
                 args=arguments(
@@ -440,7 +478,9 @@ class_with_method_ast: ClassDef = fix_missing_locations(
                             emit_separating_tabs(
                                 indent(docstring_no_default_doc_wrapped_str, tab * 2), 2
                             )
-                        )
+                        ),
+                        lineno=None,
+                        col_offset=None,
                     ),
                     return_ast,
                 ],
@@ -467,12 +507,14 @@ class_with_method_ast: ClassDef = fix_missing_locations(
 
 class_with_method_types_ast: ClassDef = fix_missing_locations(
     ClassDef(
-        bases=[Name("object", Load())],
+        bases=[Name("object", Load(), lineno=None, col_offset=None)],
         body=[
             Expr(
                 set_value(
                     " C class (mocked!) ",
-                )
+                ),
+                lineno=None,
+                col_offset=None,
             ),
             FunctionDef(
                 args=arguments(
@@ -510,6 +552,8 @@ class_with_method_types_ast: ClassDef = fix_missing_locations(
                                             ),
                                         ],
                                         expr=None,
+                                        lineno=None,
+                                        col_offset=None,
                                     )
                                 ),
                                 Load(),
@@ -543,7 +587,11 @@ class_with_method_types_ast: ClassDef = fix_missing_locations(
                     arg=None,
                 ),
                 body=[
-                    Expr(set_value(indent(docstring_no_type_no_default_str, tab * 2))),
+                    Expr(
+                        set_value(indent(docstring_no_type_no_default_str, tab * 2)),
+                        lineno=None,
+                        col_offset=None,
+                    ),
                     return_ast,
                 ],
                 decorator_list=[],
@@ -568,12 +616,14 @@ class_with_method_types_ast: ClassDef = fix_missing_locations(
 )
 
 class_with_optional_arg_method_ast: ClassDef = ClassDef(
-    bases=[Name("object", Load())],
+    bases=[Name("object", Load(), lineno=None, col_offset=None)],
     body=[
         Expr(
             set_value(
                 " C class (mocked!) ",
-            )
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         FunctionDef(
             args=arguments(
@@ -611,6 +661,8 @@ class_with_optional_arg_method_ast: ClassDef = ClassDef(
                                                 )
                                             ),
                                             expr=None,
+                                            lineno=None,
+                                            col_offset=None,
                                         )
                                     ),
                                     Load(),
@@ -634,7 +686,11 @@ class_with_optional_arg_method_ast: ClassDef = ClassDef(
                 arg=None,
             ),
             body=[
-                Expr(set_value(indent(docstring_str, tab * 2))),
+                Expr(
+                    set_value(indent(docstring_str, tab * 2)),
+                    lineno=None,
+                    col_offset=None,
+                ),
                 return_ast,
             ],
             decorator_list=[],
@@ -693,15 +749,28 @@ function_adder_ast: FunctionDef = FunctionDef(
                 ":type b: ```int```\n\n    "
                 ":return: Aggregated summation of `a` and `b`.\n    "
                 ":rtype: ```int```\n    ",
-            )
+            ),
+            lineno=None,
+            col_offset=None,
         ),
         Return(
             value=Call(
-                func=Attribute(Name("operator", Load()), "add", Load()),
-                args=[Name("a", Load()), Name("b", Load())],
+                func=Attribute(
+                    Name("operator", Load(), lineno=None, col_offset=None),
+                    "add",
+                    Load(),
+                    lineno=None,
+                    col_offset=None,
+                ),
+                args=[
+                    Name("a", Load(), lineno=None, col_offset=None),
+                    Name("b", Load(), lineno=None, col_offset=None),
+                ],
                 keywords=[],
                 expr=None,
                 expr_func=None,
+                lineno=None,
+                col_offset=None,
             ),
             expr=None,
         ),
@@ -734,7 +803,7 @@ function_default_complex_default_arg_ast: FunctionDef = FunctionDef(
         ],
         defaults=[
             set_value("mnist"),
-            Name("stdout", Load()),
+            Name("stdout", Load(), lineno=None, col_offset=None),
         ],
         kw_defaults=[],
         kwarg=None,
@@ -793,7 +862,7 @@ method_complex_args_variety_ast: FunctionDef = FunctionDef(
             set_arg(
                 arg="K",
                 annotation=Subscript(
-                    Name("Literal", Load()),
+                    Name("Literal", Load(), lineno=None, col_offset=None),
                     Tuple(
                         elts=list(
                             map(
@@ -806,6 +875,8 @@ method_complex_args_variety_ast: FunctionDef = FunctionDef(
                         ),
                         ctx=Load(),
                         expr=None,
+                        lineno=None,
+                        col_offset=None,
                     ),
                     Load(),
                     lineno=None,
@@ -819,7 +890,7 @@ method_complex_args_variety_ast: FunctionDef = FunctionDef(
             None,
             None,
             set_value("~/tensorflow_datasets"),
-            Name("stdout", Load()),
+            Name("stdout", Load(), lineno=None, col_offset=None),
         ],
         kwarg=set_arg("kwargs"),
         defaults=[],
@@ -837,14 +908,16 @@ method_complex_args_variety_ast: FunctionDef = FunctionDef(
                 ":param writer: IO object to write out to\n\n    "
                 ":param **kwargs: additional keyword arguments\n\n    "
                 ":return: backend engine\n    ",
-            )
+            ),
+            lineno=None,
+            col_offset=None,
         ),
-        Return(value=Name("K", Load()), expr=None),
+        Return(value=Name("K", Load(), lineno=None, col_offset=None), expr=None),
     ],
     decorator_list=[],
     type_params=[],
     returns=Subscript(
-        Name("Literal", Load()),
+        Name("Literal", Load(), lineno=None, col_offset=None),
         Tuple(
             elts=list(
                 map(
@@ -857,6 +930,8 @@ method_complex_args_variety_ast: FunctionDef = FunctionDef(
             ),
             ctx=Load(),
             expr=None,
+            lineno=None,
+            col_offset=None,
         ),
         Load(),
         lineno=None,
@@ -930,30 +1005,46 @@ function_google_tf_ops_losses__safe_mean_ast: FunctionDef = FunctionDef(
         vararg=None,
     ),
     body=[
-        Expr(value=set_value(docstring_google_tf_ops_losses__safe_mean_str)),
+        Expr(
+            value=set_value(docstring_google_tf_ops_losses__safe_mean_str),
+            lineno=None,
+            col_offset=None,
+        ),
         Assign(
-            targets=[Name(id="total_loss", ctx=Store())],
+            targets=[Name(id="total_loss", ctx=Store(), lineno=None, col_offset=None)],
             value=Call(
                 func=Attribute(
-                    value=Name(id="math_ops", ctx=Load()), attr="reduce_sum", ctx=Load()
+                    value=Name(id="math_ops", ctx=Load(), lineno=None, col_offset=None),
+                    attr="reduce_sum",
+                    ctx=Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
-                args=[Name(id="losses", ctx=Load())],
+                args=[Name(id="losses", ctx=Load(), lineno=None, col_offset=None)],
                 keywords=[],
+                lineno=None,
+                col_offset=None,
             ),
             **maybe_type_comment
         ),
         Return(
             value=Call(
                 func=Attribute(
-                    value=Name(id="math_ops", ctx=Load()), attr="div_no_nan", ctx=Load()
+                    value=Name(id="math_ops", ctx=Load(), lineno=None, col_offset=None),
+                    attr="div_no_nan",
+                    ctx=Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
                 args=[
-                    Name(id="total_loss", ctx=Load()),
-                    Name(id="num_present", ctx=Load()),
+                    Name(id="total_loss", ctx=Load(), lineno=None, col_offset=None),
+                    Name(id="num_present", ctx=Load(), lineno=None, col_offset=None),
                 ],
                 keywords=[
                     keyword(arg="name", value=set_value("value"), identifier=None)
                 ],
+                lineno=None,
+                col_offset=None,
             )
         ),
     ],
@@ -996,22 +1087,36 @@ function_google_tf_mean_squared_error_ast: FunctionDef = FunctionDef(
             set_value(None),
             Attribute(
                 value=Attribute(
-                    value=Name(id="ops", ctx=Load()), attr="GraphKeys", ctx=Load()
+                    value=Name(id="ops", ctx=Load(), lineno=None, col_offset=None),
+                    attr="GraphKeys",
+                    ctx=Load(),
+                    lineno=None,
+                    col_offset=None,
                 ),
                 attr="LOSSES",
                 ctx=Load(),
+                lineno=None,
+                col_offset=None,
             ),
             Attribute(
-                value=Name(id="Reduction", ctx=Load()),
+                value=Name(id="Reduction", ctx=Load(), lineno=None, col_offset=None),
                 attr="SUM_BY_NONZERO_WEIGHTS",
                 ctx=Load(),
+                lineno=None,
+                col_offset=None,
             ),
         ],
         vararg=None,
         kwarg=None,
         arg=None,
     ),
-    body=[Expr(value=set_value(docstring_google_tf_mean_squared_error_str))],
+    body=[
+        Expr(
+            value=set_value(docstring_google_tf_mean_squared_error_str),
+            lineno=None,
+            col_offset=None,
+        )
+    ],
     decorator_list=[],
 )
 
