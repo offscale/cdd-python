@@ -164,6 +164,7 @@ def main():
             "Programming Language :: Python :: 3.9",
             "Programming Language :: Python :: 3.10",
             "Programming Language :: Python :: 3.11",
+            "Programming Language :: Python :: 3.12",
             "Programming Language :: Python :: Implementation",
             "Programming Language :: Python :: Implementation :: CPython",
             "Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator",
@@ -172,7 +173,6 @@ def main():
             "Topic :: Software Development :: Code Generators",
             "Topic :: Software Development :: Compilers",
             "Topic :: Software Development :: Pre-processors",
-            "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
         ],
         python_requires=">=3.6",
     )

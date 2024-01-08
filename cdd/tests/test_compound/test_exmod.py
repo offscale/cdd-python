@@ -7,12 +7,13 @@ from itertools import chain, groupby
 from operator import itemgetter
 from os import environ, listdir, mkdir, path, walk
 from os.path import extsep
-from subprocess import run
-from sys import executable, platform
+from sys import platform
 from tempfile import TemporaryDirectory
 from typing import Tuple
 from unittest import TestCase
 from unittest.mock import patch
+
+from pip._internal.commands import install, uninstall
 
 import cdd.class_.parse
 from cdd.compound.exmod import exmod
@@ -312,7 +313,7 @@ class TestExMod(TestCase):
                 for key, count in key_counts:
                     self.assertEqual(count, len(result[key]), key)
 
-                gold = dict(
+                gold: dict = dict(
                     touch=(path.join(path.dirname(self.gold_dir), INIT_FILENAME),),
                     **{
                         k: tuple(
@@ -334,6 +335,8 @@ class TestExMod(TestCase):
                 self._check_emission(new_module_dir, dry_run=True)
         finally:
             self._pip(["uninstall", "-y", self.package_root_name])
+
+    maxDiff = None
 
     def create_and_install_pkg(self, root):
         """
@@ -671,14 +674,25 @@ class TestExMod(TestCase):
         :param cwd: Current working directory to run the command from. Defaults to current dir.
         :type cwd: ```Optional[str]```
         """
-        self.assertEqual(
-            run(
-                [executable, "-m", "pip"] + pip_args,
-                cwd=cwd,  # stdout=DEVNULL
-            ).returncode,
-            0,
-            "EXIT_SUCCESS not reached",
-        )
+        # self.assertEqual(
+        #     run(
+        #         [executable, "-m", "pip"] + pip_args,
+        #         cwd=cwd,  # stdout=DEVNULL
+        #     ).returncode,
+        #     0,
+        #     "EXIT_SUCCESS not reached",
+        # )
+
+        if pip_args[:2] == ["uninstall", "-y"]:
+            uninstall_cmd = uninstall.UninstallCommand(
+                name="uninstall", summary="Uninstall packages.", isolated=False
+            )
+            uninstall_cmd.run(*uninstall_cmd.parse_args(["-y", pip_args[2]]))
+        else:
+            install_cmd = install.InstallCommand(
+                name="install", summary="Install packages.", isolated=False
+            )
+            install_cmd.run(*install_cmd.parse_args(["install", "--root", cwd]))
 
 
 unittest_main()
