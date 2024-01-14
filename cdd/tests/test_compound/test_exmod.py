@@ -7,13 +7,15 @@ from itertools import chain, groupby
 from operator import itemgetter
 from os import environ, listdir, mkdir, path, walk
 from os.path import extsep
-from sys import platform
+from subprocess import run
+from sys import platform, executable
 from tempfile import TemporaryDirectory
 from typing import Tuple
 from unittest import TestCase
 from unittest.mock import patch
 
 from pip._internal.commands import install, uninstall
+from pip._internal.utils.temp_dir import tempdir_registry, TempDirectory
 
 import cdd.class_.parse
 from cdd.compound.exmod import exmod
@@ -24,7 +26,7 @@ from cdd.shared.source_transformer import ast_parse, to_code
 from cdd.tests.mocks import imports_header
 from cdd.tests.mocks.classes import class_str
 from cdd.tests.mocks.exmod import setup_py_mock
-from cdd.tests.utils_for_tests import unittest_main
+from cdd.tests.utils_for_tests import unittest_main, InMemoryPip, in_mem_pip
 
 
 class TestExMod(TestCase):
@@ -37,6 +39,7 @@ class TestExMod(TestCase):
     grandchild_name: str = ""
     grandchild_dir: str = ""
     module_hierarchy = ()
+    pip: InMemoryPip
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -53,6 +56,7 @@ class TestExMod(TestCase):
             (cls.child_name, cls.child_dir),
             (cls.grandchild_name, cls.grandchild_dir),
         )
+        cls.pip = InMemoryPip()
 
     @staticmethod
     def normalise_double_paths(*dictionaries):
@@ -173,7 +177,7 @@ class TestExMod(TestCase):
 
                 self.assertListEqual(gen, gold)
         finally:
-            self._pip(["uninstall", "-y", self.package_root_name])
+            self.pip(["uninstall", "-y", self.package_root_name])
 
     def test_exmod_module_directory(self) -> None:
         """Tests `exmod` module whence directory"""
@@ -663,6 +667,9 @@ class TestExMod(TestCase):
                     )
                     self.assertDictEqual(gold_ir, gen_ir)
 
+    def test_in_mem_pip(self):
+        in_mem_pip()
+
     def _pip(self, pip_args, cwd=None):
         """
         Run `pip` with given args (and assert success).
@@ -687,12 +694,29 @@ class TestExMod(TestCase):
             uninstall_cmd = uninstall.UninstallCommand(
                 name="uninstall", summary="Uninstall packages.", isolated=False
             )
-            uninstall_cmd.run(*uninstall_cmd.parse_args(["-y", pip_args[2]]))
+            uninstall_cmd.main(pip_args)
+            return
+            # with tempdir_registry() as registry:
+            #     uninstall_cmd.tempdir_registry = registry
+            pp({"pip_args[2]": pip_args[2]})
+            option, args = uninstall_cmd.parse_args([pip_args[2]])
+            option.yes = True
+            option.require_venv = (
+                not environ.get("CI") or "GITHUB_RUN_ID" not in environ
+            )
+            uninstall_cmd.run(option, args)
         else:
             install_cmd = install.InstallCommand(
                 name="install", summary="Install packages.", isolated=False
             )
-            install_cmd.run(*install_cmd.parse_args(["install", "--root", cwd]))
+            pip_args[-1] = cwd if pip_args[-1] == "." else pip_args[-1]
+            install_cmd.main(pip_args + ["--root", cwd])
+            import pip.tests.lib
+
+            pip.tests.lib.PipTestEnvironment
+            # options, args = install_cmd.parse_args(["."])
+            # options.root = cwd
+            # install_cmd.run(options, args)
 
 
 unittest_main()
