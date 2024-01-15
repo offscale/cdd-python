@@ -139,8 +139,6 @@ class TestParseClass(TestCase):
         )
         self.assertDictEqual(parsed_ir, class_google_keras_tensorboard_ir)
 
-    maxDiff = None
-
     def test_from_class_and_function_in_memory(self) -> None:
         """
         Tests that the parser can combine the outer class docstring + structure

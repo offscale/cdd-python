@@ -6,6 +6,7 @@ from io import StringIO
 from operator import attrgetter
 from os import path
 from os.path import extsep
+from typing import Tuple
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
@@ -63,7 +64,7 @@ class TestAstCstUtils(TestCase):
 
     def test_find_cst_at_ast_finds_all_functions(self) -> None:
         """Test that `find_cst_at_ast` can find the CST for all functions"""
-        funcs = tuple(
+        funcs: Tuple[FunctionDef, ...] = tuple(
             filter(rpartial(isinstance, FunctionDef), walk(self.ast_mod)),
         )
         for func in funcs:
@@ -74,7 +75,7 @@ class TestAstCstUtils(TestCase):
 
     def test_find_cst_at_ast_finds_class(self) -> None:
         """Test that `find_cst_at_ast` can find the CST for all functions"""
-        class_def = next(
+        class_def: ClassDef = next(
             filter(rpartial(isinstance, ClassDef), walk(self.ast_mod)),
         )
         cst_idx, cst_node = find_cst_at_ast(cstify_cst, class_def)

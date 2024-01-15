@@ -132,7 +132,7 @@ def sqlalchemy(class_def, parse_original_whitespace=False):
     """
 
     if not isinstance(class_def, ClassDef):
-        class_def = (
+        class_def: ClassDef = (
             next(filter(rpartial(isinstance, ClassDef), class_def.body))
             if isinstance(class_def, Module)
             else ast.parse(getsource(class_def)).body[0]

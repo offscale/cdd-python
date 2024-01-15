@@ -3,31 +3,26 @@ Shared utility functions used by many tests
 """
 
 import ast
-import os
-import pathlib
-import sys
 from ast import Expr
 from copy import deepcopy
 from functools import partial
 from importlib import import_module
 from importlib.abc import Loader
 from importlib.util import module_from_spec, spec_from_loader
-from io import StringIO
 from itertools import takewhile
 from operator import add
 from os import path
 from os.path import extsep
 from sys import modules
 from tempfile import NamedTemporaryFile
-from typing import Optional, Union
+from typing import Optional
 from unittest import main
 from unittest.mock import MagicMock, patch
-from pip._internal.cli.main import main as pip_entry_point
 
 from cdd.shared import source_transformer
 from cdd.shared.ast_utils import cmp_ast, get_value, set_value
 from cdd.shared.docstring_utils import TOKENS
-from cdd.shared.pure_utils import PY3_8, count_iter_items, identity, reindent, tab, pp
+from cdd.shared.pure_utils import PY3_8, count_iter_items, identity, reindent, tab
 
 black = (
     import_module("black")
@@ -436,48 +431,6 @@ def remove_args_from_docstring(doc_str):
             stack.append(line)
             in_args = False
     return "{}{}".format("\n".join(stack), "")  # ("\n" if stack[-1] == "" else "")
-
-
-# Next two classes taken from pip/tests/lib/__init__.py
-
-
-class InMemoryPipResult:
-    def __init__(self, returncode: int, stdout: str) -> None:
-        self.returncode = returncode
-        self.stdout = stdout
-
-
-class InMemoryPip:
-    def pip(self, *args: Union[str, pathlib.Path]) -> InMemoryPipResult:
-        orig_stdout = sys.stdout
-        stdout = StringIO()
-        sys.stdout = stdout
-        try:
-            returncode = pip_entry_point(list(map(os.fspath, args)))
-        except SystemExit as e:
-            if isinstance(e.code, int):
-                returncode = e.code
-            elif e.code:
-                returncode = 1
-            else:
-                returncode = 0
-        finally:
-            sys.stdout = orig_stdout
-        return InMemoryPipResult(returncode, stdout.getvalue())
-
-
-def in_mem_pip(*pip_args):
-    in_memory_pip = InMemoryPip()
-    result = in_memory_pip.pip()
-
-    out = frozenset(x.stdout for x in results)
-    ret = frozenset(x.returncode for x in results)
-    pp({"results": results, "out": frozenset(out), "ret": frozenset(ret)})
-
-    msg = '"pip --help" != "pip help" != "pip"'
-    assert len(set(out)) == 1, "output of: " + msg
-    assert sum(ret) == 0, "exit codes of: " + msg
-    assert all(len(o) > 0 for o in out)
 
 
 __all__ = [

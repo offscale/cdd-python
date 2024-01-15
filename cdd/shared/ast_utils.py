@@ -10,7 +10,6 @@ from ast import (
     Assign,
     AsyncFunctionDef,
     Attribute,
-    Bytes,
     Call,
     ClassDef,
     Constant,
@@ -44,6 +43,7 @@ from inspect import isclass, isfunction
 from itertools import chain, filterfalse, groupby
 from json import dumps
 from operator import attrgetter, contains, inv, neg, not_, pos
+from typing import Generator, Optional
 
 from yaml import safe_dump_all
 
@@ -72,10 +72,10 @@ FALLBACK_ARGPARSE_TYP = Name("str", Load(), lineno=None, col_offset=None)
 if PY_GTE_3_8:
     from ast import Del as _Del
 
-    Num = Str = NameConstant = _Del
+    Bytes = NameConstant = Num = Str = _Del
     del _Del
 else:
-    from ast import NameConstant, Num, Str
+    from ast import Bytes, NameConstant, Num, Str
 
 
 def Dict_to_dict(d):
@@ -333,7 +333,9 @@ def find_ast_type(node, node_name=None, of_type=ClassDef):
     :rtype: ```AST```
     """
     if isinstance(node, Module):
-        it = filter(rpartial(isinstance, of_type), node.body)
+        it: Optional[Generator[of_type]] = filter(
+            rpartial(isinstance, of_type), node.body
+        )
         if node_name is not None:
             return next(
                 filter(
@@ -341,7 +343,7 @@ def find_ast_type(node, node_name=None, of_type=ClassDef):
                     it,
                 )
             )
-        matching_nodes = tuple(it)
+        matching_nodes = tuple(it)  # type: tuple[of_type, ...]
         if len(matching_nodes) > 1:  # We could convert every one I guess?
             raise NotImplementedError()
         elif matching_nodes:

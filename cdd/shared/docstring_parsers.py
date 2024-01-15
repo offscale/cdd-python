@@ -23,7 +23,14 @@ from typing import *  # noqa
 from typing import Dict, List, Tuple, Union
 
 if sys.version_info[:2] < (3, 8):
+    from ast import Bytes, NameConstant, Num, Str
+
     from typing_extensions import *
+else:
+    from ast import Del as _Del
+
+    Bytes = NameConstant = Num = Str = _Del
+    del _Del
 
 from cdd.docstring.utils.emit_utils import interpolate_defaults
 from cdd.docstring.utils.parse_utils import parse_adhoc_doc_for_typ
@@ -606,9 +613,7 @@ def _infer_default(_param, infer_type):
     :param infer_type: Whether to try inferring the typ (from the default)
     :type infer_type: ```bool```
     """
-    if isinstance(
-        _param["default"], (ast.Str, ast.Bytes, ast.Num, ast.Constant, ast.NameConstant)
-    ):
+    if isinstance(_param["default"], (Str, Bytes, Num, ast.Constant, NameConstant)):
         _param["default"] = get_value(_param["default"])
     if _param.get("default", False) in none_types:
         _param["default"] = NoneStr

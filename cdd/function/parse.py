@@ -3,14 +3,14 @@ Function parser
 """
 
 import ast
-from ast import AnnAssign, Assign, FunctionDef, get_docstring
+from ast import AST, AnnAssign, Assign, FunctionDef, get_docstring
 from collections import OrderedDict
 from copy import deepcopy
 from functools import partial
 from inspect import getsource
 from itertools import cycle, filterfalse, islice
 from types import FunctionType
-from typing import Optional, cast
+from typing import List, Optional, cast
 
 import cdd.docstring.parse
 import cdd.shared.docstring_parsers
@@ -84,7 +84,10 @@ def function(
                 if parse_original_whitespace
                 else ast.get_docstring(parsed_source, clean=False)
             ),
-            "body": list(filterfalse(rpartial(isinstance, (AnnAssign, Assign)), body)),
+            "body": cast(
+                List[AST],
+                list(filterfalse(rpartial(isinstance, (AnnAssign, Assign)), body)),
+            ),
             "from_name": parsed_source.name,
             "from_type": "cls",
         }

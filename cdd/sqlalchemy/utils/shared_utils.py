@@ -5,7 +5,7 @@ Shared utility functions for SQLalchemy
 import ast
 from ast import Call, Expr, Load, Name, Subscript, Tuple, keyword
 from operator import attrgetter
-from typing import cast
+from typing import Optional, cast
 
 import cdd.compound.openapi.utils.emit_utils
 from cdd.shared.ast_utils import NoneStr, get_value, set_value
@@ -65,7 +65,7 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
     elif _param["typ"].startswith("List["):
         after_generic = _param["typ"][len("List[") :]
         if "struct" in after_generic:  # "," in after_generic or
-            name = Name(id="JSON", ctx=Load(), lineno=None, col_offset=None)
+            name: Name = Name(id="JSON", ctx=Load(), lineno=None, col_offset=None)
         else:
             list_typ: Expr = cast(Expr, ast.parse(_param["typ"]).body[0])
             assert isinstance(
@@ -78,7 +78,7 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
             ), "Expected `Subscript` got `{type_name}`".format(
                 type_name=type(list_typ.value).__name__
             )
-            name = next(
+            name: Optional[Name] = next(
                 filter(rpartial(isinstance, Name), ast.walk(list_typ.value.slice)), None
             )
             assert name is not None, "Could not find a type in {!r}".format(
@@ -162,7 +162,7 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
             )
         )
     else:
-        type_name = (
+        type_name: str = (
             x_typ_sql["type"]
             if "type" in x_typ_sql
             else cdd.compound.openapi.utils.emit_utils.typ2column_type.get(

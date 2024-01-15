@@ -3,6 +3,7 @@ Tests for `cdd.emit.class_`
 """
 
 from ast import FunctionDef
+from typing import cast
 from unittest import TestCase
 
 import cdd.argparse_function.emit
@@ -83,13 +84,16 @@ class TestEmitClass(TestCase):
         """Tests if this can make the roundtrip from a full function to a full function"""
         annotate_ancestry(class_with_method_and_body_types_ast)
 
-        function_def = reindent_docstring(
-            next(
-                filter(
-                    rpartial(isinstance, FunctionDef),
-                    class_with_method_and_body_types_ast.body,
+        function_def: FunctionDef = cast(
+            FunctionDef,
+            reindent_docstring(
+                next(
+                    filter(
+                        rpartial(isinstance, FunctionDef),
+                        class_with_method_and_body_types_ast.body,
+                    )
                 )
-            )
+            ),
         )
 
         ir: IntermediateRepr = cdd.function.parse.function(

@@ -2,7 +2,6 @@
 
 import ast
 import pickle
-from _ast import Subscript
 from ast import (
     AnnAssign,
     Assign,
@@ -26,6 +25,7 @@ from ast import (
     Num,
     Store,
     Str,
+    Subscript,
     Tuple,
     alias,
     arg,

@@ -4,6 +4,7 @@
 
 import ast
 from ast import (
+    AST,
     AnnAssign,
     Assign,
     ClassDef,
@@ -17,7 +18,7 @@ from collections import OrderedDict, deque
 from functools import partial
 from itertools import filterfalse
 from operator import setitem
-from typing import Optional, cast
+from typing import List, Optional, cast
 
 import cdd.docstring.parse
 import cdd.function.parse
@@ -217,8 +218,9 @@ def class_(
                     if parse_original_whitespace
                     else get_docstring(class_def, clean=False)
                 ),
-                "body": list(
-                    filterfalse(rpartial(isinstance, (AnnAssign, Assign)), body)
+                "body": cast(
+                    List[AST],
+                    list(filterfalse(rpartial(isinstance, (AnnAssign, Assign)), body)),
                 ),
                 "from_name": class_def.name,
                 "from_type": "cls",
@@ -314,11 +316,14 @@ def _class_from_memory(
             if parse_original_whitespace
             else get_docstring(parsed_class, clean=False)
         ),
-        "body": list(
-            filterfalse(
-                rpartial(isinstance, (AnnAssign, Assign)),
-                parsed_class.body,
-            )
+        "body": cast(
+            List[AST],
+            list(
+                filterfalse(
+                    rpartial(isinstance, (AnnAssign, Assign)),
+                    parsed_class.body,
+                )
+            ),
         ),
         "from_name": cast(str, class_name),
         "from_type": "cls",

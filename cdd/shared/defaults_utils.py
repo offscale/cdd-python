@@ -13,6 +13,7 @@ from operator import contains, eq
 from typing import Dict
 
 from cdd.shared.pure_utils import (
+    PY_GTE_3_8,
     PY_GTE_3_9,
     count_iter_items,
     location_within,
@@ -21,6 +22,11 @@ from cdd.shared.pure_utils import (
     simple_types,
 )
 from cdd.shared.types import IntermediateRepr
+
+if PY_GTE_3_8:
+    from ast import Del as Str
+else:
+    from ast import Str
 
 NoneStr = "```(None)```" if PY_GTE_3_9 else "```None```"
 DEFAULTS_TO_VARIANTS = (  # could do a whole r"[dD]efault[s]?\s+[value is|to|is|:]" but this suffices for now
@@ -74,7 +80,7 @@ def needs_quoting(typ):
 
     return any(
         filter(
-            lambda node: isinstance(node, ast.Str)
+            lambda node: isinstance(node, Str)
             or isinstance(node, ast.Constant)
             and type(node.value).__name__ == "str"
             or isinstance(node, ast.Name)

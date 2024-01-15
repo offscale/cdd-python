@@ -1,5 +1,6 @@
 """ Tests for exmod subcommand """
 
+import sys
 from ast import Assign, ClassDef, ImportFrom, List, Load, Module, Name, Store, alias
 from functools import partial
 from io import StringIO
@@ -8,25 +9,42 @@ from operator import itemgetter
 from os import environ, listdir, mkdir, path, walk
 from os.path import extsep
 from subprocess import run
-from sys import platform, executable
+from sys import executable, platform
 from tempfile import TemporaryDirectory
-from typing import Tuple
+from typing import Tuple, Union
 from unittest import TestCase
 from unittest.mock import patch
-
-from pip._internal.commands import install, uninstall
-from pip._internal.utils.temp_dir import tempdir_registry, TempDirectory
 
 import cdd.class_.parse
 from cdd.compound.exmod import exmod
 from cdd.shared.ast_utils import maybe_type_comment, set_value
 from cdd.shared.pkg_utils import relative_filename
-from cdd.shared.pure_utils import ENCODING, INIT_FILENAME, pp, rpartial, unquote
+from cdd.shared.pure_utils import (
+    ENCODING,
+    INIT_FILENAME,
+    PY_GTE_3_8,
+    pp,
+    rpartial,
+    unquote,
+)
 from cdd.shared.source_transformer import ast_parse, to_code
 from cdd.tests.mocks import imports_header
 from cdd.tests.mocks.classes import class_str
 from cdd.tests.mocks.exmod import setup_py_mock
-from cdd.tests.utils_for_tests import unittest_main, InMemoryPip, in_mem_pip
+from cdd.tests.utils_for_tests import unittest_main
+
+if PY_GTE_3_8:
+    from typing import TypedDict
+else:
+    from typing_extensions import TypedDict
+
+# IntOrTupleOfStr = TypeVar("IntOrTupleOfStr", Tuple[str], int)
+
+
+class ExmodOutput(TypedDict):
+    mkdir: Union[Tuple[str], int]
+    touch: Union[Tuple[str], int]
+    write: Union[Tuple[str], int]
 
 
 class TestExMod(TestCase):
@@ -38,8 +56,7 @@ class TestExMod(TestCase):
     child_dir: str = ""
     grandchild_name: str = ""
     grandchild_dir: str = ""
-    module_hierarchy = ()
-    pip: InMemoryPip
+    module_hierarchy = ()  # type: Tuple[Tuple[str, str], Tuple[str, str], Tuple[str, str]]
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -56,7 +73,6 @@ class TestExMod(TestCase):
             (cls.child_name, cls.child_dir),
             (cls.grandchild_name, cls.grandchild_dir),
         )
-        cls.pip = InMemoryPip()
 
     @staticmethod
     def normalise_double_paths(*dictionaries):
@@ -99,6 +115,7 @@ class TestExMod(TestCase):
                     no_word_wrap=None,
                     dry_run=False,
                 )
+                input(new_module_dir)
                 self._check_emission(new_module_dir)
         finally:
             # sys.path.remove(existent_module_dir)
@@ -177,7 +194,7 @@ class TestExMod(TestCase):
 
                 self.assertListEqual(gen, gold)
         finally:
-            self.pip(["uninstall", "-y", self.package_root_name])
+            self._pip(["uninstall", "-y", self.package_root_name])
 
     def test_exmod_module_directory(self) -> None:
         """Tests `exmod` module whence directory"""
@@ -249,7 +266,7 @@ class TestExMod(TestCase):
                         no_word_wrap=None,
                         dry_run=True,
                     )
-                    r = f.getvalue()
+                    r: str = f.getvalue()
 
                 result = dict(
                     map(
@@ -294,7 +311,7 @@ class TestExMod(TestCase):
                             key=itemgetter(0),
                         ),
                     )
-                )
+                )  # type: ExmodOutput[str]
 
                 all_tests_running: bool = len(result["mkdir"]) != 7
                 pp(
@@ -304,11 +321,7 @@ class TestExMod(TestCase):
                     }
                 )
 
-                key_counts: Tuple[
-                    Tuple[str, int],
-                    Tuple[str, int],
-                    Tuple[str, int],
-                ] = (
+                key_counts: ExmodOutput = (
                     (("mkdir", 7), ("touch", 3), ("write", 1))
                     if all_tests_running
                     else (("mkdir", 7), ("touch", 3), ("write", 1))
@@ -317,7 +330,7 @@ class TestExMod(TestCase):
                 for key, count in key_counts:
                     self.assertEqual(count, len(result[key]), key)
 
-                gold: dict = dict(
+                gold: ExmodOutput = ExmodOutput(
                     touch=(path.join(path.dirname(self.gold_dir), INIT_FILENAME),),
                     **{
                         k: tuple(
@@ -332,8 +345,10 @@ class TestExMod(TestCase):
                         }.items()
                     },
                 )
-                pp({"result": tuple(self.normalise_double_paths(result))})
-                pp({"gold  ": tuple(self.normalise_double_paths(gold))})
+                print("#result", file=sys.stderr)
+                pp(next(self.normalise_double_paths(result)))
+                print("#gold", file=sys.stderr)
+                pp(next(self.normalise_double_paths(gold)))
                 self.assertDictEqual(*self.normalise_double_paths(result, gold))
 
                 self._check_emission(new_module_dir, dry_run=True)
@@ -454,7 +469,9 @@ class TestExMod(TestCase):
                     ),
                 )
             )
-        mkdir(new_module_dir)
+        # mkdir(
+        #     new_module_dir
+        # )  # '/tmp/search_rootmnixv5hfsearch_path/search_rootmnixv5hfsearch_path'
         self._create_fs(existent_module_dir)
         self._pip(["install", "."], root)
         return existent_module_dir, new_module_dir
@@ -628,7 +645,7 @@ class TestExMod(TestCase):
                 :type _folder: ```str``
 
                 :return: Open IO
-                :rtype: ```open```
+                :rtype: ```TextIOWrapper```
                 """
                 return open(
                     path.join(
@@ -667,9 +684,6 @@ class TestExMod(TestCase):
                     )
                     self.assertDictEqual(gold_ir, gen_ir)
 
-    def test_in_mem_pip(self):
-        in_mem_pip()
-
     def _pip(self, pip_args, cwd=None):
         """
         Run `pip` with given args (and assert success).
@@ -681,42 +695,14 @@ class TestExMod(TestCase):
         :param cwd: Current working directory to run the command from. Defaults to current dir.
         :type cwd: ```Optional[str]```
         """
-        # self.assertEqual(
-        #     run(
-        #         [executable, "-m", "pip"] + pip_args,
-        #         cwd=cwd,  # stdout=DEVNULL
-        #     ).returncode,
-        #     0,
-        #     "EXIT_SUCCESS not reached",
-        # )
-
-        if pip_args[:2] == ["uninstall", "-y"]:
-            uninstall_cmd = uninstall.UninstallCommand(
-                name="uninstall", summary="Uninstall packages.", isolated=False
-            )
-            uninstall_cmd.main(pip_args)
-            return
-            # with tempdir_registry() as registry:
-            #     uninstall_cmd.tempdir_registry = registry
-            pp({"pip_args[2]": pip_args[2]})
-            option, args = uninstall_cmd.parse_args([pip_args[2]])
-            option.yes = True
-            option.require_venv = (
-                not environ.get("CI") or "GITHUB_RUN_ID" not in environ
-            )
-            uninstall_cmd.run(option, args)
-        else:
-            install_cmd = install.InstallCommand(
-                name="install", summary="Install packages.", isolated=False
-            )
-            pip_args[-1] = cwd if pip_args[-1] == "." else pip_args[-1]
-            install_cmd.main(pip_args + ["--root", cwd])
-            import pip.tests.lib
-
-            pip.tests.lib.PipTestEnvironment
-            # options, args = install_cmd.parse_args(["."])
-            # options.root = cwd
-            # install_cmd.run(options, args)
+        self.assertEqual(
+            run(
+                [executable, "-m", "pip"] + pip_args,
+                cwd=cwd,  # stdout=DEVNULL
+            ).returncode,
+            0,
+            "EXIT_SUCCESS not reached",
+        )
 
 
 unittest_main()
