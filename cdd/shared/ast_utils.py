@@ -46,10 +46,6 @@ from operator import attrgetter, contains, inv, neg, not_, pos
 from sys import modules
 from typing import Generator, Optional
 
-safe_dump_all = (
-    getattr(import_module("yaml"), "safe_dump_all") if "black" in modules else None
-)
-
 from cdd.shared.defaults_utils import extract_default, needs_quoting
 from cdd.shared.pure_utils import (
     PY_GTE_3_8,
@@ -63,6 +59,11 @@ from cdd.shared.pure_utils import (
     rpartial,
     simple_types,
 )
+
+safe_dump_all = (
+    getattr(import_module("yaml"), "safe_dump_all") if "black" in modules else None
+)
+
 
 # Was `"globals().__getitem__"`; this type is used for `Any` and any other unhandled
 
