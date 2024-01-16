@@ -203,7 +203,7 @@ def type_default_from_default(default, typ):
             (
                 typ
                 if typ == "None"
-                else "Optional[typ]".format(typ)
+                else "Optional[{typ}]".format(typ=typ)
                 if typ != "None"
                 else typ
             ),

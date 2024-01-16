@@ -63,46 +63,7 @@ def _union_literal_from_sentence(sentence):
     :rtype: ```Optional[str]```
     """
     union: Union[List[List[str]], List[str], Tuple[str]] = [[]]
-    i: int = 0
-    quotes = {"'": 0, '"': 0}
-    while i < len(sentence):
-        ch = sentence[i]
-        is_space = ch.isspace()
-        if not is_space and not ch == "`":
-            union[-1].append(ch)
-        elif is_space:
-            if union[-1]:
-                union[-1] = "".join(
-                    union[-1][:-1]
-                    if union[-1][-1] in frozenset((",", ";"))
-                    and (
-                        union[-1][0] in frozenset(string.digits + "'\"`")
-                        or union[-1][0].isidentifier()
-                    )
-                    else union[-1]
-                )
-                if union[-1] in frozenset(
-                    ("or", "or,", "or;", "or:", "of", "of,", "of;", "of:")
-                ):
-                    union[-1] = []
-                else:
-                    union.append([])
-            # eat until next non-space
-            j = i
-            i += count_iter_items(takewhile(str.isspace, sentence[i:])) - 1
-            union[-1] = sentence[j : i + 1]
-
-            union.append([])
-        if ch in frozenset(("'", '"')):
-            if i == 0 or sentence[i - 1] != "\\":
-                quotes[ch] += 1
-            if (
-                (i + 2) < len(sentence)
-                and sum(quotes.values()) & 1 == 0
-                and sentence[i + 1] == ","
-            ):
-                i += 1
-        i += 1
+    _union_literal_from_sentence_phase0(sentence, union)
 
     if not union[-1]:
         del union[-1]
@@ -192,6 +153,55 @@ def _union_literal_from_sentence(sentence):
         return None
 
 
+def _union_literal_from_sentence_phase0(sentence, union):
+    """
+    Internal function for `_union_literal_from_sentence`; does the first n=O(n) iteration through the sentence
+
+    :param sentence: Input sentence with 'or' or 'of'
+    :type sentence: ```str```
+    """
+    i: int = 0
+    quotes = {"'": 0, '"': 0}
+    while i < len(sentence):
+        ch = sentence[i]
+        is_space = ch.isspace()
+        if not is_space and not ch == "`":
+            union[-1].append(ch)
+        elif is_space:
+            if union[-1]:
+                union[-1] = "".join(
+                    union[-1][:-1]
+                    if union[-1][-1] in frozenset((",", ";"))
+                    and (
+                        union[-1][0] in frozenset(string.digits + "'\"`")
+                        or union[-1][0].isidentifier()
+                    )
+                    else union[-1]
+                )
+                if union[-1] in frozenset(
+                    ("or", "or,", "or;", "or:", "of", "of,", "of;", "of:")
+                ):
+                    union[-1] = []
+                else:
+                    union.append([])
+            # eat until next non-space
+            j = i
+            i += count_iter_items(takewhile(str.isspace, sentence[i:])) - 1
+            union[-1] = sentence[j : i + 1]
+
+            union.append([])
+        if ch in frozenset(("'", '"')):
+            if i == 0 or sentence[i - 1] != "\\":
+                quotes[ch] += 1
+            if (
+                (i + 2) < len(sentence)
+                and sum(quotes.values()) & 1 == 0
+                and sentence[i + 1] == ","
+            ):
+                i += 1
+        i += 1
+
+
 def parse_adhoc_doc_for_typ(doc, name, default_is_none):
     """
     Google's Keras and other frameworks have an adhoc syntax.
@@ -217,50 +227,7 @@ def parse_adhoc_doc_for_typ(doc, name, default_is_none):
     wrap: str = "Optional[{}]" if default_is_none else "{}"
 
     words: List[Union[List[str], str]] = [[]]
-    word_chars: str = "{0}{1}`'\"/|".format(string.digits, string.ascii_letters)
-    sentence_ends: int = -1
-    for i, ch in enumerate(doc):
-        if (
-            ch in word_chars
-            or ch == "."
-            and len(doc) > (i + 1)
-            and doc[i + 1] in word_chars
-            # Make "bar" start the next sentence:    `foo`.bar
-            and (i - 1 == 0 or doc[i - 1] != "`")
-        ):
-            words[-1].append(ch)
-        elif ch in frozenset((".", ";", ",")) or ch.isspace():
-            words[-1] = "".join(words[-1])
-            words.append(ch)
-            if ch == "." and sentence_ends == -1:
-                sentence_ends: int = len(words)
-            words.append([])
-    words[-1] = "".join(words[-1])
-
-    candidate_type: Optional[str] = next(
-        map(
-            adhoc_type_to_type.__getitem__,
-            filter(partial(contains, adhoc_type_to_type), words),
-        ),
-        None,
-    )
-
-    fst_sentence: str = "".join(words[:sentence_ends])
-    sentence: Optional[str] = None
-
-    # type_in_fst_sentence = adhoc_type_to_type.get(next(filterfalse(str.isspace, words)))
-    # pp({"type_in_fst_sentence": type_in_fst_sentence})
-    if " or " in fst_sentence or " of " in fst_sentence:
-        sentence = fst_sentence
-    else:
-        sentence_starts: int = sentence_ends
-        for a, b in sliding_window(words[sentence_starts:], 2):
-            sentence_ends += 1
-            if a == "." and not b.isidentifier():
-                break
-        snd_sentence: str = "".join(words[sentence_starts:sentence_ends])
-        if " or " in snd_sentence or " of " in snd_sentence:
-            sentence: str = snd_sentence
+    candidate_type, fst_sentence, sentence = _parse_adhoc_doc_for_typ_phase0(doc, words)
 
     if sentence is not None:
         wrap_type_with: str = "{}"
@@ -314,6 +281,63 @@ def parse_adhoc_doc_for_typ(doc, name, default_is_none):
         )
 
     return candidate_type if candidate_type is None else wrap.format(candidate_type)
+
+
+def _parse_adhoc_doc_for_typ_phase0(doc, words):
+    """
+    Internal function for `_parse_adhoc_doc_for_typ_`; does the few iterations through the sentence
+
+    :param doc: Possibly ambiguous docstring for argument, that *might* hint as to the type
+    :type doc: ```str```
+
+    :param words: Words
+    :type words: ```List[Union[List[str], str]]```
+
+    :return: candidate_type, fst_sentence, sentence
+    :rtype: ```Tuple[Optional[Any], Optional[str], Optional[str]]```
+    """
+    word_chars: str = "{0}{1}`'\"/|".format(string.digits, string.ascii_letters)
+    sentence_ends: int = -1
+    for i, ch in enumerate(doc):
+        if (
+            ch in word_chars
+            or ch == "."
+            and len(doc) > (i + 1)
+            and doc[i + 1] in word_chars
+            # Make "bar" start the next sentence:    `foo`.bar
+            and (i - 1 == 0 or doc[i - 1] != "`")
+        ):
+            words[-1].append(ch)
+        elif ch in frozenset((".", ";", ",")) or ch.isspace():
+            words[-1] = "".join(words[-1])
+            words.append(ch)
+            if ch == "." and sentence_ends == -1:
+                sentence_ends: int = len(words)
+            words.append([])
+    words[-1] = "".join(words[-1])
+    candidate_type: Optional[str] = next(
+        map(
+            adhoc_type_to_type.__getitem__,
+            filter(partial(contains, adhoc_type_to_type), words),
+        ),
+        None,
+    )
+    fst_sentence: str = "".join(words[:sentence_ends])
+    sentence: Optional[str] = None
+    # type_in_fst_sentence = adhoc_type_to_type.get(next(filterfalse(str.isspace, words)))
+    # pp({"type_in_fst_sentence": type_in_fst_sentence})
+    if " or " in fst_sentence or " of " in fst_sentence:
+        sentence = fst_sentence
+    else:
+        sentence_starts: int = sentence_ends
+        for a, b in sliding_window(words[sentence_starts:], 2):
+            sentence_ends += 1
+            if a == "." and not b.isidentifier():
+                break
+        snd_sentence: str = "".join(words[sentence_starts:sentence_ends])
+        if " or " in snd_sentence or " of " in snd_sentence:
+            sentence: str = snd_sentence
+    return candidate_type, fst_sentence, sentence
 
 
 __all__ = ["parse_adhoc_doc_for_typ"]  # type: list[str]

@@ -330,21 +330,26 @@ class TestMarshallDocstring(TestCase):
         gen: str = "{}\n  ".format(
             indent_all_but_first(gen, sep="  ")
             .replace(
-                "weights (Optional[float]): Optional `Tensor` whose rank is either 0, or the same rank as `labels`, and must be broadcastable to `labels` (i.e., all dimensions must be either `1`, or the same as the corresponding `losses` dimension).",
+                "weights (Optional[float]): Optional `Tensor` whose rank is either 0, or the same rank as"
+                " `labels`, and must be broadcastable to `labels` (i.e., all dimensions must be either `1`, or the "
+                "same as the corresponding `losses` dimension).",
                 """weights: Optional `Tensor` whose rank is either 0, or the same rank as
       `labels`, and must be broadcastable to `labels` (i.e., all dimensions must
       be either `1`, or the same as the corresponding `losses` dimension).""",
                 1,
             )
             .replace(
-                """float:
-     Weighted loss float `Tensor`. If `reduction` is `NONE`, this has the same shape as `labels`; otherwise, it is scalar.""",
+                "float:\n"
+                "     Weighted loss float `Tensor`. If `reduction` is `NONE`, this has the same shape as `labels`;"
+                " otherwise, it is scalar.",
                 """Weighted loss float `Tensor`. If `reduction` is `NONE`, this has the same
     shape as `labels`; otherwise, it is scalar.""",
                 1,
             )
         )
         self.assertEqual(gen, docstring_google_tf_mean_squared_error_str)
+
+    maxDiff = None
 
     # def test_(self):
     #     gold_google_doc_str = """

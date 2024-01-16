@@ -2,14 +2,21 @@
 Utility functions for `cdd.parse.function`
 """
 
-import ast
-from ast import Return, Tuple
+from ast import Constant, Return, Tuple
 from collections import OrderedDict
 from typing import Optional
 
 from cdd.shared.ast_utils import get_value
-from cdd.shared.pure_utils import rpartial
+from cdd.shared.pure_utils import PY_GTE_3_8, rpartial
 from cdd.shared.source_transformer import to_code
+
+if PY_GTE_3_8:
+    from ast import Del as _Del
+
+    Num = Str = _Del
+    del _Del
+else:
+    from ast import Num, Str
 
 
 def _interpolate_return(function_def, intermediate_repr):
@@ -63,7 +70,7 @@ def _interpolate_return(function_def, intermediate_repr):
                         default_
                         if isinstance(
                             default_,
-                            (str, int, float, complex, ast.Num, ast.Str, ast.Constant),
+                            (str, int, float, complex, Num, Str, Constant),
                         )
                         else "```{}```".format(default)
                     )

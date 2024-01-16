@@ -388,8 +388,10 @@ unittest_main()
 #         ),
 #         Return(
 #             value=Call(
-#                 func=Attribute(Name("operator", Load(), lineno=None, col_offset=None), "add", Load(), lineno=None, col_offset=None),
-#                 args=[Name("a", Load(), lineno=None, col_offset=None), Name("b", Load(), lineno=None, col_offset=None)],
+#                 func=Attribute(Name("operator", Load(), lineno=None, col_offset=None), "add",
+#                                Load(), lineno=None, col_offset=None),
+#                 args=[Name("a", Load(), lineno=None, col_offset=None),
+#                       Name("b", Load(), lineno=None, col_offset=None)],
 #                 keywords=[],
 #                 expr=None,
 #                 expr_func=None,

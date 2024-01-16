@@ -780,7 +780,9 @@ argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
                     keyword(
                         arg="help",
                         value=set_value(
-                            "frequency (in epochs) at which to compute weight histograms for the layers of the model. If set to 0, histograms won't be computed. Validation data (or split) must be specified for histogram visualizations."
+                            "frequency (in epochs) at which to compute weight histograms for the layers of the model."
+                            " If set to 0, histograms won't be computed. Validation data (or split) must be specified"
+                            " for histogram visualizations."
                         ),
                     ),
                     keyword(arg="required", value=set_value(True)),
@@ -809,7 +811,8 @@ argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
                     keyword(
                         arg="help",
                         value=set_value(
-                            "(Not supported at this time) Whether to visualize the graph in TensorBoard. Note that the log file can become quite large when `write_graph` is set to `True`."
+                            "(Not supported at this time) Whether to visualize the graph in TensorBoard. Note that the"
+                            " log file can become quite large when `write_graph` is set to `True`."
                         ),
                     ),
                     keyword(arg="required", value=set_value(True)),
@@ -867,7 +870,8 @@ argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
                     keyword(
                         arg="help",
                         value=set_value(
-                            "whether to log the training steps per second into TensorBoard. This supports both epoch and batch frequency logging."
+                            "whether to log the training steps per second into TensorBoard. This supports both epoch"
+                            " and batch frequency logging."
                         ),
                     ),
                     keyword(arg="required", value=set_value(True)),
@@ -933,7 +937,9 @@ argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
                     keyword(
                         arg="help",
                         value=set_value(
-                            "(Not supported at this time) Profile the batch(es) to sample compute characteristics. profile_batch must be a non-negative integer or a tuple of integers. A pair of positive integers signify a range of batches to profile. By default, profiling is disabled."
+                            "(Not supported at this time) Profile the batch(es) to sample compute characteristics."
+                            " profile_batch must be a non-negative integer or a tuple of integers. A pair of positive"
+                            " integers signify a range of batches to profile. By default, profiling is disabled."
                         ),
                     ),
                     keyword(arg="required", value=set_value(True)),
@@ -962,7 +968,8 @@ argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
                     keyword(
                         arg="help",
                         value=set_value(
-                            "frequency (in epochs) at which embedding layers will be visualized. If set to 0, embeddings won't be visualized."
+                            "frequency (in epochs) at which embedding layers will be visualized. If set to 0,"
+                            " embeddings won't be visualized."
                         ),
                     ),
                     keyword(arg="required", value=set_value(True)),
@@ -990,7 +997,9 @@ argparse_function_google_keras_tensorboard_ast: FunctionDef = FunctionDef(
                     keyword(
                         arg="help",
                         value=set_value(
-                            "Dictionary which maps embedding layer names to the filename of a file in which to save metadata for the embedding layer. In case the same metadata file is to be used for all embedding layers, a single filename can be passed."
+                            "Dictionary which maps embedding layer names to the filename of a file in which to save"
+                            " metadata for the embedding layer. In case the same metadata file is to be used for all"
+                            " embedding layers, a single filename can be passed."
                         ),
                     )
                 ],

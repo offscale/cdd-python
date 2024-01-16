@@ -65,7 +65,8 @@ from cdd.shared.pure_utils import (
 
 FALLBACK_TYP: str = "str"
 
-# Was `Attribute(Call(args=[], func=Name("globals", Load(), lineno=None, col_offset=None), keywords=[], expr=None, expr_func=None,),
+# Was `Attribute(Call(args=[], func=Name("globals", Load(), lineno=None, col_offset=None),
+#                     keywords=[], expr=None, expr_func=None,),
 #                "__getitem__", Load(),)`; this type is used for `Any` and any other unhandled (for argparse `type=`)
 FALLBACK_ARGPARSE_TYP = Name("str", Load(), lineno=None, col_offset=None)
 

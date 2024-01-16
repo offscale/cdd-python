@@ -98,8 +98,8 @@ def merge_params(other_params, target_params):
         TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
     :type other_params: ```Iterable[dict]```
 
-    :param target_params: The target params to modify. These values take precedence. Iterable of `dict`s consistent with
-      `ParamVal`, defined as:
+    :param target_params: The target params to modify. These values take precedence. Iterable of `dict`s consistent
+      with `ParamVal`, defined as:
         TypedDict("ParamVal", {"typ": str, "doc": Optional[str], "default": Any})
     :type target_params: ```Iterable[dict]```
 

@@ -3,25 +3,26 @@ Utility functions for `cdd.parse.sqlalchemy`
 """
 
 import ast
-from ast import (
-    Assign,
-    Call,
-    ClassDef,
-    Constant,
-    ImportFrom,
-    Load,
-    Module,
-    Name,
-    Str,
-    alias,
-)
+from ast import Assign, Call, ClassDef, Constant, ImportFrom, Load, Module, Name, alias
 from itertools import chain, filterfalse
 from operator import attrgetter
 from typing import FrozenSet
 
 from cdd.shared.ast_utils import get_value
-from cdd.shared.pure_utils import append_to_dict, indent_all_but_first, rpartial, tab
+from cdd.shared.pure_utils import (
+    PY_GTE_3_8,
+    append_to_dict,
+    indent_all_but_first,
+    rpartial,
+    tab,
+)
 from cdd.shared.source_transformer import to_code
+
+if PY_GTE_3_8:
+    from ast import Del as Str
+else:
+    from ast import Str
+
 
 # SQLalchemy 1.14
 # `from sqlalchemy import __all__; sorted(filter(lambda s: any(filter(str.isupper, s)), __all__))`

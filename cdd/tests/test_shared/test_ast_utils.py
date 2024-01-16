@@ -2,6 +2,7 @@
 
 import ast
 import pickle
+import sys
 from ast import (
     AnnAssign,
     Assign,
@@ -21,10 +22,8 @@ from ast import (
     Module,
     Mult,
     Name,
-    NameConstant,
     Num,
     Store,
-    Str,
     Subscript,
     Tuple,
     alias,
@@ -35,6 +34,7 @@ from ast import (
 from copy import deepcopy
 from itertools import repeat
 from os import extsep, path
+from sys import version_info
 from typing import Optional, Union
 from unittest import TestCase
 
@@ -87,6 +87,14 @@ from cdd.tests.mocks.methods import (
 from cdd.tests.mocks.sqlalchemy import config_decl_base_ast
 from cdd.tests.utils_for_tests import inspectable_compile, run_ast_test, unittest_main
 
+if PY_GTE_3_8:
+    from ast import Del as _Del
+
+    Bytes = NameConstant = Num = Str = _Del
+    del _Del
+else:
+    from ast import NameConstant, Num, Str
+
 
 class TestAstUtils(TestCase):
     """Test class for ast_utils"""
@@ -128,12 +136,15 @@ class TestAstUtils(TestCase):
     def test_ast_type_to_python_type(self) -> None:
         """Test `ast_type_to_python_type`"""
         vals = (5,)
-        self.assertEqual(ast_type_to_python_type(Num(n=vals[0])), vals[0])
+        if version_info[:2] < (3, 8):
+            self.assertEqual(ast_type_to_python_type(Num(n=vals[0])), vals[0])
+            self.assertEqual(
+                ast_type_to_python_type(
+                    Str(s=str(vals[0]), col_offset=None, lineno=None)
+                ),
+                str(vals[0]),
+            )
         self.assertEqual(ast_type_to_python_type(Constant(value=vals[0])), vals[0])
-        self.assertEqual(
-            ast_type_to_python_type(Str(s=str(vals[0]), col_offset=None, lineno=None)),
-            str(vals[0]),
-        )
         self.assertRaises(NotImplementedError, ast_type_to_python_type, set_arg("foo"))
 
     def test_cmp_ast(self) -> None:
@@ -589,8 +600,13 @@ class TestAstUtils(TestCase):
 
             cdd.shared.ast_utils.PY3_8 = False
 
-            self.assertIsInstance(cdd.shared.ast_utils.set_value(None), NameConstant)
-            self.assertIsInstance(cdd.shared.ast_utils.set_value(True), NameConstant)
+            if sys.version_info[:2] < (3, 8):
+                self.assertIsInstance(
+                    cdd.shared.ast_utils.set_value(None), NameConstant
+                )
+                self.assertIsInstance(
+                    cdd.shared.ast_utils.set_value(True), NameConstant
+                )
 
             cdd.shared.ast_utils.PY3_8 = True
             self.assertIsInstance(
@@ -599,7 +615,8 @@ class TestAstUtils(TestCase):
             )
 
             cdd.shared.ast_utils.PY3_8 = False
-            self.assertIsInstance(cdd.shared.ast_utils.set_value("foo"), Str)
+            if sys.version_info[:2] < (3, 8):
+                self.assertIsInstance(cdd.shared.ast_utils.set_value("foo"), Str)
         finally:
             cdd.ast_utils = _cdd_ast_utils_PY3_8_orig
 

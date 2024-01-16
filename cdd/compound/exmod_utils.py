@@ -237,10 +237,9 @@ def emit_file_on_hierarchy(
 
     relative_filename_path: str = original_relative_filename_path
     module_name_as_path: str = module_name.replace(".", path.sep)
-    new_module_name_as_path: str = new_module_name.replace(".", path.sep)
     if relative_filename_path.startswith(module_name_as_path + path.sep):
         relative_filename_path: str = relative_filename_path[
-            len(new_module_name_as_path) :
+            len(module_name_as_path + path.sep) :
         ]
     if not name and ir.get("name") is not None:
         name: Optional[str] = ir.get("name")

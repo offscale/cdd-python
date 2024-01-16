@@ -1,5 +1,6 @@
 """ Tests for exmod_utils """
 
+from ast import Module
 from collections import deque
 from io import StringIO
 from os import path
@@ -72,15 +73,21 @@ class TestExmodUtils(TestCase):
         """Test `_emit_symbol` when `isfile_emit_filename is True`"""
         with patch(
             "cdd.compound.exmod_utils.EXMOD_OUT_STREAM", new_callable=StringIO
-        ), patch("cdd.shared.ast_utils.merge_modules", MagicMock()) as f, patch(
+        ), patch(
+            "cdd.shared.ast_utils.merge_modules", MagicMock()
+        ) as func__merge_modules, patch(
             "cdd.shared.ast_utils.merge_assignment_lists", MagicMock()
-        ) as g:
+        ) as func__merge_assignment_lists:
             _emit_symbol(
                 name_orig_ir=("", "", dict()),
                 emit_name="argparse",
                 module_name="module_name",
                 emit_filename="emit_filename",
-                existent_mod=None,
+                existent_mod=Module(
+                    body=[],
+                    type_ignores=[],
+                    stmt=None,
+                ),
                 init_filepath="",
                 intermediate_repr={"name": None, "doc": None},
                 isfile_emit_filename=True,
@@ -89,8 +96,8 @@ class TestExmodUtils(TestCase):
                 no_word_wrap=None,
                 dry_run=True,
             )
-            f.assert_called_once()
-            g.assert_called_once()
+            func__merge_modules.assert_called_once()
+            func__merge_assignment_lists.assert_called_once()
 
     def test_get_module_contents_empty(self) -> None:
         """`get_module_contents`"""
