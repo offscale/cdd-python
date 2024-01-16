@@ -8,7 +8,7 @@ from copy import deepcopy
 from functools import partial
 from importlib import import_module
 from importlib.abc import Loader
-from importlib.util import module_from_spec, spec_from_loader
+from importlib.util import find_spec, module_from_spec, spec_from_loader
 from itertools import takewhile
 from operator import add
 from os import path
@@ -26,7 +26,7 @@ from cdd.shared.pure_utils import PY3_8, count_iter_items, identity, reindent, t
 
 black = (
     import_module("black")
-    if "black" in modules
+    if find_spec("black") is not None
     else type(
         "black",
         tuple(),

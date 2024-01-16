@@ -58,7 +58,10 @@ class TestConformance(TestCase):
                 ),
                 (
                     ("argparse{extsep}py".format(extsep=extsep), False),
-                    ("classes{extsep}py".format(extsep=extsep), False),
+                    (
+                        "classes{extsep}py".format(extsep=extsep),
+                        True,  # black adds a separating space in docstring
+                    ),
                     ("methods{extsep}py".format(extsep=extsep), False),
                 ),
             )
@@ -139,7 +142,10 @@ class TestConformance(TestCase):
                     ("argparse9{extsep}py".format(extsep=extsep), False),
                     ("argparse_missing{extsep}py".format(extsep=extsep), True),
                     ("argparse_empty{extsep}py".format(extsep=extsep), True),
-                    ("classes{extsep}py".format(extsep=extsep), False),
+                    (
+                        "classes{extsep}py".format(extsep=extsep),
+                        True,  # black adds a separating space in docstring
+                    ),
                     ("methods{extsep}py".format(extsep=extsep), False),
                 ),
             )

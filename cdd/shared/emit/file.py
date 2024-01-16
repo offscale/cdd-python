@@ -4,13 +4,13 @@ File emitter
 
 from ast import Module
 from importlib import import_module
-from sys import modules
+from importlib.util import find_spec
 
 from cdd.shared.source_transformer import to_code
 
 black = (
     import_module("black")
-    if "black" in modules
+    if find_spec("black") is not None
     else type(
         "black",
         tuple(),

@@ -39,11 +39,11 @@ from contextlib import suppress
 from copy import deepcopy
 from functools import partial
 from importlib import import_module
+from importlib.util import find_spec
 from inspect import isclass, isfunction
 from itertools import chain, filterfalse, groupby
 from json import dumps
 from operator import attrgetter, contains, inv, neg, not_, pos
-from sys import modules
 from typing import Generator, Optional
 
 from cdd.shared.defaults_utils import extract_default, needs_quoting
@@ -61,7 +61,9 @@ from cdd.shared.pure_utils import (
 )
 
 safe_dump_all = (
-    getattr(import_module("yaml"), "safe_dump_all") if "black" in modules else None
+    getattr(import_module("yaml"), "safe_dump_all")
+    if find_spec("yaml") is not None
+    else None
 )
 
 
