@@ -248,10 +248,6 @@ class TestEmitFunction(TestCase):
         self.assertEqual(
             *map(lambda ir: ir["returns"]["return_type"]["doc"], (gen_ir, gold_ir))
         )
-        # print('#gen_ir')
-        # pp(gen_ir)
-        # print('#gold_ir')
-        # pp(gold_ir)
 
         run_ast_test(
             self,

@@ -1,17 +1,16 @@
 """ Tests for exmod subcommand """
 
-import sys
 from ast import Assign, ClassDef, ImportFrom, List, Load, Module, Name, Store, alias
 from functools import partial
 from io import StringIO
 from itertools import chain, groupby
 from operator import itemgetter
-from os import environ, listdir, mkdir, path, walk
+from os import listdir, mkdir, path, walk
 from os.path import extsep
 from subprocess import run
 from sys import executable, platform
 from tempfile import TemporaryDirectory
-from typing import Tuple, Union
+from typing import Tuple, Union, cast
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -19,18 +18,11 @@ import cdd.class_.parse
 from cdd.compound.exmod import exmod
 from cdd.shared.ast_utils import maybe_type_comment, set_value
 from cdd.shared.pkg_utils import relative_filename
-from cdd.shared.pure_utils import (
-    ENCODING,
-    INIT_FILENAME,
-    PY_GTE_3_8,
-    pp,
-    rpartial,
-    unquote,
-)
+from cdd.shared.pure_utils import ENCODING, INIT_FILENAME, PY_GTE_3_8, rpartial, unquote
 from cdd.shared.source_transformer import ast_parse, to_code
 from cdd.tests.mocks import imports_header
 from cdd.tests.mocks.classes import class_str
-from cdd.tests.mocks.exmod import setup_py_mock
+from cdd.tests.mocks.exmod import create_init_mock, setup_py_mock
 from cdd.tests.utils_for_tests import unittest_main
 
 if PY_GTE_3_8:
@@ -42,6 +34,10 @@ else:
 
 
 class ExmodOutput(TypedDict):
+    """
+    ExmodOutput is an interface for a couple of mocks within this file
+    """
+
     mkdir: Union[Tuple[str], int]
     touch: Union[Tuple[str], int]
     write: Union[Tuple[str], int]
@@ -102,8 +98,7 @@ class TestExMod(TestCase):
 
         try:
             with TemporaryDirectory(prefix="search_root", suffix="search_path") as root:
-                _, new_module_dir = self.create_and_install_pkg(root)
-
+                existent_module_dir, new_module_dir = self.create_and_install_pkg(root)
                 exmod(
                     module=self.module_name,
                     emit_name="class",
@@ -111,12 +106,11 @@ class TestExMod(TestCase):
                     whitelist=tuple(),
                     mock_imports=True,
                     output_directory=new_module_dir,
-                    target_module_name=None,
+                    target_module_name="gold",
                     no_word_wrap=None,
                     dry_run=False,
                 )
-                input(new_module_dir)
-                self._check_emission(new_module_dir)
+                self._check_emission(existent_module_dir, new_module_dir)
         finally:
             # sys.path.remove(existent_module_dir)
             self._pip(["uninstall", "-y", self.package_root_name])
@@ -134,7 +128,7 @@ class TestExMod(TestCase):
                     whitelist=tuple(),
                     mock_imports=True,
                     output_directory=new_module_dir,
-                    target_module_name=None,
+                    target_module_name="gold",
                     no_word_wrap=None,
                     dry_run=False,
                 )
@@ -160,7 +154,7 @@ class TestExMod(TestCase):
                     whitelist=(".".join((self.package_root_name, "gen")),),
                     mock_imports=True,
                     output_directory=new_module_dir,
-                    target_module_name=None,
+                    target_module_name="gold",
                     no_word_wrap=None,
                     dry_run=False,
                 )
@@ -207,7 +201,7 @@ class TestExMod(TestCase):
                 whitelist=tuple(),
                 mock_imports=True,
                 output_directory=path.join(tempdir, "nonexistent"),
-                target_module_name=None,
+                target_module_name="gold",
                 no_word_wrap=None,
                 dry_run=False,
             )
@@ -222,7 +216,7 @@ class TestExMod(TestCase):
                 whitelist=tuple(),
                 mock_imports=True,
                 output_directory=path.join(tempdir, "nonexistent"),
-                target_module_name=None,
+                target_module_name="gold",
                 no_word_wrap=None,
                 dry_run=False,
             )
@@ -240,7 +234,7 @@ class TestExMod(TestCase):
                 whitelist=tuple(),
                 mock_imports=True,
                 output_directory=output_directory,
-                target_module_name=None,
+                target_module_name="gold",
                 no_word_wrap=None,
                 dry_run=False,
             )
@@ -250,7 +244,7 @@ class TestExMod(TestCase):
 
         try:
             with TemporaryDirectory(prefix="search_root", suffix="search_path") as root:
-                _, new_module_dir = self.create_and_install_pkg(root)
+                existent_module_dir, new_module_dir = self.create_and_install_pkg(root)
 
                 with patch(
                     "cdd.compound.exmod_utils.EXMOD_OUT_STREAM", new_callable=StringIO
@@ -262,70 +256,68 @@ class TestExMod(TestCase):
                         whitelist=tuple(),
                         mock_imports=True,
                         output_directory=new_module_dir,
-                        target_module_name=None,
+                        target_module_name="gold",
                         no_word_wrap=None,
                         dry_run=True,
                     )
                     r: str = f.getvalue()
 
-                result = dict(
-                    map(
-                        lambda k_v: (
-                            k_v[0],
-                            tuple(
-                                sorted(
-                                    set(
-                                        map(
-                                            partial(
-                                                relative_filename,
-                                                remove_hints=(
-                                                    (
-                                                        lambda directory: (
-                                                            "{directory}{sep}".format(
-                                                                directory=unquote(
-                                                                    repr(directory)
-                                                                ),
-                                                                sep=path.sep,
+                result = cast(
+                    ExmodOutput,
+                    dict(
+                        map(
+                            lambda k_v: (
+                                k_v[0],
+                                tuple(
+                                    sorted(
+                                        set(
+                                            map(
+                                                partial(
+                                                    relative_filename,
+                                                    remove_hints=(
+                                                        (
+                                                            lambda directory: (
+                                                                "{directory}{sep}".format(
+                                                                    directory=unquote(
+                                                                        repr(directory)
+                                                                    ),
+                                                                    sep=path.sep,
+                                                                )
+                                                                if platform == "win32"
+                                                                else directory
                                                             )
-                                                            if platform == "win32"
-                                                            else directory
-                                                        )
-                                                    )(
-                                                        path.join(
-                                                            new_module_dir,
-                                                            path.basename(
-                                                                new_module_dir
+                                                        )(
+                                                            path.join(
+                                                                new_module_dir,
+                                                                path.basename(
+                                                                    new_module_dir
+                                                                ),
                                                             ),
                                                         ),
                                                     ),
                                                 ),
-                                            ),
-                                            map(unquote, map(itemgetter(1), k_v[1])),
+                                                map(
+                                                    unquote, map(itemgetter(1), k_v[1])
+                                                ),
+                                            )
                                         )
                                     )
-                                )
+                                ),
                             ),
-                        ),
-                        groupby(
-                            map(rpartial(str.split, "\t", 2), sorted(r.splitlines())),
-                            key=itemgetter(0),
-                        ),
-                    )
+                            groupby(
+                                map(
+                                    rpartial(str.split, "\t", 2), sorted(r.splitlines())
+                                ),
+                                key=itemgetter(0),
+                            ),
+                        )
+                    ),
                 )  # type: ExmodOutput[str]
 
-                all_tests_running: bool = len(result["mkdir"]) != 7
-                pp(
-                    {
-                        "all_tests_running": all_tests_running,
-                        "key_counts": {k: len(c) for k, c in result.items()},
-                    }
-                )
-
-                key_counts: ExmodOutput = (
-                    (("mkdir", 7), ("touch", 3), ("write", 1))
-                    if all_tests_running
-                    else (("mkdir", 7), ("touch", 3), ("write", 1))
-                )
+                key_counts = cast(
+                    ExmodOutput,
+                    (("mkdir", 4), ("touch", 1), ("write", 1)),
+                )  # type: ExmodOutput[int]
 
                 for key, count in key_counts:
                     self.assertEqual(count, len(result[key]), key)
@@ -345,17 +337,11 @@ class TestExMod(TestCase):
                         }.items()
                     },
                 )
-                print("#result", file=sys.stderr)
-                pp(next(self.normalise_double_paths(result)))
-                print("#gold", file=sys.stderr)
-                pp(next(self.normalise_double_paths(gold)))
                 self.assertDictEqual(*self.normalise_double_paths(result, gold))
 
-                self._check_emission(new_module_dir, dry_run=True)
+                self._check_emission(existent_module_dir, new_module_dir, dry_run=True)
         finally:
             self._pip(["uninstall", "-y", self.package_root_name])
-
-    maxDiff = None
 
     def create_and_install_pkg(self, root):
         """
@@ -376,99 +362,7 @@ class TestExMod(TestCase):
             path.join(package_root_mod_dir, "__init__{extsep}py".format(extsep=extsep)),
             "wt",
         ) as f:
-            f.write(
-                "{encoding}\n\n"
-                "{mod}\n".format(
-                    encoding=ENCODING,
-                    mod=to_code(
-                        Module(
-                            body=[
-                                ImportFrom(
-                                    module=".".join((self.package_root_name, "gen")),
-                                    names=[
-                                        alias(
-                                            "*",
-                                            None,
-                                            identifier=None,
-                                            identifier_name=None,
-                                        )
-                                    ],
-                                    level=0,
-                                    identifier=None,
-                                ),
-                                Assign(
-                                    targets=[
-                                        Name(
-                                            "__author__",
-                                            Store(),
-                                            lineno=None,
-                                            col_offset=None,
-                                        )
-                                    ],
-                                    value=set_value(
-                                        environ.get("CDD_AUTHOR", "Samuel Marks")
-                                    ),
-                                    expr=None,
-                                    lineno=None,
-                                    **maybe_type_comment,
-                                ),
-                                Assign(
-                                    targets=[
-                                        Name(
-                                            "__version__",
-                                            Store(),
-                                            lineno=None,
-                                            col_offset=None,
-                                        )
-                                    ],
-                                    value=set_value(
-                                        environ.get("CDD_VERSION", "0.0.0")
-                                    ),
-                                    expr=None,
-                                    lineno=None,
-                                    **maybe_type_comment,
-                                ),
-                                Assign(
-                                    targets=[
-                                        Name(
-                                            "__all__",
-                                            Store(),
-                                            lineno=None,
-                                            col_offset=None,
-                                        )
-                                    ],
-                                    value=List(
-                                        ctx=Load(),
-                                        elts=list(
-                                            map(
-                                                set_value,
-                                                chain.from_iterable(
-                                                    (
-                                                        (
-                                                            "__author__",
-                                                            "__version__",
-                                                        ),
-                                                        map(
-                                                            itemgetter(0),
-                                                            self.module_hierarchy,
-                                                        ),
-                                                    )
-                                                ),
-                                            )
-                                        ),
-                                        expr=None,
-                                    ),
-                                    expr=None,
-                                    lineno=None,
-                                    **maybe_type_comment,
-                                ),
-                            ],
-                            type_ignores=[],
-                            stmt=None,
-                        )
-                    ),
-                )
-            )
+            f.write(create_init_mock(self.package_root_name, self.module_hierarchy))
         # mkdir(
         #     new_module_dir
         # )  # '/tmp/search_rootmnixv5hfsearch_path/search_rootmnixv5hfsearch_path'
@@ -609,60 +503,46 @@ class TestExMod(TestCase):
 
         return module_root
 
-    def _check_emission(self, tempdir, dry_run=False):
+    def _check_emission(self, gen_dir, gold_dir, dry_run=False):
         """
         Confirm whether emission conforms to gen by verifying their IRs are equivalent
 
-        :param tempdir: Temporary directory
-        :type tempdir: ```str```
+        :param gen_dir: Generated dir
+        :type gen_dir: ```str```
+
+        :param gold_dir: Gold dir
+        :type gold_dir: ```str```
 
         :param dry_run: Show what would be created; don't actually write to the filesystem
         :type dry_run: ```bool```
         """
-        new_module_name: str = path.basename(tempdir)
+
+        def _open(_folder):
+            """
+            :param _folder: Folder to join on
+            :type _folder: ```str``
+
+            :return: Open IO
+            :rtype: ```TextIOWrapper```
+            """
+            return open(
+                path.join(_folder, "{name}{extsep}py".format(name=name, extsep=extsep)),
+                "rt",
+            )
 
         for name, folder in self.module_hierarchy:
-            gen_folder: str = path.join(
-                tempdir,
-                *(
-                    (folder,)
-                    if tempdir.rpartition(path.sep)[2] == new_module_name
-                    else (new_module_name, folder)
-                ),
-            )
-            gold_folder: str = path.join(
-                self.gold_dir,
-                *(
-                    (folder,)
-                    if self.gold_dir.endswith(self.module_name.replace(".", path.sep))
-                    else (self.module_name, folder)
-                ),
-            )
+            gen_folder: str = path.join(gen_dir, folder)
+            gold_folder: str = path.join(gold_dir, folder)
 
-            def _open(_folder):
-                """
-                :param _folder: Folder to join on
-                :type _folder: ```str``
-
-                :return: Open IO
-                :rtype: ```TextIOWrapper```
-                """
-                return open(
-                    path.join(
-                        _folder, "{name}{extsep}py".format(name=name, extsep=extsep)
-                    ),
-                    "rt",
-                )
-
-            self.assertTrue(
-                path.isdir(gold_folder), "Expected {!r} to exist".format(gold_folder)
-            )
-
-            gen_is_dir: bool = path.isdir(gen_folder)
             if dry_run:
-                self.assertFalse(gen_is_dir)
+                self.assertTrue(
+                    path.isdir(gen_folder), "Expected existence {!r}".format(gen_dir)
+                )
             else:
-                self.assertTrue(gen_is_dir, gen_folder)
+                self.assertTrue(
+                    path.isdir(gold_folder),
+                    "Expected existence {!r}".format(gold_folder),
+                )
 
                 with _open(gen_folder) as gen, _open(gold_folder) as gold:
                     gen_ir, gold_ir = map(

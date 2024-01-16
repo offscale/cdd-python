@@ -377,7 +377,7 @@ def indent_all_but_first(s, indent_level=1, wipe_indents=False, sep=tab):
     :return: input string indented (except first line)
     :rtype: ```str```
     """
-    lines: List[str] = indent(
+    lines: typing.List[str] = indent(
         deindent(s) if wipe_indents else s, sep * abs(indent_level)
     ).split("\n")
     return "\n".join([lines[0].lstrip()] + lines[1:])
@@ -1068,6 +1068,10 @@ def paren_wrap_code(code):
 
 
 class FilenameProtocol(Protocol):
+    """
+    Filename protocol
+    """
+
     origin: str
 
 

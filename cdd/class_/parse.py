@@ -241,7 +241,6 @@ def class_(
             intermediate_repr=intermediate_repr,
             merge_inner_function=merge_inner_function,
         )
-    # pp(intermediate_repr)
     return intermediate_repr
 
 

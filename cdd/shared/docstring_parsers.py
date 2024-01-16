@@ -19,18 +19,31 @@ from itertools import chain, takewhile
 from operator import attrgetter, eq, le
 
 # This needs to be in `globals()` for `eval` below
-from typing import *  # noqa
-from typing import Dict, List, Tuple, Union
+from typing import *  # noqa: F401,F403
+from typing import Dict, List, Tuple, Union, cast
 
 if sys.version_info[:2] < (3, 8):
     from ast import Bytes, NameConstant, Num, Str
 
-    from typing_extensions import *
+    from typing_extensions import *  # noqa: F401,F403
+    from typing_extensions import TypedDict
 else:
     from ast import Del as _Del
 
     Bytes = NameConstant = Num = Str = _Del
+    from typing import TypedDict
+
     del _Del
+
+if sys.version_info[:2] > (3, 8):
+    from collections.abc import Callable
+else:
+    from typing import Callable
+
+if sys.version_info[:2] > (3, 10):
+    from typing import LiteralString
+else:
+    from typing_extensions import LiteralString
 
 from cdd.docstring.utils.emit_utils import interpolate_defaults
 from cdd.docstring.utils.parse_utils import parse_adhoc_doc_for_typ
@@ -571,6 +584,27 @@ def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=Fal
 
     # if "doc" in _param and isinstance(_param["doc"], list):
     #     _param["doc"] = "".join(_param["doc"])
+    __set_name_and_type_handle_doc_in_param(_param, name, was_none, word_wrap)
+
+    return name, _param
+
+
+def __set_name_and_type_handle_doc_in_param(_param, name, was_none, word_wrap):
+    """
+    Internal function to internal function `_set_name_and_type`.
+
+    :param _param: dict with keys: 'typ', 'doc', 'default'
+    :type _param: ```dict```
+
+    :param name: Name of argument; useful for debugging and if the name hints as to the type
+    :type name: ```str```
+
+    :param was_none: Whether the default value was `None`
+    :type was_none: ```bool```
+
+    :param word_wrap: Whether to word-wrap. Set `DOCTRANS_LINE_LENGTH` to configure length.
+    :type word_wrap: ```bool```
+    """
     if "doc" in _param:
         if not isinstance(_param["doc"], str):
             _param["doc"] = "".join(_param["doc"]).rstrip()
@@ -597,10 +631,6 @@ def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=Fal
             and not _param["typ"].startswith("Optional[")
         ):
             _param["typ"] = "Optional[{typ}]".format(typ=_param["typ"])
-
-    # pp({"b4": was, "l8": _param})
-    # print("*" * 100, file=sys.stderr)
-    return name, _param
 
 
 def _infer_default(_param, infer_type):
@@ -735,15 +765,16 @@ def _parse_phase_numpydoc_and_google(
             :param partitioned: Prep-partitioned `scan`, if given doesn't partition on `scan`, just uses this
             :type partitioned: ```Optional[Tuple[str, str, str]]```
 
-            :return: dict of shape {'name': ..., 'typ': ..., 'doc': ..., 'default': ..., 'required': ... }
+            :return: dict consistent with `TypedDict("CurParam", {"name": str, "typ": str, "doc": str})`
             :rtype: ```dict```
             """
             offset = next(idx for idx, ch in enumerate(scan[0]) if ch == ":")
             s = white_spacer(scan[0][:offset])
             name, delim, typ = partitioned or s.partition("(")
             name, typ = name.strip(), (delim + typ).rstrip()
-            CurParam = TypedDict("CurParam", {"name": str, "typ": str, "doc": str})
-            cur: CurParam = {"name": name}
+            cur: TypedDict("CurParam", {"name": str, "typ": str, "doc": str}) = {
+                "name": name
+            }
             if typ:
                 assert typ.startswith("(") and typ.endswith(
                     ")"
