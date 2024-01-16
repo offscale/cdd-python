@@ -68,9 +68,6 @@ jobs:
                 run: |
                     python -m pip install --upgrade pip
                     python -m pip install --upgrade setuptools wheel
-                    # Ignore most of the dependencies on Python > 3.8
-                    # Note that `Required` is needed which is only in `typing` from 3.11; thus dep `typing_extensions`
-                    python -c 'from sys import version_info;from functools import partial;from itertools import filterfalse;from operator import contains; version_info[:2] > (3,8) or exit(); rem_reqs=frozenset(("https://github.com/offscale/astor/archive/refs/heads/empty-annassign.zip", "black")); f=open("requirements.txt", "r+"); s="\n".join(filterfalse(partial(contains, rem_reqs), map(str.rstrip, f.readlines()))) + "\n"; f.seek(0); f.truncate(0); f.write(s); f.close()'
                     pip install -r requirements.txt
             -   name: Test with unittest
                 run: |

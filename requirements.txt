@@ -1,6 +1,6 @@
-# Note: no dependencies are required on Python >=3.9; `black` is optional; `pyyaml` is mostly optional
-https://api.github.com/repos/offscale/astor/zipball/empty-annassign#egg=astor
+# Note: no dependencies are required on Python >3.10; `black` is optional; `pyyaml` is mostly optional
+https://api.github.com/repos/offscale/astor/zipball/empty-annassign#egg=astor ; python_version < "3.8"
 black
 pyyaml
 setuptools
-typing-extensions
+typing-extensions ; python_version < "3.11"

@@ -43,9 +43,12 @@ from inspect import isclass, isfunction
 from itertools import chain, filterfalse, groupby
 from json import dumps
 from operator import attrgetter, contains, inv, neg, not_, pos
+from sys import modules
 from typing import Generator, Optional
 
-from yaml import safe_dump_all
+safe_dump_all = (
+    getattr(import_module("yaml"), "safe_dump_all") if "black" in modules else None
+)
 
 from cdd.shared.defaults_utils import extract_default, needs_quoting
 from cdd.shared.pure_utils import (
@@ -1255,7 +1258,11 @@ def infer_type_and_default(action, default, typ, required):
             default = dumps(default)
         except TypeError:
             # YAML is more permissive though less concise, but `loads` from yaml is used so this works
-            default = safe_dump_all(default)
+            default = (
+                dumps(default, ensure_ascii=False)
+                if safe_dump_all is None
+                else safe_dump_all(default)
+            )
     elif default is None:
         if "Optional" not in (typ or iter(())) and typ not in frozenset(
             ("Any", "pickle.loads", "loads")
