@@ -35,6 +35,7 @@ from ast import (
     walk,
 )
 from collections import namedtuple
+from collections.abc import __all__ as collections_abc__all__
 from contextlib import suppress
 from copy import deepcopy
 from functools import partial
@@ -43,8 +44,9 @@ from importlib.util import find_spec
 from inspect import isclass, isfunction
 from itertools import chain, filterfalse, groupby
 from json import dumps
-from operator import attrgetter, contains, inv, neg, not_, pos
-from typing import Generator, Optional
+from operator import attrgetter, contains, inv, itemgetter, neg, not_, pos
+from typing import FrozenSet, Generator, Optional
+from typing import __all__ as typing__all__
 
 from cdd.shared.defaults_utils import extract_default, needs_quoting
 from cdd.shared.pure_utils import (
@@ -66,6 +68,222 @@ safe_dump_all = (
     else None
 )
 
+collections_abc___all__: FrozenSet = frozenset(collections_abc__all__)
+del collections_abc__all__
+
+pydantic___all__: FrozenSet = (
+    frozenset(
+        filterfalse(rpartial(str.startswith, "_"), dir(import_module("pydantic")))
+    )
+    if find_spec("pydantic") is not None
+    else frozenset()
+)
+
+sqlalchemy___all__: FrozenSet = (
+    frozenset(
+        filterfalse(rpartial(str.startswith, "_"), dir(import_module("sqlalchemy")))
+    )
+    if find_spec("sqlalchemy") is not None
+    # Some defaults for tests mostly; from 2.0.25
+    else frozenset(
+        (
+            "ARRAY",
+            "AdaptedConnection",
+            "Alias",
+            "AliasedReturnsRows",
+            "Any",
+            "AssertionPool",
+            "AsyncAdaptedQueuePool",
+            "BIGINT",
+            "BINARY",
+            "BLANK_SCHEMA",
+            "BLOB",
+            "BOOLEAN",
+            "BaseDDLElement",
+            "BaseRow",
+            "BigInteger",
+            "BinaryExpression",
+            "BindParameter",
+            "BindTyping",
+            "Boolean",
+            "BooleanClauseList",
+            "CHAR",
+            "CLOB",
+            "CTE",
+            "CacheKey",
+            "Case",
+            "Cast",
+            "CheckConstraint",
+            "ChunkedIteratorResult",
+            "ClauseElement",
+            "ClauseList",
+            "CollectionAggregate",
+            "Column",
+            "ColumnClause",
+            "ColumnCollection",
+            "ColumnDefault",
+            "ColumnElement",
+            "ColumnExpressionArgument",
+            "ColumnOperators",
+            "Compiled",
+            "CompoundSelect",
+            "Computed",
+            "Connection",
+            "Constraint",
+            "CreateEnginePlugin",
+            "CursorResult",
+            "DATE",
+            "DATETIME",
+            "DDL",
+            "DDLElement",
+            "DECIMAL",
+            "DOUBLE",
+            "DOUBLE_PRECISION",
+            "Date",
+            "DateTime",
+            "DefaultClause",
+            "Delete",
+            "Dialect",
+            "Double",
+            "Engine",
+            "Enum",
+            "ExceptionContext",
+            "Executable",
+            "ExecutableDDLElement",
+            "ExecutionContext",
+            "Exists",
+            "Extract",
+            "FLOAT",
+            "FallbackAsyncAdaptedQueuePool",
+            "False_",
+            "FetchedValue",
+            "Float",
+            "ForeignKey",
+            "ForeignKeyConstraint",
+            "FromClause",
+            "FromGrouping",
+            "FrozenResult",
+            "Function",
+            "FunctionElement",
+            "FunctionFilter",
+            "GenerativeSelect",
+            "Grouping",
+            "HasCTE",
+            "HasPrefixes",
+            "HasSuffixes",
+            "INT",
+            "INTEGER",
+            "Identity",
+            "Index",
+            "Insert",
+            "Inspector",
+            "Integer",
+            "Interval",
+            "IteratorResult",
+            "JSON",
+            "Join",
+            "LABEL_STYLE_DEFAULT",
+            "LABEL_STYLE_DISAMBIGUATE_ONLY",
+            "LABEL_STYLE_NONE",
+            "LABEL_STYLE_TABLENAME_PLUS_COL",
+            "Label",
+            "LambdaElement",
+            "LargeBinary",
+            "Lateral",
+            "MappingResult",
+            "MergedResult",
+            "MetaData",
+            "NCHAR",
+            "NUMERIC",
+            "NVARCHAR",
+            "NestedTransaction",
+            "NotNullable",
+            "Null",
+            "NullPool",
+            "Nullable",
+            "Numeric",
+            "Operators",
+            "Over",
+            "PickleType",
+            "Pool",
+            "PoolProxiedConnection",
+            "PoolResetState",
+            "PrimaryKeyConstraint",
+            "QueuePool",
+            "REAL",
+            "ReleaseSavepointClause",
+            "Result",
+            "ResultProxy",
+            "ReturnsRows",
+            "RollbackToSavepointClause",
+            "RootTransaction",
+            "Row",
+            "RowMapping",
+            "SMALLINT",
+            "SQLColumnExpression",
+            "SavepointClause",
+            "ScalarResult",
+            "ScalarSelect",
+            "Select",
+            "SelectBase",
+            "SelectLabelStyle",
+            "Selectable",
+            "Sequence",
+            "SingletonThreadPool",
+            "SmallInteger",
+            "StatementLambdaElement",
+            "StaticPool",
+            "String",
+            "Subquery",
+            "TEXT",
+            "TIME",
+            "TIMESTAMP",
+            "Table",
+            "TableClause",
+            "TableSample",
+            "TableValuedAlias",
+            "Text",
+            "TextAsFrom",
+            "TextClause",
+            "TextualSelect",
+            "Time",
+            "Transaction",
+            "True_",
+            "TryCast",
+            "Tuple",
+            "TupleType",
+            "TwoPhaseTransaction",
+            "TypeClause",
+            "TypeCoerce",
+            "TypeCompiler",
+            "TypeDecorator",
+            "URL",
+            "UUID",
+            "UnaryExpression",
+            "Unicode",
+            "UnicodeText",
+            "UniqueConstraint",
+            "Update",
+            "UpdateBase",
+            "Uuid",
+            "VARBINARY",
+            "VARCHAR",
+            "Values",
+            "ValuesBase",
+            "Visitable",
+            "WithinGroup",
+        )
+    )
+)
+
+typing___all__: FrozenSet = frozenset(typing__all__)
+del typing__all__
+
+typing_extensions___all__: FrozenSet = (
+    frozenset(getattr(import_module("typing_extensions"), "__all__"))
+    if find_spec("typing_extensions") is not None
+    else frozenset()
+)
 
 # Was `"globals().__getitem__"`; this type is used for `Any` and any other unhandled
 
@@ -1891,50 +2109,135 @@ def optimise_imports(imports):
     ]
 
 
+def get_types(node):
+    """
+    :param node:
+    :type node: ```AST|str```
+
+    :rtype: ```Generator[str]```
+    """
+    if node is None:
+        return iter(())
+    elif isinstance(node, str):
+        return iter((node,))
+    elif isinstance(node, Name):
+        return iter((node.id,))
+    elif isinstance(node, Subscript):
+        assert isinstance(node.value, Name), type(node.value)
+        if isinstance(node.slice, Name):
+            return iter((node.value.id, node.slice.id))
+        elif isinstance(node.slice, Tuple):
+            return chain.from_iterable(
+                ((node.value.id,), map(get_value, map(get_value, node.slice.elts)))
+            )
+
+
 def infer_imports(module):
     """
-    Infer imports
+    Infer imports from AST nodes (Name|.annotation|.type_comment); in order; these:
+      - typing
+      - typing_extensions
+      - collections.abc
+      - sqlalchemy
+      - pydantic
 
     :param module: Module, ClassDef, FunctionDef, AsyncFunctionDef, Assign
     :type module: ```Union[ClassDef, FunctionDef, AsyncFunctionDef, Assign]```
 
     :return: List of imports
-    :rtype: ```list[Union[Import, ImportFrom]]```
+    :rtype: ```Optional[Tuple[Union[Import, ImportFrom]]]```
     """
-    import cdd.sqlalchemy.utils.parse_utils  # Should this be a function param instead?
-
     if isinstance(module, (ClassDef, FunctionDef, AsyncFunctionDef, Assign)):
         module: Module = Module(body=[module], type_ignores=[], stmt=None)
     assert isinstance(module, Module), "Expected `Module` got `{type_name}`".format(
         type_name=type(module).__name__
     )
 
-    sqlalchemy_class_or_assigns = filter(
-        lambda class_or_assign_def: (
-            any(
-                filter(
-                    lambda base: isinstance(base, Name) and base.id == "Base",
-                    class_or_assign_def.bases,
-                )
-            )
-            if isinstance(class_or_assign_def, ClassDef)
-            else isinstance(class_or_assign_def.value, Call)
-            and class_or_assign_def.value.func.id.endswith("Table")
-        ),
-        filter(rpartial(isinstance, (ClassDef, Assign)), module.body),
-    )
+    def node_to_importable_name(node):
+        """
+        :param node: AST node
+        :type node: ```AST```
 
-    return list(
-        (
-            (
-                cdd.sqlalchemy.utils.parse_utils.imports_from(
-                    sqlalchemy_class_or_assigns
+        :return: importable typename or None
+        :rtype: ```Optional[str]```
+        """
+        if getattr(node, "type_comment", None) is not None:
+            return node.type_comment
+        elif getattr(node, "annotation", None) is not None:
+            node = node  # type: Union[AnnAssign, arg]
+            return node.annotation  # cast(node, Union[AnnAssign, arg])
+        elif isinstance(node, Name):
+            return node.id
+        else:
+            return None
+
+    # Lots of room for optimisation here; but its probably NP-hard:
+    imports = tuple(
+        map(
+            lambda mod_names: ImportFrom(
+                module=mod_names[0],
+                names=list(
+                    map(
+                        partial(
+                            alias,
+                            asname=None,
+                            identifier=None,
+                            identifier_name=None,
+                        ),
+                        map(itemgetter(0), mod_names[1]),
+                    ),
                 ),
-            )
-            if sqlalchemy_class_or_assigns
-            else iter(())
+                level=0,
+                identifier=None,
+            ),
+            groupby(
+                sorted(
+                    filter(
+                        None,
+                        map(
+                            # Because there are duplicate names, centralise all import resolution here and order them
+                            lambda e: (e, "typing")
+                            if e in typing___all__
+                            else (e, "typing_extensions")
+                            if e in typing_extensions___all__
+                            else (e, "collections.abc")
+                            if e in collections_abc___all__
+                            else (e, "sqlalchemy")
+                            if e in sqlalchemy___all__
+                            else (e, "pydantic")
+                            if e in pydantic___all__
+                            # else block: pydantic; sqlalchemy; other things as cdd-python grows
+                            else None,
+                            sorted(
+                                frozenset(
+                                    chain.from_iterable(
+                                        filter(
+                                            None,
+                                            map(
+                                                get_types,
+                                                filter(
+                                                    None,
+                                                    map(
+                                                        node_to_importable_name,
+                                                        ast.walk(module),
+                                                    ),
+                                                ),
+                                            ),
+                                        ),
+                                    )
+                                )
+                            ),
+                        ),
+                    ),
+                    key=itemgetter(1),
+                ),
+                key=itemgetter(1),
+            ),
         )
     )
+
+    # cdd.sqlalchemy.utils.parse_utils.imports_from(sqlalchemy_class_or_assigns)
+    return imports if imports else None
 
 
 NoneStr = "```(None)```" if PY_GTE_3_9 else "```None```"

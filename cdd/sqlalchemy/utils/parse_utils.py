@@ -3,7 +3,7 @@ Utility functions for `cdd.parse.sqlalchemy`
 """
 
 import ast
-from ast import Assign, Call, ClassDef, Constant, ImportFrom, Load, Module, Name, alias
+from ast import Assign, Call, ClassDef, Constant, Load, Module, Name
 from itertools import chain, filterfalse
 from operator import attrgetter
 from typing import FrozenSet
@@ -319,45 +319,6 @@ def infer_imports_from_sqlalchemy(sqlalchemy_class_or_assigns):
     return candidates_not_in_valid_types ^ candidates
 
 
-def imports_from(sqlalchemy_asts):
-    """
-    Generate `from sqlalchemy import <>` from the body of SQLalchemy `class`es
-
-    :param sqlalchemy_asts: SQLalchemy `class`es with base class of `Base`
-    :type sqlalchemy_asts: ```Generator[ClassDef]```
-
-    :return: `from sqlalchemy import <>` where <> is what was inferred from `sqlalchemy_classes`
-    :rtype: ```ImportFrom```
-    """
-    return ImportFrom(
-        module="sqlalchemy",
-        names=list(
-            map(
-                lambda names: alias(
-                    names,
-                    None,
-                    identifier=None,
-                    identifier_name=None,
-                ),
-                sorted(
-                    frozenset(
-                        filter(
-                            None,
-                            chain.from_iterable(
-                                map(
-                                    infer_imports_from_sqlalchemy,
-                                    sqlalchemy_asts,
-                                )
-                            ),
-                        )
-                    )
-                ),
-            )
-        ),
-        level=0,
-    )
-
-
 def get_pk_and_type(sqlalchemy_class):
     """
     Get the primary key and its type from an SQLalchemy class
@@ -461,6 +422,5 @@ __all__ = [
     "concat_with_whitespace",
     "get_pk_and_type",
     "get_table_name",
-    "imports_from",
     "sqlalchemy_top_level_imports",
 ]

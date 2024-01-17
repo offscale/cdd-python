@@ -54,6 +54,7 @@ from cdd.shared.ast_utils import (
     get_ass_where_name,
     get_at_root,
     get_function_type,
+    get_types,
     get_value,
     infer_imports,
     infer_type_and_default,
@@ -374,7 +375,8 @@ class TestAstUtils(TestCase):
         """
         imports = infer_imports(
             config_decl_base_ast
-        )  # type: list[Union[Import, ImportFrom]]
+        )  # type: Optional[Tuple[Union[Import, ImportFrom]]]
+        self.assertIsNotNone(imports)
         self.assertEqual(len(imports), 1)
         run_ast_test(
             self,
@@ -686,6 +688,25 @@ class TestAstUtils(TestCase):
                     stmt=None,
                 )
             ),
+        )
+
+    def test_get_types(self) -> None:
+        """Test that `get_types` functions correctly"""
+        self.assertTupleEqual(
+            tuple(get_types("str")),
+            ("str",),
+        )
+        self.assertTupleEqual(
+            tuple(
+                get_types(
+                    Subscript(
+                        value=Name(id="Optional", ctx=Load()),
+                        slice=Name(id="Any", ctx=Load()),
+                        ctx=Load(),
+                    )
+                )
+            ),
+            ("Optional", "Any"),
         )
 
     def test_to_named_class_def(self) -> None:
