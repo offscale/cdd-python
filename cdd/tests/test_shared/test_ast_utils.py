@@ -385,8 +385,8 @@ class TestAstUtils(TestCase):
                 module="sqlalchemy",
                 names=list(
                     map(
-                        lambda names: alias(
-                            names,
+                        lambda name: alias(
+                            name,
                             None,
                             identifier=None,
                             identifier_name=None,

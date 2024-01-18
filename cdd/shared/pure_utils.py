@@ -889,15 +889,15 @@ def get_module(name, package=None, extra_symbols=None):
             raise
 
 
-def find_module_filepath(module_name, submodule_name, none_when_no_spec=False):
+def find_module_filepath(module_name, submodule_name=None, none_when_no_spec=False):
     """
     Find module's file location without first importing it
 
-    :param module_name: Module name, e.g., "cdd.tests"
+    :param module_name: Module name, e.g., "cdd.tests" or "cdd"
     :type: ```str```
 
     :param submodule_name: Submodule name, e.g., "test_pure_utils"
-    :type: ```str```
+    :type: ```Optional[str]```
 
     :param none_when_no_spec: When `find_spec` returns `None` return that. If `False` raises `AssertionError` then.
     :type none_when_no_spec: ```bool```
@@ -906,7 +906,6 @@ def find_module_filepath(module_name, submodule_name, none_when_no_spec=False):
     :rpath: ```str```
     """
     assert module_name is not None
-    assert submodule_name is not None
     module_spec: Optional[ModuleSpec] = find_spec(module_name)
     if module_spec is None:
         if none_when_no_spec:
@@ -915,21 +914,30 @@ def find_module_filepath(module_name, submodule_name, none_when_no_spec=False):
     module_origin: Optional[str] = module_spec.origin
     assert module_origin is not None
     module_parent: str = path.dirname(module_origin)
-
-    return next(
-        filter(
-            path.exists,
-            (
-                path.join(
-                    module_parent, submodule_name, "__init__{}py".format(path.extsep)
-                ),
-                path.join(module_parent, "{}{}py".format(submodule_name, path.extsep)),
-                path.join(
-                    module_parent, submodule_name, "__init__{}py".format(path.extsep)
+    return (
+        module_origin
+        if submodule_name is None
+        else next(
+            filter(
+                path.exists,
+                (
+                    path.join(
+                        module_parent,
+                        submodule_name,
+                        "__init__{}py".format(path.extsep),
+                    ),
+                    path.join(
+                        module_parent, "{}{}py".format(submodule_name, path.extsep)
+                    ),
+                    path.join(
+                        module_parent,
+                        submodule_name,
+                        "__init__{}py".format(path.extsep),
+                    ),
                 ),
             ),
-        ),
-        module_origin,
+            module_origin,
+        )
     )
 
 

@@ -2178,9 +2178,9 @@ def infer_imports(module):
                 module=mod_names[0],
                 names=list(
                     map(
-                        partial(
-                            alias,
-                            asname=None,
+                        lambda name: alias(
+                            name,
+                            None,
                             identifier=None,
                             identifier_name=None,
                         ),

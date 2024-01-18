@@ -28,7 +28,6 @@ from cdd.shared.parse.utils.parser_utils import get_parser
 from cdd.shared.pkg_utils import relative_filename
 from cdd.shared.pure_utils import (
     INIT_FILENAME,
-    pp,
     read_file_to_str,
     rpartial,
     sanitise_emit_name,
@@ -464,10 +463,6 @@ def _emit_symbol(
             **{"function_type": "static"} if emit_name == "function" else {}
         )
     )
-    imports = infer_imports(
-        gen_node
-    )  # type: Optional[Tuple[Union[Import, ImportFrom]]]
-    pp(imports)
     __all___node: Assign = Assign(
         targets=[Name("__all__", Store(), lineno=None, col_offset=None)],
         value=List(
