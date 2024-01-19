@@ -10,6 +10,8 @@ from operator import attrgetter, itemgetter
 from os import makedirs, path
 from typing import Optional, Tuple, cast
 
+from setuptools import find_packages
+
 import cdd.class_.parse
 import cdd.compound.exmod_utils
 import cdd.shared.emit.file
@@ -36,6 +38,7 @@ def exmod(
     target_module_name,
     mock_imports,
     no_word_wrap,
+    recursive,
     dry_run,
     filesystem_layout="as_input",
 ):
@@ -67,6 +70,9 @@ def exmod(
     :param no_word_wrap: Whether word-wrap is disabled (on emission).
     :type no_word_wrap: ```Optional[Literal[True]]```
 
+    :param recursive: Recursively traverse module hierarchy and recreate hierarchy with exposed interfaces
+    :type recursive: ```bool```
+
     :param dry_run: Show what would be created; don't actually write to the filesystem
     :type dry_run: ```bool```
 
@@ -86,6 +92,7 @@ def exmod(
                     no_word_wrap=no_word_wrap,
                     output_directory=output_directory,
                     target_module_name=target_module_name,
+                    recursive=recursive,
                     dry_run=dry_run,
                 ),
                 emit_name or iter(()),
@@ -112,8 +119,11 @@ def exmod(
     ), "Expected `str` got `{emit_name_type!r}`".format(emit_name_type=type(emit_name))
 
     module_root, _, submodule = module.rpartition(".")
-    module_name, new_module_name = module, target_module_name or "___".join(
-        (module_root, "gold")
+    module_name, new_module_name = (
+        module,
+        target_module_name or "___".join((module_root, "gold"))
+        if module_root
+        else "gold",
     )
 
     try:
@@ -125,6 +135,128 @@ def exmod(
     except AssertionError as e:
         raise ModuleNotFoundError(e)
 
+    _exmod_single_folder = partial(
+        exmod_single_folder,
+        emit_name=emit_name,
+        blacklist=blacklist,
+        whitelist=whitelist,
+        mock_imports=mock_imports,
+        no_word_wrap=no_word_wrap,
+        dry_run=dry_run,
+        module_root=module_root,
+        new_module_name=new_module_name,
+        filesystem_layout=filesystem_layout,
+    )
+    packages = find_packages(
+        module_root_dir,
+        include=whitelist if whitelist else ("*",),
+        exclude=blacklist if blacklist else iter(()),
+    )
+
+    _exmod_single_folder(
+        module=module,
+        module_name=module_name,
+        module_root_dir=module_root_dir,
+        output_directory=output_directory,
+    )
+    _exmod_single_folder_kwargs = chain.from_iterable(
+        (
+            (
+                {
+                    "module": module,
+                    "module_name": module_name,
+                    "module_root_dir": module_root_dir,
+                    "output_directory": output_directory,
+                },
+            ),
+            (
+                map(
+                    lambda package: (
+                        lambda pkg_relative_dir: {
+                            "module": ".".join((module, package)),
+                            "module_name": package,
+                            "module_root_dir": path.join(
+                                module_root_dir, pkg_relative_dir
+                            ),
+                            "output_directory": path.join(
+                                output_directory, pkg_relative_dir
+                            ),
+                        }
+                    )(package.replace(".", path.sep)),
+                    packages,
+                )
+            )
+            if recursive
+            else iter(()),
+        )
+    )
+    # This could be executed in parallel for efficiency
+    deque(
+        map(lambda kwargs: _exmod_single_folder(**kwargs), _exmod_single_folder_kwargs),
+        maxlen=0,
+    )
+
+    return
+
+
+def exmod_single_folder(
+    emit_name,
+    module,
+    blacklist,
+    whitelist,
+    output_directory,
+    mock_imports,
+    no_word_wrap,
+    dry_run,
+    module_root_dir,
+    module_root,
+    module_name,
+    new_module_name,
+    filesystem_layout,
+):
+    """
+    Expose module as `emit` types into `output_directory`. Single folder (non-recursive).
+
+    :param emit_name: What type(s) to generate.
+    :type emit_name: ```list[Literal["argparse", "class", "function", "json_schema",
+                                     "pydantic", "sqlalchemy", "sqlalchemy_table", "sqlalchemy_hybrid"]]```
+
+    :param module: Module name or path
+    :type module: ```str```
+
+    :param blacklist: Modules/FQN to omit. If unspecified will emit all (unless whitelist).
+    :type blacklist: ```Union[list[str], tuple[str]]```
+
+    :param whitelist: Modules/FQN to emit. If unspecified will emit all (minus blacklist).
+    :type whitelist: ```Union[list[str], tuple[str]]```
+
+    :param output_directory: Where to place the generated exposed interfaces to the given `--module`.
+    :type output_directory: ```str```
+
+    :param mock_imports: Whether to generate mock TensorFlow imports
+    :type mock_imports: ```bool```
+
+    :param no_word_wrap: Whether word-wrap is disabled (on emission).
+    :type no_word_wrap: ```Optional[Literal[True]]```
+
+    :param dry_run: Show what would be created; don't actually write to the filesystem
+    :type dry_run: ```bool```
+
+    :param module_root_dir:
+    :type module_root_dir: ```str```
+
+    :param module_root:
+    :type module_root: ```str```
+
+    :param module_name:
+    :type module_name: ```str```
+
+    :param new_module_name:
+    :type new_module_name: ```str```
+
+    :param filesystem_layout: Hierarchy of folder and file names generated. "java" is file per package per name.
+    :type filesystem_layout: ```Literal["java", "as_input"]```
+    """
     mod_path: str = (
         module_name
         if module_name.startswith(module_root + ".")
@@ -218,7 +350,7 @@ def exmod(
             )
         )  # type: list[ImportFrom]
 
-    assert imports, "Module contents are empty"
+    # assert imports, "Module contents are empty at {!r}".format(module_root_dir)
     modules_names: Tuple[str, ...] = cast(
         Tuple[str, ...],
         tuple(
@@ -257,6 +389,7 @@ def exmod(
             file=cdd.compound.exmod_utils.EXMOD_OUT_STREAM,
         )
     else:
+        makedirs(path.dirname(init_filepath), exist_ok=True)
         cdd.shared.emit.file.file(
             Module(
                 body=list(

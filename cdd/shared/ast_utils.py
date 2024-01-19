@@ -408,9 +408,9 @@ def param2ast(param):
                 if _param["default"] == NoneStr
                 else type(_param["default"]).__name__
             )
-        elif _param["typ"] == "Str":
+        elif _param.get("typ") == "Str":
             _param["typ"] = "str"
-        elif _param["typ"] in frozenset(("Constant", "NameConstant", "Num")):
+        elif _param.get("typ") in frozenset(("Constant", "NameConstant", "Num")):
             _param["typ"] = "object"
     if "typ" in _param and needs_quoting(_param["typ"]):
         default = (

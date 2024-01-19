@@ -27,9 +27,9 @@ jobs:
                         runs-on: macos-latest
                         python_platform: darwin
         steps:
-        -   uses: actions/checkout@v3
+        -   uses: actions/checkout@v4
         -   name: Set up Python 3.6
-            uses: actions/setup-python@v4
+            uses: actions/setup-python@v5
             with:
                 python-version: 3.6
                 architecture: x64
@@ -58,9 +58,9 @@ jobs:
                         runs-on: macos-latest
                         python_platform: darwin
         steps:
-            -   uses: actions/checkout@v3
+            -   uses: actions/checkout@v4
             -   name: Set up Python ${{ matrix.python-version }}
-                uses: actions/setup-python@v4
+                uses: actions/setup-python@v5
                 with:
                     python-version: ${{ matrix.python-version }}
                     architecture: x64
@@ -108,7 +108,7 @@ jobs:
                     bash <(curl --proto '=https' --tlsv1.2 -sSf https://codecov.io/bash)
                 env:
                     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-                if: matrix.python-version == '3.8' && matrix.os.name == 'Linux' && github.ref == 'refs/heads/master'
+                if: (matrix.python-version == '3.8' || matrix.python-version == '3.12') && matrix.os.name == 'Linux' && github.ref == 'refs/heads/master'
             -   name: PyPi release
                 run: |
                     pip install twine

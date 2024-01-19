@@ -238,7 +238,7 @@ def _build_parser():
         dest="emit_name",
     )
     gen_parser.add_argument(
-        "--output-filename", "-o", help="Output file to write to.", required=True
+        "-o", "--output-filename", help="Output file to write to.", required=True
     )
     gen_parser.add_argument(
         "--emit-call",
@@ -387,8 +387,8 @@ def _build_parser():
     )
 
     exmod_parser.add_argument(
-        "--module",
         "-m",
+        "--module",
         help="The module or fully-qualified name (FQN) to expose.",
         required=True,
     )
@@ -416,8 +416,8 @@ def _build_parser():
         action="append",
     )
     exmod_parser.add_argument(
-        "--output-directory",
         "-o",
+        "--output-directory",
         help="Where to place the generated exposed interfaces to the given `--module`.",
         required=True,
     )
@@ -426,6 +426,12 @@ def _build_parser():
         help="Target module name. Defaults to `${module}___gold`.",
         required=False,
         default=None,
+    )
+    exmod_parser.add_argument(
+        "-r",
+        "--recursive",
+        help="Recursively traverse module hierarchy and recreate hierarchy with exposed interfaces",
+        action="store_true",
     )
 
     exmod_parser.add_argument(
