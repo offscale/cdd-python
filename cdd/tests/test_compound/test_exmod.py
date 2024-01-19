@@ -112,6 +112,7 @@ class TestExMod(TestCase):
                     output_directory=new_module_dir,
                     target_module_name="gold",
                     no_word_wrap=None,
+                    recursive=False,
                     dry_run=False,
                 )
                 self._check_emission(existent_module_dir, new_module_dir)
@@ -138,6 +139,7 @@ class TestExMod(TestCase):
                     output_directory=new_module_dir,
                     target_module_name="gold",
                     no_word_wrap=None,
+                    recursive=False,
                     dry_run=False,
                 )
                 self.assertListEqual(
@@ -168,6 +170,7 @@ class TestExMod(TestCase):
                     output_directory=new_module_dir,
                     target_module_name="gold",
                     no_word_wrap=None,
+                    recursive=False,
                     dry_run=False,
                 )
 
@@ -218,6 +221,7 @@ class TestExMod(TestCase):
                 mock_imports=True,
                 output_directory=path.join(tempdir, "nonexistent"),
                 target_module_name="gold",
+                recursive=False,
                 no_word_wrap=None,
                 dry_run=False,
             )
@@ -237,6 +241,7 @@ class TestExMod(TestCase):
                 mock_imports=True,
                 output_directory=path.join(tempdir, "nonexistent"),
                 target_module_name="gold",
+                recursive=False,
                 no_word_wrap=None,
                 dry_run=False,
             )
@@ -259,6 +264,7 @@ class TestExMod(TestCase):
                 mock_imports=True,
                 output_directory=output_directory,
                 target_module_name="gold",
+                recursive=False,
                 no_word_wrap=None,
                 dry_run=False,
             )
@@ -285,6 +291,7 @@ class TestExMod(TestCase):
                         mock_imports=True,
                         output_directory=new_module_dir,
                         target_module_name="gold",
+                        recursive=False,
                         no_word_wrap=None,
                         dry_run=True,
                     )

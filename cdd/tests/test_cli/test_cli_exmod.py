@@ -15,7 +15,7 @@ class TestCliExMod(TestCase):
             self,
             ["exmod", "--wrong"],
             exit_code=2,
-            output="the following arguments are required: --module/-m, --emit, --output-directory/-o\n",
+            output="the following arguments are required: -m/--module, --emit, -o/--output-directory\n",
         )
 
     def test_exmod_is_called(self) -> None:

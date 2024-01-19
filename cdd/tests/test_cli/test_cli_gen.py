@@ -18,7 +18,7 @@ class TestCliGen(TestCase):
             self,
             ["gen", "--wrong"],
             exit_code=2,
-            output="the following arguments are required: --name-tpl, --input-mapping, --emit, --output-filename/-o\n",
+            output="the following arguments are required: --name-tpl, --input-mapping, --emit, -o/--output-filename\n",
         )
 
     def test_existent_file_fails(self) -> None:
