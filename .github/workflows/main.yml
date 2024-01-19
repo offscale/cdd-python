@@ -85,7 +85,7 @@ jobs:
                 if: matrix.python-version == '3.8' && matrix.os.name == 'Linux' && github.ref == 'refs/heads/master'
             -   name: Doc coverage
                 run: |
-                    pip install interrogate codecov coverage
+                    pip install interrogate
                     interrogate -e 'cdd/tests/mocks/cstify.py' --generate-badge '.github/doccoverage.svg'
                     sed -i 's/interrogate/doc coverage/g; s/data-doc c/data-doc-c/g' .github/doccoverage.svg
                     # Setup git config
@@ -103,6 +103,7 @@ jobs:
                 if: matrix.python-version == '3.8' && matrix.os.name == 'Linux' && github.ref == 'refs/heads/master'
             -   name: Test coverage
                 run: |
+                    pip install codecov coverage
                     coverage run -m unittest discover
                     env
                     bash <(curl --proto '=https' --tlsv1.2 -sSf https://codecov.io/bash)
