@@ -100,8 +100,8 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
             maxlen=0,
         )
         res: Dict[str, AST] = {
-            "{module_name}.{submodule_name}.{node_name}".format(
-                module_name=module_name,
+            "{module_name}{submodule_name}.{node_name}".format(
+                module_name="{}.".format(module_name) if module_name else "",
                 submodule_name=submodule_name,
                 node_name=node.name,
             ): node
@@ -126,7 +126,9 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
             dict(
                 map(
                     lambda node: (
-                        "{current_module}.{name}".format(
+                        node.name
+                        if current_module is None
+                        else "{current_module}.{name}".format(
                             current_module=current_module, name=node.name
                         ),
                         node,
@@ -654,7 +656,9 @@ def emit_files_from_module_and_return_imports(
                 ),
                 map(
                     lambda name_source: (
-                        name_source[0][len(module_name) + 1 :],
+                        name_source[0][len(module_name) + 1 :]
+                        if name_source[0].startswith(module_name)
+                        else name_source[0],
                         name_source[1],
                     ),
                     get_module_contents(

@@ -79,6 +79,7 @@ def exmod(
     :param filesystem_layout: Hierarchy of folder and file names generated. "java" is file per package per name.
     :type filesystem_layout: ```Literal["java", "as_input"]```
     """
+    output_directory = path.realpath(output_directory)
     if not isinstance(emit_name, str):
         deque(
             map(

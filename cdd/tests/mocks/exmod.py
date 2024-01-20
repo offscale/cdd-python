@@ -18,9 +18,9 @@ setup.py implementation, interesting because it parsed the first __init__.py and
 
 from sys import version_info
 if version_info[:2] < (3, 8):
-    from ast import Assign, Del as Constant, Str, parse
+    from ast import Assign, NodeVisitor as Constant, Str, parse
 else:
-    from ast import Assign, Del as Str, Constant, parse
+    from ast import Assign, NodeVisitor as Str, Constant, parse
 from operator import attrgetter
 from os import path
 from os.path import extsep

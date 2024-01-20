@@ -28,12 +28,12 @@ if sys.version_info[:2] < (3, 8):
     from typing_extensions import *  # noqa: F401,F403
     from typing_extensions import TypedDict
 else:
-    from ast import Del as _Del
+    from ast import NodeVisitor as _Never
 
-    Bytes = NameConstant = Num = Str = _Del
+    Bytes = NameConstant = Num = Str = _Never
     from typing import TypedDict
 
-    del _Del
+    del _Never
 
 if sys.version_info[:2] > (3, 8):
     from collections.abc import Callable
@@ -622,7 +622,7 @@ def __set_name_and_type_handle_doc_in_param(_param, name, was_none, word_wrap):
             try:
                 eval(typ, globals(), locals())
                 _param["typ"] = typ
-            except (NameError, SyntaxError) as e:
+            except (NameError, SyntaxError, TypeError) as e:
                 print(e, file=sys.stderr)
 
         if (

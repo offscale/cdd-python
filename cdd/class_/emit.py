@@ -3,7 +3,7 @@
 """
 
 import ast
-from ast import ClassDef, Expr, FunctionDef, Load, Name
+from ast import ClassDef, Constant, Expr, FunctionDef, Load, Name
 from collections import OrderedDict
 from functools import partial
 from itertools import chain
@@ -13,7 +13,7 @@ from cdd.class_.utils.emit_utils import RewriteName
 from cdd.docstring.emit import docstring
 from cdd.function.utils.emit_utils import _make_call_meth
 from cdd.shared.ast_utils import param2ast, set_value
-from cdd.shared.pure_utils import rpartial
+from cdd.shared.pure_utils import PY_GTE_3_8, rpartial
 
 
 def class_(
@@ -193,7 +193,11 @@ def class_(
             )
         )
         or [
-            Expr(set_value(""), lineno=None, col_offset=None)
+            Expr(
+                Constant(Ellipsis) if PY_GTE_3_8 else Ellipsis,
+                lineno=None,
+                col_offset=None,
+            )
         ],  # empty body will cause syntax error
         decorator_list=(
             list(

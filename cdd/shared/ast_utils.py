@@ -295,10 +295,10 @@ FALLBACK_TYP: str = "str"
 FALLBACK_ARGPARSE_TYP = Name("str", Load(), lineno=None, col_offset=None)
 
 if PY_GTE_3_8:
-    from ast import Del as _Del
+    from ast import NodeVisitor as _Never
 
-    Bytes = NameConstant = Num = Str = _Del
-    del _Del
+    Bytes = NameConstant = Num = Str = _Never
+    del _Never
 else:
     from ast import Bytes, NameConstant, Num, Str
 
