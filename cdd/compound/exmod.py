@@ -1,14 +1,14 @@
 """
 Not a dead module
 """
-
+import typing
 from ast import Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias, parse
 from collections import deque
 from functools import partial, reduce
 from itertools import chain, groupby
 from operator import attrgetter, itemgetter
 from os import makedirs, path
-from typing import Optional, Tuple, cast
+from typing import Iterator, Optional, Tuple, cast
 
 from setuptools import find_packages
 
@@ -23,10 +23,16 @@ from cdd.shared.ast_utils import (
 )
 from cdd.shared.pure_utils import (
     INIT_FILENAME,
+    PY_GTE_3_8,
     find_module_filepath,
     read_file_to_str,
     rpartial,
 )
+
+if PY_GTE_3_8:
+    from typing import TypedDict
+else:
+    from typing_extensions import TypedDict
 
 
 def exmod(
@@ -148,7 +154,7 @@ def exmod(
         new_module_name=new_module_name,
         filesystem_layout=filesystem_layout,
     )
-    packages = find_packages(
+    packages: typing.List[str] = find_packages(
         module_root_dir,
         include=whitelist if whitelist else ("*",),
         exclude=blacklist if blacklist else iter(()),
@@ -160,7 +166,17 @@ def exmod(
         module_root_dir=module_root_dir,
         output_directory=output_directory,
     )
-    _exmod_single_folder_kwargs = chain.from_iterable(
+    _exmod_single_folder_kwargs: Iterator[
+        TypedDict(
+            "_exmod_single_folder_kwargs",
+            {
+                "module": module,
+                "module_name": module_name,
+                "module_root_dir": module_root_dir,
+                "output_directory": output_directory,
+            },
+        )
+    ] = chain.from_iterable(
         (
             (
                 {
@@ -193,7 +209,10 @@ def exmod(
     )
     # This could be executed in parallel for efficiency
     deque(
-        map(lambda kwargs: _exmod_single_folder(**kwargs), _exmod_single_folder_kwargs),
+        map(
+            lambda kwargs: _exmod_single_folder(**kwargs),
+            _exmod_single_folder_kwargs,
+        ),
         maxlen=0,
     )
 
@@ -295,7 +314,7 @@ def exmod_single_folder(
             path.join(module_root_dir, "__init__{extsep}py".format(extsep=path.extsep)),
             "rt",
         ) as f:
-            mod = parse(f.read())
+            mod: Module = parse(f.read())
 
         # TODO: Optimise these imports
         imports = list(

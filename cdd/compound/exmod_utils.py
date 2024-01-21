@@ -68,7 +68,9 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
     # )
     if path.isfile(module_root_dir):
         with open(module_root_dir, "rt") as f:
-            mod: Module = ast.parse(f.read())
+            mod: Module = ast_parse(
+                f.read(), filename=module_root_dir, skip_docstring_remit=True
+            )
 
         # Bring in imported symbols that should be exposed based on `__all__`
         all_magic_var = next(
@@ -112,7 +114,9 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
                     iter(())
                     if module_filepath is None
                     else ast_parse(
-                        read_file_to_str(module_filepath), module_filepath
+                        read_file_to_str(module_filepath),
+                        module_filepath,
+                        skip_docstring_remit=True,
                     ).body
                 )
             )(
@@ -306,8 +310,8 @@ def emit_file_on_hierarchy(
     if isfile_emit_filename:
         with open(emit_filename, "rt") as f:
             emit_filename_contents: str = f.read()
-        existent_mod: Module = ast.parse(
-            emit_filename_contents
+        existent_mod: Module = ast_parse(
+            emit_filename_contents, skip_docstring_remit=True, filename=emit_filename
         )  # Also, useful as this catches syntax errors
         symbol_in_file: bool = any(
             filter(

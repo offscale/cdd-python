@@ -28,7 +28,7 @@ if sys.version_info[:2] < (3, 8):
     from typing_extensions import *  # noqa: F401,F403
     from typing_extensions import TypedDict
 else:
-    from ast import NodeVisitor as _Never
+    from ast import Del as _Never
 
     Bytes = NameConstant = Num = Str = _Never
     from typing import TypedDict

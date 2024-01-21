@@ -19,7 +19,7 @@ from cdd.shared.pure_utils import (
 from cdd.shared.source_transformer import to_code
 
 if PY_GTE_3_8:
-    from ast import NodeVisitor as Str
+    from ast import Del as Str
 else:
     from ast import Str
 

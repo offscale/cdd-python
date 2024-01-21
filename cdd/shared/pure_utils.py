@@ -31,7 +31,7 @@ PY_GTE_3_11: bool = _python_major_minor >= (3, 11)
 PY_GTE_3_12: bool = _python_major_minor >= (3, 12)
 
 if PY_GTE_3_8:
-    from ast import NodeVisitor as Str
+    from ast import Del as Str
     from typing import Literal, Protocol
 else:
     from ast import Str
