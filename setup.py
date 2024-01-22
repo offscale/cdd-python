@@ -16,12 +16,13 @@ from setuptools import find_packages, setup
 
 if sys.version_info[:2] >= (3, 12):
     import os
-    from ast import Del as Str
     from sysconfig import _BASE_EXEC_PREFIX as BASE_EXEC_PREFIX
     from sysconfig import _BASE_PREFIX as BASE_PREFIX
     from sysconfig import _EXEC_PREFIX as EXEC_PREFIX
     from sysconfig import _PREFIX as PREFIX
     from sysconfig import get_python_version
+
+    Str = type("_Never", tuple(), {})
 
     def is_virtual_environment():
         """

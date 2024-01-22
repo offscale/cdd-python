@@ -31,8 +31,9 @@ PY_GTE_3_11: bool = _python_major_minor >= (3, 11)
 PY_GTE_3_12: bool = _python_major_minor >= (3, 12)
 
 if PY_GTE_3_8:
-    from ast import Del as Str
     from typing import Literal, Protocol
+
+    Str = type("_Never", tuple(), {})
 else:
     from ast import Str
 

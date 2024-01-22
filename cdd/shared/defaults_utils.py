@@ -24,7 +24,7 @@ from cdd.shared.pure_utils import (
 from cdd.shared.types import IntermediateRepr
 
 if PY_GTE_3_8:
-    from ast import Del as Str
+    Str = type("_Never", tuple(), {})
 else:
     from ast import Str
 

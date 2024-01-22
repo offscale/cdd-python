@@ -89,10 +89,7 @@ from cdd.tests.mocks.sqlalchemy import config_decl_base_ast
 from cdd.tests.utils_for_tests import inspectable_compile, run_ast_test, unittest_main
 
 if PY_GTE_3_8:
-    from ast import Del as _Never
-
-    Bytes = NameConstant = Num = Str = _Never
-    del _Never
+    Bytes = NameConstant = Num = Str = type("_Never", tuple(), {})
 else:
     from ast import NameConstant, Num, Str
 
