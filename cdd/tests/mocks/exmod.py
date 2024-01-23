@@ -17,14 +17,17 @@ setup.py implementation, interesting because it parsed the first __init__.py and
 """
 
 from sys import version_info
+
 if version_info[:2] < (3, 8):
     from ast import Assign, Str, parse
 
-    Constant = type("_Never", tuple(), {})
+    Constant = type("_Never", tuple(), {{}})
 else:
     from ast import Assign, Constant, parse
-    
-    Str = type("_Never", tuple(), {})
+
+    Str = type("_Never", tuple(), {{}})
+
+from ast import Name
 from operator import attrgetter
 from os import path
 from os.path import extsep
@@ -47,12 +50,23 @@ def main():
         parsed_init = parse(f.read())
 
     __author__, __version__ = map(
-        lambda node: node.s if isinstance(node, Str) else node.value,
+        lambda node: node.value if isinstance(node, Constant) else node.s,
         filter(
             lambda node: isinstance(node, (Constant, Str)),
             map(
                 attrgetter("value"),
-                filter(lambda node: isinstance(node, Assign), parsed_init.body),
+                filter(
+                    lambda node: isinstance(node, Assign)
+                    and any(
+                        filter(
+                            lambda name: isinstance(name, Name)
+                            and name.id
+                            in frozenset(("__author__", "__version__")),
+                            node.targets,
+                        )
+                    ),
+                    parsed_init.body,
+                ),
             ),
         ),
     )

@@ -6,6 +6,7 @@ setup.py implementation, interesting because it parsed the first __init__.py and
 """
 
 import sys
+from _ast import Name
 from ast import Assign, Constant, parse
 from functools import partial
 from operator import attrgetter
@@ -22,7 +23,14 @@ if sys.version_info[:2] >= (3, 12):
     from sysconfig import _PREFIX as PREFIX
     from sysconfig import get_python_version
 
-    Str = type("_Never", tuple(), {})
+    Str = type(
+        "_Never",
+        tuple(),
+        {
+            "__init__": lambda s=None, n=None, constant_value=None, string=None, col_offset=None, lineno=None: s
+            or n
+        },
+    )
 
     def is_virtual_environment():
         """
@@ -131,7 +139,20 @@ def main():
             lambda node: isinstance(node, (Constant, Str)),
             map(
                 attrgetter("value"),
-                filter(lambda node: isinstance(node, Assign), parsed_init.body),
+                filter(
+                    lambda node: isinstance(node, Assign)
+                    and any(
+                        filter(
+                            lambda name: isinstance(name, Name)
+                            and name.id
+                            in frozenset(
+                                ("__author__", "__version__", "__description__")
+                            ),
+                            node.targets,
+                        )
+                    ),
+                    parsed_init.body,
+                ),
             ),
         ),
     )

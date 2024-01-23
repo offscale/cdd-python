@@ -9,17 +9,13 @@ from operator import attrgetter
 from typing import FrozenSet
 
 from cdd.shared.ast_utils import get_value
-from cdd.shared.pure_utils import (
-    PY_GTE_3_8,
-    append_to_dict,
-    indent_all_but_first,
-    rpartial,
-    tab,
-)
+from cdd.shared.pure_utils import PY_GTE_3_8
+from cdd.shared.pure_utils import FakeConstant as Str
+from cdd.shared.pure_utils import append_to_dict, indent_all_but_first, rpartial, tab
 from cdd.shared.source_transformer import to_code
 
 if PY_GTE_3_8:
-    Str = type("_Never", tuple(), {})
+    pass
 else:
     from ast import Str
 

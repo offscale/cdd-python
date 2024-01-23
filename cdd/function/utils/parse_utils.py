@@ -11,7 +11,10 @@ from cdd.shared.pure_utils import PY_GTE_3_8, rpartial
 from cdd.shared.source_transformer import to_code
 
 if PY_GTE_3_8:
-    Num = Str = type("_Never", tuple(), {})
+    from cdd.shared.pure_utils import FakeConstant
+
+    Num = Str = FakeConstant
+    del FakeConstant
 else:
     from ast import Num, Str
 

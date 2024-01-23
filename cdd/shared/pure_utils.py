@@ -32,8 +32,6 @@ PY_GTE_3_12: bool = _python_major_minor >= (3, 12)
 
 if PY_GTE_3_8:
     from typing import Literal, Protocol
-
-    Str = type("_Never", tuple(), {})
 else:
     from ast import Str
 
@@ -1321,10 +1319,25 @@ sanitise_emit_name: Callable[[str], str] = dict(
     **{"class": "class_", "argparse": "argparse_function"},
 ).__getitem__
 
+FakeConstant = type(
+    "FakeConstant",
+    tuple(),
+    {
+        "__init__": (
+            lambda self, s=None, n=None, constant_value=None, string=None, col_offset=None, lineno=None: setattr(
+                self, "s", s or n
+            )
+            or setattr(self, "n", self.s)
+            or setattr(self, "value", self.s)
+        )
+    },
+)
+
 __all__ = [
     "BUILTIN_TYPES",
     "DUNDERS",
     "ENCODING",
+    "FakeConstant",
     "INIT_FILENAME",
     "PY3_8",
     "PY_GTE_3_11",

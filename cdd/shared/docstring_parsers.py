@@ -28,7 +28,10 @@ if sys.version_info[:2] < (3, 8):
     from typing_extensions import *  # noqa: F401,F403
     from typing_extensions import TypedDict
 else:
-    Bytes = NameConstant = Num = Str = type("_Never", tuple(), {})
+    from cdd.shared.pure_utils import FakeConstant
+
+    Bytes = NameConstant = Num = Str = FakeConstant
+    del FakeConstant
     from typing import TypedDict
 
 if sys.version_info[:2] > (3, 8):

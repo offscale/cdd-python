@@ -114,7 +114,7 @@ def _union_literal_from_sentence(sentence):
     ):
         return None
 
-    valid = frozenset(string.digits + "'\"")
+    valid = frozenset(string.digits + "'\"`")
     literals: int = (
         count_iter_items(
             takewhile(
@@ -122,7 +122,7 @@ def _union_literal_from_sentence(sentence):
                 map(itemgetter(0), union),
             )
         )
-        if union and union[0] in valid
+        if union and union[0] and union[0][0] in valid
         else 0
     )
     # binary-search or even interpolation search can be done? is it sorted here?
