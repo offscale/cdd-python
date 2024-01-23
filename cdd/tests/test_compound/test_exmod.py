@@ -372,6 +372,8 @@ class TestExMod(TestCase):
                         }.items()
                     },
                 )
+                if platform != "darwin":
+                    self.assertDictEqual(*self.normalise_double_paths(result, gold))
 
                 self._check_emission(existent_module_dir, new_module_dir, dry_run=True)
         finally:
