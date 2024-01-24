@@ -70,29 +70,6 @@ class TestExMod(TestCase):
             (cls.grandchild_name, cls.grandchild_dir),
         )
 
-    @staticmethod
-    def normalise_double_paths(*dictionaries):
-        """
-        On Windows the paths can come up weird, like C:\\\\foo instead of C:\\foo
-
-        This fixes that issue, and also safe to work on non-Windows
-
-        :param dictionaries: Dictionaries
-        :type dictionaries: ```tuple[dictionaries]```
-
-        :return: `map` of normalised `dictionaries`
-        :rtype: ```map```
-        """
-        return map(
-            lambda d: {
-                k: tuple(
-                    map(repr, map(rpartial(str.replace, path.sep * 2, path.sep), v))
-                )
-                for k, v in d.items()
-            },
-            dictionaries,
-        )
-
     @skipIf(
         "GITHUB_ACTIONS" in environ and version_info[:2] >= (3, 12),
         "GitHub Actions fails this test (unable to replicate locally)",
@@ -305,34 +282,39 @@ class TestExMod(TestCase):
                                 k_v[0],
                                 tuple(
                                     sorted(
-                                        set(
+                                        frozenset(
                                             map(
-                                                partial(
-                                                    relative_filename,
-                                                    remove_hints=(
-                                                        (
-                                                            lambda directory: (
-                                                                "{directory}{sep}".format(
-                                                                    directory=unquote(
-                                                                        repr(directory)
-                                                                    ),
-                                                                    sep=path.sep,
+                                                path.normcase,
+                                                map(
+                                                    partial(
+                                                        relative_filename,
+                                                        remove_hints=(
+                                                            (
+                                                                lambda directory: (
+                                                                    "{directory}{sep}".format(
+                                                                        directory=unquote(
+                                                                            directory
+                                                                        ),
+                                                                        sep=path.sep,
+                                                                    )
+                                                                    if platform
+                                                                    == "win32"
+                                                                    else directory
                                                                 )
-                                                                if platform == "win32"
-                                                                else directory
-                                                            )
-                                                        )(
-                                                            path.join(
-                                                                new_module_dir,
-                                                                path.basename(
-                                                                    new_module_dir
+                                                            )(
+                                                                path.join(
+                                                                    new_module_dir,
+                                                                    path.basename(
+                                                                        new_module_dir
+                                                                    ),
                                                                 ),
                                                             ),
                                                         ),
                                                     ),
-                                                ),
-                                                map(
-                                                    unquote, map(itemgetter(1), k_v[1])
+                                                    map(
+                                                        unquote,
+                                                        map(itemgetter(1), k_v[1]),
+                                                    ),
                                                 ),
                                             )
                                         )
@@ -358,26 +340,40 @@ class TestExMod(TestCase):
                     self.assertEqual(count, len(result[key]), key)
 
                 gold: ExmodOutput = ExmodOutput(
-                    touch=(path.join(path.dirname(self.gold_dir), INIT_FILENAME),),
+                    touch=(
+                        path.normcase(
+                            path.join(path.dirname(self.gold_dir), INIT_FILENAME)
+                        ),
+                    ),
                     **{
                         k: tuple(
                             map(
                                 rpartial(str.rstrip, path.sep),
-                                map(partial(path.join, new_module_dir), v),
+                                map(
+                                    path.normcase,
+                                    map(partial(path.join, new_module_dir), v),
+                                ),
                             )
                         )
                         for k, v in {
-                            "mkdir": ("", *map(itemgetter(1), self.module_hierarchy)),
+                            "mkdir": (
+                                "",
+                                *map(
+                                    path.normcase,
+                                    map(itemgetter(1), self.module_hierarchy),
+                                ),
+                            ),
                             "write": (INIT_FILENAME,),
                         }.items()
                     },
                 )
-                if platform != "darwin":
-                    self.assertDictEqual(*self.normalise_double_paths(result, gold))
+                self.assertDictEqual(result, gold)
 
                 self._check_emission(existent_module_dir, new_module_dir, dry_run=True)
         finally:
             self._pip(["uninstall", "-y", self.package_root_name])
+
+    maxDiff = None
 
     def create_and_install_pkg(self, root):
         """

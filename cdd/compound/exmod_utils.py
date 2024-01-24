@@ -266,7 +266,8 @@ def emit_file_on_hierarchy(
     if not path.isdir(mod_path):
         if dry_run:
             print(
-                "mkdir\t{mod_path!r}".format(mod_path=mod_path), file=EXMOD_OUT_STREAM
+                "mkdir\t'{mod_path}'".format(mod_path=path.normcase(mod_path)),
+                file=EXMOD_OUT_STREAM,
             )
         else:
             makedirs(mod_path)
@@ -274,7 +275,9 @@ def emit_file_on_hierarchy(
     init_filepath: str = path.join(path.dirname(mod_path), INIT_FILENAME)
     if dry_run:
         print(
-            "touch\t{init_filepath!r}".format(init_filepath=init_filepath),
+            "touch\t'{init_filepath}'".format(
+                init_filepath=path.normcase(init_filepath)
+            ),
             file=EXMOD_OUT_STREAM,
         )
     else:
@@ -327,8 +330,8 @@ def emit_file_on_hierarchy(
         if not path.isdir(emit_filename_dir):
             (
                 print(
-                    "mkdir\t{emit_filename_dir!r}".format(
-                        emit_filename_dir=emit_filename_dir
+                    "mkdir\t'{emit_filename_dir}'".format(
+                        emit_filename_dir=path.normcase(emit_filename_dir)
                     ),
                     file=EXMOD_OUT_STREAM,
                 )

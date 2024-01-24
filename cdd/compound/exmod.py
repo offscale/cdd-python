@@ -108,7 +108,9 @@ def exmod(
         )
     elif dry_run:
         print(
-            "mkdir\t{output_directory!r}".format(output_directory=output_directory),
+            "mkdir\t'{output_directory}'".format(
+                output_directory=path.normcase(output_directory)
+            ),
             file=cdd.compound.exmod_utils.EXMOD_OUT_STREAM,
         )
     elif not path.isdir(output_directory):
@@ -405,7 +407,9 @@ def exmod_single_folder(
     )
     if dry_run:
         print(
-            "write\t{init_filepath!r}".format(init_filepath=init_filepath),
+            "write\t'{init_filepath}'".format(
+                init_filepath=path.normcase(init_filepath)
+            ),
             file=cdd.compound.exmod_utils.EXMOD_OUT_STREAM,
         )
     else:
