@@ -255,6 +255,7 @@ class TestExMod(TestCase):
 
         try:
             with TemporaryDirectory(prefix="search_root", suffix="search_path") as root:
+                root = path.realpath(root)  # needed for macOS prepending "/private/" to path
                 existent_module_dir, new_module_dir = self.create_and_install_pkg(root)
 
                 with patch(
