@@ -493,9 +493,7 @@ def quote(s, mark='"'):
         else (
             s.s
             if isinstance(s, Str)
-            else s.id
-            if isinstance(s, Name)
-            else getattr(s, "value", s)
+            else s.id if isinstance(s, Name) else getattr(s, "value", s)
         )
     )
     # ^ Poor man's `get_value`

@@ -131,9 +131,11 @@ def exmod(
     module_root, _, submodule = module.rpartition(".")
     module_name, new_module_name = (
         module,
-        target_module_name or "___".join((module_root, "gold"))
-        if module_root
-        else "gold",
+        (
+            target_module_name or "___".join((module_root, "gold"))
+            if module_root
+            else "gold"
+        ),
     )
 
     try:
@@ -190,24 +192,26 @@ def exmod(
                 },
             ),
             (
-                map(
-                    lambda package: (
-                        lambda pkg_relative_dir: {
-                            "module": ".".join((module, package)),
-                            "module_name": package,
-                            "module_root_dir": path.join(
-                                module_root_dir, pkg_relative_dir
-                            ),
-                            "output_directory": path.join(
-                                output_directory, pkg_relative_dir
-                            ),
-                        }
-                    )(package.replace(".", path.sep)),
-                    packages,
+                (
+                    map(
+                        lambda package: (
+                            lambda pkg_relative_dir: {
+                                "module": ".".join((module, package)),
+                                "module_name": package,
+                                "module_root_dir": path.join(
+                                    module_root_dir, pkg_relative_dir
+                                ),
+                                "output_directory": path.join(
+                                    output_directory, pkg_relative_dir
+                                ),
+                            }
+                        )(package.replace(".", path.sep)),
+                        packages,
+                    )
                 )
-            )
-            if recursive
-            else iter(()),
+                if recursive
+                else iter(())
+            ),
         )
     )
     # This could be executed in parallel for efficiency

@@ -130,10 +130,12 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
             dict(
                 map(
                     lambda node: (
-                        node.name
-                        if current_module is None
-                        else "{current_module}.{name}".format(
-                            current_module=current_module, name=node.name
+                        (
+                            node.name
+                            if current_module is None
+                            else "{current_module}.{name}".format(
+                                current_module=current_module, name=node.name
+                            )
                         ),
                         node,
                     ),
@@ -500,9 +502,11 @@ def _emit_symbol(
                                 col_offset=None,
                             ),
                         ),
-                        imports_header_ast
-                        if mock_imports
-                        else (infer_imports(gen_node) or iter(())),
+                        (
+                            imports_header_ast
+                            if mock_imports
+                            else (infer_imports(gen_node) or iter(()))
+                        ),
                         (gen_node, __all___node),
                     )
                 )
@@ -671,9 +675,11 @@ def emit_files_from_module_and_return_imports(
                 ),
                 map(
                     lambda name_source: (
-                        name_source[0][len(module_name) + 1 :]
-                        if name_source[0].startswith(module_name)
-                        else name_source[0],
+                        (
+                            name_source[0][len(module_name) + 1 :]
+                            if name_source[0].startswith(module_name)
+                            else name_source[0]
+                        ),
                         name_source[1],
                     ),
                     get_module_contents(

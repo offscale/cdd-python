@@ -522,9 +522,7 @@ def _generic_param2ast(param):
             value = (
                 parsed_default.body[0].value
                 if hasattr(parsed_default, "body")
-                else parsed_default
-                if "default" in _param
-                else None
+                else parsed_default if "default" in _param else None
             )
         else:
             value = set_value(None)
@@ -2196,18 +2194,28 @@ def infer_imports(module):
                         None,
                         map(
                             # Because there are duplicate names, centralise all import resolution here and order them
-                            lambda e: (e, "typing")
-                            if e in typing___all__
-                            else (e, "typing_extensions")
-                            if e in typing_extensions___all__
-                            else (e, "collections.abc")
-                            if e in collections_abc___all__
-                            else (e, "sqlalchemy")
-                            if e in sqlalchemy___all__
-                            else (e, "pydantic")
-                            if e in pydantic___all__
-                            # else block: pydantic; sqlalchemy; other things as cdd-python grows
-                            else None,
+                            lambda e: (
+                                (e, "typing")
+                                if e in typing___all__
+                                else (
+                                    (e, "typing_extensions")
+                                    if e in typing_extensions___all__
+                                    else (
+                                        (e, "collections.abc")
+                                        if e in collections_abc___all__
+                                        else (
+                                            (e, "sqlalchemy")
+                                            if e in sqlalchemy___all__
+                                            else (
+                                                (e, "pydantic")
+                                                if e in pydantic___all__
+                                                # else block: pydantic; sqlalchemy; other things as cdd-python grows
+                                                else None
+                                            )
+                                        )
+                                    )
+                                )
+                            ),
                             sorted(
                                 frozenset(
                                     chain.from_iterable(

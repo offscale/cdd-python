@@ -500,7 +500,8 @@ docstring_google_pytorch_lbfgs = (
 )
 docstring_google_pytorch_lbfgs_str: str = "\n".join(docstring_google_pytorch_lbfgs)
 
-docstring_google_str: str = """{docstring_header_str}
+docstring_google_str: str = (
+    """{docstring_header_str}
 Args:
   dataset_name (str): name of dataset. Defaults to "mnist"
   tfds_dir (str): directory to look for models in. Defaults to "~/tensorflow_datasets"
@@ -512,10 +513,12 @@ Returns:
   Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
    Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 """.format(
-    docstring_header_str=docstring_header_str
+        docstring_header_str=docstring_header_str
+    )
 )
 
-docstring_no_default_doc_str: str = """
+docstring_no_default_doc_str: str = (
+    """
 {header_doc_str}
 :param dataset_name: name of dataset.
 :type dataset_name: ```str```
@@ -535,7 +538,8 @@ docstring_no_default_doc_str: str = """
 :return: Train and tests dataset splits.
 :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
 """.format(
-    header_doc_str=docstring_header_str
+        header_doc_str=docstring_header_str
+    )
 )
 
 docstring_no_default_doc_wrapped_str: str = docstring_no_default_doc_str.replace(
@@ -571,10 +575,12 @@ docstring_no_default_no_nl_str: str = _docstring_no_default_str.format(
     header_doc_str=docstring_header_no_nl_str
 )
 
-docstring_numpydoc_only_doc_str: str = """
+docstring_numpydoc_only_doc_str: str = (
+    """
 {header_doc_str}
 """.format(
-    header_doc_str=docstring_header_str
+        header_doc_str=docstring_header_str
+    )
 )
 
 docstring_numpydoc_only_params_str: str = """
@@ -599,7 +605,8 @@ Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]
     Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 """
 
-docstring_numpydoc_str: str = """{docstring_header_str}
+docstring_numpydoc_str: str = (
+    """{docstring_header_str}
 Parameters
 ----------
 dataset_name : str
@@ -614,10 +621,11 @@ data_loader_kwargs : Optional[dict]
     pass this as arguments to data_loader function
 
 {docstring_numpydoc_only_returns_str}""".format(
-    docstring_header_str=docstring_header_str,
-    docstring_numpydoc_only_returns_str=docstring_numpydoc_only_returns_str.lstrip(
-        "\n"
-    ),
+        docstring_header_str=docstring_header_str,
+        docstring_numpydoc_only_returns_str=docstring_numpydoc_only_returns_str.lstrip(
+            "\n"
+        ),
+    )
 )
 
 docstring_only_return_type_str: str = """
@@ -662,7 +670,8 @@ docstring_wrapped_str: str = docstring_str.replace(
     " np.ndarray]]```", "\n{tab}np.ndarray]]```".format(tab=tab)
 )
 
-docstring_no_type_str: str = """
+docstring_no_type_str: str = (
+    """
 {header_doc_str}
 
 :param dataset_name: name of dataset. Defaults to "mnist"
@@ -677,7 +686,8 @@ docstring_no_type_str: str = """
 
 :return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
 """.format(
-    header_doc_str=docstring_header_str
+        header_doc_str=docstring_header_str
+    )
 )
 
 docstring_no_type_no_default_tpl_str: str = """
