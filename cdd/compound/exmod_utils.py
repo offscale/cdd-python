@@ -1,8 +1,8 @@
 """ Exmod utils """
 
-import ast
 import sys
 from ast import AST, Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias
+from ast import walk as ast_walk
 from collections import OrderedDict, defaultdict, deque
 from functools import partial
 from inspect import getfile, ismodule
@@ -31,6 +31,7 @@ from cdd.shared.pure_utils import (
     read_file_to_str,
     rpartial,
     sanitise_emit_name,
+    pp,
 )
 from cdd.shared.source_transformer import ast_parse
 from cdd.tests.mocks import imports_header_ast
@@ -92,7 +93,7 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
             (
                 mod_to_symbol[import_from.module].append(name.name)
                 for import_from in filter(
-                    rpartial(isinstance, ImportFrom), ast.walk(mod)
+                    rpartial(isinstance, ImportFrom), ast_walk(mod)
                 )
                 for name in import_from.names
                 if name.asname is None
@@ -235,8 +236,8 @@ def emit_file_on_hierarchy(
     :param dry_run: Show what would be created; don't actually write to the filesystem
     :type dry_run: ```bool```
 
-    :return: Import to generated module
-    :rtype: ```ImportFrom```
+    :return: (mod_name or None, relative_filename_path, ImportFrom) to generated module
+    :rtype: ```Tuple[Optional[str], str, ImportFrom]```
     """
     mod_name, _, name = name_orig_ir[0].rpartition(".")
     original_relative_filename_path, ir = name_orig_ir[1], name_orig_ir[2]
@@ -356,7 +357,7 @@ def emit_file_on_hierarchy(
         )
 
     return (
-        mod_name,
+        mod_name or None,
         relative_filename_path,
         ImportFrom(
             module=name,
@@ -522,7 +523,11 @@ def _emit_symbol(
             file=EXMOD_OUT_STREAM,
         )
     else:
-        cdd.shared.emit.file.file(gen_node, filename=emit_filename, mode="wt")
+        try:
+            cdd.shared.emit.file.file(gen_node, filename=emit_filename, mode="wt")
+        except:
+            print("fo")
+            raise
     if name != "__init__" and not path.isfile(init_filepath):
         if dry_run:
             print(
@@ -610,8 +615,8 @@ def emit_files_from_module_and_return_imports(
     :param filesystem_layout: Hierarchy of folder and file names generated. "java" is file per package per name.
     :type filesystem_layout: ```Literal["java", "as_input"]```
 
-    :return: List of `ImportFrom` referring to generated module
-    :rtype: ```list[ImportFrom]```
+    :return: List of (mod_name or None, relative_filename_path, ImportFrom) to generated module(s)
+    :rtype: ```list[Tuple[Optional[str], str, ImportFrom]]```
     """
     _emit_file_on_hierarchy = partial(
         emit_file_on_hierarchy,
@@ -626,7 +631,7 @@ def emit_files_from_module_and_return_imports(
     )
 
     # Might need some `groupby` in case multiple files are in the one project; same for `get_module_contents`
-    return list(
+    r = list(
         map(
             _emit_file_on_hierarchy,
             map(
@@ -675,6 +680,8 @@ def emit_files_from_module_and_return_imports(
             ),
         ),
     )
+    pp(r)
+    return r
 
 
 __all__ = [

@@ -5,13 +5,13 @@ from functools import partial
 from io import StringIO
 from itertools import chain, groupby
 from operator import itemgetter
-from os import environ, listdir, mkdir, path, walk
+from os import listdir, mkdir, path, walk
 from os.path import extsep
 from subprocess import run
-from sys import executable, platform, version_info
+from sys import executable, platform
 from tempfile import TemporaryDirectory
 from typing import Tuple, Union, cast
-from unittest import TestCase, skipIf
+from unittest import TestCase
 from unittest.mock import patch
 
 import cdd.class_.parse
@@ -70,10 +70,6 @@ class TestExMod(TestCase):
             (cls.grandchild_name, cls.grandchild_dir),
         )
 
-    @skipIf(
-        "GITHUB_ACTIONS" in environ and version_info[:2] >= (3, 12),
-        "GitHub Actions fails this test (unable to replicate locally)",
-    )
     def test_exmod(self) -> None:
         """Tests `exmod`"""
 
@@ -97,10 +93,6 @@ class TestExMod(TestCase):
             # sys.path.remove(existent_module_dir)
             self._pip(["uninstall", "-y", self.package_root_name])
 
-    @skipIf(
-        "GITHUB_ACTIONS" in environ and version_info[:2] >= (3, 12),
-        "GitHub Actions fails this test (unable to replicate locally)",
-    )
     def test_exmod_blacklist(self) -> None:
         """Tests `exmod` blacklist"""
 
@@ -128,10 +120,6 @@ class TestExMod(TestCase):
         finally:
             self._pip(["uninstall", "-y", self.package_root_name])
 
-    @skipIf(
-        "GITHUB_ACTIONS" in environ and version_info[:2] >= (3, 12),
-        "GitHub Actions fails this test (unable to replicate locally)",
-    )
     def test_exmod_whitelist(self) -> None:
         """Tests `exmod` whitelist"""
 
@@ -182,10 +170,6 @@ class TestExMod(TestCase):
         finally:
             self._pip(["uninstall", "-y", self.package_root_name])
 
-    @skipIf(
-        "GITHUB_ACTIONS" in environ and version_info[:2] >= (3, 12),
-        "GitHub Actions fails this test (unable to replicate locally)",
-    )
     def test_exmod_module_directory(self) -> None:
         """Tests `exmod` module whence directory"""
 
@@ -203,10 +187,6 @@ class TestExMod(TestCase):
                 dry_run=False,
             )
 
-    @skipIf(
-        "GITHUB_ACTIONS" in environ and version_info[:2] >= (3, 12),
-        "GitHub Actions fails this test (unable to replicate locally)",
-    )
     def test_exmod_no_module(self) -> None:
         """Tests that ModuleNotFound error is raised when module is not installed"""
         with TemporaryDirectory() as tempdir, self.assertRaises(ModuleNotFoundError):
@@ -223,10 +203,6 @@ class TestExMod(TestCase):
                 dry_run=False,
             )
 
-    @skipIf(
-        "GITHUB_ACTIONS" in environ and version_info[:2] >= (3, 12),
-        "GitHub Actions fails this test (unable to replicate locally)",
-    )
     def test_exmod_output_directory_nonexistent(self) -> None:
         """Tests `exmod` module whence directory does not exist"""
 
@@ -246,10 +222,6 @@ class TestExMod(TestCase):
                 dry_run=False,
             )
 
-    @skipIf(
-        "GITHUB_ACTIONS" in environ and version_info[:2] >= (3, 12),
-        "GitHub Actions fails this test (unable to replicate locally)",
-    )
     def test_exmod_dry_run(self) -> None:
         """Tests `exmod` dry_run"""
 
@@ -375,8 +347,6 @@ class TestExMod(TestCase):
                 self._check_emission(existent_module_dir, new_module_dir, dry_run=True)
         finally:
             self._pip(["uninstall", "-y", self.package_root_name])
-
-    maxDiff = None
 
     def create_and_install_pkg(self, root):
         """

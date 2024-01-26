@@ -6,8 +6,7 @@ setup.py implementation, interesting because it parsed the first __init__.py and
 """
 
 import sys
-from _ast import Name
-from ast import Assign, Constant, parse
+from ast import Assign, Constant, Name, parse
 from functools import partial
 from operator import attrgetter
 from os import path

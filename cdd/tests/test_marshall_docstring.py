@@ -349,8 +349,6 @@ class TestMarshallDocstring(TestCase):
         )
         self.assertEqual(gen, docstring_google_tf_mean_squared_error_str)
 
-    maxDiff = None
-
     # def test_(self):
     #     gold_google_doc_str = """
     #     foo
