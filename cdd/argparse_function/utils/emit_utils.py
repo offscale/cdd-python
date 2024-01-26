@@ -89,7 +89,6 @@ def parse_out_param(expr, require_default=False, emit_default_doc=True):
     :return: Name, dict with keys: 'typ', 'doc', 'default'
     :rtype: ```tuple[str, dict]```
     """
-    # print("require_default:", require_default, ";")
     required: bool = get_value(
         get_value(
             next(

@@ -34,7 +34,7 @@ from ast import (
     keyword,
     walk,
 )
-from collections import namedtuple
+from collections import deque, namedtuple
 from collections.abc import __all__ as collections_abc__all__
 from contextlib import suppress
 from copy import deepcopy
@@ -2234,10 +2234,72 @@ def infer_imports(module):
                 key=itemgetter(1),
             ),
         )
-    )
+    )  # type: tuple[ImportFrom, ...]
 
     # cdd.sqlalchemy.utils.parse_utils.imports_from(sqlalchemy_class_or_assigns)
     return imports if imports else None
+
+
+def deduplicate_sorted_imports(module):
+    """
+    Deduplicate sorted imports. NOTE: for a more extensive solution use isort or ruff.
+
+    :param module: Module
+    :type module: ```Module```
+
+    :return: Module but with duplicate import entries in first import block removed
+    :rtype: ```Module```
+    """
+    assert isinstance(module, Module)
+    fst_import_idx = next(
+        map(
+            itemgetter(0),
+            filter(
+                lambda idx_node: isinstance(idx_node[1], (ImportFrom, Import)),
+                enumerate(module.body),
+            ),
+        ),
+        None,
+    )
+    if fst_import_idx is None:
+        return module
+    lst_import_idx = next(
+        iter(
+            deque(
+                map(
+                    itemgetter(0),
+                    filter(
+                        lambda idx_node: isinstance(idx_node[1], (ImportFrom, Import)),
+                        enumerate(module.body, fst_import_idx),
+                    ),
+                ),
+                maxlen=1,
+            )
+        ),
+        None,
+    )
+
+    module.body = (
+        module.body[:fst_import_idx]
+        + [
+            # TODO: Infer `level` and deduplicate `names`
+            ImportFrom(
+                module=name,
+                names=sorted(
+                    chain.from_iterable(map(attrgetter("names"), import_from_nodes)),
+                    key=attrgetter("name"),
+                ),
+                level=0,  # import_from_nodes[0].level
+                identifier=None,
+            )
+            for name, import_from_nodes in groupby(
+                module.body[fst_import_idx:lst_import_idx], key=attrgetter("module")
+            )
+        ]
+        + module.body[lst_import_idx:]
+    )
+
+    return module
 
 
 NoneStr = "```(None)```" if PY_GTE_3_9 else "```None```"
@@ -2257,6 +2319,7 @@ __all__ = [
     "cmp_ast",
     "code_quoted",
     "construct_module_with_symbols",
+    "deduplicate_sorted_imports",
     "del_ass_where_name",
     "emit_ann_assign",
     "emit_arg",

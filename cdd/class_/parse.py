@@ -116,7 +116,6 @@ def class_(
     for e in body:
         if isinstance(e, AnnAssign):
             typ: str = to_code(e.annotation).rstrip("\n")
-            # print(ast.dump(e, indent=4))
             val = (
                 (
                     lambda v: (

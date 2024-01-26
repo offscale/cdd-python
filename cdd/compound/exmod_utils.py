@@ -1,5 +1,4 @@
 """ Exmod utils """
-
 import sys
 from ast import AST, Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias
 from ast import walk as ast_walk
@@ -23,7 +22,7 @@ import cdd.pydantic.emit
 import cdd.shared.ast_utils
 import cdd.shared.emit.file
 import cdd.sqlalchemy.emit
-from cdd.shared.ast_utils import infer_imports
+from cdd.shared.ast_utils import deduplicate_sorted_imports, infer_imports
 from cdd.shared.parse.utils.parser_utils import get_parser
 from cdd.shared.pkg_utils import relative_filename
 from cdd.shared.pure_utils import (
@@ -31,7 +30,6 @@ from cdd.shared.pure_utils import (
     read_file_to_str,
     rpartial,
     sanitise_emit_name,
-    pp,
 )
 from cdd.shared.source_transformer import ast_parse
 from cdd.tests.mocks import imports_header_ast
@@ -516,6 +514,14 @@ def _emit_symbol(
             gen_node: Module = cdd.shared.ast_utils.merge_modules(
                 cast(Module, existent_mod), gen_node
             )
+            inferred_imports = infer_imports(gen_node)
+            if inferred_imports:
+                gen_node.body = list(
+                    chain.from_iterable(
+                        ((gen_node.body[0],), inferred_imports, gen_node.body[1:])
+                    )
+                )
+                gen_node = deduplicate_sorted_imports(gen_node)
         cdd.shared.ast_utils.merge_assignment_lists(gen_node, "__all__")
     if dry_run:
         print(
@@ -523,11 +529,7 @@ def _emit_symbol(
             file=EXMOD_OUT_STREAM,
         )
     else:
-        try:
-            cdd.shared.emit.file.file(gen_node, filename=emit_filename, mode="wt")
-        except:
-            print("fo")
-            raise
+        cdd.shared.emit.file.file(gen_node, filename=emit_filename, mode="wt")
     if name != "__init__" and not path.isfile(init_filepath):
         if dry_run:
             print(
@@ -631,7 +633,7 @@ def emit_files_from_module_and_return_imports(
     )
 
     # Might need some `groupby` in case multiple files are in the one project; same for `get_module_contents`
-    r = list(
+    return list(
         map(
             _emit_file_on_hierarchy,
             map(
@@ -680,8 +682,6 @@ def emit_files_from_module_and_return_imports(
             ),
         ),
     )
-    pp(r)
-    return r
 
 
 __all__ = [

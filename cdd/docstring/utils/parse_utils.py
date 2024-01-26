@@ -330,7 +330,6 @@ def _parse_adhoc_doc_for_typ_phase0(doc, words):
     fst_sentence: str = "".join(words[:sentence_ends])
     sentence: Optional[str] = None
     # type_in_fst_sentence = adhoc_type_to_type.get(next(filterfalse(str.isspace, words)))
-    # pp({"type_in_fst_sentence": type_in_fst_sentence})
     if " or " in fst_sentence or " of " in fst_sentence:
         sentence = fst_sentence
     else:
