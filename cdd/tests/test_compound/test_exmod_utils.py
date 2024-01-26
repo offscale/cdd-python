@@ -71,21 +71,17 @@ class TestExmodUtils(TestCase):
 
     def test__emit_symbols_isfile_emit_filename_true(self) -> None:
         """Test `_emit_symbol` when `isfile_emit_filename is True`"""
-        with (
-            patch("cdd.compound.exmod_utils.EXMOD_OUT_STREAM", new_callable=StringIO),
-            patch(
-                "cdd.shared.ast_utils.merge_modules", MagicMock()
-            ) as func__merge_modules,
-            patch(
-                "cdd.shared.ast_utils.merge_assignment_lists", MagicMock()
-            ) as func__merge_assignment_lists,
-            patch(
-                "cdd.compound.exmod_utils.infer_imports", MagicMock()
-            ) as func__infer_imports,
-            patch(
-                "cdd.compound.exmod_utils.deduplicate_sorted_imports", MagicMock()
-            ) as func__deduplicate_sorted_imports,
-        ):
+        with patch(
+            "cdd.compound.exmod_utils.EXMOD_OUT_STREAM", new_callable=StringIO
+        ), patch(
+            "cdd.shared.ast_utils.merge_modules", MagicMock()
+        ) as func__merge_modules, patch(
+            "cdd.shared.ast_utils.merge_assignment_lists", MagicMock()
+        ) as func__merge_assignment_lists, patch(
+            "cdd.compound.exmod_utils.infer_imports", MagicMock()
+        ) as func__infer_imports, patch(
+            "cdd.compound.exmod_utils.deduplicate_sorted_imports", MagicMock()
+        ) as func__deduplicate_sorted_imports:
             _emit_symbol(
                 name_orig_ir=("", "", dict()),
                 emit_name="argparse",
