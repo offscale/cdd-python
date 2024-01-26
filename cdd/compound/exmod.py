@@ -1,6 +1,7 @@
 """
 Not a dead module
 """
+
 import typing
 from ast import Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias, parse
 from collections import deque

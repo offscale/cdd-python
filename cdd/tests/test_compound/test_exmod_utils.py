@@ -71,13 +71,21 @@ class TestExmodUtils(TestCase):
 
     def test__emit_symbols_isfile_emit_filename_true(self) -> None:
         """Test `_emit_symbol` when `isfile_emit_filename is True`"""
-        with patch(
-            "cdd.compound.exmod_utils.EXMOD_OUT_STREAM", new_callable=StringIO
-        ), patch(
-            "cdd.shared.ast_utils.merge_modules", MagicMock()
-        ) as func__merge_modules, patch(
-            "cdd.shared.ast_utils.merge_assignment_lists", MagicMock()
-        ) as func__merge_assignment_lists:
+        with (
+            patch("cdd.compound.exmod_utils.EXMOD_OUT_STREAM", new_callable=StringIO),
+            patch(
+                "cdd.shared.ast_utils.merge_modules", MagicMock()
+            ) as func__merge_modules,
+            patch(
+                "cdd.shared.ast_utils.merge_assignment_lists", MagicMock()
+            ) as func__merge_assignment_lists,
+            patch(
+                "cdd.compound.exmod_utils.infer_imports", MagicMock()
+            ) as func__infer_imports,
+            patch(
+                "cdd.compound.exmod_utils.deduplicate_sorted_imports", MagicMock()
+            ) as func__deduplicate_sorted_imports,
+        ):
             _emit_symbol(
                 name_orig_ir=("", "", dict()),
                 emit_name="argparse",
@@ -98,6 +106,8 @@ class TestExmodUtils(TestCase):
             )
             func__merge_modules.assert_called_once()
             func__merge_assignment_lists.assert_called_once()
+            func__infer_imports.assert_called_once()
+            func__deduplicate_sorted_imports.assert_called_once()
 
     def test_get_module_contents_empty(self) -> None:
         """`get_module_contents`"""
