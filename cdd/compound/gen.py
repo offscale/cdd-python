@@ -13,6 +13,7 @@ from typing import Union
 import cdd.compound.openapi.utils.emit_utils
 import cdd.json_schema.emit
 import cdd.shared.parse.utils.parser_utils
+import cdd.sqlalchemy.utils.emit_utils
 from cdd.compound.gen_utils import (
     file_to_input_mapping,
     gen_file,
@@ -91,15 +92,11 @@ def gen(
         ("sqlalchemy", "sqlalchemy_hybrid", "sqlalchemy_table")
     ):
         if phase == 1:
-            return (
-                cdd.compound.openapi.utils.emit_utils.update_with_imports_from_columns(
-                    output_filename
-                )
-            )
-        elif phase == 2:
-            return cdd.compound.openapi.utils.emit_utils.update_fk_for_file(
+            return cdd.sqlalchemy.utils.emit_utils.update_with_imports_from_columns(
                 output_filename
             )
+        elif phase == 2:
+            return cdd.sqlalchemy.utils.emit_utils.update_fk_for_file(output_filename)
         else:
             raise NotImplementedError("phase {}".format(phase))
     elif imports_from_file is None:

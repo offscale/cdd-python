@@ -8,8 +8,7 @@ from typing import List
 
 from cdd.shared.pure_utils import PY_GTE_3_8
 
-imports_header: str = (
-    """
+imports_header: str = """
 from {package} import Literal
 from typing import Optional, Tuple, Union
 
@@ -20,8 +19,7 @@ except ImportError:
     tf = type('TensorFlow', tuple(), {{ 'data': type('Dataset', tuple(), {{ "Dataset": None }}) }} )
     np = type('numpy', tuple(), {{ 'ndarray': None, 'empty': lambda _: _ }})
 """.format(
-        package="typing" if PY_GTE_3_8 else "typing_extensions"
-    )
+    package="typing" if PY_GTE_3_8 else "typing_extensions"
 )
 
 imports_header_ast: List[AST] = ast_parse(imports_header).body

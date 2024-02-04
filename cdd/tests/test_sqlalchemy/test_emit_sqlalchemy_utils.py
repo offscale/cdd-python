@@ -23,14 +23,14 @@ from os import mkdir, path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-from cdd.compound.openapi.utils.emit_utils import (
+from cdd.sqlalchemy.utils.emit_utils import (
+    param_to_sqlalchemy_column_calls,
     ensure_has_primary_key,
     generate_create_from_attr_staticmethod,
-    param_to_sqlalchemy_column_call,
+    update_with_imports_from_columns,
+    update_fk_for_file,
     sqlalchemy_class_to_table,
     sqlalchemy_table_to_class,
-    update_fk_for_file,
-    update_with_imports_from_columns,
 )
 from cdd.shared.ast_utils import set_value
 from cdd.shared.pure_utils import rpartial
@@ -140,7 +140,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
         """Tests that with SQL constraints the SQLalchemy column is correctly generated"""
         run_ast_test(
             self,
-            param_to_sqlalchemy_column_call(
+            param_to_sqlalchemy_column_calls(
                 (
                     "foo",
                     {
@@ -150,7 +150,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
                     },
                 ),
                 include_name=False,
-            ),
+            )[0],
             gold=Call(
                 func=Name(id="Column", ctx=Load(), lineno=None, col_offset=None),
                 args=[Name(id="String", ctx=Load(), lineno=None, col_offset=None)],
@@ -164,7 +164,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
         """Tests that SQLalchemy column with simple foreign key is correctly generated"""
         run_ast_test(
             self,
-            param_to_sqlalchemy_column_call(
+            param_to_sqlalchemy_column_calls(
                 (
                     lambda _name: (
                         _name,
@@ -172,7 +172,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
                     )
                 )("primary_element"),
                 include_name=True,
-            ),
+            )[0],
             gold=node_fk_call,
         )
 
@@ -180,7 +180,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
         """Tests that SQLalchemy column is generated with schema as comment"""
         run_ast_test(
             self,
-            param_to_sqlalchemy_column_call(
+            param_to_sqlalchemy_column_calls(
                 (
                     "foo",
                     {
@@ -190,7 +190,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
                     },
                 ),
                 include_name=False,
-            ),
+            )[0],
             gold=Call(
                 func=Name(id="Column", ctx=Load(), lineno=None, col_offset=None),
                 args=[Name(id="JSON", ctx=Load(), lineno=None, col_offset=None)],
@@ -230,6 +230,40 @@ class TestEmitSqlAlchemyUtils(TestCase):
                 col_offset=None,
             ),
         )
+
+    # TODO
+    # def test_param_to_sqlalchemy_column_call_for_complex_union(self) -> None:
+    #     """Tests that SQLalchemy column is generated from a complex union"""
+    #     run_ast_test(
+    #         self,
+    #         param_to_sqlalchemy_column_calls(
+    #             (
+    #                 "epoch_bool_or_int",
+    #                 {
+    #                     "doc": "",
+    #                     "typ": 'Union[Literal["epoch"], bool, int]',
+    #                 },
+    #             ),
+    #             include_name=False,
+    #         ),
+    #         gold=Call(
+    #             func=Name(id="Column", ctx=Load(), lineno=None, col_offset=None),
+    #             args=[Name(id="JSON", ctx=Load(), lineno=None, col_offset=None)],
+    #             keywords=[
+    #                 keyword(
+    #                     arg="comment",
+    #                     value=set_value(
+    #                         "[schema={}]".format(
+    #                             json.dumps(intermediate_repr_no_default_doc)
+    #                         )
+    #                     ),
+    #                     identifier=None,
+    #                 )
+    #             ],
+    #             lineno=None,
+    #             col_offset=None,
+    #         ),
+    #     )
 
     def test_update_args_infer_typ_sqlalchemy_when_simple_array_in_typ(self) -> None:
         """Tests that SQLalchemy can infer the typ from a simple array (in `typ`)"""

@@ -11,6 +11,7 @@ from os import environ
 from typing import Optional
 
 import cdd.compound.openapi.utils.emit_utils
+import cdd.sqlalchemy.utils.emit_utils
 from cdd.docstring.emit import docstring
 from cdd.shared.ast_utils import maybe_type_comment, set_value
 from cdd.shared.pure_utils import deindent, ensure_valid_identifier
@@ -95,12 +96,12 @@ def sqlalchemy_table(
                                 Name("metadata", Load(), lineno=None, col_offset=None),
                             )
                         ),
-                        map(
+                        *map(
                             partial(
-                                cdd.compound.openapi.utils.emit_utils.param_to_sqlalchemy_column_call,
+                                cdd.sqlalchemy.utils.emit_utils.param_to_sqlalchemy_column_calls,
                                 include_name=True,
                             ),
-                            cdd.compound.openapi.utils.emit_utils.ensure_has_primary_key(
+                            cdd.sqlalchemy.utils.emit_utils.ensure_has_primary_key(
                                 intermediate_repr["params"], force_pk_id
                             ).items(),
                         ),
@@ -253,80 +254,101 @@ def sqlalchemy(
         body=list(
             filter(
                 None,
-                (
+                chain.from_iterable(
                     (
-                        Expr(
-                            set_value(
-                                concat_with_whitespace(
-                                    *map(
-                                        partial(
-                                            docstring,
-                                            docstring_format=docstring_format,
-                                            emit_default_doc=emit_default_doc,
-                                            emit_original_whitespace=emit_original_whitespace,
-                                            emit_separating_tab=True,
-                                            emit_types=True,
-                                            indent_level=1,
-                                            word_wrap=word_wrap,
-                                        ),
-                                        (
-                                            {
-                                                "doc": intermediate_repr["doc"],
-                                                "params": OrderedDict(),
-                                                "returns": None,
-                                            },
-                                            {
-                                                "doc": "",
-                                                "params": OrderedDict(),
-                                                "returns": intermediate_repr["returns"],
-                                            },
-                                        ),
+                        (
+                            (
+                                Expr(
+                                    set_value(
+                                        concat_with_whitespace(
+                                            *map(
+                                                partial(
+                                                    docstring,
+                                                    docstring_format=docstring_format,
+                                                    emit_default_doc=emit_default_doc,
+                                                    emit_original_whitespace=emit_original_whitespace,
+                                                    emit_separating_tab=True,
+                                                    emit_types=True,
+                                                    indent_level=1,
+                                                    word_wrap=word_wrap,
+                                                ),
+                                                (
+                                                    {
+                                                        "doc": intermediate_repr["doc"],
+                                                        "params": OrderedDict(),
+                                                        "returns": None,
+                                                    },
+                                                    {
+                                                        "doc": "",
+                                                        "params": OrderedDict(),
+                                                        "returns": intermediate_repr[
+                                                            "returns"
+                                                        ],
+                                                    },
+                                                ),
+                                            )
+                                        )
+                                    ),
+                                    lineno=None,
+                                    col_offset=None,
+                                )
+                                if intermediate_repr.get("doc")
+                                or (intermediate_repr["returns"] or {})
+                                .get("return_type", {})
+                                .get("doc")
+                                else None
+                            ),
+                            Assign(
+                                targets=[
+                                    Name(
+                                        "__tablename__",
+                                        Store(),
+                                        lineno=None,
+                                        col_offset=None,
                                     )
-                                )
+                                ],
+                                value=set_value(table_name or class_name),
+                                expr=None,
+                                lineno=None,
+                                **maybe_type_comment,
                             ),
-                            lineno=None,
-                            col_offset=None,
-                        )
-                        if intermediate_repr.get("doc")
-                        or (intermediate_repr["returns"] or {})
-                        .get("return_type", {})
-                        .get("doc")
-                        else None
-                    ),
-                    Assign(
-                        targets=[
-                            Name("__tablename__", Store(), lineno=None, col_offset=None)
-                        ],
-                        value=set_value(table_name or class_name),
-                        expr=None,
-                        lineno=None,
-                        **maybe_type_comment,
-                    ),
-                    *map(
-                        lambda name_param: Assign(
-                            targets=[
-                                Name(
-                                    name_param[0], Store(), lineno=None, col_offset=None
-                                )
-                            ],
-                            value=cdd.compound.openapi.utils.emit_utils.param_to_sqlalchemy_column_call(
-                                name_param, include_name=False
-                            ),
-                            expr=None,
-                            lineno=None,
-                            **maybe_type_comment,
                         ),
-                        cdd.compound.openapi.utils.emit_utils.ensure_has_primary_key(
-                            intermediate_repr["params"], force_pk_id
-                        ).items(),
-                    ),
-                    (
-                        cdd.compound.openapi.utils.emit_utils.generate_repr_method(
-                            intermediate_repr["params"], class_name, docstring_format
-                        )
-                        if emit_repr
-                        else None
-                    ),
+                        *map(
+                            lambda name_param: map(
+                                lambda column: Assign(
+                                    targets=[
+                                        Name(
+                                            name_param[0],
+                                            Store(),
+                                            lineno=None,
+                                            col_offset=None,
+                                        )
+                                    ],
+                                    value=column,
+                                    expr=None,
+                                    lineno=None,
+                                    **maybe_type_comment,
+                                ),
+                                cdd.sqlalchemy.utils.emit_utils.param_to_sqlalchemy_column_calls(
+                                    name_param, include_name=False
+                                ),
+                            ),
+                            cdd.sqlalchemy.utils.emit_utils.ensure_has_primary_key(
+                                intermediate_repr["params"], force_pk_id
+                            ).items(),
+                        ),
+                        (
+                            (
+                                cdd.sqlalchemy.utils.emit_utils.generate_repr_method(
+                                    intermediate_repr["params"],
+                                    class_name,
+                                    docstring_format,
+                                )
+                                if emit_repr
+                                else None
+                            ),
+                        ),
+                    )
                 ),
             )
         ),
@@ -489,14 +511,14 @@ def sqlalchemy_hybrid(
                         emit_default_doc=emit_default_doc,
                     ),
                     (
-                        cdd.compound.openapi.utils.emit_utils.generate_repr_method(
+                        cdd.sqlalchemy.utils.emit_utils.generate_repr_method(
                             intermediate_repr["params"], class_name, docstring_format
                         )
                         if emit_repr
                         else None
                     ),
                     (
-                        cdd.compound.openapi.utils.emit_utils.generate_create_from_attr_staticmethod(
+                        cdd.sqlalchemy.utils.emit_utils.generate_create_from_attr_staticmethod(
                             intermediate_repr["params"], class_name, docstring_format
                         )
                         if emit_create_from_attr

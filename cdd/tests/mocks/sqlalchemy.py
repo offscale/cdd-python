@@ -54,8 +54,7 @@ sqlalchemy_imports_str: str = "\n".join(
     )
 )
 
-config_tbl_with_comments_str: str = (
-    """
+config_tbl_with_comments_str: str = """
 config_tbl = Table(
     "config_tbl",
     metadata,
@@ -95,8 +94,7 @@ config_tbl = Table(
     comment={comment!r},
 )
 """.format(
-        comment=docstring_header_and_return_two_nl_str
-    )
+    comment=docstring_header_and_return_two_nl_str
 )
 
 config_tbl_with_comments_ast: Assign = Assign(
@@ -224,8 +222,7 @@ config_tbl_with_comments_ast: Assign = Assign(
     **maybe_type_comment,
 )
 
-config_decl_base_str: str = (
-    '''
+config_decl_base_str: str = '''
 class Config(Base):
     """{_docstring_header_and_return_str}"""
     __tablename__ = "config_tbl"
@@ -267,17 +264,16 @@ class Config(Base):
     {tab}"""\n{tab}{tab}{_repr_docstring}"""
     {__repr___body}
     '''.format(
-        _docstring_header_and_return_str=reindent(_docstring_header_and_return_str),
-        tab=tab,
-        _repr_docstring=docstring_repr_str.lstrip(),
-        __repr___body="""
+    _docstring_header_and_return_str=reindent(_docstring_header_and_return_str),
+    tab=tab,
+    _repr_docstring=docstring_repr_str.lstrip(),
+    __repr___body="""
         return "Config(dataset_name={dataset_name!r}, tfds_dir={tfds_dir!r}, " \
                "K={K!r}, as_numpy={as_numpy!r}, data_loader_kwargs={data_loader_kwargs!r})".format(
             dataset_name=self.dataset_name, tfds_dir=self.tfds_dir, K=self.K,
             as_numpy=self.as_numpy, data_loader_kwargs=self.data_loader_kwargs
         )
 """,
-    )
 )
 
 dataset_primary_key_column_assign: Assign = Assign(

@@ -303,6 +303,7 @@ def _parse_adhoc_doc_for_typ_phase0(doc, words):
     """
     word_chars: str = "{0}{1}`'\"/|".format(string.digits, string.ascii_letters)
     sentence_ends: int = -1
+    break_the_union: bool = False  # lincoln
     for i, ch in enumerate(doc):
         if (
             ch in word_chars
@@ -318,6 +319,8 @@ def _parse_adhoc_doc_for_typ_phase0(doc, words):
             words.append(ch)
             if ch == "." and sentence_ends == -1:
                 sentence_ends: int = len(words)
+            elif ch == ";":
+                break_the_union = True
             words.append([])
     words[-1] = "".join(words[-1])
     candidate_type: Optional[str] = next(
@@ -327,7 +330,9 @@ def _parse_adhoc_doc_for_typ_phase0(doc, words):
         ),
         None,
     )
-    fst_sentence: str = "".join(words[:sentence_ends])
+    fst_sentence: str = "".join(
+        words[2 if break_the_union and len(words) > 2 else 0 : sentence_ends]
+    )
     sentence: Optional[str] = None
     # type_in_fst_sentence = adhoc_type_to_type.get(next(filterfalse(str.isspace, words)))
     if " or " in fst_sentence or " of " in fst_sentence:

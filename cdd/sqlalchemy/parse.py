@@ -16,7 +16,7 @@ from inspect import getsource
 from typing import Optional
 
 import cdd.shared.parse.utils.parser_utils
-from cdd.compound.openapi.utils.emit_utils import sqlalchemy_class_to_table
+from cdd.sqlalchemy.utils.emit_utils import sqlalchemy_class_to_table
 from cdd.docstring.parse import docstring
 from cdd.shared.ast_utils import get_value
 from cdd.shared.defaults_utils import extract_default

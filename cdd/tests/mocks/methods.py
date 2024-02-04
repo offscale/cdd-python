@@ -70,8 +70,7 @@ return_ast: Return = Return(
     expr=None,
 )
 
-class_with_method_str: str = (
-    '''
+class_with_method_str: str = '''
 class C(object):
     """ C class (mocked!) """
 
@@ -106,14 +105,12 @@ class C(object):
         """
         return np.empty(0), np.empty(0)
 '''.format(
-        header_doc_str=indent(docstring_header_str, tab * 2),
-        sep=tab * 2,
-        indent=" " * 12,
-    )
+    header_doc_str=indent(docstring_header_str, tab * 2),
+    sep=tab * 2,
+    indent=" " * 12,
 )
 
-class_with_method_types_str: str = (
-    '''
+class_with_method_types_str: str = '''
 class C(object):
     """ C class (mocked!) """
 
@@ -141,12 +138,10 @@ class C(object):
         """
         return np.empty(0), np.empty(0)
 '''.format(
-        header_doc_str=indent(docstring_header_str, tab * 2)
-    )
+    header_doc_str=indent(docstring_header_str, tab * 2)
 )
 
-class_with_method_and_body_types_str: str = (
-    '''
+class_with_method_and_body_types_str: str = '''
 class C(object):
     """ C class (mocked!) """
 
@@ -180,12 +175,10 @@ class C(object):
             return 5
         return np.empty(0), np.empty(0)
 '''.format(
-        header_doc_str=indent(docstring_header_str, tab * 2)
-    )
+    header_doc_str=indent(docstring_header_str, tab * 2)
 )
 
-class_with_optional_arg_method_str: str = (
-    '''
+class_with_optional_arg_method_str: str = '''
 class C(object):
     """ C class (mocked!) """
 
@@ -205,8 +198,7 @@ class C(object):
         """
         return np.empty(0), np.empty(0)
 '''.format(
-        header_doc_str=indent(docstring_header_str, tab * 2)
-    )
+    header_doc_str=indent(docstring_header_str, tab * 2)
 )
 
 

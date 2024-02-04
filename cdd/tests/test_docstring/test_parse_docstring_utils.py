@@ -77,6 +77,10 @@ class TestParseDocstringUtils(TestCase):
                         'When set to `"epoch" the callback saves the checkpoint at the end of each epoch.',
                     ),
                     ("Optional[int]", "Int or None, defaults to None."),
+                    (
+                        "Literal['bfloat16', 'float16', 'float32', 'float64']",
+                        "String; `'bfloat16'`, `'float16'`, `'float32'`, or `'float64'`.",
+                    ),
                 ),
             ),
             maxlen=0,

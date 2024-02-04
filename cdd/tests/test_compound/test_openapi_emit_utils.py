@@ -8,7 +8,7 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch
 
-from cdd.compound.openapi.utils.emit_utils import rewrite_fk
+from cdd.sqlalchemy.utils.emit_utils import rewrite_fk
 from cdd.shared.ast_utils import set_value
 from cdd.shared.source_transformer import to_code
 from cdd.tests.mocks.openapi_emit_utils import column_fk, column_fk_gold, id_column

@@ -464,11 +464,11 @@ def _emit_symbol(
         **dict(
             **{
                 "{emit_name}_name".format(
-                    emit_name=(
-                        "function"
-                        if emit_name == "argparse"
-                        else emit_name.replace("sqlalchemy_table", "table")
-                    )
+                    emit_name={
+                        "argparse": "function",
+                        "sqlalchemy_table": "table",
+                        "sqlalchemy_hybrid": "table",
+                    }.get(emit_name, emit_name)
                 ): name
             },
             **{"function_type": "static"} if emit_name == "function" else {}
