@@ -300,7 +300,7 @@ class TestGen(TestCase):
     def test_gen_phase_mocked(self) -> None:
         """Tests that different phases are branched to correctly (doesn't test their internals though)"""
         with patch(
-            "cdd.compound.openapi.utils.emit_utils.update_with_imports_from_columns",
+            "cdd.sqlalchemy.utils.emit_utils.update_with_imports_from_columns",
             new_callable=MagicMock(),
         ) as phase1_func:
             gen(
@@ -314,7 +314,7 @@ class TestGen(TestCase):
         self.assertEqual(phase1_func.call_count, 1)
 
         with patch(
-            "cdd.compound.openapi.utils.emit_utils.update_fk_for_file",
+            "cdd.sqlalchemy.utils.emit_utils.update_fk_for_file",
             new_callable=MagicMock(),
         ) as phase2_func:
             gen(

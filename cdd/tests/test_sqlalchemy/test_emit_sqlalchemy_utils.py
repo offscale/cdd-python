@@ -22,20 +22,22 @@ from copy import deepcopy
 from os import mkdir, path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
+from unittest.mock import patch
 
-from cdd.sqlalchemy.utils.emit_utils import (
-    param_to_sqlalchemy_column_calls,
-    ensure_has_primary_key,
-    generate_create_from_attr_staticmethod,
-    update_with_imports_from_columns,
-    update_fk_for_file,
-    sqlalchemy_class_to_table,
-    sqlalchemy_table_to_class,
-)
 from cdd.shared.ast_utils import set_value
 from cdd.shared.pure_utils import rpartial
 from cdd.shared.source_transformer import to_code
 from cdd.shared.types import IntermediateRepr
+from cdd.sqlalchemy.utils.emit_utils import (
+    ensure_has_primary_key,
+    generate_create_from_attr_staticmethod,
+    param_to_sqlalchemy_column_calls,
+    rewrite_fk,
+    sqlalchemy_class_to_table,
+    sqlalchemy_table_to_class,
+    update_fk_for_file,
+    update_with_imports_from_columns,
+)
 from cdd.sqlalchemy.utils.shared_utils import update_args_infer_typ_sqlalchemy
 from cdd.tests.mocks.ir import (
     intermediate_repr_empty,
@@ -43,6 +45,7 @@ from cdd.tests.mocks.ir import (
     intermediate_repr_no_default_sql_doc,
     intermediate_repr_node_pk,
 )
+from cdd.tests.mocks.openapi_emit_utils import column_fk, column_fk_gold, id_column
 from cdd.tests.mocks.sqlalchemy import (
     config_hybrid_ast,
     config_tbl_with_comments_ast,
@@ -524,6 +527,39 @@ class TestEmitSqlAlchemyUtils(TestCase):
                 deepcopy(config_hybrid_ast), parse_original_whitespace=False
             ),
             gold=gold,
+        )
+
+    def test_rewrite_fk(self) -> None:
+        """
+        Tests whether `rewrite_fk` produces `openapi_dict` given `model_paths` and `routes_paths`
+        """
+        sqlalchemy_cls = deepcopy(node_pk_tbl_class)
+        sqlalchemy_cls.name = "TableName0"
+        sqlalchemy_cls.body[0].value = set_value("table_name0")
+        sqlalchemy_cls.body[1:] = [
+            column_fk,
+            id_column,
+        ]
+
+        with TemporaryDirectory() as temp_dir:
+            mod_dir: str = path.join(temp_dir, "table_name0")
+            mkdir(mod_dir)
+            init_path: str = path.join(mod_dir, "__init__{}py".format(path.extsep))
+            with open(init_path, "wt") as f:
+                f.write(to_code(sqlalchemy_cls))
+            with patch(
+                "cdd.sqlalchemy.utils.emit_utils.find_module_filepath",
+                lambda _, __: init_path,
+            ):
+                gen_ast = rewrite_fk(
+                    {"TableName0": "table_name0"},
+                    column_fk,
+                )
+
+        run_ast_test(
+            self,
+            gen_ast=gen_ast,
+            gold=column_fk_gold,
         )
 
 

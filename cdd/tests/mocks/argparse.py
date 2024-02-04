@@ -347,7 +347,8 @@ _argparse_return: Return = Return(
     expr=None,
 )
 
-argparse_func_str: str = '''
+argparse_func_str: str = (
+    '''
 def set_cli_args(argument_parser):
     """
     {_cli_doc_str}
@@ -384,11 +385,13 @@ def set_cli_args(argument_parser):
     )
     return argument_parser, (np.empty(0), np.empty(0))
 '''.format(
-    _cli_doc_str=_cli_doc_str,
-    description=docstring_header_str.strip(),
+        _cli_doc_str=_cli_doc_str,
+        description=docstring_header_str.strip(),
+    )
 )
 
-argparse_func_with_body_str: str = '''
+argparse_func_with_body_str: str = (
+    '''
 def set_cli_args(argument_parser):
     """
     {_cli_doc_str}
@@ -424,12 +427,14 @@ def set_cli_args(argument_parser):
         return 5
     return argument_parser, (np.empty(0), np.empty(0))
 '''.format(
-    _cli_doc_str=_cli_doc_str,
-    FALLBACK_TYP=FALLBACK_TYP,
-    header_doc_str=docstring_header_str,
+        _cli_doc_str=_cli_doc_str,
+        FALLBACK_TYP=FALLBACK_TYP,
+        header_doc_str=docstring_header_str,
+    )
 )
 
-argparse_func_action_append_str: str = '''
+argparse_func_action_append_str: str = (
+    '''
 def set_cli_action_append(argument_parser):
     """
     {_cli_doc_str}
@@ -459,7 +464,8 @@ def set_cli_action_append(argument_parser):
     )
     return argument_parser
 '''.format(
-    _cli_doc_str=_cli_doc_str, header_doc_str=docstring_header_str
+        _cli_doc_str=_cli_doc_str, header_doc_str=docstring_header_str
+    )
 )
 
 argparse_func_ast: FunctionDef = fix_missing_locations(

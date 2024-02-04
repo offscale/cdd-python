@@ -3,7 +3,19 @@ Utility functions for `cdd.emit.openapi`
 """
 
 from collections import namedtuple
-from typing import NamedTuple, Type
+from typing import NamedTuple
+
+from cdd.shared.pure_utils import PY_GTE_3_8, PY_GTE_3_9
+
+if PY_GTE_3_8:
+    from typing import TypedDict
+else:
+    from typing_extensions import TypedDict
+
+if PY_GTE_3_9:
+    Type = type
+else:
+    from typing import Type
 
 NameModelRouteType = NamedTuple(
     "NameModelRoute",
@@ -151,7 +163,26 @@ def components_paths_from_name_model_route_id_crud(
         }
 
 
+# TODO: Finish writing these types
+OpenAPI_info = TypedDict("OpenAPI_info", {"title": str, "version": str})
+OpenAPI_requestBodies = dict
+OpenAPI_components = TypedDict(
+    "OpenAPI_components", {"requestBodies": OpenAPI_requestBodies, "schemas": dict}
+)
+JSON_ref = TypedDict("JSON_ref", {"$ref": str, "required": bool})
+OpenAPI_paths = dict
+OpenApiType = TypedDict(
+    "OpenApiType",
+    {
+        "openapi": str,
+        "info": OpenAPI_info,
+        "components": OpenAPI_components,
+        "paths": OpenAPI_paths,
+    },
+)
+
 __all__ = [
     "components_paths_from_name_model_route_id_crud",
     "NameModelRouteIdCrud",
+    "OpenAPI_requestBodies",
 ]  # type: list[str]

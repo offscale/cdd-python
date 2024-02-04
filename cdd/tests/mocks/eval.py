@@ -1,6 +1,11 @@
 """ eval.py for testing with `sync_properties` """
 
-from typing import FrozenSet
+import sys
+
+if sys.version_info >= (3, 9):
+    FrozenSet = frozenset
+else:
+    from typing import FrozenSet
 
 import cdd.tests.mocks
 

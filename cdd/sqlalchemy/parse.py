@@ -16,12 +16,12 @@ from inspect import getsource
 from typing import Optional
 
 import cdd.shared.parse.utils.parser_utils
-from cdd.sqlalchemy.utils.emit_utils import sqlalchemy_class_to_table
 from cdd.docstring.parse import docstring
 from cdd.shared.ast_utils import get_value
 from cdd.shared.defaults_utils import extract_default
 from cdd.shared.pure_utils import assert_equal, rpartial
 from cdd.shared.types import IntermediateRepr
+from cdd.sqlalchemy.utils.emit_utils import sqlalchemy_class_to_table
 from cdd.sqlalchemy.utils.parse_utils import column_call_to_param
 
 

@@ -59,7 +59,8 @@ class_doc_str: str = tab.join(
 )
 class_doc_str_expr: Expr = Expr(set_value(class_doc_str), lineno=None, col_offset=None)
 
-class_str: str = '''
+class_str: str = (
+    '''
 class ConfigClass(object):
     """
 {header_doc_str}{tab}
@@ -82,10 +83,12 @@ class ConfigClass(object):
         np.empty(0),
     )
 '''.format(
-    header_doc_str=indent(docstring_header_str, tab), tab=tab
+        header_doc_str=indent(docstring_header_str, tab), tab=tab
+    )
 )
 
-class_nargs_str: str = '''
+class_nargs_str: str = (
+    '''
 class ConfigClass(object):
     """
     {header_doc_str}
@@ -113,7 +116,8 @@ class ConfigClass(object):
         ]
     ] = None
 '''.format(
-    header_doc_str=indent(docstring_header_str, tab)
+        header_doc_str=indent(docstring_header_str, tab)
+    )
 )
 
 class_ast: ClassDef = ClassDef(
@@ -866,7 +870,8 @@ tensorboard_doc_str: str = "\n".join(
 del tensorboard_doc_str_no_args_examples_idx
 
 # Minus a lot of functions, just includes args and first line of `__init__` and `set_model`
-class_google_keras_tensorboard_str: str = '''
+class_google_keras_tensorboard_str: str = (
+    '''
 class TensorBoard(Callback):
     """{tensorboard_doc_str}"""
 
@@ -887,7 +892,8 @@ class TensorBoard(Callback):
     def set_model(self, model):
         """Sets Keras model and writes graph if specified."""
 '''.format(
-    tensorboard_doc_str=tensorboard_doc_str
+        tensorboard_doc_str=tensorboard_doc_str
+    )
 )
 
 class_google_keras_tensorboard_ast: ClassDef = ClassDef(
@@ -1068,7 +1074,8 @@ class_torch_nn_l1loss_docstring = (
 )
 class_torch_nn_l1loss_docstring_str: str = "\n".join(class_torch_nn_l1loss_docstring)
 
-class_torch_nn_l1loss_str: str = '''
+class_torch_nn_l1loss_str: str = (
+    '''
 class L1Loss(_Loss):
     r"""{class_torch_nn_l1loss_docstring_str!s}"""
     __constants__ = ['reduction']
@@ -1079,7 +1086,8 @@ class L1Loss(_Loss):
     def forward(self, input: Tensor, target: Tensor) -> Tensor:
         return F.l1_loss(input, target, reduction=self.reduction)
 '''.format(
-    class_torch_nn_l1loss_docstring_str=class_torch_nn_l1loss_docstring_str
+        class_torch_nn_l1loss_docstring_str=class_torch_nn_l1loss_docstring_str
+    )
 )
 
 class_torch_nn_l1loss_ast: ClassDef = ClassDef(

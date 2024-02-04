@@ -689,11 +689,7 @@ def header_args_footer_to_str(header, args_returns, footer):
     nls_needed_after_header = (
         0
         if (nls_after_header > 1 or not header or not args_returns)
-        else 1
-        if nls_after_header == 1
-        else 2
-        if nls_after_header == 0
-        else 0
+        else 1 if nls_after_header == 1 else 2 if nls_after_header == 0 else 0
     )
 
     return "{header}{maybe_nl0}{args_returns}{maybe_nl1}{footer}{maybe_nl2}".format(

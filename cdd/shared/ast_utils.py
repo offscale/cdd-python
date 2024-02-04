@@ -522,9 +522,7 @@ def _generic_param2ast(param):
             value = (
                 parsed_default.body[0].value
                 if hasattr(parsed_default, "body")
-                else parsed_default
-                if "default" in _param
-                else None
+                else parsed_default if "default" in _param else None
             )
         else:
             value = set_value(None)

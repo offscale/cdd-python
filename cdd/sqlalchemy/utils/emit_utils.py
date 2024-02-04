@@ -4,65 +4,65 @@ Utility functions for `cdd.sqlalchemy.emit`
 
 import ast
 from ast import (
-    Call,
-    Name,
-    Load,
     AST,
-    FunctionDef,
-    arguments,
-    Expr,
-    Return,
+    Assign,
     Attribute,
-    keyword,
+    Call,
+    ClassDef,
+    Compare,
     DictComp,
-    comprehension,
+    Expr,
+    FunctionDef,
+    ImportFrom,
+    IsNot,
+    Load,
+    Module,
+    Name,
+    Return,
     Store,
     Tuple,
-    Compare,
-    IsNot,
-    Module,
-    ImportFrom,
     alias,
-    Assign,
-    ClassDef,
+    arguments,
+    comprehension,
+    keyword,
 )
-from operator import attrgetter, methodcaller, eq
 from collections import OrderedDict, deque
 from functools import partial
-from itertools import filterfalse, chain
+from itertools import chain, filterfalse
 from json import dumps
+from operator import attrgetter, eq, methodcaller
 from os import path
 from platform import system
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 
-import cdd.sqlalchemy
+import cdd.sqlalchemy.utils.shared_utils
 from cdd.shared.ast_utils import (
-    set_value,
     NoneStr,
-    set_arg,
-    maybe_type_comment,
     get_value,
+    maybe_type_comment,
+    set_arg,
+    set_value,
 )
 from cdd.shared.pure_utils import (
+    find_module_filepath,
+    namespaced_upper_camelcase_to_pascal,
     none_types,
     rpartial,
     tab,
-    namespaced_upper_camelcase_to_pascal,
-    find_module_filepath,
 )
 from cdd.shared.source_transformer import to_code
 from cdd.shared.types import ParamVal
 from cdd.sqlalchemy.utils.parse_utils import (
-    sqlalchemy_top_level_imports,
+    column_type2typ,
     get_pk_and_type,
     get_table_name,
-    column_type2typ,
+    sqlalchemy_top_level_imports,
 )
 from cdd.tests.mocks.docstrings import (
-    docstring_repr_str,
-    docstring_repr_google_str,
-    docstring_create_from_attr_str,
     docstring_create_from_attr_google_str,
+    docstring_create_from_attr_str,
+    docstring_repr_google_str,
+    docstring_repr_str,
 )
 
 

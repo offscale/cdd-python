@@ -14,11 +14,11 @@ import cdd.function.parse
 import cdd.json_schema.emit
 import cdd.routes.parse.bottle
 import cdd.sqlalchemy.parse
+from cdd.compound.openapi.utils.emit_openapi_utils import OpenAPI_requestBodies
 from cdd.routes.parse.bottle_utils import get_route_meta
 from cdd.shared.ast_utils import get_value
 from cdd.shared.parse.utils.parser_utils import infer
 from cdd.shared.pure_utils import rpartial, update_d
-from cdd.sqlalchemy.utils.shared_utils import OpenAPI_requestBodies
 from cdd.tests.mocks.json_schema import server_error_schema
 
 

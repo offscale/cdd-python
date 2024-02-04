@@ -10,13 +10,8 @@ from typing import Optional, cast
 import cdd.compound.openapi.utils.emit_utils
 import cdd.sqlalchemy.utils.emit_utils
 from cdd.shared.ast_utils import NoneStr, get_value, set_value
-from cdd.shared.pure_utils import PY_GTE_3_8, PY_GTE_3_9, rpartial
+from cdd.shared.pure_utils import PY_GTE_3_9, rpartial
 from cdd.shared.source_transformer import to_code
-
-if PY_GTE_3_8:
-    from typing import TypedDict
-else:
-    from typing_extensions import TypedDict
 
 
 def _update_args_infer_typ_sqlalchemy_for_scalar(_param, args, x_typ_sql):
@@ -78,29 +73,31 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
     :rtype: ```Tuple[bool, Optional[Union[List[AST], Tuple[AST]]]]```
     """
     if _param["typ"] is None:
-        return _param.get("default") == NoneStr
+        return _param.get("default") == NoneStr, None
     if _param["typ"].startswith("Optional["):
         _param["typ"] = _param["typ"][len("Optional[") : -1]
         nullable = True
     if "Literal[" in _param["typ"]:
         parsed_typ: Call = get_value(ast.parse(_param["typ"]).body[0])
         if parsed_typ.value.id != "Literal":
-            return parsed_typ.value, nullable
+            return nullable, parsed_typ.value
         val = get_value(parsed_typ.slice)
-        args.append(
-            Call(
-                func=Name("Enum", Load(), lineno=None, col_offset=None),
-                args=val.elts,
-                keywords=[
-                    ast.keyword(arg="name", value=set_value(name), identifier=None)
-                ],
-                expr=None,
-                expr_func=None,
-                lineno=None,
-                col_offset=None,
+        (
+            args.append(
+                Call(
+                    func=Name("Enum", Load(), lineno=None, col_offset=None),
+                    args=val.elts,
+                    keywords=[
+                        ast.keyword(arg="name", value=set_value(name), identifier=None)
+                    ],
+                    expr=None,
+                    expr_func=None,
+                    lineno=None,
+                    col_offset=None,
+                )
             )
-        ) if hasattr(val, "elts") else _update_args_infer_typ_sqlalchemy_for_scalar(
-            _param, args, x_typ_sql
+            if hasattr(val, "elts")
+            else _update_args_infer_typ_sqlalchemy_for_scalar(_param, args, x_typ_sql)
         )
     elif _param["typ"].startswith("List["):
         after_generic = _param["typ"][len("List[") :]
@@ -202,23 +199,4 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
     return nullable, None
 
 
-# TODO: Finish writing these types
-OpenAPI_info = TypedDict("OpenAPI_info", {"title": str, "version": str})
-OpenAPI_requestBodies = dict
-OpenAPI_components = TypedDict(
-    "OpenAPI_components", {"requestBodies": OpenAPI_requestBodies, "schemas": dict}
-)
-JSON_ref = TypedDict("JSON_ref", {"$ref": str, "required": bool})
-OpenAPI_paths = dict
-OpenApiType = TypedDict(
-    "OpenApiType",
-    {
-        "openapi": str,
-        "info": OpenAPI_info,
-        "components": OpenAPI_components,
-        "paths": OpenAPI_paths,
-    },
-)
-
-
-__all__ = ["update_args_infer_typ_sqlalchemy", "OpenApiType"]
+__all__ = ["update_args_infer_typ_sqlalchemy"]
