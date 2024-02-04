@@ -182,7 +182,8 @@ OpenApiType = TypedDict(
 )
 
 __all__ = [
-    "components_paths_from_name_model_route_id_crud",
     "NameModelRouteIdCrud",
     "OpenAPI_requestBodies",
+    "OpenApiType",
+    "components_paths_from_name_model_route_id_crud",
 ]  # type: list[str]

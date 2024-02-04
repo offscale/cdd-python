@@ -4,7 +4,7 @@ OpenAPI mocks
 
 from copy import deepcopy
 
-from cdd.sqlalchemy.utils.shared_utils import OpenApiType
+from cdd.compound.openapi.utils.emit_openapi_utils import OpenApiType
 from cdd.tests.mocks.json_schema import (
     config_schema,
     config_schema_with_sql_types,
