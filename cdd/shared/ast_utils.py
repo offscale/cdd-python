@@ -2040,7 +2040,17 @@ def optimise_imports(imports):
         ImportFrom(
             module=module_name,
             level=sym[0].level,
-            names=list(map(lambda al: alias(name=al.name, asname=al.asname), sym[1])),
+            names=list(
+                map(
+                    lambda al: alias(
+                        name=al.name,
+                        asname=al.asname,
+                        identifier=None,
+                        identifier_name=None,
+                    ),
+                    sym[1],
+                )
+            ),
         )
         for module_name, symbols in map(
             lambda key_group: (

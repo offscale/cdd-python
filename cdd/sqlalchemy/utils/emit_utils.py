@@ -555,14 +555,37 @@ def generate_create_from_attr_staticmethod(params, cls_name, docstring_format):
 
 mock_engine_base_metadata_mod: Module = Module(
     body=[
-        ImportFrom(module="os", names=[alias(name="environ")], level=0),
         ImportFrom(
-            module="sqlalchemy",
-            names=[alias(name="MetaData"), alias(name="create_engine")],
+            module="os",
+            names=[
+                alias(
+                    "environ",
+                    None,
+                    identifier=None,
+                    identifier_name=None,
+                )
+            ],
             level=0,
         ),
         ImportFrom(
-            module="sqlalchemy.orm", names=[alias(name="DeclarativeBase")], level=0
+            module="sqlalchemy",
+            names=[
+                alias("MetaData", None, identifier=None, identifier_name=None),
+                alias("create_engine", None, identifier=None, identifier_name=None),
+            ],
+            level=0,
+        ),
+        ImportFrom(
+            module="sqlalchemy.orm",
+            names=[
+                alias(
+                    "DeclarativeBase",
+                    None,
+                    identifier=None,
+                    identifier_name=None,
+                )
+            ],
+            level=0,
         ),
         Assign(
             targets=[Name("engine", Store(), lineno=None, col_offset=None)],
@@ -598,7 +621,7 @@ mock_engine_base_metadata_mod: Module = Module(
             keywords=[],
             body=[
                 Assign(
-                    targets=[Name("metadata", ctx=Store())],
+                    targets=[Name("metadata", Store(), lineno=None, col_offset=None)],
                     value=Name("metadata", Load(), lineno=None, col_offset=None),
                     expr=None,
                     lineno=None,
@@ -613,7 +636,7 @@ mock_engine_base_metadata_mod: Module = Module(
             col_offset=None,
         ),
         Assign(
-            targets=[Name("__all__", ctx=Store())],
+            targets=[Name("__all__", Store(), lineno=None, col_offset=None)],
             value=AST_List(
                 elts=list(map(set_value, ("Base", "metadata", "engine"))),
                 ctx=Load(),
