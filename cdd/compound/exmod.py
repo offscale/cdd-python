@@ -273,7 +273,7 @@ def exmod_single_folder(
     :param mock_imports: Whether to generate mock TensorFlow imports
     :type mock_imports: ```bool```
 
-    :param emit_base_engine_metadata: [sqlalchemy specific] Whether to produce a file with `Base`, `engine`, and `metadata`.
+    :param emit_base_engine_metadata: [sqlalchemy] Whether to produce a file with `Base`, `engine`, and `metadata`.
     :type emit_base_engine_metadata: ```bool```
 
     :param no_word_wrap: Whether word-wrap is disabled (on emission).
