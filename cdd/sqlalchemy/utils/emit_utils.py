@@ -15,11 +15,15 @@ from ast import (
     FunctionDef,
     ImportFrom,
     IsNot,
+)
+from ast import List as AST_List
+from ast import (
     Load,
     Module,
     Name,
     Return,
     Store,
+    Subscript,
     Tuple,
     alias,
     arguments,
@@ -114,7 +118,7 @@ def param_to_sqlalchemy_column_calls(name_param, include_name):
         _param["doc"] = _param["doc"][end:].lstrip()
         args.append(
             Call(
-                func=Name(id="ForeignKey", ctx=Load(), lineno=None, col_offset=None),
+                func=Name("ForeignKey", Load(), lineno=None, col_offset=None),
                 args=[set_value(fk_val)],
                 keywords=[],
                 lineno=None,
@@ -280,7 +284,9 @@ def ensure_has_primary_key(intermediate_repr, force_pk_id=False):
                         "constraints": {
                             "server_default": Call(
                                 args=[],
-                                func=Name(ctx=Load(), id="Identity"),
+                                func=Name(
+                                    "Identity", Load(), lineno=None, col_offset=None
+                                ),
                                 keywords=[],
                                 lineno=None,
                                 col_offset=None,
@@ -438,7 +444,7 @@ def generate_create_from_attr_staticmethod(params, cls_name, docstring_format):
             ),
             Return(
                 value=Call(
-                    func=Name(id=cls_name, ctx=Load(), lineno=None, col_offset=None),
+                    func=Name(cls_name, Load(), lineno=None, col_offset=None),
                     args=[],
                     keywords=[
                         keyword(
@@ -456,7 +462,7 @@ def generate_create_from_attr_staticmethod(params, cls_name, docstring_format):
                                     ),
                                     args=[
                                         Name(
-                                            id="node",
+                                            id="record",
                                             ctx=Load(),
                                             lineno=None,
                                             col_offset=None,
@@ -497,7 +503,7 @@ def generate_create_from_attr_staticmethod(params, cls_name, docstring_format):
                                                     ),
                                                     args=[
                                                         Name(
-                                                            id="node",
+                                                            id="record",
                                                             ctx=Load(),
                                                             lineno=None,
                                                             col_offset=None,
@@ -537,9 +543,7 @@ def generate_create_from_attr_staticmethod(params, cls_name, docstring_format):
                 expr=None,
             ),
         ],
-        decorator_list=[
-            Name(id="staticmethod", ctx=Load(), lineno=None, col_offset=None)
-        ],
+        decorator_list=[Name("staticmethod", Load(), lineno=None, col_offset=None)],
         arguments_args=None,
         identifier_name=None,
         stmt=None,
@@ -547,6 +551,82 @@ def generate_create_from_attr_staticmethod(params, cls_name, docstring_format):
         returns=None,
         **maybe_type_comment,
     )
+
+
+mock_engine_base_metadata_mod: Module = Module(
+    body=[
+        ImportFrom(module="os", names=[alias(name="environ")], level=0),
+        ImportFrom(
+            module="sqlalchemy",
+            names=[alias(name="MetaData"), alias(name="create_engine")],
+            level=0,
+        ),
+        ImportFrom(
+            module="sqlalchemy.orm", names=[alias(name="DeclarativeBase")], level=0
+        ),
+        Assign(
+            targets=[Name("engine", Store(), lineno=None, col_offset=None)],
+            value=Call(
+                func=Name("create_engine", Load(), lineno=None, col_offset=None),
+                args=[
+                    Subscript(
+                        value=Name("environ", Load(), lineno=None, col_offset=None),
+                        slice=set_value("RDBMS_URI"),
+                        ctx=Load(),
+                    )
+                ],
+                keywords=[keyword(arg="echo", value=set_value(True))],
+            ),
+            expr=None,
+            lineno=None,
+            **maybe_type_comment,
+        ),
+        Assign(
+            targets=[Name("metadata", Store(), lineno=None, col_offset=None)],
+            value=Call(
+                func=Name("MetaData", Load(), lineno=None, col_offset=None),
+                args=[],
+                keywords=[],
+            ),
+            expr=None,
+            lineno=None,
+            **maybe_type_comment,
+        ),
+        ClassDef(
+            name="Base",
+            bases=[Name("DeclarativeBase", Load(), lineno=None, col_offset=None)],
+            keywords=[],
+            body=[
+                Assign(
+                    targets=[Name("metadata", ctx=Store())],
+                    value=Name("metadata", Load(), lineno=None, col_offset=None),
+                    expr=None,
+                    lineno=None,
+                    **maybe_type_comment,
+                )
+            ],
+            decorator_list=[],
+            type_params=[],
+            expr=None,
+            identifier_name=None,
+            lineno=None,
+            col_offset=None,
+        ),
+        Assign(
+            targets=[Name("__all__", ctx=Store())],
+            value=AST_List(
+                elts=list(map(set_value, ("Base", "metadata", "engine"))),
+                ctx=Load(),
+            ),
+            expr=None,
+            lineno=None,
+            **maybe_type_comment,
+        ),
+    ],
+    type_ignores=[],
+)
+
+mock_engine_base_metadata_str = to_code(mock_engine_base_metadata_mod)
 
 
 def update_with_imports_from_columns(filename):
@@ -810,8 +890,8 @@ def rewrite_fk(symbol_to_module, column_assign):
             assert pk_typ is not None
             pk, typ = pk_typ
             del pk_typ
-            return Name(id=typ, ctx=Load(), lineno=None, col_offset=None), Call(
-                func=Name(id="ForeignKey", ctx=Load(), lineno=None, col_offset=None),
+            return Name(typ, Load(), lineno=None, col_offset=None), Call(
+                func=Name("ForeignKey", Load(), lineno=None, col_offset=None),
                 args=[set_value(".".join((get_table_name(matching_class), pk)))],
                 keywords=[],
                 lineno=None,
@@ -1033,6 +1113,8 @@ __all__ = [
     "ensure_has_primary_key",
     "generate_create_from_attr_staticmethod",
     "generate_repr_method",
+    "mock_engine_base_metadata_mod",
+    "mock_engine_base_metadata_str",
     "param_to_sqlalchemy_column_calls",
     "rewrite_fk",
     "sqlalchemy_class_to_table",

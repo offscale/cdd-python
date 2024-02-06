@@ -29,6 +29,7 @@ from cdd.shared.pure_utils import (
     read_file_to_str,
     rpartial,
 )
+from cdd.sqlalchemy.utils.emit_utils import mock_engine_base_metadata_str
 
 if PY_GTE_3_8:
     from typing import TypedDict
@@ -44,6 +45,7 @@ def exmod(
     output_directory,
     target_module_name,
     mock_imports,
+    emit_base_engine_metadata,
     no_word_wrap,
     recursive,
     dry_run,
@@ -74,6 +76,9 @@ def exmod(
     :param mock_imports: Whether to generate mock TensorFlow imports
     :type mock_imports: ```bool```
 
+    :param emit_base_engine_metadata: Whether to produce a file with `Base`, `engine`, and `metadata`.
+    :type emit_base_engine_metadata: ```bool```
+
     :param no_word_wrap: Whether word-wrap is disabled (on emission).
     :type no_word_wrap: ```Optional[Literal[True]]```
 
@@ -97,6 +102,7 @@ def exmod(
                     whitelist=whitelist,
                     mock_imports=mock_imports,
                     filesystem_layout=filesystem_layout,
+                    emit_base_engine_metadata=emit_base_engine_metadata,
                     no_word_wrap=no_word_wrap,
                     output_directory=output_directory,
                     target_module_name=target_module_name,
@@ -170,6 +176,7 @@ def exmod(
         module_name=module_name,
         module_root_dir=module_root_dir,
         output_directory=output_directory,
+        emit_base_engine_metadata=emit_base_engine_metadata,
     )
     _exmod_single_folder_kwargs: Iterator[
         TypedDict(
@@ -189,6 +196,7 @@ def exmod(
                     "module_name": module_name,
                     "module_root_dir": module_root_dir,
                     "output_directory": output_directory,
+                    "emit_base_engine_metadata": emit_base_engine_metadata,
                 },
             ),
             (
@@ -204,6 +212,7 @@ def exmod(
                                 "output_directory": path.join(
                                     output_directory, pkg_relative_dir
                                 ),
+                                "emit_base_engine_metadata": emit_base_engine_metadata,
                             }
                         )(package.replace(".", path.sep)),
                         packages,
@@ -233,6 +242,7 @@ def exmod_single_folder(
     whitelist,
     output_directory,
     mock_imports,
+    emit_base_engine_metadata,
     no_word_wrap,
     dry_run,
     module_root_dir,
@@ -262,6 +272,9 @@ def exmod_single_folder(
 
     :param mock_imports: Whether to generate mock TensorFlow imports
     :type mock_imports: ```bool```
+
+    :param emit_base_engine_metadata: [sqlalchemy specific] Whether to produce a file with `Base`, `engine`, and `metadata`.
+    :type emit_base_engine_metadata: ```bool```
 
     :param no_word_wrap: Whether word-wrap is disabled (on emission).
     :type no_word_wrap: ```Optional[Literal[True]]```
@@ -311,6 +324,13 @@ def exmod_single_folder(
         dry_run=dry_run,
         filesystem_layout=filesystem_layout,
     )
+
+    if emit_base_engine_metadata:
+        with open(
+            path.join(module_root_dir, "sqlalchemy_engine{}py".format(path.extsep)),
+            "wt",
+        ) as f:
+            f.write(mock_engine_base_metadata_str)
 
     imports = _emit_files_from_module_and_return_imports(
         module_name=module_name, module=module, module_root_dir=module_root_dir

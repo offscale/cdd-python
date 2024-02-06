@@ -401,6 +401,12 @@ def _build_parser():
         action="append",
     )
     exmod_parser.add_argument(
+        "--emit-base-engine-metadata",
+        help="[sqlalchemy specific] Whether to produce a file with `Base`, `engine`, and `metadata`."
+        "`None` is `False`. Defaults to None.",
+        action="store_true",
+    )
+    exmod_parser.add_argument(
         "--no-word-wrap",
         help="Whether word-wrap is disabled (on emission). None enables word-wrap. Defaults to None.",
         action="store_true",

@@ -796,7 +796,7 @@ create_from_attr_mock: FunctionDef = FunctionDef(
                                 ),
                                 args=[
                                     Name(
-                                        id="node",
+                                        id="record",
                                         ctx=Load(),
                                         lineno=None,
                                         col_offset=None,
@@ -838,7 +838,7 @@ create_from_attr_mock: FunctionDef = FunctionDef(
                                                 ),
                                                 args=[
                                                     Name(
-                                                        id="node",
+                                                        id="record",
                                                         ctx=Load(),
                                                     ),
                                                     Name(
