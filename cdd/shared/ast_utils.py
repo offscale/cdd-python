@@ -285,6 +285,13 @@ typing_extensions___all__: FrozenSet = (
     else frozenset()
 )
 
+DEFAULT_MODULES_TO_ALL = (
+    ("typing", typing___all__),
+    ("typing_extensions", typing_extensions___all__),
+    ("collections.abc", collections_abc___all__),
+    ("sqlalchemy", sqlalchemy___all__),
+)  # type: tuple[tuple[str, frozenset], ...]
+
 # Was `"globals().__getitem__"`; this type is used for `Any` and any other unhandled
 
 FALLBACK_TYP: str = "str"
@@ -2140,7 +2147,10 @@ def get_types(node):
             )
 
 
-def infer_imports(module):
+def infer_imports(
+    module,
+    modules_to_all=DEFAULT_MODULES_TO_ALL,
+):
     """
     Infer imports from AST nodes (Name|.annotation|.type_comment); in order; these:
       - typing
@@ -2151,6 +2161,9 @@ def infer_imports(module):
 
     :param module: Module, ClassDef, FunctionDef, AsyncFunctionDef, Assign
     :type module: ```Union[ClassDef, FunctionDef, AsyncFunctionDef, Assign]```
+
+    :param modules_to_all: Tuple of module_name to __all__ of module; (str) to FrozenSet[str]
+    :type modules_to_all: ```tuple[tuple[str, frozenset], ...]```
 
     :return: List of imports
     :rtype: ```Optional[Tuple[Union[Import, ImportFrom]]]```
@@ -2204,28 +2217,7 @@ def infer_imports(module):
                         None,
                         map(
                             # Because there are duplicate names, centralise all import resolution here and order them
-                            lambda e: (
-                                (e, "typing")
-                                if e in typing___all__
-                                else (
-                                    (e, "typing_extensions")
-                                    if e in typing_extensions___all__
-                                    else (
-                                        (e, "collections.abc")
-                                        if e in collections_abc___all__
-                                        else (
-                                            (e, "sqlalchemy")
-                                            if e in sqlalchemy___all__
-                                            else (
-                                                (e, "pydantic")
-                                                if e in pydantic___all__
-                                                # else block: pydantic; sqlalchemy; other things as cdd-python grows
-                                                else None
-                                            )
-                                        )
-                                    )
-                                )
-                            ),
+                            partial(symbol_to_import, modules_to_all=modules_to_all),
                             sorted(
                                 frozenset(
                                     chain.from_iterable(
@@ -2256,6 +2248,27 @@ def infer_imports(module):
 
     # cdd.sqlalchemy.utils.parse_utils.imports_from(sqlalchemy_class_or_assigns)
     return imports if imports else None
+
+
+def symbol_to_import(
+    symbol,
+    modules_to_all,
+):
+    """
+    Resolve symbol to module
+
+    :param symbol: symbol to look for within various modules
+    :type symbol: ```str```
+
+    :param modules_to_all: Tuple of module_name to __all__ of module; (str) to FrozenSet[str]
+    :type modules_to_all: ```tuple[tuple[str, frozenset], ...]```
+
+    :return: (symbol, module) if name in module else None
+    :rtype: ```Optional[Tuple[str, str]]```
+    """
+    return next(
+        ((symbol, module) for (module, all_) in modules_to_all if symbol in all_), None
+    )
 
 
 def deduplicate_sorted_imports(module):

@@ -8,7 +8,7 @@ from collections import deque
 from functools import partial, reduce
 from itertools import chain, groupby
 from operator import attrgetter, itemgetter
-from os import makedirs, path
+from os import makedirs, mkdir, path
 from typing import Iterator, Optional, Tuple, cast
 
 from setuptools import find_packages
@@ -29,7 +29,11 @@ from cdd.shared.pure_utils import (
     read_file_to_str,
     rpartial,
 )
-from cdd.sqlalchemy.utils.emit_utils import mock_engine_base_metadata_str
+from cdd.shared.source_transformer import to_code
+from cdd.sqlalchemy.utils.emit_utils import (
+    generate_create_tables_mod,
+    mock_engine_base_metadata_str,
+)
 
 if PY_GTE_3_8:
     from typing import TypedDict
@@ -144,6 +148,37 @@ def exmod(
         ),
     )
 
+    if (
+        emit_name in frozenset(("sqlalchemy", "sqlalchemy_hybrid", "sqlalchemy_table"))
+        and emit_base_engine_metadata
+    ):
+        sqlalchemy_mod = "sqlalchemy_mod"
+        sqlalchemy_mod_dir_join = partial(path.join, output_directory, "sqlalchemy_mod")
+        mkdir(sqlalchemy_mod_dir_join())
+        open(
+            sqlalchemy_mod_dir_join("__init__{extsep}py".format(extsep=path.extsep)),
+            "a",
+        ).close()
+        connection_py = "connection"
+        with open(
+            sqlalchemy_mod_dir_join(
+                "{name}{extsep}py".format(name=connection_py, extsep=path.extsep)
+            ),
+            "wt",
+        ) as f:
+            f.write(mock_engine_base_metadata_str)
+
+        sqlalchemy_module_name = ".".join(
+            (path.basename(output_directory), sqlalchemy_mod, connection_py)
+        )
+        with open(
+            sqlalchemy_mod_dir_join(
+                "create_tables{extsep}py".format(extsep=path.extsep)
+            ),
+            "wt",
+        ) as f:
+            f.write(to_code(generate_create_tables_mod(sqlalchemy_module_name)))
+
     try:
         module_root_dir: str = path.dirname(
             find_module_filepath(
@@ -176,7 +211,6 @@ def exmod(
         module_name=module_name,
         module_root_dir=module_root_dir,
         output_directory=output_directory,
-        emit_base_engine_metadata=emit_base_engine_metadata,
     )
     _exmod_single_folder_kwargs: Iterator[
         TypedDict(
@@ -196,7 +230,6 @@ def exmod(
                     "module_name": module_name,
                     "module_root_dir": module_root_dir,
                     "output_directory": output_directory,
-                    "emit_base_engine_metadata": emit_base_engine_metadata,
                 },
             ),
             (
@@ -212,7 +245,6 @@ def exmod(
                                 "output_directory": path.join(
                                     output_directory, pkg_relative_dir
                                 ),
-                                "emit_base_engine_metadata": emit_base_engine_metadata,
                             }
                         )(package.replace(".", path.sep)),
                         packages,
@@ -242,7 +274,6 @@ def exmod_single_folder(
     whitelist,
     output_directory,
     mock_imports,
-    emit_base_engine_metadata,
     no_word_wrap,
     dry_run,
     module_root_dir,
@@ -272,9 +303,6 @@ def exmod_single_folder(
 
     :param mock_imports: Whether to generate mock TensorFlow imports
     :type mock_imports: ```bool```
-
-    :param emit_base_engine_metadata: [sqlalchemy] Whether to produce a file with `Base`, `engine`, and `metadata`.
-    :type emit_base_engine_metadata: ```bool```
 
     :param no_word_wrap: Whether word-wrap is disabled (on emission).
     :type no_word_wrap: ```Optional[Literal[True]]```
@@ -324,13 +352,6 @@ def exmod_single_folder(
         dry_run=dry_run,
         filesystem_layout=filesystem_layout,
     )
-
-    if emit_base_engine_metadata:
-        with open(
-            path.join(module_root_dir, "sqlalchemy_engine{}py".format(path.extsep)),
-            "wt",
-        ) as f:
-            f.write(mock_engine_base_metadata_str)
 
     imports = _emit_files_from_module_and_return_imports(
         module_name=module_name, module=module, module_root_dir=module_root_dir

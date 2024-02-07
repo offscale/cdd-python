@@ -11,8 +11,10 @@ from ast import (
     ClassDef,
     Compare,
     DictComp,
+    Eq,
     Expr,
     FunctionDef,
+    If,
     ImportFrom,
     IsNot,
 )
@@ -652,6 +654,105 @@ mock_engine_base_metadata_mod: Module = Module(
 mock_engine_base_metadata_str = to_code(mock_engine_base_metadata_mod)
 
 
+def generate_create_tables_mod(module_name):
+    """
+    Generate the `Base.metadata.create_all(engine)` for SQLalchemy
+
+    :param module_name: Module to import from
+    :type module_name: ```str```
+
+    :return: Module with imports for SQLalchemy
+    :rtype: ```Module```
+    """
+    return Module(
+        body=[
+            ImportFrom(
+                module=module_name,
+                names=list(
+                    map(
+                        partial(
+                            alias,
+                            asname=None,
+                            identifier=None,
+                            identifier_name=None,
+                        ),
+                        ("Base", "engine"),
+                    )
+                ),
+                level=0,
+            ),
+            If(
+                test=Compare(
+                    left=Name(
+                        "__name__",
+                        Load(),
+                        lineno=None,
+                        col_offset=None,
+                    ),
+                    ops=[Eq()],
+                    comparators=[set_value("__main__")],
+                ),
+                body=[
+                    Expr(
+                        value=Call(
+                            func=Name(
+                                "print",
+                                Load(),
+                                lineno=None,
+                                col_offset=None,
+                            ),
+                            args=[
+                                set_value("Base.metadata.create_all for"),
+                                Attribute(
+                                    value=Name(
+                                        "engine",
+                                        Load(),
+                                        lineno=None,
+                                        col_offset=None,
+                                    ),
+                                    attr="name",
+                                    ctx=Load(),
+                                ),
+                                set_value(";"),
+                            ],
+                            keywords=[],
+                        )
+                    ),
+                    Expr(
+                        value=Call(
+                            func=Attribute(
+                                value=Attribute(
+                                    value=Name(
+                                        "Base",
+                                        Load(),
+                                        lineno=None,
+                                        col_offset=None,
+                                    ),
+                                    attr="metadata",
+                                    ctx=Load(),
+                                ),
+                                attr="create_all",
+                                ctx=Load(),
+                            ),
+                            args=[
+                                Name(
+                                    "engine",
+                                    Load(),
+                                    lineno=None,
+                                    col_offset=None,
+                                )
+                            ],
+                            keywords=[],
+                        )
+                    ),
+                ],
+                orelse=[],
+            ),
+        ],
+        type_ignores=[],
+    )
+
+
 def update_with_imports_from_columns(filename):
     """
     Given an existing filename, figure out its relative imports
@@ -1135,6 +1236,7 @@ typ2column_type.update(
 __all__ = [
     "ensure_has_primary_key",
     "generate_create_from_attr_staticmethod",
+    "generate_create_tables_mod",
     "generate_repr_method",
     "mock_engine_base_metadata_mod",
     "mock_engine_base_metadata_str",
