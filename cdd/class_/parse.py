@@ -22,12 +22,12 @@ from typing import List, Optional, cast
 
 import cdd.docstring.parse
 import cdd.function.parse
+import cdd.shared.ast_utils
 import cdd.shared.docstring_parsers
 import cdd.shared.parse.utils.parser_utils
+import cdd.shared.source_transformer
 from cdd.class_.utils.parse_utils import get_source
-from cdd.shared.ast_utils import NoneStr, find_ast_type, get_value, parse_to_scalar
 from cdd.shared.pure_utils import rpartial, simple_types
-from cdd.shared.source_transformer import to_code
 from cdd.shared.types import IntermediateRepr
 
 
@@ -89,7 +89,9 @@ def class_(
     ), "Expected 'Union[Module, ClassDef]' got `{node_name!r}`".format(
         node_name=type(class_def).__name__
     )
-    class_def: ClassDef = cast(ClassDef, find_ast_type(class_def, class_name))
+    class_def: ClassDef = cast(
+        ClassDef, cdd.shared.ast_utils.find_ast_type(class_def, class_name)
+    )
     doc_str: Optional[str] = get_docstring(class_def, clean=parse_original_whitespace)
     intermediate_repr: IntermediateRepr = (
         {
@@ -115,11 +117,11 @@ def class_(
     body: ClassDef.body = class_def.body if doc_str is None else class_def.body[1:]
     for e in body:
         if isinstance(e, AnnAssign):
-            typ: str = to_code(e.annotation).rstrip("\n")
+            typ: str = cdd.shared.source_transformer.to_code(e.annotation).rstrip("\n")
             val = (
                 (
                     lambda v: (
-                        {"default": NoneStr}
+                        {"default": cdd.shared.ast_utils.NoneStr}
                         if v is None
                         else {
                             "default": (
@@ -130,12 +132,15 @@ def class_(
                                         "{}": {} if isinstance(v, Dict) else set(),
                                         "[]": [],
                                         "()": (),
-                                    }.get(value, parse_to_scalar(value))
-                                )(to_code(v).rstrip("\n"))
+                                    }.get(
+                                        value,
+                                        cdd.shared.ast_utils.parse_to_scalar(value),
+                                    )
+                                )(cdd.shared.source_transformer.to_code(v).rstrip("\n"))
                             )
                         }
                     )
-                )(get_value(get_value(e)))
+                )(cdd.shared.ast_utils.get_value(cdd.shared.ast_utils.get_value(e)))
                 if hasattr(e, "value") and e.value is not None
                 else {}
             )
@@ -159,10 +164,10 @@ def class_(
                     intermediate_repr[k] = OrderedDict()
                 intermediate_repr[k][target_id] = typ_default
         elif isinstance(e, Assign):
-            val = get_value(e)
+            val = cdd.shared.ast_utils.get_value(e)
 
             if val is not None:
-                val = get_value(val)
+                val = cdd.shared.ast_utils.get_value(val)
                 deque(
                     map(
                         lambda target: setitem(
@@ -181,7 +186,11 @@ def class_(
                                             (
                                                 _target_id
                                                 if isinstance(target, Name)
-                                                else get_value(get_value(target))
+                                                else cdd.shared.ast_utils.get_value(
+                                                    cdd.shared.ast_utils.get_value(
+                                                        target
+                                                    )
+                                                )
                                             ),
                                             {"default": val},
                                         )

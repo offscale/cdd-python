@@ -38,6 +38,7 @@ from sys import version_info
 from typing import Optional, Union
 from unittest import TestCase
 
+import cdd.tests.utils_for_tests
 from cdd.shared.ast_utils import (
     NoneStr,
     RewriteAtQuery,
@@ -54,6 +55,7 @@ from cdd.shared.ast_utils import (
     get_ass_where_name,
     get_at_root,
     get_function_type,
+    get_names,
     get_types,
     get_value,
     infer_imports,
@@ -61,6 +63,7 @@ from cdd.shared.ast_utils import (
     maybe_type_comment,
     merge_assignment_lists,
     merge_modules,
+    module_to_all,
     node_to_dict,
     optimise_imports,
     param2argparse_param,
@@ -367,6 +370,61 @@ class TestAstUtils(TestCase):
                     alias=None,
                 ),
             )
+        )
+
+    def test_get_names(self) -> None:
+        """Check the `get_names` works"""
+        self.assertTupleEqual(
+            tuple(
+                get_names(
+                    FunctionDef(
+                        body=[],
+                        name="func_foo",
+                        arguments_args=None,
+                        identifier_name=None,
+                        stmt=None,
+                    )
+                )
+            ),
+            ("func_foo",),
+        )
+
+        self.assertTupleEqual(
+            tuple(
+                get_names(
+                    Assign(
+                        targets=[Name("my_ass", Store(), lineno=None, col_offset=None)],
+                        value=set_value("my_val"),
+                        expr=None,
+                        lineno=None,
+                        **maybe_type_comment,
+                    )
+                )
+            ),
+            ("my_ass",),
+        )
+
+        self.assertTupleEqual(
+            tuple(
+                get_names(
+                    AnnAssign(
+                        annotation=Name("str", Load(), lineno=None, col_offset=None),
+                        simple=1,
+                        target=Name(
+                            "my_ann_ass", Store(), lineno=None, col_offset=None
+                        ),
+                        value=set_value(
+                            "my_ann_ass_val",
+                        ),
+                        expr=None,
+                        expr_annotation=None,
+                        expr_target=None,
+                        col_offset=None,
+                        lineno=None,
+                    )
+                )
+            ),
+            ("my_ann_ass",),
         )
 
     def test_infer_imports_with_sqlalchemy(self) -> None:
@@ -1424,6 +1482,34 @@ class TestAstUtils(TestCase):
                     *map(ast.parse, (src, src)), remove_imports_from_second=False
                 ),
             )
+        )
+
+    def test_module_to_all(self) -> None:
+        """Tests that `module_to_all` behaves correctly"""
+        self.assertListEqual(
+            module_to_all("cdd.tests.utils_for_tests"),
+            cdd.tests.utils_for_tests.__all__,
+        )
+        self.assertListEqual(
+            cdd.tests.utils_for_tests.__all__,
+            [
+                "inspectable_compile",
+                "mock_function",
+                # "module_from_file",
+                "reindent_docstring",
+                "remove_args_from_docstring",
+                "replace_docstring",
+                "run_ast_test",
+                "run_cli_test",
+                "unittest_main",
+            ],
+        )
+        self.assertListEqual(
+            module_to_all("cdd.tests.test_shared.test_ast_utils"),
+            [self.__class__.__name__],
+        )
+        self.assertListEqual(
+            module_to_all("cdd.tests.test_shared.test_ast_utils"), ["TestAstUtils"]
         )
 
     def test_optimise_imports(self) -> None:

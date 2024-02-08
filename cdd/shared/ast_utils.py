@@ -45,15 +45,18 @@ from inspect import isclass, isfunction
 from itertools import chain, filterfalse, groupby
 from json import dumps
 from operator import attrgetter, contains, inv, itemgetter, neg, not_, pos
+from os import path
 from typing import FrozenSet, Generator, Optional
 from typing import __all__ as typing__all__
 
+import cdd.shared.source_transformer
 from cdd.shared.defaults_utils import extract_default, needs_quoting
 from cdd.shared.pure_utils import (
     PY_GTE_3_8,
     PY_GTE_3_9,
     code_quoted,
     fill,
+    find_module_filepath,
     identity,
     none_types,
     paren_wrap_code,
@@ -290,6 +293,13 @@ DEFAULT_MODULES_TO_ALL = (
     ("typing_extensions", typing_extensions___all__),
     ("collections.abc", collections_abc___all__),
     ("sqlalchemy", sqlalchemy___all__),
+)  # type: tuple[tuple[str, frozenset], ...]
+
+DEFAULT_MODULES_TO_ALL_SQL_FIRST = (
+    ("sqlalchemy", sqlalchemy___all__),
+    ("typing", typing___all__),
+    ("typing_extensions", typing_extensions___all__),
+    ("collections.abc", collections_abc___all__),
 )  # type: tuple[tuple[str, frozenset], ...]
 
 # Was `"globals().__getitem__"`; this type is used for `Any` and any other unhandled
@@ -1898,6 +1908,69 @@ def get_doc_str(node):
             return get_value(val)
 
 
+def get_names(node):
+    """
+    Get name(s) from:
+    - Assign targets
+    - AnnAssign target
+    - Function, AsyncFunction, ClassDef
+
+    :param node: AST node
+    :type node: ```Union[Assign, AnnAssign, Function, AsyncFunctionDef, ClassDef]```
+
+    :return: All top-level symbols (except those within try/except and if/elif/else blocks)
+    :rtype: ```Generator[str]```
+    """
+    if isinstance(node, Assign):
+        return map(attrgetter("id"), node.targets)
+    elif isinstance(node, AnnAssign):
+        return iter((node.target.id,))
+    elif isinstance(node, (AsyncFunctionDef, FunctionDef, ClassDef)):
+        return iter((node.name,))
+    return iter(())
+
+
+def module_to_all(module_or_filepath):
+    """
+    From input, create (("module_name", {"symbol0", "symbol1"}),)
+
+    :param module_or_filepath: Module or filepath
+    :type module_or_filepath: ```Union[str, Module]```
+
+    :return: `__all__` from module (if present) else all symbols in module
+    :rtype: ```List[str]```
+    """
+    assert isinstance(module_or_filepath, (str, Module))
+    if not path.exists(module_or_filepath):
+        module_or_filepath = find_module_filepath(module_or_filepath)
+
+    with open(module_or_filepath, "rt") as f:
+        module_or_filepath: Module = cdd.shared.source_transformer.ast_parse(
+            f.read(), filename=module_or_filepath
+        )
+
+    module_or_filepath: Module = module_or_filepath
+
+    # If exists, construct `list[str]` version of `__all__`
+    all_ = list(
+        map(
+            get_value,
+            chain.from_iterable(
+                map(
+                    attrgetter("elts"),
+                    map(get_value, get_ass_where_name(module_or_filepath, "__all__")),
+                )
+            ),
+        )
+    )
+
+    return (
+        all_
+        if all_
+        else list(chain.from_iterable(map(get_names, module_or_filepath.body)))
+    )
+
+
 def merge_assignment_lists(node, name, unique_sort=True):
     """
     Merge multiple same-name lists within the body of a node into one, e.g., if you have multiple ```__all__```
@@ -2147,10 +2220,7 @@ def get_types(node):
             )
 
 
-def infer_imports(
-    module,
-    modules_to_all=DEFAULT_MODULES_TO_ALL,
-):
+def infer_imports(module, modules_to_all=DEFAULT_MODULES_TO_ALL):
     """
     Infer imports from AST nodes (Name|.annotation|.type_comment); in order; these:
       - typing
@@ -2192,6 +2262,8 @@ def infer_imports(
         else:
             return None
 
+    _symbol_to_import = partial(symbol_to_import, modules_to_all=modules_to_all)
+
     # Lots of room for optimisation here; but its probably NP-hard:
     imports = tuple(
         map(
@@ -2217,7 +2289,7 @@ def infer_imports(
                         None,
                         map(
                             # Because there are duplicate names, centralise all import resolution here and order them
-                            partial(symbol_to_import, modules_to_all=modules_to_all),
+                            _symbol_to_import,
                             sorted(
                                 frozenset(
                                     chain.from_iterable(
@@ -2336,6 +2408,8 @@ def deduplicate_sorted_imports(module):
 NoneStr = "```(None)```" if PY_GTE_3_9 else "```None```"
 
 __all__ = [
+    "DEFAULT_MODULES_TO_ALL",
+    "DEFAULT_MODULES_TO_ALL_SQL_FIRST",
     "Dict_to_dict",
     "FALLBACK_ARGPARSE_TYP",
     "FALLBACK_TYP",

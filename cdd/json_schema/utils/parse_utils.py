@@ -4,7 +4,7 @@ Utility functions for `cdd.parse.json_schema`
 
 from typing import Dict
 
-from cdd.shared.ast_utils import NoneStr
+import cdd.shared.ast_utils
 from cdd.shared.pure_utils import namespaced_pascal_to_upper_camelcase, none_types
 
 
@@ -103,7 +103,7 @@ def json_schema_property_to_param(param, required):
     ):
         _param["typ"] = "Optional[{}]".format(_param["typ"])
     if _param.get("default", False) in none_types:
-        _param["default"] = NoneStr
+        _param["default"] = cdd.shared.ast_utils.NoneStr
 
     return name, _param
 

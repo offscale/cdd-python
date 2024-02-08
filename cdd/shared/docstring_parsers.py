@@ -44,9 +44,10 @@ if sys.version_info[:2] > (3, 10):
 else:
     from typing_extensions import LiteralString
 
+import cdd.shared.ast_utils
+import cdd.shared.source_transformer
 from cdd.docstring.utils.emit_utils import interpolate_defaults
 from cdd.docstring.utils.parse_utils import parse_adhoc_doc_for_typ
-from cdd.shared.ast_utils import NoneStr, get_value
 from cdd.shared.defaults_utils import (
     _remove_default_from_param,
     extract_default,
@@ -70,7 +71,6 @@ from cdd.shared.pure_utils import (
     unquote,
     update_d,
 )
-from cdd.shared.source_transformer import to_code
 from cdd.shared.types import IntermediateRepr
 
 
@@ -543,7 +543,7 @@ def _set_name_and_type(param, infer_type, word_wrap, none_default_for_kwargs=Fal
     name, _param = param
     del param
     was = deepcopy(_param)
-    was_none = was.get("default") in frozenset((NoneStr, "None"))
+    was_none = was.get("default") in frozenset((cdd.shared.ast_utils.NoneStr, "None"))
     if "doc" in _param:
         merge_present_params(
             target_param=_param,
@@ -613,7 +613,7 @@ def __set_name_and_type_handle_doc_in_param(_param, name, was_none, word_wrap):
             ).rstrip()
 
         typ = parse_adhoc_doc_for_typ(
-            _param["doc"], name, _param.get("default") == NoneStr
+            _param["doc"], name, _param.get("default") == cdd.shared.ast_utils.NoneStr
         )
         if typ is not None:
             try:
@@ -641,9 +641,9 @@ def _infer_default(_param, infer_type):
     :type infer_type: ```bool```
     """
     if isinstance(_param["default"], (Str, Bytes, Num, ast.Constant, NameConstant)):
-        _param["default"] = get_value(_param["default"])
+        _param["default"] = cdd.shared.ast_utils.get_value(_param["default"])
     if _param.get("default", False) in none_types:
-        _param["default"] = NoneStr
+        _param["default"] = cdd.shared.ast_utils.NoneStr
     if infer_type and _param.get("typ") is None and _param["default"] not in none_types:
         _param["typ"] = type(_param["default"]).__name__
     if needs_quoting(_param.get("typ")) or isinstance(_param["default"], str):
@@ -655,12 +655,16 @@ def _infer_default(_param, infer_type):
                 _param["typ"] = type(_param["default"]).__name__
         except ValueError:
             _param["default"] = "```{default}```".format(
-                default=paren_wrap_code(to_code(_param["default"]).rstrip("\n"))
+                default=paren_wrap_code(
+                    cdd.shared.source_transformer.to_code(_param["default"]).rstrip(
+                        "\n"
+                    )
+                )
             )
-    if _param.get("typ") is None and _param["default"] != NoneStr:
+    if _param.get("typ") is None and _param["default"] != cdd.shared.ast_utils.NoneStr:
         _param["typ"] = type(_param["default"]).__name__
     if (
-        _param["default"] != NoneStr
+        _param["default"] != cdd.shared.ast_utils.NoneStr
         and code_quoted(_param["default"])
         and "["
         not in _param.get(

@@ -23,7 +23,6 @@ import cdd.pydantic.emit
 import cdd.shared.ast_utils
 import cdd.shared.emit.file
 import cdd.sqlalchemy.emit
-from cdd.shared.ast_utils import deduplicate_sorted_imports, infer_imports
 from cdd.shared.parse.utils.parser_utils import get_parser
 from cdd.shared.pkg_utils import relative_filename
 from cdd.shared.pure_utils import (
@@ -202,6 +201,7 @@ def emit_file_on_hierarchy(
     new_module_name,
     mock_imports,
     filesystem_layout,
+    extra_modules_to_all,
     output_directory,
     no_word_wrap,
     dry_run,
@@ -227,6 +227,9 @@ def emit_file_on_hierarchy(
 
     :param filesystem_layout: Hierarchy of folder and file names generated. "java" is file per package per name.
     :type filesystem_layout: ```Literal["java", "as_input"]```
+
+    :param extra_modules_to_all: Internal arg. Prepended to symbol resolver. E.g., `(("ast", {"List"}),)`.
+    :type extra_modules_to_all: ```Optional[tuple[tuple[str, frozenset], ...]]```
 
     :param output_directory: Where to place the generated exposed interfaces to the given `--module`.
     :type output_directory: ```str```
@@ -353,6 +356,7 @@ def emit_file_on_hierarchy(
             isfile_emit_filename,
             name,
             mock_imports,
+            extra_modules_to_all,
             no_word_wrap,
             dry_run,
         )
@@ -387,6 +391,7 @@ def _emit_symbol(
     isfile_emit_filename,
     name,
     mock_imports,
+    extra_modules_to_all,
     no_word_wrap,
     dry_run,
 ):
@@ -432,6 +437,9 @@ def _emit_symbol(
     :param mock_imports: Whether to generate mock TensorFlow imports
     :type mock_imports: ```bool```
 
+    :param extra_modules_to_all: Additional module(s) to expose. Prepended to symbol resolver. `(("ast", {"List"}),)`.
+    :type extra_modules_to_all: ```Optional[tuple[tuple[str, frozenset], ...]]```
+
     :param no_word_wrap: Whether word-wrap is disabled (on emission).
     :type no_word_wrap: ```Optional[Literal[True]]```
 
@@ -474,6 +482,12 @@ def _emit_symbol(
             **{"function_type": "static"} if emit_name == "function" else {}
         )
     )
+    modules_to_all = (extra_modules_to_all or tuple()) + (
+        cdd.shared.ast_utils.DEFAULT_MODULES_TO_ALL_SQL_FIRST
+        if emit_name
+        in frozenset(("sqlalchemy", "sqlalchemy_hybrid", "sqlalchemy_table"))
+        else cdd.shared.ast_utils.DEFAULT_MODULES_TO_ALL
+    )
     __all___node: Assign = Assign(
         targets=[Name("__all__", Store(), lineno=None, col_offset=None)],
         value=List(
@@ -505,7 +519,12 @@ def _emit_symbol(
                         (
                             imports_header_ast
                             if mock_imports
-                            else (infer_imports(gen_node) or iter(()))
+                            else (
+                                cdd.shared.ast_utils.infer_imports(
+                                    gen_node, modules_to_all=modules_to_all
+                                )
+                                or iter(())
+                            )
                         ),
                         (gen_node, __all___node),
                     )
@@ -519,14 +538,16 @@ def _emit_symbol(
             gen_node: Module = cdd.shared.ast_utils.merge_modules(
                 cast(Module, existent_mod), gen_node
             )
-            inferred_imports = infer_imports(gen_node)
+            inferred_imports = cdd.shared.ast_utils.infer_imports(
+                gen_node, modules_to_all=modules_to_all
+            )
             if inferred_imports:
                 gen_node.body = list(
                     chain.from_iterable(
                         ((gen_node.body[0],), inferred_imports, gen_node.body[1:])
                     )
                 )
-                gen_node = deduplicate_sorted_imports(gen_node)
+                gen_node = cdd.shared.ast_utils.deduplicate_sorted_imports(gen_node)
         cdd.shared.ast_utils.merge_assignment_lists(gen_node, "__all__")
     if dry_run:
         print(
@@ -586,6 +607,7 @@ def emit_files_from_module_and_return_imports(
     no_word_wrap,
     dry_run,
     filesystem_layout,
+    extra_modules_to_all,
 ):
     """
     Emit type `emit_name` of all files in `module_root_dir` into `output_directory`
@@ -622,6 +644,9 @@ def emit_files_from_module_and_return_imports(
     :param filesystem_layout: Hierarchy of folder and file names generated. "java" is file per package per name.
     :type filesystem_layout: ```Literal["java", "as_input"]```
 
+    :param extra_modules_to_all: Internal arg. Prepended to symbol resolver. E.g., `(("ast", {"List"}),)`.
+    :type extra_modules_to_all: ```Optional[tuple[tuple[str, frozenset], ...]]```
+
     :return: List of (mod_name or None, relative_filename_path, ImportFrom) to generated module(s)
     :rtype: ```list[Tuple[Optional[str], str, ImportFrom]]```
     """
@@ -633,6 +658,7 @@ def emit_files_from_module_and_return_imports(
         mock_imports=mock_imports,
         filesystem_layout=filesystem_layout,
         output_directory=output_directory,
+        extra_modules_to_all=extra_modules_to_all,
         no_word_wrap=no_word_wrap,
         dry_run=dry_run,
     )

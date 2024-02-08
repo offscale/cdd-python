@@ -9,10 +9,10 @@ from functools import partial
 from itertools import chain
 from typing import Optional
 
+import cdd.shared.ast_utils
 from cdd.class_.utils.emit_utils import RewriteName
 from cdd.docstring.emit import docstring
 from cdd.function.utils.emit_utils import _make_call_meth
-from cdd.shared.ast_utils import param2ast, set_value
 from cdd.shared.pure_utils import PY_GTE_3_8, PY_GTE_3_9, rpartial
 
 if PY_GTE_3_9:
@@ -140,7 +140,9 @@ def class_(
                                     None
                                     if ds is None
                                     else Expr(
-                                        set_value(ds), lineno=None, col_offset=None
+                                        cdd.shared.ast_utils.set_value(ds),
+                                        lineno=None,
+                                        col_offset=None,
                                     )
                                 )
                             )(
@@ -157,7 +159,7 @@ def class_(
                             ),
                         ),
                         map(
-                            param2ast,
+                            cdd.shared.ast_utils.param2ast,
                             (intermediate_repr.get("params") or OrderedDict()).items(),
                         ),
                         iter(

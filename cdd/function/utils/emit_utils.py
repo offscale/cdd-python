@@ -5,8 +5,8 @@ Utility functions for `cdd.emit.function_utils`
 import ast
 from ast import Expr, FunctionDef, Return, arguments
 
+import cdd.shared.ast_utils
 from cdd.class_.utils.emit_utils import RewriteName
-from cdd.shared.ast_utils import get_value, maybe_type_comment, set_arg, set_value
 from cdd.shared.docstring_utils import emit_param_str
 from cdd.shared.pure_utils import (
     code_quoted,
@@ -48,7 +48,7 @@ def _make_call_meth(body, return_type, param_names, docstring_format, word_wrap)
                         None
                         if body.get("doc") in none_types
                         else Expr(
-                            set_value(
+                            cdd.shared.ast_utils.set_value(
                                 emit_param_str(
                                     (
                                         "return_type",
@@ -70,12 +70,16 @@ def _make_call_meth(body, return_type, param_names, docstring_format, word_wrap)
                     (
                         RewriteName(param_names).visit(
                             Return(
-                                get_value(ast.parse(return_type.strip("`")).body[0]),
+                                cdd.shared.ast_utils.get_value(
+                                    ast.parse(return_type.strip("`")).body[0]
+                                ),
                                 expr=None,
                             )
                         )
                         if code_quoted(body["default"])
-                        else Return(set_value(body["default"]), expr=None)
+                        else Return(
+                            cdd.shared.ast_utils.set_value(body["default"]), expr=None
+                        )
                     ),
                 ),
             )
@@ -85,7 +89,7 @@ def _make_call_meth(body, return_type, param_names, docstring_format, word_wrap)
         ast.fix_missing_locations(
             FunctionDef(
                 args=arguments(
-                    args=[set_arg("self")],
+                    args=[cdd.shared.ast_utils.set_arg("self")],
                     defaults=[],
                     kw_defaults=[],
                     kwarg=None,
@@ -103,7 +107,7 @@ def _make_call_meth(body, return_type, param_names, docstring_format, word_wrap)
                 identifier_name=None,
                 stmt=None,
                 lineno=None,
-                **maybe_type_comment
+                **cdd.shared.ast_utils.maybe_type_comment
             )
         )
         if body

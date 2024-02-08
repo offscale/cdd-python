@@ -6,9 +6,9 @@ from ast import Constant, Return, Tuple
 from collections import OrderedDict
 from typing import Optional
 
-from cdd.shared.ast_utils import get_value
+import cdd.shared.ast_utils
+import cdd.shared.source_transformer
 from cdd.shared.pure_utils import PY_GTE_3_8, rpartial
-from cdd.shared.source_transformer import to_code
 
 if PY_GTE_3_8:
     from cdd.shared.pure_utils import FakeConstant
@@ -74,16 +74,20 @@ def _interpolate_return(function_def, intermediate_repr):
                         )
                         else "```{}```".format(default)
                     )
-                )(get_value(get_value(return_ast)))
+                )(
+                    cdd.shared.ast_utils.get_value(
+                        cdd.shared.ast_utils.get_value(return_ast)
+                    )
+                )
             )
-        )(to_code(return_ast.value).rstrip("\n"))
+        )(cdd.shared.source_transformer.to_code(return_ast.value).rstrip("\n"))
     if hasattr(function_def, "returns") and function_def.returns is not None:
         intermediate_repr["returns"] = intermediate_repr.get("returns") or OrderedDict(
             (("return_type", {}),)
         )
-        intermediate_repr["returns"]["return_type"]["typ"] = to_code(
-            function_def.returns
-        ).rstrip("\n")
+        intermediate_repr["returns"]["return_type"]["typ"] = (
+            cdd.shared.source_transformer.to_code(function_def.returns).rstrip("\n")
+        )
 
     return intermediate_repr
 

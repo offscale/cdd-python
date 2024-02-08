@@ -482,9 +482,9 @@ class Config(Base):
 
     $ python -m cdd --help
     usage: python -m cdd [-h] [--version]
-                         {sync_properties,sync,gen,gen_routes,openapi,doctrans,exmod}
-                         ...
-    
+                     {sync_properties,sync,gen,gen_routes,openapi,doctrans,exmod}
+                     ...
+
     Open API to/fro routes, models, and tests. Convert between docstrings,
     classes, methods, argparse, pydantic, and SQLalchemy.
     
@@ -575,7 +575,7 @@ class Config(Base):
                              [--parse {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_hybrid,sqlalchemy_table,infer}]
                              --emit
                              {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_hybrid,sqlalchemy_table}
-                             --output-filename OUTPUT_FILENAME [--emit-call]
+                             -o OUTPUT_FILENAME [--emit-call]
                              [--emit-and-infer-imports] [--no-word-wrap]
                              [--decorator DECORATOR_LIST] [--phase PHASE]
     
@@ -593,7 +593,7 @@ class Config(Base):
                             What type the input is.
       --emit {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_hybrid,sqlalchemy_table}
                             Which type to generate.
-      --output-filename OUTPUT_FILENAME, -o OUTPUT_FILENAME
+      -o OUTPUT_FILENAME, --output-filename OUTPUT_FILENAME
                             Output file to write to.
       --emit-call           Whether to place all the previous body into a new
                             `__call__` internal function
@@ -678,20 +678,27 @@ PS: If you're outputting JSON-schema and want a file per schema then:
 ### `exmod`
 
     $ python -m cdd exmod --help
-    usage: python -m cdd exmod [-h] --module MODULE --emit
+    usage: python -m cdd exmod [-h] -m MODULE --emit
                                {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_hybrid,sqlalchemy_table}
-                               [--no-word-wrap] [--blacklist BLACKLIST]
-                               [--whitelist WHITELIST] --output-directory
+                               [--emit-sqlalchemy-submodule]
+                               [--extra-module [EXTRA_MODULES]] [--no-word-wrap]
+                               [--blacklist BLACKLIST] [--whitelist WHITELIST] -o
                                OUTPUT_DIRECTORY
-                               [--target-module-name TARGET_MODULE_NAME]
+                               [--target-module-name TARGET_MODULE_NAME] [-r]
                                [--dry-run]
     
     options:
       -h, --help            show this help message and exit
-      --module MODULE, -m MODULE
+      -m MODULE, --module MODULE
                             The module or fully-qualified name (FQN) to expose.
       --emit {argparse,class,function,json_schema,pydantic,sqlalchemy,sqlalchemy_hybrid,sqlalchemy_table}
                             Which type to generate.
+      --emit-sqlalchemy-submodule
+                            Whether to; for sqlalchemy*; emit submodule "sqlalchem
+                            y_mod/{__init__,connection,create_tables}.py"
+      --extra-module [EXTRA_MODULES]
+                            Additional module(s) to expose; specifiable multiple
+                            times. Added to symbol auto-import resolver.
       --no-word-wrap        Whether word-wrap is disabled (on emission). None
                             enables word-wrap. Defaults to None.
       --blacklist BLACKLIST
@@ -700,11 +707,13 @@ PS: If you're outputting JSON-schema and want a file per schema then:
       --whitelist WHITELIST
                             Modules/FQN to emit. If unspecified will emit all
                             (minus blacklist).
-      --output-directory OUTPUT_DIRECTORY, -o OUTPUT_DIRECTORY
+      -o OUTPUT_DIRECTORY, --output-directory OUTPUT_DIRECTORY
                             Where to place the generated exposed interfaces to the
                             given `--module`.
       --target-module-name TARGET_MODULE_NAME
-                            Target module name. Defaults to `${module}.gold`.
+                            Target module name. Defaults to `${module}___gold`.
+      -r, --recursive       Recursively traverse module hierarchy and recreate
+                            hierarchy with exposed interfaces
       --dry-run             Show what would be created; don't actually write to
                             the filesystem.
 

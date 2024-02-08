@@ -20,14 +20,8 @@ from functools import partial
 from itertools import chain
 from typing import Optional
 
+import cdd.shared.ast_utils
 from cdd.docstring.emit import docstring
-from cdd.shared.ast_utils import (
-    get_value,
-    maybe_type_comment,
-    param2argparse_param,
-    set_arg,
-    set_value,
-)
 from cdd.shared.emit.utils.emitter_utils import get_internal_body
 from cdd.shared.pure_utils import code_quoted, fill, identity, none_types
 from cdd.shared.types import Internal
@@ -87,7 +81,7 @@ def argparse_function(
 
     return FunctionDef(
         args=arguments(
-            args=[set_arg("argument_parser")],
+            args=[cdd.shared.ast_utils.set_arg("argument_parser")],
             # None if function_type in frozenset((None, "static"))
             # else set_arg(function_type),
             defaults=[],
@@ -104,7 +98,7 @@ def argparse_function(
                     iter(
                         (
                             Expr(
-                                set_value(
+                                cdd.shared.ast_utils.set_value(
                                     docstring(
                                         {
                                             "doc": "Set CLI arguments",
@@ -200,14 +194,14 @@ def argparse_function(
                                         col_offset=None,
                                     )
                                 ],
-                                value=set_value(
+                                value=cdd.shared.ast_utils.set_value(
                                     (fill if wrap_description else identity)(
                                         intermediate_repr["doc"]
                                     )
                                 ),
                                 lineno=None,
                                 expr=None,
-                                **maybe_type_comment
+                                **cdd.shared.ast_utils.maybe_type_comment
                             ),
                         )
                     ),
@@ -218,7 +212,7 @@ def argparse_function(
                                 (
                                     map(
                                         partial(
-                                            param2argparse_param,
+                                            cdd.shared.ast_utils.param2argparse_param,
                                             word_wrap=word_wrap,
                                             emit_default_doc=emit_default_doc,
                                         ),
@@ -241,7 +235,12 @@ def argparse_function(
                                 ]
                                 if internal_body
                                 and isinstance(internal_body[0], Expr)
-                                and isinstance(get_value(internal_body[0].value), str)
+                                and isinstance(
+                                    cdd.shared.ast_utils.get_value(
+                                        internal_body[0].value
+                                    ),
+                                    str,
+                                )
                                 else internal_body
                             ),
                             (
@@ -260,7 +259,7 @@ def argparse_function(
                                                     col_offset=None,
                                                 ),
                                                 (
-                                                    set_value(
+                                                    cdd.shared.ast_utils.set_value(
                                                         intermediate_repr["returns"][
                                                             "return_type"
                                                         ]["default"]
@@ -314,7 +313,7 @@ def argparse_function(
         arguments_args=None,
         identifier_name=None,
         stmt=None,
-        **maybe_type_comment
+        **cdd.shared.ast_utils.maybe_type_comment
     )
 
 

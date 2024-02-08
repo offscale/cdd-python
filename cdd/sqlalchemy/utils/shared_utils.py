@@ -8,10 +8,10 @@ from operator import attrgetter
 from typing import Optional, cast
 
 import cdd.compound.openapi.utils.emit_utils
+import cdd.shared.ast_utils
+import cdd.shared.source_transformer
 import cdd.sqlalchemy.utils.emit_utils
-from cdd.shared.ast_utils import NoneStr, get_value, set_value
 from cdd.shared.pure_utils import PY_GTE_3_9, rpartial
-from cdd.shared.source_transformer import to_code
 
 
 def _update_args_infer_typ_sqlalchemy_for_scalar(_param, args, x_typ_sql):
@@ -37,9 +37,15 @@ def _update_args_infer_typ_sqlalchemy_for_scalar(_param, args, x_typ_sql):
     args.append(
         Call(
             func=Name(type_name, Load(), lineno=None, col_offset=None),
-            args=list(map(set_value, x_typ_sql.get("type_args", iter(())))),
+            args=list(
+                map(
+                    cdd.shared.ast_utils.set_value, x_typ_sql.get("type_args", iter(()))
+                )
+            ),
             keywords=[
-                keyword(arg=arg, value=set_value(val), identifier=None)
+                keyword(
+                    arg=arg, value=cdd.shared.ast_utils.set_value(val), identifier=None
+                )
                 for arg, val in x_typ_sql.get("type_kwargs", dict()).items()
             ],
             expr=None,
@@ -73,22 +79,28 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
     :rtype: ```Tuple[bool, Optional[Union[List[AST], Tuple[AST]]]]```
     """
     if _param["typ"] is None:
-        return _param.get("default") == NoneStr, None
+        return _param.get("default") == cdd.shared.ast_utils.NoneStr, None
     if _param["typ"].startswith("Optional["):
         _param["typ"] = _param["typ"][len("Optional[") : -1]
         nullable = True
     if "Literal[" in _param["typ"]:
-        parsed_typ: Call = get_value(ast.parse(_param["typ"]).body[0])
+        parsed_typ: Call = cdd.shared.ast_utils.get_value(
+            ast.parse(_param["typ"]).body[0]
+        )
         if parsed_typ.value.id != "Literal":
             return nullable, parsed_typ.value
-        val = get_value(parsed_typ.slice)
+        val = cdd.shared.ast_utils.get_value(parsed_typ.slice)
         (
             args.append(
                 Call(
                     func=Name("Enum", Load(), lineno=None, col_offset=None),
                     args=val.elts,
                     keywords=[
-                        ast.keyword(arg="name", value=set_value(name), identifier=None)
+                        ast.keyword(
+                            arg="name",
+                            value=cdd.shared.ast_utils.set_value(name),
+                            identifier=None,
+                        )
                     ],
                     expr=None,
                     expr_func=None,
@@ -119,7 +131,7 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
                 filter(rpartial(isinstance, Name), ast.walk(list_typ.value.slice)), None
             )
             assert name is not None, "Could not find a type in {!r}".format(
-                to_code(list_typ.value.slice)
+                cdd.shared.source_transformer.to_code(list_typ.value.slice)
             )
         args.append(
             Call(

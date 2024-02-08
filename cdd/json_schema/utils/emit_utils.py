@@ -6,8 +6,8 @@ import ast
 from ast import AST, Set
 from typing import Dict
 
+import cdd.shared.ast_utils
 from cdd.json_schema.utils.parse_utils import json_type2typ
-from cdd.shared.ast_utils import Set_to_set, ast_type_to_python_type, get_value
 from cdd.shared.pure_utils import none_types
 
 
@@ -47,13 +47,20 @@ def param2json_schema_property(param, required):
             required.append(name)
 
         if _param["type"].startswith("Literal["):
-            parsed_typ = get_value(ast.parse(_param["type"]).body[0])
+            parsed_typ = cdd.shared.ast_utils.get_value(
+                ast.parse(_param["type"]).body[0]
+            )
             assert (
                 parsed_typ.value.id == "Literal"
             ), "Only basic Literal support is implemented, not {}".format(
                 parsed_typ.value.id
             )
-            enum = sorted(map(get_value, get_value(parsed_typ.slice).elts))
+            enum = sorted(
+                map(
+                    cdd.shared.ast_utils.get_value,
+                    cdd.shared.ast_utils.get_value(parsed_typ.slice).elts,
+                )
+            )
             _param.update(
                 {
                     "pattern": "|".join(enum),
@@ -63,10 +70,12 @@ def param2json_schema_property(param, required):
     if _param.get("default", False) in none_types:
         del _param["default"]  # Will be inferred as `null` from the type
     elif isinstance(_param.get("default"), AST):
-        _param["default"] = ast_type_to_python_type(_param["default"])
+        _param["default"] = cdd.shared.ast_utils.ast_type_to_python_type(
+            _param["default"]
+        )
     if isinstance(_param.get("choices"), Set):
         _param["pattern"] = "|".join(
-            sorted(map(str, Set_to_set(_param.pop("choices"))))
+            sorted(map(str, cdd.shared.ast_utils.Set_to_set(_param.pop("choices"))))
         )
     return name, _param
 

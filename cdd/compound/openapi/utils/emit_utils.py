@@ -2,9 +2,9 @@
 Utility functions for `cdd.emit.sqlalchemy`
 """
 
-from cdd.sqlalchemy.utils.emit_utils import typ2column_type
+import cdd.sqlalchemy.utils.emit_utils
 
-typ2column_type.update(
+cdd.sqlalchemy.utils.emit_utils.typ2column_type.update(
     {
         "bool": "Boolean",
         "dict": "JSON",

@@ -8,11 +8,11 @@ from itertools import chain, filterfalse
 from operator import attrgetter
 from typing import FrozenSet
 
-from cdd.shared.ast_utils import get_value
+import cdd.shared.ast_utils
+import cdd.shared.source_transformer
 from cdd.shared.pure_utils import PY_GTE_3_8
 from cdd.shared.pure_utils import FakeConstant as Str
 from cdd.shared.pure_utils import append_to_dict, indent_all_but_first, rpartial, tab
-from cdd.shared.source_transformer import to_code
 
 if PY_GTE_3_8:
     pass
@@ -124,13 +124,19 @@ def column_parse_arg(idx_arg):
     elif isinstance(arg, Call):
         func_id = arg.func.id.rpartition(".")[2]
         if func_id == "Enum":
-            return "typ", "Literal{}".format(list(map(get_value, arg.args)))
+            return "typ", "Literal{}".format(
+                list(map(cdd.shared.ast_utils.get_value, arg.args))
+            )
         elif func_id == "ForeignKey":
-            return "foreign_key", ",".join(map(get_value, arg.args))
+            return "foreign_key", ",".join(
+                map(cdd.shared.ast_utils.get_value, arg.args)
+            )
         else:
-            return "typ", to_code(idx_arg[1]).replace("\n", "")
+            return "typ", cdd.shared.source_transformer.to_code(idx_arg[1]).replace(
+                "\n", ""
+            )
 
-    val = get_value(arg)
+    val = cdd.shared.ast_utils.get_value(arg)
     assert val != arg, "Unable to parse {!r}".format(arg)
     if idx == 0:
         return None  # Column name
@@ -146,12 +152,14 @@ def column_parse_kwarg(key_word):
 
     :rtype: ```tuple[str, Any]```
     """
-    val = get_value(key_word.value)
+    val = cdd.shared.ast_utils.get_value(key_word.value)
 
     # Checking that the keyword.value has a value OR is a function call.
     assert val != key_word.value or isinstance(
         key_word.value, Call
-    ), "Unable to parse {!r} of {}".format(key_word.arg, to_code(key_word.value))
+    ), "Unable to parse {!r} of {}".format(
+        key_word.arg, cdd.shared.source_transformer.to_code(key_word.value)
+    )
     return key_word.arg, val
 
 
@@ -169,7 +177,7 @@ def column_call_to_param(call):
     assert (
         len(call.args) < 4
     ), "Complex column parsing not implemented for: Column({})".format(
-        ", ".join(map(repr, map(get_value, call.args)))
+        ", ".join(map(repr, map(cdd.shared.ast_utils.get_value, call.args)))
     )
 
     _param = dict(
@@ -219,12 +227,12 @@ def column_call_to_param(call):
 
     if (
         "default" in _param
-        and not get_value(call.args[0]).endswith("kwargs")
+        and not cdd.shared.ast_utils.get_value(call.args[0]).endswith("kwargs")
         and "doc" in _param
     ):
         _param["doc"] += "."
 
-    return get_value(call.args[0]), _param
+    return cdd.shared.ast_utils.get_value(call.args[0]), _param
 
 
 def column_call_name_manipulator(call, operation="remove", name=None):
@@ -345,7 +353,7 @@ def get_pk_and_type(sqlalchemy_class):
                 lambda assign: any(
                     filter(
                         lambda key_word: key_word.arg == "primary_key"
-                        and get_value(key_word.value) is True,
+                        and cdd.shared.ast_utils.get_value(key_word.value) is True,
                         assign.value.keywords,
                     )
                 ),
@@ -373,7 +381,7 @@ def get_table_name(sqlalchemy_class):
     """
     return next(
         map(
-            lambda assign: get_value(assign.value),
+            lambda assign: cdd.shared.ast_utils.get_value(assign.value),
             filter(
                 lambda node: next(
                     filter(lambda target: target.id == "__tablename__", node.targets),

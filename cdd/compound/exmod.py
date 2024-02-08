@@ -20,6 +20,7 @@ from cdd.shared.ast_utils import (
     construct_module_with_symbols,
     maybe_type_comment,
     merge_modules,
+    module_to_all,
     set_value,
 )
 from cdd.shared.pure_utils import (
@@ -49,11 +50,13 @@ def exmod(
     output_directory,
     target_module_name,
     mock_imports,
-    emit_base_engine_metadata,
+    emit_sqlalchemy_submodule,
+    extra_modules,
     no_word_wrap,
     recursive,
     dry_run,
     filesystem_layout="as_input",
+    extra_modules_to_all=None,
 ):
     """
     Expose module as `emit` types into `output_directory`
@@ -80,8 +83,11 @@ def exmod(
     :param mock_imports: Whether to generate mock TensorFlow imports
     :type mock_imports: ```bool```
 
-    :param emit_base_engine_metadata: Whether to produce a file with `Base`, `engine`, and `metadata`.
-    :type emit_base_engine_metadata: ```bool```
+    :param emit_sqlalchemy_submodule: Whether to emit submodule "sqlalchemy_mod/{__init__,connection,create_tables}.py"
+    :type emit_sqlalchemy_submodule: ```bool```
+
+    :param extra_modules: Additional module(s) to expose; specifiable multiple times. Prepended to symbol auto-importer
+    :type extra_modules: ```Optional[List[str]]```
 
     :param no_word_wrap: Whether word-wrap is disabled (on emission).
     :type no_word_wrap: ```Optional[Literal[True]]```
@@ -94,8 +100,16 @@ def exmod(
 
     :param filesystem_layout: Hierarchy of folder and file names generated. "java" is file per package per name.
     :type filesystem_layout: ```Literal["java", "as_input"]```
+
+    :param extra_modules_to_all: Internal arg. Prepended to symbol resolver. E.g., `(("ast", {"List"}),)`.
+    :type extra_modules_to_all: ```Optional[tuple[tuple[str, frozenset], ...]]```
     """
     output_directory = path.realpath(output_directory)
+    extra_modules_to_all = (
+        cdd.shared.ast_utils.module_to_all(extra_modules)
+        if extra_modules is not None and extra_modules_to_all is None
+        else tuple()
+    )  # type: tuple[tuple[str, frozenset], ...]
     if not isinstance(emit_name, str):
         deque(
             map(
@@ -106,12 +120,14 @@ def exmod(
                     whitelist=whitelist,
                     mock_imports=mock_imports,
                     filesystem_layout=filesystem_layout,
-                    emit_base_engine_metadata=emit_base_engine_metadata,
+                    emit_sqlalchemy_submodule=emit_sqlalchemy_submodule,
+                    extra_modules=extra_modules,
                     no_word_wrap=no_word_wrap,
                     output_directory=output_directory,
                     target_module_name=target_module_name,
                     recursive=recursive,
                     dry_run=dry_run,
+                    extra_modules_to_all=extra_modules_to_all,
                 ),
                 emit_name or iter(()),
             ),
@@ -150,7 +166,7 @@ def exmod(
 
     if (
         emit_name in frozenset(("sqlalchemy", "sqlalchemy_hybrid", "sqlalchemy_table"))
-        and emit_base_engine_metadata
+        and emit_sqlalchemy_submodule
     ):
         sqlalchemy_mod = "sqlalchemy_mod"
         sqlalchemy_mod_dir_join = partial(path.join, output_directory, "sqlalchemy_mod")
@@ -160,25 +176,41 @@ def exmod(
             "a",
         ).close()
         connection_py = "connection"
-        with open(
-            sqlalchemy_mod_dir_join(
-                "{name}{extsep}py".format(name=connection_py, extsep=path.extsep)
-            ),
-            "wt",
-        ) as f:
+        connection_filepath = sqlalchemy_mod_dir_join(
+            "{name}{extsep}py".format(name=connection_py, extsep=path.extsep)
+        )
+        with open(connection_filepath, "wt") as f:
             f.write(mock_engine_base_metadata_str)
 
         sqlalchemy_module_name = ".".join(
-            (path.basename(output_directory), sqlalchemy_mod, connection_py)
+            (path.basename(output_directory), sqlalchemy_mod)
         )
-        with open(
-            sqlalchemy_mod_dir_join(
-                "create_tables{extsep}py".format(extsep=path.extsep)
-            ),
-            "wt",
-        ) as f:
-            f.write(to_code(generate_create_tables_mod(sqlalchemy_module_name)))
+        sqlalchemy_module_name_connection_py = ".".join(
+            (sqlalchemy_module_name, connection_py)
+        )
+        sqlalchemy_module_name_create_table = ".".join(
+            (sqlalchemy_module_name, "create_tables")
+        )
+        create_table_filepath = sqlalchemy_mod_dir_join(
+            "create_tables{extsep}py".format(extsep=path.extsep)
+        )
+        with open(create_table_filepath, "wt") as f:
+            f.write(
+                to_code(
+                    generate_create_tables_mod(sqlalchemy_module_name_connection_py)
+                )
+            )
 
+        extra_modules_to_all = (
+            (
+                sqlalchemy_module_name_connection_py,
+                frozenset(module_to_all(connection_filepath)),
+            ),
+            (
+                sqlalchemy_module_name_create_table,
+                frozenset(module_to_all(create_table_filepath)),
+            ),
+        ) + extra_modules_to_all
     try:
         module_root_dir: str = path.dirname(
             find_module_filepath(
@@ -199,6 +231,7 @@ def exmod(
         module_root=module_root,
         new_module_name=new_module_name,
         filesystem_layout=filesystem_layout,
+        extra_modules_to_all=extra_modules_to_all,
     )
     packages: typing.List[str] = find_packages(
         module_root_dir,
@@ -281,6 +314,7 @@ def exmod_single_folder(
     module_name,
     new_module_name,
     filesystem_layout,
+    extra_modules_to_all,
 ):
     """
     Expose module as `emit` types into `output_directory`. Single folder (non-recursive).
@@ -324,6 +358,9 @@ def exmod_single_folder(
 
     :param filesystem_layout: Hierarchy of folder and file names generated. "java" is file per package per name.
     :type filesystem_layout: ```Literal["java", "as_input"]```
+
+    :param extra_modules_to_all: Internal arg. Prepended to symbol resolver. E.g., `(("ast", {"List"}),)`.
+    :type extra_modules_to_all: ```Optional[tuple[tuple[str, frozenset], ...]]```
     """
     mod_path: str = (
         module_name
@@ -351,6 +388,7 @@ def exmod_single_folder(
         no_word_wrap=no_word_wrap,
         dry_run=dry_run,
         filesystem_layout=filesystem_layout,
+        extra_modules_to_all=extra_modules_to_all,
     )
 
     imports = _emit_files_from_module_and_return_imports(

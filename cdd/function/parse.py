@@ -13,10 +13,10 @@ from types import FunctionType
 from typing import List, Optional, cast
 
 import cdd.docstring.parse
+import cdd.shared.ast_utils
 import cdd.shared.docstring_parsers
 import cdd.shared.parse.utils.parser_utils
 from cdd.function.utils.parse_utils import _interpolate_return
-from cdd.shared.ast_utils import NoneStr, func_arg2param, get_function_type
 from cdd.shared.pure_utils import rpartial
 from cdd.shared.types import IntermediateRepr
 
@@ -104,7 +104,7 @@ def function(
         function_name=function_name, function_def_name=function_def.name
     )
 
-    found_type = get_function_type(function_def)
+    found_type = cdd.shared.ast_utils.get_function_type(function_def)
 
     # Read docstring
     doc_str: Optional[str] = (
@@ -168,7 +168,7 @@ def function(
     ):
         _param = intermediate_repr["params"].pop(function_def.args.kwarg.arg)
         assert "typ" in _param
-        _param["default"] = NoneStr
+        _param["default"] = cdd.shared.ast_utils.NoneStr
         params_to_append[function_def.args.kwarg.arg] = _param
         del _param
 
@@ -195,7 +195,7 @@ def function(
         {
             "params": OrderedDict(
                 (
-                    func_arg2param(
+                    cdd.shared.ast_utils.func_arg2param(
                         getattr(function_def.args, args)[idx],
                         default=getattr(function_def.args, defaults)[idx],
                     )

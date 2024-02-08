@@ -430,7 +430,7 @@ def remove_args_from_docstring(doc_str):
         ):
             stack.append(line)
             in_args = False
-    return "{}{}".format("\n".join(stack), "")  # ("\n" if stack[-1] == "" else "")
+    return "\n".join(stack)  # + ("\n" if stack[-1] == "" else "")
 
 
 __all__ = [

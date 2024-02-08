@@ -2,7 +2,7 @@
 Utility functions for `cdd.emit.docstring`
 """
 
-from cdd.shared.ast_utils import NoneStr
+import cdd.shared.ast_utils
 from cdd.shared.defaults_utils import extract_default
 from cdd.shared.pure_utils import simple_types, unquote
 
@@ -50,7 +50,7 @@ def interpolate_defaults(
         _param["default"] = (
             simple_types[_param["typ"]]
             if _param.get("typ", memoryview) in simple_types
-            else NoneStr
+            else cdd.shared.ast_utils.NoneStr
         )
 
     return name, _param

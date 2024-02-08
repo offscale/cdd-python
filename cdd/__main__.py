@@ -401,10 +401,16 @@ def _build_parser():
         action="append",
     )
     exmod_parser.add_argument(
-        "--emit-base-engine-metadata",
-        help="[sqlalchemy specific] Whether to produce a file with `Base`, `engine`, and `metadata`."
-        "`None` is `False`. Defaults to None.",
+        "--emit-sqlalchemy-submodule",
+        help='Whether to; for sqlalchemy*; emit submodule "sqlalchemy_mod/{__init__,connection,create_tables}.py"',
         action="store_true",
+    )
+    exmod_parser.add_argument(
+        "--extra-module",
+        help="Additional module(s) to expose; specifiable multiple times. Added to symbol auto-import resolver.",
+        action="append",
+        nargs="?",
+        dest="extra_modules",
     )
     exmod_parser.add_argument(
         "--no-word-wrap",

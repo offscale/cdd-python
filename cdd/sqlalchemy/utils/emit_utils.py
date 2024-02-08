@@ -41,14 +41,9 @@ from os import path
 from platform import system
 from typing import Any, Dict, List, Optional
 
+import cdd.shared.ast_utils
+import cdd.shared.source_transformer
 import cdd.sqlalchemy.utils.shared_utils
-from cdd.shared.ast_utils import (
-    NoneStr,
-    get_value,
-    maybe_type_comment,
-    set_arg,
-    set_value,
-)
 from cdd.shared.pure_utils import (
     find_module_filepath,
     namespaced_upper_camelcase_to_pascal,
@@ -56,7 +51,6 @@ from cdd.shared.pure_utils import (
     rpartial,
     tab,
 )
-from cdd.shared.source_transformer import to_code
 from cdd.shared.types import ParamVal
 from cdd.sqlalchemy.utils.parse_utils import (
     column_type2typ,
@@ -93,7 +87,7 @@ def param_to_sqlalchemy_column_calls(name_param, include_name):
     args, keywords, nullable, multiple = [], [], None, False
 
     if include_name:
-        args.append(set_value(name))
+        args.append(cdd.shared.ast_utils.set_value(name))
 
     x_typ_sql = _param.get("x_typ", {}).get("sql", {})  # type: dict
 
@@ -112,7 +106,11 @@ def param_to_sqlalchemy_column_calls(name_param, include_name):
     if pk:
         _param["doc"] = _param["doc"][4:].lstrip()
         keywords.append(
-            ast.keyword(arg="primary_key", value=set_value(True), identifier=None),
+            ast.keyword(
+                arg="primary_key",
+                value=cdd.shared.ast_utils.set_value(True),
+                identifier=None,
+            ),
         )
     elif fk:
         end: int = _param["doc"].find("]") + 1
@@ -121,7 +119,7 @@ def param_to_sqlalchemy_column_calls(name_param, include_name):
         args.append(
             Call(
                 func=Name("ForeignKey", Load(), lineno=None, col_offset=None),
-                args=[set_value(fk_val)],
+                args=[cdd.shared.ast_utils.set_value(fk_val)],
                 keywords=[],
                 lineno=None,
                 col_offset=None,
@@ -135,13 +133,19 @@ def param_to_sqlalchemy_column_calls(name_param, include_name):
     if rstripped_dot_doc:
         doc_added_at: int = len(keywords)
         keywords.append(
-            ast.keyword(arg="doc", value=set_value(rstripped_dot_doc), identifier=None)
+            ast.keyword(
+                arg="doc",
+                value=cdd.shared.ast_utils.set_value(rstripped_dot_doc),
+                identifier=None,
+            )
         )
 
     if x_typ_sql.get("constraints"):
         keywords += [
             ast.keyword(
-                arg=k, value=v if isinstance(v, AST) else set_value(v), identifier=None
+                arg=k,
+                value=v if isinstance(v, AST) else cdd.shared.ast_utils.set_value(v),
+                identifier=None,
             )
             for k, v in _param["x_typ"]["sql"]["constraints"].items()
         ]
@@ -151,7 +155,9 @@ def param_to_sqlalchemy_column_calls(name_param, include_name):
         keywords.append(
             ast.keyword(
                 arg="comment",
-                value=set_value("[schema={}]".format(dumps(_param["ir"]))),
+                value=cdd.shared.ast_utils.set_value(
+                    "[schema={}]".format(dumps(_param["ir"]))
+                ),
                 identifier=None,
             )
         )
@@ -164,7 +170,9 @@ def param_to_sqlalchemy_column_calls(name_param, include_name):
                 value=(
                     default
                     if isinstance(default, AST)
-                    else set_value(None if default == NoneStr else default)
+                    else cdd.shared.ast_utils.set_value(
+                        None if default == cdd.shared.ast_utils.NoneStr else default
+                    )
                 ),
                 identifier=None,
             )
@@ -172,7 +180,11 @@ def param_to_sqlalchemy_column_calls(name_param, include_name):
 
     if isinstance(nullable, bool):
         keywords.append(
-            ast.keyword(arg="nullable", value=set_value(nullable), identifier=None)
+            ast.keyword(
+                arg="nullable",
+                value=cdd.shared.ast_utils.set_value(nullable),
+                identifier=None,
+            )
         )
 
     # if include_name is True and _param.get("doc") and _param["doc"] != "[PK]":
@@ -323,7 +335,7 @@ def generate_repr_method(params, cls_name, docstring_format):
         args=arguments(
             posonlyargs=[],
             arg=None,
-            args=[set_arg("self")],
+            args=[cdd.shared.ast_utils.set_arg("self")],
             kwonlyargs=[],
             kw_defaults=[],
             defaults=[],
@@ -332,7 +344,7 @@ def generate_repr_method(params, cls_name, docstring_format):
         ),
         body=[
             Expr(
-                set_value(
+                cdd.shared.ast_utils.set_value(
                     """\n{sep}{_repr_docstring}""".format(
                         sep=tab * 2,
                         _repr_docstring=(
@@ -348,7 +360,7 @@ def generate_repr_method(params, cls_name, docstring_format):
             Return(
                 value=Call(
                     func=Attribute(
-                        set_value(
+                        cdd.shared.ast_utils.set_value(
                             "{cls_name}({format_args})".format(
                                 cls_name=cls_name,
                                 format_args=", ".join(
@@ -393,7 +405,7 @@ def generate_repr_method(params, cls_name, docstring_format):
         stmt=None,
         lineno=None,
         returns=None,
-        **maybe_type_comment,
+        **cdd.shared.ast_utils.maybe_type_comment,
     )
 
 
@@ -420,7 +432,7 @@ def generate_create_from_attr_staticmethod(params, cls_name, docstring_format):
         args=arguments(
             posonlyargs=[],
             arg=None,
-            args=[set_arg("record")],
+            args=[cdd.shared.ast_utils.set_arg("record")],
             kwonlyargs=[],
             kw_defaults=[],
             defaults=[],
@@ -429,7 +441,7 @@ def generate_create_from_attr_staticmethod(params, cls_name, docstring_format):
         ),
         body=[
             Expr(
-                set_value(
+                cdd.shared.ast_utils.set_value(
                     """\n{sep}{_repr_docstring}""".format(
                         sep=tab * 2,
                         _repr_docstring=(
@@ -489,7 +501,11 @@ def generate_create_from_attr_staticmethod(params, cls_name, docstring_format):
                                             col_offset=None,
                                         ),
                                         iter=Tuple(
-                                            elts=list(map(set_value, keys)),
+                                            elts=list(
+                                                map(
+                                                    cdd.shared.ast_utils.set_value, keys
+                                                )
+                                            ),
                                             ctx=Load(),
                                             lineno=None,
                                             col_offset=None,
@@ -516,14 +532,18 @@ def generate_create_from_attr_staticmethod(params, cls_name, docstring_format):
                                                             lineno=None,
                                                             col_offset=None,
                                                         ),
-                                                        set_value(None),
+                                                        cdd.shared.ast_utils.set_value(
+                                                            None
+                                                        ),
                                                     ],
                                                     keywords=[],
                                                     lineno=None,
                                                     col_offset=None,
                                                 ),
                                                 ops=[IsNot()],
-                                                comparators=[set_value(None)],
+                                                comparators=[
+                                                    cdd.shared.ast_utils.set_value(None)
+                                                ],
                                                 lineno=None,
                                                 col_offset=None,
                                             )
@@ -551,7 +571,7 @@ def generate_create_from_attr_staticmethod(params, cls_name, docstring_format):
         stmt=None,
         lineno=None,
         returns=None,
-        **maybe_type_comment,
+        **cdd.shared.ast_utils.maybe_type_comment,
     )
 
 
@@ -596,15 +616,17 @@ mock_engine_base_metadata_mod: Module = Module(
                 args=[
                     Subscript(
                         value=Name("environ", Load(), lineno=None, col_offset=None),
-                        slice=set_value("RDBMS_URI"),
+                        slice=cdd.shared.ast_utils.set_value("RDBMS_URI"),
                         ctx=Load(),
                     )
                 ],
-                keywords=[keyword(arg="echo", value=set_value(True))],
+                keywords=[
+                    keyword(arg="echo", value=cdd.shared.ast_utils.set_value(True))
+                ],
             ),
             expr=None,
             lineno=None,
-            **maybe_type_comment,
+            **cdd.shared.ast_utils.maybe_type_comment,
         ),
         Assign(
             targets=[Name("metadata", Store(), lineno=None, col_offset=None)],
@@ -615,7 +637,7 @@ mock_engine_base_metadata_mod: Module = Module(
             ),
             expr=None,
             lineno=None,
-            **maybe_type_comment,
+            **cdd.shared.ast_utils.maybe_type_comment,
         ),
         ClassDef(
             name="Base",
@@ -627,7 +649,7 @@ mock_engine_base_metadata_mod: Module = Module(
                     value=Name("metadata", Load(), lineno=None, col_offset=None),
                     expr=None,
                     lineno=None,
-                    **maybe_type_comment,
+                    **cdd.shared.ast_utils.maybe_type_comment,
                 )
             ],
             decorator_list=[],
@@ -640,18 +662,22 @@ mock_engine_base_metadata_mod: Module = Module(
         Assign(
             targets=[Name("__all__", Store(), lineno=None, col_offset=None)],
             value=AST_List(
-                elts=list(map(set_value, ("Base", "metadata", "engine"))),
+                elts=list(
+                    map(cdd.shared.ast_utils.set_value, ("Base", "metadata", "engine"))
+                ),
                 ctx=Load(),
             ),
             expr=None,
             lineno=None,
-            **maybe_type_comment,
+            **cdd.shared.ast_utils.maybe_type_comment,
         ),
     ],
     type_ignores=[],
 )
 
-mock_engine_base_metadata_str = to_code(mock_engine_base_metadata_mod)
+mock_engine_base_metadata_str = cdd.shared.source_transformer.to_code(
+    mock_engine_base_metadata_mod
+)
 
 
 def generate_create_tables_mod(module_name):
@@ -690,7 +716,7 @@ def generate_create_tables_mod(module_name):
                         col_offset=None,
                     ),
                     ops=[Eq()],
-                    comparators=[set_value("__main__")],
+                    comparators=[cdd.shared.ast_utils.set_value("__main__")],
                 ),
                 body=[
                     Expr(
@@ -702,7 +728,9 @@ def generate_create_tables_mod(module_name):
                                 col_offset=None,
                             ),
                             args=[
-                                set_value("Base.metadata.create_all for"),
+                                cdd.shared.ast_utils.set_value(
+                                    "Base.metadata.create_all for"
+                                ),
                                 Attribute(
                                     value=Name(
                                         "engine",
@@ -713,7 +741,7 @@ def generate_create_tables_mod(module_name):
                                     attr="name",
                                     ctx=Load(),
                                 ),
-                                set_value(";"),
+                                cdd.shared.ast_utils.set_value(";"),
                             ],
                             keywords=[],
                         )
@@ -838,7 +866,7 @@ def update_with_imports_from_columns(filename):
     )
 
     with open(filename, "wt") as f:
-        f.write(to_code(mod))
+        f.write(cdd.shared.source_transformer.to_code(mod))
 
 
 def update_fk_for_file(filename):
@@ -939,7 +967,7 @@ def update_fk_for_file(filename):
     )
 
     with open(filename, "wt") as f:
-        f.write(to_code(mod))
+        f.write(cdd.shared.source_transformer.to_code(mod))
 
 
 def rewrite_fk(symbol_to_module, column_assign):
@@ -971,7 +999,7 @@ def rewrite_fk(symbol_to_module, column_assign):
         and isinstance(column_assign.value.func, Name)
         and column_assign.value.func.id == "Column"
     ), 'Expected `Call.func.Name.id` of "<var> = Column" eval to `<var> = Column(...)` got `{code}`'.format(
-        code=to_code(column_assign).rstrip()
+        code=cdd.shared.source_transformer.to_code(column_assign).rstrip()
     )
 
     def rewrite_fk_from_import(column_name, foreign_key_call):
@@ -995,7 +1023,7 @@ def rewrite_fk(symbol_to_module, column_assign):
             and isinstance(foreign_key_call.func, Name)
             and foreign_key_call.func.id == "ForeignKey"
         ), 'Expected `Call.func.Name.id` of "ForeignKey" eval to `ForeignKey(...)` got `{code}`'.format(
-            code=to_code(foreign_key_call).rstrip()
+            code=cdd.shared.source_transformer.to_code(foreign_key_call).rstrip()
         )
         if column_name.id in symbol_to_module:
             with open(
@@ -1016,7 +1044,11 @@ def rewrite_fk(symbol_to_module, column_assign):
             del pk_typ
             return Name(typ, Load(), lineno=None, col_offset=None), Call(
                 func=Name("ForeignKey", Load(), lineno=None, col_offset=None),
-                args=[set_value(".".join((get_table_name(matching_class), pk)))],
+                args=[
+                    cdd.shared.ast_utils.set_value(
+                        ".".join((get_table_name(matching_class), pk))
+                    )
+                ],
                 keywords=[],
                 lineno=None,
                 col_offset=None,
@@ -1072,7 +1104,7 @@ def sqlalchemy_class_to_table(class_def, parse_original_whitespace):
 
     # Parse into the same format that `sqlalchemy_table` can read, then return with a call to it
 
-    name: str = get_value(
+    name: str = cdd.shared.ast_utils.get_value(
         next(
             filter(
                 lambda assign: any(
@@ -1099,7 +1131,9 @@ def sqlalchemy_class_to_table(class_def, parse_original_whitespace):
         :return: Unwrapped Call with name prepended
         :rtype: ```Call```
         """
-        assign.value.args.insert(0, set_value(assign.targets[0].id))
+        assign.value.args.insert(
+            0, cdd.shared.ast_utils.set_value(assign.targets[0].id)
+        )
         return assign.value
 
     return Call(
@@ -1107,7 +1141,10 @@ def sqlalchemy_class_to_table(class_def, parse_original_whitespace):
         args=list(
             chain.from_iterable(
                 (
-                    (set_value(name), Name("metadata_obj", Load())),
+                    (
+                        cdd.shared.ast_utils.set_value(name),
+                        Name("metadata_obj", Load()),
+                    ),
                     map(
                         _merge_name_to_column,
                         filterfalse(
@@ -1129,7 +1166,13 @@ def sqlalchemy_class_to_table(class_def, parse_original_whitespace):
         keywords=(
             []
             if doc_string is None
-            else [keyword(arg="comment", value=set_value(doc_string), identifier=None)]
+            else [
+                keyword(
+                    arg="comment",
+                    value=cdd.shared.ast_utils.set_value(doc_string),
+                    identifier=None,
+                )
+            ]
         ),
         expr=None,
         expr_func=None,
@@ -1167,17 +1210,21 @@ def sqlalchemy_table_to_class(table_expr_ass):
                                     col_offset=None,
                                 )
                             ],
-                            value=set_value(get_value(table_expr_ass.value.args[0])),
+                            value=cdd.shared.ast_utils.set_value(
+                                cdd.shared.ast_utils.get_value(
+                                    table_expr_ass.value.args[0]
+                                )
+                            ),
                             expr=None,
                             lineno=None,
-                            **maybe_type_comment,
+                            **cdd.shared.ast_utils.maybe_type_comment,
                         ),
                     ),
                     map(
                         lambda column_call: Assign(
                             targets=[
                                 Name(
-                                    get_value(column_call.args[0]),
+                                    cdd.shared.ast_utils.get_value(column_call.args[0]),
                                     Store(),
                                     lineno=None,
                                     col_offset=None,
@@ -1196,7 +1243,7 @@ def sqlalchemy_table_to_class(table_expr_ass):
                             ),
                             expr=None,
                             lineno=None,
-                            **maybe_type_comment,
+                            **cdd.shared.ast_utils.maybe_type_comment,
                         ),
                         filter(
                             lambda node: isinstance(node, Call)

@@ -6,8 +6,10 @@ import ast
 from ast import Expr, FunctionDef, Load, Name, Return, arguments
 from typing import Optional
 
+import cdd.shared.ast_utils
 from cdd.docstring.emit import docstring
-from cdd.shared.ast_utils import maybe_type_comment, set_arg, set_value
+
+# import , ,
 from cdd.shared.emit.utils.emitter_utils import get_internal_body
 from cdd.shared.pure_utils import PY3_8, none_types, simple_types
 from cdd.shared.types import Internal
@@ -84,13 +86,15 @@ def function(
     function_type: Optional[str] = function_type or intermediate_repr["type"]
 
     args = (
-        [] if function_type in frozenset((None, "static")) else [set_arg(function_type)]
+        []
+        if function_type in frozenset((None, "static"))
+        else [cdd.shared.ast_utils.set_arg(function_type)]
     )
     from cdd.shared.emit.utils.emitter_utils import ast_parse_fix
 
     args_from_params = list(
         map(
-            lambda param: set_arg(
+            lambda param: cdd.shared.ast_utils.set_arg(
                 annotation=(
                     (
                         Name(param[1]["typ"], Load(), lineno=None, col_offset=None)
@@ -108,9 +112,9 @@ def function(
     defaults_from_params = list(
         map(
             lambda param: (
-                set_value(None)
+                cdd.shared.ast_utils.set_value(None)
                 if param[1].get("default") in none_types
-                else set_value(param[1].get("default"))
+                else cdd.shared.ast_utils.set_value(param[1].get("default"))
             ),
             params_no_kwargs,
         )
@@ -148,7 +152,7 @@ def function(
             kw_defaults=kw_defaults,
             kwarg=next(
                 map(
-                    lambda param: set_arg(param[0]),
+                    lambda param: cdd.shared.ast_utils.set_arg(param[0]),
                     filter(
                         lambda param: param[0].endswith("kwargs"),
                         intermediate_repr["params"].items(),
@@ -166,7 +170,7 @@ def function(
                 None,
                 (
                     Expr(
-                        set_value(
+                        cdd.shared.ast_utils.set_value(
                             docstring(
                                 intermediate_repr,
                                 docstring_format=docstring_format,
@@ -207,7 +211,7 @@ def function(
         arguments_args=None,
         identifier_name=None,
         stmt=None,
-        **maybe_type_comment
+        **cdd.shared.ast_utils.maybe_type_comment
     )
 
 

@@ -6,7 +6,7 @@ from ast import Module
 from importlib import import_module
 from importlib.util import find_spec
 
-from cdd.shared.source_transformer import to_code
+import cdd.shared.source_transformer
 
 black = (
     import_module("black")
@@ -45,7 +45,7 @@ def file(node, filename, mode="a", skip_black=False):
     """
     if not isinstance(node, Module):
         node: Module = Module(body=[node], type_ignores=[], stmt=None)
-    src: str = to_code(node)
+    src: str = cdd.shared.source_transformer.to_code(node)
     if not skip_black:
         src = black.format_str(
             src,

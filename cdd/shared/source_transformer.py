@@ -7,7 +7,7 @@ from importlib import import_module
 from sys import version_info
 from typing import Optional
 
-from cdd.shared.ast_utils import annotate_ancestry
+import cdd.shared.ast_utils
 from cdd.shared.pure_utils import reindent, tab
 
 unparse = (
@@ -62,7 +62,7 @@ def ast_parse(
     """
     parsed_ast = parse(source, filename=filename, mode=mode)
     if not skip_annotate:
-        annotate_ancestry(parsed_ast, filename=filename)
+        cdd.shared.ast_utils.annotate_ancestry(parsed_ast, filename=filename)
         setattr(parsed_ast, "__file__", filename)
     if not skip_docstring_remit and isinstance(
         parsed_ast, (Module, ClassDef, FunctionDef, AsyncFunctionDef)

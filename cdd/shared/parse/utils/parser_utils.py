@@ -18,10 +18,10 @@ from typing import Optional
 import cdd.class_.parse
 import cdd.docstring.parse
 import cdd.function.parse
+import cdd.shared.ast_utils
 import cdd.shared.docstring_parsers
 import cdd.shared.parse
 from cdd.class_.utils.parse_utils import get_source
-from cdd.shared.ast_utils import get_value
 from cdd.shared.pure_utils import lstrip_namespace, none_types, rpartial, simple_types
 from cdd.shared.types import IntermediateRepr
 
@@ -236,7 +236,7 @@ def infer(*args, **kwargs):
 
     if not is_supported_ast_node:
         if not isinstance(node, str):
-            node = get_value(node)
+            node = cdd.shared.ast_utils.get_value(node)
         if (
             isinstance(node, str)
             and not node.startswith("def ")

@@ -30,13 +30,14 @@ class TestExmodUtils(TestCase):
             "cdd.compound.exmod_utils.EXMOD_OUT_STREAM", new_callable=StringIO
         ) as f:
             emit_file_on_hierarchy(
-                ("", "foo_dir", ir),
-                "argparse",
-                "",
-                "",
-                True,
-                None,
-                "",
+                name_orig_ir=("", "foo_dir", ir),
+                emit_name="argparse",
+                module_name="",
+                new_module_name="",
+                mock_imports=True,
+                filesystem_layout=None,
+                extra_modules_to_all=None,
+                output_directory="",
                 no_word_wrap=None,
                 dry_run=True,
             )
@@ -66,6 +67,7 @@ class TestExmodUtils(TestCase):
                 output_directory=tempdir,
                 no_word_wrap=None,
                 dry_run=False,
+                extra_modules_to_all=None,
             )
             self.assertTrue(path.isdir(tempdir))
 
@@ -78,9 +80,9 @@ class TestExmodUtils(TestCase):
         ) as func__merge_modules, patch(
             "cdd.shared.ast_utils.merge_assignment_lists", MagicMock()
         ) as func__merge_assignment_lists, patch(
-            "cdd.compound.exmod_utils.infer_imports", MagicMock()
+            "cdd.shared.ast_utils.infer_imports", MagicMock()
         ) as func__infer_imports, patch(
-            "cdd.compound.exmod_utils.deduplicate_sorted_imports", MagicMock()
+            "cdd.shared.ast_utils.deduplicate_sorted_imports", MagicMock()
         ) as func__deduplicate_sorted_imports:
             _emit_symbol(
                 name_orig_ir=("", "", dict()),
@@ -97,6 +99,7 @@ class TestExmodUtils(TestCase):
                 isfile_emit_filename=True,
                 name="",
                 mock_imports=True,
+                extra_modules_to_all=None,
                 no_word_wrap=None,
                 dry_run=True,
             )
