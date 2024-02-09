@@ -136,68 +136,9 @@ def param_to_sqlalchemy_column_calls(name_param, include_name):
     elif has_default and default not in none_types:
         nullable: bool = False
 
-    rstripped_dot_doc: str = _param.get("doc", "").rstrip(".")
-    doc_added_at: Optional[int] = None
-    if rstripped_dot_doc:
-        doc_added_at: int = len(keywords)
-        keywords.append(
-            ast.keyword(
-                arg="doc",
-                value=cdd.shared.ast_utils.set_value(rstripped_dot_doc),
-                identifier=None,
-            )
-        )
-
-    if x_typ_sql.get("constraints"):
-        keywords += [
-            ast.keyword(
-                arg=k,
-                value=v if isinstance(v, AST) else cdd.shared.ast_utils.set_value(v),
-                identifier=None,
-            )
-            for k, v in _param["x_typ"]["sql"]["constraints"].items()
-        ]
-
-    # TODO: Maybe `CREATE TYPE` and use that?
-    if _param.get("typ") == "dict" and "ir" in _param:
-        keywords.append(
-            ast.keyword(
-                arg="comment",
-                value=cdd.shared.ast_utils.set_value(
-                    "[schema={}]".format(dumps(_param["ir"]))
-                ),
-                identifier=None,
-            )
-        )
-
-    if has_default:
-        # if default == NoneStr: default = None
-        keywords.append(
-            ast.keyword(
-                arg="default",
-                value=(
-                    default
-                    if isinstance(default, AST)
-                    else cdd.shared.ast_utils.set_value(
-                        None if default == cdd.shared.ast_utils.NoneStr else default
-                    )
-                ),
-                identifier=None,
-            )
-        )
-
-    if isinstance(nullable, bool):
-        keywords.append(
-            ast.keyword(
-                arg="nullable",
-                value=cdd.shared.ast_utils.set_value(nullable),
-                identifier=None,
-            )
-        )
-
-    # if include_name is True and _param.get("doc") and _param["doc"] != "[PK]":
-    if doc_added_at is not None:
-        keywords[doc_added_at].arg = "comment"
+    keywords = _handle_column_keywords(
+        _param, default, has_default, keywords, nullable, x_typ_sql
+    )
     # elif _param["doc"]:
     #     keywords.append(
     #         ast.keyword(arg="comment", value=set_value(_param["doc"]), identifier=None)
@@ -225,6 +166,90 @@ def param_to_sqlalchemy_column_calls(name_param, include_name):
             col_offset=None,
         ),
     )
+
+
+def _handle_column_keywords(
+    _param, default, has_default, keywords, nullable, x_typ_sql
+):
+    """
+    Popular keyword args for the `Column(…)`. Internal function.
+
+    :param _param: dict with keys: 'typ', 'doc', 'default'
+    :type _param: ```dict```
+
+    :param default: Default value
+    :type default: ```Any```
+
+    :param has_default: Whether it had a default value originally
+    :type has_default: ```bool`
+
+    :param keywords: Keywords list
+    :type keywords: ```List[ast.keywords]```
+
+    :param nullable: Whether it is NULL-able
+    :type nullable: ```Optional[bool]```
+
+    :param x_typ_sql:
+    :type x_typ_sql: ```dict```
+    """
+    rstripped_dot_doc: str = _param.get("doc", "").rstrip(".")
+    doc_added_at: Optional[int] = None
+    if rstripped_dot_doc:
+        doc_added_at: int = len(keywords)
+        keywords.append(
+            ast.keyword(
+                arg="doc",
+                value=cdd.shared.ast_utils.set_value(rstripped_dot_doc),
+                identifier=None,
+            )
+        )
+    if x_typ_sql.get("constraints"):
+        keywords += [
+            ast.keyword(
+                arg=k,
+                value=v if isinstance(v, AST) else cdd.shared.ast_utils.set_value(v),
+                identifier=None,
+            )
+            for k, v in _param["x_typ"]["sql"]["constraints"].items()
+        ]
+    # TODO: Maybe `CREATE TYPE` and use that?
+    if _param.get("typ") == "dict" and "ir" in _param:
+        keywords.append(
+            ast.keyword(
+                arg="comment",
+                value=cdd.shared.ast_utils.set_value(
+                    "[schema={}]".format(dumps(_param["ir"]))
+                ),
+                identifier=None,
+            )
+        )
+    if has_default:
+        # if default == NoneStr: default = None
+        keywords.append(
+            ast.keyword(
+                arg="default",
+                value=(
+                    default
+                    if isinstance(default, AST)
+                    else cdd.shared.ast_utils.set_value(
+                        None if default == cdd.shared.ast_utils.NoneStr else default
+                    )
+                ),
+                identifier=None,
+            )
+        )
+    if isinstance(nullable, bool):
+        keywords.append(
+            ast.keyword(
+                arg="nullable",
+                value=cdd.shared.ast_utils.set_value(nullable),
+                identifier=None,
+            )
+        )
+    # if include_name is True and _param.get("doc") and _param["doc"] != "[PK]":
+    if doc_added_at is not None:
+        keywords[doc_added_at].arg = "comment"
+    return keywords
 
 
 def ensure_has_primary_key(intermediate_repr, force_pk_id=False):

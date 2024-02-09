@@ -541,7 +541,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
 
     def test_rewrite_fk(self) -> None:
         """
-        Tests whether `cdd.sqlalchemy.utils.emit_utils.rewrite_fk` produces `openapi_dict` given `model_paths` and `routes_paths`
+        Tests whether `rewrite_fk` produces `openapi_dict` given `model_paths` and `routes_paths`
         """
         sqlalchemy_cls = deepcopy(node_pk_tbl_class)
         sqlalchemy_cls.name = "TableName0"
