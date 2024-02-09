@@ -58,6 +58,16 @@ def _update_args_infer_typ_sqlalchemy_for_scalar(_param, args, x_typ_sql):
     )
 
 
+import os
+
+
+def fast_scandir(dirname):
+    subfolders = [f.path for f in os.scandir(dirname) if f.is_dir()]
+    for dirname in list(subfolders):
+        subfolders.extend(fast_scandir(dirname))
+    return subfolders
+
+
 def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
     """
     :param _param: Param with typ
@@ -204,6 +214,8 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
                     else cdd.sqlalchemy.utils.emit_utils.typ2column_type.get(left, left)
                 ),
                 Load(),
+                lineno=None,
+                col_offset=None,
             )
         )
     else:

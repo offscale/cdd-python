@@ -405,10 +405,7 @@ class TestExMod(TestCase):
         new_module_dir: str = path.join(root, self.package_root_name, "gold")
         package_root_mod_dir: str = path.join(root, self.package_root_name)
         mkdir(package_root_mod_dir)
-        with open(
-            path.join(package_root_mod_dir, "__init__{extsep}py".format(extsep=extsep)),
-            "wt",
-        ) as f:
+        with open(path.join(package_root_mod_dir, INIT_FILENAME), "wt") as f:
             f.write(create_init_mock(self.package_root_name, self.module_hierarchy))
         # mkdir(
         #     new_module_dir
@@ -520,9 +517,7 @@ class TestExMod(TestCase):
             folder: str = path.join(module_root, _folder)
             mkdir(folder)
             cls_name: str = "{name}Class".format(name=name.title())
-            with open(
-                path.join(folder, "__init__{extsep}py".format(extsep=extsep)), "wt"
-            ) as f:
+            with open(path.join(folder, INIT_FILENAME), "wt") as f:
                 f.write(
                     "{encoding}\n\n"
                     "from .{name} import {cls_name}\n\n"

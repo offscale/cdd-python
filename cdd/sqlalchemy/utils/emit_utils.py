@@ -99,6 +99,14 @@ def param_to_sqlalchemy_column_calls(name_param, include_name):
             _param, args, name, nullable, x_typ_sql
         )
 
+    if len(args) < 2 and (
+        not args
+        or isinstance(args[0], Name)
+        and args[0].id not in sqlalchemy_top_level_imports
+    ):
+        # A good default I guess?
+        args.append(Name("LargeBinary", Load(), lineno=None, col_offset=None))
+
     default = x_typ_sql.get("default", _param.get("default", ast))
     has_default: bool = default is not ast
     pk: bool = _param.get("doc", "").startswith("[PK]")
@@ -206,7 +214,6 @@ def param_to_sqlalchemy_column_calls(name_param, include_name):
     #         lineno=None,
     #         col_offset=None,
     #     )
-
     return (
         Call(
             func=Name("Column", Load(), lineno=None, col_offset=None),
@@ -312,7 +319,7 @@ def ensure_has_primary_key(intermediate_repr, force_pk_id=False):
     return intermediate_repr
 
 
-def generate_repr_method(params, cls_name, docstring_format):
+def generate_repr_method(params, cls_name, docstring_format, hybrid=False):
     """
     Generate a `__repr__` method with all params, using `str.format` syntax
 
@@ -325,6 +332,9 @@ def generate_repr_method(params, cls_name, docstring_format):
 
     :param docstring_format: Format of docstring
     :type docstring_format: ```Literal['rest', 'numpydoc', 'google']```
+
+    :param hybrid:
+    :type hybrid: ```bool```
 
     :return: `__repr__` method
     :rtype: ```FunctionDef```
@@ -378,12 +388,36 @@ def generate_repr_method(params, cls_name, docstring_format):
                         map(
                             lambda key: ast.keyword(
                                 arg=key,
-                                value=Attribute(
-                                    Name("self", Load(), lineno=None, col_offset=None),
-                                    key,
-                                    Load(),
-                                    lineno=None,
-                                    col_offset=None,
+                                value=(
+                                    Attribute(
+                                        value=Attribute(
+                                            value=Attribute(
+                                                value=Name(id="self", ctx=Load()),
+                                                attr="__table__",
+                                                ctx=Load(),
+                                                lineno=None,
+                                                col_offset=None,
+                                            ),
+                                            attr="c",
+                                            ctx=Load(),
+                                            lineno=None,
+                                            col_offset=None,
+                                        ),
+                                        attr=key,
+                                        ctx=Load(),
+                                        lineno=None,
+                                        col_offset=None,
+                                    )
+                                    if hybrid
+                                    else Attribute(
+                                        Name(
+                                            "self", Load(), lineno=None, col_offset=None
+                                        ),
+                                        key,
+                                        Load(),
+                                        lineno=None,
+                                        col_offset=None,
+                                    )
                                 ),
                                 identifier=None,
                             ),
@@ -733,15 +767,55 @@ def generate_create_tables_mod(module_name):
                                 ),
                                 Attribute(
                                     value=Name(
-                                        "engine",
-                                        Load(),
+                                        id="engine",
+                                        ctx=Load(),
                                         lineno=None,
                                         col_offset=None,
                                     ),
                                     attr="name",
                                     ctx=Load(),
+                                    lineno=None,
+                                    col_offset=None,
                                 ),
-                                cdd.shared.ast_utils.set_value(";"),
+                                cdd.shared.ast_utils.set_value("-> ("),
+                                Call(
+                                    func=Attribute(
+                                        value=cdd.shared.ast_utils.set_value(", "),
+                                        attr="join",
+                                        ctx=Load(),
+                                        lineno=None,
+                                        col_offset=None,
+                                    ),
+                                    args=[
+                                        Call(
+                                            func=Attribute(
+                                                value=Attribute(
+                                                    value=Attribute(
+                                                        value=Name(
+                                                            id="Base", ctx=Load()
+                                                        ),
+                                                        attr="metadata",
+                                                        ctx=Load(),
+                                                        lineno=None,
+                                                        col_offset=None,
+                                                    ),
+                                                    attr="tables",
+                                                    ctx=Load(),
+                                                    lineno=None,
+                                                    col_offset=None,
+                                                ),
+                                                attr="keys",
+                                                ctx=Load(),
+                                                lineno=None,
+                                                col_offset=None,
+                                            ),
+                                            args=[],
+                                            keywords=[],
+                                        )
+                                    ],
+                                    keywords=[],
+                                ),
+                                cdd.shared.ast_utils.set_value(") ;"),
                             ],
                             keywords=[],
                         )
@@ -758,9 +832,13 @@ def generate_create_tables_mod(module_name):
                                     ),
                                     attr="metadata",
                                     ctx=Load(),
+                                    lineno=None,
+                                    col_offset=None,
                                 ),
                                 attr="create_all",
                                 ctx=Load(),
+                                lineno=None,
+                                col_offset=None,
                             ),
                             args=[
                                 Name(

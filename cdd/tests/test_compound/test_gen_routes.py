@@ -12,6 +12,7 @@ from unittest import TestCase
 
 from cdd.compound.openapi.gen_routes import gen_routes, upsert_routes
 from cdd.routes.parse.bottle_utils import get_route_meta
+from cdd.shared.pure_utils import INIT_FILENAME
 from cdd.tests.mocks.routes import (
     create_route,
     destroy_route,
@@ -48,7 +49,7 @@ def populate_files(tempdir, init_with_crud):
     """
     model_path: str = path.join(tempdir, "model{extsep}py".format(extsep=extsep))
     routes_path: str = path.join(tempdir, "routes{extsep}py".format(extsep=extsep))
-    open(path.join(tempdir, "__init__{extsep}py".format(extsep=extsep)), "a").close()
+    open(path.join(tempdir, INIT_FILENAME), "a").close()
 
     model: str = "\n".join(
         (

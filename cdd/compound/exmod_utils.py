@@ -56,9 +56,7 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
     :return: fully-qualified module name to values (could be modules, classes, and whatever other symbols are exposed)
     :rtype: ```Dict[str,Generator[Any]]```
     """
-    module_root_dir_init: str = path.join(
-        module_root_dir, "__init__{extsep}py".format(extsep=path.extsep)
-    )
+    module_root_dir_init: str = path.join(module_root_dir, INIT_FILENAME)
     # process_module_contents = partial(
     #     _process_module_contents,
     #     _result=_result,
@@ -241,7 +239,7 @@ def emit_file_on_hierarchy(
     :type dry_run: ```bool```
 
     :return: (mod_name or None, relative_filename_path, ImportFrom) to generated module
-    :rtype: ```Tuple[Optional[str], str, ImportFrom]```
+    :rtype: ```Optional[Tuple[Optional[str], str, ImportFrom]]```
     """
     mod_name, _, name = name_orig_ir[0].rpartition(".")
     original_relative_filename_path, ir = name_orig_ir[1], name_orig_ir[2]
@@ -361,23 +359,23 @@ def emit_file_on_hierarchy(
             dry_run,
         )
 
-    return (
-        mod_name or None,
-        relative_filename_path,
-        ImportFrom(
-            module=name,
-            names=[
-                alias(
-                    name=name,
-                    asname=None,
-                    identifier=None,
-                    identifier_name=None,
-                ),
-            ],
-            level=1,
-            identifier=None,
-        ),
-    )
+    # return (
+    #     mod_name or None,
+    #     relative_filename_path,
+    #     ImportFrom(
+    #         module=name,
+    #         names=[
+    #             alias(
+    #                 name=name,
+    #                 asname=None,
+    #                 identifier=None,
+    #                 identifier_name=None,
+    #             ),
+    #         ],
+    #         level=1,
+    #         identifier=None,
+    #     ),
+    # )
 
 
 def _emit_symbol(
@@ -574,7 +572,7 @@ def _emit_symbol(
                             col_offset=None,
                         ),
                         ImportFrom(
-                            module=name,
+                            module=path.splitext(path.basename(emit_filename))[0],
                             names=[
                                 alias(
                                     name=name,
@@ -665,55 +663,58 @@ def emit_files_from_module_and_return_imports(
 
     # Might need some `groupby` in case multiple files are in the one project; same for `get_module_contents`
     return list(
-        map(
-            _emit_file_on_hierarchy,
+        filter(
+            None,
             map(
-                lambda name_source: (
-                    name_source[0],
-                    (
-                        path.join(output_directory, path.basename(module_root_dir))
-                        if path.isfile(module_root_dir)
-                        else (
-                            lambda filename: (
-                                filename[len(module_name) + 1 :]
-                                if filename.startswith(module_name)
-                                else filename
-                            )
-                        )(
-                            relative_filename(
-                                name_source[1].__file__
-                                if hasattr(name_source[1], "__file__")
-                                else getfile(name_source[1])
-                            )
-                        )
-                    ),
-                    (
-                        {"params": OrderedDict(), "returns": OrderedDict()}
-                        if dry_run
-                        else (
-                            lambda parser: (
-                                partial(parser, merge_inner_function="__init__")
-                                if parser is cdd.class_.parse.class_
-                                else parser
-                            )
-                        )(get_parser(name_source[1], "infer"))(name_source[1])
-                    ),
-                ),
+                _emit_file_on_hierarchy,
                 map(
                     lambda name_source: (
+                        name_source[0],
                         (
-                            name_source[0][len(module_name) + 1 :]
-                            if name_source[0].startswith(module_name)
-                            else name_source[0]
+                            path.join(output_directory, path.basename(module_root_dir))
+                            if path.isfile(module_root_dir)
+                            else (
+                                lambda filename: (
+                                    filename[len(module_name) + 1 :]
+                                    if filename.startswith(module_name)
+                                    else filename
+                                )
+                            )(
+                                relative_filename(
+                                    name_source[1].__file__
+                                    if hasattr(name_source[1], "__file__")
+                                    else getfile(name_source[1])
+                                )
+                            )
                         ),
-                        name_source[1],
+                        (
+                            {"params": OrderedDict(), "returns": OrderedDict()}
+                            if dry_run
+                            else (
+                                lambda parser: (
+                                    partial(parser, merge_inner_function="__init__")
+                                    if parser is cdd.class_.parse.class_
+                                    else parser
+                                )
+                            )(get_parser(name_source[1], "infer"))(name_source[1])
+                        ),
                     ),
-                    get_module_contents(
-                        module, module_root_dir=module_root_dir
-                    ).items(),
+                    map(
+                        lambda name_source: (
+                            (
+                                name_source[0][len(module_name) + 1 :]
+                                if name_source[0].startswith(module_name)
+                                else name_source[0]
+                            ),
+                            name_source[1],
+                        ),
+                        get_module_contents(
+                            module, module_root_dir=module_root_dir
+                        ).items(),
+                    ),
                 ),
             ),
-        ),
+        )
     )
 
 

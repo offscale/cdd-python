@@ -18,6 +18,7 @@ import cdd.compound.exmod_utils
 import cdd.shared.emit.file
 from cdd.shared.ast_utils import (
     construct_module_with_symbols,
+    deduplicate_sorted_imports,
     maybe_type_comment,
     merge_modules,
     module_to_all,
@@ -164,15 +165,17 @@ def exmod(
         ),
     )
 
+    sqlalchemy_mod = "sqlalchemy_mod"
+    sqlalchemy_mod_dir_join = partial(path.join, output_directory, "sqlalchemy_mod")
+    sqlalchemy_mod_dir = sqlalchemy_mod_dir_join()
     if (
         emit_name in frozenset(("sqlalchemy", "sqlalchemy_hybrid", "sqlalchemy_table"))
         and emit_sqlalchemy_submodule
+        and not path.isdir(sqlalchemy_mod_dir)
     ):
-        sqlalchemy_mod = "sqlalchemy_mod"
-        sqlalchemy_mod_dir_join = partial(path.join, output_directory, "sqlalchemy_mod")
-        mkdir(sqlalchemy_mod_dir_join())
+        mkdir(sqlalchemy_mod_dir)
         open(
-            sqlalchemy_mod_dir_join("__init__{extsep}py".format(extsep=path.extsep)),
+            sqlalchemy_mod_dir_join(INIT_FILENAME),
             "a",
         ).close()
         connection_py = "connection"
@@ -396,11 +399,9 @@ def exmod_single_folder(
     )  # type: Optional[list[ImportFrom]]
     if not imports:
         # Case: no obvious folder hierarchy, so parse the `__init__` file in root
-        with open(
-            path.join(module_root_dir, "__init__{extsep}py".format(extsep=path.extsep)),
-            "rt",
-        ) as f:
-            mod: Module = parse(f.read())
+        top_level_init = path.join(module_root_dir, INIT_FILENAME)
+        with open(top_level_init, "rt") as f:
+            mod: Module = parse(f.read(), filename=top_level_init)
 
         # TODO: Optimise these imports
         imports = list(
@@ -499,75 +500,77 @@ def exmod_single_folder(
     else:
         makedirs(path.dirname(init_filepath), exist_ok=True)
         cdd.shared.emit.file.file(
-            Module(
-                body=list(
-                    chain.from_iterable(
-                        (
+            deduplicate_sorted_imports(
+                Module(
+                    body=list(
+                        chain.from_iterable(
                             (
-                                Expr(
-                                    set_value("\nExport internal imports\n"),
-                                    lineno=None,
-                                    col_offset=None,
-                                ),
-                            ),
-                            map(
-                                lambda module_names: ImportFrom(
-                                    module=module_names[0],
-                                    names=list(
-                                        map(
-                                            lambda names: alias(
-                                                names,
-                                                None,
-                                                identifier=None,
-                                                identifier_name=None,
-                                            ),
-                                            module_names[1],
-                                        )
+                                (
+                                    Expr(
+                                        set_value("\nExport internal imports\n"),
+                                        lineno=None,
+                                        col_offset=None,
                                     ),
-                                    level=1,
-                                    identifier=None,
                                 ),
-                                modules_names,
-                            ),
-                            (
-                                Assign(
-                                    targets=[
-                                        Name(
-                                            "__all__",
-                                            Store(),
-                                            lineno=None,
-                                            col_offset=None,
-                                        )
-                                    ],
-                                    value=List(
-                                        ctx=Load(),
-                                        elts=list(
+                                map(
+                                    lambda module_names: ImportFrom(
+                                        module=module_names[0],
+                                        names=list(
                                             map(
-                                                set_value,
-                                                sorted(
-                                                    frozenset(
-                                                        chain.from_iterable(
-                                                            map(
-                                                                itemgetter(1),
-                                                                modules_names,
-                                                            )
-                                                        ),
-                                                    )
+                                                lambda names: alias(
+                                                    names,
+                                                    None,
+                                                    identifier=None,
+                                                    identifier_name=None,
                                                 ),
+                                                module_names[1],
                                             )
                                         ),
-                                        expr=None,
+                                        level=1,
+                                        identifier=None,
                                     ),
-                                    expr=None,
-                                    lineno=None,
-                                    **maybe_type_comment
+                                    modules_names,
                                 ),
-                            ),
+                                (
+                                    Assign(
+                                        targets=[
+                                            Name(
+                                                "__all__",
+                                                Store(),
+                                                lineno=None,
+                                                col_offset=None,
+                                            )
+                                        ],
+                                        value=List(
+                                            ctx=Load(),
+                                            elts=list(
+                                                map(
+                                                    set_value,
+                                                    sorted(
+                                                        frozenset(
+                                                            chain.from_iterable(
+                                                                map(
+                                                                    itemgetter(1),
+                                                                    modules_names,
+                                                                )
+                                                            ),
+                                                        )
+                                                    ),
+                                                )
+                                            ),
+                                            expr=None,
+                                        ),
+                                        expr=None,
+                                        lineno=None,
+                                        **maybe_type_comment
+                                    ),
+                                ),
+                            )
                         )
-                    )
-                ),
-                stmt=None,
-                type_ignores=[],
+                    ),
+                    stmt=None,
+                    type_ignores=[],
+                )
             ),
             init_filepath,
             mode="wt",

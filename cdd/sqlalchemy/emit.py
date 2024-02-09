@@ -512,7 +512,10 @@ def sqlalchemy_hybrid(
                     ),
                     (
                         cdd.sqlalchemy.utils.emit_utils.generate_repr_method(
-                            intermediate_repr["params"], class_name, docstring_format
+                            intermediate_repr["params"],
+                            class_name,
+                            docstring_format,
+                            hybrid=True,
                         )
                         if emit_repr
                         else None

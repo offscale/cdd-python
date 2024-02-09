@@ -717,6 +717,10 @@ PS: If you're outputting JSON-schema and want a file per schema then:
       --dry-run             Show what would be created; don't actually write to
                             the filesystem.
 
+PS: If you want to `import` every module, e.g., for your `create_tables` script then run this in your module dir:
+
+    python -c 'import os;fast_scandir = lambda dirname: [f.path for f in os.scandir(dirname) if f.is_dir()] + [item for sublist in [fast_scandir(d) for d in [f.path for f in os.scandir(dirname) if f.is_dir()]] for item in sublist];print("\n".join(sorted(frozenset(map(lambda m: "import {}.{}".format(os.path.basename(os.path.abspath(".")),  m.replace(os.path.sep, ".")[2:]),fast_scandir("."))))))'
+
 ---
 
 ## License

@@ -29,7 +29,7 @@ import cdd.class_.emit
 import cdd.function.parse
 from cdd.compound.gen import gen
 from cdd.shared.ast_utils import maybe_type_comment, set_value
-from cdd.shared.pure_utils import rpartial
+from cdd.shared.pure_utils import INIT_FILENAME, rpartial
 from cdd.shared.source_transformer import to_code
 from cdd.tests.mocks.gen import (
     import_gen_test_module_ast,
@@ -147,10 +147,7 @@ class TestGen(TestCase):
             cls.input_class_ast,
             cls.expected_class_ast,
         ) = populate_files(temp_module_dir)
-        with open(
-            os.path.join(temp_module_dir, "__init__{extsep}py".format(extsep=extsep)),
-            "w",
-        ) as f:
+        with open(os.path.join(temp_module_dir, INIT_FILENAME), "w") as f:
             f.write(import_star_from_input_str)
 
         sys.path.append(cls.tempdir)

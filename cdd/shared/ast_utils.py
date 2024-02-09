@@ -1921,7 +1921,7 @@ def get_names(node):
     :return: All top-level symbols (except those within try/except and if/elif/else blocks)
     :rtype: ```Generator[str]```
     """
-    if isinstance(node, Assign):
+    if isinstance(node, Assign) and isinstance(node.targets[0], Name):
         return map(attrgetter("id"), node.targets)
     elif isinstance(node, AnnAssign):
         return iter((node.target.id,))

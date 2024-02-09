@@ -9,6 +9,7 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 from cdd.compound.openapi.gen_openapi import openapi_bulk
+from cdd.shared.pure_utils import INIT_FILENAME
 from cdd.tests.mocks.openapi import openapi_dict_with_sql_types
 from cdd.tests.mocks.routes import (
     create_route,
@@ -32,7 +33,7 @@ class TestOpenApiBulk(TestCase):
         """
         with TemporaryDirectory() as tempdir:
             temp_dir_join = partial(path.join, tempdir)
-            open(temp_dir_join("__init__{extsep}py".format(extsep=extsep)), "a").close()
+            open(temp_dir_join(INIT_FILENAME), "a").close()
 
             models_filename: str = temp_dir_join(
                 "models{extsep}py".format(extsep=extsep)

@@ -24,20 +24,11 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch
 
+import cdd.shared.pure_utils
+import cdd.sqlalchemy.utils.emit_utils
 from cdd.shared.ast_utils import set_value
-from cdd.shared.pure_utils import rpartial
 from cdd.shared.source_transformer import to_code
 from cdd.shared.types import IntermediateRepr
-from cdd.sqlalchemy.utils.emit_utils import (
-    ensure_has_primary_key,
-    generate_create_from_attr_staticmethod,
-    param_to_sqlalchemy_column_calls,
-    rewrite_fk,
-    sqlalchemy_class_to_table,
-    sqlalchemy_table_to_class,
-    update_fk_for_file,
-    update_with_imports_from_columns,
-)
 from cdd.sqlalchemy.utils.shared_utils import update_args_infer_typ_sqlalchemy
 from cdd.tests.mocks.ir import (
     intermediate_repr_empty,
@@ -64,21 +55,25 @@ class TestEmitSqlAlchemyUtils(TestCase):
 
     def test_ensure_has_primary_key(self) -> None:
         """
-        Tests `cdd.emit.sqlalchemy.utils.sqlalchemy_utils.ensure_has_primary_key`
+        Tests `cdd.emit.sqlalchemy.utils.sqlalchemy_utils.cdd.sqlalchemy.utils.emit_utils.ensure_has_primary_key`
         """
         self.assertDictEqual(
-            ensure_has_primary_key(deepcopy(intermediate_repr_no_default_sql_doc)),
+            cdd.sqlalchemy.utils.emit_utils.ensure_has_primary_key(
+                deepcopy(intermediate_repr_no_default_sql_doc)
+            ),
             intermediate_repr_no_default_sql_doc,
         )
 
         self.assertDictEqual(
-            ensure_has_primary_key(deepcopy(intermediate_repr_no_default_doc)),
+            cdd.sqlalchemy.utils.emit_utils.ensure_has_primary_key(
+                deepcopy(intermediate_repr_no_default_doc)
+            ),
             intermediate_repr_no_default_sql_doc,
         )
 
         ir: IntermediateRepr = deepcopy(intermediate_repr_empty)
         ir["params"] = OrderedDict((("foo", {"doc": "My doc", "typ": "str"}),))
-        res = ensure_has_primary_key(deepcopy(ir))
+        res = cdd.sqlalchemy.utils.emit_utils.ensure_has_primary_key(deepcopy(ir))
         ir["params"]["id"] = {
             "doc": "[PK]",
             "typ": "int",
@@ -108,7 +103,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
 
     def test_ensure_has_primary_key_from_id(self) -> None:
         """
-        Tests `cdd.emit.sqlalchemy.utils.sqlalchemy_utils.ensure_has_primary_key`
+        Tests `cdd.emit.sqlalchemy.utils.sqlalchemy_utils.cdd.sqlalchemy.utils.emit_utils.ensure_has_primary_key`
         """
         ir: IntermediateRepr = deepcopy(intermediate_repr_empty)
         ir["params"] = OrderedDict(
@@ -117,7 +112,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
                 ("not_pk_id", {"doc": "", "typ": "str"}),
             )
         )
-        res = ensure_has_primary_key(deepcopy(ir))
+        res = cdd.sqlalchemy.utils.emit_utils.ensure_has_primary_key(deepcopy(ir))
         ir["params"]["id"]["doc"] = "[PK] {}".format(ir["params"]["id"]["doc"])
         self.assertDictEqual(res, ir)
 
@@ -125,7 +120,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
         """Tests that `generate_create_from_attr` staticmethod is correctly constructed"""
         run_ast_test(
             self,
-            generate_create_from_attr_staticmethod(
+            cdd.sqlalchemy.utils.emit_utils.generate_create_from_attr_staticmethod(
                 OrderedDict(
                     (
                         ("id", {"doc": "My doc", "typ": "str"}),
@@ -143,7 +138,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
         """Tests that with SQL constraints the SQLalchemy column is correctly generated"""
         run_ast_test(
             self,
-            param_to_sqlalchemy_column_calls(
+            cdd.sqlalchemy.utils.emit_utils.param_to_sqlalchemy_column_calls(
                 (
                     "foo",
                     {
@@ -167,7 +162,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
         """Tests that SQLalchemy column with simple foreign key is correctly generated"""
         run_ast_test(
             self,
-            param_to_sqlalchemy_column_calls(
+            cdd.sqlalchemy.utils.emit_utils.param_to_sqlalchemy_column_calls(
                 (
                     lambda _name: (
                         _name,
@@ -183,7 +178,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
         """Tests that SQLalchemy column is generated with schema as comment"""
         run_ast_test(
             self,
-            param_to_sqlalchemy_column_calls(
+            cdd.sqlalchemy.utils.emit_utils.param_to_sqlalchemy_column_calls(
                 (
                     "foo",
                     {
@@ -239,7 +234,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
     #     """Tests that SQLalchemy column is generated from a complex union"""
     #     run_ast_test(
     #         self,
-    #         param_to_sqlalchemy_column_calls(
+    #         cdd.sqlalchemy.utils.emit_utils.param_to_sqlalchemy_column_calls(
     #             (
     #                 "epoch_bool_or_int",
     #                 {
@@ -302,7 +297,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
 
     def test_update_with_imports_from_columns(self) -> None:
         """
-        Tests basic `update_with_imports_from_columns` usage
+        Tests basic `cdd.sqlalchemy.utils.emit_utils.update_with_imports_from_columns` usage
 
         Confirms that this:
         ```
@@ -358,20 +353,29 @@ class TestEmitSqlAlchemyUtils(TestCase):
             with open(node_filename, "wt") as f:
                 f.write(to_code(node_pk_with_phase1_fk))
 
-            element_class: ClassDef = sqlalchemy_table_to_class(element_pk_fk_ass)
+            element_class: ClassDef = (
+                cdd.sqlalchemy.utils.emit_utils.sqlalchemy_table_to_class(
+                    element_pk_fk_ass
+                )
+            )
             element_class.name = "Element"
 
             with open(element_filename, "wt") as f:
                 f.write(to_code(element_class))
 
-            update_with_imports_from_columns(node_filename)
+            cdd.sqlalchemy.utils.emit_utils.update_with_imports_from_columns(
+                node_filename
+            )
 
             with open(node_filename, "rt") as f:
                 node_filename_str: str = f.read()
             gen_mod: Module = ast.parse(node_filename_str)
 
         gen_imports = tuple(
-            filter(rpartial(isinstance, (ImportFrom, Import)), gen_mod.body)
+            filter(
+                cdd.shared.pure_utils.rpartial(isinstance, (ImportFrom, Import)),
+                gen_mod.body,
+            )
         )  # type: tuple[Union[ImportFrom, Import]]
         self.assertEqual(len(gen_imports), 1)
 
@@ -394,7 +398,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
 
     def test_update_fk_for_file(self) -> None:
         """
-        Tests basic `update_with_imports_from_columns` usage
+        Tests basic `cdd.sqlalchemy.utils.emit_utils.update_with_imports_from_columns` usage
 
         Confirms that this:
         ```
@@ -481,13 +485,17 @@ class TestEmitSqlAlchemyUtils(TestCase):
                 f.write(
                     to_code(
                         Module(
-                            body=[sqlalchemy_table_to_class(element_pk_fk_ass)],
+                            body=[
+                                cdd.sqlalchemy.utils.emit_utils.sqlalchemy_table_to_class(
+                                    element_pk_fk_ass
+                                )
+                            ],
                             type_ignores=[],
                         )
                     )
                 )
 
-            update_fk_for_file(node_filename)
+            cdd.sqlalchemy.utils.emit_utils.update_fk_for_file(node_filename)
 
             with open(node_filename, "rt") as f:
                 node_filename_str: str = f.read()
@@ -500,30 +508,32 @@ class TestEmitSqlAlchemyUtils(TestCase):
         )
 
     def test_sqlalchemy_table_to_class(self) -> None:
-        """Tests that `sqlalchemy_table_to_class` works"""
+        """Tests that `cdd.sqlalchemy.utils.emit_utils.sqlalchemy_table_to_class` works"""
         run_ast_test(
             self,
-            gen_ast=sqlalchemy_table_to_class(deepcopy(node_pk_tbl_ass)),
+            gen_ast=cdd.sqlalchemy.utils.emit_utils.sqlalchemy_table_to_class(
+                deepcopy(node_pk_tbl_ass)
+            ),
             gold=node_pk_tbl_class,
         )
 
     def test_sqlalchemy_class_to_table(self) -> None:
-        """Tests that `sqlalchemy_class_to_table` works"""
+        """Tests that `cdd.sqlalchemy.utils.emit_utils.sqlalchemy_class_to_table` works"""
         run_ast_test(
             self,
-            sqlalchemy_class_to_table(
+            cdd.sqlalchemy.utils.emit_utils.sqlalchemy_class_to_table(
                 deepcopy(node_pk_tbl_class), parse_original_whitespace=False
             ),
             gold=node_pk_tbl_call,
         )
 
     def test_sqlalchemy_hybrid_class_to_table(self) -> None:
-        """Tests that `sqlalchemy_class_to_table` works on hybrid class"""
+        """Tests that `cdd.sqlalchemy.utils.emit_utils.sqlalchemy_class_to_table` works on hybrid class"""
         gold = deepcopy(config_tbl_with_comments_ast)
         gold.targets[0].id = "__table__"
         run_ast_test(
             self,
-            sqlalchemy_class_to_table(
+            cdd.sqlalchemy.utils.emit_utils.sqlalchemy_class_to_table(
                 deepcopy(config_hybrid_ast), parse_original_whitespace=False
             ),
             gold=gold,
@@ -531,7 +541,7 @@ class TestEmitSqlAlchemyUtils(TestCase):
 
     def test_rewrite_fk(self) -> None:
         """
-        Tests whether `rewrite_fk` produces `openapi_dict` given `model_paths` and `routes_paths`
+        Tests whether `cdd.sqlalchemy.utils.emit_utils.rewrite_fk` produces `openapi_dict` given `model_paths` and `routes_paths`
         """
         sqlalchemy_cls = deepcopy(node_pk_tbl_class)
         sqlalchemy_cls.name = "TableName0"
@@ -544,14 +554,14 @@ class TestEmitSqlAlchemyUtils(TestCase):
         with TemporaryDirectory() as temp_dir:
             mod_dir: str = path.join(temp_dir, "table_name0")
             mkdir(mod_dir)
-            init_path: str = path.join(mod_dir, "__init__{}py".format(path.extsep))
+            init_path: str = path.join(mod_dir, cdd.shared.pure_utils.INIT_FILENAME)
             with open(init_path, "wt") as f:
                 f.write(to_code(sqlalchemy_cls))
             with patch(
                 "cdd.sqlalchemy.utils.emit_utils.find_module_filepath",
                 lambda _, __: init_path,
             ):
-                gen_ast = rewrite_fk(
+                gen_ast = cdd.sqlalchemy.utils.emit_utils.rewrite_fk(
                     {"TableName0": "table_name0"},
                     column_fk,
                 )
