@@ -93,6 +93,7 @@ config_tbl = Table(
         nullable=True,
     ),
     comment={comment!r},
+    keep_existing=True
 )
 """.format(
         comment=docstring_header_and_return_two_nl_str
@@ -214,7 +215,15 @@ config_tbl_with_comments_ast: Assign = Assign(
                 arg="comment",
                 value=set_value(docstring_header_and_return_two_nl_str),
                 identifier=None,
-            )
+            ),
+            keyword(
+                arg="keep_existing",
+                value=set_value(True),
+                identifier=None,
+                expr=None,
+                lineno=None,
+                **maybe_type_comment,
+            ),
         ],
         lineno=None,
         col_offset=None,
@@ -588,7 +597,16 @@ empty_with_inferred_pk_column_assign: Assign = Assign(
                 col_offset=None,
             ),
         ],
-        keywords=[],
+        keywords=[
+            keyword(
+                arg="keep_existing",
+                value=set_value(True),
+                identifier=None,
+                expr=None,
+                lineno=None,
+                **maybe_type_comment,
+            )
+        ],
         lineno=None,
         col_offset=None,
     ),
@@ -602,13 +620,15 @@ foreign_sqlalchemy_tbls_str: str = """node = Table(
     metadata_obj,
     Column("node_id", Integer, primary_key=True),
     Column("primary_element", Integer, ForeignKey("element.element_id")),
+    keep_existing=True
 )
 
 element = Table(
     "element",
     metadata_obj,
     Column("element_id", Integer, primary_key=True),
-    Column("parent_node_id", Integer)
+    Column("parent_node_id", Integer),
+    keep_existing=True
 )"""
 
 node_fk_call: Call = Call(
@@ -644,7 +664,16 @@ node_pk_tbl_call: Call = Call(
         ),
         node_fk_call,
     ],
-    keywords=[],
+    keywords=[
+        keyword(
+            arg="keep_existing",
+            value=set_value(True),
+            identifier=None,
+            expr=None,
+            lineno=None,
+            **maybe_type_comment,
+        )
+    ],
 )
 
 node_pk_tbl_ass: Assign = Assign(
@@ -728,7 +757,16 @@ element_pk_fk_tbl: Call = Call(
             keywords=[],
         ),
     ],
-    keywords=[],
+    keywords=[
+        keyword(
+            arg="keep_existing",
+            value=set_value(True),
+            identifier=None,
+            expr=None,
+            lineno=None,
+            **maybe_type_comment,
+        )
+    ],
 )
 
 element_pk_fk_ass: Assign = Assign(

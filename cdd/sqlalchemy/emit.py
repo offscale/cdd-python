@@ -108,56 +108,81 @@ def sqlalchemy_table(
                     )
                 )
             ),
-            keywords=(
-                (
-                    lambda val: (
-                        [
+            keywords=list(
+                chain.from_iterable(
+                    (
+                        (
+                            (
+                                (
+                                    lambda val: (
+                                        (
+                                            keyword(
+                                                arg="comment",
+                                                value=set_value(val),
+                                                identifier=None,
+                                                expr=None,
+                                                lineno=None,
+                                                **maybe_type_comment,
+                                            ),
+                                        )
+                                        if val
+                                        else iter(())
+                                    )
+                                )(
+                                    deindent(
+                                        add(
+                                            *map(
+                                                partial(
+                                                    docstring,
+                                                    emit_default_doc=emit_default_doc,
+                                                    docstring_format=docstring_format,
+                                                    word_wrap=word_wrap,
+                                                    emit_original_whitespace=emit_original_whitespace,
+                                                    emit_types=True,
+                                                ),
+                                                (
+                                                    {
+                                                        "doc": (
+                                                            intermediate_repr[
+                                                                "doc"
+                                                            ].lstrip()
+                                                            + "\n\n"
+                                                            if intermediate_repr[
+                                                                "returns"
+                                                            ]
+                                                            else ""
+                                                        ),
+                                                        "params": OrderedDict(),
+                                                        "returns": None,
+                                                    },
+                                                    {
+                                                        "doc": "",
+                                                        "params": OrderedDict(),
+                                                        "returns": intermediate_repr[
+                                                            "returns"
+                                                        ],
+                                                    },
+                                                ),
+                                            )
+                                        ).strip()
+                                    )
+                                )
+                                if intermediate_repr.get("doc")
+                                else iter(())
+                            )
+                        ),
+                        (
                             keyword(
-                                arg="comment",
-                                value=set_value(val),
+                                arg="keep_existing",
+                                value=set_value(True),
                                 identifier=None,
                                 expr=None,
                                 lineno=None,
                                 **maybe_type_comment,
-                            )
-                        ]
-                        if val
-                        else []
-                    )
-                )(
-                    deindent(
-                        add(
-                            *map(
-                                partial(
-                                    docstring,
-                                    emit_default_doc=emit_default_doc,
-                                    docstring_format=docstring_format,
-                                    word_wrap=word_wrap,
-                                    emit_original_whitespace=emit_original_whitespace,
-                                    emit_types=True,
-                                ),
-                                (
-                                    {
-                                        "doc": (
-                                            intermediate_repr["doc"].lstrip() + "\n\n"
-                                            if intermediate_repr["returns"]
-                                            else ""
-                                        ),
-                                        "params": OrderedDict(),
-                                        "returns": None,
-                                    },
-                                    {
-                                        "doc": "",
-                                        "params": OrderedDict(),
-                                        "returns": intermediate_repr["returns"],
-                                    },
-                                ),
-                            )
-                        ).strip()
+                            ),
+                        ),
                     )
                 )
-                if intermediate_repr.get("doc")
-                else []
             ),
             expr=None,
             expr_func=None,

@@ -5,12 +5,17 @@ Docstring parse utils
 import string
 from collections import Counter
 from functools import partial
-from itertools import filterfalse, takewhile
+from itertools import chain, filterfalse, takewhile
 from keyword import iskeyword
 from operator import contains, itemgetter
 from typing import List, Optional, Tuple, Union, cast
 
-from cdd.shared.pure_utils import count_iter_items, sliding_window, type_to_name
+from cdd.shared.pure_utils import (
+    count_iter_items,
+    simple_types,
+    sliding_window,
+    type_to_name,
+)
 
 adhoc_type_to_type = {
     "bool": "bool",
@@ -65,12 +70,6 @@ def _union_literal_from_sentence(sentence):
     union: Union[List[List[str]], List[str], Tuple[str]] = [[]]
     _union_literal_from_sentence_phase0(sentence, union)
 
-    if not union[-1]:
-        del union[-1]
-    else:
-        union[-1] = "".join(
-            union[-1][:-1] if union[-1][-1] in frozenset((".", ",")) else union[-1]
-        )
     if len(union) > 1:
         candidate_type = next(
             map(
@@ -82,9 +81,22 @@ def _union_literal_from_sentence(sentence):
             ),
             None,
         )
+
         if candidate_type is not None:
             return candidate_type
-
+        else:
+            candidate_collection = next(
+                map(
+                    adhoc_3_tuple_to_collection.__getitem__,
+                    filter(
+                        partial(contains, adhoc_3_tuple_to_collection),
+                        sliding_window(union, 3),
+                    ),
+                ),
+                None,
+            )
+            if candidate_collection is not None:
+                return None
     union = sorted(
         frozenset(
             map(
@@ -164,6 +176,8 @@ def _union_literal_from_sentence_phase0(sentence, union):
 
     :param sentence: Input sentence with 'or' or 'of'
     :type sentence: ```str```
+
+    :type union: ```Union[List[List[str]], List[str], Tuple[str]]```
     """
     i: int = 0
     quotes = {"'": 0, '"': 0}
@@ -183,16 +197,21 @@ def _union_literal_from_sentence_phase0(sentence, union):
                     )
                     else union[-1]
                 )
-                if union[-1] in frozenset(
-                    ("or", "or,", "or;", "or:", "of", "of,", "of;", "of:")
-                ):
+                if union[-1] in frozenset(("or", "or,", "or;", "or:")):
                     union[-1] = []
+                elif union[-1] in frozenset(("of", "of,", "of;", "of:")):
+                    collection_type = adhoc_3_tuple_to_collection.get(tuple(union))
+                    if collection_type is None:
+                        union[-1] = []
+                    else:
+                        union = []
                 else:
                     union.append([])
             # eat until next non-space
             j = i
             i += count_iter_items(takewhile(str.isspace, sentence[i:])) - 1
-            union[-1] = sentence[j : i + 1]
+
+            union[slice(*((-1, None) if union else (None, None)))] = sentence[j : i + 1]
 
             union.append([])
         if ch in frozenset(("'", '"')):
@@ -205,6 +224,12 @@ def _union_literal_from_sentence_phase0(sentence, union):
             ):
                 i += 1
         i += 1
+    if not union[-1]:
+        del union[-1]
+    else:
+        union[-1] = "".join(
+            union[-1][:-1] if union[-1][-1] in frozenset((".", ",")) else union[-1]
+        )
 
 
 def parse_adhoc_doc_for_typ(doc, name, default_is_none):
@@ -225,7 +250,6 @@ def parse_adhoc_doc_for_typ(doc, name, default_is_none):
     :return: The type (if determined) else `None`
     :rtype: ```Optional[str]```
     """
-
     if not doc:
         return None
 
@@ -239,27 +263,45 @@ def parse_adhoc_doc_for_typ(doc, name, default_is_none):
         defaults_idx: int = sentence.rfind(", default")
         if defaults_idx != -1:
             sentence: str = sentence[:defaults_idx]
-        if sentence.count("`") == 2:
-            fst_tick: str = sentence.find("`")
+        if (sentence.count("`") & 1) == 0:
+            fst_tick: int = (lambda idx: idx if idx > -1 else None)(sentence.find("`"))
             candidate_collection: Optional[str] = next(
-                map(
-                    adhoc_3_tuple_to_collection.__getitem__,
-                    filter(
-                        partial(contains, adhoc_3_tuple_to_collection),
-                        sliding_window(sentence[:fst_tick], 3),
-                    ),
+                chain.from_iterable(
+                    (
+                        map(
+                            adhoc_3_tuple_to_collection.__getitem__,
+                            filter(
+                                partial(contains, adhoc_3_tuple_to_collection),
+                                sliding_window(sentence[:fst_tick].split(), 3),
+                            ),
+                        ),
+                        map(
+                            adhoc_3_tuple_to_collection.__getitem__,
+                            filter(
+                                partial(contains, adhoc_3_tuple_to_collection),
+                                sliding_window(words, 3),
+                            ),
+                        ),
+                    )
                 ),
                 None,
             )
             if candidate_collection is not None:
                 wrap_type_with: str = candidate_collection + "[{}]"
-            sentence: str = sentence[fst_tick : sentence.rfind("`")]
+            if fst_tick is not None:
+                sentence: str = sentence[fst_tick : sentence.rfind("`")]
 
         new_candidate_type: Optional[str] = cast(
             Optional[str], _union_literal_from_sentence(sentence)
         )
         if new_candidate_type is not None:
-            candidate_type: Optional[str] = new_candidate_type
+            if (
+                new_candidate_type.startswith("Literal[")
+                and candidate_type in simple_types
+                and candidate_type is not None
+            ):
+                wrap_type_with = "Union[{}, " + "{}]".format(candidate_type)
+            candidate_type: str = new_candidate_type
         if candidate_type is not None:
             return wrap_type_with.format(candidate_type)
 

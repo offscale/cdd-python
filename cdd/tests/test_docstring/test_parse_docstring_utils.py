@@ -81,6 +81,7 @@ class TestParseDocstringUtils(TestCase):
                         "Literal['bfloat16', 'float16', 'float32', 'float64']",
                         "String; `'bfloat16'`, `'float16'`, `'float32'`, or `'float64'`.",
                     ),
+                    ("List[str]", "List of string."),
                 ),
             ),
             maxlen=0,

@@ -1281,7 +1281,7 @@ docstring_keras_rmsprop_class_ir: IntermediateRepr = {
                         'gradients by norm; `"clipvalue"` (float) clips '
                         "gradients by value."
                     ),
-                    "typ": "Optional[dict]",
+                    "typ": 'Optional[Union[Literal["clipnorm", "clipvalue"], float]]',
                 },
             ),
         )

@@ -80,12 +80,12 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
     """
     if _param["typ"] is None:
         return _param.get("default") == cdd.shared.ast_utils.NoneStr, None
-    if _param["typ"].startswith("Optional["):
+    elif _param["typ"].startswith("Optional["):
         _param["typ"] = _param["typ"][len("Optional[") : -1]
         nullable = True
     if "Literal[" in _param["typ"]:
-        parsed_typ: Call = cdd.shared.ast_utils.get_value(
-            ast.parse(_param["typ"]).body[0]
+        parsed_typ: Call = cast(
+            Call, cdd.shared.ast_utils.get_value(ast.parse(_param["typ"]).body[0])
         )
         if parsed_typ.value.id != "Literal":
             return nullable, parsed_typ.value

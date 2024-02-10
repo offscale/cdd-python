@@ -1921,9 +1921,9 @@ def get_names(node):
     :return: All top-level symbols (except those within try/except and if/elif/else blocks)
     :rtype: ```Generator[str]```
     """
-    if isinstance(node, Assign) and isinstance(node.targets[0], Name):
+    if isinstance(node, Assign) and all(map(rpartial(isinstance, Name), node.targets)):
         return map(attrgetter("id"), node.targets)
-    elif isinstance(node, AnnAssign):
+    elif isinstance(node, AnnAssign) and isinstance(node.target, Name):
         return iter((node.target.id,))
     elif isinstance(node, (AsyncFunctionDef, FunctionDef, ClassDef)):
         return iter((node.name,))

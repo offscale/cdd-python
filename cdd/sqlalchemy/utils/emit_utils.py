@@ -101,8 +101,14 @@ def param_to_sqlalchemy_column_calls(name_param, include_name):
 
     if len(args) < 2 and (
         not args
-        or isinstance(args[0], Name)
-        and args[0].id not in sqlalchemy_top_level_imports
+        or not (
+            isinstance(args[0], Name) and args[0].id in sqlalchemy_top_level_imports
+        )
+        and not (
+            isinstance(args[0], Call)
+            and isinstance(args[0].func, Name)
+            and args[0].func.id in sqlalchemy_top_level_imports
+        )
     ):
         # A good default I guess?
         args.append(Name("LargeBinary", Load(), lineno=None, col_offset=None))
@@ -1266,16 +1272,32 @@ def sqlalchemy_class_to_table(class_def, parse_original_whitespace):
                 )
             )
         ),
-        keywords=(
-            []
-            if doc_string is None
-            else [
-                keyword(
-                    arg="comment",
-                    value=cdd.shared.ast_utils.set_value(doc_string),
-                    identifier=None,
+        keywords=list(
+            chain.from_iterable(
+                (
+                    (
+                        iter(())
+                        if doc_string is None
+                        else (
+                            keyword(
+                                arg="comment",
+                                value=cdd.shared.ast_utils.set_value(doc_string),
+                                identifier=None,
+                            ),
+                        )
+                    ),
+                    (
+                        keyword(
+                            arg="keep_existing",
+                            value=cdd.shared.ast_utils.set_value(True),
+                            identifier=None,
+                            expr=None,
+                            lineno=None,
+                            **cdd.shared.ast_utils.maybe_type_comment,
+                        ),
+                    ),
                 )
-            ]
+            )
         ),
         expr=None,
         expr_func=None,
