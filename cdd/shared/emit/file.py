@@ -43,8 +43,6 @@ def file(node, filename, mode="a", skip_black=False):
     :return: None
     :rtype: ```NoneType```
     """
-    with open("/tmp/write.log", "a") as f:
-        f.write("{}\n".format(filename))
     if not isinstance(node, Module):
         node: Module = Module(body=[node], type_ignores=[], stmt=None)
     src: str = cdd.shared.source_transformer.to_code(node)

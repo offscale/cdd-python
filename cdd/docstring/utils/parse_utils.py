@@ -259,37 +259,7 @@ def parse_adhoc_doc_for_typ(doc, name, default_is_none):
     candidate_type, fst_sentence, sentence = _parse_adhoc_doc_for_typ_phase0(doc, words)
 
     if sentence is not None:
-        wrap_type_with: str = "{}"
-        defaults_idx: int = sentence.rfind(", default")
-        if defaults_idx != -1:
-            sentence: str = sentence[:defaults_idx]
-        if (sentence.count("`") & 1) == 0:
-            fst_tick: int = (lambda idx: idx if idx > -1 else None)(sentence.find("`"))
-            candidate_collection: Optional[str] = next(
-                chain.from_iterable(
-                    (
-                        map(
-                            adhoc_3_tuple_to_collection.__getitem__,
-                            filter(
-                                partial(contains, adhoc_3_tuple_to_collection),
-                                sliding_window(sentence[:fst_tick].split(), 3),
-                            ),
-                        ),
-                        map(
-                            adhoc_3_tuple_to_collection.__getitem__,
-                            filter(
-                                partial(contains, adhoc_3_tuple_to_collection),
-                                sliding_window(words, 3),
-                            ),
-                        ),
-                    )
-                ),
-                None,
-            )
-            if candidate_collection is not None:
-                wrap_type_with: str = candidate_collection + "[{}]"
-            if fst_tick is not None:
-                sentence: str = sentence[fst_tick : sentence.rfind("`")]
+        sentence, wrap_type_with = _parse_adhoc_doc_for_typ_phase1(sentence, words)
 
         new_candidate_type: Optional[str] = cast(
             Optional[str], _union_literal_from_sentence(sentence)
@@ -328,6 +298,53 @@ def parse_adhoc_doc_for_typ(doc, name, default_is_none):
         )
 
     return candidate_type if candidate_type is None else wrap.format(candidate_type)
+
+
+def _parse_adhoc_doc_for_typ_phase1(sentence, words):
+    """
+    Internal function for `parse_adhoc_doc_for_typ`.
+
+    :param sentence: Input sentence
+    :type sentence: ```str```
+
+    :param words: Words
+    :type words: ```List[Union[List[str], str]]```
+
+    :return: sentence, wrap_type_with
+    :rtype: ```Tuple[str, str]```
+    """
+    wrap_type_with: str = "{}"
+    defaults_idx: int = sentence.rfind(", default")
+    if defaults_idx != -1:
+        sentence: str = sentence[:defaults_idx]
+    if (sentence.count("`") & 1) == 0:
+        fst_tick: int = (lambda idx: idx if idx > -1 else None)(sentence.find("`"))
+        candidate_collection: Optional[str] = next(
+            chain.from_iterable(
+                (
+                    map(
+                        adhoc_3_tuple_to_collection.__getitem__,
+                        filter(
+                            partial(contains, adhoc_3_tuple_to_collection),
+                            sliding_window(sentence[:fst_tick].split(), 3),
+                        ),
+                    ),
+                    map(
+                        adhoc_3_tuple_to_collection.__getitem__,
+                        filter(
+                            partial(contains, adhoc_3_tuple_to_collection),
+                            sliding_window(words, 3),
+                        ),
+                    ),
+                )
+            ),
+            None,
+        )
+        if candidate_collection is not None:
+            wrap_type_with: str = candidate_collection + "[{}]"
+        if fst_tick is not None:
+            sentence: str = sentence[fst_tick : sentence.rfind("`")]
+    return sentence, wrap_type_with
 
 
 def _parse_adhoc_doc_for_typ_phase0(doc, words):
