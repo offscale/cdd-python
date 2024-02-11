@@ -201,6 +201,7 @@ def emit_file_on_hierarchy(
     filesystem_layout,
     extra_modules_to_all,
     output_directory,
+    first_output_directory,
     no_word_wrap,
     dry_run,
 ):
@@ -231,6 +232,9 @@ def emit_file_on_hierarchy(
 
     :param output_directory: Where to place the generated exposed interfaces to the given `--module`.
     :type output_directory: ```str```
+
+    :param first_output_directory: Initial output directory (e.g., direct from `--output-directory`)
+    :type first_output_directory: ```str```
 
     :param no_word_wrap: Whether word-wrap is disabled (on emission).
     :type no_word_wrap: ```Optional[Literal[True]]```
@@ -344,19 +348,20 @@ def emit_file_on_hierarchy(
 
     if not symbol_in_file and (ir.get("name") or ir["params"] or ir["returns"]):
         _emit_symbol(
-            name_orig_ir,
-            emit_name,
-            module_name,
-            emit_filename,
-            existent_mod,
-            init_filepath,
-            ir,
-            isfile_emit_filename,
-            name,
-            mock_imports,
-            extra_modules_to_all,
-            no_word_wrap,
-            dry_run,
+            name_orig_ir=name_orig_ir,
+            emit_name=emit_name,
+            module_name=module_name,
+            emit_filename=emit_filename,
+            existent_mod=existent_mod,
+            init_filepath=init_filepath,
+            intermediate_repr=ir,
+            isfile_emit_filename=isfile_emit_filename,
+            name=name,
+            mock_imports=mock_imports,
+            extra_modules_to_all=extra_modules_to_all,
+            no_word_wrap=no_word_wrap,
+            first_output_directory=first_output_directory,
+            dry_run=dry_run,
         )
 
     # return (
@@ -391,6 +396,7 @@ def _emit_symbol(
     mock_imports,
     extra_modules_to_all,
     no_word_wrap,
+    first_output_directory,
     dry_run,
 ):
     """
@@ -440,6 +446,9 @@ def _emit_symbol(
 
     :param no_word_wrap: Whether word-wrap is disabled (on emission).
     :type no_word_wrap: ```Optional[Literal[True]]```
+
+    :param first_output_directory: Where to place the generated exposed interfaces to the given `--module`.
+    :type first_output_directory: ```str```
 
     :param dry_run: Show what would be created; don't actually write to the filesystem
     :type dry_run: ```bool```
@@ -561,6 +570,9 @@ def _emit_symbol(
                 file=EXMOD_OUT_STREAM,
             )
         else:
+            module = path.splitext(
+                emit_filename[len(path.dirname(first_output_directory)) + 1 :]
+            )[0].replace(path.sep, ".")
             cdd.shared.emit.file.file(
                 Module(
                     body=[
@@ -572,7 +584,7 @@ def _emit_symbol(
                             col_offset=None,
                         ),
                         ImportFrom(
-                            module=path.splitext(path.basename(emit_filename))[0],
+                            module=module,
                             names=[
                                 alias(
                                     name=name,
@@ -581,7 +593,7 @@ def _emit_symbol(
                                     identifier_name=None,
                                 ),
                             ],
-                            level=1,
+                            level=0,
                             identifier=None,
                         ),
                         __all___node,
@@ -601,6 +613,7 @@ def emit_files_from_module_and_return_imports(
     emit_name,
     module,
     output_directory,
+    first_output_directory,
     mock_imports,
     no_word_wrap,
     dry_run,
@@ -630,6 +643,9 @@ def emit_files_from_module_and_return_imports(
     :param output_directory: Where to place the generated exposed interfaces to the given `--module`.
     :type output_directory: ```str```
 
+    :param first_output_directory: Initial output directory (e.g., direct from `--output-directory`)
+    :type first_output_directory: ```str```
+
     :param mock_imports: Whether to generate mock TensorFlow imports
     :type mock_imports: ```bool```
 
@@ -656,6 +672,7 @@ def emit_files_from_module_and_return_imports(
         mock_imports=mock_imports,
         filesystem_layout=filesystem_layout,
         output_directory=output_directory,
+        first_output_directory=first_output_directory,
         extra_modules_to_all=extra_modules_to_all,
         no_word_wrap=no_word_wrap,
         dry_run=dry_run,

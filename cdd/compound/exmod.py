@@ -235,6 +235,7 @@ def exmod(
         new_module_name=new_module_name,
         filesystem_layout=filesystem_layout,
         extra_modules_to_all=extra_modules_to_all,
+        first_output_directory=output_directory,
     )
     packages: typing.List[str] = find_packages(
         module_root_dir,
@@ -309,6 +310,7 @@ def exmod_single_folder(
     blacklist,
     whitelist,
     output_directory,
+    first_output_directory,
     mock_imports,
     no_word_wrap,
     dry_run,
@@ -337,6 +339,9 @@ def exmod_single_folder(
 
     :param output_directory: Where to place the generated exposed interfaces to the given `--module`.
     :type output_directory: ```str```
+
+    :param first_output_directory: Initial output directory (e.g., direct from `--output-directory`)
+    :type first_output_directory: ```str```
 
     :param mock_imports: Whether to generate mock TensorFlow imports
     :type mock_imports: ```bool```
@@ -387,6 +392,7 @@ def exmod_single_folder(
         new_module_name=new_module_name,
         emit_name=emit_name,
         output_directory=output_directory,
+        first_output_directory=first_output_directory,
         mock_imports=mock_imports,
         no_word_wrap=no_word_wrap,
         dry_run=dry_run,

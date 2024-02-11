@@ -2277,7 +2277,7 @@ def infer_imports(module, modules_to_all=DEFAULT_MODULES_TO_ALL):
                             identifier=None,
                             identifier_name=None,
                         ),
-                        map(itemgetter(0), mod_names[1]),
+                        sorted(frozenset(map(itemgetter(0), mod_names[1]))),
                     ),
                 ),
                 level=0,

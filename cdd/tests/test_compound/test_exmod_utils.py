@@ -38,6 +38,7 @@ class TestExmodUtils(TestCase):
                 filesystem_layout=None,
                 extra_modules_to_all=None,
                 output_directory="",
+                first_output_directory="",
                 no_word_wrap=None,
                 dry_run=True,
             )
@@ -65,6 +66,7 @@ class TestExmodUtils(TestCase):
                 True,
                 filesystem_layout="as_input",
                 output_directory=tempdir,
+                first_output_directory=tempdir,
                 no_word_wrap=None,
                 dry_run=False,
                 extra_modules_to_all=None,
@@ -101,6 +103,7 @@ class TestExmodUtils(TestCase):
                 mock_imports=True,
                 extra_modules_to_all=None,
                 no_word_wrap=None,
+                first_output_directory=path.join("foo", "module_name"),
                 dry_run=True,
             )
             func__merge_modules.assert_called_once()

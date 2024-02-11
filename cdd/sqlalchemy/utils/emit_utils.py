@@ -84,34 +84,11 @@ def param_to_sqlalchemy_column_calls(name_param, include_name):
     name, _param = name_param
     del name_param
 
-    args, keywords, nullable, multiple = [], [], None, False
+    args, keywords, nullable = [], [], None
 
-    if include_name:
-        args.append(cdd.shared.ast_utils.set_value(name))
-
-    x_typ_sql = _param.get("x_typ", {}).get("sql", {})  # type: dict
-
-    if "typ" in _param:
-        (
-            nullable,
-            multiple,
-        ) = cdd.sqlalchemy.utils.shared_utils.update_args_infer_typ_sqlalchemy(
-            _param, args, name, nullable, x_typ_sql
-        )
-
-    if len(args) < 2 and (
-        not args
-        or not (
-            isinstance(args[0], Name) and args[0].id in sqlalchemy_top_level_imports
-        )
-        and not (
-            isinstance(args[0], Call)
-            and isinstance(args[0].func, Name)
-            and args[0].func.id in sqlalchemy_top_level_imports
-        )
-    ):
-        # A good default I guess?
-        args.append(Name("LargeBinary", Load(), lineno=None, col_offset=None))
+    nullable, x_typ_sql = _handle_column_args(
+        _param, args, include_name, name, nullable
+    )
 
     default = x_typ_sql.get("default", _param.get("default", ast))
     has_default: bool = default is not ast
@@ -145,6 +122,7 @@ def param_to_sqlalchemy_column_calls(name_param, include_name):
     keywords = _handle_column_keywords(
         _param, default, has_default, keywords, nullable, x_typ_sql
     )
+
     # elif _param["doc"]:
     #     keywords.append(
     #         ast.keyword(arg="comment", value=set_value(_param["doc"]), identifier=None)
@@ -174,11 +152,60 @@ def param_to_sqlalchemy_column_calls(name_param, include_name):
     )
 
 
+def _handle_column_args(_param, args, include_name, name, nullable):
+    """
+    Populate non-keyword args for the `Column(…)`. Internal function.
+
+    :param _param: dict with keys: 'typ', 'doc', 'default'
+    :type _param: ```dict```
+
+    :param args: holds a list of the arguments passed by position
+    :type args: ```List[AST]```
+
+    :param include_name: Whether to include the name (exclude in declarative base)
+    :type include_name: ```bool```
+
+    :param name: Parameter name
+    :type name: ```str```
+
+    :param nullable: Whether it is NULL-able
+    :type nullable: ```Optional[bool]```
+
+    :return: nullable, x_typ_sql
+    :rtype: ```Tuple[Optional[bool], dict]```
+    """
+    if include_name:
+        args.append(cdd.shared.ast_utils.set_value(name))
+    x_typ_sql = _param.get("x_typ", {}).get("sql", {})  # type: dict
+    if "typ" in _param:
+        (
+            nullable,
+            multiple,
+        ) = cdd.sqlalchemy.utils.shared_utils.update_args_infer_typ_sqlalchemy(
+            _param, args, name, nullable, x_typ_sql
+        )
+    if len(args) < 2 and (
+        not args
+        or not (
+            isinstance(args[0], Name) and args[0].id in sqlalchemy_top_level_imports
+        )
+        and not (
+            isinstance(args[0], Call)
+            and isinstance(args[0].func, Name)
+            and args[0].func.id in sqlalchemy_top_level_imports
+        )
+    ):
+        # A good default I guess?
+        args.append(Name("LargeBinary", Load(), lineno=None, col_offset=None))
+
+    return nullable, x_typ_sql
+
+
 def _handle_column_keywords(
     _param, default, has_default, keywords, nullable, x_typ_sql
 ):
     """
-    Popular keyword args for the `Column(…)`. Internal function.
+    Populate keyword args for the `Column(…)`. Internal function.
 
     :param _param: dict with keys: 'typ', 'doc', 'default'
     :type _param: ```dict```
@@ -189,7 +216,7 @@ def _handle_column_keywords(
     :param has_default: Whether it had a default value originally
     :type has_default: ```bool`
 
-    :param keywords: Keywords list
+    :param keywords: holds a list of keyword objects representing arguments passed by keyword.
     :type keywords: ```List[ast.keywords]```
 
     :param nullable: Whether it is NULL-able
