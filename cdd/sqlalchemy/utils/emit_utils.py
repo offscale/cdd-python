@@ -45,6 +45,7 @@ import cdd.shared.ast_utils
 import cdd.shared.source_transformer
 import cdd.sqlalchemy.utils.shared_utils
 from cdd.shared.pure_utils import (
+    count_iter_items,
     find_module_filepath,
     namespaced_upper_camelcase_to_pascal,
     none_types,
@@ -184,17 +185,16 @@ def _handle_column_args(_param, args, include_name, name, nullable):
         ) = cdd.sqlalchemy.utils.shared_utils.update_args_infer_typ_sqlalchemy(
             _param, args, name, nullable, x_typ_sql
         )
-    if len(args) < 2 and (
-        not args
-        or not (
-            isinstance(args[0], Name) and args[0].id in sqlalchemy_top_level_imports
+    if count_iter_items(
+        filter(
+            lambda arg: isinstance(arg, Name)
+            and arg.id in sqlalchemy_top_level_imports
+            or isinstance(arg, Call)
+            and isinstance(arg.func, Name)
+            and arg.func.id in sqlalchemy_top_level_imports,
+            args,
         )
-        and not (
-            isinstance(args[0], Call)
-            and isinstance(args[0].func, Name)
-            and args[0].func.id in sqlalchemy_top_level_imports
-        )
-    ):
+    ) < (int(include_name) - 2):
         # A good default I guess?
         args.append(Name("LargeBinary", Load(), lineno=None, col_offset=None))
 
