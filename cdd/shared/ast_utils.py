@@ -2385,45 +2385,47 @@ def deduplicate_sorted_imports(module):
 
     module.body = (
         module.body[:fst_import_idx]
-        + [
-            import_from
-            for import_from in (
-                # TODO: Infer `level`
-                ImportFrom(
-                    module=name,
-                    names=list(
-                        filter(
-                            lambda _alias: (
-                                lambda key: (
-                                    False
-                                    if key in name_seen
-                                    else (name_seen.add(key) or True)
-                                )
-                            )(
-                                "<name={!r}, alias.name={!r}, alias.asname={!r}>".format(
-                                    name, _alias.name, _alias.asname
-                                )
-                            ),
-                            sorted(
-                                chain.from_iterable(
-                                    map(attrgetter("names"), import_from_nodes)
+        + list(
+            filter(
+                attrgetter("names"),
+                (
+                    # TODO: Infer `level`
+                    ImportFrom(
+                        module=name,
+                        names=list(
+                            filter(
+                                lambda _alias: (
+                                    lambda key: (
+                                        False
+                                        if key in name_seen
+                                        else (name_seen.add(key) or True)
+                                    )
+                                )(
+                                    "<name={!r}, alias.name={!r}, alias.asname={!r}>".format(
+                                        name, _alias.name, _alias.asname
+                                    )
                                 ),
-                                key=attrgetter("name"),
-                            ),
-                        )
-                    ),
-                    level=0,  # import_from_nodes[0].level
-                    identifier=None,
-                )
-                for name, import_from_nodes in groupby(
-                    module.body[fst_import_idx:lst_import_idx], key=attrgetter("module")
-                )
+                                sorted(
+                                    chain.from_iterable(
+                                        map(attrgetter("names"), import_from_nodes)
+                                    ),
+                                    key=attrgetter("name"),
+                                ),
+                            )
+                        ),
+                        level=0,  # import_from_nodes[0].level
+                        identifier=None,
+                    )
+                    for name, import_from_nodes in groupby(
+                        module.body[fst_import_idx:lst_import_idx],
+                        key=attrgetter("module"),
+                    )
+                ),
             )
-            if import_from.names
-        ]
+        )
         + module.body[lst_import_idx:]
     )
-
+    name_seen.clear()
     return module
 
 

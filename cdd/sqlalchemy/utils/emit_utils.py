@@ -185,7 +185,7 @@ def _handle_column_args(_param, args, include_name, name, nullable):
         ) = cdd.sqlalchemy.utils.shared_utils.update_args_infer_typ_sqlalchemy(
             _param, args, name, nullable, x_typ_sql
         )
-    if count_iter_items(
+    found_type: bool = any(
         filter(
             lambda arg: isinstance(arg, Name)
             and arg.id in sqlalchemy_top_level_imports
@@ -194,7 +194,8 @@ def _handle_column_args(_param, args, include_name, name, nullable):
             and arg.func.id in sqlalchemy_top_level_imports,
             args,
         )
-    ) < (int(include_name) - 2):
+    )
+    if not found_type:
         # A good default I guess?
         args.append(Name("LargeBinary", Load(), lineno=None, col_offset=None))
 
