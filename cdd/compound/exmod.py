@@ -3,13 +3,25 @@ Not a dead module
 """
 
 import typing
-from ast import Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias, parse
+from ast import (
+    Assign,
+    Expr,
+    Import,
+    ImportFrom,
+    List,
+    Load,
+    Module,
+    Name,
+    Store,
+    alias,
+    parse,
+)
 from collections import deque
 from functools import partial, reduce
 from itertools import chain, groupby
 from operator import attrgetter, itemgetter
 from os import makedirs, mkdir, path
-from typing import Iterator, Optional, Tuple, cast
+from typing import Optional, Tuple, cast
 
 from setuptools import find_packages
 
@@ -31,7 +43,7 @@ from cdd.shared.pure_utils import (
     read_file_to_str,
     rpartial,
 )
-from cdd.shared.source_transformer import to_code
+from cdd.shared.source_transformer import ast_parse, to_code
 from cdd.sqlalchemy.utils.emit_utils import (
     generate_create_tables_mod,
     mock_engine_base_metadata_str,
@@ -165,55 +177,24 @@ def exmod(
         ),
     )
 
-    sqlalchemy_mod = "sqlalchemy_mod"
-    sqlalchemy_mod_dir_join = partial(path.join, output_directory, "sqlalchemy_mod")
+    sqlalchemy_mod: str = "sqlalchemy_mod"
+    sqlalchemy_mod_dir_join: typing.Union[
+        typing.Callable[[str], str], typing.Callable[[], str]
+    ] = partial(path.join, output_directory, "sqlalchemy_mod")
     sqlalchemy_mod_dir = sqlalchemy_mod_dir_join()
-    if (
+    make_sqlalchemy_mod: bool = (
         emit_name in frozenset(("sqlalchemy", "sqlalchemy_hybrid", "sqlalchemy_table"))
         and emit_sqlalchemy_submodule
         and not path.isdir(sqlalchemy_mod_dir)
-    ):
-        mkdir(sqlalchemy_mod_dir)
-        open(
-            sqlalchemy_mod_dir_join(INIT_FILENAME),
-            "a",
-        ).close()
-        connection_py = "connection"
-        connection_filepath = sqlalchemy_mod_dir_join(
-            "{name}{extsep}py".format(name=connection_py, extsep=path.extsep)
+    )
+    if make_sqlalchemy_mod:
+        extra_modules_to_all = _create_sqlalchemy_mod(
+            extra_modules_to_all,
+            output_directory,
+            sqlalchemy_mod,
+            sqlalchemy_mod_dir,
+            sqlalchemy_mod_dir_join,
         )
-        with open(connection_filepath, "wt") as f:
-            f.write(mock_engine_base_metadata_str)
-
-        sqlalchemy_module_name = ".".join(
-            (path.basename(output_directory), sqlalchemy_mod)
-        )
-        sqlalchemy_module_name_connection_py = ".".join(
-            (sqlalchemy_module_name, connection_py)
-        )
-        sqlalchemy_module_name_create_table = ".".join(
-            (sqlalchemy_module_name, "create_tables")
-        )
-        create_table_filepath = sqlalchemy_mod_dir_join(
-            "create_tables{extsep}py".format(extsep=path.extsep)
-        )
-        with open(create_table_filepath, "wt") as f:
-            f.write(
-                to_code(
-                    generate_create_tables_mod(sqlalchemy_module_name_connection_py)
-                )
-            )
-
-        extra_modules_to_all = (
-            (
-                sqlalchemy_module_name_connection_py,
-                frozenset(module_to_all(connection_filepath)),
-            ),
-            (
-                sqlalchemy_module_name_create_table,
-                frozenset(module_to_all(create_table_filepath)),
-            ),
-        ) + extra_modules_to_all
     try:
         module_root_dir: str = path.dirname(
             find_module_filepath(
@@ -249,7 +230,11 @@ def exmod(
         module_root_dir=module_root_dir,
         output_directory=output_directory,
     )
-    _exmod_single_folder_kwargs: Iterator[
+    output_directory_basename = path.basename(output_directory)
+    imports = (
+        [output_directory_basename] if make_sqlalchemy_mod else None
+    )  # type: Optional[list[str]]
+    _exmod_single_folder_kwargs: Tuple[
         TypedDict(
             "_exmod_single_folder_kwargs",
             {
@@ -259,39 +244,52 @@ def exmod(
                 "output_directory": output_directory,
             },
         )
-    ] = chain.from_iterable(
-        (
+    ] = tuple(
+        chain.from_iterable(
             (
-                {
-                    "module": module,
-                    "module_name": module_name,
-                    "module_root_dir": module_root_dir,
-                    "output_directory": output_directory,
-                },
-            ),
-            (
+                (
+                    {
+                        "module": module,
+                        "module_name": module_name,
+                        "module_root_dir": module_root_dir,
+                        "output_directory": output_directory,
+                    },
+                ),
                 (
                     map(
                         lambda package: (
-                            lambda pkg_relative_dir: {
-                                "module": ".".join((module, package)),
-                                "module_name": package,
-                                "module_root_dir": path.join(
-                                    module_root_dir, pkg_relative_dir
-                                ),
-                                "output_directory": path.join(
-                                    output_directory, pkg_relative_dir
-                                ),
-                            }
+                            lambda pkg_relative_dir: (
+                                imports is not None
+                                and imports.append(
+                                    path.join(
+                                        output_directory_basename,
+                                        pkg_relative_dir,
+                                    ).replace(path.sep, ".")
+                                )
+                                or {
+                                    "module": ".".join((module, package)),
+                                    "module_name": package,
+                                    "module_root_dir": path.join(
+                                        module_root_dir, pkg_relative_dir
+                                    ),
+                                    "output_directory": path.join(
+                                        output_directory, pkg_relative_dir
+                                    ),
+                                }
+                            )
                         )(package.replace(".", path.sep)),
                         packages,
                     )
-                )
-                if recursive
-                else iter(())
-            ),
+                    if recursive
+                    else iter(())
+                ),
+            )
         )
     )
+
+    if make_sqlalchemy_mod:
+        _add_imports_to_sqlalchemy_create_all(imports, sqlalchemy_mod_dir_join)
+
     # This could be executed in parallel for efficiency
     deque(
         map(
@@ -302,6 +300,118 @@ def exmod(
     )
 
     return
+
+
+def _add_imports_to_sqlalchemy_create_all(imports, sqlalchemy_mod_dir_join):
+    """
+    Internal function to update the "create_all.py" file in the generated SQLalchemy module.
+
+    :param imports: Collection of names to `import {name}`
+    :type imports: ```Iterable[str]```
+
+    :param sqlalchemy_mod_dir_join: `path.join` partial on `sqlalchemy_mod_dir`
+    :type sqlalchemy_mod_dir_join: ```: typing.Union[
+        typing.Callable[[str], str], typing.Callable[[], str]
+    ]```
+    """
+    create_table_filepath = sqlalchemy_mod_dir_join(
+        "create_tables{extsep}py".format(extsep=path.extsep)
+    )
+    with open(create_table_filepath, "rt") as f:
+        create_table_mod = ast_parse(f.read(), filename=create_table_filepath)
+    first_import_idx: int = next(
+        idx
+        for idx, node in enumerate(create_table_mod.body)
+        if isinstance(node, (Import, ImportFrom))
+    )
+    create_table_mod.body = (
+        create_table_mod.body[:first_import_idx]
+        + [
+            Import(
+                names=[
+                    alias(
+                        name=name,
+                        asname=None,
+                        identifier=None,
+                        identifier_name=None,
+                    )
+                ],
+                alias=None,
+            )
+            for name in imports
+        ]
+        + create_table_mod.body[first_import_idx:]
+    )
+    with open(create_table_filepath, "wt") as f:
+        f.write(to_code(create_table_mod))
+
+
+def _create_sqlalchemy_mod(
+    extra_modules_to_all,
+    output_directory,
+    sqlalchemy_mod,
+    sqlalchemy_mod_dir,
+    sqlalchemy_mod_dir_join,
+):
+    """
+    Internal function to create the SQLalchemy module.
+
+    :param extra_modules_to_all: Internal arg. Prepended to symbol resolver. E.g., `(("ast", {"List"}),)`.
+    :type extra_modules_to_all: ```Optional[tuple[tuple[str, frozenset], ...]]```
+
+    :param output_directory: Where to place the generated exposed interfaces to the given `--module`.
+    :type output_directory: ```str```
+
+    :param sqlalchemy_mod: module name
+    :type sqlalchemy_mod: ```str```
+
+    :param sqlalchemy_mod_dir: SQLalchemy module root directory
+    :type sqlalchemy_mod_dir: ```str```
+
+    :param sqlalchemy_mod_dir_join: `path.join` partial on `sqlalchemy_mod_dir`
+    :type sqlalchemy_mod_dir_join: ```: typing.Union[
+        typing.Callable[[str], str], typing.Callable[[], str]
+    ]```
+
+    :return: Updated `extra_modules_to_all`
+    :rtype: ```Optional[tuple[tuple[str, frozenset], ...]]```
+    """
+    mkdir(sqlalchemy_mod_dir)
+    open(
+        sqlalchemy_mod_dir_join(INIT_FILENAME),
+        "a",
+    ).close()
+    connection_py = "connection"
+    connection_filepath = sqlalchemy_mod_dir_join(
+        "{name}{extsep}py".format(name=connection_py, extsep=path.extsep)
+    )
+    with open(connection_filepath, "wt") as f:
+        f.write(mock_engine_base_metadata_str)
+    sqlalchemy_module_name = ".".join((path.basename(output_directory), sqlalchemy_mod))
+    sqlalchemy_module_name_connection_py = ".".join(
+        (sqlalchemy_module_name, connection_py)
+    )
+    sqlalchemy_module_name_create_table = ".".join(
+        (sqlalchemy_module_name, "create_tables")
+    )
+    create_table_filepath = sqlalchemy_mod_dir_join(
+        "create_tables{extsep}py".format(extsep=path.extsep)
+    )
+    with open(create_table_filepath, "wt") as f:
+        f.write(
+            to_code(generate_create_tables_mod(sqlalchemy_module_name_connection_py))
+        )
+    extra_modules_to_all = (
+        (
+            sqlalchemy_module_name_connection_py,
+            frozenset(module_to_all(connection_filepath)),
+        ),
+        (
+            sqlalchemy_module_name_create_table,
+            frozenset(module_to_all(create_table_filepath)),
+        ),
+    ) + extra_modules_to_all
+    return extra_modules_to_all
 
 
 def exmod_single_folder(

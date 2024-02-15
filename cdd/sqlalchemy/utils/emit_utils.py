@@ -45,7 +45,6 @@ import cdd.shared.ast_utils
 import cdd.shared.source_transformer
 import cdd.sqlalchemy.utils.shared_utils
 from cdd.shared.pure_utils import (
-    count_iter_items,
     find_module_filepath,
     namespaced_upper_camelcase_to_pascal,
     none_types,

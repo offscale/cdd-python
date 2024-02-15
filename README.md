@@ -717,11 +717,7 @@ PS: If you're outputting JSON-schema and want a file per schema then:
       --dry-run             Show what would be created; don't actually write to
                             the filesystem.
 
-PS: If you want to `import` every module, e.g., for your `create_tables` script then run this in your module dir:
-
-    python -c 'import os;fast_scandir = lambda dirname: [f.path for f in os.scandir(dirname) if f.is_dir()] + [item for sublist in [fast_scandir(d) for d in [f.path for f in os.scandir(dirname) if f.is_dir()]] for item in sublist];print("\n".join(sorted(frozenset(map(lambda m: "import {}.{}".format(os.path.basename(os.path.abspath(".")),  m.replace(os.path.sep, ".")[2:]),fast_scandir("."))))))'
-
-PPS: Below is a temporary hack to run on the SQLalchemy output to make it work; until the `tuple`|`Tuple`|`List`|`list`|`name` as column-type bug is resolved:
+PS: Below is a temporary hack to run on the SQLalchemy output to make it work; until the `tuple`|`Tuple`|`List`|`list`|`name` as column-type bug is resolved:
 
     fastmod --accept-all -iF 'tuple, comment=' 'LargeBinary, comment=' ; fastmod --accept-all -iF 'tuple,
             comment=' 'LargeBinary, comment=' ; fastmod --accept-all -iF 'list, comment=' 'LargeBinary, comment=' ; fastmod --accept-all -iF 'list,
