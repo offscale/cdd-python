@@ -2429,6 +2429,20 @@ def deduplicate_sorted_imports(module):
     return module
 
 
+def deduplicate(it):
+    """
+    Deduplicate an iterable
+
+    :param it: An iterable|collection with hashable elements
+    :type it: ```Union[Iterable, Generator, List, Tuple, Set, FrozenSet]```
+
+    :return: Deduplicated iterable of the input
+    :rtype: ```Iterable```
+    """
+    seen = set()
+    return (seen.add(e) or e for e in it if e not in seen)
+
+
 NoneStr = "```(None)```" if PY_GTE_3_9 else "```None```"
 
 __all__ = [
@@ -2448,6 +2462,7 @@ __all__ = [
     "cmp_ast",
     "code_quoted",
     "construct_module_with_symbols",
+    "deduplicate",
     "deduplicate_sorted_imports",
     "del_ass_where_name",
     "emit_ann_assign",

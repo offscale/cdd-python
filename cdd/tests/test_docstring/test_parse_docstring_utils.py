@@ -68,11 +68,11 @@ class TestParseDocstringUtils(TestCase):
                         )["returns"]["return_type"]["typ"],
                     ),
                     (
-                        "Literal['auto', 'max', 'min']",
+                        "Literal['auto', 'min', 'max']",
                         "String. One of `{'auto', 'min', 'max'}`. In `'min'` mode,",
                     ),
                     (
-                        'Union[Literal["epoch"], bool, int]',
+                        'Union[Literal["epoch"], int, bool]',
                         '`"epoch"`, integer, or `False`.'
                         'When set to `"epoch" the callback saves the checkpoint at the end of each epoch.',
                     ),
@@ -82,6 +82,7 @@ class TestParseDocstringUtils(TestCase):
                         "String; `'bfloat16'`, `'float16'`, `'float32'`, or `'float64'`.",
                     ),
                     ("List[str]", "List of string."),
+                    ("Mapping[str, object]", "Dictionary of `{str: object}` pairs."),
                 ),
             ),
             maxlen=0,

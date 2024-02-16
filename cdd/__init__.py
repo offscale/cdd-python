@@ -9,7 +9,7 @@ from logging import Logger
 from logging import getLogger as get_logger
 
 __author__ = "Samuel Marks"  # type: str
-__version__ = "0.0.99rc32"  # type: str
+__version__ = "0.0.99rc33"  # type: str
 __description__ = (
     "Open API to/fro routes, models, and tests. "
     "Convert between docstrings, classes, methods, argparse, pydantic, and SQLalchemy."

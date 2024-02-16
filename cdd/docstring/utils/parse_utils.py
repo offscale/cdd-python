@@ -10,6 +10,7 @@ from keyword import iskeyword
 from operator import contains, itemgetter
 from typing import List, Optional, Tuple, Union, cast
 
+from cdd.shared.ast_utils import deduplicate
 from cdd.shared.pure_utils import (
     count_iter_items,
     simple_types,
@@ -54,10 +55,11 @@ adhoc_3_tuple_to_type = {
 adhoc_3_tuple_to_collection = {
     ("List", " ", "of"): "List",
     ("Tuple", " ", "of"): "Tuple",
+    ("Dictionary", " ", "of"): "Mapping",
 }
 
 
-def _union_literal_from_sentence(sentence):
+def _union_literal_from_sentence(sentence, wrap_with="Union[{}]"):
     """
     Extract the Union and/or Literal from a given sentence
 
@@ -97,8 +99,8 @@ def _union_literal_from_sentence(sentence):
             )
             if candidate_collection is not None:
                 return None
-    union = sorted(
-        frozenset(
+    union = list(
+        deduplicate(
             map(
                 lambda k: adhoc_type_to_type.get(k.lower(), k),
                 filterfalse(str.isspace, union),
@@ -271,7 +273,11 @@ def parse_adhoc_doc_for_typ(doc, name, default_is_none):
                 and candidate_type is not None
             ):
                 wrap_type_with = "Union[{}, " + "{}]".format(candidate_type)
-            candidate_type: str = new_candidate_type
+            candidate_type: str = (
+                new_candidate_type[len("Union[") : -len("]")]
+                if wrap_type_with == "Mapping[{}]"
+                else new_candidate_type
+            )
         if candidate_type is not None:
             return wrap_type_with.format(candidate_type)
 
@@ -285,7 +291,7 @@ def parse_adhoc_doc_for_typ(doc, name, default_is_none):
         return candidate_type
     elif len(words) > 2:
         if "/" in words[2]:
-            return "Union[{}]".format(",".join(sorted(words[2].split("/"))))
+            return "Union[{}]".format(",".join(deduplicate(words[2].split("/"))))
         candidate_type: Optional[str] = next(
             map(
                 adhoc_3_tuple_to_type.__getitem__,
