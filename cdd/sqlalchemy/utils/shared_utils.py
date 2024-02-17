@@ -199,8 +199,8 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
         args.append(
             Name(
                 (
-                    cdd.sqlalchemy.utils.emit_utils.typ2column_type.get(right, right)
-                    if left in cdd.sqlalchemy.utils.emit_utils.typ2column_type
+                    cdd.sqlalchemy.utils.emit_utils.typ2column_type[right]
+                    if right in cdd.sqlalchemy.utils.emit_utils.typ2column_type
                     else cdd.sqlalchemy.utils.emit_utils.typ2column_type.get(left, left)
                 ),
                 Load(),

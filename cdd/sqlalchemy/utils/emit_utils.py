@@ -1429,6 +1429,9 @@ typ2column_type.update(
         "string": "String",
         "int64": "BigInteger",
         "Optional[dict]": "JSON",
+        # TODO: Infer type from default fallback to LargeBinary,
+        "list": "ARRAY({})".format("LargeBinary"),
+        "Tuple": "ARRAY({}, as_tuple=True)".format("LargeBinary"),
     }
 )
 

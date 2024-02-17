@@ -7,6 +7,7 @@ from unittest import TestCase
 
 import cdd.shared.docstring_parsers
 from cdd.docstring.utils.parse_utils import parse_adhoc_doc_for_typ
+from cdd.shared.pure_utils import pp
 from cdd.tests.mocks.docstrings import docstring_google_keras_tensorboard_return_str
 from cdd.tests.mocks.ir import class_google_keras_tensorboard_ir
 from cdd.tests.utils_for_tests import unittest_main
@@ -31,6 +32,13 @@ class TestParseDocstringUtils(TestCase):
         """
         Test that `parse_adhoc_doc_for_typ` works for various found-in-wild Keras variants
         """
+        pp(
+            parse_adhoc_doc_for_typ(
+                "Dictionary of `{str: object}` pairs, where the `str` key is the object name.",
+                name="",
+                default_is_none=False,
+            )
+        )
         deque(
             map(
                 lambda output_input: self.assertEqual(

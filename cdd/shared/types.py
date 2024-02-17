@@ -57,4 +57,4 @@ IntermediateRepr = TypedDict(
     total=False,
 )
 
-__all__ = ["IntermediateRepr", "Internal"]  # type: list[str]
+__all__ = ["IntermediateRepr", "Internal", "ParamVal"]  # type: list[str]
