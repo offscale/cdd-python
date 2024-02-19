@@ -1430,8 +1430,35 @@ typ2column_type.update(
         "int64": "BigInteger",
         "Optional[dict]": "JSON",
         # TODO: Infer type from default fallback to LargeBinary,
-        "list": "ARRAY({})".format("LargeBinary"),
-        "Tuple": "ARRAY({}, as_tuple=True)".format("LargeBinary"),
+        "list": cdd.shared.source_transformer.to_code(
+            Call(
+                func=Name("ARRAY", Load(), lineno=None, col_offset=None),
+                args=[Name("LargeBinary", Load(), lineno=None, col_offset=None)],
+                keywords=[],
+                expr=None,
+                expr_func=None,
+                lineno=None,
+                col_offset=None,
+            )
+        ),
+        "Tuple": cdd.shared.source_transformer.to_code(
+            Call(
+                func=Name("ARRAY", Load(), lineno=None, col_offset=None),
+                args=[Name("LargeBinary", Load(), lineno=None, col_offset=None)],
+                keywords=[
+                    keyword(
+                        arg="as_tuple",
+                        value=cdd.shared.ast_utils.set_value(True),
+                        # "ARRAY({}, as_tuple=True)".format("LargeBinary"),
+                        identifier=None,
+                    )
+                ],
+                expr=None,
+                expr_func=None,
+                lineno=None,
+                col_offset=None,
+            )
+        ),
     }
 )
 
