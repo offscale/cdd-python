@@ -19,22 +19,21 @@ class TestPkgUtils(TestCase):
 
     def test_get_python_lib(self) -> None:
         """Tests that `get_python_lib` works"""
-        site_packages = getsitepackages()[0]
         python_lib = get_python_lib()
-        if site_packages != python_lib:
+        # Yes yes, I know; win32 note:
+        site_packages = python_lib if platform == "win32" else getsitepackages()[0]
+        if site_packages == python_lib:
+            self.assertTrue(site_packages, python_lib)
+        else:
             site_packages = path.dirname(path.dirname(site_packages))
-        self.assertEqual(
-            (
-                python_lib  # Yes yes, I know
-                if platform == "win32"
-                else (
+            self.assertEqual(
+                (
                     site_packages
                     if site_packages == python_lib
                     else path.join(site_packages, "python3", "dist-packages")
-                )
-            ),
-            python_lib,
-        )
+                ),
+                python_lib,
+            )
 
 
 unittest_main()

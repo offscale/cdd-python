@@ -788,8 +788,8 @@ def generate_create_tables_mod(module_name):
                 module=module_name,
                 names=list(
                     map(
-                        partial(
-                            alias,
+                        lambda name: alias(
+                            name=name,
                             asname=None,
                             identifier=None,
                             identifier_name=None,
