@@ -1,8 +1,9 @@
 """ Tests for pkg utils """
 
+from site import getsitepackages
 from unittest import TestCase
 
-from cdd.shared.pkg_utils import relative_filename
+from cdd.shared.pkg_utils import get_python_lib, relative_filename
 from cdd.tests.utils_for_tests import unittest_main
 
 
@@ -13,6 +14,10 @@ class TestPkgUtils(TestCase):
         """Tests relative_filename ident"""
         expect: str = "gaffe"
         self.assertEqual(relative_filename(expect), expect)
+
+    def test_get_python_lib(self) -> None:
+        """Tests that `get_python_lib` works"""
+        self.assertEqual(getsitepackages()[0], get_python_lib())
 
 
 unittest_main()

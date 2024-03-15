@@ -6,12 +6,12 @@ import ast
 from ast import Assign, Call, ClassDef, Constant, Load, Module, Name
 from itertools import chain, filterfalse
 from operator import attrgetter
-from typing import FrozenSet
 
 import cdd.shared.ast_utils
 import cdd.shared.source_transformer
 from cdd.shared.pure_utils import (
     PY_GTE_3_8,
+    PY_GTE_3_9,
     append_to_dict,
     indent_all_but_first,
     rpartial,
@@ -23,6 +23,10 @@ if PY_GTE_3_8:
 else:
     from ast import Str
 
+if PY_GTE_3_9:
+    FrozenSet = frozenset
+else:
+    from typing import FrozenSet
 
 # SQLalchemy 1.14
 # `from sqlalchemy import __all__; sorted(filter(lambda s: any(filter(str.isupper, s)), __all__))`

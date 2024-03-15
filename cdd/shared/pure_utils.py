@@ -20,7 +20,7 @@ from pprint import PrettyPrinter
 from sys import stderr, version_info
 from textwrap import fill as _fill
 from textwrap import indent
-from typing import Any, Callable, Dict, FrozenSet, Optional, Sized, Tuple, Union, cast
+from typing import Any, Callable, Dict, Optional, Sized, Tuple, Union, cast
 
 _python_major_minor: Tuple[int, int] = version_info[:2]
 PY3_8: bool = _python_major_minor == (3, 8)
@@ -36,6 +36,11 @@ else:
     from ast import Str
 
     from typing_extensions import Literal, Protocol
+
+if PY_GTE_3_9:
+    FrozenSet = frozenset
+else:
+    from typing import FrozenSet
 
 pp: Callable[[Any], None] = PrettyPrinter(indent=4, width=100, stream=stderr).pprint
 tab: str = environ.get("DOCTRANS_TAB", " " * 4)
