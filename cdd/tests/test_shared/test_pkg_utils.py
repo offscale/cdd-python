@@ -3,9 +3,8 @@
 from functools import partial
 from operator import eq
 from os import path
-from platform import platform
 from site import getsitepackages
-from unittest import TestCase, skipIf
+from unittest import TestCase
 
 from cdd.shared.pkg_utils import get_python_lib, relative_filename
 from cdd.tests.utils_for_tests import unittest_main
@@ -19,7 +18,6 @@ class TestPkgUtils(TestCase):
         expect: str = "gaffe"
         self.assertEqual(relative_filename(expect), expect)
 
-    @skipIf(platform == "win32", "Skip hack for sitepackages check on Windows")
     def test_get_python_lib(self) -> None:
         """Tests that `get_python_lib` works"""
         python_lib: str = get_python_lib()
@@ -31,6 +29,7 @@ class TestPkgUtils(TestCase):
                     lambda two_dir_above: (
                         site_packages,
                         two_dir_above,
+                        path.join(two_dir_above, "Lib", "site-packages"),
                         path.join(two_dir_above, "python3", "dist-packages"),
                     )
                 )(path.dirname(path.dirname(site_packages))),
