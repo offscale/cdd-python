@@ -120,4 +120,4 @@ def relative_filename(filename, remove_hints=tuple()):
     )
 
 
-__all__ = ["relative_filename"]  # type: list[str]
+__all__ = ["get_python_lib", "relative_filename"]  # type: list[str]
