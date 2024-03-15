@@ -1,5 +1,6 @@
 """ Tests for pkg utils """
 
+from os import path
 from site import getsitepackages
 from unittest import TestCase
 
@@ -17,7 +18,18 @@ class TestPkgUtils(TestCase):
 
     def test_get_python_lib(self) -> None:
         """Tests that `get_python_lib` works"""
-        self.assertEqual(getsitepackages()[0], get_python_lib())
+        site_packages = getsitepackages()[0]
+        python_lib = get_python_lib()
+        if site_packages != python_lib:
+            site_packages = path.dirname(path.dirname(site_packages))
+        self.assertEqual(
+            (
+                site_packages
+                if site_packages == python_lib
+                else path.join(site_packages, "python3", "dist-packages")
+            ),
+            python_lib,
+        )
 
 
 unittest_main()
