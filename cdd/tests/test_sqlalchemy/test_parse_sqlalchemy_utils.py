@@ -7,7 +7,6 @@ from copy import deepcopy
 from unittest import TestCase
 
 from cdd.shared.ast_utils import set_value
-from cdd.shared.pure_utils import pp
 from cdd.sqlalchemy.utils.parse_utils import (
     column_call_name_manipulator,
     column_call_to_param,

@@ -12,8 +12,9 @@ from itertools import takewhile
 from operator import contains, eq
 from typing import Dict
 
-from cdd.shared.pure_utils import PY_GTE_3_8, PY_GTE_3_9
 from cdd.shared.pure_utils import (
+    PY_GTE_3_8,
+    PY_GTE_3_9,
     count_iter_items,
     location_within,
     none_types,
