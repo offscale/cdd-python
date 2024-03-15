@@ -258,6 +258,45 @@ class TestExMod(TestCase):
                 dry_run=False,
             )
 
+    def test_exmod_output__create_sqlalchemy_mod(self) -> None:
+        """
+        Tests `exmod` module whence directory does not exist and that it:
+        - calls `_create_sqlalchemy_mod`
+        - that `_create_sqlalchemy_mod` works properly
+        """
+
+        try:
+            with TemporaryDirectory(prefix="search_root", suffix="search_path") as root:
+                existent_module_dir, new_module_dir = self.create_and_install_pkg(root)
+                exmod(
+                    module=self.module_name,
+                    emit_name="sqlalchemy_table",
+                    blacklist=tuple(),
+                    whitelist=tuple(),
+                    mock_imports=True,
+                    emit_sqlalchemy_submodule=True,
+                    output_directory=new_module_dir,
+                    target_module_name="gold",
+                    extra_modules=None,
+                    no_word_wrap=None,
+                    recursive=False,
+                    dry_run=False,
+                )
+                # There are no conditionals in the generation, so just check existence
+                sqlalchemy_mod_dir = path.join(new_module_dir, "sqlalchemy_mod")
+                self.assertTrue(path.isdir(sqlalchemy_mod_dir))
+                for name in ("__init__", "create_tables", "connection"):
+                    self.assertTrue(
+                        path.isfile(
+                            path.join(
+                                sqlalchemy_mod_dir, "{}{}py".format(name, path.extsep)
+                            )
+                        )
+                    )
+        finally:
+            # sys.path.remove(existent_module_dir)
+            self._pip(["uninstall", "-y", self.package_root_name])
+
     @skipIf(
         github_actions_and_non_windows_and_gte_3_12,
         github_actions_err,
