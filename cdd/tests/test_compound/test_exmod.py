@@ -39,9 +39,7 @@ else:
 
 # IntOrTupleOfStr = TypeVar("IntOrTupleOfStr", Tuple[str], int)
 
-github_actions_and_non_windows_and_gte_3_12: bool = (
-    "GITHUB_ACTIONS" in environ and platform != "win32" and PY_GTE_3_12
-)
+github_actions_and_non_windows_and_gte_3_12: bool = False
 github_actions_err: str = "GitHub Actions fails this test (unable to replicate locally)"
 
 
