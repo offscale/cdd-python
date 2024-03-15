@@ -7,6 +7,7 @@ from copy import deepcopy
 from unittest import TestCase
 
 from cdd.shared.ast_utils import set_value
+from cdd.shared.pure_utils import pp
 from cdd.sqlalchemy.utils.parse_utils import (
     column_call_name_manipulator,
     column_call_to_param,
@@ -84,6 +85,27 @@ class TestParseSqlAlchemyUtils(TestCase):
         gen_name, gen_param = column_call_to_param(deepcopy(node_fk_call))
         gold_name, gold_param = (
             lambda _name: (_name, deepcopy(intermediate_repr_node_pk["params"][_name]))
+        )("primary_element")
+        self.assertEqual(gold_name, gen_name)
+        self.assertDictEqual(gold_param, gen_param)
+
+    def test_column_call_to_param_from_ast_construct(self) -> None:
+        """
+        Tests that `parse.sqlalchemy.utils.column_call_to_param` works with AST construct
+        """
+        node_with_func_call = deepcopy(node_fk_call)
+        node_with_func_call.args[-1].func.id = "Foo"
+        gen_name, gen_param = column_call_to_param(node_with_func_call)
+        gold_name, gold_param = (
+            lambda _name: (
+                _name,
+                {
+                    "x_typ": deepcopy(
+                        intermediate_repr_node_pk["params"][_name]["x_typ"]
+                    ),
+                    "typ": "Foo('element.element_id')",
+                },
+            )
         )("primary_element")
         self.assertEqual(gold_name, gen_name)
         self.assertDictEqual(gold_param, gen_param)
