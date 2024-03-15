@@ -21,10 +21,6 @@ class TestUtilsForTests(TestCase):
     Tests whether docstrings are parsed out—and emitted—correctly
     """
 
-    @skipIf(
-        "GITHUB_ACTIONS" in environ and version_info[:2] >= (3, 6),
-        "GitHub Actions fails this test (unable to replicate locally)",
-    )
     def test_unittest_main(self) -> None:
         """
         Tests whether `unittest_main` is called when `__name__ == '__main__'`
@@ -32,6 +28,7 @@ class TestUtilsForTests(TestCase):
         self.assertEqual(type(unittest_main).__name__, "function")
         self.assertIsNone(unittest_main())
         argparse_mock = MagicMock()
+        #           cdd.tests.utils_for_tests.py
         with patch("cdd.tests.utils_for_tests.__name__", "__main__"), patch(
             "sys.stderr", new_callable=StringIO
         ), self.assertRaises(SystemExit) as e:
