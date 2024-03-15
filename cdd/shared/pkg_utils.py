@@ -109,8 +109,15 @@ def relative_filename(filename, remove_hints=tuple()):
     """
     _filename: str = filename.casefold()
     lib = get_python_lib(), get_python_lib(prefix="")
-    return next(map(lambda elem: filename[len(elem) + 1 :],
-                    filter(lambda elem: _filename.startswith(elem.casefold()), remove_hints + lib)), filename)
+    return next(
+        map(
+            lambda elem: filename[len(elem) + 1 :],
+            filter(
+                lambda elem: _filename.startswith(elem.casefold()), remove_hints + lib
+            ),
+        ),
+        filename,
+    )
 
 
 __all__ = ["relative_filename"]  # type: list[str]
