@@ -19,6 +19,7 @@ import cdd.json_schema.emit
 import cdd.shared.emit.file
 import cdd.sqlalchemy.emit
 from cdd.compound.gen_utils import get_input_mapping_from_path
+from cdd.json_schema.utils.shared_utils import JSON_schema
 from cdd.tests.mocks.ir import intermediate_repr_no_default_sql_doc
 from cdd.tests.mocks.json_schema import config_schema
 from cdd.tests.utils_for_tests import unittest_main
@@ -31,7 +32,7 @@ class TestEmitJsonSchema(TestCase):
         """
         Tests that `emit.json_schema` with `intermediate_repr_no_default_doc` produces `config_schema`
         """
-        gen_config_schema = cdd.json_schema.emit.json_schema(
+        gen_config_schema: JSON_schema = cdd.json_schema.emit.json_schema(
             deepcopy(intermediate_repr_no_default_sql_doc),
             "https://offscale.io/config.schema.json",
             emit_original_whitespace=True,
@@ -43,6 +44,14 @@ class TestEmitJsonSchema(TestCase):
             gen_config_schema,
             config_schema,
         )
+
+    def test_to_json_schema_early_exit(self) -> None:
+        """
+        Tests that `emit.json_schema` has an early exit
+        """
+        ir: dict = {"$id": "https://offscale.io/config.schema.json"}
+        gen_config_schema: dict = cdd.json_schema.emit.json_schema(deepcopy(ir), "")
+        self.assertDictEqual(ir, gen_config_schema)
 
     def test_to_json_schema_file(self) -> None:
         """

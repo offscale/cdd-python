@@ -1,6 +1,15 @@
 """ Tests for doctrans_utils """
 
-from ast import Expr, Load, Module, Name, fix_missing_locations, get_docstring
+from ast import (
+    Expr,
+    FunctionDef,
+    Load,
+    Module,
+    Name,
+    arguments,
+    fix_missing_locations,
+    get_docstring,
+)
 from collections import deque
 from copy import deepcopy
 from os import path
@@ -8,6 +17,7 @@ from os.path import extsep
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
+import cdd.shared.ast_utils
 from cdd.compound.doctrans_utils import (
     DocTrans,
     clear_annotation,
@@ -283,6 +293,39 @@ class TestDocTransUtils(TestCase):
             doctransify_cst(cst_list, ast_mod)
         self.assertTrue(fake_maybe_replace_doc_str_in_function_or_class.called)
         self.assertEqual(fake_maybe_replace_doc_str_in_function_or_class.call_count, 6)
+
+    def test_doctransify_cst_early_exit(self) -> None:
+        """
+        Tests that `doctransify_cst` early exits
+        """
+        cst_list = list(deepcopy(cstify_cst))
+        ast_mod = cdd.shared.ast_utils.annotate_ancestry(
+            Module(
+                body=[
+                    FunctionDef(
+                        args=arguments(
+                            args=[],
+                            defaults=[],
+                            kw_defaults=[],
+                            kwarg=None,
+                            kwonlyargs=[],
+                            posonlyargs=[],
+                            vararg=None,
+                            arg=None,
+                        ),
+                        body=[],
+                        name="foo",
+                        arguments_args=None,
+                        identifier_name=None,
+                        stmt=None,
+                        lineno=1,
+                    )
+                ],
+                type_ignores=[],
+                stmt=None,
+            )
+        )
+        doctransify_cst(cst_list, ast_mod)
 
 
 unittest_main()
