@@ -12,7 +12,7 @@ from typing import Optional
 import cdd.shared.ast_utils
 from cdd.class_.utils.emit_utils import RewriteName
 from cdd.docstring.emit import docstring
-from cdd.function.utils.emit_utils import _make_call_meth
+from cdd.function.utils.emit_utils import make_call_meth
 from cdd.shared.pure_utils import PY_GTE_3_8, PY_GTE_3_9, rpartial
 
 if PY_GTE_3_9:
@@ -170,7 +170,7 @@ def class_(
                                         if len(internal_body) == 1
                                         and isinstance(internal_body[0], FunctionDef)
                                         and internal_body[0].name == "__call__"
-                                        else _make_call_meth(
+                                        else make_call_meth(
                                             internal_body,
                                             (
                                                 returns["return_type"]["default"]

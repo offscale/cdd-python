@@ -55,41 +55,49 @@ if sys.version_info[:2] >= (3, 12):
             "/usr",
             "/usr/local",
         )
-        if prefix is None:
-            if standard_lib:
-                prefix = plat_specific and BASE_EXEC_PREFIX or BASE_PREFIX
-            else:
-                prefix = plat_specific and EXEC_PREFIX or PREFIX
+        prefix = (
+            prefix or plat_specific and (BASE_EXEC_PREFIX or BASE_PREFIX)
+            if standard_lib
+            else (EXEC_PREFIX or PREFIX)
+        )
 
-        if os.name == "posix":
-            if plat_specific or standard_lib:
+        class DistutilsPlatformError(Exception):
+            """DistutilsPlatformError"""
+
+        assert os.name in frozenset(("posix", "nt")), DistutilsPlatformError(
+            "I don't know where Python installs its library "
+            "on platform '{}'".format(os.name)
+        )
+        return (
+            (
+                # plat_specific or standard_lib:
                 # Platform-specific modules (any module from a non-pure-Python
                 # module distribution) or standard Python library modules.
-                libdir = sys.platlibdir
-            else:
+                # else:
                 # Pure Python
-                libdir = "lib"
-            libpython = os.path.join(prefix, libdir, "python" + get_python_version())
-            if standard_lib:
-                return libpython
-            elif is_default_prefix and not is_virtual_environment():
-                return os.path.join(prefix, "lib", "python3", "dist-packages")
-            else:
-                return os.path.join(libpython, "site-packages")
-        elif os.name == "nt":
-            if standard_lib:
-                return os.path.join(prefix, "Lib")
-            else:
-                return os.path.join(prefix, "Lib", "site-packages")
-        else:
-
-            class DistutilsPlatformError(Exception):
-                """DistutilsPlatformError"""
-
-            raise DistutilsPlatformError(
-                "I don't know where Python installs its library "
-                "on platform '%s'" % os.name
+                lambda libpython: (
+                    libpython
+                    if standard_lib
+                    else (
+                        os.path.join(prefix, "lib", "python3", "dist-packages")
+                        if is_default_prefix and not is_virtual_environment()
+                        else os.path.join(libpython, "site-packages")
+                    )
+                )
+            )(
+                os.path.join(
+                    prefix,
+                    sys.platlibdir if plat_specific or standard_lib else "lib",
+                    "python" + get_python_version(),
+                )
             )
+            if os.name == "posix"
+            else (
+                os.path.join(prefix, "Lib")
+                if standard_lib
+                else os.path.join(prefix, "Lib", "site-packages")
+            )
+        )
 
 else:
     from ast import Str

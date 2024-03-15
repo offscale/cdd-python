@@ -91,6 +91,7 @@ class TestParseDocstringUtils(TestCase):
                     ),
                     ("List[str]", "List of string."),
                     ("Mapping[str, object]", "Dictionary of `{str: object}` pairs."),
+                    (None, ""),
                 ),
             ),
             maxlen=0,

@@ -11,10 +11,9 @@ import cdd.shared.source_transformer
 from cdd.shared.pure_utils import PY_GTE_3_8, rpartial
 
 if PY_GTE_3_8:
-    from cdd.shared.pure_utils import FakeConstant
+    from cdd.shared.pure_utils import FakeConstant as Str
 
-    Num = Str = FakeConstant
-    del FakeConstant
+    Num = Str
 else:
     from ast import Num, Str
 

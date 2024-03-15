@@ -3,6 +3,7 @@ Helpers to traverse the AST, extract the docstring out, parse and format to inte
 """
 
 from ast import (
+    AST,
     AnnAssign,
     Assign,
     AsyncFunctionDef,
@@ -374,7 +375,7 @@ def doctransify_cst(cst_list, node):
             if not is_func:
                 continue
 
-            cur_ast_node = ast_parse(
+            cur_ast_node: AST = ast_parse(
                 reindent_block_with_pass_body(cst_list[cst_idx].value),
                 skip_annotate=True,
                 skip_docstring_remit=True,

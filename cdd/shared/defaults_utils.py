@@ -13,7 +13,6 @@ from operator import contains, eq
 from typing import Dict
 
 from cdd.shared.pure_utils import PY_GTE_3_8, PY_GTE_3_9
-from cdd.shared.pure_utils import FakeConstant as Str
 from cdd.shared.pure_utils import (
     count_iter_items,
     location_within,
@@ -24,7 +23,7 @@ from cdd.shared.pure_utils import (
 from cdd.shared.types import IntermediateRepr
 
 if PY_GTE_3_8:
-    pass
+    from cdd.shared.pure_utils import FakeConstant as Str
 else:
     from ast import Str
 

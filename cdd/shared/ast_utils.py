@@ -312,10 +312,9 @@ FALLBACK_TYP: str = "str"
 FALLBACK_ARGPARSE_TYP = Name("str", Load(), lineno=None, col_offset=None)
 
 if PY_GTE_3_8:
-    from cdd.shared.pure_utils import FakeConstant
+    from cdd.shared.pure_utils import FakeConstant as Str
 
-    Bytes = NameConstant = Num = Str = FakeConstant
-    del FakeConstant
+    Bytes = NameConstant = Num = Str
 else:
     from ast import Bytes, NameConstant, Num, Str
 

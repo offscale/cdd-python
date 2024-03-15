@@ -11,11 +11,10 @@ from typing import FrozenSet
 import cdd.shared.ast_utils
 import cdd.shared.source_transformer
 from cdd.shared.pure_utils import PY_GTE_3_8
-from cdd.shared.pure_utils import FakeConstant as Str
 from cdd.shared.pure_utils import append_to_dict, indent_all_but_first, rpartial, tab
 
 if PY_GTE_3_8:
-    pass
+    from cdd.shared.pure_utils import FakeConstant as Str
 else:
     from ast import Str
 

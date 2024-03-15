@@ -16,7 +16,7 @@ from cdd.shared.pure_utils import (
 )
 
 
-def _make_call_meth(body, return_type, param_names, docstring_format, word_wrap):
+def make_call_meth(body, return_type, param_names, docstring_format, word_wrap):
     """
     Construct a `__call__` method from the provided `body`
 
@@ -115,4 +115,4 @@ def _make_call_meth(body, return_type, param_names, docstring_format, word_wrap)
     )
 
 
-__all__ = ["_make_call_meth"]  # type: list[str]
+__all__ = ["make_call_meth"]  # type: list[str]

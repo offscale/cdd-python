@@ -28,12 +28,11 @@ if sys.version_info[:2] < (3, 8):
     from typing_extensions import *  # noqa: F401,F403
     from typing_extensions import TypedDict
 else:
-    from cdd.shared.pure_utils import FakeConstant
-
-    Bytes = NameConstant = Num = Str = FakeConstant
-    del FakeConstant
     from typing import TypedDict
 
+    from cdd.shared.pure_utils import FakeConstant as Str
+
+    Bytes = NameConstant = Num = Str
 if sys.version_info[:2] > (3, 8):
     from collections.abc import Callable
 else:
