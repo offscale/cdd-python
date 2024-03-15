@@ -1,6 +1,7 @@
 """ Tests for pkg utils """
 
 from os import path
+from platform import platform
 from site import getsitepackages
 from unittest import TestCase
 
@@ -24,9 +25,13 @@ class TestPkgUtils(TestCase):
             site_packages = path.dirname(path.dirname(site_packages))
         self.assertEqual(
             (
-                site_packages
-                if site_packages == python_lib
-                else path.join(site_packages, "python3", "dist-packages")
+                python_lib  # Yes yes, I know
+                if platform == "win32"
+                else (
+                    site_packages
+                    if site_packages == python_lib
+                    else path.join(site_packages, "python3", "dist-packages")
+                )
             ),
             python_lib,
         )

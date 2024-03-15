@@ -102,13 +102,13 @@ def relative_filename(filename, remove_hints=tuple()):
     :type filename: ```str```
 
     :param remove_hints: Hints as to what can be removed
-    :type remove_hints: ```tuple[str]```
+    :type remove_hints: ```tuple[str, ...]```
 
     :return: Relative `os.path` (if derived) else original
     :rtype: ```str```
     """
     _filename: str = filename.casefold()
-    lib = get_python_lib(), get_python_lib(prefix="")
+    lib = get_python_lib(), get_python_lib(prefix="")  # type: tuple[str, str]
     return next(
         map(
             lambda elem: filename[len(elem) + 1 :],
