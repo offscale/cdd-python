@@ -1,9 +1,11 @@
 """ Tests for pkg utils """
 
+from functools import partial
+from operator import eq
 from os import path
 from platform import platform
 from site import getsitepackages
-from unittest import TestCase
+from unittest import TestCase, skipIf
 
 from cdd.shared.pkg_utils import get_python_lib, relative_filename
 from cdd.tests.utils_for_tests import unittest_main
@@ -17,23 +19,25 @@ class TestPkgUtils(TestCase):
         expect: str = "gaffe"
         self.assertEqual(relative_filename(expect), expect)
 
+    @skipIf(platform == "win32", "Skip hack for sitepackages check on Windows")
     def test_get_python_lib(self) -> None:
         """Tests that `get_python_lib` works"""
-        python_lib = get_python_lib()
-        # Yes yes, I know; win32 note:
-        site_packages = python_lib if platform == "win32" else getsitepackages()[0]
-        if site_packages == python_lib:
-            self.assertTrue(site_packages, python_lib)
-        else:
-            site_packages = path.dirname(path.dirname(site_packages))
-            self.assertEqual(
+        python_lib: str = get_python_lib()
+        site_packages: str = getsitepackages()[0]
+        site_packages: str = next(
+            filter(
+                partial(eq, python_lib),
                 (
-                    site_packages
-                    if site_packages == python_lib
-                    else path.join(site_packages, "python3", "dist-packages")
-                ),
-                python_lib,
-            )
+                    lambda two_dir_above: (
+                        site_packages,
+                        two_dir_above,
+                        path.join(two_dir_above, "python3", "dist-packages"),
+                    )
+                )(path.dirname(path.dirname(site_packages))),
+            ),
+            site_packages,
+        )
+        self.assertEqual(site_packages, python_lib)
 
 
 unittest_main()
