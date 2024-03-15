@@ -2,13 +2,13 @@
 Tests for docstring parsing
 """
 
+import os.path
+import sys
 from ast import Module
 from collections import namedtuple
 from io import StringIO
-from os import environ
-from sys import version_info
 from typing import Any
-from unittest import TestCase, skipIf
+from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from cdd.shared.pure_utils import PY_GTE_3_8, PY_GTE_3_12
@@ -27,7 +27,7 @@ class TestUtilsForTests(TestCase):
         """
         self.assertEqual(type(unittest_main).__name__, "function")
         self.assertIsNone(unittest_main())
-        argparse_mock = MagicMock()
+        argparse_mock: MagicMock = MagicMock()
         #           cdd.tests.utils_for_tests.py
         with patch("cdd.tests.utils_for_tests.__name__", "__main__"), patch(
             "sys.stderr", new_callable=StringIO
@@ -35,10 +35,13 @@ class TestUtilsForTests(TestCase):
             import cdd.tests.utils_for_tests
 
             cdd.tests.utils_for_tests.unittest_main()
+        is_jetbrains: bool = os.path.basename(
+            sys.modules["__main__"].__file__
+        ) == "_jb_unittest_runner{}py".format(os.path.extsep)
         (
             # Python >=3.12 has:
             # if self.result.testsRun == 0: where `_NO_TESTS_EXITCODE` is `5`
-            self.assertEqual(e.exception.code, 5)
+            self.assertEqual(e.exception.code, 5 if is_jetbrains else 1)
             if PY_GTE_3_12
             else self.assertIsInstance(e.exception.code, bool)
         )

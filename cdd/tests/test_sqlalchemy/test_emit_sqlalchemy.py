@@ -2,10 +2,9 @@
 Tests for `cdd.emit.sqlalchemy`
 """
 
-import os
 from copy import deepcopy
 from platform import system
-from unittest import TestCase, skipIf
+from unittest import TestCase
 
 import cdd.argparse_function.emit
 import cdd.argparse_function.parse
