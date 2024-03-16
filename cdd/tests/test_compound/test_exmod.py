@@ -15,7 +15,7 @@ from unittest import TestCase, skipIf
 from unittest.mock import patch
 
 import cdd.class_.parse
-from cdd.compound.exmod import exmod
+from cdd.compound.exmod import exmod, exmod_single_folder
 from cdd.shared.ast_utils import maybe_type_comment, set_value
 from cdd.shared.pkg_utils import relative_filename
 from cdd.shared.pure_utils import (
@@ -428,6 +428,30 @@ class TestExMod(TestCase):
                 self._check_emission(existent_module_dir, new_module_dir, dry_run=True)
         finally:
             self._pip(["uninstall", "-y", self.package_root_name])
+
+    def test_exmod_single_folder_early_exit(self):
+        """
+        Tests that `exmod_single_folder` exits early
+        """
+        self.assertIsNone(
+            exmod_single_folder(
+                emit_name="sqlalchemy",
+                module="mod",
+                blacklist=["tmp.mod"],
+                whitelist=[],
+                output_directory="tmp",
+                first_output_directory="tmp",
+                mock_imports=True,
+                no_word_wrap=True,
+                dry_run=False,
+                module_root_dir="tmp",
+                module_root="tmp",
+                module_name="mod",
+                new_module_name="mod_new",
+                filesystem_layout="as_input",
+                extra_modules_to_all=None,
+            )
+        )
 
     def create_and_install_pkg(self, root):
         """

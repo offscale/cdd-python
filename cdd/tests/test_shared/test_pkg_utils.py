@@ -1,13 +1,12 @@
 """ Tests for pkg utils """
 
-from functools import partial
 from operator import eq
 from os import path
 from site import getsitepackages
 from unittest import TestCase
 
 from cdd.shared.pkg_utils import get_python_lib, relative_filename
-from cdd.shared.pure_utils import rpartial
+from cdd.shared.pure_utils import rpartial, pp
 from cdd.tests.utils_for_tests import unittest_main
 
 
@@ -23,6 +22,20 @@ class TestPkgUtils(TestCase):
         """Tests that `get_python_lib` works"""
         python_lib: str = get_python_lib()
         site_packages: str = getsitepackages()[0]
+        two_dirs_above: str = path.dirname(path.dirname(site_packages))
+        pp(
+            {
+                "python_lib": python_lib,
+                "two_dirs_above": two_dirs_above,
+                "site_packages": site_packages,
+                'path.join(two_dir_above, "Lib", "site-packages")': path.join(
+                    two_dirs_above, "Lib", "site-packages"
+                ),
+                'path.join(two_dir_above, "python3", "dist-packages")': path.join(
+                    two_dirs_above, "python3", "dist-packages"
+                ),
+            }
+        )
         site_packages: str = next(
             filter(
                 rpartial(eq, python_lib),
