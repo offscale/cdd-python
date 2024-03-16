@@ -7,6 +7,7 @@ from site import getsitepackages
 from unittest import TestCase
 
 from cdd.shared.pkg_utils import get_python_lib, relative_filename
+from cdd.shared.pure_utils import rpartial
 from cdd.tests.utils_for_tests import unittest_main
 
 
@@ -24,7 +25,7 @@ class TestPkgUtils(TestCase):
         site_packages: str = getsitepackages()[0]
         site_packages: str = next(
             filter(
-                partial(eq, python_lib),
+                rpartial(eq, python_lib),
                 (
                     lambda two_dir_above: (
                         site_packages,
