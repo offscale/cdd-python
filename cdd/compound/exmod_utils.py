@@ -5,7 +5,7 @@ from ast import AST, Assign, Expr, ImportFrom, List, Load, Module, Name, Store, 
 from ast import walk as ast_walk
 from collections import OrderedDict, defaultdict, deque
 from functools import partial
-from inspect import getfile, ismodule
+from inspect import getfile
 from itertools import chain
 from operator import attrgetter, eq
 from os import environ, extsep, makedirs, path
@@ -156,40 +156,40 @@ def get_module_contents(obj, module_root_dir, current_module=None, _result={}):
     return _result
 
 
-def _process_module_contents(_result, current_module, module_root_dir, name, symbol):
-    """
-    Internal function to get the symbol and store it with a fully-qualified name in `_result`
-
-    :param current_module: The current module
-    :type current_module: ```Optional[str]```
-
-    :param module_root_dir: Root of module
-    :type module_root_dir: ```str```
-
-    :param name: Name—first value—from `dir(module)`
-    :type name: ```str```
-
-    :param symbol: Symbol—second value—from `dir(module)`
-    :type symbol: ```type```
-    """
-    fq: str = "{current_module}.{name}".format(current_module=current_module, name=name)
-    try:
-        symbol_location: Optional[str] = getfile(symbol)
-    except TypeError:
-        symbol_location: Optional[str] = None
-    if symbol_location is not None and symbol_location.startswith(module_root_dir):
-        if isinstance(symbol, type):
-            _result[fq] = symbol
-        elif (
-            current_module != getattr(symbol, "__name__", current_module)
-            and ismodule(symbol)
-            and fq not in _result
-        ):
-            get_module_contents(
-                symbol,
-                module_root_dir=module_root_dir,
-                current_module=symbol.__name__,
-            )
+# def _process_module_contents(_result, current_module, module_root_dir, name, symbol):
+#     """
+#     Internal function to get the symbol and store it with a fully-qualified name in `_result`
+#
+#     :param current_module: The current module
+#     :type current_module: ```Optional[str]```
+#
+#     :param module_root_dir: Root of module
+#     :type module_root_dir: ```str```
+#
+#     :param name: Name—first value—from `dir(module)`
+#     :type name: ```str```
+#
+#     :param symbol: Symbol—second value—from `dir(module)`
+#     :type symbol: ```type```
+#     """
+#     fq: str = "{current_module}.{name}".format(current_module=current_module, name=name)
+#     try:
+#         symbol_location: Optional[str] = getfile(symbol)
+#     except TypeError:
+#         symbol_location: Optional[str] = None
+#     if symbol_location is not None and symbol_location.startswith(module_root_dir):
+#         if isinstance(symbol, type):
+#             _result[fq] = symbol
+#         elif (
+#             current_module != getattr(symbol, "__name__", current_module)
+#             and ismodule(symbol)
+#             and fq not in _result
+#         ):
+#             get_module_contents(
+#                 symbol,
+#                 module_root_dir=module_root_dir,
+#                 current_module=symbol.__name__,
+#             )
 
 
 def emit_file_on_hierarchy(
