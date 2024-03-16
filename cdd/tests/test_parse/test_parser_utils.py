@@ -27,6 +27,23 @@ from cdd.tests.utils_for_tests import inspectable_compile, unittest_main
 class TestParserUtils(TestCase):
     """Test class for parser_utils"""
 
+    def test_get_source_raises(self) -> None:
+        """Tests that `get_source` raises an exception"""
+        with self.assertRaises(TypeError):
+            get_source(None)
+
+        def raise_os_error(_):
+            """raise_OSError"""
+            raise OSError
+
+        with patch("inspect.getsourcelines", raise_os_error), self.assertRaises(
+            OSError
+        ):
+            get_source(min)
+
+        with patch("inspect.getsourcefile", lambda _: None):
+            self.assertIsNone(get_source(raise_os_error))
+
     def test_ir_merge_empty(self) -> None:
         """Tests for `ir_merge` when both are empty"""
         target = {"params": OrderedDict(), "returns": None}
@@ -250,22 +267,14 @@ class TestParserUtils(TestCase):
         with self.assertRaises(NotImplementedError):
             cdd.shared.parse.utils.parser_utils.infer(None)
 
-    def test_get_source_raises(self) -> None:
-        """Tests that `get_source` raises an exception"""
-        with self.assertRaises(TypeError):
-            get_source(None)
-
-        def raise_os_error(_):
-            """raise_OSError"""
-            raise OSError
-
-        with patch("inspect.getsourcelines", raise_os_error), self.assertRaises(
-            OSError
-        ):
-            get_source(min)
-
-        with patch("inspect.getsourcefile", lambda _: None):
-            self.assertIsNone(get_source(raise_os_error))
+    def test_merge_params(self) -> None:
+        """Tests `merge_params` works"""
+        d0 = {"foo": "bar"}
+        d1 = {"can": "haz"}
+        self.assertDictEqual(
+            cdd.shared.parse.utils.parser_utils.merge_params(deepcopy(d0), d1),
+            {"foo": "bar", "can": "haz"},
+        )
 
 
 unittest_main()

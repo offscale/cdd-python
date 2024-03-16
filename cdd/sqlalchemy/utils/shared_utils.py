@@ -3,7 +3,7 @@ Shared utility functions for SQLalchemy
 """
 
 import ast
-from ast import Call, Expr, Load, Name, Subscript, Tuple, keyword
+from ast import Call, Expr, Load, Name, Subscript, Tuple, expr, keyword
 from operator import attrgetter
 from typing import Optional, cast
 
@@ -82,13 +82,14 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
         return _param.get("default") == cdd.shared.ast_utils.NoneStr, None
     elif _param["typ"].startswith("Optional["):
         _param["typ"] = _param["typ"][len("Optional[") : -1]
-        nullable = True
+        nullable: bool = True
     if "Literal[" in _param["typ"]:
         parsed_typ: Call = cast(
             Call, cdd.shared.ast_utils.get_value(ast.parse(_param["typ"]).body[0])
         )
-        if parsed_typ.value.id != "Literal":
-            return nullable, parsed_typ.value
+        assert parsed_typ.value.id == "Literal", "Expected `Literal` got: {!r}".format(
+            parsed_typ.value.id
+        )
         val = cdd.shared.ast_utils.get_value(parsed_typ.slice)
         (
             args.append(
@@ -112,7 +113,7 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
             else _update_args_infer_typ_sqlalchemy_for_scalar(_param, args, x_typ_sql)
         )
     elif _param["typ"].startswith("List["):
-        after_generic = _param["typ"][len("List[") :]
+        after_generic: str = _param["typ"][len("List[") :]
         if "struct" in after_generic:  # "," in after_generic or
             name: Name = Name(id="JSON", ctx=Load(), lineno=None, col_offset=None)
         else:
@@ -175,42 +176,53 @@ def update_args_infer_typ_sqlalchemy(_param, args, name, nullable, x_typ_sql):
             )
         )
     elif _param.get("typ").startswith("Union["):
-        # Hack to remove the union type. Enum parse seems to be incorrect?
-        union_typ: Subscript = cast(Subscript, ast.parse(_param["typ"]).body[0])
-        assert isinstance(
-            union_typ.value, Subscript
-        ), "Expected `Subscript` got `{type_name}`".format(
-            type_name=type(union_typ.value).__name__
-        )
-        union_typ_tuple = (
-            union_typ.value.slice if PY_GTE_3_9 else union_typ.value.slice.value
-        )
-        assert isinstance(
-            union_typ_tuple, Tuple
-        ), "Expected `Tuple` got `{type_name}`".format(
-            type_name=type(union_typ_tuple).__name__
-        )
-        assert (
-            len(union_typ_tuple.elts) == 2
-        ), "Expected length of 2 got `{tuple_len}`".format(
-            tuple_len=len(union_typ_tuple.elts)
-        )
-        left, right = map(attrgetter("id"), union_typ_tuple.elts)
-        args.append(
-            Name(
-                (
-                    cdd.sqlalchemy.utils.emit_utils.typ2column_type[right]
-                    if right in cdd.sqlalchemy.utils.emit_utils.typ2column_type
-                    else cdd.sqlalchemy.utils.emit_utils.typ2column_type.get(left, left)
-                ),
-                Load(),
-                lineno=None,
-                col_offset=None,
-            )
-        )
+        args.append(_handle_union_of_length_2(_param["typ"]))
     else:
         _update_args_infer_typ_sqlalchemy_for_scalar(_param, args, x_typ_sql)
     return nullable, None
+
+
+def _handle_union_of_length_2(typ):
+    """
+    Internal function to turn `str` to `Name`
+
+    :param typ: `str` which evaluates to `ast.Subscript`
+    :type typ: ```str```
+
+    :return: Parsed out name
+    :rtype: ```Name```
+    """
+    # Hack to remove the union type. Enum parse seems to be incorrect?
+    union_typ: Subscript = cast(Subscript, ast.parse(typ).body[0])
+    assert isinstance(
+        union_typ.value, Subscript
+    ), "Expected `Subscript` got `{type_name}`".format(
+        type_name=type(union_typ.value).__name__
+    )
+    union_typ_tuple: expr = (
+        union_typ.value.slice if PY_GTE_3_9 else union_typ.value.slice.value
+    )
+    assert isinstance(
+        union_typ_tuple, Tuple
+    ), "Expected `Tuple` got `{type_name}`".format(
+        type_name=type(union_typ_tuple).__name__
+    )
+    assert (
+        len(union_typ_tuple.elts) == 2
+    ), "Expected length of 2 got `{tuple_len}`".format(
+        tuple_len=len(union_typ_tuple.elts)
+    )
+    left, right = map(attrgetter("id"), union_typ_tuple.elts)
+    return Name(
+        (
+            cdd.sqlalchemy.utils.emit_utils.typ2column_type[right]
+            if right in cdd.sqlalchemy.utils.emit_utils.typ2column_type
+            else cdd.sqlalchemy.utils.emit_utils.typ2column_type.get(left, left)
+        ),
+        Load(),
+        lineno=None,
+        col_offset=None,
+    )
 
 
 __all__ = ["update_args_infer_typ_sqlalchemy"]
