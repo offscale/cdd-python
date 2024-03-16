@@ -62,10 +62,7 @@ def ir_merge(target, other):
         target["params"] = other["params"]
     elif other["params"]:
         target_params, other_params = map(itemgetter("params"), (target, other))
-
-        merge_params(other_params, target_params)
-
-        target["params"] = target_params
+        target["params"] = merge_params(other_params, target_params)
 
     if "return_type" not in (target.get("returns") or iter(())):
         target["returns"] = other["returns"]
@@ -110,6 +107,7 @@ def merge_params(other_params, target_params):
         merge_present_params(other_params[name], target_params[name])
     for name in other_params.keys() - target_params.keys():
         target_params[name] = other_params[name]
+    return target_params
 
 
 def merge_present_params(other_param, target_param):

@@ -5,6 +5,7 @@ Tests for `cdd.emit.sqlalchemy.utils.sqlalchemy_utils`
 import ast
 import json
 from ast import (
+    AST,
     Assign,
     Call,
     ClassDef,
@@ -19,8 +20,10 @@ from ast import (
 )
 from collections import OrderedDict
 from copy import deepcopy
+from functools import partial
 from os import mkdir, path
 from tempfile import TemporaryDirectory
+from typing import Callable, List, Optional, Tuple, Union
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -29,7 +32,10 @@ import cdd.sqlalchemy.utils.emit_utils
 from cdd.shared.ast_utils import set_value
 from cdd.shared.source_transformer import to_code
 from cdd.shared.types import IntermediateRepr
-from cdd.sqlalchemy.utils.shared_utils import update_args_infer_typ_sqlalchemy
+from cdd.sqlalchemy.utils.shared_utils import (
+    _handle_union_of_length_2,
+    update_args_infer_typ_sqlalchemy,
+)
 from cdd.tests.mocks.ir import (
     intermediate_repr_empty,
     intermediate_repr_no_default_doc,
@@ -295,6 +301,27 @@ class TestEmitSqlAlchemyUtils(TestCase):
     #         args[0],
     #         gold=Name(id="Small", ctx=Load(), lineno=None, col_offset=None),
     #     )
+
+    def test_update_args_infer_typ_sqlalchemy_early_exit(self) -> None:
+        """Tests that `update_args_infer_typ_sqlalchemy` exits early"""
+        _update_args_infer_typ_sqlalchemy: Callable[
+            [dict], Tuple[bool, Optional[Union[List[AST], Tuple[AST]]]]
+        ] = partial(
+            update_args_infer_typ_sqlalchemy,
+            args=[],
+            name="",
+            nullable=True,
+            x_typ_sql={},
+        )
+        self.assertTupleEqual(
+            _update_args_infer_typ_sqlalchemy({"typ": None}), (False, None)
+        )
+        self.assertTupleEqual(
+            _update_args_infer_typ_sqlalchemy(
+                {"typ": None, "default": cdd.shared.ast_utils.NoneStr},
+            ),
+            (True, None),
+        )
 
     def test_update_with_imports_from_columns(self) -> None:
         """
@@ -571,6 +598,19 @@ class TestEmitSqlAlchemyUtils(TestCase):
             self,
             gen_ast=gen_ast,
             gold=column_fk_gold,
+        )
+
+    def test__handle_union_of_length_2(self) -> None:
+        """Tests that `_handle_union_of_length_2` works"""
+        run_ast_test(
+            self,
+            gen_ast=_handle_union_of_length_2("Union[int, float]"),
+            gold=Name(
+                "Float",
+                Load(),
+                lineno=None,
+                col_offset=None,
+            ),
         )
 
 
