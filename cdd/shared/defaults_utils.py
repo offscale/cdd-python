@@ -187,31 +187,6 @@ def extract_default(
     )
 
 
-def type_default_from_default(default, typ):
-    """
-    :param default: The default value; potentially `NoneStr`
-    :type default: ```str```
-
-    :param typ: The type of the parameter
-    :type typ: ```str```
-
-    :return: (Optional[typ], None) if default is NoneStr else (typ, default)
-    :rtype: ```tuple[Optional[str], str]```
-    """
-    return (
-        (
-            (
-                typ
-                if typ == "None"
-                else "Optional[{typ}]".format(typ=typ) if typ != "None" else typ
-            ),
-            None,
-        )
-        if default is NoneStr
-        else (typ, default)
-    )
-
-
 def _parse_out_default_and_doc(
     _start_idx,
     start_rest_offset,

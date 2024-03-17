@@ -86,5 +86,11 @@ class TestParseJsonSchemaUtils(TestCase):
         self.assertEqual(res[0], mock[0])
         self.assertDictEqual(res[1], mock[1])
 
+    def test_json_schema_property_to_param_removes_string_from_anyOf(self) -> None:
+        """Tests that `json_schema_property_to_param` removes `string` from `anyOf`"""
+        param = ("foo", {"anyOf": ["string", "can"], "typ": ["string", "can", "haz"]})
+        cdd.json_schema.utils.parse_utils.json_schema_property_to_param(param, {})
+        self.assertDictEqual(param[1], {"typ": "Optional[can]"})
+
 
 unittest_main()

@@ -251,7 +251,7 @@ def gen_module(
     :type no_word_wrap: ```Optional[Literal[True]]```
 
     :param imports: Import to preclude in Python file
-    :type imports: ```str```
+    :type imports: ```Optional[str]```
 
     :param functions_and_classes: Functions and classes that have been preparsed
     :type functions_and_classes: ```Optional[Tuple[AST]]```
@@ -466,8 +466,9 @@ def file_to_input_mapping(filepath, parse_name):
 
 __all__ = [
     "file_to_input_mapping",
-    "get_input_mapping_from_path",
-    "get_emit_kwarg",
     "gen_file",
+    "gen_module",
+    "get_emit_kwarg",
+    "get_input_mapping_from_path",
     "get_parser",
 ]

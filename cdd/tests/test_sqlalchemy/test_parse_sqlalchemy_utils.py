@@ -2,7 +2,7 @@
 Tests for the utils that is used by the SQLalchemy parsers
 """
 
-from ast import ClassDef, keyword
+from ast import Call, ClassDef, Load, Name, keyword
 from copy import deepcopy
 from unittest import TestCase
 
@@ -51,6 +51,20 @@ class TestParseSqlAlchemyUtils(TestCase):
         )
         self.assertEqual(gold_name, gen_name)
         self.assertDictEqual(gold_param, gen_param)
+
+    def test_column_call_name_manipulator_remove_op(self) -> None:
+        """
+        Tests that `column_call_name_manipulator` runs remove op
+        """
+        call: Call = Call(
+            func=Name(id="Column", ctx=Load(), lineno=None, col_offset=None),
+            args=[set_value("foo")],
+            keywords=[],
+            lineno=None,
+            col_offset=None,
+        )
+        column_call_name_manipulator(call, "remove")
+        self.assertListEqual(call.args, [])
 
     def test_column_call_to_param_server_default(self) -> None:
         """

@@ -24,6 +24,7 @@ from cdd.shared.pure_utils import (
     multiline,
     namespaced_pascal_to_upper_camelcase,
     namespaced_upper_camelcase_to_pascal,
+    pairwise,
     parse_comment_from_line,
     pluralise,
     pp,
@@ -185,7 +186,7 @@ class TestPureUtils(TestCase):
             ),
         )
 
-    def test_(self) -> None:
+    def test_parse_comment_from_line(self) -> None:
         """Tests that  parses the comment out of the line"""
         for output_val, input_val in (
             ("foo", "foo#bar"),
@@ -197,6 +198,7 @@ class TestPureUtils(TestCase):
             ("foo = 'ba#r'", "foo = 'ba#r'"),
             ("foo =", "foo = #'foo'"),
             ("source = ndb.TextProperty()", "source = ndb.TextProperty()"),
+            ("bar\\'", "bar" "\\" "'"),
         ):
             self.assertEqual(output_val, parse_comment_from_line(input_val))
 
@@ -220,16 +222,20 @@ class TestPureUtils(TestCase):
 
     def test_append_to_dict(self) -> None:
         """Tests `append_to_dict`"""
-        self.assertEqual(
+        self.assertDictEqual(
             append_to_dict({"a": {"b": {}}}, ["a", "b", "c"], "d"),
             {"a": {"b": {"c": "d"}}},
         )
-        self.assertEqual(
+        self.assertDictEqual(
             append_to_dict({"a": {"b": 2}}, ["a", "b", "c"], "d"), {"a": {"b": 2}}
         )
-        self.assertEqual(
+        self.assertDictEqual(
             append_to_dict({"a": {"b": {"c": {}}}}, ["a", "b", "c"], "d"),
             {"a": {"b": {"c": "d"}}},
+        )
+        self.assertDictEqual(
+            append_to_dict({}, [], None),
+            {},
         )
 
     def test_remove_whitespace_comments(self) -> None:
@@ -342,6 +348,13 @@ class TestPureUtils(TestCase):
         )
         self.assertEqual(
             namespaced_pascal_to_upper_camelcase("foo_bar_can"), "FooBarCan"
+        )
+
+    def test_pairwise(self) -> None:
+        """Tests that (potentially proxy) `pairwise` implementation works"""
+        self.assertTupleEqual(
+            tuple(pairwise("ABCDEFG")),
+            (("A", "B"), ("B", "C"), ("C", "D"), ("D", "E"), ("E", "F"), ("F", "G")),
         )
 
 

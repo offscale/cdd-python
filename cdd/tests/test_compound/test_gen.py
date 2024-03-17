@@ -340,19 +340,30 @@ class TestGen(TestCase):
         with patch(
             "cdd.json_schema.emit.json_schema_file", new_callable=MagicMock()
         ) as json_schema_file_mock, TemporaryDirectory() as tempdir:
-            json_schema_file = os.path.join(tempdir, "foo.json")
+            json_schema_file = os.path.join(tempdir, "foo{}json".format(os.path.extsep))
             with open(json_schema_file, "wt") as f:
                 dump(server_error_schema, f)
+            # file
             gen(
                 "{name}",
                 input_mapping=json_schema_file,
                 parse_name="json_schema",
                 emit_name="json_schema",
                 output_filename=os.path.join(
-                    tempdir, "foo.gen{}json".format(os.path.extsep)
+                    tempdir, "foo.gen0{}json".format(os.path.extsep)
                 ),
             )
-        self.assertEqual(json_schema_file_mock.call_count, 1)
+            # directory
+            gen(
+                "{name}",
+                input_mapping=tempdir,
+                parse_name="json_schema",
+                emit_name="json_schema",
+                output_filename=os.path.join(
+                    tempdir, "foo.gen1{}json".format(os.path.extsep)
+                ),
+            )
+        self.assertEqual(json_schema_file_mock.call_count, 2)
 
 
 unittest_main()
