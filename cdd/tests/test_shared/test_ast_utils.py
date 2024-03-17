@@ -31,6 +31,7 @@ from ast import (
     arguments,
     keyword,
 )
+from collections import deque
 from copy import deepcopy
 from itertools import repeat
 from os import extsep, path
@@ -88,6 +89,7 @@ from cdd.tests.mocks.methods import (
     function_adder_ast,
     function_adder_str,
 )
+from cdd.tests.mocks.pydantic import pydantic_class_cls_def
 from cdd.tests.mocks.sqlalchemy import config_decl_base_ast
 from cdd.tests.utils_for_tests import inspectable_compile, run_ast_test, unittest_main
 
@@ -432,7 +434,7 @@ class TestAstUtils(TestCase):
         """
         imports = infer_imports(
             config_decl_base_ast
-        )  # type: Optional[Tuple[Union[Import, ImportFrom]]]
+        )  # type: Optional[TTuple[Union[Import, ImportFrom], ...]]
         self.assertIsNotNone(imports)
         self.assertEqual(len(imports), 1)
         run_ast_test(
@@ -453,6 +455,57 @@ class TestAstUtils(TestCase):
                 ),
                 level=0,
             ),
+        )
+
+    def test_infer_imports_with_simple_node_variants(self) -> None:
+        """
+        Test that `infer_imports` with some simple variants
+        """
+
+        def inner_test(imports):
+            """
+            Run the actual test
+
+            :param imports: The imports to compare against
+            :type imports: ```TList[ImportFrom]```
+            """
+            self.assertIsNotNone(imports)
+            self.assertEqual(len(imports), 1)
+            run_ast_test(
+                self,
+                imports[0],
+                ImportFrom(
+                    module="typing" if PY_GTE_3_8 else "typing_extensions",
+                    names=[
+                        alias(
+                            "Literal",
+                            None,
+                            identifier=None,
+                            identifier_name=None,
+                        )
+                    ],
+                    level=0,
+                ),
+            )
+
+        deque(
+            map(
+                inner_test,
+                map(
+                    infer_imports,
+                    (
+                        pydantic_class_cls_def,
+                        Assign(
+                            targets=[Name("a", Load(), lineno=None, col_offset=None)],
+                            value=set_value("cat"),
+                            type_comment="Literal['cat']",
+                            expr=None,
+                            lineno=None,
+                        ),
+                    ),
+                ),
+            ),
+            maxlen=0,
         )
 
     def test_node_to_dict(self) -> None:
@@ -642,6 +695,7 @@ class TestAstUtils(TestCase):
         )
         self.assertIsNone(get_value(Name(None, None)))
         self.assertEqual(get_value(get_value(ast.parse("-5").body[0])), -5)
+        self.assertEqual(get_value(Num(n=-5, constant_value=None, string=None)), -5)
 
     def test_set_value(self) -> None:
         """Tests that `set_value` returns the right type for the right Python version"""
@@ -749,21 +803,76 @@ class TestAstUtils(TestCase):
 
     def test_get_types(self) -> None:
         """Test that `get_types` functions correctly"""
+        self.assertTupleEqual(tuple(get_types(None)), tuple())
+        self.assertTupleEqual(tuple(get_types("str")), ("str",))
         self.assertTupleEqual(
-            tuple(get_types("str")),
-            ("str",),
+            tuple(
+                get_types(
+                    Subscript(
+                        value=Name(
+                            id="Optional", ctx=Load(), lineno=None, col_offset=None
+                        ),
+                        slice=Name(id="Any", ctx=Load(), lineno=None, col_offset=None),
+                        ctx=Load(),
+                        expr_context_ctx=None,
+                        expr_slice=None,
+                        expr_value=None,
+                        lineno=None,
+                        col_offset=None,
+                    )
+                )
+            ),
+            ("Optional", "Any"),
         )
         self.assertTupleEqual(
             tuple(
                 get_types(
                     Subscript(
-                        value=Name(id="Optional", ctx=Load()),
-                        slice=Name(id="Any", ctx=Load()),
+                        value=Name(
+                            id="Literal", ctx=Load(), lineno=None, col_offset=None
+                        ),
+                        slice=Tuple(
+                            elts=list(map(set_value, ("foo", "bar"))),
+                            ctx=Load(),
+                            expr=None,
+                            lineno=None,
+                            col_offset=None,
+                        ),
                         ctx=Load(),
+                        expr_context_ctx=None,
+                        expr_slice=None,
+                        expr_value=None,
+                        lineno=None,
+                        col_offset=None,
                     )
                 )
             ),
-            ("Optional", "Any"),
+            ("Literal",),
+        )
+        self.assertTupleEqual(
+            tuple(
+                get_types(
+                    Subscript(
+                        value=Name(
+                            id="Tuple", ctx=Load(), lineno=None, col_offset=None
+                        ),
+                        slice=Tuple(
+                            elts=list(map(set_value, ("int", "float"))),
+                            ctx=Load(),
+                            expr=None,
+                            lineno=None,
+                            col_offset=None,
+                        ),
+                        ctx=Load(),
+                        expr_context_ctx=None,
+                        expr_slice=None,
+                        expr_value=None,
+                        lineno=None,
+                        col_offset=None,
+                    )
+                )
+            ),
+            ("Tuple", "int", "float"),
         )
 
     def test_to_named_class_def(self) -> None:
