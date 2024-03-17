@@ -46,7 +46,8 @@ from itertools import chain, filterfalse, groupby
 from json import dumps
 from operator import attrgetter, contains, inv, itemgetter, neg, not_, pos
 from os import path
-from typing import FrozenSet, Generator, Optional
+from typing import Callable, FrozenSet, Generator, MutableSet, Optional
+from typing import Tuple as TTuple
 from typing import __all__ as typing__all__
 
 import cdd.shared.source_transformer
@@ -2215,7 +2216,14 @@ def get_types(node):
             return iter((node.value.id, node.slice.id))
         elif isinstance(node.slice, Tuple):
             return chain.from_iterable(
-                ((node.value.id,), map(get_value, map(get_value, node.slice.elts)))
+                (
+                    (node.value.id,),
+                    (
+                        iter(())
+                        if node.value.id == "Literal"
+                        else map(get_value, map(get_value, node.slice.elts))
+                    ),
+                )
             )
 
 
@@ -2228,16 +2236,16 @@ def infer_imports(module, modules_to_all=DEFAULT_MODULES_TO_ALL):
       - sqlalchemy
       - pydantic
 
-    :param module: Module, ClassDef, FunctionDef, AsyncFunctionDef, Assign
-    :type module: ```Union[ClassDef, FunctionDef, AsyncFunctionDef, Assign]```
+    :param module: Module, ClassDef, FunctionDef, AsyncFunctionDef, Assign, AnnAssign
+    :type module: ```Union[Module, ClassDef, FunctionDef, AsyncFunctionDef, Assign, AnnAssign]```
 
     :param modules_to_all: Tuple of module_name to __all__ of module; (str) to FrozenSet[str]
     :type modules_to_all: ```tuple[tuple[str, frozenset], ...]```
 
     :return: List of imports
-    :rtype: ```Optional[Tuple[Union[Import, ImportFrom]]]```
+    :rtype: ```Optional[Tuple[Union[Import, ImportFrom], ...]]```
     """
-    if isinstance(module, (ClassDef, FunctionDef, AsyncFunctionDef, Assign)):
+    if isinstance(module, (ClassDef, FunctionDef, AsyncFunctionDef, Assign, AnnAssign)):
         module: Module = Module(body=[module], type_ignores=[], stmt=None)
     assert isinstance(module, Module), "Expected `Module` got `{type_name}`".format(
         type_name=type(module).__name__
@@ -2252,7 +2260,13 @@ def infer_imports(module, modules_to_all=DEFAULT_MODULES_TO_ALL):
         :rtype: ```Optional[str]```
         """
         if getattr(node, "type_comment", None) is not None:
-            return node.type_comment
+            return (
+                node.type_comment
+                if node.type_comment in simple_types
+                else get_value(
+                    get_value(get_value(ast.parse(node.type_comment).body[0]))
+                )
+            )
         elif getattr(node, "annotation", None) is not None:
             node = node  # type: Union[AnnAssign, arg]
             return node.annotation  # cast(node, Union[AnnAssign, arg])
@@ -2261,7 +2275,9 @@ def infer_imports(module, modules_to_all=DEFAULT_MODULES_TO_ALL):
         else:
             return None
 
-    _symbol_to_import = partial(symbol_to_import, modules_to_all=modules_to_all)
+    _symbol_to_import: Callable[[str], Optional[TTuple[str, str]]] = partial(
+        symbol_to_import, modules_to_all=modules_to_all
+    )
 
     # Lots of room for optimisation here; but its probably NP-hard:
     imports = tuple(
@@ -2352,8 +2368,10 @@ def deduplicate_sorted_imports(module):
     :return: Module but with duplicate import entries in first import block removed
     :rtype: ```Module```
     """
-    assert isinstance(module, Module)
-    fst_import_idx = next(
+    assert isinstance(module, Module), "Expected `Module` got `{}`".format(
+        type(module).__name__
+    )
+    fst_import_idx: Optional[int] = next(
         map(
             itemgetter(0),
             filter(
@@ -2365,7 +2383,7 @@ def deduplicate_sorted_imports(module):
     )
     if fst_import_idx is None:
         return module
-    lst_import_idx = next(
+    lst_import_idx: Optional[int] = next(
         iter(
             deque(
                 map(
@@ -2380,7 +2398,7 @@ def deduplicate_sorted_imports(module):
         ),
         None,
     )
-    name_seen = set()
+    name_seen: MutableSet[str] = set()
 
     module.body = (
         module.body[:fst_import_idx]
