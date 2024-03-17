@@ -77,6 +77,7 @@ def json_schema_property_to_param(param, required):
                 _param.pop("anyOf"),
             )
         )
+
         if len(_param["typ"]) > 1 and "string" in _param["typ"]:
             del _param["typ"][_param["typ"].index("string")]
         _param["typ"] = (

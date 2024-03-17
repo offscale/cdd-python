@@ -2,10 +2,8 @@
 Utility functions for `cdd.parse.sqlalchemy`
 """
 
-import ast
-from ast import Assign, Call, ClassDef, Constant, Load, Module, Name
-from itertools import chain, filterfalse
-from operator import attrgetter
+from ast import Assign, Call, ClassDef, Constant, Load, Name
+from itertools import chain
 
 import cdd.shared.ast_utils
 import cdd.shared.source_transformer
@@ -146,9 +144,7 @@ def column_parse_arg(idx_arg):
 
     val = cdd.shared.ast_utils.get_value(arg)
     assert val != arg, "Unable to parse {!r}".format(arg)
-    if idx == 0:
-        return None  # Column name
-    return None, val
+    return None if idx == 0 else (None, val)
 
 
 def column_parse_kwarg(key_word):
@@ -287,48 +283,6 @@ def concat_with_whitespace(a, b):
         a=a, tab=tab, snd=b_splits[0], end="\n".join(b_splits[1:])
     )
     return indent_all_but_first(res, indent_level=1, sep=tab)
-
-
-def infer_imports_from_sqlalchemy(sqlalchemy_class_or_assigns):
-    """
-    Infer imports from SQLalchemy ast
-
-    :param sqlalchemy_class_or_assigns: SQLalchemy Class or Assign
-    :type sqlalchemy_class_or_assigns: ```Union[ClassDef, Assign]```
-
-    :return: filter of imports (can be considered ```Iterable[str]```)
-    :rtype: ```filter```
-    """
-    candidates = frozenset(
-        map(
-            attrgetter("id"),
-            filter(
-                rpartial(isinstance, Name),
-                ast.walk(
-                    Module(
-                        body=list(
-                            filter(
-                                rpartial(isinstance, Call),
-                                ast.walk(sqlalchemy_class_or_assigns),
-                            )
-                        ),
-                        type_ignores=[],
-                        stmt=None,
-                    )
-                ),
-            ),
-        )
-    )
-
-    candidates_not_in_valid_types = frozenset(
-        filterfalse(
-            frozenset(
-                ("list", "string", "int", "float", "complex", "long")
-            ).__contains__,
-            filterfalse(sqlalchemy_top_level_imports.__contains__, candidates),
-        )
-    )
-    return candidates_not_in_valid_types ^ candidates
 
 
 def get_pk_and_type(sqlalchemy_class):

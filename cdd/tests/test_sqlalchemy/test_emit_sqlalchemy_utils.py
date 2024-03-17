@@ -302,6 +302,20 @@ class TestEmitSqlAlchemyUtils(TestCase):
     #         gold=Name(id="Small", ctx=Load(), lineno=None, col_offset=None),
     #     )
 
+    def test_update_args_infer_typ_sqlalchemy_calls__handle_union_of_length_2(
+        self,
+    ) -> None:
+        """Tests that `update_args_infer_typ_sqlalchemy` calls `_handle_union_of_length_2`"""
+        args = []
+        with patch(
+            "cdd.sqlalchemy.utils.shared_utils._handle_union_of_length_2", lambda _: 5
+        ):
+            update_args_infer_typ_sqlalchemy(
+                {"typ": "Union[string, Small]"}, args, "", False, {}
+            )
+        self.assertEqual(len(args), 1)
+        self.assertListEqual(args, [5])
+
     def test_update_args_infer_typ_sqlalchemy_early_exit(self) -> None:
         """Tests that `update_args_infer_typ_sqlalchemy` exits early"""
         _update_args_infer_typ_sqlalchemy: Callable[
