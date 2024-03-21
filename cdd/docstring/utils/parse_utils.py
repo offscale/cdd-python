@@ -13,6 +13,7 @@ from typing import List, Optional, Tuple, Union, cast
 from cdd.shared.ast_utils import deduplicate
 from cdd.shared.pure_utils import (
     count_iter_items,
+    pp,
     simple_types,
     sliding_window,
     type_to_name,
@@ -56,6 +57,7 @@ adhoc_3_tuple_to_collection = {
     ("List", " ", "of"): "List",
     ("Tuple", " ", "of"): "Tuple",
     ("Dictionary", " ", "of"): "Mapping",
+    ("One", " ", "of"): "Union",
 }
 
 
@@ -369,8 +371,19 @@ def _parse_adhoc_doc_for_typ_phase0(doc, words):
     word_chars: str = "{0}{1}`'\"/|".format(string.digits, string.ascii_letters)
     sentence_ends: int = -1
     break_the_union: bool = False  # lincoln
-    for i, ch in enumerate(doc):
-        if (
+    counter = Counter(doc)  # Imperfect because won't catch escaped quote marks
+    balanced_single: bool = counter["'"] > 0 and counter["'"] & 1 == 0
+    balanced_double: bool = counter['"'] > 0 and counter['"'] & 1 == 0
+
+    i: int = 0
+    n: int = len(doc)
+    while i < n:
+        ch: str = doc[i]
+        if (ch == "'" and balanced_single or ch == '"' and balanced_double) and (
+            i == 0 or doc[i - 1] != "\\"
+        ):
+            i = eat_quoted(ch, doc, i, words, n)
+        elif (
             ch in word_chars
             or ch == "."
             and len(doc) > (i + 1)
@@ -380,14 +393,20 @@ def _parse_adhoc_doc_for_typ_phase0(doc, words):
         ):
             words[-1].append(ch)
         elif ch in frozenset((".", ";", ",")) or ch.isspace():
-            words[-1] = "".join(words[-1])
-            words.append(ch)
+            if words[-1]:
+                words[-1] = "".join(words[-1])
+                words.append(ch)
+            else:
+                words[-1] = ch
             if ch == "." and sentence_ends == -1:
                 sentence_ends: int = len(words)
             elif ch == ";":
                 break_the_union = True
             words.append([])
+        i += 1
     words[-1] = "".join(words[-1])
+    if not words[-1]:
+        del words[-1]
     candidate_type: Optional[str] = next(
         map(
             adhoc_type_to_type.__getitem__,
@@ -412,6 +431,49 @@ def _parse_adhoc_doc_for_typ_phase0(doc, words):
         if " or " in snd_sentence or " of " in snd_sentence:
             sentence: str = snd_sentence
     return candidate_type, fst_sentence, sentence
+
+
+def eat_quoted(ch, doc, chomp_start_idx, words, n):
+    """
+    Chomp from quoted character `ch` to quoted character `ch`
+
+    :param ch: Character of `'` or `"`
+    :type ch: ```Literal["'", '"']```
+
+    :param doc: Possibly ambiguous docstring for argument, that *might* hint as to the type
+    :type doc: ```str```
+
+    :param chomp_start_idx: chomp_start_idx
+    :type chomp_start_idx: ```int```
+
+    :param words: Words
+    :type words: ```List[Union[List[str], str]]```
+
+    :param n: Length of `doc`
+    :type n: ```int```
+
+    :return: chomp_end_idx
+    :rtype: ```int```
+    """
+    chomp_end_idx: int = next(
+        filter(
+            lambda _chomp_end_idx: doc[_chomp_end_idx + 1] != ch
+            or doc[_chomp_end_idx] == "\\",
+            range(chomp_start_idx, n),
+        ),
+        chomp_start_idx,
+    )
+    quoted_str: str = doc[chomp_start_idx:chomp_end_idx]
+    from operator import iadd
+
+    pp({"b4::words": words, '"".join(words[-1])': "".join(words[-1])})
+    (
+        iadd(words, (quoted_str, []))
+        if len(words[-1]) == 1 and words[-1][-1] == "`"
+        else iadd(words, ("".join(words[-1]), quoted_str, []))
+    )
+    pp({"words": words})
+    return chomp_end_idx
 
 
 __all__ = ["parse_adhoc_doc_for_typ"]  # type: list[str]

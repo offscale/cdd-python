@@ -38,7 +38,6 @@ from itertools import chain, filterfalse
 from json import dumps
 from operator import attrgetter, eq, methodcaller
 from os import path
-from platform import system
 from typing import Any, Dict, List, Optional
 
 import cdd.shared.ast_utils
@@ -79,8 +78,7 @@ def param_to_sqlalchemy_column_calls(name_param, include_name):
     :return: Iterable of elements in form of: `Column(…)`
     :rtype: ```Iterable[Call]```
     """
-    if system() == "Darwin":
-        print("param_to_sqlalchemy_column_calls::include_name:", include_name, ";")
+    # if system() == "Darwin": print("param_to_sqlalchemy_column_calls::include_name:", include_name, ";")
     name, _param = name_param
     del name_param
 
