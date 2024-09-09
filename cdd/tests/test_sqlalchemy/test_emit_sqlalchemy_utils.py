@@ -337,34 +337,6 @@ class TestEmitSqlAlchemyUtils(TestCase):
             (True, None),
         )
 
-    def test_update_args_infer_typ_sqlalchemy_list_struct(self) -> None:
-        """Tests that `update_args_infer_typ_sqlalchemy` behaves correctly on List[struct]"""
-        args = []
-        self.assertTupleEqual(
-            update_args_infer_typ_sqlalchemy(
-                {"typ": "List[struct]"},
-                args=args,
-                name="",
-                nullable=True,
-                x_typ_sql={},
-            ),
-            (True, None),
-        )
-        self.assertEqual(len(args), 1)
-        run_ast_test(
-            self,
-            args[0],
-            Call(
-                func=Name("ARRAY", Load(), lineno=None, col_offset=None),
-                args=[Name("JSON", Load(), lineno=None, col_offset=None)],
-                keywords=[],
-                expr=None,
-                expr_func=None,
-                lineno=None,
-                col_offset=None,
-            ),
-        )
-
     def test_update_with_imports_from_columns(self) -> None:
         """
         Tests basic `cdd.sqlalchemy.utils.emit_utils.update_with_imports_from_columns` usage

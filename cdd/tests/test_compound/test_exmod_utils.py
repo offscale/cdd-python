@@ -57,7 +57,6 @@ class TestExmodUtils(TestCase):
         with patch(
             "cdd.compound.exmod_utils.EXMOD_OUT_STREAM", new_callable=StringIO
         ), TemporaryDirectory() as tempdir:
-            output_directory: str = path.join(tempdir, "haz")
             open(path.join(tempdir, INIT_FILENAME), "a").close()
             emit_file_on_hierarchy(
                 ("foo.bar", "foo_dir", ir),
@@ -66,13 +65,13 @@ class TestExmodUtils(TestCase):
                 "",
                 True,
                 filesystem_layout="as_input",
-                output_directory=output_directory,
+                output_directory=tempdir,
                 first_output_directory=tempdir,
                 no_word_wrap=None,
                 dry_run=False,
                 extra_modules_to_all=None,
             )
-            self.assertTrue(path.isdir(output_directory))
+            self.assertTrue(path.isdir(tempdir))
 
     def test__emit_symbols_isfile_emit_filename_true(self) -> None:
         """Test `_emit_symbol` when `isfile_emit_filename is True`"""

@@ -500,22 +500,20 @@ docstring_google_pytorch_lbfgs = (
 )
 docstring_google_pytorch_lbfgs_str: str = "\n".join(docstring_google_pytorch_lbfgs)
 
-docstring_google_args_str: str = """Args:
+docstring_google_str: str = (
+    """{docstring_header_str}
+Args:
   dataset_name (str): name of dataset. Defaults to "mnist"
   tfds_dir (str): directory to look for models in. Defaults to "~/tensorflow_datasets"
   K (Literal['np', 'tf']): backend engine, e.g., `np` or `tf`. Defaults to "np"
   as_numpy (Optional[bool]): Convert to numpy ndarrays
   data_loader_kwargs (Optional[dict]): pass this as arguments to data_loader function
-"""
-docstring_google_footer_return_str: str = """Returns:
+
+Returns:
   Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
    Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
-"""
-docstring_google_str: str = "\n".join(
-    (
-        docstring_header_str,
-        docstring_google_args_str,
-        docstring_google_footer_return_str,
+""".format(
+        docstring_header_str=docstring_header_str
     )
 )
 

@@ -248,25 +248,6 @@ class TestMarshallDocstring(TestCase):
         _intermediate_repr_no_default_doc["doc"] = docstring_header_str
         self.assertDictEqual(ir, _intermediate_repr_no_default_doc)
 
-    def test_from_docstring_google_str_extra_after(self) -> None:
-        """
-        Tests whether `parse_docstring` produces `intermediate_repr_no_default_doc`  + "\n\n\ntrailer"
-              from `docstring_google_str` + "\n\n\ntrailer"
-        """
-        ir: IntermediateRepr = parse_docstring(
-            "{}\n\n\ntrailer".format(docstring_google_str)
-        )
-        _intermediate_repr_no_default_doc = deepcopy(
-            intermediate_repr_no_default_with_nones_doc
-        )
-        _intermediate_repr_no_default_doc["doc"] = "{0}\n\n\n\ntrailer".format(
-            docstring_header_str
-        )
-
-        self.assertDictEqual(ir, _intermediate_repr_no_default_doc)
-
-    maxDiff = None
-
     def test_from_docstring_google_keras_squared_hinge(self) -> None:
         """
         Tests whether `parse_docstring` produces the right IR

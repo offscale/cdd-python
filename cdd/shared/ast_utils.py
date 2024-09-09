@@ -427,10 +427,8 @@ def param2ast(param):
             )
         elif _param.get("typ") == "Str":
             _param["typ"] = "str"
-        elif _param.get("typ") in frozenset(("Constant", "NameConstant")):
+        elif _param.get("typ") in frozenset(("Constant", "NameConstant", "Num")):
             _param["typ"] = "object"
-        elif _param.get("typ") == "Num":
-            _param["typ"] = "float"
     if "typ" in _param and needs_quoting(_param["typ"]):
         default = (
             _param.get("default")

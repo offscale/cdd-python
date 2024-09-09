@@ -228,38 +228,27 @@ def _parse_out_default_and_doc(
     :rtype: Tuple[str, Optional[str]]
     """
     if typ is not None and typ in simple_types and default not in none_types:
-        keep_default: bool = False
-        try:
-            lit = (
-                ast.AST()
-                if typ != "str"
-                and any(
-                    map(
-                        partial(
-                            contains, frozenset(("*", "^", "&", "|", "$", "@", "!"))
-                        ),
-                        default,
-                    )
+        lit = (
+            ast.AST()
+            if typ != "str"
+            and any(
+                map(
+                    partial(contains, frozenset(("*", "^", "&", "|", "$", "@", "!"))),
+                    default,
                 )
-                else literal_eval("({default})".format(default=default))
             )
-        except ValueError as e:
-            assert e.args[0].startswith("malformed node or string"), e
-            keep_default = True
+            else literal_eval("({default})".format(default=default))
+        )
         default = (
-            default
-            if keep_default
-            else (
-                "```{default}```".format(default=default)
-                if isinstance(lit, ast.AST)
-                else {
-                    "bool": bool,
-                    "int": int,
-                    "float": float,
-                    "complex": complex,
-                    "str": str,
-                }[typ](lit)
-            )
+            "```{default}```".format(default=default)
+            if isinstance(lit, ast.AST)
+            else {
+                "bool": bool,
+                "int": int,
+                "float": float,
+                "complex": complex,
+                "str": str,
+            }[typ](lit)
         )
     elif default.isdecimal():
         default = int(default)

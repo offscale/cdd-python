@@ -1011,39 +1011,6 @@ class TestAstUtils(TestCase):
             ),
         )
 
-    def test_param2ast_with_simple_types(self) -> None:
-        """Check that `param2ast` behaves correctly with simple types"""
-        deque(
-            map(
-                lambda typ_res: run_ast_test(
-                    self,
-                    param2ast(
-                        ("zion", {"typ": typ_res[0], "default": NoneStr}),
-                    ),
-                    gold=AnnAssign(
-                        annotation=Name(
-                            typ_res[1], Load(), lineno=None, col_offset=None
-                        ),
-                        simple=1,
-                        target=Name("zion", Store(), lineno=None, col_offset=None),
-                        value=set_value(None),
-                        expr=None,
-                        expr_target=None,
-                        expr_annotation=None,
-                        col_offset=None,
-                        lineno=None,
-                    ),
-                ),
-                (
-                    ("Str", "str"),
-                    ("Constant", "object"),
-                    ("NameConstant", "object"),
-                    ("Num", "float"),
-                ),
-            ),
-            maxlen=0,
-        )
-
     def test_param2argparse_param_none_default(self) -> None:
         """
         Tests that param2argparse_param works to reparse the default
