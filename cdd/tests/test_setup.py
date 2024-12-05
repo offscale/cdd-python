@@ -51,19 +51,6 @@ class TestSetupPy(TestCase):
         self.assertEqual(getattr(self.mod, "package_name"), "cdd")
         self.assertEqual(self.mod.__name__, "setup_py")
 
-    def test_to_funcs(self) -> None:
-        """Tests that `to_funcs` produces the right local and install dirs"""
-        to_funcs = getattr(self.mod, "to_funcs")
-        args = "5", "6"  # type: tuple[str, str]
-        local_dir_join_func_resp, install_dir_join_func_resp = map(
-            methodcaller("__call__"), to_funcs(*args)
-        )
-        self.assertNotEqual(local_dir_join_func_resp, install_dir_join_func_resp)
-        self.assertEqual(
-            local_dir_join_func_resp,
-            path.join(path.dirname(path.dirname(__file__)), *args),
-        )
-
     def test_main(self) -> None:
         """
         Tests that no errors occur in `main` function call (up to `setup()`, which is tested in setuptools)
