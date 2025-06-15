@@ -6,7 +6,7 @@ cdd-python
 [![Linting, testing, coverage, and release](https://github.com/offscale/cdd-python/workflows/Linting,%20testing,%20coverage,%20and%20release/badge.svg)](https://github.com/offscale/cdd-python/actions)
 ![Tested OSs, others may work](https://img.shields.io/badge/Tested%20on-Linux%20|%20macOS%20|%20Windows-green)
 ![Documentation coverage](https://raw.githubusercontent.com/offscale/cdd-python/master/.github/doccoverage.svg)
-[![codecov](https://codecov.io/gh/offscale/cdd-python/branch/master/graph/badge.svg)](https://codecov.io/gh/offscale/cdd-python)
+[![codecov](https://codecov.io/gh/offscale/cdd-python/graph/badge.svg?token=TndsFusENZ)](https://codecov.io/gh/offscale/cdd-python)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort)
 [![PyPi: release](https://img.shields.io/pypi/v/python-cdd.svg?maxAge=3600)](https://pypi.org/project/python-cdd)
