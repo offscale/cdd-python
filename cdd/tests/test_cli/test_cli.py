@@ -1,4 +1,4 @@
-""" Tests for CLI (__main__.py) """
+"""Tests for CLI (__main__.py)"""
 
 import os
 from argparse import ArgumentParser

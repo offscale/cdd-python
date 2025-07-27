@@ -1,4 +1,4 @@
-""" Tests for cst_utils """
+"""Tests for cst_utils"""
 
 from unittest import TestCase
 

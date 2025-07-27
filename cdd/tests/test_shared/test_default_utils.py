@@ -1,4 +1,4 @@
-""" Tests for default utils """
+"""Tests for default utils"""
 
 from unittest import TestCase
 
@@ -114,6 +114,37 @@ class TestDefaultUtils(TestCase):
             extract_default(sample, emit_default_doc=True),
             (sample, "max_iter * 1.25"),
         )
+
+    def test_extract_default_quoted_string(self) -> None:
+        """Tests that `extract_default` handles defaults within quoted strings correctly"""
+        line = 'Example - "dataset. Defaults to mnist"'
+
+        # No type hint, default should be a string literal
+        doc, default = extract_default(line)
+        self.assertEqual(doc, line)
+        self.assertEqual(default, "mnist")
+
+        # No type hint, emit_default_doc=False
+        doc, default = extract_default(line, emit_default_doc=False)
+        self.assertEqual(doc, 'Example - "dataset.')
+        self.assertEqual(default, "mnist")
+
+        # With typ="str" hint, default should be the raw string
+        doc, default = extract_default(line, typ="str", emit_default_doc=False)
+        self.assertEqual(doc, 'Example - "dataset.')
+        self.assertEqual(default, "mnist")
+
+        # A default that looks like an identifier but should be a string
+        line_no_quotes = "Defaults to mnist"
+        doc, default = extract_default(line_no_quotes, typ="str")
+        self.assertEqual(doc, line_no_quotes)
+        self.assertEqual(default, "mnist")
+
+        # A default that is a number, but should be a string
+        line_num_as_str = 'Defaults to "5"'
+        doc, default = extract_default(line_num_as_str, typ="str")
+        self.assertEqual(doc, line_num_as_str)
+        self.assertEqual(default, "5")
 
     def test_set_default_doc_none(self) -> None:
         """Tests that `set_default_doc` does nop whence no doc in param"""

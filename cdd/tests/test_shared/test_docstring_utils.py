@@ -1,4 +1,4 @@
-""" Tests for docstring_utils """
+"""Tests for docstring_utils"""
 
 from functools import partial
 from operator import add

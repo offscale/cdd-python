@@ -1,4 +1,4 @@
-""" Tests for exmod_utils """
+"""Tests for exmod_utils"""
 
 from ast import Module
 from collections import deque

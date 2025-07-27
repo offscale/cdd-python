@@ -1,4 +1,4 @@
-""" Tests for doctrans """
+"""Tests for doctrans"""
 
 from copy import deepcopy
 from os import path

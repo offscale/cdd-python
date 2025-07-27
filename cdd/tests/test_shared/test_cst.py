@@ -1,4 +1,4 @@
-""" Tests for cst """
+"""Tests for cst"""
 
 from os import extsep, path
 from unittest import TestCase
@@ -16,7 +16,8 @@ class TestCst(TestCase):
         with open(
             path.join(
                 path.dirname(__file__),
-                "../mocks",
+                "..",
+                "mocks",
                 "cstify{extsep}py".format(extsep=extsep),
             ),
             "rt",

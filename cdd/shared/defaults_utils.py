@@ -175,6 +175,24 @@ def extract_default(
 
     default = default.strip(" \t`")
 
+    if default.count('"') & 1:
+        default = default.strip('"')
+    if default.count("'") & 1:
+        default = default.strip("'")
+
+    # Correct for parsing errors where a quote is captured at the start or end, but not both
+    if len(default) > 0:
+        if default.count('"') == 1 and default.count("'") == 0:
+            if default.startswith('"'):
+                default = default + '"'
+            elif default.endswith('"'):
+                default = '"' + default
+        elif default.count("'") == 1 and default.count('"') == 0:
+            if default.startswith("'"):
+                default = default + "'"
+            elif default.endswith("'"):
+                default = "'" + default
+
     return _parse_out_default_and_doc(
         _start_idx,
         start_rest_offset,
@@ -228,28 +246,35 @@ def _parse_out_default_and_doc(
     :rtype: Tuple[str, Optional[str]]
     """
     if typ is not None and typ in simple_types and default not in none_types:
-        lit = (
-            ast.AST()
-            if typ != "str"
-            and any(
-                map(
-                    partial(contains, frozenset(("*", "^", "&", "|", "$", "@", "!"))),
-                    default,
+        if typ == "str":
+            from cdd.shared.pure_utils import unquote
+
+            default = unquote(default)
+        else:
+            lit = (
+                ast.AST()
+                if any(
+                    map(
+                        partial(
+                            contains, frozenset(("*", "^", "&", "|", "$", "@", "!"))
+                        ),
+                        default,
+                    )
                 )
+                else literal_eval("({default})".format(default=default))
             )
-            else literal_eval("({default})".format(default=default))
-        )
-        default = (
-            "```{default}```".format(default=default)
-            if isinstance(lit, ast.AST)
-            else {
-                "bool": bool,
-                "int": int,
-                "float": float,
-                "complex": complex,
-                "str": str,
-            }[typ](lit)
-        )
+            default = (
+                "```{default}```".format(default=default)
+                if isinstance(lit, ast.AST)
+                else {
+                    "bool": bool,
+                    "int": int,
+                    "float": float,
+                    "complex": complex,
+                }[
+                    typ
+                ](lit)
+            )
     elif default.isdecimal():
         default = int(default)
     elif default in frozenset(("True", "False")):
@@ -261,8 +286,15 @@ def _parse_out_default_and_doc(
         return line, default
     else:
         stop_tokens = frozenset((" ", "\t", "\n", "\n", "."))
-        end = line[: _start_idx - 1]
-        extra_offset = int(end[-1] in frozenset((" ", "\t", "\n", "\n")) if end else 0)
+        if _start_idx == 0:
+            fst = ""
+            extra_offset = 0
+        else:
+            end = line[: _start_idx - 1]
+            extra_offset = int(
+                end[-1] in frozenset((" ", "\t", "\n", "\n")) if end else 0
+            )
+            fst = line[: _start_idx - 1 - extra_offset]
 
         if rstrip_default:
             offset: int = count_iter_items(
@@ -273,7 +305,6 @@ def _parse_out_default_and_doc(
             )
             start_rest_offset += offset
 
-        fst = line[: _start_idx - 1 - extra_offset]
         rest = line[
             start_rest_offset : (
                 (-extra_offset if extra_offset > 0 else None)

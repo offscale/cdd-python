@@ -1,4 +1,4 @@
-""" eval.py for testing with `sync_properties` """
+"""eval.py for testing with `sync_properties`"""
 
 import sys
 

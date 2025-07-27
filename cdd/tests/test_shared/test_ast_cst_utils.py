@@ -1,4 +1,4 @@
-""" Tests for ast_cst_utils """
+"""Tests for ast_cst_utils"""
 
 from ast import ClassDef, Expr, FunctionDef, Load, Name, Pass, walk
 from copy import deepcopy

@@ -1,4 +1,4 @@
-""" Tests for gen_utils """
+"""Tests for gen_utils"""
 
 from ast import Assign, List, Load, Module, Name, Store
 from os import path

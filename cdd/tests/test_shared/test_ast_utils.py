@@ -1,4 +1,4 @@
-""" Tests for ast_utils """
+"""Tests for ast_utils"""
 
 import ast
 import pickle

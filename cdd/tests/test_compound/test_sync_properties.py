@@ -1,4 +1,4 @@
-""" Tests for sync_properties """
+"""Tests for sync_properties"""
 
 import ast
 import os

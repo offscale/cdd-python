@@ -1,4 +1,4 @@
-""" Tests for gen """
+"""Tests for gen"""
 
 import ast
 import os

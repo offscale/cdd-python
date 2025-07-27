@@ -1,0 +1,2 @@
+#https://github.com/SamuelMarks/griffe/archive/rest.zip
+git+https://github.com/SamuelMarks/griffe.git@rest

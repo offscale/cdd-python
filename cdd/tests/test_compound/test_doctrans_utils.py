@@ -1,4 +1,4 @@
-""" Tests for doctrans_utils """
+"""Tests for doctrans_utils"""
 
 from ast import (
     Expr,
@@ -292,7 +292,7 @@ class TestDocTransUtils(TestCase):
         ):
             doctransify_cst(cst_list, ast_mod)
         self.assertTrue(fake_maybe_replace_doc_str_in_function_or_class.called)
-        self.assertEqual(fake_maybe_replace_doc_str_in_function_or_class.call_count, 6)
+        self.assertEqual(fake_maybe_replace_doc_str_in_function_or_class.call_count, 3)
 
     def test_doctransify_cst_early_exit(self) -> None:
         """

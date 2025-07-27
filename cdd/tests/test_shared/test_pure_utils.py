@@ -1,4 +1,4 @@
-""" Tests for pure utils """
+"""Tests for pure utils"""
 
 import unittest
 from functools import partial

@@ -1,4 +1,4 @@
-""" Exmod mocks """
+"""Exmod mocks"""
 
 from ast import Assign, ImportFrom, List, Load, Module, Name, Store, alias
 from itertools import chain

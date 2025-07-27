@@ -1,4 +1,4 @@
-""" Tests for CLI exmod subparser (__main__.py) """
+"""Tests for CLI exmod subparser (__main__.py)"""
 
 from unittest import TestCase
 from unittest.mock import MagicMock, patch

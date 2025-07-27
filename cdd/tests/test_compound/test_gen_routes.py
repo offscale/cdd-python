@@ -1,4 +1,4 @@
-""" Tests for gen_routes subcommand """
+"""Tests for gen_routes subcommand"""
 
 import ast
 from ast import FunctionDef

@@ -1,4 +1,4 @@
-""" Exmod utils """
+"""Exmod utils"""
 
 import sys
 from ast import AST, Assign, Expr, ImportFrom, List, Load, Module, Name, Store, alias

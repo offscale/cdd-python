@@ -1,4 +1,4 @@
-""" Tests for emitter_utils """
+"""Tests for emitter_utils"""
 
 from ast import Attribute, Call, Expr, Load, Name, Subscript, keyword
 from collections import OrderedDict

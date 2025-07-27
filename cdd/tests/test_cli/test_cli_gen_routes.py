@@ -1,4 +1,4 @@
-""" Tests for CLI gen_routes subparser (__main__.py) """
+"""Tests for CLI gen_routes subparser (__main__.py)"""
 
 from unittest import TestCase
 from unittest.mock import patch

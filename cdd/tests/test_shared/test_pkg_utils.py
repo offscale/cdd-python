@@ -1,4 +1,4 @@
-""" Tests for pkg utils """
+"""Tests for pkg utils"""
 
 from operator import eq
 from os import path

@@ -1,4 +1,4 @@
-""" Tests for CLI sync subparser (__main__.py) """
+"""Tests for CLI sync subparser (__main__.py)"""
 
 import os
 from os.path import extsep

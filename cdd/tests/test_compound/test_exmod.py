@@ -1,4 +1,4 @@
-""" Tests for exmod subcommand """
+"""Tests for exmod subcommand"""
 
 from ast import Assign, ClassDef, ImportFrom, List, Load, Module, Name, Store, alias
 from functools import partial
