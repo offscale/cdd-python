@@ -10,6 +10,7 @@ cdd-python
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort)
 [![PyPi: release](https://img.shields.io/pypi/v/python-cdd.svg?maxAge=3600)](https://pypi.org/project/python-cdd)
+[![hosted documentation](https://img.shields.io/badge/hosted-docs-white)](https://offscale.io/cdd-python/)
 
 [OpenAPI](https://openapis.org) to/fro routes, models, and tests. Convert between docstrings, `class`es, methods, [argparse](https://docs.python.org/3/library/argparse.html), pydantic, and [SQLalchemy](https://sqlalchemy.org).
 
