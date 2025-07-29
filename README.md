@@ -12,7 +12,9 @@ cdd-python
 [![PyPi: release](https://img.shields.io/pypi/v/python-cdd.svg?maxAge=3600)](https://pypi.org/project/python-cdd)
 [![hosted documentation](https://img.shields.io/badge/hosted-docs-white)](https://offscale.io/cdd-python/)
 
-[OpenAPI](https://openapis.org) to/fro routes, models, and tests. Convert between docstrings, `class`es, methods, [argparse](https://docs.python.org/3/library/argparse.html), pydantic, and [SQLalchemy](https://sqlalchemy.org).
+[OpenAPI](https://openapis.org) to/fro routes, models, and tests. Convert between docstrings, `class`es,
+methods, [argparse](https://docs.python.org/3/library/argparse.html), pydantic,
+and [SQLalchemy](https://sqlalchemy.org).
 
 Public SDK works with filenames, source code, and even in memory constructs (e.g., as imported into your REPL).
 
@@ -81,7 +83,12 @@ To break it down, with current tooling there is no way to know:
 Some of these problems can be solved dynamically, however in doing so one loses developer-tool insights.
 There is no code-completion, and likely the CLI parser won't provide you with the enumeration of possibilities.
 
-For migration from Google App Engine, this project builds upon cdd-python for a unidirectional experience: https://github.com/offscale/cdd-python-gae
+For migration from Google App Engine, this project builds upon cdd-python for a unidirectional
+experience: https://github.com/offscale/cdd-python-gae
+
+Also, a proof-of-concept was made
+to [generate documentation using cdd-python](https://github.com/SamuelMarks/griffe/tree/rest) (`mkdocs` core
+replacement).
 
 ## SDK example (REPL)
 
@@ -718,7 +725,8 @@ PS: If you're outputting JSON-schema and want a file per schema then:
       --dry-run             Show what would be created; don't actually write to
                             the filesystem.
 
-PS: Below is a temporary hack to run on the SQLalchemy output to make it work; until the `tuple`|`Tuple`|`List`|`list`|`name` as column-type bug is resolved:
+PS: Below is a temporary hack to run on the SQLalchemy output to make it work; until the `tuple`|`Tuple`|`List`|`list`|
+`name` as column-type bug is resolved:
 
     fastmod --accept-all -iF 'tuple, comment=' 'LargeBinary, comment=' ; fastmod --accept-all -iF 'tuple,
             comment=' 'LargeBinary, comment=' ; fastmod --accept-all -iF 'list, comment=' 'LargeBinary, comment=' ; fastmod --accept-all -iF 'list,
