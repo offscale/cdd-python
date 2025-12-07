@@ -12,7 +12,7 @@ cdd-python
 [![PyPi: release](https://img.shields.io/pypi/v/python-cdd.svg?maxAge=3600)](https://pypi.org/project/python-cdd)
 [![hosted documentation](https://img.shields.io/badge/hosted-docs-white)](https://offscale.io/cdd-python/)
 
-[OpenAPI](https://openapis.org) to/fro routes, models, and tests. Convert between docstrings, `class`es,
+[OpenAPI](https://openapis.org) to/from routes, models, and tests. Convert between docstrings, `class`es,
 methods, [argparse](https://docs.python.org/3/library/argparse.html), pydantic,
 and [SQLalchemy](https://sqlalchemy.org).
 
