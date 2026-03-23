@@ -127,6 +127,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+venv*
 
 # Spyder project settings
 .spyderproject
@@ -152,3 +153,8 @@ dmypy.json
 # Docs
 _docs
 reports
+
+*.wasm
+node_modules/
+*.o
+.idea/

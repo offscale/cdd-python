@@ -195,9 +195,9 @@ def cst_scanner(source):
     """
     scanned, stack = [], []
     for idx, ch in enumerate(source):
+        stack.append(ch)
         if ch == "\n":  # in frozenset(("\n", ":", ";", '"""', "'''", '#')):
             cst_scan(scanned, stack)
-        stack.append(ch)
     cst_scan(scanned, stack)
     if stack:
         scanned.append("".join(stack))
@@ -215,6 +215,11 @@ def cst_scan(scanned, stack):
     :param stack: List of characters observed
     :type stack: ```list[str]```
     """
+    if not "".join(stack).strip():
+        scanned.append("".join(stack))
+        stack.clear()
+        return
+
     statement = "".join(stack)
     statement_stripped = statement.strip()
 
@@ -432,6 +437,18 @@ def cst_parse_one_node(statement, state):
         line_no_end=state["acc"],
         value=statement,
     )
+    last_line = block_def.rstrip()
+    if not last_line:
+        return block_def
+    colon_pos = last_line.rfind(":")
+    if colon_pos == -1:
+        return block_def
+    after_colon = last_line[colon_pos + 1 :]
+    comment_pos = after_colon.find("#")
+    code_after_colon = after_colon if comment_pos == -1 else after_colon[:comment_pos]
+    if code_after_colon.strip():
+        return block_def
+    return "{block_def}\n{tab}pass".format(block_def=block_def, tab=tab)
 
     if len(statement_stripped) > 5:
         is_single_quote = (statement_stripped[:3], statement_stripped[-3:]) == (
@@ -479,14 +496,16 @@ def reindent_block_with_pass_body(s):
     :return: Reindented string with `pass` body
     :rtype: ```str```
     """
-    return "{block_def} pass".format(
-        block_def="\n".join(
-            map(
-                str.lstrip,
-                s.split("\n"),
-            )
-        ).replace(tab, "", 1)
-    )
+    block_def: str = "\n".join(
+        map(
+            str.lstrip,
+            s.split("\n"),
+        )
+    )  # .replace(tab, "", 1)
+    stripped_block_def: str = block_def.strip()
+    if stripped_block_def and stripped_block_def.endswith(":"):
+        return "{block_def}\n{tab}pass".format(block_def=block_def, tab=tab)
+    return block_def
 
 
 CstTypes = Union[

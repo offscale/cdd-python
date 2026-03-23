@@ -212,8 +212,9 @@ def maybe_replace_function_return_type(new_node, cur_ast_node, cst_idx, cst_list
         :return: The new function prototype
         :rtype: ```str```
         """
-        return "{type_less}:".format(
-            type_less=statement[: statement.rfind("->")].rstrip()
+        pre, col, post = statement.rpartition(":")
+        return "{type_less}{col}{post}".format(
+            type_less=pre[: pre.rfind("->")].rstrip(), col=col, post=post
         )
 
     def add_return_typ(statement):

@@ -1,5 +1,6 @@
 # pragma: no cover
 # flake8: noqa
+# fmt: off
 # === Copyright 2022 under CC0
 """Module docstring goes here"""
 
@@ -20,15 +21,13 @@ class C(object):
         """
 
         """foo"""
+        def g(): """foo : bar ; can"""; pass
 
-        def g():
-            """foo : bar ; can"""
+        def h(): # stuff
             pass
 
-        def h():  # stuff
-            pass
-
-        def adder(a: int, b: int) -> int:
+        def adder(a: int,
+                  b: int) -> int:
             """
             :param a: First arg
 
@@ -42,14 +41,19 @@ class C(object):
                 = a + b
             return res
 
-        r = add(foo, 1) or adder(foo, 1)
+        r = (
+            add(foo, 1)
+            or
+            adder(foo, 1)
+        )
         if r:
             None
         elif r:
             True
             False
             # ([5,5] @ [5,5]) *\
-            -5 / 7**6 + 6.0 - 6e1 & 1 + 2.34j
+            -5 / 7 ** 6 + \
+            6.0 - 6e1 & 1+2.34j
             r <<= 5
             print(r)
         else:

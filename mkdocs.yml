@@ -35,7 +35,7 @@ plugins:
         options:
           show_root_heading: true
           show_source: true
-          docstring_style: rest
+          docstring_style: sphinx
           show_signature_annotations: true
           separate_signature: true
           merge_init_into_class: true

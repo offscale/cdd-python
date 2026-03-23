@@ -247,8 +247,8 @@ class TestAstCstUtils(TestCase):
         Tests that `maybe_replace_function_return_type` adds return type
         """
 
-        before: str = "\n\n    @staticmethod\n    def add1(foo):"
-        after: str = "\n\n    @staticmethod\n    def add1(foo) -> int:"
+        before: str = "    @staticmethod\n    def add1(foo):"
+        after: str = "    @staticmethod\n    def add1(foo) -> int:"
 
         new_func_node = deepcopy(self.func_node)
         new_func_node.returns = Name("int", Load(), lineno=None, col_offset=None)
@@ -272,8 +272,8 @@ class TestAstCstUtils(TestCase):
         Tests that `maybe_replace_function_return_type` removes return type
         """
 
-        before: str = "\n\n    @staticmethod\n    def add1(foo) -> int:"
-        after: str = "\n\n    @staticmethod\n    def add1(foo):"
+        before: str = "    @staticmethod\n    def add1(foo) -> int:\n"
+        after: str = "    @staticmethod\n    def add1(foo):\n"
 
         self.maybe_replace_function_return_type_test(
             ast_node_to_find=self.func_node,
@@ -294,8 +294,8 @@ class TestAstCstUtils(TestCase):
         Tests that `maybe_replace_function_return_type` replaces return type
         """
 
-        before: str = "\n\n    @staticmethod\n    def add1(foo) -> int:"
-        after: str = "\n\n    @staticmethod\n    def add1(foo) -> float:"
+        before: str = "    @staticmethod\n    def add1(foo) -> int:\n"
+        after: str = "    @staticmethod\n    def add1(foo) -> float:\n"
 
         new_func_node = deepcopy(self.func_node)
         new_func_node.returns = Name("float", Load(), lineno=None, col_offset=None)
@@ -415,8 +415,8 @@ class TestAstCstUtils(TestCase):
         """
 
         self.maybe_replace_function_args_test(
-            before="\n\n    @staticmethod\n    def add1(foo: int) -> int:",
-            after="\n\n    @staticmethod\n    def add1(foo) -> int:",
+            before="    @staticmethod\n    def add1(foo: int) -> int:\n",
+            after="    @staticmethod\n    def add1(foo) -> int:\n",
             delta=Delta.removed,
         )
 
@@ -426,8 +426,8 @@ class TestAstCstUtils(TestCase):
         """
 
         self.maybe_replace_function_args_test(
-            before="\n\n    @staticmethod\n    def add1(foo: int) -> int:",
-            after="\n\n    @staticmethod\n    def add1(foo: float) -> int:",
+            before="    @staticmethod\n    def add1(foo: int) -> int:\n",
+            after="    @staticmethod\n    def add1(foo: float) -> int:\n",
             delta=Delta.replaced,
         )
 
