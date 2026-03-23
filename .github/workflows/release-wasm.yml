@@ -14,11 +14,11 @@ jobs:
       - name: Build WASM
         run: |
           if [ -f Makefile ] && grep -q build_wasm Makefile; then
-          make build_wasm
-          cp bin/cdd-python.wasm . || echo -n -e '\x00asm\x01\x00\x00\x00' > cdd-python.wasm
-        else
-          echo -n -e '\x00asm\x01\x00\x00\x00' > cdd-python.wasm
-        fi
+            make build_wasm
+            cp bin/cdd-python.wasm . || echo -n -e '\x00asm\x01\x00\x00\x00' > cdd-python.wasm
+          else
+            echo -n -e '\x00asm\x01\x00\x00\x00' > cdd-python.wasm
+          fi
       - name: Release WASM Artifact
         uses: softprops/action-gh-release@v2
         with:
