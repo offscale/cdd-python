@@ -1,5 +1,5 @@
-cdd-python
-==========
+# cdd-python
+
 ![Python version range](https://img.shields.io/badge/python-3.6%20|%203.7%20|%203.8%20|%203.9%20|%203.10%20|%203.11%20|%203.12%20|%203.13-blue.svg)
 ![Python implementation](https://img.shields.io/badge/implementation-cpython-blue.svg)
 [![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -12,483 +12,106 @@ cdd-python
 [![PyPi: release](https://img.shields.io/pypi/v/python-cdd.svg?maxAge=3600)](https://pypi.org/project/python-cdd)
 [![hosted documentation](https://img.shields.io/badge/hosted-docs-white)](https://offscale.io/cdd-python/)
 
-[OpenAPI](https://openapis.org) to/fro routes, models, and tests. Convert between docstrings, `class`es,
-methods, [argparse](https://docs.python.org/3/library/argparse.html), pydantic,
-and [SQLalchemy](https://sqlalchemy.org).
+OpenAPI ↔ Python. This is one compiler in a suite, all focussed on the same task: Compiler Driven Development (CDD).
 
-Public SDK works with filenames, source code, and even in memory constructs (e.g., as imported into your REPL).
+Each compiler is written in its target language, is whitespace and comment sensitive, and has both an SDK and CLI.
 
-## Features
+The CLI—at a minimum—has:
 
-| Type                                                                                                                                                    | Parse | Emit | Convert to all other Types |
-|---------------------------------------------------------------------------------------------------------------------------------------------------------|-------|------|----------------------------|
-| docstrings (between Google, NumPy, ReST formats; and betwixt type annotations and docstring)                                                            | ✅     | ✅    | ✅                          |
-| `class`es                                                                                                                                               | ✅     | ✅    | ✅                          |
-| functions                                                                                                                                               | ✅     | ✅    | ✅                          |
-| [`argparse` CLI generating](https://docs.python.org/3/library/argparse.html#argumentparser-objects) functions                                           | ✅     | ✅    | ✅                          |
-| JSON-schema                                                                                                                                             | ✅     | ✅    | ✅                          |
-| [SQLalchemy `class`es](https://docs.sqlalchemy.org/en/14/orm/mapping_styles.html#orm-declarative-mapping)                                               | ✅     | ✅    | ✅                          |
-| [SQLalchemy `Table`s](https://docs.sqlalchemy.org/en/14/core/metadata.html#sqlalchemy.schema.Table)                                                     | ✅     | ✅    | ✅                          |
-| [SQLalchemy hybrid `class`es](https://docs.sqlalchemy.org/en/14/orm/declarative_tables.html#declarative-with-imperative-table-a-k-a-hybrid-declarative) | ✅     | ✅    | ✅                          |
-| [pydantic `class`es](https://pydantic-docs.helpmanual.io/usage/schema/)                                                                                 | ✅     | ✅    | ✅                          |
+- `cdd-python --help`
+- `cdd-python --version`
+- `cdd-python from_openapi to_sdk_cli -i spec.json`
+- `cdd-python from_openapi to_sdk -i spec.json`
+- `cdd-python from_openapi to_server -i spec.json`
+- `cdd-python to_openapi -f path/to/code`
+- `cdd-python to_docs_json --no-imports --no-wrapping -i spec.json`
+- `cdd-python serve_json_rpc --port 8080 --listen 0.0.0.0`
 
-### [OpenAPI](https://openapis.org) composite
+The goal of this project is to enable rapid application development without tradeoffs. Tradeoffs of Protocol Buffers / Thrift etc. are an untouchable "generated" directory and package, compile-time and/or runtime overhead. Tradeoffs of Java or JavaScript for everything are: overhead in hardware access, offline mode, ML inefficiency, and more. And neither of these alternative approaches are truly integrated into your target system, test frameworks, and bigger abstractions you build in your app. Tradeoffs in CDD are code duplication (but CDD handles the synchronisation for you).
 
-The [OpenAPI](https://swagger.io/specification/) parser and emitter
-utilises:
+## 🚀 Capabilities
 
-| Type                                                                                                      | Parse | Emit |
-|-----------------------------------------------------------------------------------------------------------|-------|------|
-| [Bottle route functions](https://bottlepy.org/docs/dev/api.html#routing)                                  | WiP   | WiP  |
-| [FastAPI route functions](https://fastapi.tiangolo.com/tutorial/body/#request-body-path-query-parameters) | ✅     | ❌    |
-| JSON-schema (e.g., from [SQLalchemy](https://docs.sqlalchemy.org))                                        | ✅     | ✅    |
+The `cdd-python` compiler leverages a unified architecture to support various facets of API and code lifecycle management.
 
-## Install package
+- **Compilation**:
+    - **OpenAPI → `Python`**: Generate idiomatic native models, network routes, client SDKs, and boilerplate directly from OpenAPI (`.json` / `.yaml`) specifications.
+    - **`Python` → OpenAPI**: Statically parse existing `Python` source code and emit compliant OpenAPI specifications.
+- **AST-Driven & Safe**: Employs static analysis instead of unsafe dynamic execution or reflection, allowing it to safely parse and emit code even for incomplete or un-compilable project states.
+- **Seamless Sync**: Keep your docs, tests, database, clients, and routing in perfect harmony. Update your code, and generate the docs; or update the docs, and generate the code.
 
-### PyPi
+## 📦 Installation & Build
 
-    python -m pip install python-cdd
+### Native Tooling
 
-### Master
-
-    python -m pip install -r https://raw.githubusercontent.com/offscale/cdd-python/master/requirements.txt
-    python -m pip install https://api.github.com/repos/offscale/cdd-python/zipball#egg=cdd
-
-## Goal
-
-Easily create and maintain Database / ORM models and REST APIs out of existing Python SDKs.
-
-For example, this can be used to expose TensorFlow in a REST API and store its parameters in an SQL database.
-
-## Relation to other projects
-
-This was created to aid in the `ml_params` project. It exposes an `@abstractclass` which is implemented [officially] by
-more than 8 projects.
-
-Due to the nature of ML frameworks, `ml_params`' `def train(self, <these>)` has a potentially large number of arguments.
-Accumulate the complexity of maintaining interfaces as the underlying release changes (e.g, new version of PyTorch),
-add in the extra interfaces folks find useful (CLIs, REST APIs, SQL models, &etc.); and you end up needing a team to
-maintain it.
-
-That's unacceptable. The only existing solutions maintainable by one engineer involve dynamic generation,
-with no static, editable interfaces available. This means developer tooling becomes useless for debugging,
-introspection, and documentation.
-
-To break it down, with current tooling there is no way to know:
-
-- What arguments can be provided to `train`
-- What CLI arguments are available
-- What 'shape' the `Config` takes
-
-Some of these problems can be solved dynamically, however in doing so one loses developer-tool insights.
-There is no code-completion, and likely the CLI parser won't provide you with the enumeration of possibilities.
-
-For migration from Google App Engine, this project builds upon cdd-python for a unidirectional
-experience: https://github.com/offscale/cdd-python-gae
-
-Also, a proof-of-concept was made
-to [generate documentation using cdd-python](https://github.com/SamuelMarks/griffe/tree/rest) (`mkdocs` core
-replacement).
-
-## SDK example (REPL)
-
-To create a `class`
-from [`tf.keras.optimizers.Adam`](https://tensorflow.org/api_docs/python/tf/keras/optimizers/Adam):
-
-```python
->> > from cdd.shared.source_transformer import to_code
-
->> > import cdd.class_.emit
-
->> > import cdd.class_.parse
-
->> > import tensorflow as tf
-
->> > from typing import Optional
-
->> > print(to_code(cdd.class_.emit.class_(cdd.class_.parse.class_(
-    tf.keras.optimizers.Adam,
-    merge_inner_function="__init__"
-),
-    class_name="AdamConfig")))
-
-
-class AdamConfig(object):
-    """
-    Optimizer that implements the Adam algorithm.
-
-    Adam optimization is a stochastic gradient descent method that is based on
-    adaptive estimation of first-order and second-order moments.
-
-    According to
-    [Kingma et al., 2014](http://arxiv.org/abs/1412.6980),
-    the method is "*computationally
-    efficient, has little memory requirement, invariant to diagonal rescaling of
-    gradients, and is well suited for problems that are large in terms of
-    data/parameters*".
-
-
-    Usage:
-
-    >>> opt = tf.keras.optimizers.Adam(learning_rate=0.1)
-    >>> var1 = tf.Variable(10.0)
-    >>> loss = lambda: (var1 ** 2)/2.0       # d(loss)/d(var1) == var1
-    >>> step_count = opt.minimize(loss, [var1]).numpy()
-    >>> # The first step is `-learning_rate*sign(grad)`
-    >>> var1.numpy()
-    9.9
-
-    Reference:
-      - [Kingma et al., 2014](http://arxiv.org/abs/1412.6980)
-      - [Reddi et al., 2018](
-          https://openreview.net/pdf?id=ryQu7f-RZ) for `amsgrad`.
-
-    Notes:
-
-    The default value of 1e-7 for epsilon might not be a good default in
-    general. For example, when training an Inception network on ImageNet a
-    current good choice is 1.0 or 0.1. Note that since Adam uses the
-    formulation just before Section 2.1 of the Kingma and Ba paper rather than
-    the formulation in Algorithm 1, the "epsilon" referred to here is "epsilon
-    hat" in the paper.
-
-    The sparse implementation of this algorithm (used when the gradient is an
-    IndexedSlices object, typically because of `tf.gather` or an embedding
-    lookup in the forward pass) does apply momentum to variable slices even if
-    they were not used in the forward pass (meaning they have a gradient equal
-    to zero). Momentum decay (beta1) is also applied to the entire momentum
-    accumulator. This means that the sparse behavior is equivalent to the dense
-    behavior (in contrast to some momentum implementations which ignore momentum
-    unless a variable slice was actually used).
-
-    :cvar learning_rate: A `Tensor`, floating point value, or a schedule that is a
-        `tf.keras.optimizers.schedules.LearningRateSchedule`, or a callable that takes no arguments and
-        returns the actual value to use, The learning rate.
-    :cvar beta_1: A float value or a constant float tensor, or a callable that takes no arguments and
-        returns the actual value to use. The exponential decay rate for the 1st moment estimates.
-    :cvar beta_2: A float value or a constant float tensor, or a callable that takes no arguments and
-        returns the actual value to use, The exponential decay rate for the 2nd moment estimates.
-    :cvar epsilon: A small constant for numerical stability. This epsilon is "epsilon hat" in the
-        Kingma and Ba paper (in the formula just before Section 2.1), not the epsilon in Algorithm 1 of the
-        paper.
-    :cvar amsgrad: Boolean. Whether to apply AMSGrad variant of this algorithm from the paper "On the
-        Convergence of Adam and beyond".
-    :cvar name: Optional name for the operations created when applying gradients.
-    :cvar kwargs: Keyword arguments. Allowed to be one of `"clipnorm"` or `"clipvalue"`. `"clipnorm"`
-        (float) clips gradients by norm; `"clipvalue"` (float) clips gradients by value."""
-    learning_rate: float = 0.001
-    beta_1: float = 0.9
-    beta_2: float = 0.999
-    epsilon: float = 1e-07
-    amsgrad: bool = False
-    name: Optional[str] = 'Adam'
-    kwargs: Optional[dict] = None
-    _HAS_AGGREGATE_GRAD: bool = True
+```bash
+python -m pip install -e .
+python -m pytest
 ```
 
-### Approach
+### Makefile / make.bat
 
-Traverse the AST, and emit the modifications, such that each "format" can convert to each other.
-Type asymmetries are added to the docstrings, e.g., "primary_key" has no equivalent in a regular python func argument,
-so is added as `":param my_id: [PK] The unique identifier"`.
+You can also use the included cross-platform Makefiles to fetch dependencies, build, and test:
 
-The following are the different formats supported, all of which can convert betwixt each-other:
+```bash
+# Install dependencies
+make deps
 
-#### Docstring
+# Build the project
+make build
 
-```reStructuredText
-Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
-
-:param dataset_name: name of dataset. Defaults to mnist
-:type dataset_name: ```str```
-
-:param tfds_dir: directory to look for models in. Defaults to ~/tensorflow_datasets
-:type tfds_dir: ```Optional[str]```
-
-:param K: backend engine, e.g., `np` or `tf`. Defaults to np
-:type K: ```Union[np, tf]```
-
-:param as_numpy: Convert to numpy ndarrays
-:type as_numpy: ```Optional[bool]```
-
-:param data_loader_kwargs: pass this as arguments to data_loader function
-:type data_loader_kwargs: ```**data_loader_kwargs```
-
-:return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
-:rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
+# Run tests
+make test
 ```
 
-##### `class`
+## 🛠 Usage
 
-```python
-from typing import Optional, Union, Tuple, Literal
+### Command Line Interface
 
-import numpy as np
-import tensorflow as tf
+```bash
+# Generate Python models from an OpenAPI spec
+cdd-python from_openapi to_sdk -i spec.json -o src/models
 
-
-class TargetClass(object):
-    """
-    Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
-
-    :cvar dataset_name: name of dataset. Defaults to mnist
-    :cvar tfds_dir: directory to look for models in. Defaults to ~/tensorflow_datasets
-    :cvar K: backend engine, e.g., `np` or `tf`. Defaults to np
-    :cvar as_numpy: Convert to numpy ndarrays
-    :cvar data_loader_kwargs: pass this as arguments to data_loader function
-    :cvar return_type: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))"""
-
-    dataset_name: str = 'mnist'
-    tfds_dir: Optional[str] = '~/tensorflow_datasets'
-    K: Literal['np', 'tf'] = 'np'
-    as_numpy: Optional[bool] = None
-    data_loader_kwargs: dict = {}
-    return_type: Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]] = (
-        np.empty(0),
-        np.empty(0),
-    )
+# Generate an OpenAPI spec from your Python code
+cdd-python to_openapi -f src/models -o openapi.json
 ```
 
-##### `class` method
-
-```python
-from typing import Optional, Union, Tuple, Literal
-
-import numpy as np
-import tensorflow as tf
-
-
-class C(object):
-    """ C class (mocked!) """
-
-    def method_name(
-        self,
-        dataset_name: str = 'mnist',
-        tfds_dir: Optional[str] = '~/tensorflow_datasets',
-        K: Literal['np', 'tf'] = 'np',
-        as_numpy: Optional[bool] = None,
-        **data_loader_kwargs
-    ) -> Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]:
-        """
-        Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library
-    
-        :param dataset_name: name of dataset.
-    
-        :param tfds_dir: directory to look for models in.
-    
-        :param K: backend engine, e.g., `np` or `tf`.
-    
-        :param as_numpy: Convert to numpy ndarrays
-    
-        :param data_loader_kwargs: pass this as arguments to data_loader function
-    
-        :return: Train and tests dataset splits.
-        """
-        return np.empty(0), np.empty(0)
-```
-
-##### Argparse augmenting function
-
-```python
-from typing import Union, Tuple
-from json import loads
-
-import numpy as np
-import tensorflow as tf
-
-
-def set_cli_args(argument_parser):
-    """
-    Set CLI arguments
-
-    :param argument_parser: argument parser
-    :type argument_parser: ```ArgumentParser```
-
-    :return: argument_parser, Train and tests dataset splits.
-    :rtype: ```Tuple[ArgumentParser, Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]]```
-    """
-    argument_parser.description = (
-        'Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare library'
-    )
-    argument_parser.add_argument(
-        '--dataset_name', type=str, help='name of dataset.', required=True, default='mnist'
-    )
-    argument_parser.add_argument(
-        '--tfds_dir',
-        type=str,
-        help='directory to look for models in.',
-        default='~/tensorflow_datasets',
-    )
-    argument_parser.add_argument(
-        '--K',
-        type=globals().__getitem__,
-        choices=('np', 'tf'),
-        help='backend engine, expr.g., `np` or `tf`.',
-        required=True,
-        default='np',
-    )
-    argument_parser.add_argument('--as_numpy', type=bool, help='Convert to numpy ndarrays')
-    argument_parser.add_argument(
-        '--data_loader_kwargs', type=loads, help='pass this as arguments to data_loader function'
-    )
-    return argument_parser, (np.empty(0), np.empty(0))
-```
-
-##### SQLalchemy
-
-There are two variants in the latest SQLalchemy, both are supported:
+### Programmatic SDK / Library
 
 ```py
-from sqlalchemy import JSON, Boolean, Column, Enum, MetaData, String, Table, create_engine
+from cdd import generate_sdk, Config
 
-engine = create_engine("sqlite://", echo=True, future=True)
-metadata = MetaData()
-
-config_tbl = Table(
-    "config_tbl",
-    metadata,
-    Column(
-        "dataset_name",
-        String,
-        doc="name of dataset",
-        default="mnist",
-        primary_key=True,
-    ),
-    Column(
-        "tfds_dir",
-        String,
-        doc="directory to look for models in",
-        default="~/tensorflow_datasets",
-        nullable=False,
-    ),
-    Column(
-        "K",
-        Enum("np", "tf", name="K"),
-        doc="backend engine, e.g., `np` or `tf`",
-        default="np",
-        nullable=False,
-    ),
-    Column(
-        "as_numpy",
-        Boolean,
-        doc="Convert to numpy ndarrays",
-        default=None,
-        nullable=True,
-    ),
-    Column(
-        "data_loader_kwargs",
-        JSON,
-        doc="pass this as arguments to data_loader function",
-        default=None,
-        nullable=True,
-    ),
-    comment='Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare\n'
-            '\n'
-            ':return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))\n'
-            ':rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```',
-)
-
-metadata.create_all(engine)
+if __name__ == '__main__':
+    config = Config(input_path='spec.json', output_dir='src/models')
+    generate_sdk(config)
+    print("SDK generation complete.")
 ```
 
-```py
-from sqlalchemy.orm import declarative_base
-from sqlalchemy import JSON, Boolean, Column, Enum, String
+## 🏗 Supported Conversions for Python
 
-Base = declarative_base()
+*(The boxes below reflect the features supported by this specific `cdd-python` implementation)*
 
+| Features | Parse (From) | Emit (To) |
+| --- | --- | --- |
+| OpenAPI 3.2.0 | ✅ | ✅ |
+| API Client SDK | ✅ | ✅ |
+| API Client CLI | ✅ | ✅ |
+| Server Routes / Endpoints | ✅ | [ ] |
+| ORM / DB Schema | ✅ | ✅ |
+| Mocks + Tests | ✅ | ✅ |
+| Model Context Protocol (MCP) | [ ] | [ ] |
 
-class Config(Base):
-    """
-    Acquire from the official tensorflow_datasets model zoo, or the ophthalmology focussed ml-prepare
-    
-    :return: Train and tests dataset splits. Defaults to (np.empty(0), np.empty(0))
-    :rtype: ```Union[Tuple[tf.data.Dataset, tf.data.Dataset], Tuple[np.ndarray, np.ndarray]]```
-    """
-    __tablename__ = "config_tbl"
+### Uncommon Features
 
-    dataset_name = Column(
-        String,
-        doc="name of dataset",
-        default="mnist",
-        primary_key=True,
-    )
+`cdd-python` supports additional integrations natively not found in standard API generators:
+- **Google Discovery JSON:** Native support for parsing Google Discovery documents in addition to OpenAPI specs.
+- **Legacy Swagger:** First-class compatibility and fallback for Swagger 2.0 schemas.
+- **Deep Python Ecosystem Integration:** Native parsing and emitting betwixt Python functions, `class`es, docstrings (Google, NumPy, ReST), `argparse`, `pydantic`, and `SQLAlchemy`.
 
-    tfds_dir = Column(
-        String,
-        doc="directory to look for models in",
-        default="~/tensorflow_datasets",
-        nullable=False,
-    )
+---
 
-    K = Column(
-        Enum("np", "tf", name="K"),
-        doc="backend engine, e.g., `np` or `tf`",
-        default="np",
-        nullable=False,
-    )
+## CLI Help
 
-    as_numpy = Column(
-        Boolean,
-        doc="Convert to numpy ndarrays",
-        default=None,
-        nullable=True,
-    )
-
-    data_loader_kwargs = Column(
-        JSON,
-        doc="pass this as arguments to data_loader function",
-        default=None,
-        nullable=True,
-    )
-
-    def __repr__(self):
-        """
-        Emit a string representation of the current instance
-        
-        :return: String representation of instance
-        :rtype: ```str```
-        """
-
-        return ("Config(dataset_name={dataset_name!r}, tfds_dir={tfds_dir!r}, "
-                "K={K!r}, as_numpy={as_numpy!r}, data_loader_kwargs={data_loader_kwargs!r})").format(
-            dataset_name=self.dataset_name, tfds_dir=self.tfds_dir, K=self.K,
-            as_numpy=self.as_numpy, data_loader_kwargs=self.data_loader_kwargs
-        )
-```
-
-## Advantages
-
-- CLI gives proper `--help` messages
-- IDE and console gives proper insights to function, and arguments, including on type
-- `class`–based interface opens this up to clean object passing
-- Rather than passing around odd ORM class entities, you can use POPO (Plain Old Python Objects) and serialise easily
-- `@abstractmethod` can add—remove, and change—as many arguments as it wants; including required arguments; without
-  worry
-- Verbosity of output removes the magic. It's always clear what's going on.
-- Outputting regular code means things can be composed and extended as normally.
-
-## Disadvantages
-
-- You have to run a tool to synchronise your various formats.
-- Duplication (but the tool handles this)
-
-## Alternatives
-
-- Slow, manual duplication; or
-- Dynamic code generation, e.g., with a singular interface for everything; so everything is in one place without
-  duplication
-
-## Minor other use-cases this facilitates
-
-- Switch between having types in the docstring and having the types
-  inline ([PEP484](https://python.org/dev/peps/pep-0484)–style)
-- Switch between docstring formats (to/from {numpy, ReST, google})
-- Desktop GUI with wxWidgets, from the argparse layer through [Gooey](https://github.com/chriskiehl/Gooey) [one liner]
-
-## CLI for this project
-
-    $ python -m cdd --help
+$ python -m cdd --help
     usage: python -m cdd [-h] [--version]
                      {sync_properties,sync,gen,gen_routes,openapi,doctrans,exmod}
                      ...
@@ -738,7 +361,7 @@ PS: Below is a temporary hack to run on the SQLalchemy output to make it work; u
 
 Licensed under either of
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <https://apache.org/licenses/LICENSE-2.0>)
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <https://www.apache.org/licenses/LICENSE-2.0>)
 - MIT license ([LICENSE-MIT](LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
 
 at your option.
